@@ -14,6 +14,7 @@ export async function mockWorkspace(page: Page) {
     const request = route.request(); const path = new URL(request.url()).pathname
     const error = (status: number, code: string, blockers?: components['schemas']['Blocker'][]) => route.fulfill({ status, json: { error: { code, message: 'Safe fixture', request_id: 'synthetic', blockers } } })
     if (path === '/api/v1/session') return route.fulfill({ json: { person, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: person.platform_admin } })
+    if (path === '/api/v1/account/github') return route.fulfill({ json: { enabled: false, revision: 0, account: null, invitations_needing_review: 0 } })
     if (path === '/api/v1/time/resolve') { const body = request.postDataJSON(); return route.fulfill({ json: { instant: body.wall_time + 'Z' } }) }
     if (path === '/api/v1/event-preview') return route.fulfill({ json: { blockers: [], challenge_publication: '2027-06-13T10:00:00Z', schedule: [] } })
     if (path === '/api/v1/events') {

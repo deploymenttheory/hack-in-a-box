@@ -127,6 +127,40 @@ type File struct {
 	CreatedAt      time.Time
 }
 
+type GithubAccount struct {
+	ID             uuid.UUID
+	PersonID       uuid.UUID
+	GithubID       int64
+	Login          string
+	TokenEncrypted []byte
+	VerifiedAt     time.Time
+}
+
+type GithubInvitationBinding struct {
+	ID           uuid.UUID
+	EventID      uuid.UUID
+	PersonID     uuid.UUID
+	GithubID     int64
+	LinkRevision int64
+	State        string
+	UpdatedAt    time.Time
+}
+
+type GithubLinkAttempt struct {
+	StateHash         []byte
+	PersonID          uuid.UUID
+	SessionHash       []byte
+	VerifierEncrypted []byte
+	LinkRevision      int64
+	SessionRevision   int64
+	ExpiresAt         time.Time
+}
+
+type GithubLinkState struct {
+	PersonID uuid.UUID
+	Revision int64
+}
+
 type LoginAttempt struct {
 	StateHash   string
 	BrowserHash string

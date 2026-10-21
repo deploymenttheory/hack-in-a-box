@@ -19,6 +19,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
@@ -27,6 +28,7 @@ import (
 )
 
 type Dependencies struct {
+	GitHub      *githubidentity.Service
 	Pool        *pgxpool.Pool
 	Auth        *identity.Auth
 	Audit       audit.Service
@@ -278,6 +280,10 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		status, code, message = 503, "object_missing", "The stored file is unavailable. Ask an administrator to check the file volume."
 	case errors.Is(err, database.ErrDatabase), errors.Is(err, database.ErrSchema):
 		status, code, message = 503, "unavailable", "A required service is temporarily unavailable."
+	case errors.Is(err, githubidentity.ErrLink):
+		status, code, message = 400, "github_link_failed", githubidentity.ErrLink.Error()
+	case errors.Is(err, githubidentity.ErrDisabled):
+		status, code, message = 503, "github_unconfigured", githubidentity.ErrDisabled.Error()
 	case errors.Is(err, identity.ErrLogin):
 		status, code, message = 401, "login_failed", "Sign-in could not be completed. Start sign-in again."
 	}

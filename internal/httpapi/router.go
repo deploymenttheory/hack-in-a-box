@@ -119,6 +119,9 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 	)
 	router.Get("/ops/metrics", metrics.serve(deps.Pool, cfg.MetricsToken))
 	if deps.Auth != nil {
+		if deps.GitHub != nil {
+			router.Get("/auth/github/callback", githubCallback(deps))
+		}
 		router.Get("/auth/login", func(w http.ResponseWriter, r *http.Request) {
 			if err := deps.Auth.Login(w, r); err != nil {
 				respondError(w, r, err)

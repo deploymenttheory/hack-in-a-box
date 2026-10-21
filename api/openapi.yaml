@@ -737,6 +737,72 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CloneInput'
+  /api/v1/account/github:
+    get:
+      operationId: getGitHubLink
+      parameters: []
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitHubLink'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: unlinkGitHub
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitHubLink'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - acknowledge_invitation_impact
+              properties:
+                acknowledge_invitation_impact:
+                  type: boolean
+  /api/v1/account/github/authorize:
+    post:
+      operationId: authorizeGitHub
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitHubAuthorization'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - acknowledge_invitation_impact
+              properties:
+                acknowledge_invitation_impact:
+                  type: boolean
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -1829,3 +1895,56 @@ components:
           maximum: 1000
         acknowledge_competition_restriction:
           type: boolean
+
+    GitHubAccount:
+      type: object
+      additionalProperties: false
+      required:
+        - github_id
+        - login
+        - verified_at
+      properties:
+        github_id:
+          type: integer
+          format: int64
+          minimum: 1
+        login:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+    GitHubLink:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - revision
+        - account
+        - invitations_needing_review
+      properties:
+        enabled:
+          type: boolean
+        revision:
+          type: integer
+          format: int64
+        account:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [github_id, login, verified_at]
+          properties:
+            github_id: {type: integer, format: int64, minimum: 1}
+            login: {type: string}
+            verified_at: {type: string, format: date-time}
+        invitations_needing_review:
+          type: integer
+          format: int64
+    GitHubAuthorization:
+      type: object
+      additionalProperties: false
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
