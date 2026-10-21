@@ -1026,6 +1026,7 @@ export interface components {
             version: number;
         };
         RegistrationPage: {
+            branding: components["schemas"]["TemplateBranding"];
             event: components["schemas"]["RegistrationEvent"];
             forms: components["schemas"]["PublishedRegistrationForm"][];
             registrations: components["schemas"]["Registration"][];

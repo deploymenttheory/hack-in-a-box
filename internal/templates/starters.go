@@ -113,13 +113,6 @@ func starter(qualification bool) Starter {
 					Type:    "single",
 					Choices: []string{"Starting out", "Some experience", "Experienced"},
 				},
-				{
-					ID:       id("preference"),
-					Label:    "Team preference",
-					Type:     "single",
-					Required: true,
-					Choices:  []string{"Captain", "Join a team", "Solo placement"},
-				},
 			},
 		},
 		{

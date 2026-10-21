@@ -111,3 +111,9 @@ facilitator separation, owner ineligibility, reasoned promotions, capacity reduc
 and deadline checks pass with PostgreSQL/race detection. HTTP schemas validate
 registration discovery, submission and private status. Event, template and database
 regression suites and Go lint pass.
+
+### PR 6 — registration journeys (#54)
+
+Added authenticated event discovery, selectively branded application pages, captain/join/solo preferences and separate facilitator applications. Requests retain their application ID when retried, and status comes from the committed server result. The starter form now leaves team preferences to the dedicated application controls. No private event definitions or rosters are exposed by discovery.
+
+Validation: four desktop/mobile browser checks pass, including submission retry identity, confirmed versus waitlisted versus received states, and closed applications. Registration, HTTP authorization/OpenAPI and template PostgreSQL suites pass with the race detector; frontend lint/build pass.
