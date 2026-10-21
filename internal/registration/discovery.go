@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Summary struct {
@@ -34,9 +35,10 @@ type (
 		Version    int32            `json:"version"`
 	}
 	RegistrationPage struct {
-		Event         Summary         `json:"event"`
-		Forms         []PublishedForm `json:"forms"`
-		Registrations []View          `json:"registrations"`
+		Branding      templates.Branding `json:"branding"`
+		Event         Summary            `json:"event"`
+		Forms         []PublishedForm    `json:"forms"`
+		Registrations []View             `json:"registrations"`
 	}
 )
 
@@ -115,6 +117,20 @@ func (s Service) Page(ctx context.Context, actor, eventID uuid.UUID) (Registrati
 		return result, err
 	}
 	result.Registrations = own
+	result.Branding = templates.EmptyDefinitions().Branding
+	definitions, readErr := q.EventDefinitions(ctx, eventID)
+	if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
+		return result, fmt.Errorf("read registration branding: %w", readErr)
+	}
+	if readErr == nil {
+		selected := struct {
+			Branding templates.Branding `json:"branding"`
+		}{Branding: result.Branding}
+		if err := json.Unmarshal(definitions.Definitions, &selected); err != nil {
+			return result, fmt.Errorf("decode registration branding: %w", err)
+		}
+		result.Branding = selected.Branding
+	}
 	if !result.Event.Open {
 		return result, nil
 	}

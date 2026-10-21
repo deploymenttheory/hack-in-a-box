@@ -1768,8 +1768,10 @@ components:
     RegistrationPage:
       type: object
       additionalProperties: false
-      required: [event, forms, registrations]
+      required: [event, forms, registrations, branding]
       properties:
+        branding:
+          $ref: '#/components/schemas/TemplateBranding'
         event:
           $ref: '#/components/schemas/RegistrationEvent'
         forms:
