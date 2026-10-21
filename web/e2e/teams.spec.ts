@@ -23,13 +23,14 @@ test('captain sees pending teammates without seats and draft membership', async 
   await expect(page.getByText(/If you chose solo placement/)).toBeVisible()
 })
 test('organiser freeze displays server blockers and then locks membership', async ({ page }, testInfo) => {
-  await mockWorkspace(page)
+  const { events } = await mockWorkspace(page)
+  events[0].stage = 'preparation'; events[0].confirmed_attendees = 3; events[0].configuration.minimum_attendance = 3; events[0].configuration.capacity = 5
   let teams = teamPage(true), attempts = 0
   await page.route(`**/events/${firstID}/teams`, route => {
     if (route.request().method() === 'POST') {
       const body = route.request().postDataJSON(); expect(body.action).toBe('freeze'); expect(body.reason).toBe('All competitors reviewed'); attempts++
       if (attempts === 1) return route.fulfill({ status: 409, json: { error: { code: 'teams_unready', message: 'Resolve', request_id: 'synthetic' } } })
-      teams = { ...teams, frozen: true, revision: teams.revision + 1, teams: teams.teams.map(t => ({ ...t, state: 'published', published: t.draft, frozen: true })) }
+      teams = { ...teams, frozen: true, revision: teams.revision + 1, teams: teams.teams.map(t => ({ ...t, state: 'published', published_captain: t.captain, published: [...t.draft, { id: joinerID, name: 'Solo competitor' }, { id: '00000000-0000-4000-8000-000000000013', name: 'Another competitor' }], draft: [...t.draft, { id: joinerID, name: 'Solo competitor' }, { id: '00000000-0000-4000-8000-000000000013', name: 'Another competitor' }], frozen: true })) }
     }
     return route.fulfill({ json: teams })
   })

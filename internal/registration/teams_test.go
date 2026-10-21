@@ -166,6 +166,25 @@ func TestTeamRebalancingFreezeAndWithdrawalFacts(t *testing.T) {
 		facts.FrozenTeams != 1 {
 		t.Fatalf("withdrawal facts: %+v %v", facts, err)
 	}
+	// Depletion below three after freeze keeps the remaining team and entry active.
+	for _, i := range []int{1, 2} {
+		if _, err := f.service.Respond(
+			ctx,
+			people[i].ID,
+			f.event.ID,
+			registrations[i].ID,
+			registrations[i].Revision,
+			"withdraw",
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	remaining, err := s.Read(ctx, people[4].ID, f.event.ID)
+	if err != nil || len(remaining.Teams) != 1 || len(remaining.Teams[0].Published) != 2 ||
+		remaining.Teams[0].State != "published" {
+		t.Fatalf("frozen depleted team did not continue: %+v %v", remaining, err)
+	}
+
 	var entries, active int
 	if err := f.pool.QueryRow(ctx, "SELECT count(*),count(*) FILTER(WHERE active) FROM competition_entries WHERE event_id=$1", f.event.ID).
 		Scan(&entries, &active); err != nil ||

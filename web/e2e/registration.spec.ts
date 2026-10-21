@@ -31,3 +31,22 @@ test('facilitator receipt and a closed waitlist show distinct outcomes', async (
   await expect(page.getByText('New applications are closed. Existing registrations remain valid.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Submit application' })).toHaveCount(0)
 })
+
+test('facilitator application records fallback preference without enrolling a competitor', async ({ page }) => {
+  await mockWorkspace(page)
+  const form = { ...attendeeForm, definition: { ...attendeeForm.definition, audience: 'mentor', name: 'Mentor application' } }
+  let registrations: components['schemas']['Registration'][] = []
+  await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [form], registrations } }))
+  await page.route(`**/events/${firstID}/registrations`, route => {
+    const body = route.request().postDataJSON(); expect(body.fallback_to_attendee).toBe(true)
+    registrations = [{ ...fixtureRegistration('received'), id: body.id, audience: 'mentor', kind: 'facilitator', fallback_to_attendee: true }]
+    return route.fulfill({ json: registrations[0] })
+  })
+  await page.goto(`/register/${firstID}`)
+  await page.getByLabel('What would you like to learn? (required)').fill('Support new teams')
+  await page.getByLabel(/If I am not selected, invite me/).check()
+  await page.getByRole('button', { name: 'Submit application' }).click()
+  await expect(page.getByText('Your facilitator application has been received for review.')).toBeVisible()
+  await expect(page.getByText('Your competitor place is confirmed.')).toHaveCount(0)
+  expect(registrations).toHaveLength(1)
+})

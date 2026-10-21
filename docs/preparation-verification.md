@@ -137,3 +137,17 @@ Added opaque invitation codes, pending requests that reserve no seats, confirmed
 Registration withdrawal removes both membership snapshots transactionally and updates lifecycle facts. Before freeze, undersized teams require organiser rebalancing. After freeze, remaining members stay in place; an existing member can replace a departed captain. Empty teams and entries are retired. Repository transfer and reassignment after freeze are intentionally absent under ADR-0005.
 
 Validation: real PostgreSQL tests exercise concurrent joins, missing seats, duplicate names, private rosters, captain departure, rebalancing, one entry per team, freeze and consistent withdrawal facts. Registration/event/HTTP suites pass with the race detector; Go/frontend lint and build pass. Twelve relevant desktop/mobile checks pass (the registration status assertion is scoped to its region because the team panel loads independently).
+
+### PR 10 — registration and lifecycle concurrency (#58)
+
+Added real PostgreSQL races for registration versus the explicit go decision, offer acceptance versus withdrawal and worker replay, organiser grants versus acceptance, and team freeze versus a membership move. Calendar coverage checks a Friday offer across a weekend and excluded Monday, then simultaneous acceptance/expiry at final admission with no later backfill. Tests prove offers do not satisfy minimum attendance, FIFO admission continues during preparation, and frozen teams may continue below three after withdrawals. Browser journeys now cover application → waitlist → offer → acceptance → response correction → withdrawal, plus facilitator fallback preferences without competitor enrollment. Removed the obsolete empty team placeholder package after the implemented team owner was verified.
+
+Final validation:
+
+- `HACKBOX_INTEGRATION=1 go test -race -timeout 5m ./cmd/... ./internal/...` — passed.
+- `golangci-lint run ./cmd/... ./internal/...` — zero issues.
+- Frontend build/lint — passed; five component tests and 54 desktop/mobile browser tests passed.
+- Desktop/mobile frozen-team screenshots inspected: readable controls, wrapping navigation and no horizontal overflow. Screenshots use synthetic browser fixtures; backend transactions and authorization are exercised separately against real PostgreSQL.
+- Generated contracts are checked for reproducibility after each PR commit.
+
+External delivery remains a future communications adapter: offer and fallback notifications are durable intents, not claimed deliveries. Challenge publication, submission/judging, automatic team suggestions and mentor allocation retain their separate backlog owners.
