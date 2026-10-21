@@ -373,6 +373,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/registration/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listRegistrationForms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registration/forms/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewRegistrationForm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registration/forms/{form_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                form_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveRegistrationForm"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registration/forms/{form_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                form_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishRegistrationForm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -794,6 +868,21 @@ export interface components {
         RemovedResult: {
             removed: boolean;
         };
+        RegistrationForm: {
+            definition: components["schemas"]["TemplateForm"];
+            /** Format: int64 */
+            revision: number;
+            version: number;
+            published_version: number | null;
+        };
+        FormAnswers: {
+            [key: string]: unknown;
+        };
+        FormCheck: {
+            answers: components["schemas"]["FormAnswers"];
+            visible: string[];
+            issues: components["schemas"]["Blocker"][];
+        };
         TemplateCondition: {
             /** Format: uuid */
             field_id: string;
@@ -802,6 +891,7 @@ export interface components {
         TemplateField: {
             /** Format: uuid */
             id: string;
+            section?: string;
             label: string;
             /** @enum {string} */
             type: "text" | "single" | "multiple" | "checkbox" | "rating";
@@ -1725,6 +1815,130 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfilePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRegistrationForms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Editable form drafts and their publication versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["RegistrationForm"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    previewRegistrationForm: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    definition: components["schemas"]["TemplateForm"];
+                    answers: components["schemas"]["FormAnswers"];
+                };
+            };
+        };
+        responses: {
+            /** @description Authoritative visibility and validation; preview answers are not persisted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveRegistrationForm: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                form_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateForm"];
+            };
+        };
+        responses: {
+            /** @description New immutable form draft version. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationForm"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    publishRegistrationForm: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                form_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                    acknowledge_response_versions: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Explicitly published form version. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationForm"];
                 };
             };
             default: components["responses"]["Error"];

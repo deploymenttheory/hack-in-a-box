@@ -11,6 +11,7 @@ export class APIError extends Error {
       competition_ineligible: 'Previous organiser or early brief access permanently prevents competition in this event.',
       assessment_conflict: 'A person cannot compete and assess in the same event.',
       last_organiser: 'Assign another organiser and transfer ownership before removing this organiser.',
+      form_invalid: 'Resolve the form fields before continuing.',
       event_blocked: 'Resolve the event blockers before continuing.',
     }
     super(messages[code] ?? (status === 401 ? 'Your session has expired. Sign in to continue.' :

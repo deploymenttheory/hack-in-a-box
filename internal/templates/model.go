@@ -12,30 +12,15 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
 type (
-	Condition struct {
-		FieldID uuid.UUID `json:"field_id"`
-		Equals  string    `json:"equals"`
-	}
-	Field struct {
-		ID          uuid.UUID  `json:"id"`
-		Label       string     `json:"label"`
-		Type        string     `json:"type"`
-		Required    bool       `json:"required"`
-		Help        string     `json:"help"`
-		Choices     []string   `json:"choices"`
-		VisibleWhen *Condition `json:"visible_when,omitempty"`
-	}
-	Form struct {
-		ID       uuid.UUID `json:"id"`
-		Name     string    `json:"name"`
-		Audience string    `json:"audience"`
-		Fields   []Field   `json:"fields"`
-	}
-	Task struct {
+	Condition = forms.Condition
+	Field     = forms.Field
+	Form      = forms.Definition
+	Task      struct {
 		ID         uuid.UUID   `json:"id"`
 		Title      string      `json:"title"`
 		OwnerRole  string      `json:"owner_role"`
@@ -219,30 +204,8 @@ func Validate(bundle Bundle) error {
 }
 
 func validateForm(form Form) error {
-	if form.Name == "" || len(form.Name) > 160 || !slices.Contains(roles, form.Audience) ||
-		len(form.Fields) > 100 {
-		return access.ErrInvalid
-	}
-	previous := map[uuid.UUID]bool{}
-	for _, field := range form.Fields {
-		if field.Label == "" || len(field.Label) > 160 || len(field.Help) > 2000 ||
-			!slices.Contains(
-				[]string{"text", "single", "multiple", "checkbox", "rating"},
-				field.Type,
-			) ||
-			len(field.Choices) > 100 {
-			return access.ErrInvalid
-		}
-		for _, choice := range field.Choices {
-			if choice == "" || len(choice) > 160 {
-				return access.ErrInvalid
-			}
-		}
-		if field.VisibleWhen != nil &&
-			(!previous[field.VisibleWhen.FieldID] || len(field.VisibleWhen.Equals) > 160) {
-			return access.ErrInvalid
-		}
-		previous[field.ID] = true
+	if err := forms.Validate(form); err != nil {
+		return fmt.Errorf("validate template form: %w", err)
 	}
 	return nil
 }

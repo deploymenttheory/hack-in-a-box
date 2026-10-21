@@ -57,3 +57,29 @@ reasoned postponement and invalidation of obsolete schedule approvals. Those tes
 exercise domain gate contracts; registration/team/publication execution receives
 its own integrated coverage as those modules arrive. All 34 desktop/mobile browser
 scenarios passed. Conflict screenshots were visually checked at both widths.
+
+## Registration forms (#49, #50)
+
+Migration 11 adds event-scoped form headers, immutable definition versions,
+publication history and versioned answers. Cloned form definitions remain drafts
+until deliberately saved/published. Form edits update reusable definitions by value
+without replacing unrelated event configuration. Publication explicitly confirms
+that existing responses retain their original version and new requirements apply
+to new responses; correction validates against the originally answered version.
+
+The shared `internal/forms` rules validate bounded text, choices, checkboxes and
+1–10 ratings, required answers and earlier-question conditions. Hidden/unknown
+answers are discarded before persistence and cannot activate hidden descendants.
+The organiser editor supports sections, ordering, conditional controls and branch
+previews through the same server validator. Preview answers are never persisted.
+
+Stored answer histories follow the existing event retention policy; worker
+maintenance deletes expired histories after completion/cancellation/archive.
+Definition versions remain reusable configuration. No answers enter audit metadata.
+Registration submission and self-service correction endpoints are delivered in the
+subsequent registration/withdrawal PRs.
+
+Verification: full Go suite with PostgreSQL and race detection; form HTTP request
+and response schemas; typed-answer, hidden-answer, unreachable-branch, original
+version correction, stale revision and retention checks. Frontend lint/build,
+five component tests and all 36 desktop/mobile browser scenarios pass.
