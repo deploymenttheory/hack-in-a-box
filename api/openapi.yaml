@@ -413,6 +413,330 @@ paths:
                     - ''
                     - earlier
                     - later
+  /api/v1/events/{event_id}/privacy:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getPrivacySettings
+      parameters: []
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: setPrivacySettings
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettings'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySettings'
+  /api/v1/events/{event_id}/profiles/{person_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: person_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getOperationalProfile
+      parameters: []
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationalProfile'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: correctOperationalProfile
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationalProfile'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileFields'
+    delete:
+      operationId: deleteOperationalProfile
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemovedResult'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/profiles/export:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: exportOperationalProfiles
+      parameters:
+        - name: after
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePage'
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/templates:
+    get:
+      operationId: listTemplates
+      parameters:
+        - name: after
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 25
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplatePage'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: createTemplate
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateInput'
+  /api/v1/templates/{template_id}:
+    parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getTemplate
+      parameters:
+        - name: version
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: editTemplate
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateInput'
+  /api/v1/templates/{template_id}/publish:
+    parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: publishTemplate
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - version
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+  /api/v1/templates/{template_id}/clone:
+    parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: cloneTemplate
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneInput'
+  /api/v1/events/{event_id}/configuration-snapshot:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getConfigurationSnapshot
+      parameters: []
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationBundle'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: saveEventDefinitions
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationBundle'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDefinitions'
+  /api/v1/events/{event_id}/clone:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: cloneEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneInput'
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -446,6 +770,16 @@ components:
       name: limit
       in: query
       schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+    ProfileRevision:
+      name: If-Match
+      in: header
+      required: true
+      description: >-
+        Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current
+        revision.
+      schema:
+        type: string
+        pattern: ^"[0-9]+"$
   responses:
     Error:
       description: |
@@ -479,7 +813,7 @@ components:
             blockers: { type: array, items: { $ref: '#/components/schemas/Blocker' } }
     Session:
       type: object
-      required: [person, csrf_token]
+      required: [person, csrf_token, can_create_events]
       properties:
         person:
           type: object
@@ -489,6 +823,7 @@ components:
             display_name: { type: string }
             platform_admin: { type: boolean }
         csrf_token: { type: string }
+        can_create_events: { type: boolean }
     AuditEvent:
       type: object
       required: [id, sequence, action, target_id, reason_code, occurred_at, metadata]
@@ -921,3 +1256,576 @@ components:
         instant:
           type: string
           format: date-time
+
+    ProfileFields:
+      type: object
+      additionalProperties: false
+      required:
+        - contact_email
+        - contact_phone
+        - dietary
+        - accessibility
+        - photo_consent
+      properties:
+        contact_email:
+          type: string
+          maxLength: 320
+        contact_phone:
+          type: string
+          maxLength: 80
+        dietary:
+          type: string
+          maxLength: 2000
+        accessibility:
+          type: string
+          maxLength: 2000
+        photo_consent:
+          type: string
+          enum:
+            - unknown
+            - 'yes'
+            - 'no'
+    OperationalProfile:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - event_id
+        - person_id
+        - display_name
+        - revision
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        person_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        revision:
+          type: integer
+          format: int64
+        contact_email:
+          type: string
+          maxLength: 320
+        contact_phone:
+          type: string
+          maxLength: 80
+        dietary:
+          type: string
+          maxLength: 2000
+        accessibility:
+          type: string
+          maxLength: 2000
+        photo_consent:
+          type: string
+          enum:
+            - unknown
+            - 'yes'
+            - 'no'
+    ProfilePage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - next_cursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationalProfile'
+        next_cursor:
+          type: string
+          format: uuid
+          nullable: true
+    PrivacySettings:
+      type: object
+      additionalProperties: false
+      required:
+        - retention_days
+        - draft_days
+      properties:
+        retention_days:
+          type: integer
+          minimum: 1
+          maximum: 3650
+        draft_days:
+          type: integer
+          minimum: 1
+          maximum: 90
+    RemovedResult:
+      type: object
+      additionalProperties: false
+      required:
+        - removed
+      properties:
+        removed:
+          type: boolean
+
+    TemplateCondition:
+      type: object
+      additionalProperties: false
+      required:
+        - field_id
+        - equals
+      properties:
+        field_id:
+          type: string
+          format: uuid
+        equals:
+          type: string
+          maxLength: 160
+    TemplateField:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - label
+        - type
+        - required
+        - help
+        - choices
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          minLength: 1
+          maxLength: 160
+        type:
+          type: string
+          enum:
+            - text
+            - single
+            - multiple
+            - checkbox
+            - rating
+        required:
+          type: boolean
+        help:
+          type: string
+          maxLength: 2000
+        choices:
+          type: array
+          items:
+            type: string
+            maxLength: 160
+        visible_when:
+          $ref: '#/components/schemas/TemplateCondition'
+    TemplateForm:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - audience
+        - fields
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        audience:
+          type: string
+          enum:
+            - attendee
+            - organiser
+            - mentor
+            - judge
+            - mc
+            - logistics
+            - photographer
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateField'
+          maxItems: 100
+    TemplateTask:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - owner_role
+        - depends_on
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        owner_role:
+          type: string
+          enum:
+            - attendee
+            - organiser
+            - mentor
+            - judge
+            - mc
+            - logistics
+            - photographer
+        depends_on:
+          type: array
+          items:
+            type: string
+            format: uuid
+        schedule_id:
+          type: string
+          format: uuid
+    TemplateDeliverable:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - description
+        - required
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 4000
+        required:
+          type: boolean
+        schedule_id:
+          type: string
+          format: uuid
+    TemplateRoleBrief:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - role
+        - body
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum:
+            - attendee
+            - organiser
+            - mentor
+            - judge
+            - mc
+            - logistics
+            - photographer
+        body:
+          type: string
+          maxLength: 10000
+    TemplateCriterion:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - label
+        - guidance
+        - max_score
+        - weight
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          minLength: 1
+          maxLength: 160
+        guidance:
+          type: string
+          maxLength: 4000
+        max_score:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        weight:
+          type: integer
+          minimum: 1
+          maximum: 100
+    TemplateRubric:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - criteria
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateCriterion'
+          maxItems: 50
+    TemplateMessage:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - subject
+        - body
+        - audience
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        subject:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 10000
+        audience:
+          type: array
+          items:
+            type: string
+            enum:
+              - all
+              - attendee
+              - organiser
+              - mentor
+              - judge
+              - mc
+              - logistics
+              - photographer
+        schedule_id:
+          type: string
+          format: uuid
+    TemplateAsset:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - kind
+        - media_type
+        - content
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+            - logo
+            - icon
+            - hero
+        media_type:
+          type: string
+          enum:
+            - image/png
+            - image/jpeg
+        content:
+          type: string
+          format: byte
+    TemplateBranding:
+      type: object
+      additionalProperties: false
+      required:
+        - primary
+        - accent
+        - background
+        - foreground
+        - assets
+      properties:
+        primary:
+          type: string
+          pattern: ^#[0-9a-fA-F]{6}$
+        accent:
+          type: string
+          pattern: ^#[0-9a-fA-F]{6}$
+        background:
+          type: string
+          pattern: ^#[0-9a-fA-F]{6}$
+        foreground:
+          type: string
+          pattern: ^#[0-9a-fA-F]{6}$
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateAsset'
+          maxItems: 3
+    EventDefinitions:
+      type: object
+      additionalProperties: false
+      required:
+        - forms
+        - tasks
+        - deliverables
+        - role_briefs
+        - rubrics
+        - messages
+        - branding
+      properties:
+        forms:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateForm'
+          maxItems: 50
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateTask'
+          maxItems: 200
+        deliverables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateDeliverable'
+          maxItems: 100
+        role_briefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateRoleBrief'
+          maxItems: 20
+        rubrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateRubric'
+          maxItems: 20
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateMessage'
+          maxItems: 200
+        branding:
+          $ref: '#/components/schemas/TemplateBranding'
+    ConfigurationBundle:
+      type: object
+      additionalProperties: false
+      required:
+        - event
+        - definitions
+      properties:
+        event:
+          $ref: '#/components/schemas/EventConfiguration'
+        definitions:
+          $ref: '#/components/schemas/EventDefinitions'
+    TemplateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - configuration
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        configuration:
+          $ref: '#/components/schemas/ConfigurationBundle'
+    Template:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - revision
+        - latest_version
+        - published_version
+        - version
+        - configuration
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        revision:
+          type: integer
+          format: int64
+        latest_version:
+          type: integer
+        published_version:
+          type: integer
+          nullable: true
+        version:
+          type: integer
+        configuration:
+          $ref: '#/components/schemas/ConfigurationBundle'
+    TemplatePage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - next_cursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Template'
+        next_cursor:
+          type: string
+          format: uuid
+          nullable: true
+    CloneInput:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - slug
+        - live_start
+        - timezone
+        - dst_choice
+        - version
+        - acknowledge_competition_restriction
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+        live_start:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+        dst_choice:
+          type: string
+          enum:
+            - ''
+            - earlier
+            - later
+        version:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        acknowledge_competition_restriction:
+          type: boolean

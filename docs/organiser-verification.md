@@ -36,3 +36,30 @@ npm --prefix web test
 npm --prefix web run test:e2e
 sh scripts/check-generated.sh
 ```
+
+## Privacy and reusable templates (#37, #41)
+
+`internal/privacy/service_test.go` and the HTTP contracts verify self-correction,
+optimistic revisions, field-level payloads (logistics contact/dietary/accessibility;
+photographers consent only), scoped exports and revocation. Retention defaults to
+90 days after completion/cancellation, with seven-day private drafts; organisers
+can configure both. A bounded worker sweep deletes fields/drafts and keeps only
+anonymous removal totals plus safe decision audit records. Administrators can
+remove a profile without gaining permission to read its operational fields.
+
+`internal/templates/service_test.go` verifies immutable versions/publications,
+independent event snapshots, ID/reference remapping, inline raster branding by
+value, draft schedules without approval/delivery state, transactional failure and
+idempotent clone retries. The London DST fixture keeps challenge publication seven
+calendar days before live start at the same local time. Clone definitions are an
+explicit allowlist; participant, assessment, credential and delivery records never
+enter the copy. Existing events remain independent of subsequent publications.
+
+Current event organisers can create events/templates; installation administrators
+bootstrap the first event. The session exposes this capability for the creation
+screen. Creating a new event still requires the lasting competition-exclusion
+acknowledgment and grants its creator the organiser role. Template editing APIs are
+included here; the template editor and domain execution remain in their own issues.
+
+Verification: full Go suite with `HACKBOX_INTEGRATION=1` and `-race`, HTTP response
+schema validation, zero Go lint findings, frontend build/unit/browser checks.

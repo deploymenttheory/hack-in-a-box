@@ -58,72 +58,92 @@ func recordAudit(
 
 func (s Service) Create(ctx context.Context, actor uuid.UUID, input Input) (View, error) {
 	var result View
-	if issues := Validate(input, false); len(issues) > 0 {
-		return result, &Blocked{Issues: issues}
-	}
-	if input.ID == uuid.Nil || !input.AcknowledgeCompetitionRestriction {
-		return result, access.ErrInvalid
-	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
-		person, err := q.Person(ctx, actor)
-		if err != nil || !person.Active || !person.PlatformAdmin {
-			return access.ErrForbidden
-		}
-		data, err := json.Marshal(input.Configuration)
-		if err != nil {
-			return fmt.Errorf("encode event: %w", err)
-		}
-		existing, err := q.Event(ctx, input.ID)
-		if err == nil {
-			old, decodeErr := decode(existing)
-			if decodeErr != nil {
-				return fmt.Errorf("decode existing event: %w", decodeErr)
-			}
-			oldData, _ := json.Marshal(old)
-			if existing.OwnerID == nil || *existing.OwnerID != actor ||
-				existing.Name != input.Name ||
-				existing.Slug != input.Slug ||
-				string(oldData) != string(data) {
-				return access.ErrConflict
-			}
-			result, err = s.view(ctx, q, actor, existing)
-			return err
-		}
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("check event creation: %w", err)
-		}
-		row, err := q.CreateEvent(
-			ctx,
-			dbgen.CreateEventParams{
-				ID:            input.ID,
-				Name:          input.Name,
-				Slug:          input.Slug,
-				Configuration: data,
-			},
-		)
-		if err != nil {
-			return conflict(err)
-		}
-		if err := q.InitializeEventFacts(ctx, row.ID); err != nil {
-			return fmt.Errorf("initialize gates: %w", err)
-		}
-		if err := permissions.AssignOwner(ctx, q, row.ID, actor); err != nil {
-			return fmt.Errorf("assign initial owner: %w", err)
-		}
-		if err := replan(ctx, q, row.ID, input.Configuration); err != nil {
-			return err
-		}
-		if err := recordAudit(ctx, q, actor, row.ID, "event.created", row.ID); err != nil {
-			return err
-		}
-		row.OwnerID = &actor
-		result, err = s.view(ctx, q, actor, row)
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		result, err = s.CreateIn(ctx, tx, actor, input)
 		return err
 	})
 	if err != nil {
 		return result, fmt.Errorf("create event: %w", err)
 	}
 	return result, nil
+}
+
+// CreateIn lets a template snapshot and the new event commit atomically.
+func (s Service) CreateIn(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor uuid.UUID,
+	input Input,
+) (View, error) {
+	var result View
+	if issues := Validate(input, false); len(issues) > 0 {
+		return result, &Blocked{Issues: issues}
+	}
+	if input.ID == uuid.Nil || !input.AcknowledgeCompetitionRestriction {
+		return result, access.ErrInvalid
+	}
+	q := dbgen.New(tx)
+	if err := q.LockCreationID(ctx, input.ID.String()); err != nil {
+		return result, fmt.Errorf("lock creation identity: %w", err)
+	}
+	allowed, err := q.CanCreateEvent(ctx, actor)
+	if err != nil {
+		return result, fmt.Errorf("check event creation authority: %w", err)
+	}
+	if !allowed {
+		return result, access.ErrForbidden
+	}
+	data, err := json.Marshal(input.Configuration)
+	if err != nil {
+		return result, fmt.Errorf("encode event: %w", err)
+	}
+	existing, err := q.Event(ctx, input.ID)
+	if err == nil {
+		old, decodeErr := decode(existing)
+		if decodeErr != nil {
+			return result, fmt.Errorf("decode existing event: %w", decodeErr)
+		}
+		oldData, _ := json.Marshal(old)
+		if existing.OwnerID == nil || *existing.OwnerID != actor ||
+			existing.Name != input.Name ||
+			existing.Slug != input.Slug ||
+			string(oldData) != string(data) {
+			return result, access.ErrConflict
+		}
+		result, err = s.view(ctx, q, actor, existing)
+		return result, err
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return result, fmt.Errorf("check event creation: %w", err)
+	}
+	row, err := q.CreateEvent(
+		ctx,
+		dbgen.CreateEventParams{
+			ID:            input.ID,
+			Name:          input.Name,
+			Slug:          input.Slug,
+			Configuration: data,
+		},
+	)
+	if err != nil {
+		return result, conflict(err)
+	}
+	if err := q.InitializeEventFacts(ctx, row.ID); err != nil {
+		return result, fmt.Errorf("initialize gates: %w", err)
+	}
+	if err := permissions.AssignOwner(ctx, q, row.ID, actor); err != nil {
+		return result, fmt.Errorf("assign initial owner: %w", err)
+	}
+	if err := replan(ctx, q, row.ID, input.Configuration); err != nil {
+		return result, err
+	}
+	if err := recordAudit(ctx, q, actor, row.ID, "event.created", row.ID); err != nil {
+		return result, err
+	}
+	row.OwnerID = &actor
+	result, err = s.view(ctx, q, actor, row)
+	return result, err
 }
 
 func conflict(err error) error {

@@ -318,6 +318,167 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/privacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getPrivacySettings"];
+        put: operations["setPrivacySettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/profiles/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOperationalProfile"];
+        put: operations["correctOperationalProfile"];
+        post?: never;
+        delete: operations["deleteOperationalProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/profiles/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["exportOperationalProfiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTemplates"];
+        put?: never;
+        post: operations["createTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTemplate"];
+        put: operations["editTemplate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cloneTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/configuration-snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getConfigurationSnapshot"];
+        put: operations["saveEventDefinitions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cloneEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -342,6 +503,7 @@ export interface components {
                 platform_admin: boolean;
             };
             csrf_token: string;
+            can_create_events: boolean;
         };
         AuditEvent: {
             /** Format: uuid */
@@ -529,6 +691,182 @@ export interface components {
             /** Format: date-time */
             instant: string;
         };
+        ProfileFields: {
+            contact_email: string;
+            contact_phone: string;
+            dietary: string;
+            accessibility: string;
+            /** @enum {string} */
+            photo_consent: "unknown" | "yes" | "no";
+        };
+        OperationalProfile: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            /** Format: int64 */
+            revision: number;
+            contact_email?: string;
+            contact_phone?: string;
+            dietary?: string;
+            accessibility?: string;
+            /** @enum {string} */
+            photo_consent?: "unknown" | "yes" | "no";
+        };
+        ProfilePage: {
+            items: components["schemas"]["OperationalProfile"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        PrivacySettings: {
+            retention_days: number;
+            draft_days: number;
+        };
+        RemovedResult: {
+            removed: boolean;
+        };
+        TemplateCondition: {
+            /** Format: uuid */
+            field_id: string;
+            equals: string;
+        };
+        TemplateField: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** @enum {string} */
+            type: "text" | "single" | "multiple" | "checkbox" | "rating";
+            required: boolean;
+            help: string;
+            choices: string[];
+            visible_when?: components["schemas"]["TemplateCondition"];
+        };
+        TemplateForm: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            audience: "attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer";
+            fields: components["schemas"]["TemplateField"][];
+        };
+        TemplateTask: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @enum {string} */
+            owner_role: "attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer";
+            depends_on: string[];
+            /** Format: uuid */
+            schedule_id?: string;
+        };
+        TemplateDeliverable: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            required: boolean;
+            /** Format: uuid */
+            schedule_id?: string;
+        };
+        TemplateRoleBrief: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            role: "attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer";
+            body: string;
+        };
+        TemplateCriterion: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            guidance: string;
+            max_score: number;
+            weight: number;
+        };
+        TemplateRubric: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            criteria: components["schemas"]["TemplateCriterion"][];
+        };
+        TemplateMessage: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            subject: string;
+            body: string;
+            audience: ("all" | "attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer")[];
+            /** Format: uuid */
+            schedule_id?: string;
+        };
+        TemplateAsset: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "logo" | "icon" | "hero";
+            /** @enum {string} */
+            media_type: "image/png" | "image/jpeg";
+            /** Format: byte */
+            content: string;
+        };
+        TemplateBranding: {
+            primary: string;
+            accent: string;
+            background: string;
+            foreground: string;
+            assets: components["schemas"]["TemplateAsset"][];
+        };
+        EventDefinitions: {
+            forms: components["schemas"]["TemplateForm"][];
+            tasks: components["schemas"]["TemplateTask"][];
+            deliverables: components["schemas"]["TemplateDeliverable"][];
+            role_briefs: components["schemas"]["TemplateRoleBrief"][];
+            rubrics: components["schemas"]["TemplateRubric"][];
+            messages: components["schemas"]["TemplateMessage"][];
+            branding: components["schemas"]["TemplateBranding"];
+        };
+        ConfigurationBundle: {
+            event: components["schemas"]["EventConfiguration"];
+            definitions: components["schemas"]["EventDefinitions"];
+        };
+        TemplateInput: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            configuration: components["schemas"]["ConfigurationBundle"];
+        };
+        Template: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int64 */
+            revision: number;
+            latest_version: number;
+            published_version: number | null;
+            version: number;
+            configuration: components["schemas"]["ConfigurationBundle"];
+        };
+        TemplatePage: {
+            items: components["schemas"]["Template"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        CloneInput: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** Format: date-time */
+            live_start: string;
+            timezone: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+            version: number;
+            acknowledge_competition_restriction: boolean;
+        };
     };
     responses: {
         /**
@@ -556,6 +894,8 @@ export interface components {
         Revision: string;
         Cursor: number;
         Limit: number;
+        /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+        ProfileRevision: string;
     };
     requestBodies: never;
     headers: never;
@@ -1121,6 +1461,421 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResolvedTime"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPrivacySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacySettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setPrivacySettings: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacySettings"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacySettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOperationalProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalProfile"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    correctOperationalProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileFields"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationalProfile"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteOperationalProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemovedResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportOperationalProfiles: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfilePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTemplates: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplatePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTemplate: {
+        parameters: {
+            query?: {
+                version?: number;
+            };
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    editTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    publishTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Template"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cloneTemplate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloneInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getConfigurationSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationBundle"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveEventDefinitions: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventDefinitions"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationBundle"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cloneEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloneInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
                 };
             };
             default: components["responses"]["Error"];

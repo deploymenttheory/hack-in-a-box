@@ -23,6 +23,8 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 func Main(component string, run func(context.Context, config.Config, *slog.Logger) error) int {
@@ -80,6 +82,8 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Pool:        pool,
 		Permissions: permissions.Service{Pool: pool},
 		Events:      event.Service{Pool: pool},
+		Privacy:     privacy.Service{Pool: pool},
+		Templates:   templates.Service{Pool: pool},
 		Auth:        auth,
 		Audit:       audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{
@@ -131,7 +135,12 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		return fmt.Errorf("new: %w", err)
 	}
 	logger.Info("worker started", "jobs_enabled", true)
-	worker.Maintenance = func(ctx context.Context) error { return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists) }
+	worker.Maintenance = func(ctx context.Context) error {
+		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
+			return fmt.Errorf("retain private records: %w", err)
+		}
+		return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists)
+	}
 	if err := worker.Run(ctx, cfg.ShutdownTimeout); err != nil {
 		return fmt.Errorf("run worker: %w", err)
 	}

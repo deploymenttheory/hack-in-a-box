@@ -342,7 +342,7 @@ func (q *Queries) ScheduleItems(ctx context.Context, eventID uuid.UUID) ([]Sched
 }
 
 const setEventStage = `-- name: SetEventStage :one
-UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2='completed' THEN now() WHEN $2='assessment' THEN NULL ELSE completed_at END,
+UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2 IN ('completed','cancelled') THEN now() WHEN $2='assessment' THEN NULL ELSE completed_at END,
 revision=revision+1,updated_at=now() WHERE id=$1 RETURNING id, name, revision, created_at, updated_at, owner_id, writes_allowed, slug, configuration, stage, published_at, team_frozen_at, completed_at
 `
 
