@@ -11,6 +11,11 @@ The approved follow-on batch is #34, #33, #39, #45, #40, #35, #37, #41, #36 and 
 | #40 | Event directory/switching, draft setup, local-time previews, readiness blockers, stage decisions and protected unsaved edits | Desktop/mobile creation and two-event navigation, invalid fields, blocked transitions, draft cleanup and navigation protection; visually checked at 1440px and 390px. |
 | #35 | Event staff roles, lasting eligibility explanations, owner transfer, revocation and assignment history | Browser grant/acknowledgment and last-owner conflict checks; real HTTP ownership/revocation checks. Idempotent role edits do not fabricate new assignment history. |
 
+| #37 | Field-specific operational profile DTOs, audited logistics exports, self-correction and configurable retention/deletion | Role-by-role HTTP serialization, export/cross-event denial, revision conflicts, retention and safe aggregates. |
+| #41 | Immutable template versions/publications and independent event configuration snapshots | Reference remapping, DST rebasing, clone retries/rollback, no private/live records and source-edit independence. |
+| #36 | Separate GitHub OAuth identity verification with PKCE, encrypted tokens and invitation review | Deterministic OAuth/API fixture, forged/replayed callbacks, renamed logins, duplicate IDs, unlink/relink, HTTP/desktop/mobile checks. |
+| #38 | Shared two-event authorization fixtures covering HTTP, files, exports, queued jobs and per-emission policy | Revoked/overlapping grants, active/waitlisted eligibility conflicts, transaction races and a deliberate event-filter mutation that fails the suite. |
+
 ## Domain boundaries
 
 Registration writes `competition_claims` through `permissions.SetRegistrationState` inside its own transaction. The function shares the event row lock with role changes. #51 supplies real confirmed-attendee facts; no API in this batch grants a competitor place.
@@ -63,3 +68,36 @@ included here; the template editor and domain execution remain in their own issu
 
 Verification: full Go suite with `HACKBOX_INTEGRATION=1` and `-race`, HTTP response
 schema validation, zero Go lint findings, frontend build/unit/browser checks.
+
+
+## GitHub identity and authorization regression checks (#36, #38)
+
+See [GitHub setup](github-identity.md) for provider configuration and the separate
+repository-invitation contract. The account screen explains verification and
+unlink/relink impact; it does not treat a typed login as verified ownership.
+
+The shared `testdb.NewAuthorization` fixture supplies two events and an overlapping
+person. File tests prove that a grant in one event does not authorize another
+event's bytes and that revocation is checked on the next download. Background
+fixtures queue approved work, revoke the judge grant or resource assignment, and
+verify that delivery does not occur. The stream test is a **per-emission policy
+contract**, not an SSE implementation: #85 still owns the live transport and must
+call the same current policy before reading/serializing every emission.
+
+The permission suite covers received, waitlisted and confirmed registrations
+against organiser/advance-access grants, persistent exclusions after revocation
+without opening a brief, eligibility in a different event, and concurrent
+registration/grant attempts. Profile HTTP tests use a logistics person with
+legitimate grants in both events and a profile present in only one event.
+
+Mutation verification changed only the operational-profile query's event filter
+from `p.event_id=$1` to a non-filtering UUID check, regenerated sqlc, and ran
+`TestPrivacyAndTemplateHTTPContracts`. The suite failed with
+`event-scope predicate missing: 200` instead of the required 404. The original SQL
+and generated binding were restored byte-for-byte, and the unmodified suite was
+rerun successfully. The probe was temporary and is not part of the implementation.
+
+Final checks: real PostgreSQL race suite; OpenAPI request/response validation;
+Go lint and module advisory scan; frontend lint/build, five component tests and
+26 desktop/mobile browser tests; Docker Compose migration, startup, non-root
+runtime and restart persistence. Visual screenshots use synthetic identities only.

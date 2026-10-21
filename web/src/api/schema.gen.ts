@@ -479,6 +479,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGitHubLink"];
+        put?: never;
+        post?: never;
+        delete: operations["unlinkGitHub"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/github/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["authorizeGitHub"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -866,6 +898,31 @@ export interface components {
             dst_choice: "" | "earlier" | "later";
             version: number;
             acknowledge_competition_restriction: boolean;
+        };
+        GitHubAccount: {
+            /** Format: int64 */
+            github_id: number;
+            login: string;
+            /** Format: date-time */
+            verified_at: string;
+        };
+        GitHubLink: {
+            enabled: boolean;
+            /** Format: int64 */
+            revision: number;
+            account: {
+                /** Format: int64 */
+                github_id: number;
+                login: string;
+                /** Format: date-time */
+                verified_at: string;
+            } | null;
+            /** Format: int64 */
+            invitations_needing_review: number;
+        };
+        GitHubAuthorization: {
+            /** Format: uri */
+            url: string;
         };
     };
     responses: {
@@ -1876,6 +1933,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getGitHubLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubLink"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    unlinkGitHub: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    acknowledge_invitation_impact: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubLink"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    authorizeGitHub: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    acknowledge_invitation_impact: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubAuthorization"];
                 };
             };
             default: components["responses"]["Error"];

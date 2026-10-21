@@ -47,35 +47,37 @@ func TestGrantHistoryEligibilityAndConcurrentRegistration(t *testing.T) {
 		)
 		return err
 	}
-	for _, role := range []string{"organiser", "early_brief_access"} {
-		p := testdb.Person(t, pool)
-		if err := registration(p.ID, event, "waitlisted"); err != nil {
-			t.Fatal(err)
-		}
-		if err := change(p.ID, role, true); !errors.Is(err, permissions.ErrWithdrawal) {
-			t.Fatalf("waitlisted grant: %v", err)
-		}
-		if err := registration(p.ID, event, "withdrawn"); err != nil {
-			t.Fatal(err)
-		}
-		if err := change(p.ID, role, true); err != nil {
-			t.Fatal(err)
-		}
-		if err := change(p.ID, role, false); err != nil {
-			t.Fatal(err)
-		}
-		if err := registration(
-			p.ID,
-			event,
-			"received",
-		); !errors.Is(
-			err,
-			permissions.ErrIneligible,
-		) {
-			t.Fatalf("revocation restored eligibility: %v", err)
-		}
-		if err := registration(p.ID, other, "confirmed"); err != nil {
-			t.Fatalf("exclusion crossed events: %v", err)
+	for _, state := range []string{"received", "waitlisted", "confirmed"} {
+		for _, role := range []string{"organiser", "early_brief_access"} {
+			p := testdb.Person(t, pool)
+			if err := registration(p.ID, event, state); err != nil {
+				t.Fatal(err)
+			}
+			if err := change(p.ID, role, true); !errors.Is(err, permissions.ErrWithdrawal) {
+				t.Fatalf("waitlisted grant: %v", err)
+			}
+			if err := registration(p.ID, event, "withdrawn"); err != nil {
+				t.Fatal(err)
+			}
+			if err := change(p.ID, role, true); err != nil {
+				t.Fatal(err)
+			}
+			if err := change(p.ID, role, false); err != nil {
+				t.Fatal(err)
+			}
+			if err := registration(
+				p.ID,
+				event,
+				"received",
+			); !errors.Is(
+				err,
+				permissions.ErrIneligible,
+			) {
+				t.Fatalf("revocation restored eligibility: %v", err)
+			}
+			if err := registration(p.ID, other, "confirmed"); err != nil {
+				t.Fatalf("exclusion crossed events: %v", err)
+			}
 		}
 	}
 	if _, err := pool.Exec(ctx, "DELETE FROM competition_exclusions"); err == nil {

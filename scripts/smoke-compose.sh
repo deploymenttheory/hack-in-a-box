@@ -8,6 +8,7 @@ export HACKBOX_ENV=development
 export HACKBOX_PORT=18080
 export HACKBOX_PUBLIC_ORIGIN=http://127.0.0.1:18080
 export HACKBOX_OIDC_ISSUER= HACKBOX_OIDC_CLIENT_ID= HACKBOX_OIDC_CLIENT_SECRET= HACKBOX_BOOTSTRAP_SUBJECT=
+export HACKBOX_GITHUB_CLIENT_ID= HACKBOX_GITHUB_CLIENT_SECRET= HACKBOX_GITHUB_TOKEN_KEY=
 export HACKBOX_METRICS_TOKEN=synthetic-metrics-token-32-characters
 compose() { docker compose --env-file /dev/null "$@"; }
 cleanup() { compose down --volumes --remove-orphans >/dev/null 2>&1; }

@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
@@ -76,9 +77,22 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("new: %w", err)
 	}
+	github, err := githubidentity.New(
+		pool,
+		githubidentity.Settings{
+			ClientID:     cfg.GitHubClientID,
+			ClientSecret: cfg.GitHubClientSecret,
+			TokenKey:     cfg.GitHubTokenKey,
+			Origin:       cfg.PublicOrigin,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("configure GitHub identity: %w", err)
+	}
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
+		GitHub:      github,
 		Pool:        pool,
 		Permissions: permissions.Service{Pool: pool},
 		Events:      event.Service{Pool: pool},
@@ -136,6 +150,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	}
 	logger.Info("worker started", "jobs_enabled", true)
 	worker.Maintenance = func(ctx context.Context) error {
+		if err := dbgen.New(pool).ExpireGitHubLinkAttempts(ctx); err != nil {
+			return fmt.Errorf("expire GitHub verification attempts: %w", err)
+		}
 		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain private records: %w", err)
 		}
