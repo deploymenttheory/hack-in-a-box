@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-func main() {
+func main() { os.Exit(run()) }
+
+func run() int {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 	request, err := http.NewRequestWithContext(
@@ -18,14 +20,15 @@ func main() {
 		nil,
 	)
 	if err != nil {
-		os.Exit(1)
+		return 1
 	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		os.Exit(1)
+		return 1
 	}
 	_ = response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
