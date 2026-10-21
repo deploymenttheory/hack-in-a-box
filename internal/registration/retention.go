@@ -34,6 +34,9 @@ func (s Service) Retain(ctx context.Context) error {
 				row.CompletedAt.Time.AddDate(0, 0, int(policy.RetentionDays)).After(now) {
 				continue
 			}
+			if err := q.ForgetRegistrationInput(ctx, id); err != nil {
+				return fmt.Errorf("forget retained registration inputs: %w", err)
+			}
 			if _, err := q.DeleteFormResponses(ctx, id); err != nil {
 				return fmt.Errorf("delete expired form responses: %w", err)
 			}

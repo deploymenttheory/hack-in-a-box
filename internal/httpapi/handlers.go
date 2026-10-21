@@ -265,6 +265,12 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	status, code, message := 500, "internal_error", "An internal error occurred."
 	switch {
+	case errors.Is(err, registration.ErrClosed):
+		status, code, message = 409, "registration_closed", registration.ErrClosed.Error()
+	case errors.Is(err, registration.ErrDuplicate):
+		status, code, message = 409, "registration_exists", registration.ErrDuplicate.Error()
+	case errors.Is(err, registration.ErrCapacity):
+		status, code, message = 409, "capacity_unavailable", registration.ErrCapacity.Error()
 	case errors.Is(err, permissions.ErrWithdrawal):
 		status, code, message = 409, "withdrawal_required", permissions.ErrWithdrawal.Error()
 	case errors.Is(err, permissions.ErrIneligible):

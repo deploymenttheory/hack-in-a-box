@@ -323,6 +323,25 @@ func (s Service) Update(
 		if issues := Validate(input, row.Stage != "draft"); len(issues) > 0 {
 			return &Blocked{Issues: issues}
 		}
+		confirmed, err := q.ConfirmedAttendees(ctx, id)
+		if err != nil {
+			return fmt.Errorf("read confirmed capacity: %w", err)
+		}
+		reserved, err := q.ReservedAttendees(ctx, id)
+		if err != nil {
+			return fmt.Errorf("read reserved capacity: %w", err)
+		}
+		if int64(input.Configuration.Capacity) < confirmed+reserved {
+			return &Blocked{
+				Issues: []Issue{
+					{
+						Field:   "capacity",
+						Code:    "occupied_places",
+						Message: "Capacity cannot be reduced below confirmed places and reserved offers. Resolve withdrawals or offers before reducing it.",
+					},
+				},
+			}
+		}
 		previous, err := decode(row)
 		if err != nil {
 			return fmt.Errorf("decode previous configuration: %w", err)
