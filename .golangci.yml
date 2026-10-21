@@ -18,14 +18,8 @@ issues:
   # Don’t dedupe by line; every instance matters.
   uniq-by-line: false
 
-  # Only fail on new issues introduced by new PR's.
-  new: true
-
-  # Define the “base” for “new” issues as the merge-base against main.
-  new-from-merge-base: main
-
-  # Also catch anything in new or modified files, even outside the diff hunk.
-  whole-files: true
+  # Check the complete application, including on detached CI checkouts.
+  new: false
 
   # Keep CI read-only; apply formatting locally with golangci-lint fmt.
   fix: false

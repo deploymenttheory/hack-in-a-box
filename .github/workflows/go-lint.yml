@@ -42,7 +42,7 @@ jobs:
         with:
           version: v2.14.0
           args: --timeout=30m --verbose --config=./.golangci.yml --issues-exit-code=1
-          only-new-issues: true
+          only-new-issues: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
           skip-cache: false              # restore and save cache
           skip-save-cache: false         # allow saving any new cache
