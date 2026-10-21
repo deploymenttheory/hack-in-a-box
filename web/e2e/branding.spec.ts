@@ -34,3 +34,18 @@ test('unsafe image selection is explained without sending a save', async ({ page
   await page.getByLabel('Logo image').setInputFiles({ name: 'unsafe.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') })
   await expect(page.getByRole('alert')).toContainText('PNG or JPEG')
 })
+
+test('a stale branding save retains the draft and explains the conflict', async ({ page }, info) => {
+  await mockWorkspace(page)
+  await page.route(`**/events/${firstID}/branding`, async route => {
+    if (route.request().method() !== 'PUT') return route.fallback()
+    return route.fulfill({ status: 409, json: { error: { code: 'revision_conflict', message: 'Changed', request_id: 'synthetic' } } })
+  })
+  await page.goto(`/events/${firstID}`)
+  await page.getByRole('button', { name: 'Branding', exact: true }).click()
+  await page.getByLabel('Primary colour').fill('#233c78')
+  await page.getByRole('button', { name: 'Save branding' }).click()
+  await expect(page.getByText('This has changed. Refresh and try again.')).toBeVisible()
+  await expect(page.getByLabel('Primary colour')).toHaveValue('#233c78')
+  await page.screenshot({ path: info.outputPath('branding-conflict.png'), fullPage: true })
+})

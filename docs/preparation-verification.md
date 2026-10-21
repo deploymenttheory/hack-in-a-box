@@ -43,3 +43,17 @@ Verification: both starters pass full domain validation; spring/autumn DST clone
 preserve gate order. HTTP tests validate starter payloads and deny unauthorised
 access. Desktop/mobile browser tests create, edit, compare, publish and clone a
 template, preserving the earlier version and an existing event.
+
+## Setup isolation (#46)
+
+Concurrent retries of one clone create exactly one event/audit creation. Competing
+branding and event-configuration saves at the same revision produce one success
+and one conflict, preserve reusable definitions, and leave the source template
+unchanged. Browser conflict checks retain the user's unsaved branding values.
+
+The combined PostgreSQL race run includes the existing lifecycle suite: confirmed
+attendance, explicit preparation, publication readiness, cutoff/outcome gates,
+reasoned postponement and invalidation of obsolete schedule approvals. Those tests
+exercise domain gate contracts; registration/team/publication execution receives
+its own integrated coverage as those modules arrive. All 34 desktop/mobile browser
+scenarios passed. Conflict screenshots were visually checked at both widths.
