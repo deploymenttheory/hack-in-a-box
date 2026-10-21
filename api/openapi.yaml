@@ -752,6 +752,8 @@ components:
         - blockers
         - can_edit
         - can_manage_owner
+        - can_read_staff
+        - can_transition
       properties:
         id:
           type: string
@@ -798,6 +800,10 @@ components:
         can_edit:
           type: boolean
         can_manage_owner:
+          type: boolean
+        can_read_staff:
+          type: boolean
+        can_transition:
           type: boolean
     EventPage:
       type: object

@@ -126,6 +126,23 @@ func (q *Queries) ExcludeCompetition(ctx context.Context, arg ExcludeCompetition
 	return err
 }
 
+const membershipState = `-- name: MembershipState :one
+SELECT active FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND role=$3
+`
+
+type MembershipStateParams struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+	Role     string
+}
+
+func (q *Queries) MembershipState(ctx context.Context, arg MembershipStateParams) (bool, error) {
+	row := q.db.QueryRow(ctx, membershipState, arg.EventID, arg.PersonID, arg.Role)
+	var active bool
+	err := row.Scan(&active)
+	return active, err
+}
+
 const memberships = `-- name: Memberships :many
 SELECT m.event_id, m.person_id, m.role, m.active, m.changed_at, p.display_name FROM event_memberships m JOIN people p ON p.id=m.person_id
 WHERE m.event_id=$1 ORDER BY p.display_name,m.person_id,m.role

@@ -1,19 +1,16 @@
 import { test, expect } from '@playwright/test'
-const person = { id: '1ca7d59b-3160-48b7-99b7-aad2cb648d64', display_name: 'Synthetic Person', platform_admin: false }
+import { mockWorkspace } from './fixtures'
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/session', (route) => route.fulfill({ json: { person, csrf_token: 'synthetic-csrf-token-32-characters' } }))
+  await mockWorkspace(page)
 })
 test('navigation, forms and event deep links work on both screen sizes', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Ready when you are.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Your events' })).toBeVisible()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
-  await page.getByRole('button', { name: 'Open event' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Enter the event ID supplied by your organiser.')
-  await page.getByLabel('Event ID').fill('8b4917c1-f27a-40c8-838b-a7fd047c4313')
-  await page.getByRole('button', { name: 'Open event' }).click()
+  await page.getByRole('link', { name: /North Star Hack/ }).click()
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'A shared place to build.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'North Star Hack' })).toBeVisible()
   await page.getByRole('button', { name: 'Synthetic Person' }).click()
   await expect(page.getByRole('menuitem', { name: 'Sign out' })).toBeVisible()
   expect(await page.locator('[data-theme-portals] [role="menu"]').count()).toBe(1)
@@ -29,8 +26,8 @@ test('unknown pages and failed API calls have safe states', async ({ page }) => 
 })
 test('expired session discards the private workspace', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Ready when you are.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Your events' })).toBeVisible()
   await page.evaluate(() => window.dispatchEvent(new Event('session-expired')))
   await expect(page.getByRole('link', { name: /Sign in with your organisation/ })).toBeVisible()
-  await expect(page.getByLabel('Event ID')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Your events' })).toHaveCount(0)
 })

@@ -9,6 +9,9 @@ SELECT role FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND active
 INSERT INTO event_memberships(event_id,person_id,role,active) VALUES ($1,$2,$3,$4)
 ON CONFLICT(event_id,person_id,role) DO UPDATE SET active=EXCLUDED.active,changed_at=now();
 
+-- name: MembershipState :one
+SELECT active FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND role=$3;
+
 -- name: ActiveOrganisers :one
 SELECT count(*) FROM event_memberships m JOIN people p ON p.id=m.person_id
 WHERE m.event_id=$1 AND m.role='organiser' AND m.active AND p.active;

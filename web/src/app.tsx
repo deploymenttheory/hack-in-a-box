@@ -1,15 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { createRootRoute, createRoute, createRouter, Link, Outlet, RouterProvider, useNavigate, useRouterState } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, Link, Outlet, RouterProvider, useRouterState } from '@tanstack/react-router'
 import { Menu } from '@base-ui/react/menu'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { api, APIError, getSession, type Session } from './api/client'
 import { Button } from './components/ui/button'
 import { Theme, useThemePortal } from './components/theme'
-import { Failure, FieldError, Loading } from './components/states'
+import { Failure, Loading } from './components/states'
 import { clearPrivateDrafts, loginURL } from './auth'
+import { IdentityContext, useIdentity } from './session'
+import { EventDirectory, EventWorkspace, NewEvent } from './events'
 
 export const sessionCache = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
@@ -39,7 +38,7 @@ function Account({ session }: { session: Session }) {
       <Menu.Trigger render={<Button variant="outline" />} disabled={pending}>{session.person.display_name || 'Your account'}</Menu.Trigger>
       <Menu.Portal container={portal}>
         <Menu.Positioner sideOffset={8} className="z-50">
-          <Menu.Popup className="menu"><Menu.Item className="menu-item" onClick={() => void logout()}>Sign out</Menu.Item></Menu.Popup>
+          <Menu.Popup className="menu"><Menu.Item className="menu-item" render={<Link to="/account" />}>Account settings</Menu.Item><Menu.Item className="menu-item" onClick={() => void logout()}>Sign out</Menu.Item></Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>
@@ -66,8 +65,8 @@ function Shell() {
       {session.data && !session.error ? <Account session={session.data} /> : <a className="sign-in" href={loginURL()}>Sign in</a>}
     </header>
     <main id="main" tabIndex={-1}>
-      {!/^\/$|^\/events\/[a-f0-9-]+$/i.test(pathname) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
-        signedOut ? <Welcome expired={expired} /> : session.data ? <PrivateCache key={session.data.person.id}><Outlet /></PrivateCache> : <Welcome />}
+      {!/^\/$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
+        signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={session.data.person.id}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
     </main>
     <footer>Make something worth sharing.</footer>
   </Theme>
@@ -77,21 +76,16 @@ function Welcome({ expired = false }: { expired?: boolean }) {
   return <section className="welcome"><p className="eyebrow">Build together</p><h1>{expired ? 'Sign in to continue.' : <>Big ideas.<br />A place to begin.</>}</h1><p>{expired ? 'Your session has expired. Sign in again to return to this page. Safe event setup drafts remain available to the same account.' : 'Bring your curiosity, meet your team, and turn a shared challenge into something real.'}</p><a className="primary-link" href={loginURL()}>Sign in with your organisation <span aria-hidden="true">↗</span></a><p className="muted">Sign in to access your events and team workspace.</p></section>
 }
 
-const eventSchema = z.object({ event: z.uuid('Enter the event ID supplied by your organiser.') })
-function Workspace() {
-  const navigate = useNavigate()
-  const form = useForm<z.infer<typeof eventSchema>>({ resolver: zodResolver(eventSchema) })
-  return <section className="welcome"><p className="eyebrow">Your workspace</p><h1>Ready when you are.</h1><p>Open the event shared by your organiser to find your workspace.</p>
-    <form className="event-form" onSubmit={form.handleSubmit(({ event }) => navigate({ to: '/events/$eventId', params: { eventId: event } }))}>
-      <label htmlFor="event">Event ID</label><input id="event" {...form.register('event')} aria-invalid={!!form.formState.errors.event} aria-describedby="event-error" autoComplete="off" />
-      <FieldError message={form.formState.errors.event?.message} /><Button size="lg" type="submit" disabled={form.formState.isSubmitting}>Open event</Button>
-    </form></section>
+function AccountPage() {
+  const identity = useIdentity()
+  return <section className="workspace"><Link to="/">← Your events</Link><div className="page-heading"><div><p className="eyebrow">Your identity</p><h1>Your account</h1><p>{identity.person.display_name}</p></div></div><section className="panel"><h2>Organisation account</h2><label htmlFor="account-id">Your account ID</label><input id="account-id" readOnly value={identity.person.id} /><p>Share this ID with an organiser who needs to assign you an event role.</p></section></section>
 }
-function EventWorkspace() { return <section className="welcome"><p className="eyebrow">Event workspace</p><h1>A shared place to build.</h1><p>Your event details will appear here when they are available.</p><Link to="/">Back to your workspace</Link></section> }
 function NotFound() { return <section className="state"><h1>Page not found</h1><p>This link does not lead to a workspace.</p><Link to="/">Return home</Link></section> }
 const root = createRootRoute({ component: Shell, notFoundComponent: NotFound, errorComponent: ({ error, reset }) => <Failure error={error} retry={reset} /> })
-const home = createRoute({ getParentRoute: () => root, path: '/', component: Workspace })
+const home = createRoute({ getParentRoute: () => root, path: '/', component: EventDirectory })
 const event = createRoute({ getParentRoute: () => root, path: '/events/$eventId', component: EventWorkspace })
-export const router = createRouter({ routeTree: root.addChildren([home, event]), defaultPendingComponent: Loading })
+const newEvent = createRoute({ getParentRoute: () => root, path: '/events/new', component: NewEvent })
+const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
+export const router = createRouter({ routeTree: root.addChildren([home, newEvent, event, account]), defaultPendingComponent: Loading })
 declare module '@tanstack/react-router' { interface Register { router: typeof router } }
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

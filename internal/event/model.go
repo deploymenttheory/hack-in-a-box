@@ -80,6 +80,8 @@ type View struct {
 	Blockers             []Issue       `json:"blockers"`
 	CanEdit              bool          `json:"can_edit"`
 	CanManageOwner       bool          `json:"can_manage_owner"`
+	CanReadStaff         bool          `json:"can_read_staff"`
+	CanTransition        bool          `json:"can_transition"`
 }
 
 func DefaultConfiguration() Configuration {

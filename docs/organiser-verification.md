@@ -8,6 +8,8 @@ The approved follow-on batch is #34, #33, #39, #45, #40, #35, #37, #41, #36 and 
 | #33 | Validated local login return paths, expired-session feedback, account-scoped safe drafts and logout cleanup | Signed OIDC callback returns to its original page; desktop/mobile return-path, logout and account-switch tests. |
 | #39 | Event directory APIs, configuration, optimistic revisions, explicit lifecycle transitions and transactional domain gate contracts | Real PostgreSQL checks for confirmed-only thresholds, explicit go action, withdrawal continuity, post-publication attendance exceptions, cutoff/outcome gates, reopening reasons and archive write/job protection; HTTP schema validation. |
 | #45 | Event-local calendar arithmetic, business calendars, explicit DST resolution, schedule preview/approval and obsolete-work cancellation | Spring/autumn seven-calendar-day tests (167/169 elapsed hours), gap/fold handling, excluded dates, stale edits, cancelled approvals and preservation of executed actions. |
+| #40 | Event directory/switching, draft setup, local-time previews, readiness blockers, stage decisions and protected unsaved edits | Desktop/mobile creation and two-event navigation, invalid fields, blocked transitions, draft cleanup and navigation protection; visually checked at 1440px and 390px. |
+| #35 | Event staff roles, lasting eligibility explanations, owner transfer, revocation and assignment history | Browser grant/acknowledgment and last-owner conflict checks; real HTTP ownership/revocation checks. Idempotent role edits do not fabricate new assignment history. |
 
 ## Domain boundaries
 

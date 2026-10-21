@@ -484,6 +484,8 @@ export interface components {
             blockers: components["schemas"]["Blocker"][];
             can_edit: boolean;
             can_manage_owner: boolean;
+            can_read_staff: boolean;
+            can_transition: boolean;
         };
         EventPage: {
             items: components["schemas"]["Event"][];

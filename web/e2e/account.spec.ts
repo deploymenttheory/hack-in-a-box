@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test'
+import { mockWorkspace } from './fixtures'
+test.beforeEach(async ({ page }) => { await mockWorkspace(page) })
 const person = { id: '1ca7d59b-3160-48b7-99b7-aad2cb648d64', display_name: 'Synthetic Person', platform_admin: false }
 const eventPath = '/events/8b4917c1-f27a-40c8-838b-a7fd047c4313'
 test('sign-in and expired sessions return to the current event', async ({ page }) => {
