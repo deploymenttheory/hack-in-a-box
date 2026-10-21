@@ -127,6 +127,23 @@ type File struct {
 	CreatedAt      time.Time
 }
 
+type FormResponse struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+	FormID   uuid.UUID
+	Revision int64
+}
+
+type FormResponseVersion struct {
+	EventID     uuid.UUID
+	PersonID    uuid.UUID
+	FormID      uuid.UUID
+	Revision    int64
+	FormVersion int32
+	Answers     []byte
+	CreatedAt   time.Time
+}
+
 type GithubAccount struct {
 	ID             uuid.UUID
 	PersonID       uuid.UUID
@@ -238,6 +255,28 @@ type ReconciliationRun struct {
 	RecoveredLeases int32
 	Enqueued        int32
 	OccurredAt      time.Time
+}
+
+type RegistrationForm struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	Revision         int64
+	LatestVersion    int32
+	PublishedVersion pgtype.Int4
+}
+
+type RegistrationFormPublication struct {
+	EventID uuid.UUID
+	FormID  uuid.UUID
+	Version int32
+}
+
+type RegistrationFormVersion struct {
+	EventID    uuid.UUID
+	FormID     uuid.UUID
+	Version    int32
+	Definition []byte
+	CreatedAt  time.Time
 }
 
 type ResourceAssignment struct {

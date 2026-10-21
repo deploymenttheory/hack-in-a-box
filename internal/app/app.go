@@ -25,6 +25,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
@@ -92,14 +93,15 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		GitHub:      github,
-		Pool:        pool,
-		Permissions: permissions.Service{Pool: pool},
-		Events:      event.Service{Pool: pool},
-		Privacy:     privacy.Service{Pool: pool},
-		Templates:   templates.Service{Pool: pool},
-		Auth:        auth,
-		Audit:       audit.Service{Queries: queries, Policy: policy},
+		GitHub:       github,
+		Pool:         pool,
+		Permissions:  permissions.Service{Pool: pool},
+		Events:       event.Service{Pool: pool},
+		Privacy:      privacy.Service{Pool: pool},
+		Templates:    templates.Service{Pool: pool},
+		Registration: registration.Service{Pool: pool},
+		Auth:         auth,
+		Audit:        audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{
 			Pool:       pool,
 			Storage:    storage,
@@ -152,6 +154,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	worker.Maintenance = func(ctx context.Context) error {
 		if err := dbgen.New(pool).ExpireGitHubLinkAttempts(ctx); err != nil {
 			return fmt.Errorf("expire GitHub verification attempts: %w", err)
+		}
+		if err := (registration.Service{Pool: pool}).Retain(ctx); err != nil {
+			return fmt.Errorf("retain registration responses: %w", err)
 		}
 		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain private records: %w", err)

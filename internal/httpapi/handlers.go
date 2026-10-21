@@ -19,24 +19,27 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
+	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
-	GitHub      *githubidentity.Service
-	Pool        *pgxpool.Pool
-	Auth        *identity.Auth
-	Audit       audit.Service
-	Files       files.Service
-	Permissions permissions.Service
-	Events      event.Service
-	Privacy     privacy.Service
-	Templates   templates.Service
+	GitHub       *githubidentity.Service
+	Pool         *pgxpool.Pool
+	Auth         *identity.Auth
+	Audit        audit.Service
+	Files        files.Service
+	Permissions  permissions.Service
+	Events       event.Service
+	Privacy      privacy.Service
+	Templates    templates.Service
+	Registration registration.Service
 }
 type handlers struct{ Dependencies }
 
@@ -232,6 +235,20 @@ func (h handlers) DownloadFile(
 }
 
 func respondError(w http.ResponseWriter, r *http.Request, err error) {
+	var formError *forms.Invalid
+	if errors.As(err, &formError) {
+		body := errorBody(r, "form_invalid", "Resolve the form fields before continuing.")
+		items := make([]contract.Blocker, 0, len(formError.Issues))
+		for _, item := range formError.Issues {
+			items = append(
+				items,
+				contract.Blocker{Field: item.Field, Code: item.Code, Message: item.Message},
+			)
+		}
+		body.Error.Blockers = &items
+		writeJSON(w, 400, body)
+		return
+	}
 	var blocked *event.Blocked
 	if errors.As(err, &blocked) {
 		body := errorBody(r, "event_blocked", "Resolve the event blockers before continuing.")

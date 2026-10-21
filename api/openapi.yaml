@@ -527,6 +527,114 @@ paths:
                 type: string
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registration/forms:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: listRegistrationForms
+      responses:
+        '200':
+          description: Editable form drafts and their publication versions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistrationForm'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registration/forms/preview:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: previewRegistrationForm
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [definition, answers]
+              properties:
+                definition:
+                  $ref: '#/components/schemas/TemplateForm'
+                answers:
+                  $ref: '#/components/schemas/FormAnswers'
+      responses:
+        '200':
+          description: Authoritative visibility and validation; preview answers are not persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormCheck'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registration/forms/{form_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: form_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      operationId: saveRegistrationForm
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateForm'
+      responses:
+        '200':
+          description: New immutable form draft version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationForm'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registration/forms/{form_id}/publish:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: form_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: publishRegistrationForm
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [version, acknowledge_response_versions]
+              properties:
+                version: {type: integer, minimum: 1, maximum: 1000}
+                acknowledge_response_versions: {type: boolean}
+      responses:
+        '200':
+          description: Explicitly published form version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationForm'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -1485,6 +1593,34 @@ components:
         removed:
           type: boolean
 
+    RegistrationForm:
+      type: object
+      additionalProperties: false
+      required: [definition, revision, version, published_version]
+      properties:
+        definition:
+          $ref: '#/components/schemas/TemplateForm'
+        revision: {type: integer, format: int64}
+        version: {type: integer}
+        published_version: {type: integer, nullable: true}
+    FormAnswers:
+      type: object
+      maxProperties: 100
+      additionalProperties: {}
+    FormCheck:
+      type: object
+      additionalProperties: false
+      required: [answers, visible, issues]
+      properties:
+        answers:
+          $ref: '#/components/schemas/FormAnswers'
+        visible:
+          type: array
+          items: {type: string, format: uuid}
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Blocker'
     TemplateCondition:
       type: object
       additionalProperties: false
@@ -1512,6 +1648,9 @@ components:
         id:
           type: string
           format: uuid
+        section:
+          type: string
+          maxLength: 160
         label:
           type: string
           minLength: 1
