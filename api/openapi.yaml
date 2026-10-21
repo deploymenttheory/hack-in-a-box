@@ -187,6 +187,232 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/RevisionResult' }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events:
+    get:
+      operationId: listEvents
+      parameters:
+        - name: after
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventPage'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: createEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+  /api/v1/events/{event_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getEvent
+      parameters: []
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+  /api/v1/events/{event_id}/transition:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: transitionEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - stage
+                - reason
+                - attendance_exception
+              properties:
+                stage:
+                  type: string
+                  enum:
+                    - registration
+                    - preparation
+                    - live
+                    - assessment
+                    - completed
+                    - cancelled
+                    - archived
+                reason:
+                  type: string
+                  maxLength: 2000
+                attendance_exception:
+                  type: boolean
+  /api/v1/events/{event_id}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getEventSchedule
+      parameters: []
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulePage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/schedule/{item_id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: approveEventSchedule
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulePage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/decisions:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: listEventDecisions
+      parameters: []
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDecisionPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/event-preview:
+    post:
+      operationId: previewEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventPreview'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+  /api/v1/time/resolve:
+    post:
+      operationId: resolveEventTime
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200':
+          description: Authorized event operation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolvedTime'
+        default:
+          $ref: '#/components/responses/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - wall_time
+                - timezone
+                - dst_choice
+              properties:
+                wall_time:
+                  type: string
+                timezone:
+                  type: string
+                dst_choice:
+                  type: string
+                  enum:
+                    - ''
+                    - earlier
+                    - later
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -250,6 +476,7 @@ components:
             code: { type: string }
             message: { type: string }
             request_id: { type: string }
+            blockers: { type: array, items: { $ref: '#/components/schemas/Blocker' } }
     Session:
       type: object
       required: [person, csrf_token]
@@ -331,3 +558,360 @@ components:
       required: [revision]
       properties:
         revision: { type: integer, format: int64 }
+
+    Calendar:
+      type: object
+      additionalProperties: false
+      required:
+        - working_days
+        - excluded_dates
+      properties:
+        working_days:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          minItems: 1
+          maxItems: 7
+          uniqueItems: true
+        excluded_dates:
+          type: array
+          items:
+            type: string
+            format: date
+    AgendaItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - audience
+        - anchor
+        - days
+        - minutes
+        - business_days
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 160
+        audience:
+          type: array
+          items:
+            type: string
+            enum:
+              - all
+              - attendee
+              - organiser
+              - mentor
+              - judge
+              - mc
+              - logistics
+              - photographer
+        anchor:
+          type: string
+          enum:
+            - live_start
+            - submission_cutoff
+        days:
+          type: integer
+          minimum: -3660
+          maximum: 3660
+        minutes:
+          type: integer
+          minimum: -1440
+          maximum: 1440
+        business_days:
+          type: boolean
+    EventConfiguration:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+        - timezone
+        - venue
+        - capacity
+        - minimum_attendance
+        - live_start
+        - live_end
+        - admission_cutoff
+        - team_freeze
+        - submission_cutoff
+        - dst_choice
+        - calendar
+        - schedule
+      properties:
+        description:
+          type: string
+          maxLength: 4000
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+        venue:
+          type: string
+          maxLength: 500
+        capacity:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        minimum_attendance:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        live_start:
+          type: string
+          format: date-time
+        live_end:
+          type: string
+          format: date-time
+        admission_cutoff:
+          type: string
+          format: date-time
+        team_freeze:
+          type: string
+          format: date-time
+        submission_cutoff:
+          type: string
+          format: date-time
+        dst_choice:
+          type: string
+          enum:
+            - ''
+            - earlier
+            - later
+        calendar:
+          $ref: '#/components/schemas/Calendar'
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgendaItem'
+          maxItems: 200
+    EventInput:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - slug
+        - configuration
+        - acknowledge_competition_restriction
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+        configuration:
+          $ref: '#/components/schemas/EventConfiguration'
+        reason:
+          type: string
+          maxLength: 2000
+        approve_postponement:
+          type: boolean
+        acknowledge_competition_restriction:
+          type: boolean
+    Blocker:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - code
+        - message
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+    Event:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - slug
+        - owner_id
+        - revision
+        - stage
+        - configuration
+        - challenge_publication
+        - published_at
+        - confirmed_attendees
+        - blockers
+        - can_edit
+        - can_manage_owner
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+          nullable: true
+        revision:
+          type: integer
+          format: int64
+        stage:
+          type: string
+          enum:
+            - draft
+            - registration
+            - preparation
+            - live
+            - assessment
+            - completed
+            - cancelled
+            - archived
+        configuration:
+          $ref: '#/components/schemas/EventConfiguration'
+        challenge_publication:
+          type: string
+          format: date-time
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        confirmed_attendees:
+          type: integer
+          format: int64
+        blockers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Blocker'
+        can_edit:
+          type: boolean
+        can_manage_owner:
+          type: boolean
+    EventPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - next_cursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        next_cursor:
+          type: string
+          format: uuid
+          nullable: true
+    ScheduleItem:
+      type: object
+      additionalProperties: false
+      required:
+        - item
+        - due_at
+        - status
+        - revision
+      properties:
+        item:
+          $ref: '#/components/schemas/AgendaItem'
+        due_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - draft
+            - approved
+            - executed
+            - cancelled
+            - needs_review
+        revision:
+          type: integer
+          format: int64
+    SchedulePage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleItem'
+    EventPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - blockers
+        - challenge_publication
+        - schedule
+      properties:
+        blockers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Blocker'
+        challenge_publication:
+          type: string
+          format: date-time
+          nullable: true
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleItem'
+    EventDecision:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - actor_id
+        - kind
+        - reason
+        - revision
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        actor_id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        reason:
+          type: string
+        revision:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+    EventDecisionPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDecision'
+    ResolvedTime:
+      type: object
+      additionalProperties: false
+      required:
+        - instant
+      properties:
+        instant:
+          type: string
+          format: date-time

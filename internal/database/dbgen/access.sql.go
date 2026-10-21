@@ -55,7 +55,7 @@ func (q *Queries) ActiveRoles(ctx context.Context, arg ActiveRolesParams) ([]str
 }
 
 const bumpEventRevision = `-- name: BumpEventRevision :one
-UPDATE events SET revision=revision+1,updated_at=now() WHERE id=$1 RETURNING id, name, revision, created_at, updated_at, owner_id, writes_allowed
+UPDATE events SET revision=revision+1,updated_at=now() WHERE id=$1 RETURNING id, name, revision, created_at, updated_at, owner_id, writes_allowed, slug, configuration, stage, published_at, team_frozen_at, completed_at
 `
 
 func (q *Queries) BumpEventRevision(ctx context.Context, id uuid.UUID) (Event, error) {
@@ -69,6 +69,12 @@ func (q *Queries) BumpEventRevision(ctx context.Context, id uuid.UUID) (Event, e
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.WritesAllowed,
+		&i.Slug,
+		&i.Configuration,
+		&i.Stage,
+		&i.PublishedAt,
+		&i.TeamFrozenAt,
+		&i.CompletedAt,
 	)
 	return i, err
 }

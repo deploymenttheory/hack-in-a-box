@@ -29,6 +29,11 @@ const (
 	RoleGranted             Action = "role.granted"
 	RoleRevoked             Action = "role.revoked"
 	OwnerTransferred        Action = "owner.transferred"
+	EventCreated            Action = "event.created"
+	EventUpdated            Action = "event.updated"
+	EventStageChanged       Action = "event.stage_changed"
+	EventDecision           Action = "event.decision"
+	ScheduleApproved        Action = "schedule.approved"
 )
 
 type Reason string
@@ -70,7 +75,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		TeamRebalanced,
 		ChallengeApproved,
 		ChallengePostponed,
-		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred:
+		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved:
 	default:
 		return access.ErrInvalid
 	}

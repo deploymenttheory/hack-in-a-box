@@ -53,6 +53,33 @@ type Event struct {
 	UpdatedAt     time.Time
 	OwnerID       *uuid.UUID
 	WritesAllowed bool
+	Slug          string
+	Configuration []byte
+	Stage         string
+	PublishedAt   pgtype.Timestamptz
+	TeamFrozenAt  pgtype.Timestamptz
+	CompletedAt   pgtype.Timestamptz
+}
+
+type EventDecision struct {
+	ID        uuid.UUID
+	EventID   uuid.UUID
+	ActorID   uuid.UUID
+	Kind      string
+	Reason    string
+	Revision  int64
+	CreatedAt time.Time
+}
+
+type EventGateFact struct {
+	EventID            uuid.UUID
+	AttendanceReady    bool
+	TeamsReady         bool
+	AssignedAttendees  int32
+	TotalTeams         int32
+	FrozenTeams        int32
+	SubmissionsReady   bool
+	SettledSubmissions int32
 }
 
 type EventMembership struct {
@@ -61,6 +88,16 @@ type EventMembership struct {
 	Role      string
 	Active    bool
 	ChangedAt time.Time
+}
+
+type EventNotice struct {
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	Revision         int64
+	LiveStart        time.Time
+	LiveEnd          time.Time
+	SubmissionCutoff time.Time
+	CreatedAt        time.Time
 }
 
 type File struct {
@@ -133,6 +170,18 @@ type ResourceAssignment struct {
 	EventID    uuid.UUID
 	ResourceID uuid.UUID
 	PersonID   uuid.UUID
+}
+
+type ScheduleItem struct {
+	ID          uuid.UUID
+	EventID     uuid.UUID
+	Definition  []byte
+	DueAt       time.Time
+	Approved    bool
+	Cancelled   bool
+	ExecutedAt  pgtype.Timestamptz
+	OperationID *uuid.UUID
+	Revision    int64
 }
 
 type Session struct {

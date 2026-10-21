@@ -99,6 +99,13 @@ func (s *Service) Enqueue(
 		return dbgen.Operation{}, access.ErrInvalid
 	}
 	input.DueAt = input.DueAt.UTC().Truncate(time.Microsecond)
+	event, err := dbgen.New(tx).LockEvent(ctx, input.EventID)
+	if err != nil {
+		return dbgen.Operation{}, fmt.Errorf("check operation event: %w", err)
+	}
+	if !event.WritesAllowed {
+		return dbgen.Operation{}, access.ErrForbidden
+	}
 	op, err := dbgen.New(tx).InsertOperation(ctx, input)
 	if err != nil {
 		return dbgen.Operation{}, fmt.Errorf("persist operation: %w", err)
@@ -167,6 +174,13 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 			return fmt.Errorf("lock operation: %w", err)
 		}
 		if op.State != "pending" || !op.Approved || op.Cancelled || op.DueAt.After(time.Now()) {
+			return nil
+		}
+		event, err := q.Event(ctx, op.EventID)
+		if err != nil {
+			return fmt.Errorf("recheck event operation eligibility: %w", err)
+		}
+		if !event.WritesAllowed {
 			return nil
 		}
 		handler := s.handlers[op.Kind]
