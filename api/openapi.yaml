@@ -900,6 +900,40 @@ paths:
                 $ref: '#/components/schemas/Registration'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/teams:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getTeams
+      responses:
+        '200':
+          description: Organiser allocations or the person's own teams and requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPage'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: changeTeams
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCommand'
+      responses:
+        '200':
+          description: Committed team allocation state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPage'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -1858,6 +1892,74 @@ components:
         removed:
           type: boolean
 
+    TeamPerson:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        preference: {type: string}
+    HackTeam:
+      type: object
+      required: [id, name, state, captain, published_captain, invitation_code, draft, published, frozen]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        state: {type: string, enum: [draft, published, disbanded]}
+        captain: {type: string, format: uuid, nullable: true}
+        published_captain: {type: string, format: uuid, nullable: true}
+        invitation_code: {type: string, format: uuid, nullable: true}
+        frozen: {type: boolean}
+        draft:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamPerson'
+        published:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamPerson'
+    TeamRequest:
+      type: object
+      required: [id, team_id, person, confirmed]
+      properties:
+        id: {type: string, format: uuid}
+        team_id: {type: string, format: uuid}
+        person:
+          $ref: '#/components/schemas/TeamPerson'
+        confirmed: {type: boolean}
+    TeamPage:
+      type: object
+      required: [revision, can_manage, can_create, frozen, freeze_at, teams, people, requests]
+      properties:
+        revision: {type: integer, format: int64}
+        can_manage: {type: boolean}
+        can_create: {type: boolean}
+        frozen: {type: boolean}
+        freeze_at: {type: string, format: date-time}
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/HackTeam'
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamPerson'
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamRequest'
+    TeamCommand:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: {type: string, enum: [create, join, approve, decline, move, captain, publish, freeze, disband]}
+        team_id: {type: string, format: uuid}
+        person_id: {type: string, format: uuid}
+        request_id: {type: string, format: uuid}
+        invitation_code: {type: string, format: uuid}
+        name: {type: string, maxLength: 160}
+        reason: {type: string, maxLength: 2000}
     Applicant:
       type: object
       required: [registration, display_name]

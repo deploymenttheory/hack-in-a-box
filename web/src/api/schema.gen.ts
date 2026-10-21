@@ -648,6 +648,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getTeams"];
+        put?: never;
+        post: operations["changeTeams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -1068,6 +1086,62 @@ export interface components {
         };
         RemovedResult: {
             removed: boolean;
+        };
+        TeamPerson: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            preference?: string;
+        };
+        HackTeam: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            state: "draft" | "published" | "disbanded";
+            /** Format: uuid */
+            captain: string | null;
+            /** Format: uuid */
+            published_captain: string | null;
+            /** Format: uuid */
+            invitation_code: string | null;
+            frozen: boolean;
+            draft: components["schemas"]["TeamPerson"][];
+            published: components["schemas"]["TeamPerson"][];
+        };
+        TeamRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            team_id: string;
+            person: components["schemas"]["TeamPerson"];
+            confirmed: boolean;
+        };
+        TeamPage: {
+            /** Format: int64 */
+            revision: number;
+            can_manage: boolean;
+            can_create: boolean;
+            frozen: boolean;
+            /** Format: date-time */
+            freeze_at: string;
+            teams: components["schemas"]["HackTeam"][];
+            people: components["schemas"]["TeamPerson"][];
+            requests: components["schemas"]["TeamRequest"][];
+        };
+        TeamCommand: {
+            /** @enum {string} */
+            action: "create" | "join" | "approve" | "decline" | "move" | "captain" | "publish" | "freeze" | "disband";
+            /** Format: uuid */
+            team_id?: string;
+            /** Format: uuid */
+            person_id?: string;
+            /** Format: uuid */
+            request_id?: string;
+            /** Format: uuid */
+            invitation_code?: string;
+            name?: string;
+            reason?: string;
         };
         Applicant: {
             registration: components["schemas"]["Registration"];
@@ -2630,6 +2704,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Registration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser allocations or the person's own teams and requests. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeTeams: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed team allocation state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamPage"];
                 };
             };
             default: components["responses"]["Error"];

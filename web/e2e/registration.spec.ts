@@ -18,7 +18,7 @@ test('attendee discovery and retry preserve one application identity', async ({ 
   await page.getByLabel('What would you like to learn? (required)').fill('Collaboration')
   await page.getByLabel('Team preference', { exact: true }).selectOption('captain')
   await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('alert')).toBeVisible()
-  await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('status')).toHaveText('Your competitor place is confirmed.')
+  await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('region', { name: 'attendee application status' }).getByRole('status')).toHaveText('Your competitor place is confirmed.')
   expect(attempts).toBe(2); await expect(page.getByRole('button', { name: 'Submit application' })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
 })

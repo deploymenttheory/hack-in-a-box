@@ -29,6 +29,13 @@ type CompetitionClaim struct {
 	State    string
 }
 
+type CompetitionEntry struct {
+	ID      uuid.UUID
+	EventID uuid.UUID
+	TeamID  uuid.UUID
+	Active  bool
+}
+
 type CompetitionExclusion struct {
 	EventID    uuid.UUID
 	PersonID   uuid.UUID
@@ -176,6 +183,33 @@ type GithubLinkAttempt struct {
 type GithubLinkState struct {
 	PersonID uuid.UUID
 	Revision int64
+}
+
+type HackTeam struct {
+	ID                 uuid.UUID
+	EventID            uuid.UUID
+	Name               string
+	InvitationCode     uuid.UUID
+	CaptainID          *uuid.UUID
+	PublishedCaptainID *uuid.UUID
+	State              string
+	Frozen             bool
+}
+
+type HackTeamMember struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+	Snapshot string
+}
+
+type HackTeamRequest struct {
+	ID        uuid.UUID
+	EventID   uuid.UUID
+	TeamID    uuid.UUID
+	PersonID  uuid.UUID
+	State     string
+	CreatedAt time.Time
 }
 
 type LoginAttempt struct {

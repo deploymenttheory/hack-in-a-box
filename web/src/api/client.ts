@@ -11,6 +11,8 @@ export class APIError extends Error {
       competition_ineligible: 'Previous organiser or early brief access permanently prevents competition in this event.',
       assessment_conflict: 'A person cannot compete and assess in the same event.',
       last_organiser: 'Assign another organiser and transfer ownership before removing this organiser.',
+      teams_frozen: 'Teams are frozen. Joining and moving members are no longer available.',
+      teams_unready: 'Assign every confirmed competitor, resolve teams below three and choose captains before freezing. Changes remain drafts until published.',
       registration_closed: 'New applications are closed. Your existing status remains available.',
       registration_exists: 'You already have an active application of this type. Your status is shown below.',
       capacity_unavailable: 'All attendee places are currently held. No place was allocated.',

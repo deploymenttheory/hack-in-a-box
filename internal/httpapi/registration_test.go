@@ -21,6 +21,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -51,6 +52,7 @@ func TestRegistrationAllocationHTTPContracts(t *testing.T) {
 			Privacy:      privacy.Service{Pool: pool},
 			Templates:    templates.Service{Pool: pool},
 			Registration: registration.Service{Pool: pool},
+			Teams:        teams.Service{Pool: pool},
 		},
 	)
 	owner := testdb.Person(t, pool)
@@ -227,6 +229,28 @@ func TestRegistrationAllocationHTTPContracts(t *testing.T) {
 		1,
 	); w.Code != 400 {
 		t.Fatalf("attendee selected as staff: %d %s", w.Code, w.Body)
+	}
+
+	teamPath := "/api/v1/events/" + id.String() + "/teams"
+	w := request(outsider, "GET", teamPath, nil, 0)
+	if w.Code != 200 {
+		t.Fatalf("own teams: %d %s", w.Code, w.Body)
+	}
+	var teamPage teams.Page
+	if err := json.Unmarshal(w.Body.Bytes(), &teamPage); err != nil {
+		t.Fatal(err)
+	}
+	if w := request(
+		outsider,
+		"POST",
+		teamPath,
+		map[string]string{"action": "create", "name": "Confirmed team"},
+		teamPage.Revision,
+	); w.Code != 200 {
+		t.Fatalf("create team HTTP: %d %s", w.Code, w.Body)
+	}
+	if w := request(other, "GET", teamPath, nil, 0); w.Code != 403 {
+		t.Fatalf("private teams exposed: %d %s", w.Code, w.Body)
 	}
 
 	policyPath := base + "/offer-policy"

@@ -26,10 +26,12 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	Teams        teams.Service
 	GitHub       *githubidentity.Service
 	Pool         *pgxpool.Pool
 	Auth         *identity.Auth
@@ -269,6 +271,10 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		status, code, message = 409, "registration_closed", registration.ErrClosed.Error()
 	case errors.Is(err, registration.ErrDuplicate):
 		status, code, message = 409, "registration_exists", registration.ErrDuplicate.Error()
+	case errors.Is(err, teams.ErrFrozen):
+		status, code, message = 409, "teams_frozen", teams.ErrFrozen.Error()
+	case errors.Is(err, teams.ErrUnready):
+		status, code, message = 409, "teams_unready", teams.ErrUnready.Error()
 	case errors.Is(err, registration.ErrCapacity):
 		status, code, message = 409, "capacity_unavailable", registration.ErrCapacity.Error()
 	case errors.Is(err, permissions.ErrWithdrawal):
