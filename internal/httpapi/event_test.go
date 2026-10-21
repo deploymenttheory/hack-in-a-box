@@ -124,7 +124,10 @@ func TestEventHTTPContractsAndActionableBlockers(t *testing.T) {
 		transition,
 		2,
 	); w.Code != 409 ||
-		!strings.Contains(w.Body.String(), "attendance_unavailable") {
+		!strings.Contains(
+			w.Body.String(),
+			"attendance_shortfall",
+		) || strings.Contains(w.Body.String(), "attendance_unavailable") {
 		t.Fatalf("gate blockers: %d %s", w.Code, w.Body)
 	}
 	if w := request("PUT", path, input, 1); w.Code != 409 {

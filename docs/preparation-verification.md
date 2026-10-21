@@ -83,3 +83,31 @@ Verification: full Go suite with PostgreSQL and race detection; form HTTP reques
 and response schemas; typed-answer, hidden-answer, unreachable-branch, original
 version correction, stale revision and retention checks. Frontend lint/build,
 five component tests and all 36 desktop/mobile browser scenarios pass.
+
+## Capacity, FIFO and confirmed attendance (#51)
+
+Migration 12 installs registrations, server-assigned FIFO sequences and immutable
+registration decisions. Applications lock the event with role grants and lifecycle
+changes, validate the current published form, check lasting eligibility, allocate
+one place and persist answers in one transaction. The stable application ID and
+canonical request fingerprint make retries return the original outcome, including
+after registration closes. A different request cannot reuse an active application.
+
+Facilitator applications remain received for review and consume no competitor
+places. Team preferences never reserve additional seats. New arrivals stay behind
+an existing waitlist even if capacity becomes available. Explicit organiser
+promotions require a recorded reason, available unreserved capacity and an open
+admission window. Capacity reductions below occupied/reserved places are blocked.
+
+Registration now supplies authoritative attendance facts. Only confirmed claims
+count; reaching the floor never advances the stage. Preparation rejects new
+applications while retaining existing registrations. Admission/freeze deadlines
+also apply server-side. Authenticated discovery exposes an allowlist of event
+information and published forms, with only the caller's registration status.
+
+Verification: eight simultaneous applications for one place produce one confirmed
+competitor and an ordered waitlist; retries, duplicates, explicit go, closure,
+facilitator separation, owner ineligibility, reasoned promotions, capacity reduction
+and deadline checks pass with PostgreSQL/race detection. HTTP schemas validate
+registration discovery, submission and private status. Event, template and database
+regression suites and Go lint pass.

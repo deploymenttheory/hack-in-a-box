@@ -43,6 +43,7 @@ const (
 	TemplatePublished       Action = "template.published"
 	DefinitionsUpdated      Action = "definitions.updated"
 	EventCloned             Action = "event.cloned"
+	RegistrationChanged     Action = "registration.changed"
 	GitHubLinked            Action = "github.linked"
 	GitHubRelinked          Action = "github.relinked"
 	GitHubUnlinked          Action = "github.unlinked"
@@ -88,7 +89,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		TeamRebalanced,
 		ChallengeApproved,
 		ChallengePostponed,
-		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved, ProfileCorrected, ProfileExported, ProfileRemoved, PrivacyConfigured, TemplateCreated, TemplateUpdated, TemplatePublished, DefinitionsUpdated, EventCloned, GitHubLinked, GitHubRelinked, GitHubUnlinked:
+		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved, ProfileCorrected, ProfileExported, ProfileRemoved, PrivacyConfigured, TemplateCreated, TemplateUpdated, TemplatePublished, DefinitionsUpdated, EventCloned, RegistrationChanged, GitHubLinked, GitHubRelinked, GitHubUnlinked:
 	default:
 		return access.ErrInvalid
 	}

@@ -257,6 +257,25 @@ type ReconciliationRun struct {
 	OccurredAt      time.Time
 }
 
+type Registration struct {
+	ID                  uuid.UUID
+	EventID             uuid.UUID
+	PersonID            uuid.UUID
+	FormID              uuid.UUID
+	FormVersion         int32
+	Audience            string
+	Kind                string
+	State               string
+	Sequence            int64
+	Revision            int64
+	RequestHash         string
+	ResponseRevision    int64
+	TeamPreference      string
+	InvitationReference string
+	FallbackToAttendee  bool
+	CreatedAt           time.Time
+}
+
 type RegistrationForm struct {
 	EventID          uuid.UUID
 	ID               uuid.UUID
@@ -277,6 +296,18 @@ type RegistrationFormVersion struct {
 	Version    int32
 	Definition []byte
 	CreatedAt  time.Time
+}
+
+type RegistrationHistory struct {
+	ID             uuid.UUID
+	EventID        uuid.UUID
+	RegistrationID uuid.UUID
+	ActorID        uuid.UUID
+	Action         string
+	FromState      string
+	ToState        string
+	Reason         string
+	CreatedAt      time.Time
 }
 
 type ResourceAssignment struct {

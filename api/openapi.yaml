@@ -635,6 +635,106 @@ paths:
                 $ref: '#/components/schemas/RegistrationForm'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/registration/events:
+    get:
+      operationId: discoverRegistrationEvents
+      parameters:
+        - name: after
+          in: query
+          schema: {type: string, format: uuid}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 50}
+      responses:
+        '200':
+          description: Authorised registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationEventPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/registration/events/{event_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getRegistrationPage
+      responses:
+        '200':
+          description: Authorised registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: applyForEvent
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationInput'
+      responses:
+        '200':
+          description: Authorised registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/mine:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: listOwnRegistrations
+      responses:
+        '200':
+          description: Authorised registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/{registration_id}/promote:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: registration_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: promoteRegistration
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: {type: string, minLength: 1, maxLength: 2000}
+      responses:
+        '200':
+          description: Authorised registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -1593,6 +1693,93 @@ components:
         removed:
           type: boolean
 
+    ApplicationInput:
+      type: object
+      additionalProperties: false
+      required: [id, form_id, form_version, answers, team_preference, invitation_reference, fallback_to_attendee]
+      properties:
+        id: {type: string, format: uuid}
+        form_id: {type: string, format: uuid}
+        form_version: {type: integer, minimum: 1, maximum: 1000}
+        answers:
+          $ref: '#/components/schemas/FormAnswers'
+        team_preference: {type: string, enum: [captain, join, solo]}
+        invitation_reference: {type: string, maxLength: 160}
+        fallback_to_attendee: {type: boolean}
+    Registration:
+      type: object
+      additionalProperties: false
+      required: [id, event_id, person_id, form_id, form_version, audience, kind, state, sequence, revision, team_preference, invitation_reference, fallback_to_attendee, waitlist_position]
+      properties:
+        id: {type: string, format: uuid}
+        event_id: {type: string, format: uuid}
+        person_id: {type: string, format: uuid}
+        form_id: {type: string, format: uuid}
+        form_version: {type: integer}
+        audience: {type: string}
+        kind: {type: string, enum: [attendee, facilitator]}
+        state: {type: string, enum: [received, confirmed, waitlisted, offered, withdrawn, selected, backup, declined]}
+        sequence: {type: integer, format: int64}
+        revision: {type: integer, format: int64}
+        team_preference: {type: string, enum: [captain, join, solo]}
+        invitation_reference: {type: string}
+        fallback_to_attendee: {type: boolean}
+        waitlist_position: {type: integer, format: int64, nullable: true}
+    RegistrationList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registration'
+    RegistrationEvent:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, venue, timezone, live_start, live_end, admission_cutoff, team_freeze, stage, open]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        venue: {type: string}
+        timezone: {type: string}
+        live_start: {type: string, format: date-time}
+        live_end: {type: string, format: date-time}
+        admission_cutoff: {type: string, format: date-time}
+        team_freeze: {type: string, format: date-time}
+        stage: {type: string}
+        open: {type: boolean}
+    RegistrationEventPage:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationEvent'
+        next_cursor: {type: string, format: uuid, nullable: true}
+    PublishedRegistrationForm:
+      type: object
+      required: [definition, version]
+      properties:
+        definition:
+          $ref: '#/components/schemas/TemplateForm'
+        version: {type: integer}
+    RegistrationPage:
+      type: object
+      additionalProperties: false
+      required: [event, forms, registrations]
+      properties:
+        event:
+          $ref: '#/components/schemas/RegistrationEvent'
+        forms:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublishedRegistrationForm'
+        registrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registration'
     RegistrationForm:
       type: object
       additionalProperties: false

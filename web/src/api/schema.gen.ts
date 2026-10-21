@@ -447,6 +447,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/registration/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["discoverRegistrationEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registration/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getRegistrationPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["applyForEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listOwnRegistrations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/{registration_id}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["promoteRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -867,6 +956,79 @@ export interface components {
         };
         RemovedResult: {
             removed: boolean;
+        };
+        ApplicationInput: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            form_id: string;
+            form_version: number;
+            answers: components["schemas"]["FormAnswers"];
+            /** @enum {string} */
+            team_preference: "captain" | "join" | "solo";
+            invitation_reference: string;
+            fallback_to_attendee: boolean;
+        };
+        Registration: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            person_id: string;
+            /** Format: uuid */
+            form_id: string;
+            form_version: number;
+            audience: string;
+            /** @enum {string} */
+            kind: "attendee" | "facilitator";
+            /** @enum {string} */
+            state: "received" | "confirmed" | "waitlisted" | "offered" | "withdrawn" | "selected" | "backup" | "declined";
+            /** Format: int64 */
+            sequence: number;
+            /** Format: int64 */
+            revision: number;
+            /** @enum {string} */
+            team_preference: "captain" | "join" | "solo";
+            invitation_reference: string;
+            fallback_to_attendee: boolean;
+            /** Format: int64 */
+            waitlist_position: number | null;
+        };
+        RegistrationList: {
+            items: components["schemas"]["Registration"][];
+        };
+        RegistrationEvent: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string;
+            venue: string;
+            timezone: string;
+            /** Format: date-time */
+            live_start: string;
+            /** Format: date-time */
+            live_end: string;
+            /** Format: date-time */
+            admission_cutoff: string;
+            /** Format: date-time */
+            team_freeze: string;
+            stage: string;
+            open: boolean;
+        };
+        RegistrationEventPage: {
+            items: components["schemas"]["RegistrationEvent"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        PublishedRegistrationForm: {
+            definition: components["schemas"]["TemplateForm"];
+            version: number;
+        };
+        RegistrationPage: {
+            event: components["schemas"]["RegistrationEvent"];
+            forms: components["schemas"]["PublishedRegistrationForm"][];
+            registrations: components["schemas"]["Registration"][];
         };
         RegistrationForm: {
             definition: components["schemas"]["TemplateForm"];
@@ -1939,6 +2101,139 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegistrationForm"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    discoverRegistrationEvents: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationEventPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRegistrationPage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    applyForEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationInput"];
+            };
+        };
+        responses: {
+            /** @description Authorised registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Registration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOwnRegistrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    promoteRegistration: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorised registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Registration"];
                 };
             };
             default: components["responses"]["Error"];
