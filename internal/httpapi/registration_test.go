@@ -199,6 +199,45 @@ func TestRegistrationAllocationHTTPContracts(t *testing.T) {
 		strings.Contains(w.Body.String(), body.ID.String()) {
 		t.Fatal("other registration exposed")
 	}
+	policyPath := base + "/offer-policy"
+	if w := request(
+		other,
+		"PUT",
+		policyPath,
+		map[string]any{"automated": true, "working_days": 2},
+		0,
+	); w.Code != 403 {
+		t.Fatalf("unprivileged automation: %d %s", w.Code, w.Body)
+	}
+	if w := request(
+		owner,
+		"PUT",
+		policyPath,
+		map[string]any{"automated": true, "working_days": 2},
+		0,
+	); w.Code != 200 {
+		t.Fatalf("approve automation: %d %s", w.Code, w.Body)
+	}
+	responsePath := base + "/" + body.ID.String() + "/response"
+	if w := request(other, "GET", responsePath, nil, 0); w.Code != 404 {
+		t.Fatal("private answers exposed")
+	}
+	if w := request(outsider, "GET", responsePath, nil, 0); w.Code != 200 {
+		t.Fatalf("own answers: %d %s", w.Code, w.Body)
+	}
+	if w := request(outsider, "PUT", responsePath, forms.Answers{}, 1); w.Code != 200 {
+		t.Fatalf("correct answers: %d %s", w.Code, w.Body)
+	}
+	if w := request(
+		outsider,
+		"POST",
+		base+"/"+body.ID.String()+"/respond",
+		map[string]string{"action": "withdraw"},
+		2,
+	); w.Code != 200 {
+		t.Fatalf("withdraw: %d %s", w.Code, w.Body)
+	}
+
 	if _, err := pool.Exec(
 		ctx,
 		"UPDATE events SET stage='preparation' WHERE id=$1",
@@ -229,5 +268,25 @@ func TestRegistrationAllocationHTTPContracts(t *testing.T) {
 		0,
 	); w.Code != 200 {
 		t.Fatal("own status inaccessible after closure")
+	}
+	if w := request(
+		outsider,
+		"GET",
+		"/api/v1/registration/events",
+		nil,
+		0,
+	); w.Code != 200 ||
+		!strings.Contains(w.Body.String(), id.String()) {
+		t.Fatalf("closed own status not discoverable: %d %s", w.Code, w.Body)
+	}
+	if w := request(
+		other,
+		"GET",
+		"/api/v1/registration/events",
+		nil,
+		0,
+	); w.Code != 200 ||
+		strings.Contains(w.Body.String(), id.String()) {
+		t.Fatalf("closed unrelated event exposed: %d %s", w.Code, w.Body)
 	}
 }

@@ -30,7 +30,7 @@ INSERT INTO registration_history(event_id,registration_id,actor_id,action,from_s
 SELECT * FROM registration_history WHERE event_id=$1 AND registration_id=$2 ORDER BY created_at,id LIMIT 200;
 
 -- name: OpenRegistrationEvents :many
-SELECT * FROM events WHERE stage='registration' AND writes_allowed AND id>$1 ORDER BY id LIMIT $2;
+SELECT e.* FROM events e WHERE e.id>sqlc.arg(cursor)::uuid AND ((e.stage='registration' AND e.writes_allowed) OR EXISTS(SELECT 1 FROM registrations r WHERE r.event_id=e.id AND r.person_id=sqlc.arg(actor)::uuid)) ORDER BY e.id LIMIT sqlc.arg(page_size);
 
 -- name: PublishedRegistrationForms :many
 SELECT v.* FROM registration_forms f JOIN registration_form_versions v ON v.event_id=f.event_id AND v.form_id=f.id AND v.version=f.published_version

@@ -181,16 +181,17 @@ func (q *Queries) ListRegistrations(ctx context.Context, arg ListRegistrationsPa
 }
 
 const openRegistrationEvents = `-- name: OpenRegistrationEvents :many
-SELECT id, name, revision, created_at, updated_at, owner_id, writes_allowed, slug, configuration, stage, published_at, team_frozen_at, completed_at FROM events WHERE stage='registration' AND writes_allowed AND id>$1 ORDER BY id LIMIT $2
+SELECT e.id, e.name, e.revision, e.created_at, e.updated_at, e.owner_id, e.writes_allowed, e.slug, e.configuration, e.stage, e.published_at, e.team_frozen_at, e.completed_at FROM events e WHERE e.id>$1::uuid AND ((e.stage='registration' AND e.writes_allowed) OR EXISTS(SELECT 1 FROM registrations r WHERE r.event_id=e.id AND r.person_id=$2::uuid)) ORDER BY e.id LIMIT $3
 `
 
 type OpenRegistrationEventsParams struct {
-	ID    uuid.UUID
-	Limit int32
+	Cursor   uuid.UUID
+	Actor    uuid.UUID
+	PageSize int32
 }
 
 func (q *Queries) OpenRegistrationEvents(ctx context.Context, arg OpenRegistrationEventsParams) ([]Event, error) {
-	rows, err := q.db.Query(ctx, openRegistrationEvents, arg.ID, arg.Limit)
+	rows, err := q.db.Query(ctx, openRegistrationEvents, arg.Cursor, arg.Actor, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +308,7 @@ INSERT INTO registration_history(event_id,registration_id,actor_id,action,from_s
 type RecordRegistrationHistoryParams struct {
 	EventID        uuid.UUID
 	RegistrationID uuid.UUID
-	ActorID        uuid.UUID
+	ActorID        *uuid.UUID
 	Action         string
 	FromState      string
 	ToState        string

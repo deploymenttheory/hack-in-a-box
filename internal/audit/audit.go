@@ -58,6 +58,7 @@ const (
 	OrganiserDecision  Reason = "organiser_decision"
 	ThresholdException Reason = "post_publication_withdrawal"
 	RetentionPolicy    Reason = "retention_policy"
+	DeadlinePolicy     Reason = "deadline_policy"
 )
 
 // Metadata has no arbitrary strings/maps: credentials, brief text, accessibility
@@ -99,7 +100,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		UserRequest,
 		OrganiserDecision,
 		ThresholdException,
-		RetentionPolicy:
+		RetentionPolicy, DeadlinePolicy:
 	default:
 		return access.ErrInvalid
 	}

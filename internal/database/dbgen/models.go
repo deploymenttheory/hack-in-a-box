@@ -302,12 +302,29 @@ type RegistrationHistory struct {
 	ID             uuid.UUID
 	EventID        uuid.UUID
 	RegistrationID uuid.UUID
-	ActorID        uuid.UUID
+	ActorID        *uuid.UUID
 	Action         string
 	FromState      string
 	ToState        string
 	Reason         string
 	CreatedAt      time.Time
+}
+
+type RegistrationOffer struct {
+	ID             uuid.UUID
+	EventID        uuid.UUID
+	RegistrationID uuid.UUID
+	ExpiresAt      time.Time
+	State          string
+	CreatedAt      time.Time
+}
+
+type RegistrationSetting struct {
+	EventID     uuid.UUID
+	Automated   bool
+	WorkingDays int32
+	ApprovedBy  uuid.UUID
+	Revision    int64
 }
 
 type ResourceAssignment struct {

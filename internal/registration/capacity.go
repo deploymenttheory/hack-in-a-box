@@ -42,6 +42,7 @@ type Application struct {
 	FallbackToAttendee  bool          `json:"fallback_to_attendee"`
 }
 type View struct {
+	Offer               *Offer    `json:"offer"`
 	ID                  uuid.UUID `json:"id"`
 	EventID             uuid.UUID `json:"event_id"`
 	PersonID            uuid.UUID `json:"person_id"`
@@ -83,6 +84,16 @@ func viewRegistration(ctx context.Context, q *dbgen.Queries, r dbgen.Registratio
 			return v, fmt.Errorf("read waitlist position: %w", err)
 		}
 		v.WaitlistPosition = &position
+	}
+	offer, err := q.LatestRegistrationOffer(
+		ctx,
+		dbgen.LatestRegistrationOfferParams{EventID: r.EventID, RegistrationID: r.ID},
+	)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return v, fmt.Errorf("read registration offer: %w", err)
+	}
+	if err == nil {
+		v.Offer = &Offer{ID: offer.ID, ExpiresAt: offer.ExpiresAt, State: offer.State}
 	}
 	return v, nil
 }
@@ -135,12 +146,20 @@ func registrationHistory(
 	row dbgen.Registration,
 	action, previous, reason string,
 ) error {
+	var actorID *uuid.UUID
+	reasonCode := audit.UserRequest
+	if actor != uuid.Nil {
+		actorID = &actor
+	} else {
+		reasonCode = audit.DeadlinePolicy
+	}
+
 	if err := q.RecordRegistrationHistory(
 		ctx,
 		dbgen.RecordRegistrationHistoryParams{
 			EventID:        row.EventID,
 			RegistrationID: row.ID,
-			ActorID:        actor,
+			ActorID:        actorID,
 			Action:         action,
 			FromState:      previous,
 			ToState:        row.State,
@@ -153,11 +172,11 @@ func registrationHistory(
 		ctx,
 		q,
 		audit.Record{
-			ActorID:  &actor,
+			ActorID:  actorID,
 			EventID:  &row.EventID,
 			TargetID: row.ID,
 			Action:   audit.RegistrationChanged,
-			Reason:   audit.UserRequest,
+			Reason:   reasonCode,
 		},
 	); err != nil {
 		return fmt.Errorf("audit registration: %w", err)

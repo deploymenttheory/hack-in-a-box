@@ -117,3 +117,9 @@ regression suites and Go lint pass.
 Added authenticated event discovery, selectively branded application pages, captain/join/solo preferences and separate facilitator applications. Requests retain their application ID when retried, and status comes from the committed server result. The starter form now leaves team preferences to the dedicated application controls. No private event definitions or rosters are exposed by discovery.
 
 Validation: four desktop/mobile browser checks pass, including submission retry identity, confirmed versus waitlisted versus received states, and closed applications. Registration, HTTP authorization/OpenAPI and template PostgreSQL suites pass with the race detector; frontend lint/build pass.
+
+### PR 7 — offers, status and withdrawals (#55, #57)
+
+Offers reserve capacity and expire using the event timezone, configured working days and holiday exclusions, capped by admission cutoff and team freeze. Organisers explicitly approve automation; each reconciliation rechecks that approver's authority. Event locks serialize offers, acceptance, expiry and cancellation. Acceptance/decline retries return authoritative outcomes; obsolete offer notices are cancelled and notification intents are unique. Answer corrections retain their original form version. Own-status screens explain deadlines and withdrawal impact; selected staff relinquish their corresponding role, preserving lasting exclusions and last-organiser protection.
+
+Notifications are durable outbox intents for the future communications adapter (#82); this slice does not claim email delivery. Team roster effects attach to the same withdrawal transaction in PR 9.
