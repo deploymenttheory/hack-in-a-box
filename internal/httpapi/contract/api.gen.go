@@ -78,6 +78,27 @@ func (e AgendaItemAudience) Valid() bool {
 	}
 }
 
+// Defines values for CloneInputDstChoice.
+const (
+	CloneInputDstChoiceEarlier CloneInputDstChoice = "earlier"
+	CloneInputDstChoiceEmpty   CloneInputDstChoice = ""
+	CloneInputDstChoiceLater   CloneInputDstChoice = "later"
+)
+
+// Valid indicates whether the value is a known member of the CloneInputDstChoice enum.
+func (e CloneInputDstChoice) Valid() bool {
+	switch e {
+	case CloneInputDstChoiceEarlier:
+		return true
+	case CloneInputDstChoiceEmpty:
+		return true
+	case CloneInputDstChoiceLater:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EventStage.
 const (
 	EventStageArchived     EventStage = "archived"
@@ -150,6 +171,48 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for OperationalProfilePhotoConsent.
+const (
+	OperationalProfilePhotoConsentNo      OperationalProfilePhotoConsent = "no"
+	OperationalProfilePhotoConsentUnknown OperationalProfilePhotoConsent = "unknown"
+	OperationalProfilePhotoConsentYes     OperationalProfilePhotoConsent = "yes"
+)
+
+// Valid indicates whether the value is a known member of the OperationalProfilePhotoConsent enum.
+func (e OperationalProfilePhotoConsent) Valid() bool {
+	switch e {
+	case OperationalProfilePhotoConsentNo:
+		return true
+	case OperationalProfilePhotoConsentUnknown:
+		return true
+	case OperationalProfilePhotoConsentYes:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProfileFieldsPhotoConsent.
+const (
+	ProfileFieldsPhotoConsentNo      ProfileFieldsPhotoConsent = "no"
+	ProfileFieldsPhotoConsentUnknown ProfileFieldsPhotoConsent = "unknown"
+	ProfileFieldsPhotoConsentYes     ProfileFieldsPhotoConsent = "yes"
+)
+
+// Valid indicates whether the value is a known member of the ProfileFieldsPhotoConsent enum.
+func (e ProfileFieldsPhotoConsent) Valid() bool {
+	switch e {
+	case ProfileFieldsPhotoConsentNo:
+		return true
+	case ProfileFieldsPhotoConsentUnknown:
+		return true
+	case ProfileFieldsPhotoConsentYes:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ScheduleItemStatus.
 const (
 	ScheduleItemStatusApproved    ScheduleItemStatus = "approved"
@@ -210,24 +273,225 @@ func (e StaffRole) Valid() bool {
 	}
 }
 
+// Defines values for TemplateAssetKind.
+const (
+	Hero TemplateAssetKind = "hero"
+	Icon TemplateAssetKind = "icon"
+	Logo TemplateAssetKind = "logo"
+)
+
+// Valid indicates whether the value is a known member of the TemplateAssetKind enum.
+func (e TemplateAssetKind) Valid() bool {
+	switch e {
+	case Hero:
+		return true
+	case Icon:
+		return true
+	case Logo:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateAssetMediaType.
+const (
+	TemplateAssetMediaTypeImagejpeg TemplateAssetMediaType = "image/jpeg"
+	TemplateAssetMediaTypeImagepng  TemplateAssetMediaType = "image/png"
+)
+
+// Valid indicates whether the value is a known member of the TemplateAssetMediaType enum.
+func (e TemplateAssetMediaType) Valid() bool {
+	switch e {
+	case TemplateAssetMediaTypeImagejpeg:
+		return true
+	case TemplateAssetMediaTypeImagepng:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateFieldType.
+const (
+	Checkbox TemplateFieldType = "checkbox"
+	Multiple TemplateFieldType = "multiple"
+	Rating   TemplateFieldType = "rating"
+	Single   TemplateFieldType = "single"
+	Text     TemplateFieldType = "text"
+)
+
+// Valid indicates whether the value is a known member of the TemplateFieldType enum.
+func (e TemplateFieldType) Valid() bool {
+	switch e {
+	case Checkbox:
+		return true
+	case Multiple:
+		return true
+	case Rating:
+		return true
+	case Single:
+		return true
+	case Text:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateFormAudience.
+const (
+	TemplateFormAudienceAttendee     TemplateFormAudience = "attendee"
+	TemplateFormAudienceJudge        TemplateFormAudience = "judge"
+	TemplateFormAudienceLogistics    TemplateFormAudience = "logistics"
+	TemplateFormAudienceMc           TemplateFormAudience = "mc"
+	TemplateFormAudienceMentor       TemplateFormAudience = "mentor"
+	TemplateFormAudienceOrganiser    TemplateFormAudience = "organiser"
+	TemplateFormAudiencePhotographer TemplateFormAudience = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the TemplateFormAudience enum.
+func (e TemplateFormAudience) Valid() bool {
+	switch e {
+	case TemplateFormAudienceAttendee:
+		return true
+	case TemplateFormAudienceJudge:
+		return true
+	case TemplateFormAudienceLogistics:
+		return true
+	case TemplateFormAudienceMc:
+		return true
+	case TemplateFormAudienceMentor:
+		return true
+	case TemplateFormAudienceOrganiser:
+		return true
+	case TemplateFormAudiencePhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateMessageAudience.
+const (
+	TemplateMessageAudienceAll          TemplateMessageAudience = "all"
+	TemplateMessageAudienceAttendee     TemplateMessageAudience = "attendee"
+	TemplateMessageAudienceJudge        TemplateMessageAudience = "judge"
+	TemplateMessageAudienceLogistics    TemplateMessageAudience = "logistics"
+	TemplateMessageAudienceMc           TemplateMessageAudience = "mc"
+	TemplateMessageAudienceMentor       TemplateMessageAudience = "mentor"
+	TemplateMessageAudienceOrganiser    TemplateMessageAudience = "organiser"
+	TemplateMessageAudiencePhotographer TemplateMessageAudience = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the TemplateMessageAudience enum.
+func (e TemplateMessageAudience) Valid() bool {
+	switch e {
+	case TemplateMessageAudienceAll:
+		return true
+	case TemplateMessageAudienceAttendee:
+		return true
+	case TemplateMessageAudienceJudge:
+		return true
+	case TemplateMessageAudienceLogistics:
+		return true
+	case TemplateMessageAudienceMc:
+		return true
+	case TemplateMessageAudienceMentor:
+		return true
+	case TemplateMessageAudienceOrganiser:
+		return true
+	case TemplateMessageAudiencePhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateRoleBriefRole.
+const (
+	TemplateRoleBriefRoleAttendee     TemplateRoleBriefRole = "attendee"
+	TemplateRoleBriefRoleJudge        TemplateRoleBriefRole = "judge"
+	TemplateRoleBriefRoleLogistics    TemplateRoleBriefRole = "logistics"
+	TemplateRoleBriefRoleMc           TemplateRoleBriefRole = "mc"
+	TemplateRoleBriefRoleMentor       TemplateRoleBriefRole = "mentor"
+	TemplateRoleBriefRoleOrganiser    TemplateRoleBriefRole = "organiser"
+	TemplateRoleBriefRolePhotographer TemplateRoleBriefRole = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the TemplateRoleBriefRole enum.
+func (e TemplateRoleBriefRole) Valid() bool {
+	switch e {
+	case TemplateRoleBriefRoleAttendee:
+		return true
+	case TemplateRoleBriefRoleJudge:
+		return true
+	case TemplateRoleBriefRoleLogistics:
+		return true
+	case TemplateRoleBriefRoleMc:
+		return true
+	case TemplateRoleBriefRoleMentor:
+		return true
+	case TemplateRoleBriefRoleOrganiser:
+		return true
+	case TemplateRoleBriefRolePhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateTaskOwnerRole.
+const (
+	TemplateTaskOwnerRoleAttendee     TemplateTaskOwnerRole = "attendee"
+	TemplateTaskOwnerRoleJudge        TemplateTaskOwnerRole = "judge"
+	TemplateTaskOwnerRoleLogistics    TemplateTaskOwnerRole = "logistics"
+	TemplateTaskOwnerRoleMc           TemplateTaskOwnerRole = "mc"
+	TemplateTaskOwnerRoleMentor       TemplateTaskOwnerRole = "mentor"
+	TemplateTaskOwnerRoleOrganiser    TemplateTaskOwnerRole = "organiser"
+	TemplateTaskOwnerRolePhotographer TemplateTaskOwnerRole = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the TemplateTaskOwnerRole enum.
+func (e TemplateTaskOwnerRole) Valid() bool {
+	switch e {
+	case TemplateTaskOwnerRoleAttendee:
+		return true
+	case TemplateTaskOwnerRoleJudge:
+		return true
+	case TemplateTaskOwnerRoleLogistics:
+		return true
+	case TemplateTaskOwnerRoleMc:
+		return true
+	case TemplateTaskOwnerRoleMentor:
+		return true
+	case TemplateTaskOwnerRoleOrganiser:
+		return true
+	case TemplateTaskOwnerRolePhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UploadFileJSONBodyMediaType.
 const (
-	Applicationpdf UploadFileJSONBodyMediaType = "application/pdf"
-	Imagejpeg      UploadFileJSONBodyMediaType = "image/jpeg"
-	Imagepng       UploadFileJSONBodyMediaType = "image/png"
-	Textplain      UploadFileJSONBodyMediaType = "text/plain"
+	UploadFileJSONBodyMediaTypeApplicationpdf UploadFileJSONBodyMediaType = "application/pdf"
+	UploadFileJSONBodyMediaTypeImagejpeg      UploadFileJSONBodyMediaType = "image/jpeg"
+	UploadFileJSONBodyMediaTypeImagepng       UploadFileJSONBodyMediaType = "image/png"
+	UploadFileJSONBodyMediaTypeTextplain      UploadFileJSONBodyMediaType = "text/plain"
 )
 
 // Valid indicates whether the value is a known member of the UploadFileJSONBodyMediaType enum.
 func (e UploadFileJSONBodyMediaType) Valid() bool {
 	switch e {
-	case Applicationpdf:
+	case UploadFileJSONBodyMediaTypeApplicationpdf:
 		return true
-	case Imagejpeg:
+	case UploadFileJSONBodyMediaTypeImagejpeg:
 		return true
-	case Imagepng:
+	case UploadFileJSONBodyMediaTypeImagepng:
 		return true
-	case Textplain:
+	case UploadFileJSONBodyMediaTypeTextplain:
 		return true
 	default:
 		return false
@@ -342,6 +606,27 @@ type Calendar struct {
 	WorkingDays   []int                `json:"working_days"`
 }
 
+// CloneInput defines model for CloneInput.
+type CloneInput struct {
+	AcknowledgeCompetitionRestriction bool                `json:"acknowledge_competition_restriction"`
+	DstChoice                         CloneInputDstChoice `json:"dst_choice"`
+	Id                                openapi_types.UUID  `json:"id"`
+	LiveStart                         time.Time           `json:"live_start"`
+	Name                              string              `json:"name"`
+	Slug                              string              `json:"slug"`
+	Timezone                          string              `json:"timezone"`
+	Version                           int                 `json:"version"`
+}
+
+// CloneInputDstChoice defines model for CloneInput.DstChoice.
+type CloneInputDstChoice string
+
+// ConfigurationBundle defines model for ConfigurationBundle.
+type ConfigurationBundle struct {
+	Definitions EventDefinitions   `json:"definitions"`
+	Event       EventConfiguration `json:"event"`
+}
+
 // ErrorEnvelope defines model for ErrorEnvelope.
 type ErrorEnvelope struct {
 	Error struct {
@@ -409,6 +694,17 @@ type EventDecisionPage struct {
 	Items []EventDecision `json:"items"`
 }
 
+// EventDefinitions defines model for EventDefinitions.
+type EventDefinitions struct {
+	Branding     TemplateBranding      `json:"branding"`
+	Deliverables []TemplateDeliverable `json:"deliverables"`
+	Forms        []TemplateForm        `json:"forms"`
+	Messages     []TemplateMessage     `json:"messages"`
+	RoleBriefs   []TemplateRoleBrief   `json:"role_briefs"`
+	Rubrics      []TemplateRubric      `json:"rubrics"`
+	Tasks        []TemplateTask        `json:"tasks"`
+}
+
 // EventInput defines model for EventInput.
 type EventInput struct {
 	AcknowledgeCompetitionRestriction bool               `json:"acknowledge_competition_restriction"`
@@ -453,6 +749,52 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// OperationalProfile defines model for OperationalProfile.
+type OperationalProfile struct {
+	Accessibility *string                         `json:"accessibility,omitempty"`
+	ContactEmail  *string                         `json:"contact_email,omitempty"`
+	ContactPhone  *string                         `json:"contact_phone,omitempty"`
+	Dietary       *string                         `json:"dietary,omitempty"`
+	DisplayName   string                          `json:"display_name"`
+	EventId       openapi_types.UUID              `json:"event_id"`
+	Id            openapi_types.UUID              `json:"id"`
+	PersonId      openapi_types.UUID              `json:"person_id"`
+	PhotoConsent  *OperationalProfilePhotoConsent `json:"photo_consent,omitempty"`
+	Revision      int64                           `json:"revision"`
+}
+
+// OperationalProfilePhotoConsent defines model for OperationalProfile.PhotoConsent.
+type OperationalProfilePhotoConsent string
+
+// PrivacySettings defines model for PrivacySettings.
+type PrivacySettings struct {
+	DraftDays     int `json:"draft_days"`
+	RetentionDays int `json:"retention_days"`
+}
+
+// ProfileFields defines model for ProfileFields.
+type ProfileFields struct {
+	Accessibility string                    `json:"accessibility"`
+	ContactEmail  string                    `json:"contact_email"`
+	ContactPhone  string                    `json:"contact_phone"`
+	Dietary       string                    `json:"dietary"`
+	PhotoConsent  ProfileFieldsPhotoConsent `json:"photo_consent"`
+}
+
+// ProfileFieldsPhotoConsent defines model for ProfileFields.PhotoConsent.
+type ProfileFieldsPhotoConsent string
+
+// ProfilePage defines model for ProfilePage.
+type ProfilePage struct {
+	Items      []OperationalProfile `json:"items"`
+	NextCursor *openapi_types.UUID  `json:"next_cursor"`
+}
+
+// RemovedResult defines model for RemovedResult.
+type RemovedResult struct {
+	Removed bool `json:"removed"`
+}
+
 // ResolvedTime defines model for ResolvedTime.
 type ResolvedTime struct {
 	Instant time.Time `json:"instant"`
@@ -481,8 +823,9 @@ type SchedulePage struct {
 
 // Session defines model for Session.
 type Session struct {
-	CsrfToken string `json:"csrf_token"`
-	Person    struct {
+	CanCreateEvents bool   `json:"can_create_events"`
+	CsrfToken       string `json:"csrf_token"`
+	Person          struct {
 		DisplayName   string             `json:"display_name"`
 		Id            openapi_types.UUID `json:"id"`
 		PlatformAdmin bool               `json:"platform_admin"`
@@ -514,6 +857,144 @@ type StaffPage struct {
 // StaffRole defines model for StaffRole.
 type StaffRole string
 
+// Template defines model for Template.
+type Template struct {
+	Configuration    ConfigurationBundle `json:"configuration"`
+	Id               openapi_types.UUID  `json:"id"`
+	LatestVersion    int                 `json:"latest_version"`
+	Name             string              `json:"name"`
+	PublishedVersion *int                `json:"published_version"`
+	Revision         int64               `json:"revision"`
+	Version          int                 `json:"version"`
+}
+
+// TemplateAsset defines model for TemplateAsset.
+type TemplateAsset struct {
+	Content   []byte                 `json:"content"`
+	Id        openapi_types.UUID     `json:"id"`
+	Kind      TemplateAssetKind      `json:"kind"`
+	MediaType TemplateAssetMediaType `json:"media_type"`
+}
+
+// TemplateAssetKind defines model for TemplateAsset.Kind.
+type TemplateAssetKind string
+
+// TemplateAssetMediaType defines model for TemplateAsset.MediaType.
+type TemplateAssetMediaType string
+
+// TemplateBranding defines model for TemplateBranding.
+type TemplateBranding struct {
+	Accent     string          `json:"accent"`
+	Assets     []TemplateAsset `json:"assets"`
+	Background string          `json:"background"`
+	Foreground string          `json:"foreground"`
+	Primary    string          `json:"primary"`
+}
+
+// TemplateCondition defines model for TemplateCondition.
+type TemplateCondition struct {
+	Equals  string             `json:"equals"`
+	FieldId openapi_types.UUID `json:"field_id"`
+}
+
+// TemplateCriterion defines model for TemplateCriterion.
+type TemplateCriterion struct {
+	Guidance string             `json:"guidance"`
+	Id       openapi_types.UUID `json:"id"`
+	Label    string             `json:"label"`
+	MaxScore int                `json:"max_score"`
+	Weight   int                `json:"weight"`
+}
+
+// TemplateDeliverable defines model for TemplateDeliverable.
+type TemplateDeliverable struct {
+	Description string              `json:"description"`
+	Id          openapi_types.UUID  `json:"id"`
+	Required    bool                `json:"required"`
+	ScheduleId  *openapi_types.UUID `json:"schedule_id,omitempty"`
+	Title       string              `json:"title"`
+}
+
+// TemplateField defines model for TemplateField.
+type TemplateField struct {
+	Choices     []string           `json:"choices"`
+	Help        string             `json:"help"`
+	Id          openapi_types.UUID `json:"id"`
+	Label       string             `json:"label"`
+	Required    bool               `json:"required"`
+	Type        TemplateFieldType  `json:"type"`
+	VisibleWhen *TemplateCondition `json:"visible_when,omitempty"`
+}
+
+// TemplateFieldType defines model for TemplateField.Type.
+type TemplateFieldType string
+
+// TemplateForm defines model for TemplateForm.
+type TemplateForm struct {
+	Audience TemplateFormAudience `json:"audience"`
+	Fields   []TemplateField      `json:"fields"`
+	Id       openapi_types.UUID   `json:"id"`
+	Name     string               `json:"name"`
+}
+
+// TemplateFormAudience defines model for TemplateForm.Audience.
+type TemplateFormAudience string
+
+// TemplateInput defines model for TemplateInput.
+type TemplateInput struct {
+	Configuration ConfigurationBundle `json:"configuration"`
+	Id            openapi_types.UUID  `json:"id"`
+	Name          string              `json:"name"`
+}
+
+// TemplateMessage defines model for TemplateMessage.
+type TemplateMessage struct {
+	Audience   []TemplateMessageAudience `json:"audience"`
+	Body       string                    `json:"body"`
+	Id         openapi_types.UUID        `json:"id"`
+	Name       string                    `json:"name"`
+	ScheduleId *openapi_types.UUID       `json:"schedule_id,omitempty"`
+	Subject    string                    `json:"subject"`
+}
+
+// TemplateMessageAudience defines model for TemplateMessage.Audience.
+type TemplateMessageAudience string
+
+// TemplatePage defines model for TemplatePage.
+type TemplatePage struct {
+	Items      []Template          `json:"items"`
+	NextCursor *openapi_types.UUID `json:"next_cursor"`
+}
+
+// TemplateRoleBrief defines model for TemplateRoleBrief.
+type TemplateRoleBrief struct {
+	Body string                `json:"body"`
+	Id   openapi_types.UUID    `json:"id"`
+	Role TemplateRoleBriefRole `json:"role"`
+}
+
+// TemplateRoleBriefRole defines model for TemplateRoleBrief.Role.
+type TemplateRoleBriefRole string
+
+// TemplateRubric defines model for TemplateRubric.
+type TemplateRubric struct {
+	Criteria []TemplateCriterion `json:"criteria"`
+	Id       openapi_types.UUID  `json:"id"`
+	Name     string              `json:"name"`
+}
+
+// TemplateTask defines model for TemplateTask.
+type TemplateTask struct {
+	DependsOn  []openapi_types.UUID  `json:"depends_on"`
+	Id         openapi_types.UUID    `json:"id"`
+	OwnerRole  TemplateTaskOwnerRole `json:"owner_role"`
+	ScheduleId *openapi_types.UUID   `json:"schedule_id,omitempty"`
+	Title      string                `json:"title"`
+}
+
+// TemplateTaskOwnerRole defines model for TemplateTask.OwnerRole.
+type TemplateTaskOwnerRole string
+
 // CSRF defines model for CSRF.
 type CSRF = string
 
@@ -528,6 +1009,9 @@ type IdempotencyKey = openapi_types.UUID
 
 // Limit defines model for Limit.
 type Limit = int
+
+// ProfileRevision defines model for ProfileRevision.
+type ProfileRevision = string
 
 // Revision defines model for Revision.
 type Revision = string
@@ -571,6 +1055,19 @@ type ExportAuditParams struct {
 	Limit  *Limit  `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// CloneEventParams defines parameters for CloneEvent.
+type CloneEventParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+}
+
+// SaveEventDefinitionsParams defines parameters for SaveEventDefinitions.
+type SaveEventDefinitionsParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
 // UploadFileJSONBody defines parameters for UploadFile.
 type UploadFileJSONBody struct {
 	Content   []byte                      `json:"content"`
@@ -602,6 +1099,33 @@ type TransferOwnerParams struct {
 
 	// IfMatch Quoted event revision, for example "1".
 	IfMatch Revision `json:"If-Match"`
+}
+
+// SetPrivacySettingsParams defines parameters for SetPrivacySettings.
+type SetPrivacySettingsParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
+// ExportOperationalProfilesParams defines parameters for ExportOperationalProfiles.
+type ExportOperationalProfilesParams struct {
+	After *openapi_types.UUID `form:"after,omitempty" json:"after,omitempty"`
+	Limit *Limit              `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// DeleteOperationalProfileParams defines parameters for DeleteOperationalProfile.
+type DeleteOperationalProfileParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+}
+
+// CorrectOperationalProfileParams defines parameters for CorrectOperationalProfile.
+type CorrectOperationalProfileParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision.
+	IfMatch ProfileRevision `json:"If-Match"`
 }
 
 // ApproveEventScheduleParams defines parameters for ApproveEventSchedule.
@@ -643,6 +1167,48 @@ type LogoutParams struct {
 	XCSRFToken CSRF `json:"X-CSRF-Token"`
 }
 
+// ListTemplatesParams defines parameters for ListTemplates.
+type ListTemplatesParams struct {
+	After *openapi_types.UUID `form:"after,omitempty" json:"after,omitempty"`
+	Limit *int                `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// CreateTemplateParams defines parameters for CreateTemplate.
+type CreateTemplateParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+}
+
+// GetTemplateParams defines parameters for GetTemplate.
+type GetTemplateParams struct {
+	Version *int `form:"version,omitempty" json:"version,omitempty"`
+}
+
+// EditTemplateParams defines parameters for EditTemplate.
+type EditTemplateParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
+// CloneTemplateParams defines parameters for CloneTemplate.
+type CloneTemplateParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+}
+
+// PublishTemplateJSONBody defines parameters for PublishTemplate.
+type PublishTemplateJSONBody struct {
+	Version int `json:"version"`
+}
+
+// PublishTemplateParams defines parameters for PublishTemplate.
+type PublishTemplateParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
 // ResolveEventTimeJSONBody defines parameters for ResolveEventTime.
 type ResolveEventTimeJSONBody struct {
 	DstChoice ResolveEventTimeJSONBodyDstChoice `json:"dst_choice"`
@@ -667,17 +1233,41 @@ type CreateEventJSONRequestBody = EventInput
 // UpdateEventJSONRequestBody defines body for UpdateEvent for application/json ContentType.
 type UpdateEventJSONRequestBody = EventInput
 
+// CloneEventJSONRequestBody defines body for CloneEvent for application/json ContentType.
+type CloneEventJSONRequestBody = CloneInput
+
+// SaveEventDefinitionsJSONRequestBody defines body for SaveEventDefinitions for application/json ContentType.
+type SaveEventDefinitionsJSONRequestBody = EventDefinitions
+
 // UploadFileJSONRequestBody defines body for UploadFile for application/json ContentType.
 type UploadFileJSONRequestBody UploadFileJSONBody
 
 // TransferOwnerJSONRequestBody defines body for TransferOwner for application/json ContentType.
 type TransferOwnerJSONRequestBody TransferOwnerJSONBody
 
+// SetPrivacySettingsJSONRequestBody defines body for SetPrivacySettings for application/json ContentType.
+type SetPrivacySettingsJSONRequestBody = PrivacySettings
+
+// CorrectOperationalProfileJSONRequestBody defines body for CorrectOperationalProfile for application/json ContentType.
+type CorrectOperationalProfileJSONRequestBody = ProfileFields
+
 // ChangeStaffJSONRequestBody defines body for ChangeStaff for application/json ContentType.
 type ChangeStaffJSONRequestBody = StaffChange
 
 // TransitionEventJSONRequestBody defines body for TransitionEvent for application/json ContentType.
 type TransitionEventJSONRequestBody TransitionEventJSONBody
+
+// CreateTemplateJSONRequestBody defines body for CreateTemplate for application/json ContentType.
+type CreateTemplateJSONRequestBody = TemplateInput
+
+// EditTemplateJSONRequestBody defines body for EditTemplate for application/json ContentType.
+type EditTemplateJSONRequestBody = TemplateInput
+
+// CloneTemplateJSONRequestBody defines body for CloneTemplate for application/json ContentType.
+type CloneTemplateJSONRequestBody = CloneInput
+
+// PublishTemplateJSONRequestBody defines body for PublishTemplate for application/json ContentType.
+type PublishTemplateJSONRequestBody PublishTemplateJSONBody
 
 // ResolveEventTimeJSONRequestBody defines body for ResolveEventTime for application/json ContentType.
 type ResolveEventTimeJSONRequestBody ResolveEventTimeJSONBody
@@ -706,6 +1296,15 @@ type ServerInterface interface {
 	// (GET /api/v1/events/{event_id}/audit/export)
 	ExportAudit(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportAuditParams)
 
+	// (POST /api/v1/events/{event_id}/clone)
+	CloneEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params CloneEventParams)
+
+	// (GET /api/v1/events/{event_id}/configuration-snapshot)
+	GetConfigurationSnapshot(w http.ResponseWriter, r *http.Request, eventId EventID)
+
+	// (PUT /api/v1/events/{event_id}/configuration-snapshot)
+	SaveEventDefinitions(w http.ResponseWriter, r *http.Request, eventId EventID, params SaveEventDefinitionsParams)
+
 	// (GET /api/v1/events/{event_id}/decisions)
 	ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID)
 
@@ -717,6 +1316,24 @@ type ServerInterface interface {
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams)
+
+	// (GET /api/v1/events/{event_id}/privacy)
+	GetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID)
+
+	// (PUT /api/v1/events/{event_id}/privacy)
+	SetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID, params SetPrivacySettingsParams)
+
+	// (GET /api/v1/events/{event_id}/profiles/export)
+	ExportOperationalProfiles(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportOperationalProfilesParams)
+
+	// (DELETE /api/v1/events/{event_id}/profiles/{person_id})
+	DeleteOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params DeleteOperationalProfileParams)
+
+	// (GET /api/v1/events/{event_id}/profiles/{person_id})
+	GetOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID)
+
+	// (PUT /api/v1/events/{event_id}/profiles/{person_id})
+	CorrectOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params CorrectOperationalProfileParams)
 
 	// (GET /api/v1/events/{event_id}/schedule)
 	GetEventSchedule(w http.ResponseWriter, r *http.Request, eventId EventID)
@@ -738,6 +1355,24 @@ type ServerInterface interface {
 
 	// (GET /api/v1/session)
 	GetSession(w http.ResponseWriter, r *http.Request)
+
+	// (GET /api/v1/templates)
+	ListTemplates(w http.ResponseWriter, r *http.Request, params ListTemplatesParams)
+
+	// (POST /api/v1/templates)
+	CreateTemplate(w http.ResponseWriter, r *http.Request, params CreateTemplateParams)
+
+	// (GET /api/v1/templates/{template_id})
+	GetTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params GetTemplateParams)
+
+	// (PUT /api/v1/templates/{template_id})
+	EditTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params EditTemplateParams)
+
+	// (POST /api/v1/templates/{template_id}/clone)
+	CloneTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params CloneTemplateParams)
+
+	// (POST /api/v1/templates/{template_id}/publish)
+	PublishTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params PublishTemplateParams)
 
 	// (POST /api/v1/time/resolve)
 	ResolveEventTime(w http.ResponseWriter, r *http.Request, params ResolveEventTimeParams)
@@ -788,6 +1423,21 @@ func (_ Unimplemented) ExportAudit(w http.ResponseWriter, r *http.Request, event
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// (POST /api/v1/events/{event_id}/clone)
+func (_ Unimplemented) CloneEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params CloneEventParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/configuration-snapshot)
+func (_ Unimplemented) GetConfigurationSnapshot(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/configuration-snapshot)
+func (_ Unimplemented) SaveEventDefinitions(w http.ResponseWriter, r *http.Request, eventId EventID, params SaveEventDefinitionsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // (GET /api/v1/events/{event_id}/decisions)
 func (_ Unimplemented) ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -805,6 +1455,36 @@ func (_ Unimplemented) DownloadFile(w http.ResponseWriter, r *http.Request, even
 
 // (PUT /api/v1/events/{event_id}/owner)
 func (_ Unimplemented) TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/privacy)
+func (_ Unimplemented) GetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/privacy)
+func (_ Unimplemented) SetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID, params SetPrivacySettingsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/profiles/export)
+func (_ Unimplemented) ExportOperationalProfiles(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportOperationalProfilesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (DELETE /api/v1/events/{event_id}/profiles/{person_id})
+func (_ Unimplemented) DeleteOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params DeleteOperationalProfileParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/profiles/{person_id})
+func (_ Unimplemented) GetOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/profiles/{person_id})
+func (_ Unimplemented) CorrectOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params CorrectOperationalProfileParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -840,6 +1520,36 @@ func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request, params Log
 
 // (GET /api/v1/session)
 func (_ Unimplemented) GetSession(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/templates)
+func (_ Unimplemented) ListTemplates(w http.ResponseWriter, r *http.Request, params ListTemplatesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/templates)
+func (_ Unimplemented) CreateTemplate(w http.ResponseWriter, r *http.Request, params CreateTemplateParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/templates/{template_id})
+func (_ Unimplemented) GetTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params GetTemplateParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/templates/{template_id})
+func (_ Unimplemented) EditTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params EditTemplateParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/templates/{template_id}/clone)
+func (_ Unimplemented) CloneTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params CloneTemplateParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/templates/{template_id}/publish)
+func (_ Unimplemented) PublishTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params PublishTemplateParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1216,6 +1926,163 @@ func (siw *ServerInterfaceWrapper) ExportAudit(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// CloneEvent operation middleware
+func (siw *ServerInterfaceWrapper) CloneEvent(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CloneEventParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CloneEvent(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetConfigurationSnapshot operation middleware
+func (siw *ServerInterfaceWrapper) GetConfigurationSnapshot(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetConfigurationSnapshot(w, r, eventId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SaveEventDefinitions operation middleware
+func (siw *ServerInterfaceWrapper) SaveEventDefinitions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SaveEventDefinitionsParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SaveEventDefinitions(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListEventDecisions operation middleware
 func (siw *ServerInterfaceWrapper) ListEventDecisions(w http.ResponseWriter, r *http.Request) {
 
@@ -1445,6 +2312,348 @@ func (siw *ServerInterfaceWrapper) TransferOwner(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TransferOwner(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPrivacySettings operation middleware
+func (siw *ServerInterfaceWrapper) GetPrivacySettings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPrivacySettings(w, r, eventId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetPrivacySettings operation middleware
+func (siw *ServerInterfaceWrapper) SetPrivacySettings(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SetPrivacySettingsParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetPrivacySettings(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportOperationalProfiles operation middleware
+func (siw *ServerInterfaceWrapper) ExportOperationalProfiles(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExportOperationalProfilesParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportOperationalProfiles(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteOperationalProfile operation middleware
+func (siw *ServerInterfaceWrapper) DeleteOperationalProfile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "person_id" -------------
+	var personId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "person_id", chi.URLParam(r, "person_id"), &personId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteOperationalProfileParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteOperationalProfile(w, r, eventId, personId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOperationalProfile operation middleware
+func (siw *ServerInterfaceWrapper) GetOperationalProfile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "person_id" -------------
+	var personId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "person_id", chi.URLParam(r, "person_id"), &personId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOperationalProfile(w, r, eventId, personId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CorrectOperationalProfile operation middleware
+func (siw *ServerInterfaceWrapper) CorrectOperationalProfile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "person_id" -------------
+	var personId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "person_id", chi.URLParam(r, "person_id"), &personId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CorrectOperationalProfileParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch ProfileRevision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CorrectOperationalProfile(w, r, eventId, personId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1805,6 +3014,347 @@ func (siw *ServerInterfaceWrapper) GetSession(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// ListTemplates operation middleware
+func (siw *ServerInterfaceWrapper) ListTemplates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListTemplatesParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListTemplates(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateTemplate operation middleware
+func (siw *ServerInterfaceWrapper) CreateTemplate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateTemplateParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateTemplate(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTemplate operation middleware
+func (siw *ServerInterfaceWrapper) GetTemplate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "template_id" -------------
+	var templateId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "template_id", chi.URLParam(r, "template_id"), &templateId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "template_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetTemplateParams
+
+	// ------------- Optional query parameter "version" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "version", r.URL.Query(), &params.Version, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "version"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "version", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTemplate(w, r, templateId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EditTemplate operation middleware
+func (siw *ServerInterfaceWrapper) EditTemplate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "template_id" -------------
+	var templateId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "template_id", chi.URLParam(r, "template_id"), &templateId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "template_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params EditTemplateParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EditTemplate(w, r, templateId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CloneTemplate operation middleware
+func (siw *ServerInterfaceWrapper) CloneTemplate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "template_id" -------------
+	var templateId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "template_id", chi.URLParam(r, "template_id"), &templateId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "template_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CloneTemplateParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CloneTemplate(w, r, templateId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PublishTemplate operation middleware
+func (siw *ServerInterfaceWrapper) PublishTemplate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "template_id" -------------
+	var templateId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "template_id", chi.URLParam(r, "template_id"), &templateId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "template_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PublishTemplateParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PublishTemplate(w, r, templateId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ResolveEventTime operation middleware
 func (siw *ServerInterfaceWrapper) ResolveEventTime(w http.ResponseWriter, r *http.Request) {
 
@@ -2053,6 +3603,51 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/v1/time/resolve", wrapper.ResolveEventTime)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/privacy", wrapper.GetPrivacySettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/privacy", wrapper.SetPrivacySettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/v1/events/{event_id}/profiles/{person_id}", wrapper.DeleteOperationalProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/profiles/{person_id}", wrapper.GetOperationalProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/profiles/{person_id}", wrapper.CorrectOperationalProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/profiles/export", wrapper.ExportOperationalProfiles)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/templates", wrapper.ListTemplates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/templates", wrapper.CreateTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/templates/{template_id}", wrapper.GetTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/templates/{template_id}", wrapper.EditTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/templates/{template_id}/publish", wrapper.PublishTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/templates/{template_id}/clone", wrapper.CloneTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/configuration-snapshot", wrapper.GetConfigurationSnapshot)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/configuration-snapshot", wrapper.SaveEventDefinitions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/events/{event_id}/clone", wrapper.CloneEvent)
 	})
 
 	return r
@@ -2384,6 +3979,139 @@ func (response ExportAuditdefaultJSONResponse) VisitExportAuditResponse(w http.R
 	return err
 }
 
+type CloneEventRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  CloneEventParams
+	Body    *CloneEventJSONRequestBody
+}
+
+type CloneEventResponseObject interface {
+	VisitCloneEventResponse(w http.ResponseWriter) error
+}
+
+type CloneEvent200JSONResponse Event
+
+func (response CloneEvent200JSONResponse) VisitCloneEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CloneEventdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response CloneEventdefaultJSONResponse) VisitCloneEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetConfigurationSnapshotRequestObject struct {
+	EventId EventID `json:"event_id"`
+}
+
+type GetConfigurationSnapshotResponseObject interface {
+	VisitGetConfigurationSnapshotResponse(w http.ResponseWriter) error
+}
+
+type GetConfigurationSnapshot200JSONResponse ConfigurationBundle
+
+func (response GetConfigurationSnapshot200JSONResponse) VisitGetConfigurationSnapshotResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetConfigurationSnapshotdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetConfigurationSnapshotdefaultJSONResponse) VisitGetConfigurationSnapshotResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveEventDefinitionsRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  SaveEventDefinitionsParams
+	Body    *SaveEventDefinitionsJSONRequestBody
+}
+
+type SaveEventDefinitionsResponseObject interface {
+	VisitSaveEventDefinitionsResponse(w http.ResponseWriter) error
+}
+
+type SaveEventDefinitions200JSONResponse ConfigurationBundle
+
+func (response SaveEventDefinitions200JSONResponse) VisitSaveEventDefinitionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveEventDefinitionsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SaveEventDefinitionsdefaultJSONResponse) VisitSaveEventDefinitionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListEventDecisionsRequestObject struct {
 	EventId EventID `json:"event_id"`
 }
@@ -2561,6 +4289,283 @@ type TransferOwnerdefaultJSONResponse struct {
 }
 
 func (response TransferOwnerdefaultJSONResponse) VisitTransferOwnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPrivacySettingsRequestObject struct {
+	EventId EventID `json:"event_id"`
+}
+
+type GetPrivacySettingsResponseObject interface {
+	VisitGetPrivacySettingsResponse(w http.ResponseWriter) error
+}
+
+type GetPrivacySettings200JSONResponse PrivacySettings
+
+func (response GetPrivacySettings200JSONResponse) VisitGetPrivacySettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPrivacySettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetPrivacySettingsdefaultJSONResponse) VisitGetPrivacySettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetPrivacySettingsRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  SetPrivacySettingsParams
+	Body    *SetPrivacySettingsJSONRequestBody
+}
+
+type SetPrivacySettingsResponseObject interface {
+	VisitSetPrivacySettingsResponse(w http.ResponseWriter) error
+}
+
+type SetPrivacySettings200JSONResponse PrivacySettings
+
+func (response SetPrivacySettings200JSONResponse) VisitSetPrivacySettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetPrivacySettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SetPrivacySettingsdefaultJSONResponse) VisitSetPrivacySettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportOperationalProfilesRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ExportOperationalProfilesParams
+}
+
+type ExportOperationalProfilesResponseObject interface {
+	VisitExportOperationalProfilesResponse(w http.ResponseWriter) error
+}
+
+type ExportOperationalProfiles200ResponseHeaders struct {
+	ContentDisposition *string
+}
+
+type ExportOperationalProfiles200JSONResponse struct {
+	Body    ProfilePage
+	Headers ExportOperationalProfiles200ResponseHeaders
+}
+
+func (response ExportOperationalProfiles200JSONResponse) VisitExportOperationalProfilesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.ContentDisposition != nil {
+		w.Header().Set("Content-Disposition", fmt.Sprint(*response.Headers.ContentDisposition))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportOperationalProfilesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ExportOperationalProfilesdefaultJSONResponse) VisitExportOperationalProfilesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteOperationalProfileRequestObject struct {
+	EventId  EventID            `json:"event_id"`
+	PersonId openapi_types.UUID `json:"person_id"`
+	Params   DeleteOperationalProfileParams
+}
+
+type DeleteOperationalProfileResponseObject interface {
+	VisitDeleteOperationalProfileResponse(w http.ResponseWriter) error
+}
+
+type DeleteOperationalProfile200JSONResponse RemovedResult
+
+func (response DeleteOperationalProfile200JSONResponse) VisitDeleteOperationalProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteOperationalProfiledefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response DeleteOperationalProfiledefaultJSONResponse) VisitDeleteOperationalProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOperationalProfileRequestObject struct {
+	EventId  EventID            `json:"event_id"`
+	PersonId openapi_types.UUID `json:"person_id"`
+}
+
+type GetOperationalProfileResponseObject interface {
+	VisitGetOperationalProfileResponse(w http.ResponseWriter) error
+}
+
+type GetOperationalProfile200JSONResponse OperationalProfile
+
+func (response GetOperationalProfile200JSONResponse) VisitGetOperationalProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOperationalProfiledefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetOperationalProfiledefaultJSONResponse) VisitGetOperationalProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CorrectOperationalProfileRequestObject struct {
+	EventId  EventID            `json:"event_id"`
+	PersonId openapi_types.UUID `json:"person_id"`
+	Params   CorrectOperationalProfileParams
+	Body     *CorrectOperationalProfileJSONRequestBody
+}
+
+type CorrectOperationalProfileResponseObject interface {
+	VisitCorrectOperationalProfileResponse(w http.ResponseWriter) error
+}
+
+type CorrectOperationalProfile200JSONResponse OperationalProfile
+
+func (response CorrectOperationalProfile200JSONResponse) VisitCorrectOperationalProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CorrectOperationalProfiledefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response CorrectOperationalProfiledefaultJSONResponse) VisitCorrectOperationalProfileResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -2875,6 +4880,272 @@ func (response GetSessiondefaultJSONResponse) VisitGetSessionResponse(w http.Res
 	return err
 }
 
+type ListTemplatesRequestObject struct {
+	Params ListTemplatesParams
+}
+
+type ListTemplatesResponseObject interface {
+	VisitListTemplatesResponse(w http.ResponseWriter) error
+}
+
+type ListTemplates200JSONResponse TemplatePage
+
+func (response ListTemplates200JSONResponse) VisitListTemplatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListTemplatesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ListTemplatesdefaultJSONResponse) VisitListTemplatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTemplateRequestObject struct {
+	Params CreateTemplateParams
+	Body   *CreateTemplateJSONRequestBody
+}
+
+type CreateTemplateResponseObject interface {
+	VisitCreateTemplateResponse(w http.ResponseWriter) error
+}
+
+type CreateTemplate200JSONResponse Template
+
+func (response CreateTemplate200JSONResponse) VisitCreateTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTemplatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response CreateTemplatedefaultJSONResponse) VisitCreateTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTemplateRequestObject struct {
+	TemplateId openapi_types.UUID `json:"template_id"`
+	Params     GetTemplateParams
+}
+
+type GetTemplateResponseObject interface {
+	VisitGetTemplateResponse(w http.ResponseWriter) error
+}
+
+type GetTemplate200JSONResponse Template
+
+func (response GetTemplate200JSONResponse) VisitGetTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTemplatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetTemplatedefaultJSONResponse) VisitGetTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditTemplateRequestObject struct {
+	TemplateId openapi_types.UUID `json:"template_id"`
+	Params     EditTemplateParams
+	Body       *EditTemplateJSONRequestBody
+}
+
+type EditTemplateResponseObject interface {
+	VisitEditTemplateResponse(w http.ResponseWriter) error
+}
+
+type EditTemplate200JSONResponse Template
+
+func (response EditTemplate200JSONResponse) VisitEditTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EditTemplatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response EditTemplatedefaultJSONResponse) VisitEditTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CloneTemplateRequestObject struct {
+	TemplateId openapi_types.UUID `json:"template_id"`
+	Params     CloneTemplateParams
+	Body       *CloneTemplateJSONRequestBody
+}
+
+type CloneTemplateResponseObject interface {
+	VisitCloneTemplateResponse(w http.ResponseWriter) error
+}
+
+type CloneTemplate200JSONResponse Event
+
+func (response CloneTemplate200JSONResponse) VisitCloneTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CloneTemplatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response CloneTemplatedefaultJSONResponse) VisitCloneTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PublishTemplateRequestObject struct {
+	TemplateId openapi_types.UUID `json:"template_id"`
+	Params     PublishTemplateParams
+	Body       *PublishTemplateJSONRequestBody
+}
+
+type PublishTemplateResponseObject interface {
+	VisitPublishTemplateResponse(w http.ResponseWriter) error
+}
+
+type PublishTemplate200JSONResponse Template
+
+func (response PublishTemplate200JSONResponse) VisitPublishTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PublishTemplatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response PublishTemplatedefaultJSONResponse) VisitPublishTemplateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ResolveEventTimeRequestObject struct {
 	Params ResolveEventTimeParams
 	Body   *ResolveEventTimeJSONRequestBody
@@ -3027,6 +5298,15 @@ type StrictServerInterface interface {
 	// (GET /api/v1/events/{event_id}/audit/export)
 	ExportAudit(ctx context.Context, request ExportAuditRequestObject) (ExportAuditResponseObject, error)
 
+	// (POST /api/v1/events/{event_id}/clone)
+	CloneEvent(ctx context.Context, request CloneEventRequestObject) (CloneEventResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/configuration-snapshot)
+	GetConfigurationSnapshot(ctx context.Context, request GetConfigurationSnapshotRequestObject) (GetConfigurationSnapshotResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/configuration-snapshot)
+	SaveEventDefinitions(ctx context.Context, request SaveEventDefinitionsRequestObject) (SaveEventDefinitionsResponseObject, error)
+
 	// (GET /api/v1/events/{event_id}/decisions)
 	ListEventDecisions(ctx context.Context, request ListEventDecisionsRequestObject) (ListEventDecisionsResponseObject, error)
 
@@ -3038,6 +5318,24 @@ type StrictServerInterface interface {
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(ctx context.Context, request TransferOwnerRequestObject) (TransferOwnerResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/privacy)
+	GetPrivacySettings(ctx context.Context, request GetPrivacySettingsRequestObject) (GetPrivacySettingsResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/privacy)
+	SetPrivacySettings(ctx context.Context, request SetPrivacySettingsRequestObject) (SetPrivacySettingsResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/profiles/export)
+	ExportOperationalProfiles(ctx context.Context, request ExportOperationalProfilesRequestObject) (ExportOperationalProfilesResponseObject, error)
+
+	// (DELETE /api/v1/events/{event_id}/profiles/{person_id})
+	DeleteOperationalProfile(ctx context.Context, request DeleteOperationalProfileRequestObject) (DeleteOperationalProfileResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/profiles/{person_id})
+	GetOperationalProfile(ctx context.Context, request GetOperationalProfileRequestObject) (GetOperationalProfileResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/profiles/{person_id})
+	CorrectOperationalProfile(ctx context.Context, request CorrectOperationalProfileRequestObject) (CorrectOperationalProfileResponseObject, error)
 
 	// (GET /api/v1/events/{event_id}/schedule)
 	GetEventSchedule(ctx context.Context, request GetEventScheduleRequestObject) (GetEventScheduleResponseObject, error)
@@ -3059,6 +5357,24 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/session)
 	GetSession(ctx context.Context, request GetSessionRequestObject) (GetSessionResponseObject, error)
+
+	// (GET /api/v1/templates)
+	ListTemplates(ctx context.Context, request ListTemplatesRequestObject) (ListTemplatesResponseObject, error)
+
+	// (POST /api/v1/templates)
+	CreateTemplate(ctx context.Context, request CreateTemplateRequestObject) (CreateTemplateResponseObject, error)
+
+	// (GET /api/v1/templates/{template_id})
+	GetTemplate(ctx context.Context, request GetTemplateRequestObject) (GetTemplateResponseObject, error)
+
+	// (PUT /api/v1/templates/{template_id})
+	EditTemplate(ctx context.Context, request EditTemplateRequestObject) (EditTemplateResponseObject, error)
+
+	// (POST /api/v1/templates/{template_id}/clone)
+	CloneTemplate(ctx context.Context, request CloneTemplateRequestObject) (CloneTemplateResponseObject, error)
+
+	// (POST /api/v1/templates/{template_id}/publish)
+	PublishTemplate(ctx context.Context, request PublishTemplateRequestObject) (PublishTemplateResponseObject, error)
 
 	// (POST /api/v1/time/resolve)
 	ResolveEventTime(ctx context.Context, request ResolveEventTimeRequestObject) (ResolveEventTimeResponseObject, error)
@@ -3315,6 +5631,100 @@ func (sh *strictHandler) ExportAudit(w http.ResponseWriter, r *http.Request, eve
 	}
 }
 
+// CloneEvent operation middleware
+func (sh *strictHandler) CloneEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params CloneEventParams) {
+	var request CloneEventRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body CloneEventJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CloneEvent(ctx, request.(CloneEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CloneEvent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CloneEventResponseObject); ok {
+		if err := validResponse.VisitCloneEventResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetConfigurationSnapshot operation middleware
+func (sh *strictHandler) GetConfigurationSnapshot(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	var request GetConfigurationSnapshotRequestObject
+
+	request.EventId = eventId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetConfigurationSnapshot(ctx, request.(GetConfigurationSnapshotRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetConfigurationSnapshot")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetConfigurationSnapshotResponseObject); ok {
+		if err := validResponse.VisitGetConfigurationSnapshotResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SaveEventDefinitions operation middleware
+func (sh *strictHandler) SaveEventDefinitions(w http.ResponseWriter, r *http.Request, eventId EventID, params SaveEventDefinitionsParams) {
+	var request SaveEventDefinitionsRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body SaveEventDefinitionsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SaveEventDefinitions(ctx, request.(SaveEventDefinitionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SaveEventDefinitions")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SaveEventDefinitionsResponseObject); ok {
+		if err := validResponse.VisitSaveEventDefinitionsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListEventDecisions operation middleware
 func (sh *strictHandler) ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID) {
 	var request ListEventDecisionsRequestObject
@@ -3429,6 +5839,183 @@ func (sh *strictHandler) TransferOwner(w http.ResponseWriter, r *http.Request, e
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(TransferOwnerResponseObject); ok {
 		if err := validResponse.VisitTransferOwnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPrivacySettings operation middleware
+func (sh *strictHandler) GetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	var request GetPrivacySettingsRequestObject
+
+	request.EventId = eventId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPrivacySettings(ctx, request.(GetPrivacySettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPrivacySettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPrivacySettingsResponseObject); ok {
+		if err := validResponse.VisitGetPrivacySettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetPrivacySettings operation middleware
+func (sh *strictHandler) SetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID, params SetPrivacySettingsParams) {
+	var request SetPrivacySettingsRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body SetPrivacySettingsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetPrivacySettings(ctx, request.(SetPrivacySettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetPrivacySettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetPrivacySettingsResponseObject); ok {
+		if err := validResponse.VisitSetPrivacySettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportOperationalProfiles operation middleware
+func (sh *strictHandler) ExportOperationalProfiles(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportOperationalProfilesParams) {
+	var request ExportOperationalProfilesRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportOperationalProfiles(ctx, request.(ExportOperationalProfilesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportOperationalProfiles")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportOperationalProfilesResponseObject); ok {
+		if err := validResponse.VisitExportOperationalProfilesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteOperationalProfile operation middleware
+func (sh *strictHandler) DeleteOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params DeleteOperationalProfileParams) {
+	var request DeleteOperationalProfileRequestObject
+
+	request.EventId = eventId
+	request.PersonId = personId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteOperationalProfile(ctx, request.(DeleteOperationalProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteOperationalProfile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteOperationalProfileResponseObject); ok {
+		if err := validResponse.VisitDeleteOperationalProfileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOperationalProfile operation middleware
+func (sh *strictHandler) GetOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID) {
+	var request GetOperationalProfileRequestObject
+
+	request.EventId = eventId
+	request.PersonId = personId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOperationalProfile(ctx, request.(GetOperationalProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOperationalProfile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOperationalProfileResponseObject); ok {
+		if err := validResponse.VisitGetOperationalProfileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CorrectOperationalProfile operation middleware
+func (sh *strictHandler) CorrectOperationalProfile(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, params CorrectOperationalProfileParams) {
+	var request CorrectOperationalProfileRequestObject
+
+	request.EventId = eventId
+	request.PersonId = personId
+	request.Params = params
+
+	var body CorrectOperationalProfileJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CorrectOperationalProfile(ctx, request.(CorrectOperationalProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CorrectOperationalProfile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CorrectOperationalProfileResponseObject); ok {
+		if err := validResponse.VisitCorrectOperationalProfileResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -3634,6 +6221,194 @@ func (sh *strictHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListTemplates operation middleware
+func (sh *strictHandler) ListTemplates(w http.ResponseWriter, r *http.Request, params ListTemplatesParams) {
+	var request ListTemplatesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListTemplates(ctx, request.(ListTemplatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListTemplates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListTemplatesResponseObject); ok {
+		if err := validResponse.VisitListTemplatesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateTemplate operation middleware
+func (sh *strictHandler) CreateTemplate(w http.ResponseWriter, r *http.Request, params CreateTemplateParams) {
+	var request CreateTemplateRequestObject
+
+	request.Params = params
+
+	var body CreateTemplateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateTemplate(ctx, request.(CreateTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateTemplate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateTemplateResponseObject); ok {
+		if err := validResponse.VisitCreateTemplateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTemplate operation middleware
+func (sh *strictHandler) GetTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params GetTemplateParams) {
+	var request GetTemplateRequestObject
+
+	request.TemplateId = templateId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTemplate(ctx, request.(GetTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTemplate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTemplateResponseObject); ok {
+		if err := validResponse.VisitGetTemplateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// EditTemplate operation middleware
+func (sh *strictHandler) EditTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params EditTemplateParams) {
+	var request EditTemplateRequestObject
+
+	request.TemplateId = templateId
+	request.Params = params
+
+	var body EditTemplateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.EditTemplate(ctx, request.(EditTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "EditTemplate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(EditTemplateResponseObject); ok {
+		if err := validResponse.VisitEditTemplateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CloneTemplate operation middleware
+func (sh *strictHandler) CloneTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params CloneTemplateParams) {
+	var request CloneTemplateRequestObject
+
+	request.TemplateId = templateId
+	request.Params = params
+
+	var body CloneTemplateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CloneTemplate(ctx, request.(CloneTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CloneTemplate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CloneTemplateResponseObject); ok {
+		if err := validResponse.VisitCloneTemplateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishTemplate operation middleware
+func (sh *strictHandler) PublishTemplate(w http.ResponseWriter, r *http.Request, templateId openapi_types.UUID, params PublishTemplateParams) {
+	var request PublishTemplateRequestObject
+
+	request.TemplateId = templateId
+	request.Params = params
+
+	var body PublishTemplateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishTemplate(ctx, request.(PublishTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishTemplate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PublishTemplateResponseObject); ok {
+		if err := validResponse.VisitPublishTemplateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ResolveEventTime operation middleware
 func (sh *strictHandler) ResolveEventTime(w http.ResponseWriter, r *http.Request, params ResolveEventTimeParams) {
 	var request ResolveEventTimeRequestObject
@@ -3720,65 +6495,89 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"/wcA",
+	"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",
+	"cdUpAnNAGozdIKX+g9Wj5POX+y/3/zcA",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

@@ -71,6 +71,14 @@ type EventDecision struct {
 	CreatedAt time.Time
 }
 
+type EventDefinition struct {
+	EventID          uuid.UUID
+	Definitions      []byte
+	SourceTemplateID *uuid.UUID
+	SourceVersion    pgtype.Int4
+	CloneKey         string
+}
+
 type EventGateFact struct {
 	EventID            uuid.UUID
 	AttendanceReady    bool
@@ -98,6 +106,12 @@ type EventNotice struct {
 	LiveEnd          time.Time
 	SubmissionCutoff time.Time
 	CreatedAt        time.Time
+}
+
+type EventPrivacy struct {
+	EventID       uuid.UUID
+	RetentionDays int32
+	DraftDays     int32
 }
 
 type File struct {
@@ -140,6 +154,19 @@ type Operation struct {
 	UpdatedAt    time.Time
 }
 
+type OperationalProfile struct {
+	ID            uuid.UUID
+	EventID       uuid.UUID
+	PersonID      uuid.UUID
+	ContactEmail  string
+	ContactPhone  string
+	Dietary       string
+	Accessibility string
+	PhotoConsent  string
+	Revision      int64
+	UpdatedAt     time.Time
+}
+
 type Person struct {
 	ID              uuid.UUID
 	Issuer          string
@@ -157,6 +184,19 @@ type PolicyResource struct {
 	EventID uuid.UUID
 	ID      uuid.UUID
 	Kind    string
+}
+
+type PrivacyAggregate struct {
+	EventID         uuid.UUID
+	RemovedProfiles int64
+}
+
+type PrivateDraft struct {
+	ID        uuid.UUID
+	EventID   uuid.UUID
+	PersonID  uuid.UUID
+	Body      []byte
+	ExpiresAt time.Time
 }
 
 type ReconciliationRun struct {
@@ -188,4 +228,27 @@ type Session struct {
 	Token  string
 	Data   []byte
 	Expiry time.Time
+}
+
+type Template struct {
+	ID               uuid.UUID
+	OwnerID          uuid.UUID
+	Name             string
+	Revision         int64
+	LatestVersion    int32
+	PublishedVersion pgtype.Int4
+	UpdatedAt        time.Time
+}
+
+type TemplatePublication struct {
+	TemplateID uuid.UUID
+	Version    int32
+	CreatedAt  time.Time
+}
+
+type TemplateVersion struct {
+	TemplateID    uuid.UUID
+	Version       int32
+	Configuration []byte
+	CreatedAt     time.Time
 }

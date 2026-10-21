@@ -139,7 +139,7 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 	payload, _ := json.Marshal(
 		contract.UploadFileJSONRequestBody{
 			Filename:  "notes.txt",
-			MediaType: contract.Textplain,
+			MediaType: contract.UploadFileJSONBodyMediaTypeTextplain,
 			Content:   []byte("safe synthetic file"),
 		},
 	)

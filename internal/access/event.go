@@ -27,6 +27,7 @@ const (
 	MediaRead        Action = "media.read"
 	ProfileRead      Action = "profile.read"
 	ProfileExport    Action = "profile.export"
+	ProfileManage    Action = "profile.manage"
 )
 
 // EventPolicy always reads current authority. Platform administration permits
@@ -92,11 +93,8 @@ func (p EventPolicy) Authorize(
 		}
 		return ErrForbidden
 	}
-	if action == ProfileRead || action == ProfileExport {
-		if slices.Contains(roles, "logistics") {
-			return nil
-		}
-		return ErrForbidden
+	if action == ProfileManage || action == ProfileRead || action == ProfileExport {
+		return profilePolicy(action, roles, organiser, person.PlatformAdmin)
 	}
 	if action == FileRead {
 		return p.file(ctx, event, target, organiser)
@@ -170,6 +168,25 @@ func (p EventPolicy) file(ctx context.Context, event, target uuid.UUID, organise
 	}
 	if organiser && file.EventID == event {
 		return nil
+	}
+	return ErrForbidden
+}
+
+func profilePolicy(action Action, roles []string, organiser, admin bool) error {
+	if action == ProfileManage {
+		if organiser || admin {
+			return nil
+		}
+		return ErrForbidden
+	}
+	if action == ProfileRead && slices.Contains(roles, "photographer") {
+		return nil
+	}
+	if action == ProfileRead || action == ProfileExport {
+		if slices.Contains(roles, "logistics") {
+			return nil
+		}
+		return ErrForbidden
 	}
 	return ErrForbidden
 }

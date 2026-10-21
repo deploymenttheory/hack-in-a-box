@@ -34,6 +34,15 @@ const (
 	EventStageChanged       Action = "event.stage_changed"
 	EventDecision           Action = "event.decision"
 	ScheduleApproved        Action = "schedule.approved"
+	ProfileCorrected        Action = "profile.corrected"
+	ProfileExported         Action = "profile.exported"
+	ProfileRemoved          Action = "profile.removed"
+	PrivacyConfigured       Action = "privacy.configured"
+	TemplateCreated         Action = "template.created"
+	TemplateUpdated         Action = "template.updated"
+	TemplatePublished       Action = "template.published"
+	DefinitionsUpdated      Action = "definitions.updated"
+	EventCloned             Action = "event.cloned"
 )
 
 type Reason string
@@ -44,6 +53,7 @@ const (
 	UserRequest        Reason = "user_request"
 	OrganiserDecision  Reason = "organiser_decision"
 	ThresholdException Reason = "post_publication_withdrawal"
+	RetentionPolicy    Reason = "retention_policy"
 )
 
 // Metadata has no arbitrary strings/maps: credentials, brief text, accessibility
@@ -75,12 +85,17 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		TeamRebalanced,
 		ChallengeApproved,
 		ChallengePostponed,
-		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved:
+		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved, ProfileCorrected, ProfileExported, ProfileRemoved, PrivacyConfigured, TemplateCreated, TemplateUpdated, TemplatePublished, DefinitionsUpdated, EventCloned:
 	default:
 		return access.ErrInvalid
 	}
 	switch r.Reason {
-	case Bootstrap, Authentication, UserRequest, OrganiserDecision, ThresholdException:
+	case Bootstrap,
+		Authentication,
+		UserRequest,
+		OrganiserDecision,
+		ThresholdException,
+		RetentionPolicy:
 	default:
 		return access.ErrInvalid
 	}

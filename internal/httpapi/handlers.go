@@ -16,11 +16,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
@@ -30,6 +33,8 @@ type Dependencies struct {
 	Files       files.Service
 	Permissions permissions.Service
 	Events      event.Service
+	Privacy     privacy.Service
+	Templates   templates.Service
 }
 type handlers struct{ Dependencies }
 
@@ -72,6 +77,11 @@ func (h handlers) GetSession(
 	response.Person.Id = person.ID
 	response.Person.DisplayName = person.DisplayName
 	response.Person.PlatformAdmin = person.PlatformAdmin
+	allowed, err := dbgen.New(h.Auth.Pool).CanCreateEvent(ctx, person.ID)
+	if err != nil {
+		return nil, fmt.Errorf("check creation capability: %w", err)
+	}
+	response.CanCreateEvents = allowed
 	return response, nil
 }
 

@@ -10,7 +10,7 @@ test('sign-in and expired sessions return to the current event', async ({ page }
 })
 test('logout clears private browser drafts and account data', async ({ page }) => {
   let loggedOut = false
-  await page.route('**/api/v1/session', route => route.fulfill(loggedOut ? { status: 401, json: { error: { code: 'unauthenticated', message: 'Sign in', request_id: 'test' } } } : { json: { person, csrf_token: 'synthetic-csrf-token-32-characters' } }))
+  await page.route('**/api/v1/session', route => route.fulfill(loggedOut ? { status: 401, json: { error: { code: 'unauthenticated', message: 'Sign in', request_id: 'test' } } } : { json: { person, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: person.platform_admin } }))
   await page.route('**/api/v1/logout', route => { loggedOut = true; return route.fulfill({ status: 204 }) })
   await page.goto('/')
   await expect(page.getByRole('button', { name: person.display_name })).toBeVisible()
@@ -22,7 +22,7 @@ test('logout clears private browser drafts and account data', async ({ page }) =
   await expect(page.getByText(person.display_name)).toHaveCount(0)
 })
 test('switching accounts removes another account’s saved drafts', async ({ page }) => {
-  await page.route('**/api/v1/session', route => route.fulfill({ json: { person, csrf_token: 'synthetic-csrf-token-32-characters' } }))
+  await page.route('**/api/v1/session', route => route.fulfill({ json: { person, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: person.platform_admin } }))
   await page.addInitScript((id) => { sessionStorage.setItem('hackbox:draft:another:event', 'private'); sessionStorage.setItem(`hackbox:draft:${id}:event`, 'safe configuration') }, person.id)
   await page.goto('/')
   await expect(page.getByRole('button', { name: person.display_name })).toBeVisible()

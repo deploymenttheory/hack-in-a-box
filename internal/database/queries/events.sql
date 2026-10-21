@@ -22,7 +22,7 @@ UPDATE events SET name=$2,slug=$3,configuration=$4,revision=revision+1,updated_a
 WHERE id=$1 RETURNING *;
 
 -- name: SetEventStage :one
-UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2='completed' THEN now() WHEN $2='assessment' THEN NULL ELSE completed_at END,
+UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2 IN ('completed','cancelled') THEN now() WHEN $2='assessment' THEN NULL ELSE completed_at END,
 revision=revision+1,updated_at=now() WHERE id=$1 RETURNING *;
 
 -- name: RecordEventDecision :one

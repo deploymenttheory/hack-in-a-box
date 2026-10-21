@@ -18,10 +18,10 @@ export function EventDirectory() {
   const identity = useIdentity()
   const query = useInfiniteQuery({ queryKey: privateKey(identity.person.id, 'directory', 'events'), initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/events', { params: { query: { after: pageParam, limit: 50 } } })), getNextPageParam: page => page.next_cursor ?? undefined })
-  return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Prepare the next hack, or return to an event already in motion.</p></div>{identity.person.platform_admin && <Link className="primary-link" to="/events/new">Create event</Link>}</div>
+  return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Prepare the next hack, or return to an event already in motion.</p></div>{identity.can_create_events && <Link className="primary-link" to="/events/new">Create event</Link>}</div>
     {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <>
       <div className="event-grid">{query.data.pages.flatMap(page => page.items).map(event => <Link className="event-card" key={event.id} to="/events/$eventId" params={{ eventId: event.id }}><span className="badge">{event.stage}</span><h2>{event.name}</h2><p>{localDate(event.configuration.live_start, event.configuration.timezone)}</p><p className="muted">{event.configuration.timezone} · {event.confirmed_attendees} confirmed competitors</p></Link>)}</div>
-      {query.data.pages[0].items.length === 0 && <div className="empty-state"><h2>No events yet</h2><p>{identity.person.platform_admin ? 'Create your first event to set its dates and appoint the organising team.' : 'Events will appear here when your organiser grants you access.'}</p></div>}
+      {query.data.pages[0].items.length === 0 && <div className="empty-state"><h2>No events yet</h2><p>{identity.can_create_events ? 'Create your first event to set its dates and appoint the organising team.' : 'Events will appear here when your organiser grants you access.'}</p></div>}
       {query.hasNextPage && <Button onClick={() => void query.fetchNextPage()} disabled={query.isFetchingNextPage}>Show more events</Button>}
     </>}
   </section>
@@ -29,7 +29,7 @@ export function EventDirectory() {
 
 export function NewEvent() {
   const identity = useIdentity()
-  if (!identity.person.platform_admin) return <Failure error={new APIError(403, 'forbidden')} />
+  if (!identity.can_create_events) return <Failure error={new APIError(403, 'forbidden')} />
   return <section className="workspace"><Link to="/">← Your events</Link><div className="page-heading"><div><p className="eyebrow">Plan the next hack</p><h1>Create an event</h1><p>Save a draft, check the dates, then explicitly open registration when you are ready.</p></div></div><EventForm /></section>
 }
 
