@@ -834,6 +834,72 @@ paths:
                 $ref: '#/components/schemas/RegistrationResponse'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/review:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: listApplicants
+      parameters:
+        - name: after
+          in: query
+          schema: {type: integer, format: int64, minimum: 0}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 50}
+      responses:
+        '200':
+          description: Authorised applicant review result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicantPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/{registration_id}/review:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: registration_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getApplicant
+      responses:
+        '200':
+          description: Authorised applicant review result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicantDetail'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/{registration_id}/decision:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: registration_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: reviewApplicant
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicantDecision'
+      responses:
+        '200':
+          description: Authorised applicant review result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -1792,6 +1858,54 @@ components:
         removed:
           type: boolean
 
+    Applicant:
+      type: object
+      required: [registration, display_name]
+      properties:
+        registration:
+          $ref: '#/components/schemas/Registration'
+        display_name: {type: string}
+    ApplicantPage:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Applicant'
+        next_cursor: {type: integer, format: int64, nullable: true}
+    ApplicantHistory:
+      type: object
+      required: [action, from, to, reason, at]
+      properties:
+        action: {type: string}
+        from: {type: string}
+        to: {type: string}
+        reason: {type: string}
+        at: {type: string, format: date-time}
+    ApplicantDetail:
+      type: object
+      required: [applicant, response, history, fallback_available]
+      properties:
+        applicant:
+          $ref: '#/components/schemas/Applicant'
+        response:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationResponse'
+          nullable: true
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicantHistory'
+        fallback_available: {type: boolean}
+    ApplicantDecision:
+      type: object
+      additionalProperties: false
+      required: [action, reason, acknowledge_competition_restriction]
+      properties:
+        action: {type: string, enum: [selected, backup, declined, invite]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        acknowledge_competition_restriction: {type: boolean}
     ApplicationInput:
       type: object
       additionalProperties: false

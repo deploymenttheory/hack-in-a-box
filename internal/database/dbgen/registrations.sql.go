@@ -7,7 +7,6 @@ package dbgen
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -53,6 +52,22 @@ UPDATE registrations SET request_hash='',invitation_reference='' WHERE event_id=
 func (q *Queries) ForgetRegistrationInput(ctx context.Context, eventID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, forgetRegistrationInput, eventID)
 	return err
+}
+
+const hasRegistrationInvitation = `-- name: HasRegistrationInvitation :one
+SELECT EXISTS(SELECT 1 FROM operations WHERE event_id=$1 AND operation_key=$2)
+`
+
+type HasRegistrationInvitationParams struct {
+	EventID      uuid.UUID
+	OperationKey string
+}
+
+func (q *Queries) HasRegistrationInvitation(ctx context.Context, arg HasRegistrationInvitationParams) (bool, error) {
+	row := q.db.QueryRow(ctx, hasRegistrationInvitation, arg.EventID, arg.OperationKey)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const insertRegistration = `-- name: InsertRegistration :one
@@ -123,23 +138,8 @@ type ListRegistrationsParams struct {
 }
 
 type ListRegistrationsRow struct {
-	ID                  uuid.UUID
-	EventID             uuid.UUID
-	PersonID            uuid.UUID
-	FormID              uuid.UUID
-	FormVersion         int32
-	Audience            string
-	Kind                string
-	State               string
-	Sequence            int64
-	Revision            int64
-	RequestHash         string
-	ResponseRevision    int64
-	TeamPreference      string
-	InvitationReference string
-	FallbackToAttendee  bool
-	CreatedAt           time.Time
-	DisplayName         string
+	Registration Registration
+	DisplayName  string
 }
 
 func (q *Queries) ListRegistrations(ctx context.Context, arg ListRegistrationsParams) ([]ListRegistrationsRow, error) {
@@ -152,22 +152,22 @@ func (q *Queries) ListRegistrations(ctx context.Context, arg ListRegistrationsPa
 	for rows.Next() {
 		var i ListRegistrationsRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.EventID,
-			&i.PersonID,
-			&i.FormID,
-			&i.FormVersion,
-			&i.Audience,
-			&i.Kind,
-			&i.State,
-			&i.Sequence,
-			&i.Revision,
-			&i.RequestHash,
-			&i.ResponseRevision,
-			&i.TeamPreference,
-			&i.InvitationReference,
-			&i.FallbackToAttendee,
-			&i.CreatedAt,
+			&i.Registration.ID,
+			&i.Registration.EventID,
+			&i.Registration.PersonID,
+			&i.Registration.FormID,
+			&i.Registration.FormVersion,
+			&i.Registration.Audience,
+			&i.Registration.Kind,
+			&i.Registration.State,
+			&i.Registration.Sequence,
+			&i.Registration.Revision,
+			&i.Registration.RequestHash,
+			&i.Registration.ResponseRevision,
+			&i.Registration.TeamPreference,
+			&i.Registration.InvitationReference,
+			&i.Registration.FallbackToAttendee,
+			&i.Registration.CreatedAt,
 			&i.DisplayName,
 		); err != nil {
 			return nil, err
