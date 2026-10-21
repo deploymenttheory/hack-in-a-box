@@ -1,3 +1,4 @@
+import { TemplatesPage, TemplatePage } from './templates'
 import { GitHubAccount } from './github-account'
 import { useEffect, useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
@@ -66,7 +67,7 @@ function Shell() {
       {session.data && !session.error ? <Account session={session.data} /> : <a className="sign-in" href={loginURL()}>Sign in</a>}
     </header>
     <main id="main" tabIndex={-1}>
-      {!/^\/$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
+      {!/^\/$|^\/templates(?:\/[a-f0-9-]+)?$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
         signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={session.data.person.id}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
     </main>
     <footer>Make something worth sharing.</footer>
@@ -86,7 +87,9 @@ const root = createRootRoute({ component: Shell, notFoundComponent: NotFound, er
 const home = createRoute({ getParentRoute: () => root, path: '/', component: EventDirectory })
 const event = createRoute({ getParentRoute: () => root, path: '/events/$eventId', component: EventWorkspace })
 const newEvent = createRoute({ getParentRoute: () => root, path: '/events/new', component: NewEvent })
+const templates = createRoute({ getParentRoute: () => root, path: '/templates', component: TemplatesPage })
+const template = createRoute({ getParentRoute: () => root, path: '/templates/$templateId', component: TemplatePage })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([home, newEvent, event, account]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([home, newEvent, event, account, templates, template]), defaultPendingComponent: Loading })
 declare module '@tanstack/react-router' { interface Register { router: typeof router } }
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

@@ -527,6 +527,25 @@ paths:
                 type: string
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/template-starters:
+    get:
+      operationId: listTemplateStarters
+      responses:
+        '200':
+          description: Sanitized starter definitions for authorised event creators.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TemplateStarter'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/templates:
     get:
       operationId: listTemplates
@@ -1879,6 +1898,17 @@ components:
           nullable: true
         version:
           type: integer
+        configuration:
+          $ref: '#/components/schemas/ConfigurationBundle'
+    TemplateStarter:
+      type: object
+      additionalProperties: false
+      required: [key, name, configuration]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
         configuration:
           $ref: '#/components/schemas/ConfigurationBundle'
     TemplatePage:
