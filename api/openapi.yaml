@@ -715,6 +715,40 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/EventDefinitions'
+  /api/v1/events/{event_id}/branding:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getEventBranding
+      responses:
+        '200':
+          description: Event branding only; excludes private configuration definitions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventBranding'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateEventBranding
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateBranding'
+      responses:
+        '200':
+          description: Saved branding and current event revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventBranding'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/events/{event_id}/clone:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -1709,6 +1743,16 @@ components:
         content:
           type: string
           format: byte
+    EventBranding:
+      type: object
+      additionalProperties: false
+      required: [revision, branding]
+      properties:
+        revision:
+          type: integer
+          format: int64
+        branding:
+          $ref: '#/components/schemas/TemplateBranding'
     TemplateBranding:
       type: object
       additionalProperties: false

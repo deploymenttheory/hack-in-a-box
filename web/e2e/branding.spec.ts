@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test'
+import { mockWorkspace, firstID, secondID } from './fixtures'
+
+test('branding previews before save, rejects unreadable palettes and stays scoped to one event', async ({ page }) => {
+  await mockWorkspace(page)
+  let primary = '#173a35', saves = 0
+  await page.route(`**/events/${firstID}/branding`, async route => {
+    if (route.request().method() === 'PUT') { primary = route.request().postDataJSON().primary; saves++ }
+    await route.fulfill({ json: { revision: 1 + saves, branding: { primary, accent: '#d17c32', background: '#f8f9f5', foreground: '#173a35', assets: [] } } })
+  })
+  await page.goto(`/events/${firstID}`)
+  await page.getByRole('button', { name: 'Branding', exact: true }).click()
+  await page.getByLabel('Primary colour').fill('#233c78')
+  expect(saves).toBe(0)
+  await expect(page.getByRole('region', { name: 'Branding preview' })).toHaveCSS('--primary', '#233c78')
+  await page.getByLabel('Text colour').fill('#f8f9f5')
+  await expect(page.getByRole('button', { name: 'Save branding' })).toBeDisabled()
+  await expect(page.getByRole('alert')).toContainText('contrast')
+  await page.getByLabel('Text colour').fill('#173a35')
+  await page.getByRole('button', { name: 'Save branding' }).click()
+  await expect(page.getByRole('status')).toHaveText('Branding saved.')
+  expect(saves).toBe(1)
+  await page.getByRole('link', { name: 'Switch event' }).click()
+  await page.locator(`a[href="/events/${secondID}"]`).click()
+  await expect(page.getByRole('heading', { name: 'Southern Lights Hack' })).toBeVisible()
+  await expect(page.locator('.theme .theme').first()).toHaveCSS('--primary', '#173a35')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+})
+
+test('unsafe image selection is explained without sending a save', async ({ page }) => {
+  await mockWorkspace(page)
+  await page.goto(`/events/${firstID}`)
+  await page.getByRole('button', { name: 'Branding', exact: true }).click()
+  await page.getByLabel('Logo image').setInputFiles({ name: 'unsafe.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') })
+  await expect(page.getByRole('alert')).toContainText('PNG or JPEG')
+})
