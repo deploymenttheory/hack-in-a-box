@@ -262,6 +262,8 @@ func (s Service) view(
 			view.ChallengePublication = &at
 		}
 	}
+	view.CanReadStaff = policy.Authorize(ctx, actor, row.ID, row.ID, access.StaffRead) == nil
+	view.CanTransition = view.CanReadStaff && row.Stage != "archived"
 	if row.PublishedAt.Valid {
 		at := row.PublishedAt.Time
 		view.PublishedAt = &at

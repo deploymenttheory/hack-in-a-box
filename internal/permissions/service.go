@@ -92,8 +92,22 @@ func (s Service) Change(ctx context.Context, c Change) (dbgen.Event, error) {
 			return access.ErrConflict
 		}
 		target, err := q.Person(ctx, c.Person)
-		if err != nil || !target.Active {
+		if err != nil || (c.Active && !target.Active) {
 			return access.ErrNotFound
+		}
+		current, err := q.MembershipState(
+			ctx,
+			dbgen.MembershipStateParams{EventID: c.Event, PersonID: c.Person, Role: c.Role},
+		)
+		if errors.Is(err, pgx.ErrNoRows) && !c.Active {
+			return access.ErrNotFound
+		}
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("load current role: %w", err)
+		}
+		if err == nil && current == c.Active {
+			result = event
+			return nil
 		}
 		if c.Active {
 			if err := checkGrant(ctx, q, c); err != nil {
