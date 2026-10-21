@@ -1,0 +1,9 @@
+package: contract
+output: internal/httpapi/contract/api.gen.go
+generate:
+  models: true
+  chi-server: true
+  strict-server: true
+  embedded-spec: true
+output-options:
+  skip-prune: true

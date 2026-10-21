@@ -1,0 +1,249 @@
+package httpapi
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"mime"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/files"
+	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
+	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+)
+
+type Dependencies struct {
+	Pool  *pgxpool.Pool
+	Auth  *identity.Auth
+	Audit audit.Service
+	Files files.Service
+}
+type handlers struct{ Dependencies }
+
+var _ contract.StrictServerInterface = handlers{}
+
+func (h handlers) GetHealth(
+	context.Context,
+	contract.GetHealthRequestObject,
+) (contract.GetHealthResponseObject, error) {
+	return contract.GetHealth200JSONResponse{Status: contract.Ok}, nil
+}
+
+func (h handlers) GetReady(
+	ctx context.Context,
+	_ contract.GetReadyRequestObject,
+) (contract.GetReadyResponseObject, error) {
+	if h.Pool == nil || h.Files.Storage == nil {
+		return nil, database.ErrDatabase
+	}
+	if err := h.Pool.Ping(ctx); err != nil {
+		return nil, database.ErrDatabase
+	}
+	if err := database.CheckSchema(ctx, h.Pool); err != nil {
+		return nil, database.ErrSchema
+	}
+	if err := h.Files.Storage.Ready(ctx); err != nil {
+		return nil, database.ErrDatabase
+	}
+	return contract.GetReady200JSONResponse{Status: contract.Ok}, nil
+}
+
+func (h handlers) GetSession(
+	ctx context.Context,
+	_ contract.GetSessionRequestObject,
+) (contract.GetSessionResponseObject, error) {
+	person := actor(ctx)
+	response := contract.GetSession200JSONResponse{
+		CsrfToken: h.Auth.Sessions.GetString(ctx, "csrf"),
+	}
+	response.Person.Id = person.ID
+	response.Person.DisplayName = person.DisplayName
+	response.Person.PlatformAdmin = person.PlatformAdmin
+	return response, nil
+}
+
+func (h handlers) Logout(
+	ctx context.Context,
+	_ contract.LogoutRequestObject,
+) (contract.LogoutResponseObject, error) {
+	if err := h.Auth.Logout(ctx); err != nil {
+		return nil, fmt.Errorf("logout: %w", err)
+	}
+	return contract.Logout204Response{}, nil
+}
+
+func page(cursor *int64, limit *int) (int64, int32) {
+	start := int64(0)
+	size := int32(50)
+	if cursor != nil {
+		start = *cursor
+	}
+	if limit != nil && *limit >= 1 && *limit <= 100 {
+		size = int32(*limit)
+	}
+	return start, size
+}
+
+func (h handlers) ListAudit(
+	ctx context.Context,
+	r contract.ListAuditRequestObject,
+) (contract.ListAuditResponseObject, error) {
+	cursor, limit := page(r.Params.Cursor, r.Params.Limit)
+	records, err := h.Audit.List(ctx, actor(ctx).ID, r.EventId, cursor, limit, false)
+	if err != nil {
+		return nil, fmt.Errorf("list: %w", err)
+	}
+	result := contract.AuditPage{
+		Items:      make([]contract.AuditEvent, 0, len(records)),
+		NextCursor: cursor,
+	}
+	for _, record := range records {
+		entry := contract.AuditEvent{
+			Id:         record.ID,
+			ActorId:    record.ActorID,
+			Action:     record.Action,
+			TargetId:   record.TargetID,
+			Sequence:   record.Sequence,
+			ReasonCode: record.ReasonCode,
+			OccurredAt: record.OccurredAt,
+		}
+		if err := json.Unmarshal(record.Metadata, &entry.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshal: %w", err)
+		}
+		result.Items = append(result.Items, entry)
+		result.NextCursor = record.Sequence
+	}
+	return contract.ListAudit200JSONResponse(result), nil
+}
+
+func (h handlers) ExportAudit(
+	ctx context.Context,
+	r contract.ExportAuditRequestObject,
+) (contract.ExportAuditResponseObject, error) {
+	cursor, limit := page(r.Params.Cursor, r.Params.Limit)
+	records, err := h.Audit.List(ctx, actor(ctx).ID, r.EventId, cursor, limit, true)
+	if err != nil {
+		return nil, fmt.Errorf("list: %w", err)
+	}
+	result := contract.AuditPage{
+		Items:      make([]contract.AuditEvent, 0, len(records)),
+		NextCursor: cursor,
+	}
+	for _, record := range records {
+		entry := contract.AuditEvent{
+			Id:         record.ID,
+			ActorId:    record.ActorID,
+			Action:     record.Action,
+			TargetId:   record.TargetID,
+			Sequence:   record.Sequence,
+			ReasonCode: record.ReasonCode,
+			OccurredAt: record.OccurredAt,
+		}
+		if err := json.Unmarshal(record.Metadata, &entry.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshal: %w", err)
+		}
+		result.Items = append(result.Items, entry)
+		result.NextCursor = record.Sequence
+	}
+	disposition := "attachment; filename=audit.json"
+	return contract.ExportAudit200JSONResponse{
+		Body:    result,
+		Headers: contract.ExportAudit200ResponseHeaders{ContentDisposition: &disposition},
+	}, nil
+}
+
+func (h handlers) UploadFile(
+	ctx context.Context,
+	r contract.UploadFileRequestObject,
+) (contract.UploadFileResponseObject, error) {
+	if r.Body == nil {
+		return nil, access.ErrInvalid
+	}
+	revision, err := strconv.ParseInt(strings.Trim(r.Params.IfMatch, "\""), 10, 64)
+	if err != nil {
+		return nil, access.ErrInvalid
+	}
+	file, err := h.Files.Upload(
+		ctx,
+		files.Upload{
+			Actor:     actor(ctx).ID,
+			Event:     r.EventId,
+			Key:       r.Params.IdempotencyKey,
+			Revision:  revision,
+			Filename:  r.Body.Filename,
+			MediaType: string(r.Body.MediaType),
+			Content:   r.Body.Content,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("upload: %w", err)
+	}
+	return contract.UploadFile201JSONResponse{
+		Id:        file.ID,
+		EventId:   file.EventID,
+		OwnerId:   file.OwnerID,
+		Filename:  file.Filename,
+		MediaType: file.MediaType,
+		Checksum:  file.Checksum,
+		SizeBytes: file.SizeBytes,
+		CreatedAt: file.CreatedAt,
+	}, nil
+}
+
+func (h handlers) DownloadFile(
+	ctx context.Context,
+	r contract.DownloadFileRequestObject,
+) (contract.DownloadFileResponseObject, error) {
+	file, data, err := h.Files.Download(ctx, actor(ctx).ID, r.EventId, r.FileId)
+	if err != nil {
+		return nil, fmt.Errorf("download: %w", err)
+	}
+	disposition := mime.FormatMediaType("attachment", map[string]string{"filename": file.Filename})
+	return contract.DownloadFile200ApplicationoctetStreamResponse{
+		Body:          bytes.NewReader(data),
+		ContentLength: file.SizeBytes,
+		Headers:       contract.DownloadFile200ResponseHeaders{ContentDisposition: &disposition},
+	}, nil
+}
+
+func respondError(w http.ResponseWriter, r *http.Request, err error) {
+	status, code, message := 500, "internal_error", "An internal error occurred."
+	switch {
+	case errors.Is(err, access.ErrUnauthenticated):
+		status, code, message = 401, "unauthenticated", "Sign in to continue."
+	case errors.Is(err, access.ErrForbidden):
+		status, code, message = 403, "forbidden", "You do not have access to this resource."
+	case errors.Is(err, identity.ErrCSRF):
+		status, code, message = 403, "csrf_invalid", "Refresh the page and try again."
+	case errors.Is(err, access.ErrNotFound):
+		status, code, message = 404, "not_found", "The requested resource was not found."
+	case errors.Is(err, access.ErrConflict):
+		status, code, message = 409, "revision_conflict", "This resource has changed. Refresh and try again."
+	case errors.Is(err, files.ErrIdempotency):
+		status, code, message = 409, "idempotency_conflict", "This action key has already been used for different content."
+	case errors.Is(err, access.ErrInvalid), errors.Is(err, files.ErrPath):
+		status, code, message = 400, "invalid_request", "Check the request fields and try again."
+	case errors.Is(err, files.ErrSize):
+		status, code, message = 413, "body_too_large", "The file exceeds the upload limit."
+	case errors.Is(err, files.ErrQuota):
+		status, code, message = 413, "quota_exceeded", "This event has reached its file quota."
+	case errors.Is(err, files.ErrMedia):
+		status, code, message = 415, "unsupported_media", "The file type is unsupported or does not match its content."
+	case errors.Is(err, files.ErrMissing):
+		status, code, message = 503, "object_missing", "The stored file is unavailable. Ask an administrator to check the file volume."
+	case errors.Is(err, database.ErrDatabase), errors.Is(err, database.ErrSchema):
+		status, code, message = 503, "unavailable", "A required service is temporarily unavailable."
+	case errors.Is(err, identity.ErrLogin):
+		status, code, message = 401, "login_failed", "Sign-in could not be completed. Start sign-in again."
+	}
+	writeError(w, r, status, code, message)
+}

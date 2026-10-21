@@ -12,16 +12,25 @@ import (
 func TestLoad(t *testing.T) {
 	t.Parallel()
 	env := map[string]string{
-		"HACKBOX_ENV": "production", "HACKBOX_HTTP_ADDR": "[::1]:9090",
-		"HACKBOX_LOG_LEVEL": "DEBUG", "HACKBOX_MAX_BODY_BYTES": "4096",
-		"HACKBOX_REQUEST_TIMEOUT": "2s", "HACKBOX_SHUTDOWN_TIMEOUT": "4s",
+		"HACKBOX_PUBLIC_ORIGIN":    "https://hack.example.test",
+		"HACKBOX_OIDC_ISSUER":      "https://login.example.test/tenant",
+		"HACKBOX_OIDC_CLIENT_ID":   "test-client",
+		"HACKBOX_METRICS_TOKEN":    "synthetic-test-token-32-characters-long",
+		"HACKBOX_ENV":              "production",
+		"HACKBOX_HTTP_ADDR":        "[::1]:9090",
+		"HACKBOX_LOG_LEVEL":        "DEBUG",
+		"HACKBOX_MAX_BODY_BYTES":   "4096",
+		"HACKBOX_REQUEST_TIMEOUT":  "2s",
+		"HACKBOX_SHUTDOWN_TIMEOUT": "4s",
 	}
 	cfg, err := config.Load(func(key string) string { return env[key] })
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Environment != "production" || cfg.HTTPAddr != "[::1]:9090" || cfg.LogLevel != slog.LevelDebug ||
-		cfg.MaxBodyBytes != 4096 || cfg.RequestTimeout != 2*time.Second ||
+	if cfg.Environment != "production" || cfg.HTTPAddr != "[::1]:9090" ||
+		cfg.LogLevel != slog.LevelDebug ||
+		cfg.MaxBodyBytes != 4096 ||
+		cfg.RequestTimeout != 2*time.Second ||
 		cfg.ShutdownTimeout != 4*time.Second {
 		t.Fatalf("unexpected configuration: %+v", cfg)
 	}
@@ -53,5 +62,23 @@ func TestLoadRejectsInvalidConfigurationWithoutValues(t *testing.T) {
 				t.Fatalf("configuration value leaked: %v", err)
 			}
 		})
+	}
+}
+
+func TestOIDCIssuerRetainsProviderTrailingSlash(t *testing.T) {
+	t.Parallel()
+	env := map[string]string{
+		"HACKBOX_ENV":            "production",
+		"HACKBOX_PUBLIC_ORIGIN":  "https://hack.example.test",
+		"HACKBOX_OIDC_ISSUER":    "https://issuer.example.test/",
+		"HACKBOX_OIDC_CLIENT_ID": "synthetic-client",
+		"HACKBOX_METRICS_TOKEN":  "synthetic-metrics-token-32-characters",
+	}
+	cfg, err := config.Load(func(key string) string { return env[key] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.OIDCIssuer != env["HACKBOX_OIDC_ISSUER"] {
+		t.Fatal("issuer was normalized instead of retained exactly")
 	}
 }
