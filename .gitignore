@@ -27,6 +27,10 @@
 /pkg/
 coverage.out
 coverage.html
+.env
+.env.*
+!.env.example
+golangci-lint-report.sarif
 
 # Python virtual environments
 scripts/python/venv/

@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: Hack-in-a-Box API
+  version: 0.1.0
+  description: >-
+    Initial operational contract. Domain endpoints will use /api/v1.
+    Server and browser code generation is implemented in foundation ticket 25.
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      summary: Check that the API process can serve HTTP
+      description: Liveness only; this does not check database or provider readiness.
+      responses:
+        '200':
+          description: The process is running.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestID'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+        default:
+          $ref: '#/components/responses/Error'
+components:
+  headers:
+    RequestID:
+      description: Server-generated request identifier for correlating errors.
+      schema:
+        type: string
+  responses:
+    Error:
+      description: >-
+        Application HTTP errors use this envelope: 400 invalid_body,
+        404 not_found, 405 method_not_allowed, 413 body_too_large,
+        500 internal_error and 503 request_timeout. Connection-level failures
+        rejected by the HTTP server before routing may use its native response.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            request_id:
+              type: string
