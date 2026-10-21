@@ -132,6 +132,61 @@ paths:
             application/octet-stream:
               schema: { type: string, format: binary }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/staff:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    get:
+      operationId: listStaff
+      responses:
+        '200':
+          description: Current and revoked event grants with assignment timestamps.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffPage' }
+        default: { $ref: '#/components/responses/Error' }
+    put:
+      operationId: changeStaff
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StaffChange' }
+      responses:
+        '200':
+          description: Grant saved; current event revision.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RevisionResult' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/owner:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    put:
+      operationId: transferOwner
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [person_id, acknowledge_competition_restriction]
+              properties:
+                person_id: { type: string, format: uuid }
+                acknowledge_competition_restriction: { type: boolean }
+      responses:
+        '200':
+          description: Ownership transferred; current event revision.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RevisionResult' }
+        default: { $ref: '#/components/responses/Error' }
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -226,6 +281,7 @@ components:
             previous_revision: { type: integer, format: int64 }
             revision: { type: integer, format: int64 }
             count: { type: integer }
+            role: { $ref: '#/components/schemas/StaffRole' }
     AuditPage:
       type: object
       required: [items, next_cursor]
@@ -244,3 +300,34 @@ components:
         checksum: { type: string }
         size_bytes: { type: integer, format: int64 }
         created_at: { type: string, format: date-time }
+    StaffRole:
+      type: string
+      enum: [organiser, mentor, judge, mc, logistics, photographer, early_brief_access]
+    StaffChange:
+      type: object
+      additionalProperties: false
+      required: [person_id, role, active, acknowledge_competition_restriction]
+      properties:
+        person_id: { type: string, format: uuid }
+        role: { $ref: '#/components/schemas/StaffRole' }
+        active: { type: boolean }
+        acknowledge_competition_restriction: { type: boolean }
+    StaffMember:
+      type: object
+      required: [person_id, display_name, role, active, changed_at]
+      properties:
+        person_id: { type: string, format: uuid }
+        display_name: { type: string }
+        role: { $ref: '#/components/schemas/StaffRole' }
+        active: { type: boolean }
+        changed_at: { type: string, format: date-time }
+    StaffPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/StaffMember' } }
+    RevisionResult:
+      type: object
+      required: [revision]
+      properties:
+        revision: { type: integer, format: int64 }

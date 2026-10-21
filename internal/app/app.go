@@ -21,6 +21,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
+	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 )
 
 func Main(component string, run func(context.Context, config.Config, *slog.Logger) error) int {
@@ -73,11 +74,12 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		return fmt.Errorf("new: %w", err)
 	}
 	queries := dbgen.New(pool)
-	policy := access.AdminPolicy{Queries: queries}
+	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		Pool:  pool,
-		Auth:  auth,
-		Audit: audit.Service{Queries: queries, Policy: policy},
+		Pool:        pool,
+		Permissions: permissions.Service{Pool: pool},
+		Auth:        auth,
+		Audit:       audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{
 			Pool:       pool,
 			Storage:    storage,

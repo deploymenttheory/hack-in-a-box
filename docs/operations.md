@@ -32,6 +32,6 @@ This is at-least-once execution. A unique job does not prove exactly-once extern
 
 Back up PostgreSQL and the files volume as one consistent installation. File contents are private, opaque objects; metadata includes checksum, size, event and owner. A database commit with an unknown outcome leaves the object in place until reconciliation can safely prove it is unreferenced. The worker checks for unreferenced objects older than 24 hours at startup and every minute, and stops cleanup on database errors.
 
-Never edit an audit record or delete a delivered operation to clear an alert. Fix the underlying condition and retain the evidence. No public API provides audit mutation. Event audit query/export policy is enforced server-side; the foundation restricts it to active platform administrators until event grants are implemented.
+Never edit an audit record or delete a delivered operation to clear an alert. Fix the underlying condition and retain the evidence. No public API provides audit mutation. Event audit query/export policy is enforced server-side; current event organiser membership is required, including for platform administrators.
 
 For schema upgrades, stop API and worker before migrating. The dedicated migration connection holds a PostgreSQL session lock across the complete Goose and River upgrade; a disconnected migrator releases it. A failed migration can be rerun, but a failed deployment must not start incompatible binaries. Keep the previous image and matching backup until validation succeeds.

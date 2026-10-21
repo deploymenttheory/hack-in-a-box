@@ -7,8 +7,6 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-
-	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
 var (
@@ -30,28 +28,4 @@ const (
 
 type Policy interface {
 	Authorize(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, Action) error
-}
-
-// AdminPolicy is deliberately restrictive until event-role grants land in #34.
-// Callers provide event AND resource IDs so subsequent policies can narrow access.
-type AdminPolicy struct{ Queries *dbgen.Queries }
-
-func (p AdminPolicy) Authorize(
-	ctx context.Context,
-	actor, event, _ uuid.UUID,
-	action Action,
-) error {
-	switch action {
-	case AuditRead, AuditExport, FileWrite, FileRead:
-	default:
-		return ErrForbidden
-	}
-	person, err := p.Queries.Person(ctx, actor)
-	if err != nil || !person.Active || !person.PlatformAdmin {
-		return ErrForbidden
-	}
-	if _, err := p.Queries.Event(ctx, event); err != nil {
-		return ErrNotFound
-	}
-	return nil
 }

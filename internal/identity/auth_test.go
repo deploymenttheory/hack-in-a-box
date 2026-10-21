@@ -104,7 +104,14 @@ func TestOIDCStatePKCENonceAudienceAndRevocation(t *testing.T) {
 	for _, scenario := range []string{"bad_nonce", "bad_audience", "success"} {
 		t.Run(scenario, func(t *testing.T) {
 			start := httptest.NewRecorder()
-			handler.ServeHTTP(start, httptest.NewRequest("GET", "/auth/login", nil))
+			handler.ServeHTTP(
+				start,
+				httptest.NewRequest(
+					"GET",
+					"/auth/login?return_to=%2Fevents%2Fsynthetic%3Ftab%3Dstaff",
+					nil,
+				),
+			)
 			redirect, err := url.Parse(start.Header().Get("Location"))
 			if err != nil {
 				t.Fatal(err)
@@ -146,6 +153,9 @@ func TestOIDCStatePKCENonceAudienceAndRevocation(t *testing.T) {
 			}
 			if scenario != "success" {
 				return
+			}
+			if result.Header().Get("Location") != "/events/synthetic?tab=staff" {
+				t.Fatal("validated login destination was lost")
 			}
 			var token string
 			for _, cookie := range result.Result().Cookies() {

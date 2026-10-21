@@ -35,6 +35,17 @@ func TestQuotaFinalizationIdempotencyAndOwnership(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+	if err := q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{
+			EventID:  event,
+			PersonID: person.ID,
+			Role:     "organiser",
+			Active:   true,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
 	storage, err := files.OpenLocal(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +54,7 @@ func TestQuotaFinalizationIdempotencyAndOwnership(t *testing.T) {
 	service := files.Service{
 		Pool:       pool,
 		Storage:    storage,
-		Policy:     access.AdminPolicy{Queries: q},
+		Policy:     access.EventPolicy{Queries: q},
 		MaxBytes:   100,
 		EventQuota: 12,
 	}

@@ -27,7 +27,7 @@ func (q *Queries) BootstrapAdmin(ctx context.Context, id uuid.UUID) (int64, erro
 }
 
 const consumeLoginAttempt = `-- name: ConsumeLoginAttempt :one
-DELETE FROM login_attempts WHERE state_hash = $1 AND browser_hash = $2 AND expires_at > now() RETURNING state_hash, browser_hash, nonce, verifier, expires_at
+DELETE FROM login_attempts WHERE state_hash = $1 AND browser_hash = $2 AND expires_at > now() RETURNING state_hash, browser_hash, nonce, verifier, expires_at, return_to
 `
 
 type ConsumeLoginAttemptParams struct {
@@ -44,6 +44,7 @@ func (q *Queries) ConsumeLoginAttempt(ctx context.Context, arg ConsumeLoginAttem
 		&i.Nonce,
 		&i.Verifier,
 		&i.ExpiresAt,
+		&i.ReturnTo,
 	)
 	return i, err
 }
@@ -58,7 +59,7 @@ func (q *Queries) DeleteSession(ctx context.Context, token string) error {
 }
 
 const event = `-- name: Event :one
-SELECT id, name, revision, created_at, updated_at FROM events WHERE id = $1
+SELECT id, name, revision, created_at, updated_at, owner_id, writes_allowed FROM events WHERE id = $1
 `
 
 func (q *Queries) Event(ctx context.Context, id uuid.UUID) (Event, error) {
@@ -70,6 +71,8 @@ func (q *Queries) Event(ctx context.Context, id uuid.UUID) (Event, error) {
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.WritesAllowed,
 	)
 	return i, err
 }
@@ -126,7 +129,7 @@ func (q *Queries) Person(ctx context.Context, id uuid.UUID) (Person, error) {
 }
 
 const putLoginAttempt = `-- name: PutLoginAttempt :exec
-INSERT INTO login_attempts(state_hash, browser_hash, nonce, verifier, expires_at) VALUES ($1, $2, $3, $4, $5)
+INSERT INTO login_attempts(state_hash, browser_hash, nonce, verifier, expires_at, return_to) VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type PutLoginAttemptParams struct {
@@ -135,6 +138,7 @@ type PutLoginAttemptParams struct {
 	Nonce       string
 	Verifier    string
 	ExpiresAt   time.Time
+	ReturnTo    string
 }
 
 func (q *Queries) PutLoginAttempt(ctx context.Context, arg PutLoginAttemptParams) error {
@@ -144,6 +148,7 @@ func (q *Queries) PutLoginAttempt(ctx context.Context, arg PutLoginAttemptParams
 		arg.Nonce,
 		arg.Verifier,
 		arg.ExpiresAt,
+		arg.ReturnTo,
 	)
 	return err
 }
@@ -175,7 +180,7 @@ func (q *Queries) RevokeSessions(ctx context.Context, id uuid.UUID) error {
 
 const updateEventName = `-- name: UpdateEventName :one
 UPDATE events SET name = $2, revision = revision + 1, updated_at = now()
-WHERE id = $1 AND revision = $3 RETURNING id, name, revision, created_at, updated_at
+WHERE id = $1 AND revision = $3 RETURNING id, name, revision, created_at, updated_at, owner_id, writes_allowed
 `
 
 type UpdateEventNameParams struct {
@@ -193,6 +198,8 @@ func (q *Queries) UpdateEventName(ctx context.Context, arg UpdateEventNameParams
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.WritesAllowed,
 	)
 	return i, err
 }

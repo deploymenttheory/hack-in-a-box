@@ -32,7 +32,7 @@ SELECT data FROM sessions WHERE token = $1 AND expiry > now();
 DELETE FROM sessions WHERE token = $1;
 
 -- name: PutLoginAttempt :exec
-INSERT INTO login_attempts(state_hash, browser_hash, nonce, verifier, expires_at) VALUES ($1, $2, $3, $4, $5);
+INSERT INTO login_attempts(state_hash, browser_hash, nonce, verifier, expires_at, return_to) VALUES ($1, $2, $3, $4, $5, $6);
 
 -- name: ConsumeLoginAttempt :one
 DELETE FROM login_attempts WHERE state_hash = $1 AND browser_hash = $2 AND expires_at > now() RETURNING *;

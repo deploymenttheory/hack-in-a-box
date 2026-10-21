@@ -88,6 +88,9 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 		if err != nil {
 			return fmt.Errorf("lock event: %w", err)
 		}
+		if err := s.authorizeUpload(ctx, q, input, event.WritesAllowed); err != nil {
+			return err
+		}
 		existing, err := q.IdempotentFile(
 			ctx,
 			dbgen.IdempotentFileParams{
@@ -178,4 +181,31 @@ func (s Service) Download(
 		return dbgen.File{}, nil, ErrMissing
 	}
 	return file, data, nil
+}
+
+func (s Service) authorizeUpload(
+	ctx context.Context,
+	q *dbgen.Queries,
+	input Upload,
+	writable bool,
+) error {
+	policy := s.Policy
+	if scoped, ok := policy.(interface {
+		WithQueries(*dbgen.Queries) access.Policy
+	}); ok {
+		policy = scoped.WithQueries(q)
+	}
+	if err := policy.Authorize(
+		ctx,
+		input.Actor,
+		input.Event,
+		input.Event,
+		access.FileWrite,
+	); err != nil {
+		return fmt.Errorf("recheck upload authority: %w", err)
+	}
+	if !writable {
+		return access.ErrForbidden
+	}
+	return nil
 }
