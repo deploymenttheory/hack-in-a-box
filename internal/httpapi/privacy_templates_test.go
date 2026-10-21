@@ -78,6 +78,20 @@ func TestPrivacyAndTemplateHTTPContracts(t *testing.T) {
 		validateResponse(t, r, w)
 		return w
 	}
+	if w := request(
+		owner,
+		"GET",
+		"/api/v1/template-starters",
+		nil,
+		1,
+	); w.Code != 200 ||
+		!strings.Contains(w.Body.String(), "qualification-final") {
+		t.Fatalf("starters: %d %s", w.Code, w.Body)
+	}
+	outsider := testdb.Person(t, pool)
+	if w := request(outsider, "GET", "/api/v1/template-starters", nil, 1); w.Code != 403 {
+		t.Fatal("unprivileged starter access")
+	}
 	base := "/api/v1/events/" + id.String()
 	profilePath := base + "/profiles/" + owner.ID.String()
 	fields := privacy.Fields{

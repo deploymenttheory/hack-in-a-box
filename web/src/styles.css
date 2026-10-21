@@ -106,3 +106,10 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .brand-preview.theme { min-height: auto; border: 1px solid var(--foreground); border-radius: 12px; padding: 24px; margin-top: 24px; }
 .brand-image-preview { display: flex; align-items: center; gap: 16px; margin: 12px 0; }
 .brand-image-preview img { max-width: 140px; max-height: 80px; object-fit: contain; }
+
+.section-heading { margin-top: 32px; }
+.definition-section { padding: 16px 0; }
+.definition-section fieldset { margin-bottom: 16px; }
+.setup-form details { border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.setup-form summary { cursor: pointer; font-weight: 650; padding: 6px; }
+.change-list { padding-left: 20px; line-height: 1.8; overflow-wrap: anywhere; }

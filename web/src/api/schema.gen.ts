@@ -373,6 +373,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/template-starters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTemplateStarters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/templates": {
         parameters: {
             query?: never;
@@ -902,6 +918,11 @@ export interface components {
             latest_version: number;
             published_version: number | null;
             version: number;
+            configuration: components["schemas"]["ConfigurationBundle"];
+        };
+        TemplateStarter: {
+            key: string;
+            name: string;
             configuration: components["schemas"]["ConfigurationBundle"];
         };
         TemplatePage: {
@@ -1704,6 +1725,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfilePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTemplateStarters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized starter definitions for authorised event creators. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["TemplateStarter"][];
+                    };
                 };
             };
             default: components["responses"]["Error"];

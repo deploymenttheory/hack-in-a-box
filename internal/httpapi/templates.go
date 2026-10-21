@@ -200,3 +200,18 @@ func (h handlers) ListTemplates(
 	}
 	return result, nil
 }
+
+func (h handlers) ListTemplateStarters(
+	ctx context.Context,
+	_ contract.ListTemplateStartersRequestObject,
+) (contract.ListTemplateStartersResponseObject, error) {
+	rows, err := h.Templates.Starters(ctx, actor(ctx).ID)
+	if err != nil {
+		return nil, fmt.Errorf("list starter templates: %w", err)
+	}
+	items, err := convertDTO[[]contract.TemplateStarter](rows)
+	if err != nil {
+		return nil, err
+	}
+	return contract.ListTemplateStarters200JSONResponse{Items: items}, nil
+}
