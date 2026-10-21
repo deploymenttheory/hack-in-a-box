@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 )
 
 type (
@@ -443,6 +444,11 @@ func (s Service) Respond(
 		r, err = changeAttendee(ctx, q, actor, r, state, action, "")
 		if err != nil {
 			return err
+		}
+		if r.Kind == "attendee" && state == "withdrawn" {
+			if err := teams.Withdraw(ctx, tx, eventID, actor); err != nil {
+				return fmt.Errorf("withdraw team membership: %w", err)
+			}
 		}
 		if err := s.reconcileOffers(ctx, tx, q, row); err != nil {
 			return err

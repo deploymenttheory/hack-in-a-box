@@ -24,6 +24,7 @@ export async function mockWorkspace(page: Page) {
     }
     const event = events.find(event => path.startsWith('/api/v1/events/' + event.id))
     if (!event) return error(404, 'not_found')
+    if (path.endsWith('/teams')) return route.fulfill({ json: { revision: event.revision, can_manage: false, can_create: true, frozen: false, freeze_at: event.configuration.team_freeze, teams: [], people: [], requests: [] } })
     if (path.endsWith('/branding')) return route.fulfill({ json: { revision: event.revision, branding: defaultBranding } })
     if (path.endsWith('/staff')) {
       if (request.method() === 'PUT') {
