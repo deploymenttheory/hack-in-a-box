@@ -32,7 +32,7 @@ OIDC uses authorization code flow with PKCE, one-use browser-bound state and a n
 
 ## Develop locally
 
-Use Go 1.27.1+, Node 22.23.3 and Docker for PostgreSQL tests. Set `HACKBOX_ENV=development` and export `HACKBOX_DATABASE_URL` for an explicitly provisioned development database. Go commands read environment variables, not `.env` files. Compose derives its own connection string from `.env`.
+Use Go 1.27.3+, Node 22.23.3 and Docker for PostgreSQL tests. Set `HACKBOX_ENV=development` and export `HACKBOX_DATABASE_URL` for an explicitly provisioned development database. Go commands read environment variables, not `.env` files. Compose derives its own connection string from `.env`.
 
 ```sh
 go mod download
@@ -86,6 +86,7 @@ The React shell uses TanStack Router/Query, React Hook Form/Zod and shadcn Base 
 ```sh
 go build ./cmd/... ./internal/...
 go vet ./cmd/... ./internal/...
+(cd cmd/api && go tool govulncheck -scan=module)
 HACKBOX_INTEGRATION=1 go test -race -timeout 5m ./cmd/... ./internal/...
 golangci-lint run ./cmd/... ./internal/...
 npm --prefix web run lint
