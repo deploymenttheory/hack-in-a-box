@@ -199,6 +199,36 @@ func TestRegistrationAllocationHTTPContracts(t *testing.T) {
 		strings.Contains(w.Body.String(), body.ID.String()) {
 		t.Fatal("other registration exposed")
 	}
+	if w := request(
+		owner,
+		"GET",
+		base+"/review",
+		nil,
+		0,
+	); w.Code != 200 ||
+		!strings.Contains(w.Body.String(), body.ID.String()) {
+		t.Fatalf("review directory: %d %s", w.Code, w.Body)
+	}
+	if w := request(other, "GET", base+"/review", nil, 0); w.Code != 403 {
+		t.Fatal("applicants exposed")
+	}
+	if w := request(owner, "GET", base+"/"+body.ID.String()+"/review", nil, 0); w.Code != 200 {
+		t.Fatalf("applicant detail: %d %s", w.Code, w.Body)
+	}
+	if w := request(
+		owner,
+		"POST",
+		base+"/"+body.ID.String()+"/decision",
+		map[string]any{
+			"action":                              "selected",
+			"reason":                              "Wrong application type",
+			"acknowledge_competition_restriction": false,
+		},
+		1,
+	); w.Code != 400 {
+		t.Fatalf("attendee selected as staff: %d %s", w.Code, w.Body)
+	}
+
 	policyPath := base + "/offer-policy"
 	if w := request(
 		other,

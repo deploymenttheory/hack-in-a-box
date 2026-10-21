@@ -592,6 +592,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/registrations/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listApplicants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/{registration_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getApplicant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/{registration_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviewApplicant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -1012,6 +1068,35 @@ export interface components {
         };
         RemovedResult: {
             removed: boolean;
+        };
+        Applicant: {
+            registration: components["schemas"]["Registration"];
+            display_name: string;
+        };
+        ApplicantPage: {
+            items: components["schemas"]["Applicant"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        ApplicantHistory: {
+            action: string;
+            from: string;
+            to: string;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        ApplicantDetail: {
+            applicant: components["schemas"]["Applicant"];
+            response: components["schemas"]["RegistrationResponse"] | null;
+            history: components["schemas"]["ApplicantHistory"][];
+            fallback_available: boolean;
+        };
+        ApplicantDecision: {
+            /** @enum {string} */
+            action: "selected" | "backup" | "declined" | "invite";
+            reason: string;
+            acknowledge_competition_restriction: boolean;
         };
         ApplicationInput: {
             /** Format: uuid */
@@ -2463,6 +2548,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegistrationResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listApplicants: {
+        parameters: {
+            query?: {
+                after?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised applicant review result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicantPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getApplicant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised applicant review result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicantDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    reviewApplicant: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicantDecision"];
+            };
+        };
+        responses: {
+            /** @description Authorised applicant review result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Registration"];
                 };
             };
             default: components["responses"]["Error"];

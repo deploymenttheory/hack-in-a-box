@@ -37,10 +37,13 @@ SELECT v.* FROM registration_forms f JOIN registration_form_versions v ON v.even
 WHERE f.event_id=$1 ORDER BY f.id LIMIT 50;
 
 -- name: ListRegistrations :many
-SELECT r.*,p.display_name FROM registrations r JOIN people p ON p.id=r.person_id WHERE r.event_id=$1 AND r.sequence>$2 ORDER BY r.sequence LIMIT $3;
+SELECT sqlc.embed(r),p.display_name FROM registrations r JOIN people p ON p.id=r.person_id WHERE r.event_id=$1 AND r.sequence>$2 ORDER BY r.sequence LIMIT $3;
 
 -- name: SetRegistrationResponseRevision :exec
 UPDATE registrations SET response_revision=$3 WHERE event_id=$1 AND id=$2;
 
 -- name: ForgetRegistrationInput :exec
 UPDATE registrations SET request_hash='',invitation_reference='' WHERE event_id=$1;
+
+-- name: HasRegistrationInvitation :one
+SELECT EXISTS(SELECT 1 FROM operations WHERE event_id=$1 AND operation_key=$2);

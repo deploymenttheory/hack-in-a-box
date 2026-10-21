@@ -71,10 +71,25 @@ func (s Service) List(ctx context.Context, actor, event uuid.UUID) ([]dbgen.Memb
 
 func (s Service) Change(ctx context.Context, c Change) (dbgen.Event, error) {
 	var result dbgen.Event
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		var err error
+		result, err = ChangeWithin(ctx, q, c)
+		return err
+	})
+	if err != nil {
+		return result, fmt.Errorf("change event authority: %w", err)
+	}
+	return result, nil
+}
+
+// ChangeWithin keeps selection and its role grant in the caller's transaction.
+// It applies the same current-authority, revision and permanent-exclusion checks.
+func ChangeWithin(ctx context.Context, q *dbgen.Queries, c Change) (dbgen.Event, error) {
+	var result dbgen.Event
 	if !slices.Contains(Roles, c.Role) || c.Person == uuid.Nil {
 		return result, access.ErrInvalid
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := func() error {
 		event, err := q.LockEvent(ctx, c.Event)
 		if err != nil {
 			return fmt.Errorf("lock event: %w", err)
@@ -161,7 +176,7 @@ func (s Service) Change(ctx context.Context, c Change) (dbgen.Event, error) {
 				Metadata: audit.Metadata{Revision: &result.Revision, Role: &c.Role},
 			},
 		)
-	})
+	}()
 	if err != nil {
 		return result, fmt.Errorf("change event authority: %w", err)
 	}

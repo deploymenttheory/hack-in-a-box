@@ -123,3 +123,9 @@ Validation: four desktop/mobile browser checks pass, including submission retry 
 Offers reserve capacity and expire using the event timezone, configured working days and holiday exclusions, capped by admission cutoff and team freeze. Organisers explicitly approve automation; each reconciliation rechecks that approver's authority. Event locks serialize offers, acceptance, expiry and cancellation. Acceptance/decline retries return authoritative outcomes; obsolete offer notices are cancelled and notification intents are unique. Answer corrections retain their original form version. Own-status screens explain deadlines and withdrawal impact; selected staff relinquish their corresponding role, preserving lasting exclusions and last-organiser protection.
 
 Notifications are durable outbox intents for the future communications adapter (#82); this slice does not claim email delivery. Team roster effects attach to the same withdrawal transaction in PR 9.
+
+### PR 8 — organiser applicant review (#56)
+
+Added a paged, organiser-only applicant directory, original response and decision history, facilitator selection/backup/decline, reasoned attendee promotion, capacity navigation and explicit FIFO automation controls. Staff selection and grants share a transaction and the existing permission checks. Fallback invitations require the applicant's preference, current competition eligibility and open new applications; retries create one durable intent and never allocate a seat.
+
+Validation: real PostgreSQL selection/withdrawal/role rollback and fallback tests pass, with the race detector. HTTP authorization and schema checks cover private review routes. Desktop and mobile review flows exercise incompatible roles and recorded backup decisions.
