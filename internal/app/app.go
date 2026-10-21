@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
@@ -78,6 +79,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	deps := httpapi.Dependencies{
 		Pool:        pool,
 		Permissions: permissions.Service{Pool: pool},
+		Events:      event.Service{Pool: pool},
 		Auth:        auth,
 		Audit:       audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{

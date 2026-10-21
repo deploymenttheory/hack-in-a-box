@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
@@ -28,6 +29,7 @@ type Dependencies struct {
 	Audit       audit.Service
 	Files       files.Service
 	Permissions permissions.Service
+	Events      event.Service
 }
 type handlers struct{ Dependencies }
 
@@ -218,6 +220,20 @@ func (h handlers) DownloadFile(
 }
 
 func respondError(w http.ResponseWriter, r *http.Request, err error) {
+	var blocked *event.Blocked
+	if errors.As(err, &blocked) {
+		body := errorBody(r, "event_blocked", "Resolve the event blockers before continuing.")
+		items := make([]contract.Blocker, 0, len(blocked.Issues))
+		for _, item := range blocked.Issues {
+			items = append(
+				items,
+				contract.Blocker{Field: item.Field, Code: item.Code, Message: item.Message},
+			)
+		}
+		body.Error.Blockers = &items
+		writeJSON(w, 409, body)
+		return
+	}
 	status, code, message := 500, "internal_error", "An internal error occurred."
 	switch {
 	case errors.Is(err, permissions.ErrWithdrawal):

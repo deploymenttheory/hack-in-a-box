@@ -179,6 +179,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEvents"];
+        put?: never;
+        post: operations["createEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getEvent"];
+        put: operations["updateEvent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transitionEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getEventSchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/schedule/{item_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveEventSchedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listEventDecisions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/event-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previewEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/time/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveEventTime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -192,6 +331,7 @@ export interface components {
                 code: string;
                 message: string;
                 request_id: string;
+                blockers?: components["schemas"]["Blocker"][];
             };
         };
         Session: {
@@ -271,6 +411,121 @@ export interface components {
         RevisionResult: {
             /** Format: int64 */
             revision: number;
+        };
+        Calendar: {
+            working_days: number[];
+            excluded_dates: string[];
+        };
+        AgendaItem: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            audience: ("all" | "attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer")[];
+            /** @enum {string} */
+            anchor: "live_start" | "submission_cutoff";
+            days: number;
+            minutes: number;
+            business_days: boolean;
+        };
+        EventConfiguration: {
+            description: string;
+            timezone: string;
+            venue: string;
+            capacity: number;
+            minimum_attendance: number;
+            /** Format: date-time */
+            live_start: string;
+            /** Format: date-time */
+            live_end: string;
+            /** Format: date-time */
+            admission_cutoff: string;
+            /** Format: date-time */
+            team_freeze: string;
+            /** Format: date-time */
+            submission_cutoff: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+            calendar: components["schemas"]["Calendar"];
+            schedule: components["schemas"]["AgendaItem"][];
+        };
+        EventInput: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            configuration: components["schemas"]["EventConfiguration"];
+            reason?: string;
+            approve_postponement?: boolean;
+            acknowledge_competition_restriction: boolean;
+        };
+        Blocker: {
+            field: string;
+            code: string;
+            message: string;
+        };
+        Event: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** Format: uuid */
+            owner_id: string | null;
+            /** Format: int64 */
+            revision: number;
+            /** @enum {string} */
+            stage: "draft" | "registration" | "preparation" | "live" | "assessment" | "completed" | "cancelled" | "archived";
+            configuration: components["schemas"]["EventConfiguration"];
+            /** Format: date-time */
+            challenge_publication: string | null;
+            /** Format: date-time */
+            published_at: string | null;
+            /** Format: int64 */
+            confirmed_attendees: number;
+            blockers: components["schemas"]["Blocker"][];
+            can_edit: boolean;
+            can_manage_owner: boolean;
+        };
+        EventPage: {
+            items: components["schemas"]["Event"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ScheduleItem: {
+            item: components["schemas"]["AgendaItem"];
+            /** Format: date-time */
+            due_at: string;
+            /** @enum {string} */
+            status: "draft" | "approved" | "executed" | "cancelled" | "needs_review";
+            /** Format: int64 */
+            revision: number;
+        };
+        SchedulePage: {
+            items: components["schemas"]["ScheduleItem"][];
+        };
+        EventPreview: {
+            blockers: components["schemas"]["Blocker"][];
+            /** Format: date-time */
+            challenge_publication: string | null;
+            schedule: components["schemas"]["ScheduleItem"][];
+        };
+        EventDecision: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            actor_id: string;
+            kind: string;
+            reason: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            created_at: string;
+        };
+        EventDecisionPage: {
+            items: components["schemas"]["EventDecision"][];
+        };
+        ResolvedTime: {
+            /** Format: date-time */
+            instant: string;
         };
     };
     responses: {
@@ -590,6 +845,280 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RevisionResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listEvents: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    transitionEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    stage: "registration" | "preparation" | "live" | "assessment" | "completed" | "cancelled" | "archived";
+                    reason: string;
+                    attendance_exception: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getEventSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    approveEventSchedule: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listEventDecisions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventDecisionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    previewEvent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventInput"];
+            };
+        };
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPreview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    resolveEventTime: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    wall_time: string;
+                    timezone: string;
+                    /** @enum {string} */
+                    dst_choice: "" | "earlier" | "later";
+                };
+            };
+        };
+        responses: {
+            /** @description Authorized event operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolvedTime"];
                 };
             };
             default: components["responses"]["Error"];
