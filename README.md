@@ -1,75 +1,125 @@
-# Template
+# Hack-in-a-Box
 
-This repository serves as a **Default Template Repository** according official [GitHub Contributing Guidelines][ProjectSetup] for healthy contributions. It brings you clean default Templates for several areas:
+A self-hosted application for preparing, running and following up branded hackathons.
+The [implementation backlog](https://github.com/deploymenttheory/hack-in-a-box/issues/7)
+defines the product scope and agreed libraries.
 
-- [Azure DevOps Pull Requests](.azuredevops/PULL_REQUEST_TEMPLATE.md) ([`.azuredevops\PULL_REQUEST_TEMPLATE.md`](`.azuredevops\PULL_REQUEST_TEMPLATE.md`))
-- [Azure Pipelines](.pipelines/pipeline.yml) ([`.pipelines/pipeline.yml`](`.pipelines/pipeline.yml`))
-- [GitHub Workflows](.github/workflows/)
-  - [Super Linter](.github/workflows/linter.yml) ([`.github/workflows/linter.yml`](`.github/workflows/linter.yml`))
-  - [Sample Workflows](.github/workflows/workflow.yml) ([`.github/workflows/workflow.yml`](`.github/workflows/workflow.yml`))
-- [GitHub Pull Requests](.github/PULL_REQUEST_TEMPLATE.md) ([`.github/PULL_REQUEST_TEMPLATE.md`](`.github/PULL_REQUEST_TEMPLATE.md`))
-- [GitHub Issues](.github/ISSUE_TEMPLATE/)
-  - [Feature Requests](.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md) ([`.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md`](`.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md`))
-  - [Bug Reports](.github/ISSUE_TEMPLATE/BUG_REPORT.md) ([`.github/ISSUE_TEMPLATE/BUG_REPORT.md`](`.github/ISSUE_TEMPLATE/BUG_REPORT.md`))
-- [Codeowners](.github/CODEOWNERS) ([`.github/CODEOWNERS`](`.github/CODEOWNERS`)) _adjust usernames once cloned_
-- [Wiki and Documentation](docs/) ([`docs/`](`docs/`))
-- [gitignore](.gitignore) ([`.gitignore`](.gitignore))
-- [gitattributes](.gitattributes) ([`.gitattributes`](.gitattributes))
-- [Changelog](CHANGELOG.md) ([`CHANGELOG.md`](`CHANGELOG.md`))
-- [Code of Conduct](CODE_OF_CONDUCT.md) ([`CODE_OF_CONDUCT.md`](`CODE_OF_CONDUCT.md`))
-- [Contribution](CONTRIBUTING.md) ([`CONTRIBUTING.md`](`CONTRIBUTING.md`))
-- [License](LICENSE) ([`LICENSE`](`LICENSE`)) _adjust projectname once cloned_
-- [Readme](README.md) ([`README.md`](`README.md`))
-- [Security](SECURITY.md) ([`SECURITY.md`](`SECURITY.md`))
+The initial Go foundation provides API and worker entrypoints, Chi routing,
+validated configuration, request limits, JSON errors and graceful HTTP shutdown.
+The worker currently waits for shutdown and logs `jobs_enabled=false`;
+River execution is tracked in [#27](https://github.com/deploymenttheory/hack-in-a-box/issues/27).
 
+## Run locally
 
-## Status
+Install Go 1.27.1 or newer, then run:
 
-[![Super Linter](<https://github.com/segraef/Template/actions/workflows/linter.yml/badge.svg>)](<https://github.com/segraef/Template/actions/workflows/linter.yml>)
+```sh
+go mod download
+HACKBOX_ENV=development go run ./cmd/api
+```
 
-[![Sample Workflow](<https://github.com/segraef/Template/actions/workflows/workflow.yml/badge.svg>)](<https://github.com/segraef/Template/actions/workflows/workflow.yml>)
+From another terminal:
 
-## Creating a repository from a template
+```sh
+curl -i http://127.0.0.1:8080/healthz
+```
 
-You can [generate](https://github.com/segraef/Template/generate) a new repository with the same directory structure and files as an existing repository. More details can be found [here][CreateFromTemplate].
+The response is `200`, with `{"status":"ok"}` and an `X-Request-ID` header.
+`/healthz` checks process liveness; dependency readiness belongs to
+[#30](https://github.com/deploymenttheory/hack-in-a-box/issues/30).
+Unknown routes, including unimplemented `/api/v1` routes, return a JSON `404`.
 
-## Reporting Issues and Feedback
+Build executables to exercise process signals directly:
 
-### Issues and Bugs
+```sh
+go build -o bin/api ./cmd/api
+go build -o bin/worker ./cmd/worker
+HACKBOX_ENV=development ./bin/api
+# In another terminal, if needed:
+HACKBOX_ENV=development ./bin/worker
+```
 
-If you find any bugs, please file an issue in the [GitHub Issues][GitHubIssues] page. Please fill out the provided template with the appropriate information.
+Send Ctrl-C or SIGTERM to the executable to shut it down. The API closes its
+listener and allows in-flight requests to finish. If the configured shutdown
+deadline expires, it cancels outstanding requests, closes connections and exits
+with a failure status. Handlers must honour request context cancellation.
 
-If you are taking the time to mention a problem, even a seemingly minor one, it is greatly appreciated, and a totally valid contribution to this project. **Thank you!**
+## Configuration
 
-## Feedback
+Configuration comes from environment variables. `.env.example` is a reference;
+the application does not automatically load `.env` files.
 
-If there is a feature you would like to see in here, please file an issue or feature request in the [GitHub Issues][GitHubIssues] page to provide direct feedback.
+| Variable | Default | Accepted values |
+|---|---|---|
+| `HACKBOX_ENV` | Required | `development`, `test`, `production` |
+| `HACKBOX_HTTP_ADDR` | `127.0.0.1:8080` | IP address or `localhost` and port 1–65535; `:8080` binds all interfaces |
+| `HACKBOX_LOG_LEVEL` | `INFO` | A Go slog level, such as `DEBUG`, `INFO`, `WARN`, `ERROR` |
+| `HACKBOX_MAX_BODY_BYTES` | `1048576` | 1–67108864 bytes |
+| `HACKBOX_REQUEST_TIMEOUT` | `10s` | Positive Go duration, at most `5m` |
+| `HACKBOX_SHUTDOWN_TIMEOUT` | `20s` | Positive Go duration, at most `5m` |
 
-## Contribution
+Both entrypoints validate shared configuration before starting. HTTP settings
+apply to the API. Invalid settings produce actionable errors naming the variable
+without echoing its value. Logs are structured JSON on stderr.
 
-If you would like to become an active contributor to this repository or project, please follow the instructions provided in [`CONTRIBUTING.md`][Contributing].
+The server limits headers to 1 MiB, header reads to 5 seconds, idle connections
+to 60 seconds, body reads to request timeout plus 5 seconds, and response writes
+to request timeout plus 10 seconds. Request bodies are read up to the configured
+cap before dispatch, including unknown-length/chunked requests. The finite JSON
+handler timeout returns a `503 request_timeout` envelope and cancels its context.
+Future uploads, downloads and SSE routes need their own size/streaming policies.
 
-## Learn More
+## HTTP contract
 
-* [GitHub Documentation][GitHubDocs]
-* [Azure DevOps Documentation][AzureDevOpsDocs]
-* [Microsoft Azure Documentation][MicrosoftAzureDocs]
+The initial OpenAPI 3.0 contract is in [api/openapi.yaml](api/openapi.yaml).
+The oapi-codegen server and TypeScript generation pipeline belongs to
+[#25](https://github.com/deploymenttheory/hack-in-a-box/issues/25).
 
-<!-- References -->
+Application errors have this shape, with the same request ID in the response header:
 
-<!-- Local -->
-[ProjectSetup]: <https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions>
-[CreateFromTemplate]: <https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-on-github/creating-a-repository-from-a-template>
-[GitHubDocs]: <https://docs.github.com/>
-[AzureDevOpsDocs]: <https://docs.microsoft.com/en-us/azure/devops/?view=azure-devops>
-[GitHubIssues]: <https://github.com/segraef/Template/issues>
-[Contributing]: CONTRIBUTING.md
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "The requested resource was not found.",
+    "request_id": "server-generated-id"
+  }
+}
+```
 
-<!-- External -->
-[Az]: <https://img.shields.io/powershellgallery/v/Az.svg?style=flat-square&label=Az>
-[AzGallery]: <https://www.powershellgallery.com/packages/Az/>
-[PowerShellCore]: <https://github.com/PowerShell/PowerShell/releases/latest>
+Request IDs are generated by the server. Panic payloads, request bodies and
+credentials are not included in logs or error responses. Malformed HTTP and
+connection failures rejected before routing use the Go HTTP server's own behavior.
 
-<!-- Docs -->
-[MicrosoftAzureDocs]: <https://docs.microsoft.com/en-us/azure/>
-[PowerShellDocs]: <https://docs.microsoft.com/en-us/powershell/>
+## Package boundaries
+
+| Path | Responsibility |
+|---|---|
+| `cmd/api`, `cmd/worker` | Executable entrypoints |
+| `internal/app` | Configuration, signals and application wiring |
+| `internal/config` | Environment parsing and validation |
+| `internal/httpapi` | HTTP routing, middleware and response envelopes |
+| `internal/httpserver` | Server limits and listener/shutdown lifecycle |
+| `internal/event`, `internal/identity`, `internal/team` | Reserved domain package boundaries; implementation follows their tickets |
+
+Domain packages own business rules and must not import HTTP handlers or application
+wiring. Persistence adapters will use pgx/sqlc; domain state and job enqueue must
+share transactions where required. Introduce interfaces at actual integration
+boundaries as features are implemented.
+
+## Development checks
+
+```sh
+go test -race ./...
+go vet ./...
+go build ./...
+golangci-lint run
+git diff --check
+```
+
+Tests cover configuration errors, safe responses, known/unknown-length body limits,
+timeout cancellation, panic recovery and real HTTP connections during graceful
+and forced shutdown. No external services or credentials are required.
+
+The next foundation tickets add the React shell (#23), PostgreSQL (#24), generated
+contracts (#25), Docker Compose (#26) and the complete application CI pipeline (#31).
