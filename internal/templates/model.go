@@ -2,12 +2,8 @@
 package templates
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"image"
-	_ "image/jpeg" // Validate inline branding without accepting executable formats.
-	_ "image/png"
 	"regexp"
 	"slices"
 	"time"
@@ -312,32 +308,6 @@ func validateMessage(m Message) error {
 	}
 	for _, role := range m.Audience {
 		if role != "all" && !slices.Contains(roles, role) {
-			return access.ErrInvalid
-		}
-	}
-	return nil
-}
-
-func validateBranding(b Branding) error {
-	for _, value := range []string{b.Primary, b.Accent, b.Background, b.Foreground} {
-		if !colour.MatchString(value) {
-			return access.ErrInvalid
-		}
-	}
-	kinds := map[string]bool{}
-	for _, asset := range b.Assets {
-		if !slices.Contains([]string{"logo", "icon", "hero"}, asset.Kind) || kinds[asset.Kind] ||
-			len(asset.Content) > 512*1024 {
-			return access.ErrInvalid
-		}
-		kinds[asset.Kind] = true
-		info, format, err := image.DecodeConfig(bytes.NewReader(asset.Content))
-		if err != nil || info.Width < 1 || info.Height < 1 || info.Width > 4096 ||
-			info.Height > 4096 {
-			return access.ErrInvalid
-		}
-		if (format != "png" || asset.MediaType != "image/png") &&
-			(format != "jpeg" || asset.MediaType != "image/jpeg") {
 			return access.ErrInvalid
 		}
 	}

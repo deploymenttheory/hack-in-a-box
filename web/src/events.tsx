@@ -8,6 +8,7 @@ import { Button } from './components/ui/button'
 import { Failure, Loading } from './components/states'
 import { EventForm } from './event-form'
 import { Staff } from './staff'
+import { EventBrand, BrandingEditor } from './branding'
 
 export function localDate(value: string | null | undefined, timezone: string) {
   if (!value || value.startsWith('0001-')) return 'Not set'
@@ -18,7 +19,7 @@ export function EventDirectory() {
   const identity = useIdentity()
   const query = useInfiniteQuery({ queryKey: privateKey(identity.person.id, 'directory', 'events'), initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/events', { params: { query: { after: pageParam, limit: 50 } } })), getNextPageParam: page => page.next_cursor ?? undefined })
-  return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Prepare the next hack, or return to an event already in motion.</p></div>{identity.can_create_events && <Link className="primary-link" to="/events/new">Create event</Link>}</div>
+  return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Prepare the next hack, or return to an event already in motion.</p></div>{identity.can_create_events && <div><Link className="primary-link" to="/events/new">Create event</Link><p><Link to="/templates">Event templates</Link></p></div>}</div>
     {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <>
       <div className="event-grid">{query.data.pages.flatMap(page => page.items).map(event => <Link className="event-card" key={event.id} to="/events/$eventId" params={{ eventId: event.id }}><span className="badge">{event.stage}</span><h2>{event.name}</h2><p>{localDate(event.configuration.live_start, event.configuration.timezone)}</p><p className="muted">{event.configuration.timezone} · {event.confirmed_attendees} confirmed competitors</p></Link>)}</div>
       {query.data.pages[0].items.length === 0 && <div className="empty-state"><h2>No events yet</h2><p>{identity.can_create_events ? 'Create your first event to set its dates and appoint the organising team.' : 'Events will appear here when your organiser grants you access.'}</p></div>}
@@ -35,6 +36,10 @@ export function NewEvent() {
 
 export function EventWorkspace() {
   const { eventId } = useParams({ from: '/events/$eventId' })
+  return <EventBrand key={eventId} eventID={eventId}><EventContent eventId={eventId} /></EventBrand>
+}
+
+function EventContent({ eventId }: { eventId: string }) {
   const identity = useIdentity()
   const [tab, setTab] = useState('overview')
   const [unsaved, setUnsaved] = useState(false)
@@ -44,8 +49,8 @@ export function EventWorkspace() {
   if (query.error) return <Failure error={query.error} retry={() => void query.refetch()} />
   const event = query.data
   return <section className="workspace"><Link to="/">← Switch event</Link><div className="page-heading"><div><p className="eyebrow">{event.stage} · {event.configuration.timezone}</p><h1>{event.name}</h1><p>{event.configuration.description || 'Your shared event workspace.'}</p></div><div className="count"><strong>{event.confirmed_attendees}</strong><span>confirmed competitors</span><small>Minimum {event.configuration.minimum_attendance} · Capacity {event.configuration.capacity}</small></div></div>
-    <nav className="tabs" aria-label="Event sections">{['overview', ...(event.can_edit ? ['setup', 'schedule'] : []), ...(event.can_read_staff ? ['staff'] : [])].map(name => <button key={name} className={tab === name ? 'active' : ''} onClick={() => { if (!unsaved || window.confirm('Leave setup with unsaved changes?')) setTab(name) }} aria-current={tab === name ? 'page' : undefined}>{name[0].toUpperCase() + name.slice(1)}</button>)}</nav>
-    {tab === 'setup' && event.can_edit ? <EventForm key={event.id} event={event} onDirty={setUnsaved} /> : tab === 'staff' && event.can_read_staff ? <Staff event={event} /> : tab === 'schedule' && event.can_edit ? <Schedule event={event} /> : <>
+    <nav className="tabs" aria-label="Event sections">{['overview', ...(event.can_edit ? ['setup', 'schedule', 'branding'] : []), ...(event.can_read_staff ? ['staff'] : [])].map(name => <button key={name} className={tab === name ? 'active' : ''} onClick={() => { if (!unsaved || window.confirm('Leave setup with unsaved changes?')) setTab(name) }} aria-current={tab === name ? 'page' : undefined}>{name[0].toUpperCase() + name.slice(1)}</button>)}</nav>
+    {tab === 'branding' && event.can_edit ? <BrandingEditor event={event} onDirty={setUnsaved} /> : tab === 'setup' && event.can_edit ? <EventForm key={event.id} event={event} onDirty={setUnsaved} /> : tab === 'staff' && event.can_read_staff ? <Staff event={event} /> : tab === 'schedule' && event.can_edit ? <Schedule event={event} /> : <>
       <div className="detail-grid"><div><h2>Event dates</h2><dl className="dates">{[
         ['Final admission', event.configuration.admission_cutoff], ['Team freeze', event.configuration.team_freeze], ['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end],
       ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></div><div><h2>Readiness</h2><Blockers items={event.blockers} /><p className="muted">Only confirmed competitors count toward the minimum. Reaching it makes the go decision available; an organiser still chooses to proceed.</p></div></div>

@@ -78,6 +78,20 @@ func TestPrivacyAndTemplateHTTPContracts(t *testing.T) {
 		validateResponse(t, r, w)
 		return w
 	}
+	if w := request(
+		owner,
+		"GET",
+		"/api/v1/template-starters",
+		nil,
+		1,
+	); w.Code != 200 ||
+		!strings.Contains(w.Body.String(), "qualification-final") {
+		t.Fatalf("starters: %d %s", w.Code, w.Body)
+	}
+	outsider := testdb.Person(t, pool)
+	if w := request(outsider, "GET", "/api/v1/template-starters", nil, 1); w.Code != 403 {
+		t.Fatal("unprivileged starter access")
+	}
 	base := "/api/v1/events/" + id.String()
 	profilePath := base + "/profiles/" + owner.ID.String()
 	fields := privacy.Fields{
@@ -211,5 +225,48 @@ func TestPrivacyAndTemplateHTTPContracts(t *testing.T) {
 	bad["participants"] = []string{"must-never-copy"}
 	if w := request(owner, "POST", "/api/v1/templates", bad, 1); w.Code != 400 {
 		t.Fatal("unknown live data accepted by clone contract")
+	}
+	current, err := q.Event(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	brand := templates.EmptyDefinitions().Branding
+	brand.Primary = "#233c78"
+	if w := request(owner, "PUT", base+"/branding", brand, current.Revision); w.Code != 200 {
+		t.Fatalf("branding: %d %s", w.Code, w.Body)
+	}
+	if w := request(owner, "PUT", base+"/branding", brand, current.Revision); w.Code != 409 {
+		t.Fatal("stale branding saved")
+	}
+	viewer := testdb.Person(t, pool)
+	if err := q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{EventID: id, PersonID: viewer.ID, Role: "mentor", Active: true},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if w := request(
+		viewer,
+		"GET",
+		base+"/branding",
+		nil,
+		0,
+	); w.Code != 200 ||
+		strings.Contains(w.Body.String(), "role_briefs") {
+		t.Fatalf("branding payload: %d %s", w.Code, w.Body)
+	}
+	if w := request(viewer, "PUT", base+"/branding", brand, current.Revision+1); w.Code != 403 {
+		t.Fatal("non-organiser edited branding")
+	}
+	brand.Foreground = brand.Background
+	if w := request(
+		owner,
+		"PUT",
+		base+"/branding",
+		brand,
+		current.Revision+1,
+	); w.Code != 409 ||
+		!strings.Contains(w.Body.String(), "contrast") {
+		t.Fatalf("contrast error: %d %s", w.Code, w.Body)
 	}
 }

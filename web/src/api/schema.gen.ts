@@ -373,6 +373,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/template-starters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTemplateStarters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/templates": {
         parameters: {
             query?: never;
@@ -454,6 +470,24 @@ export interface paths {
         };
         get: operations["getConfigurationSnapshot"];
         put: operations["saveEventDefinitions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/branding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getEventBranding"];
+        put: operations["updateEventBranding"];
         post?: never;
         delete?: never;
         options?: never;
@@ -844,6 +878,11 @@ export interface components {
             /** Format: byte */
             content: string;
         };
+        EventBranding: {
+            /** Format: int64 */
+            revision: number;
+            branding: components["schemas"]["TemplateBranding"];
+        };
         TemplateBranding: {
             primary: string;
             accent: string;
@@ -879,6 +918,11 @@ export interface components {
             latest_version: number;
             published_version: number | null;
             version: number;
+            configuration: components["schemas"]["ConfigurationBundle"];
+        };
+        TemplateStarter: {
+            key: string;
+            name: string;
             configuration: components["schemas"]["ConfigurationBundle"];
         };
         TemplatePage: {
@@ -1686,6 +1730,29 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    listTemplateStarters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sanitized starter definitions for authorised event creators. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["TemplateStarter"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listTemplates: {
         parameters: {
             query?: {
@@ -1904,6 +1971,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfigurationBundle"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getEventBranding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event branding only; excludes private configuration definitions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventBranding"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateEventBranding: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateBranding"];
+            };
+        };
+        responses: {
+            /** @description Saved branding and current event revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventBranding"];
                 };
             };
             default: components["responses"]["Error"];

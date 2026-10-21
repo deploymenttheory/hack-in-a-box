@@ -1,3 +1,4 @@
+import { defaultBranding } from '../src/branding'
 import type { Page } from '@playwright/test'
 import type { components } from '../src/api/schema.gen'
 export const person = { id: '1ca7d59b-3160-48b7-99b7-aad2cb648d64', display_name: 'Synthetic Person', platform_admin: true }
@@ -23,6 +24,7 @@ export async function mockWorkspace(page: Page) {
     }
     const event = events.find(event => path.startsWith('/api/v1/events/' + event.id))
     if (!event) return error(404, 'not_found')
+    if (path.endsWith('/branding')) return route.fulfill({ json: { revision: event.revision, branding: defaultBranding } })
     if (path.endsWith('/staff')) {
       if (request.method() === 'PUT') {
         const body = request.postDataJSON()
