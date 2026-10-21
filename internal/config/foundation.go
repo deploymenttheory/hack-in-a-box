@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
-	"strings"
 )
 
 var (
@@ -62,8 +61,7 @@ func validateEndpoints(cfg *Config) []error {
 		if err != nil || issuer.Host == "" || issuer.User != nil || issuer.RawQuery != "" ||
 			issuer.Fragment != "" ||
 			cfg.OIDCClientID == "" ||
-			(issuer.Scheme != "https" && (cfg.Environment == "production" || issuer.Scheme != "http")) ||
-			strings.HasSuffix(cfg.OIDCIssuer, "/") {
+			(issuer.Scheme != "https" && (cfg.Environment == "production" || issuer.Scheme != "http")) {
 			problems = append(problems, errOIDC)
 		}
 	}

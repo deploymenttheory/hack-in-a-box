@@ -64,3 +64,21 @@ func TestLoadRejectsInvalidConfigurationWithoutValues(t *testing.T) {
 		})
 	}
 }
+
+func TestOIDCIssuerRetainsProviderTrailingSlash(t *testing.T) {
+	t.Parallel()
+	env := map[string]string{
+		"HACKBOX_ENV":            "production",
+		"HACKBOX_PUBLIC_ORIGIN":  "https://hack.example.test",
+		"HACKBOX_OIDC_ISSUER":    "https://issuer.example.test/",
+		"HACKBOX_OIDC_CLIENT_ID": "synthetic-client",
+		"HACKBOX_METRICS_TOKEN":  "synthetic-metrics-token-32-characters",
+	}
+	cfg, err := config.Load(func(key string) string { return env[key] })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.OIDCIssuer != env["HACKBOX_OIDC_ISSUER"] {
+		t.Fatal("issuer was normalized instead of retained exactly")
+	}
+}
