@@ -39,6 +39,39 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for StaffRole.
+const (
+	EarlyBriefAccess StaffRole = "early_brief_access"
+	Judge            StaffRole = "judge"
+	Logistics        StaffRole = "logistics"
+	Mc               StaffRole = "mc"
+	Mentor           StaffRole = "mentor"
+	Organiser        StaffRole = "organiser"
+	Photographer     StaffRole = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the StaffRole enum.
+func (e StaffRole) Valid() bool {
+	switch e {
+	case EarlyBriefAccess:
+		return true
+	case Judge:
+		return true
+	case Logistics:
+		return true
+	case Mc:
+		return true
+	case Mentor:
+		return true
+	case Organiser:
+		return true
+	case Photographer:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UploadFileJSONBodyMediaType.
 const (
 	Applicationpdf UploadFileJSONBodyMediaType = "application/pdf"
@@ -73,6 +106,7 @@ type AuditEvent struct {
 		PreviousRevision *int64              `json:"previous_revision,omitempty"`
 		ReferenceId      *openapi_types.UUID `json:"reference_id,omitempty"`
 		Revision         *int64              `json:"revision,omitempty"`
+		Role             *StaffRole          `json:"role,omitempty"`
 	} `json:"metadata"`
 	OccurredAt time.Time          `json:"occurred_at"`
 	ReasonCode string             `json:"reason_code"`
@@ -115,6 +149,11 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// RevisionResult defines model for RevisionResult.
+type RevisionResult struct {
+	Revision int64 `json:"revision"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	CsrfToken string `json:"csrf_token"`
@@ -124,6 +163,31 @@ type Session struct {
 		PlatformAdmin bool               `json:"platform_admin"`
 	} `json:"person"`
 }
+
+// StaffChange defines model for StaffChange.
+type StaffChange struct {
+	AcknowledgeCompetitionRestriction bool               `json:"acknowledge_competition_restriction"`
+	Active                            bool               `json:"active"`
+	PersonId                          openapi_types.UUID `json:"person_id"`
+	Role                              StaffRole          `json:"role"`
+}
+
+// StaffMember defines model for StaffMember.
+type StaffMember struct {
+	Active      bool               `json:"active"`
+	ChangedAt   time.Time          `json:"changed_at"`
+	DisplayName string             `json:"display_name"`
+	PersonId    openapi_types.UUID `json:"person_id"`
+	Role        StaffRole          `json:"role"`
+}
+
+// StaffPage defines model for StaffPage.
+type StaffPage struct {
+	Items []StaffMember `json:"items"`
+}
+
+// StaffRole defines model for StaffRole.
+type StaffRole string
 
 // CSRF defines model for CSRF.
 type CSRF = string
@@ -177,6 +241,28 @@ type UploadFileParams struct {
 // UploadFileJSONBodyMediaType defines parameters for UploadFile.
 type UploadFileJSONBodyMediaType string
 
+// TransferOwnerJSONBody defines parameters for TransferOwner.
+type TransferOwnerJSONBody struct {
+	AcknowledgeCompetitionRestriction bool               `json:"acknowledge_competition_restriction"`
+	PersonId                          openapi_types.UUID `json:"person_id"`
+}
+
+// TransferOwnerParams defines parameters for TransferOwner.
+type TransferOwnerParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
+// ChangeStaffParams defines parameters for ChangeStaff.
+type ChangeStaffParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted event revision, for example "1".
+	IfMatch Revision `json:"If-Match"`
+}
+
 // LogoutParams defines parameters for Logout.
 type LogoutParams struct {
 	XCSRFToken CSRF `json:"X-CSRF-Token"`
@@ -184,6 +270,12 @@ type LogoutParams struct {
 
 // UploadFileJSONRequestBody defines body for UploadFile for application/json ContentType.
 type UploadFileJSONRequestBody UploadFileJSONBody
+
+// TransferOwnerJSONRequestBody defines body for TransferOwner for application/json ContentType.
+type TransferOwnerJSONRequestBody TransferOwnerJSONBody
+
+// ChangeStaffJSONRequestBody defines body for ChangeStaff for application/json ContentType.
+type ChangeStaffJSONRequestBody = StaffChange
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -199,6 +291,15 @@ type ServerInterface interface {
 
 	// (GET /api/v1/events/{event_id}/files/{file_id})
 	DownloadFile(w http.ResponseWriter, r *http.Request, eventId EventID, fileId openapi_types.UUID)
+
+	// (PUT /api/v1/events/{event_id}/owner)
+	TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams)
+
+	// (GET /api/v1/events/{event_id}/staff)
+	ListStaff(w http.ResponseWriter, r *http.Request, eventId EventID)
+
+	// (PUT /api/v1/events/{event_id}/staff)
+	ChangeStaff(w http.ResponseWriter, r *http.Request, eventId EventID, params ChangeStaffParams)
 
 	// (POST /api/v1/logout)
 	Logout(w http.ResponseWriter, r *http.Request, params LogoutParams)
@@ -234,6 +335,21 @@ func (_ Unimplemented) UploadFile(w http.ResponseWriter, r *http.Request, eventI
 
 // (GET /api/v1/events/{event_id}/files/{file_id})
 func (_ Unimplemented) DownloadFile(w http.ResponseWriter, r *http.Request, eventId EventID, fileId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/owner)
+func (_ Unimplemented) TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/staff)
+func (_ Unimplemented) ListStaff(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/staff)
+func (_ Unimplemented) ChangeStaff(w http.ResponseWriter, r *http.Request, eventId EventID, params ChangeStaffParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -511,6 +627,186 @@ func (siw *ServerInterfaceWrapper) DownloadFile(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// TransferOwner operation middleware
+func (siw *ServerInterfaceWrapper) TransferOwner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TransferOwnerParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TransferOwner(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListStaff operation middleware
+func (siw *ServerInterfaceWrapper) ListStaff(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListStaff(w, r, eventId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ChangeStaff operation middleware
+func (siw *ServerInterfaceWrapper) ChangeStaff(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ChangeStaffParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch Revision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ChangeStaff(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Logout operation middleware
 func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request) {
 
@@ -735,6 +1031,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/events/{event_id}/files/{file_id}", wrapper.DownloadFile)
 	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/staff", wrapper.ListStaff)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/staff", wrapper.ChangeStaff)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/owner", wrapper.TransferOwner)
+	})
 
 	return r
 }
@@ -949,6 +1254,139 @@ func (response DownloadFiledefaultJSONResponse) VisitDownloadFileResponse(w http
 	return err
 }
 
+type TransferOwnerRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  TransferOwnerParams
+	Body    *TransferOwnerJSONRequestBody
+}
+
+type TransferOwnerResponseObject interface {
+	VisitTransferOwnerResponse(w http.ResponseWriter) error
+}
+
+type TransferOwner200JSONResponse RevisionResult
+
+func (response TransferOwner200JSONResponse) VisitTransferOwnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type TransferOwnerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response TransferOwnerdefaultJSONResponse) VisitTransferOwnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStaffRequestObject struct {
+	EventId EventID `json:"event_id"`
+}
+
+type ListStaffResponseObject interface {
+	VisitListStaffResponse(w http.ResponseWriter) error
+}
+
+type ListStaff200JSONResponse StaffPage
+
+func (response ListStaff200JSONResponse) VisitListStaffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListStaffdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ListStaffdefaultJSONResponse) VisitListStaffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ChangeStaffRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ChangeStaffParams
+	Body    *ChangeStaffJSONRequestBody
+}
+
+type ChangeStaffResponseObject interface {
+	VisitChangeStaffResponse(w http.ResponseWriter) error
+}
+
+type ChangeStaff200JSONResponse RevisionResult
+
+func (response ChangeStaff200JSONResponse) VisitChangeStaffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ChangeStaffdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ChangeStaffdefaultJSONResponse) VisitChangeStaffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type LogoutRequestObject struct {
 	Params LogoutParams
 }
@@ -1127,6 +1565,15 @@ type StrictServerInterface interface {
 	// (GET /api/v1/events/{event_id}/files/{file_id})
 	DownloadFile(ctx context.Context, request DownloadFileRequestObject) (DownloadFileResponseObject, error)
 
+	// (PUT /api/v1/events/{event_id}/owner)
+	TransferOwner(ctx context.Context, request TransferOwnerRequestObject) (TransferOwnerResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/staff)
+	ListStaff(ctx context.Context, request ListStaffRequestObject) (ListStaffResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/staff)
+	ChangeStaff(ctx context.Context, request ChangeStaffRequestObject) (ChangeStaffResponseObject, error)
+
 	// (POST /api/v1/logout)
 	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
 
@@ -1294,6 +1741,100 @@ func (sh *strictHandler) DownloadFile(w http.ResponseWriter, r *http.Request, ev
 	}
 }
 
+// TransferOwner operation middleware
+func (sh *strictHandler) TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams) {
+	var request TransferOwnerRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body TransferOwnerJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.TransferOwner(ctx, request.(TransferOwnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TransferOwner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(TransferOwnerResponseObject); ok {
+		if err := validResponse.VisitTransferOwnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListStaff operation middleware
+func (sh *strictHandler) ListStaff(w http.ResponseWriter, r *http.Request, eventId EventID) {
+	var request ListStaffRequestObject
+
+	request.EventId = eventId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListStaff(ctx, request.(ListStaffRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListStaff")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListStaffResponseObject); ok {
+		if err := validResponse.VisitListStaffResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ChangeStaff operation middleware
+func (sh *strictHandler) ChangeStaff(w http.ResponseWriter, r *http.Request, eventId EventID, params ChangeStaffParams) {
+	var request ChangeStaffRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body ChangeStaffJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ChangeStaff(ctx, request.(ChangeStaffRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ChangeStaff")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ChangeStaffResponseObject); ok {
+		if err := validResponse.VisitChangeStaffResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Logout operation middleware
 func (sh *strictHandler) Logout(w http.ResponseWriter, r *http.Request, params LogoutParams) {
 	var request LogoutRequestObject
@@ -1397,39 +1938,45 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"3Frbcts40n4VFP65+os6OHZSG/sqcTIz2U12snamaqosL6tFtCTEJMAATcVKSu++1SBFURJ1iuOZ7F7J",
+	"Eg6N/vqA/hr+KhOb5dagIS/Pv8ocHGRI6MK3y+urn/lTG3kuJwgKnYykgQzlufyjw8OdD/YOjYykw0+F",
+	"dqjkObkCI+mTCWbAqzO4f4tmTBN5fvLkb5HMtFl8P30SSZrlvJ0np81YzueRvCyct64W/KlAN1vKTcrR",
+	"pgSFIyhSkuf9SI6sy4DkudSGnp3JIE5nRRYGK1naEI7RBWGvp2jozataWg40WQpDHo212qlgLbIowsxN",
+	"jd4ozHJLaJLZP3C2FdLGtA7Pe5jQtzrTtA3FNAy2gvi0H7HNStBO+v0GhCetEF7hVHttTbmLT5zOKXyV",
+	"/yosoRIBReGqaZEYWSfwHrI8RTGQJwPZldEWREadd0DJZCcUORCh4+X/Hsibk87z25t+5/nt/w/kTy3A",
+	"zHkrn1vjMTj5a+dKZ0usITQBMcjzVCfAWvQ++lKzpbyfHI7kufy/3jJ2euWo74XdXpsppjbHUtoqJGf9",
+	"vtBmCqlWMauEni7EWf9EFAYKmqAhFoyKfzxlpIZaKTTCOpF4N4qrtRcDc9Y/E8ZSPLKFCdOf1xDHiTWj",
+	"VCfEy/TSq+rfefnJqRhaNYvJ2jgFN0ae/KmwBDHeJ4gqHOLkqSiML/LcOkIVZ6g0XAzM06AGww5pjKz0",
+	"hXjaP2UtpqBTGKZhOzv8iAnFmfZem3F3YN6h9zBGL8Ch8DDC4AxK+zyFWVe8WAIvcpvqZCbQjKxLeEVB",
+	"E+v0lzDaHRgZVe4SzPhH56pEs1MG89JcGw7ARimHw8oXhdIU0gB/y53N0ZEunQMSqhx7bZeIh6zj1LA/",
+	"GCN54LQMCRRQODYopVk4pO8bRxpB6jFaO2Vii/Lw68HJE3GqbeFj1wjSjRy5uc7hCB2aBA/V8Nj9bYr7",
+	"YumaYDS64onzeb1H6VG8hU2SwjlUMdCKUAWEHdIZth8TfIgPha1W9exEJsED1SCOGzoMo3kzh93IMKUW",
+	"Fy1crbnn6nFXNW44y20LOMGp38MYN31aE2arf+wyQiM6lkYA52DG3w3eU5zU9/VexNYxCCdY3aZNm9Ws",
+	"uqERLlL4elhsMXJWJqHWsSonVybdbcLKLIvtVhZvqrG2uDx0m7Y/67RFyWSCyZ0vspZjRTJxCFQ6xsGh",
+	"UNc2h4T3SKdY3slfH5DdlIa4/LllF/vZ4MEJ1esvGA9nhH5l+qF+p2RD/4bohqIr542W8K/IXkG+zZa/",
+	"IqQ02bSmJ6Ai/IWGbXoj7Z283VB07dzVqjZBiyLsCn2o4tYFHpWf18TWa9sEX6Nf7LvmsFyuUKAHbebO",
+	"0fm2ZVUtED/U2/IUiCfFoDLdPMLQ2hTBtDvFivSNTfYGdaVU1FS+FTS+2i4nYMZ45F0PyZ2xn1NUY4w5",
+	"XSOFlbFDVn29XKl1Le+XKbaPlcc++Ko/+u7ehKi63nhCfbToIOW2wvkOsyG69hpum+JJMMFxeXOvg/5V",
+	"aK757jq4DV23Yvg9KoamMTZKhtYCYOtxrips6hzpxmC0DwwxQ0OhD/CxUOHyzRIZydSOtSedeA7eiSU7",
+	"dpBPwgIEl87iodM4iiFJ0Pv2hOsxKZym2TXrU2XrZY4LNDWx9k7jkqZOILkb2vt4MW+pda6ZyAfKoc3I",
+	"blLka8iwY50eayOuXl9/EC/ev+mK98GsQntBExR+Ag4VEzlDmmYXwiFr6UqepCx6JoIDo7M8nQnmeNpl",
+	"qAQQoVFgEuyKy3DkkkUtSCZv5G3hEizJlm6wLGSyVlAQ4UVlM8EtH5E7SxiCsStehE/hkByvdlh4FGDE",
+	"WivjYmB4SJuxAHGHs4r1jQLJIFFRb96mcMYzl+0Kls40sj5jWSF7UXgcmEVnQHzWNAko2aFHN0VVs2AB",
+	"RlVbBnZsjfAEKdYTfHdg3mpPAo3KrTbkRXV8vE/SwuspClNk6HQiyuo0bDlkwo1K5DBG4Uuo2OSa2Fvl",
+	"r5DcdbTpQOelvWdzykhO0ZUOJPvdJ91+KHdyNJBreS5Pu/3uKfsr0CS4Ww9y3Zue9EKF4ntfF5XKvAdc",
+	"jfOUMYYPjtJgojdKnkvWJdTrMlrp5N20B+xySq9quc2jvTPLrtL8dq2L8qTf/249lCV3aemfvFj456Kt",
+	"FCARDhPrlO+GBL3oZLWLqc9dNmtKIcfBtWgazm/n0T5r9fA+t65ptFWFXlbe9Pfr3/4pyrkXYmTT1H4W",
+	"DV4kyFajYlktBBf03D1bdYTXYeL/uiu8sp9NakGFLAFLvyg9gqHprvaILssjdV5pn1uvF7XSrlbRD+RN",
+	"zEw2mvTH7B7J3PodHjgEj8/ORJEzqF3xymagTdsVkXor2KazTc/7PSwODPZox+PXhgPcbq2ZfsCKukE9",
+	"v605+kurZke56VH9uHrPuvxjvriPWDdfSp71V15KTvby6UWN1NQiVyMZSZ3BGHu5Gdd/f8yRvxDeUy9P",
+	"YYXZbKGeW3lxpWsLNZqvN+3nG5ni5LtliuByLUmidEhUghWIuCcdaoVQcEHK3l2kFMoRMFWFlYTfyc2+",
+	"8TbZH8W9r/zB37fe5YvkVoXSERnWJoTU8eQQslX8ls6oDYTXoJbHka3XLRBBMsnQ0IUwOEUnQOTFMNVJ",
+	"wNbPPGEmfr96+1+WdaPWl7/KQA96g9udz0PT6YH5vGjxnA8OjB+h+y3s/1hZ+M/Oqd/c9ziGje8g19/W",
+	"mjgkB36/ammtB9gSzsEn/ETngiovcfzKF54VDK091D5G+vNM63cSmED85SOitGx0tAB0WSFRUsepvat5",
+	"xtgBE8RAN8F7PTacCgXpDD1Blv/53GNL/JdtxQWMP3D07zVSqcmPF0W/sCsID9PHjJ3Ujm1p3kXVvhYr",
+	"5fi3WXiTs521tKbQ8S1fNbUW/7UAhOrh2jU6aq2Z4Bek67qZ9nipoBKxKxE0/ymjbsGF/BCaYaHH/wA8",
+	"JuGB6MsuIKo3pEfEoZLQAsN7ZxP0njuRqZ7ihTBWKMzRKOZfonwV+zb1l51WeX5zG8BwCGq2E4srnvHX",
+	"QHFVZSDBj+7MlSNRLgrO4Mk67geCQxHU+D6grP7Q6ETf3M5v5/8ZAA==",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

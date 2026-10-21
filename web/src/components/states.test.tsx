@@ -14,6 +14,10 @@ test('expired sessions have a useful action', () => {
   render(<Failure error={new APIError(401, 'unauthenticated')} />)
   expect(screen.getByRole('alert')).toHaveTextContent('Sign in to continue')
 })
+test('permission denial explains why access is unavailable', () => {
+  render(<Failure error={new APIError(403, 'forbidden')} />)
+  expect(screen.getByRole('alert')).toHaveTextContent('You do not have access to this resource.')
+})
 test('private cache keys separate both accounts and events', () => {
   const cache = new QueryClient()
   cache.setQueryData(privateKey('person-a', 'event-a', 'team'), 'private')

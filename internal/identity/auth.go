@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -77,7 +79,7 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) error {
 	state, nonce, browser := rand.Text(), rand.Text(), rand.Text()
 	verifier := oauth2.GenerateVerifier()
 	err := dbgen.New(a.Pool).
-		PutLoginAttempt(r.Context(), dbgen.PutLoginAttemptParams{StateHash: digest(state), BrowserHash: digest(browser), Nonce: nonce, Verifier: verifier, ExpiresAt: time.Now().Add(5 * time.Minute)})
+		PutLoginAttempt(r.Context(), dbgen.PutLoginAttemptParams{StateHash: digest(state), BrowserHash: digest(browser), Nonce: nonce, Verifier: verifier, ExpiresAt: time.Now().Add(5 * time.Minute), ReturnTo: SafeReturnTo(r.URL.Query().Get("return_to"))})
 	if err != nil {
 		return ErrLogin
 	}
@@ -219,8 +221,29 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) error {
 	a.Sessions.Put(ctx, "person_id", person.ID.String())
 	a.Sessions.Put(ctx, "session_revision", person.SessionRevision)
 	a.Sessions.Put(ctx, "csrf", rand.Text()+rand.Text())
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, SafeReturnTo(attempt.ReturnTo), http.StatusSeeOther)
 	return nil
+}
+
+// SafeReturnTo accepts only local application pages, including on callback.
+// It rejects encoded slashes/backslashes and auth/API destinations as well as
+// external URLs, so a login cannot become an open redirect or trigger an action.
+func SafeReturnTo(raw string) string {
+	if raw == "" || len(raw) > 2048 || !strings.HasPrefix(raw, "/") ||
+		strings.ContainsAny(raw, "\\\r\n\x00") {
+		return "/"
+	}
+	u, err := url.ParseRequestURI(raw)
+	if err != nil || u.IsAbs() || u.Host != "" || strings.HasPrefix(u.Path, "//") ||
+		strings.ContainsAny(u.Path, "\\\r\n\x00") {
+		return "/"
+	}
+	for _, prefix := range []string{"/auth", "/api", "/ops"} {
+		if u.Path == prefix || strings.HasPrefix(u.Path, prefix+"/") {
+			return "/"
+		}
+	}
+	return u.RequestURI()
 }
 
 func (a *Auth) Current(ctx context.Context) (dbgen.Person, error) {

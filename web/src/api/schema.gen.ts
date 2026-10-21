@@ -143,6 +143,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listStaff"];
+        put: operations["changeStaff"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["transferOwner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -188,6 +224,7 @@ export interface components {
                 /** Format: int64 */
                 revision?: number;
                 count?: number;
+                role?: components["schemas"]["StaffRole"];
             };
         };
         AuditPage: {
@@ -209,6 +246,31 @@ export interface components {
             size_bytes: number;
             /** Format: date-time */
             created_at: string;
+        };
+        /** @enum {string} */
+        StaffRole: "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer" | "early_brief_access";
+        StaffChange: {
+            /** Format: uuid */
+            person_id: string;
+            role: components["schemas"]["StaffRole"];
+            active: boolean;
+            acknowledge_competition_restriction: boolean;
+        };
+        StaffMember: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            role: components["schemas"]["StaffRole"];
+            active: boolean;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        StaffPage: {
+            items: components["schemas"]["StaffMember"][];
+        };
+        RevisionResult: {
+            /** Format: int64 */
+            revision: number;
         };
     };
     responses: {
@@ -439,6 +501,95 @@ export interface operations {
                 };
                 content: {
                     "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current and revoked event grants with assignment timestamps. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeStaff: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffChange"];
+            };
+        };
+        responses: {
+            /** @description Grant saved; current event revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    transferOwner: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    person_id: string;
+                    acknowledge_competition_restriction: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Ownership transferred; current event revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionResult"];
                 };
             };
             default: components["responses"]["Error"];

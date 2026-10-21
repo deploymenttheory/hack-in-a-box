@@ -26,6 +26,9 @@ const (
 	ChallengeApproved       Action = "challenge.approved"
 	ChallengePostponed      Action = "challenge.postponed"
 	SubmissionFinalized     Action = "submission.finalized"
+	RoleGranted             Action = "role.granted"
+	RoleRevoked             Action = "role.revoked"
+	OwnerTransferred        Action = "owner.transferred"
 )
 
 type Reason string
@@ -45,6 +48,7 @@ type Metadata struct {
 	PreviousRevision *int64     `json:"previous_revision,omitempty"`
 	Revision         *int64     `json:"revision,omitempty"`
 	Count            *int       `json:"count,omitempty"`
+	Role             *string    `json:"role,omitempty"`
 }
 type Record struct {
 	ActorID, EventID *uuid.UUID
@@ -66,7 +70,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		TeamRebalanced,
 		ChallengeApproved,
 		ChallengePostponed,
-		SubmissionFinalized:
+		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred:
 	default:
 		return access.ErrInvalid
 	}
@@ -77,6 +81,19 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	}
 	if r.TargetID == uuid.Nil {
 		return access.ErrInvalid
+	}
+	if r.Metadata.Role != nil {
+		switch *r.Metadata.Role {
+		case "organiser",
+			"mentor",
+			"judge",
+			"mc",
+			"logistics",
+			"photographer",
+			"early_brief_access":
+		default:
+			return access.ErrInvalid
+		}
 	}
 	metadata, err := json.Marshal(r.Metadata)
 	if err != nil {

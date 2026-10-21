@@ -23,6 +23,19 @@ type AuditEvent struct {
 	OccurredAt time.Time
 }
 
+type CompetitionClaim struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+	State    string
+}
+
+type CompetitionExclusion struct {
+	EventID    uuid.UUID
+	PersonID   uuid.UUID
+	Source     string
+	OccurredAt time.Time
+}
+
 type DeliveryAttempt struct {
 	ID          uuid.UUID
 	OperationID uuid.UUID
@@ -33,11 +46,21 @@ type DeliveryAttempt struct {
 }
 
 type Event struct {
-	ID        uuid.UUID
-	Name      string
-	Revision  int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID            uuid.UUID
+	Name          string
+	Revision      int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	OwnerID       *uuid.UUID
+	WritesAllowed bool
+}
+
+type EventMembership struct {
+	EventID   uuid.UUID
+	PersonID  uuid.UUID
+	Role      string
+	Active    bool
+	ChangedAt time.Time
 }
 
 type File struct {
@@ -59,6 +82,7 @@ type LoginAttempt struct {
 	Nonce       string
 	Verifier    string
 	ExpiresAt   time.Time
+	ReturnTo    string
 }
 
 type Operation struct {
@@ -92,11 +116,23 @@ type Person struct {
 	UpdatedAt       time.Time
 }
 
+type PolicyResource struct {
+	EventID uuid.UUID
+	ID      uuid.UUID
+	Kind    string
+}
+
 type ReconciliationRun struct {
 	ID              uuid.UUID
 	RecoveredLeases int32
 	Enqueued        int32
 	OccurredAt      time.Time
+}
+
+type ResourceAssignment struct {
+	EventID    uuid.UUID
+	ResourceID uuid.UUID
+	PersonID   uuid.UUID
 }
 
 type Session struct {

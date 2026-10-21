@@ -123,7 +123,7 @@ func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, e
 }
 
 const lockEvent = `-- name: LockEvent :one
-SELECT id, name, revision, created_at, updated_at FROM events WHERE id = $1 FOR UPDATE
+SELECT id, name, revision, created_at, updated_at, owner_id, writes_allowed FROM events WHERE id = $1 FOR UPDATE
 `
 
 func (q *Queries) LockEvent(ctx context.Context, id uuid.UUID) (Event, error) {
@@ -135,6 +135,8 @@ func (q *Queries) LockEvent(ctx context.Context, id uuid.UUID) (Event, error) {
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.WritesAllowed,
 	)
 	return i, err
 }

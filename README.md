@@ -2,7 +2,7 @@
 
 A self-hosted hackathon platform: a Go API and durable worker, a React/TypeScript browser application, PostgreSQL and private persistent-volume file storage. The product vocabulary is in [GLOSSARY.md](GLOSSARY.md), and the agreed rules are in [docs/adr](docs/adr).
 
-The foundation implements database migrations, the application shell, generated REST contracts, OIDC sessions, audit records, durable delivery operations, protected files and operational checks. Event registration, team formation, challenge publication and judging remain in their domain tickets. Event-resource access currently requires an active platform administrator through an explicit policy interface; event-role grants extend that policy in #34.
+The foundation implements database migrations, the application shell, generated REST contracts, OIDC sessions, audit records, durable delivery operations, protected files and operational checks. Event registration, team formation, challenge publication and judging remain in their domain tickets. Event-resource access uses current event memberships and resource assignments. Platform administration manages ownership without implicitly granting private content, credentials or assessments. See [organiser verification](docs/organiser-verification.md).
 
 ## Run with Docker Compose
 

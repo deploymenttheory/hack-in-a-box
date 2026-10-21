@@ -51,7 +51,7 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	policy := access.AdminPolicy{Queries: q}
+	policy := access.EventPolicy{Queries: q}
 	logs := new(bytes.Buffer)
 	router := NewRouter(
 		cfg,
@@ -88,6 +88,17 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 		ctx,
 		"INSERT INTO events(id,name) VALUES ($1,'Synthetic')",
 		event,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{
+			EventID:  event,
+			PersonID: person.ID,
+			Role:     "organiser",
+			Active:   true,
+		},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +182,7 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 	// Current authorization is checked after login, not cached in the session.
 	if _, err := pool.Exec(
 		ctx,
-		"UPDATE people SET platform_admin=false WHERE id=$1",
+		"UPDATE event_memberships SET active=false WHERE person_id=$1",
 		person.ID,
 	); err != nil {
 		t.Fatal(err)

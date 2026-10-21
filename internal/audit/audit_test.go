@@ -39,6 +39,17 @@ func TestAuditRollbackScopeAndSafeMetadata(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if err := q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{
+			EventID:  first,
+			PersonID: person.ID,
+			Role:     "organiser",
+			Active:   true,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
 	record := audit.Record{
 		ActorID:  &person.ID,
 		EventID:  &first,
@@ -55,7 +66,7 @@ func TestAuditRollbackScopeAndSafeMetadata(t *testing.T) {
 	}); !errors.Is(err, failure) {
 		t.Fatal(err)
 	}
-	service := audit.Service{Queries: q, Policy: access.AdminPolicy{Queries: q}}
+	service := audit.Service{Queries: q, Policy: access.EventPolicy{Queries: q}}
 	rows, err := service.List(ctx, person.ID, first, 0, 50, false)
 	if err != nil || len(rows) != 0 {
 		t.Fatalf("audit escaped rollback: %v %v", rows, err)

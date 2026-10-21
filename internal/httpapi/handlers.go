@@ -19,13 +19,15 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 )
 
 type Dependencies struct {
-	Pool  *pgxpool.Pool
-	Auth  *identity.Auth
-	Audit audit.Service
-	Files files.Service
+	Pool        *pgxpool.Pool
+	Auth        *identity.Auth
+	Audit       audit.Service
+	Files       files.Service
+	Permissions permissions.Service
 }
 type handlers struct{ Dependencies }
 
@@ -218,6 +220,14 @@ func (h handlers) DownloadFile(
 func respondError(w http.ResponseWriter, r *http.Request, err error) {
 	status, code, message := 500, "internal_error", "An internal error occurred."
 	switch {
+	case errors.Is(err, permissions.ErrWithdrawal):
+		status, code, message = 409, "withdrawal_required", permissions.ErrWithdrawal.Error()
+	case errors.Is(err, permissions.ErrIneligible):
+		status, code, message = 409, "competition_ineligible", permissions.ErrIneligible.Error()
+	case errors.Is(err, permissions.ErrAssessment):
+		status, code, message = 409, "assessment_conflict", permissions.ErrAssessment.Error()
+	case errors.Is(err, permissions.ErrLastOrganiser):
+		status, code, message = 409, "last_organiser", permissions.ErrLastOrganiser.Error()
 	case errors.Is(err, access.ErrUnauthenticated):
 		status, code, message = 401, "unauthenticated", "Sign in to continue."
 	case errors.Is(err, access.ErrForbidden):

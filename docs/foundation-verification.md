@@ -38,7 +38,7 @@ PostgreSQL tests use isolated Testcontainers and synthetic data. Browser checks 
 
 ## Review boundaries
 
-- Event-role authorization (#34) is intentionally not implemented here. Current audit/file policy admits active platform administrators only; future domain policy plugs into the same server-side interface.
+- The original foundation used a restrictive administrator policy. Event-role authorization now replaces it; see [organiser verification](organiser-verification.md) for current grants and policy coverage.
 - The worker has no real external integration handler yet. The execution/reconciliation protocol is tested with deterministic providers; future handlers must respect cancellation, recheck eligibility and reconcile uncertain outcomes.
 - OIDC must be configured before real sign-in. No fake login exists in production or development.
 - Run explicit migrations before starting either process. Take a matching database/file-volume backup before upgrades.
