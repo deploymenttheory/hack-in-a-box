@@ -152,6 +152,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	}
 	logger.Info("worker started", "jobs_enabled", true)
 	worker.Maintenance = func(ctx context.Context) error {
+		if err := (registration.Service{Pool: pool}).MaintainOffers(ctx); err != nil {
+			return fmt.Errorf("maintain attendee offers: %w", err)
+		}
 		if err := dbgen.New(pool).ExpireGitHubLinkAttempts(ctx); err != nil {
 			return fmt.Errorf("expire GitHub verification attempts: %w", err)
 		}

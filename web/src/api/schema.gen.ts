@@ -536,6 +536,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/registrations/offer-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getOfferPolicy"];
+        put: operations["saveOfferPolicy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/{registration_id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["respondToRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/registrations/{registration_id}/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOwnRegistrationResponse"];
+        put: operations["correctRegistrationResponse"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -994,11 +1050,41 @@ export interface components {
             fallback_to_attendee: boolean;
             /** Format: int64 */
             waitlist_position: number | null;
+            offer: components["schemas"]["RegistrationOffer"] | null;
+        };
+        RegistrationOffer: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** @enum {string} */
+            state: "pending" | "accepted" | "declined" | "expired";
+        };
+        OfferSettings: {
+            /** Format: int64 */
+            revision: number;
+            automated: boolean;
+            working_days: number;
+        };
+        OfferPolicyInput: {
+            automated: boolean;
+            working_days: number;
+        };
+        RegistrationAction: {
+            /** @enum {string} */
+            action: "accept" | "decline" | "withdraw";
+        };
+        RegistrationResponse: {
+            definition: components["schemas"]["TemplateForm"];
+            answers: components["schemas"]["FormAnswers"];
+            /** Format: int64 */
+            revision: number;
         };
         RegistrationList: {
             items: components["schemas"]["Registration"][];
         };
         RegistrationEvent: {
+            team_frozen: boolean;
             /** Format: uuid */
             id: string;
             name: string;
@@ -2235,6 +2321,148 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Registration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOfferPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveOfferPolicy: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferPolicyInput"];
+            };
+        };
+        responses: {
+            /** @description Authoritative registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    respondToRegistration: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrationAction"];
+            };
+        };
+        responses: {
+            /** @description Authoritative registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Registration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnRegistrationResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    correctRegistrationResponse: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                registration_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormAnswers"];
+            };
+        };
+        responses: {
+            /** @description Authoritative registration result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationResponse"];
                 };
             };
             default: components["responses"]["Error"];

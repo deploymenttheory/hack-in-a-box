@@ -17,6 +17,7 @@ import (
 )
 
 type Summary struct {
+	TeamFrozen      bool      `json:"team_frozen"`
 	ID              uuid.UUID `json:"id"`
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
@@ -48,6 +49,7 @@ func summary(row dbgen.Event, now time.Time) (Summary, error) {
 		return Summary{}, err
 	}
 	return Summary{
+		TeamFrozen:      row.TeamFrozenAt.Valid || !now.Before(c.TeamFreeze),
 		ID:              row.ID,
 		Name:            row.Name,
 		Description:     c.Description,
@@ -76,7 +78,7 @@ func (s Service) Discover(
 	}
 	rows, err := q.OpenRegistrationEvents(
 		ctx,
-		dbgen.OpenRegistrationEventsParams{ID: after, Limit: limit},
+		dbgen.OpenRegistrationEventsParams{Cursor: after, Actor: actor, PageSize: limit},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("discover registration events: %w", err)

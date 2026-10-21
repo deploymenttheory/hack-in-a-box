@@ -735,6 +735,105 @@ paths:
                 $ref: '#/components/schemas/Registration'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/offer-policy:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getOfferPolicy
+      responses:
+        '200':
+          description: Authoritative registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferSettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: saveOfferPolicy
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferPolicyInput'
+      responses:
+        '200':
+          description: Authoritative registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferSettings'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/{registration_id}/respond:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: registration_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: respondToRegistration
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationAction'
+      responses:
+        '200':
+          description: Authoritative registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/registrations/{registration_id}/response:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: registration_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getOwnRegistrationResponse
+      responses:
+        '200':
+          description: Authoritative registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: correctRegistrationResponse
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormAnswers'
+      responses:
+        '200':
+          description: Authoritative registration result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -1709,7 +1808,7 @@ components:
     Registration:
       type: object
       additionalProperties: false
-      required: [id, event_id, person_id, form_id, form_version, audience, kind, state, sequence, revision, team_preference, invitation_reference, fallback_to_attendee, waitlist_position]
+      required: [id, event_id, person_id, form_id, form_version, audience, kind, state, sequence, revision, team_preference, invitation_reference, fallback_to_attendee, waitlist_position, offer]
       properties:
         id: {type: string, format: uuid}
         event_id: {type: string, format: uuid}
@@ -1725,6 +1824,46 @@ components:
         invitation_reference: {type: string}
         fallback_to_attendee: {type: boolean}
         waitlist_position: {type: integer, format: int64, nullable: true}
+        offer:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationOffer'
+          nullable: true
+    RegistrationOffer:
+      type: object
+      required: [id, expires_at, state]
+      properties:
+        id: {type: string, format: uuid}
+        expires_at: {type: string, format: date-time}
+        state: {type: string, enum: [pending, accepted, declined, expired]}
+    OfferSettings:
+      type: object
+      required: [revision, automated, working_days]
+      properties:
+        revision: {type: integer, format: int64}
+        automated: {type: boolean}
+        working_days: {type: integer, minimum: 1, maximum: 30}
+    OfferPolicyInput:
+      type: object
+      additionalProperties: false
+      required: [automated, working_days]
+      properties:
+        automated: {type: boolean}
+        working_days: {type: integer, minimum: 1, maximum: 30}
+    RegistrationAction:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: {type: string, enum: [accept, decline, withdraw]}
+    RegistrationResponse:
+      type: object
+      required: [definition, answers, revision]
+      properties:
+        definition:
+          $ref: '#/components/schemas/TemplateForm'
+        answers:
+          $ref: '#/components/schemas/FormAnswers'
+        revision: {type: integer, format: int64}
     RegistrationList:
       type: object
       required: [items]
@@ -1736,8 +1875,9 @@ components:
     RegistrationEvent:
       type: object
       additionalProperties: false
-      required: [id, name, description, venue, timezone, live_start, live_end, admission_cutoff, team_freeze, stage, open]
+      required: [id, name, description, venue, timezone, live_start, live_end, admission_cutoff, team_freeze, stage, open, team_frozen]
       properties:
+        team_frozen: {type: boolean}
         id: {type: string, format: uuid}
         name: {type: string}
         description: {type: string}
