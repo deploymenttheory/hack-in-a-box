@@ -10,6 +10,8 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type requestIDKey struct{}
@@ -59,6 +61,11 @@ func recoverPanics(logger *slog.Logger) func(http.Handler) http.Handler {
 func timeout(duration time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// The timeout goroutine can outlive Chi's pooled request context.
+			// Give it an independent routing context before it starts routing.
+			if routing := chi.RouteContext(r.Context()); routing != nil {
+				r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, routing.Clone()))
+			}
 			body, err := json.Marshal(
 				errorBody(r, "request_timeout", "The request exceeded its time limit."),
 			)

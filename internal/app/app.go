@@ -11,9 +11,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
+	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 )
 
 func Main(component string, run func(context.Context, config.Config, *slog.Logger) error) int {
@@ -34,7 +41,52 @@ func Main(component string, run func(context.Context, config.Config, *slog.Logge
 }
 
 func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
-	server := httpserver.New(cfg, httpapi.NewRouter(cfg, logger))
+	pool, err := database.Open(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open: %w", err)
+	}
+	defer pool.Close()
+	if err := database.CheckSchema(ctx, pool); err != nil {
+		return fmt.Errorf("check schema: %w", err)
+	}
+	storage, err := files.OpenLocal(cfg.StoragePath)
+	if err != nil {
+		return fmt.Errorf("open local: %w", err)
+	}
+	defer func() { _ = storage.Close() }()
+	if err := storage.Ready(ctx); err != nil {
+		return fmt.Errorf("ready: %w", err)
+	}
+	auth, err := identity.New(
+		ctx,
+		pool,
+		identity.Settings{
+			Issuer:           cfg.OIDCIssuer,
+			ClientID:         cfg.OIDCClientID,
+			ClientSecret:     cfg.OIDCClientSecret,
+			Origin:           cfg.PublicOrigin,
+			BootstrapSubject: cfg.BootstrapSubject,
+			Secure:           cfg.Environment == "production",
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("new: %w", err)
+	}
+	queries := dbgen.New(pool)
+	policy := access.AdminPolicy{Queries: queries}
+	deps := httpapi.Dependencies{
+		Pool:  pool,
+		Auth:  auth,
+		Audit: audit.Service{Queries: queries, Policy: policy},
+		Files: files.Service{
+			Pool:       pool,
+			Storage:    storage,
+			Policy:     policy,
+			MaxBytes:   cfg.FileMaxBytes,
+			EventQuota: cfg.FileEventQuota,
+		},
+	}
+	server := httpserver.New(cfg, httpapi.NewRouter(cfg, logger, deps))
 	var listenConfig net.ListenConfig
 	listener, err := listenConfig.Listen(ctx, "tcp", cfg.HTTPAddr)
 	if err != nil {
@@ -53,11 +105,31 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	return nil
 }
 
-func RunWorker(ctx context.Context, _ config.Config, logger *slog.Logger) error {
-	// River execution and durable shutdown are added in #27. This entrypoint
-	// deliberately reports that it does not yet consume background jobs.
-	logger.Info("worker entrypoint started", "jobs_enabled", false)
-	<-ctx.Done()
-	logger.Info("worker shutdown complete")
+func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
+	pool, err := database.Open(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open: %w", err)
+	}
+	defer pool.Close()
+	if err := database.CheckSchema(ctx, pool); err != nil {
+		return fmt.Errorf("check schema: %w", err)
+	}
+	storage, err := files.OpenLocal(cfg.StoragePath)
+	if err != nil {
+		return fmt.Errorf("open local: %w", err)
+	}
+	defer func() { _ = storage.Close() }()
+	if err := storage.Cleanup(ctx, dbgen.New(pool).ObjectExists); err != nil {
+		return fmt.Errorf("cleanup: %w", err)
+	}
+	worker, err := jobs.New(pool, logger, map[string]jobs.Handler{})
+	if err != nil {
+		return fmt.Errorf("new: %w", err)
+	}
+	logger.Info("worker started", "jobs_enabled", true)
+	worker.Maintenance = func(ctx context.Context) error { return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists) }
+	if err := worker.Run(ctx, cfg.ShutdownTimeout); err != nil {
+		return fmt.Errorf("run worker: %w", err)
+	}
 	return nil
 }

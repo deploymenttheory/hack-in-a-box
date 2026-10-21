@@ -42,8 +42,8 @@ func assertError(t *testing.T, response *httptest.ResponseRecorder, status int, 
 	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.Error.Code != code || body.Error.Message == "" || body.Error.RequestID == "" ||
-		body.Error.RequestID != response.Header().Get("X-Request-ID") {
+	if body.Error.Code != code || body.Error.Message == "" || body.Error.RequestId == "" ||
+		body.Error.RequestId != response.Header().Get("X-Request-ID") {
 		t.Fatalf("invalid error envelope: %+v", body)
 	}
 }

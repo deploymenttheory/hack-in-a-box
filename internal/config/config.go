@@ -25,24 +25,47 @@ var (
 
 // Config is shared by the API and worker processes. HTTP fields apply to the API.
 type Config struct {
-	Environment     string
-	LogLevel        slog.Level
-	HTTPAddr        string
-	MaxBodyBytes    int64
-	RequestTimeout  time.Duration
-	ShutdownTimeout time.Duration
+	DatabaseURL      string
+	PublicOrigin     string
+	OIDCIssuer       string
+	OIDCClientID     string
+	OIDCClientSecret string
+	BootstrapSubject string
+	StoragePath      string
+	WebDir           string
+	MetricsToken     string
+	FileMaxBytes     int64
+	FileEventQuota   int64
+	Environment      string
+	LogLevel         slog.Level
+	HTTPAddr         string
+	MaxBodyBytes     int64
+	RequestTimeout   time.Duration
+	ShutdownTimeout  time.Duration
 }
 
 // Load uses an injected environment lookup so configuration tests are isolated.
 func Load(getenv func(string) string) (Config, error) {
 	cfg := Config{
-		Environment:     getenv("HACKBOX_ENV"),
-		HTTPAddr:        valueOr(getenv("HACKBOX_HTTP_ADDR"), "127.0.0.1:8080"),
-		MaxBodyBytes:    1 << 20,
-		RequestTimeout:  10 * time.Second,
-		ShutdownTimeout: 20 * time.Second,
+		DatabaseURL:      getenv("HACKBOX_DATABASE_URL"),
+		PublicOrigin:     valueOr(getenv("HACKBOX_PUBLIC_ORIGIN"), "http://127.0.0.1:8080"),
+		OIDCIssuer:       getenv("HACKBOX_OIDC_ISSUER"),
+		OIDCClientID:     getenv("HACKBOX_OIDC_CLIENT_ID"),
+		OIDCClientSecret: getenv("HACKBOX_OIDC_CLIENT_SECRET"),
+		BootstrapSubject: getenv("HACKBOX_BOOTSTRAP_SUBJECT"),
+		StoragePath:      valueOr(getenv("HACKBOX_STORAGE_PATH"), "data/files"),
+		WebDir:           valueOr(getenv("HACKBOX_WEB_DIR"), "web/dist"),
+		MetricsToken:     getenv("HACKBOX_METRICS_TOKEN"),
+		FileMaxBytes:     8 << 20,
+		FileEventQuota:   1 << 30,
+		Environment:      getenv("HACKBOX_ENV"),
+		HTTPAddr:         valueOr(getenv("HACKBOX_HTTP_ADDR"), "127.0.0.1:8080"),
+		MaxBodyBytes:     16 << 20,
+		RequestTimeout:   10 * time.Second,
+		ShutdownTimeout:  20 * time.Second,
 	}
 	var problems []error
+	problems = append(problems, loadFoundation(&cfg, getenv)...)
 	switch cfg.Environment {
 	case "development", "test", "production":
 	default:

@@ -1,0 +1,61 @@
+name: hackbox
+x-app: &app
+  image: hack-in-a-box:local
+  build: .
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: &environment
+    HACKBOX_ENV: ${HACKBOX_ENV:-development}
+    HACKBOX_DATABASE_URL: postgres://hackbox:${HACKBOX_DB_PASSWORD:?Set HACKBOX_DB_PASSWORD in .env}@postgres:5432/hackbox?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: ${HACKBOX_PUBLIC_ORIGIN:-http://127.0.0.1:8080}
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web
+    HACKBOX_OIDC_ISSUER: ${HACKBOX_OIDC_ISSUER:-}
+    HACKBOX_OIDC_CLIENT_ID: ${HACKBOX_OIDC_CLIENT_ID:-}
+    HACKBOX_OIDC_CLIENT_SECRET: ${HACKBOX_OIDC_CLIENT_SECRET:-}
+    HACKBOX_BOOTSTRAP_SUBJECT: ${HACKBOX_BOOTSTRAP_SUBJECT:-}
+    HACKBOX_METRICS_TOKEN: ${HACKBOX_METRICS_TOKEN:-}
+    HACKBOX_FILE_MAX_BYTES: ${HACKBOX_FILE_MAX_BYTES:-8388608}
+    HACKBOX_FILE_EVENT_QUOTA: ${HACKBOX_FILE_EVENT_QUOTA:-1073741824}
+    HACKBOX_MAX_BODY_BYTES: ${HACKBOX_MAX_BODY_BYTES:-16777216}
+  volumes: [files:/data/files]
+  depends_on:
+    postgres: { condition: service_healthy }
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    environment:
+      POSTGRES_DB: hackbox
+      POSTGRES_USER: hackbox
+      POSTGRES_PASSWORD: ${HACKBOX_DB_PASSWORD:?Set HACKBOX_DB_PASSWORD in .env}
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U hackbox -d hackbox']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    <<: *app
+    entrypoint: [/app/migrate]
+    profiles: [tools]
+  api:
+    <<: *app
+    ports: ['127.0.0.1:${HACKBOX_PORT:-8080}:8080']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  worker:
+    <<: *app
+    entrypoint: [/app/worker]
+    restart: unless-stopped
+volumes:
+  database:
+  files:

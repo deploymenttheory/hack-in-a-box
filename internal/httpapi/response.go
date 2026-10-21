@@ -3,20 +3,18 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 )
 
-type errorResponse struct {
-	Error errorDetail `json:"error"`
-}
-
-type errorDetail struct {
-	Code      string `json:"code"`
-	Message   string `json:"message"`
-	RequestID string `json:"request_id"`
-}
+type errorResponse = contract.ErrorEnvelope
 
 func errorBody(r *http.Request, code, message string) errorResponse {
-	return errorResponse{Error: errorDetail{Code: code, Message: message, RequestID: requestID(r)}}
+	var body errorResponse
+	body.Error.Code = code
+	body.Error.Message = message
+	body.Error.RequestId = requestID(r)
+	return body
 }
 
 func writeError(w http.ResponseWriter, r *http.Request, status int, code, message string) {
