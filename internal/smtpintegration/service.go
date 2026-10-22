@@ -1,6 +1,6 @@
-// Package smtpintegration binds reviewed organiser-only test intents to durable
-// private mail snapshots and bounded transport receipts. Production campaign
-// scheduling and recipient expansion remain with the automation owner.
+// Package smtpintegration binds reviewed personal campaign and organiser-test
+// intents to durable private mail snapshots and bounded transport receipts.
+// Campaign timing and occurrence orchestration remain with the automation owner.
 package smtpintegration
 
 import (
@@ -38,11 +38,12 @@ type (
 		Send(context.Context, maildelivery.Message) maildelivery.Receipt
 	}
 	Service struct {
-		Pool      *pgxpool.Pool
-		Transport Transport
-		Origin    string
-		Campaigns *communications.Service
-		Now       func() time.Time
+		Pool        *pgxpool.Pool
+		Transport   Transport
+		Origin      string
+		Campaigns   *communications.Service
+		ScopePolicy communications.ScopePolicy
+		Now         func() time.Time
 	}
 	privateSnapshot struct {
 		ProviderRevision string               `json:"provider_revision"`
@@ -192,7 +193,16 @@ func (s Service) calendar(
 	q *dbgen.Queries,
 	request communications.TestMessage,
 ) (*maildelivery.Calendar, error) {
-	row, err := q.Event(ctx, request.EventID)
+	return s.calendarFor(ctx, q, request.EventID, true)
+}
+
+func (s Service) calendarFor(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	test bool,
+) (*maildelivery.Calendar, error) {
+	row, err := q.Event(ctx, eventID)
 	if err != nil {
 		return nil, fmt.Errorf("read approved calendar: %w", err)
 	}
@@ -202,12 +212,15 @@ func (s Service) calendar(
 	}
 	calendar := &maildelivery.Calendar{
 		EventID:      row.ID,
-		Test:         true,
+		Test:         test,
 		Start:        configuration.LiveStart,
 		End:          configuration.LiveEnd,
 		Timezone:     configuration.Timezone,
-		Summary:      "[TEST] " + row.Name,
+		Summary:      row.Name,
 		WorkspaceURL: strings.TrimRight(s.Origin, "/") + "/events/" + row.ID.String(),
+	}
+	if test {
+		calendar.Summary = "[TEST] " + calendar.Summary
 	}
 	data, _ := json.Marshal(calendar)
 	fingerprint := sha256.Sum256(data)
@@ -215,7 +228,7 @@ func (s Service) calendar(
 		ctx,
 		dbgen.NextEmailCalendarSequenceParams{
 			EventID:     row.ID,
-			Test:        true,
+			Test:        test,
 			Fingerprint: fingerprint[:],
 		},
 	)
@@ -233,6 +246,17 @@ func (s Service) newMessage(
 	d jobs.Delivery,
 	mailbox string,
 ) (maildelivery.Message, error) {
+	return s.newMessageFor(ctx, q, request, d, mailbox, true)
+}
+
+func (s Service) newMessageFor(
+	ctx context.Context,
+	q *dbgen.Queries,
+	request communications.TestMessage,
+	d jobs.Delivery,
+	mailbox string,
+	test bool,
+) (maildelivery.Message, error) {
 	currentBrand, err := brand(ctx, q, d.EventID)
 	if err != nil {
 		return maildelivery.Message{}, err
@@ -240,7 +264,7 @@ func (s Service) newMessage(
 	var calendar *maildelivery.Calendar
 	body := request.PlainText
 	if request.IncludeCalendar {
-		calendar, err = s.calendar(ctx, q, request)
+		calendar, err = s.calendarFor(ctx, q, request.EventID, test)
 		if err != nil {
 			return maildelivery.Message{}, err
 		}

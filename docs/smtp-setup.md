@@ -45,7 +45,14 @@ redirect to an audience or a shared channel. A calendar attachment must be selec
 explicitly. Tests use a separate calendar UID from the live event, so receiving a
 test cannot replace a live calendar entry. Queued tests expire after fifteen
 minutes and recheck current role, mailbox, source, campaign and provider settings.
-Production campaign scheduling remains a separate worker integration.
+Production campaign scheduling remains a separate worker integration. That
+integration calls the SMTP queue inside its own transaction; the queue resolves
+the current approved audience once, stores individual private immutable intents,
+and enqueues durable jobs without network effects. Occurrence-scoped sends also
+require the automation policy to confirm the retained occurrence/source binding
+and current recipient scope again before delivery. Missing scope policy fails
+closed. Repeating the same approved occurrence deduplicates; a distinct approved
+occurrence retains its own personal message identity.
 
 The receipt means **relay accepted**, never delivered to an inbox or read. A final
 positive DATA reply remains accepted even if QUIT subsequently fails. A definite

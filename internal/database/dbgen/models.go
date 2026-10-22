@@ -639,6 +639,25 @@ type Session struct {
 	Expiry time.Time
 }
 
+type SmtpCampaignMessage struct {
+	OperationID       uuid.UUID
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	ProviderRevision  string
+	PersonID          uuid.UUID
+	Mailbox           string
+	Snapshot          []byte
+	State             string
+	ReceiptCode       string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
+
 type SmtpMessageSnapshot struct {
 	OperationID   uuid.UUID
 	EventID       uuid.UUID

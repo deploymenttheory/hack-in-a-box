@@ -46,6 +46,21 @@ func (q *Queries) NextEmailCalendarSequence(ctx context.Context, arg NextEmailCa
 	return sequence, err
 }
 
+const recordSMTPCampaignReceipt = `-- name: RecordSMTPCampaignReceipt :exec
+UPDATE smtp_campaign_messages SET state=$2,receipt_code=$3,updated_at=now() WHERE operation_id=$1
+`
+
+type RecordSMTPCampaignReceiptParams struct {
+	OperationID uuid.UUID
+	State       string
+	ReceiptCode string
+}
+
+func (q *Queries) RecordSMTPCampaignReceipt(ctx context.Context, arg RecordSMTPCampaignReceiptParams) error {
+	_, err := q.db.Exec(ctx, recordSMTPCampaignReceipt, arg.OperationID, arg.State, arg.ReceiptCode)
+	return err
+}
+
 const recordSMTPReceipt = `-- name: RecordSMTPReceipt :exec
 UPDATE smtp_message_snapshots SET state=$2,receipt_code=$3,updated_at=now() WHERE operation_id=$1
 `
@@ -59,6 +74,34 @@ type RecordSMTPReceiptParams struct {
 func (q *Queries) RecordSMTPReceipt(ctx context.Context, arg RecordSMTPReceiptParams) error {
 	_, err := q.db.Exec(ctx, recordSMTPReceipt, arg.OperationID, arg.State, arg.ReceiptCode)
 	return err
+}
+
+const sMTPCampaignMessage = `-- name: SMTPCampaignMessage :one
+SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at FROM smtp_campaign_messages WHERE operation_id=$1
+`
+
+func (q *Queries) SMTPCampaignMessage(ctx context.Context, operationID uuid.UUID) (SmtpCampaignMessage, error) {
+	row := q.db.QueryRow(ctx, sMTPCampaignMessage, operationID)
+	var i SmtpCampaignMessage
+	err := row.Scan(
+		&i.OperationID,
+		&i.EventID,
+		&i.IntentID,
+		&i.CampaignID,
+		&i.CampaignVersion,
+		&i.ApprovalBinding,
+		&i.OccurrenceID,
+		&i.OccurrenceBinding,
+		&i.ProviderRevision,
+		&i.PersonID,
+		&i.Mailbox,
+		&i.Snapshot,
+		&i.State,
+		&i.ReceiptCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const sMTPMessageSnapshot = `-- name: SMTPMessageSnapshot :one
@@ -114,6 +157,45 @@ func (q *Queries) SMTPTestOperation(ctx context.Context, arg SMTPTestOperationPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const saveSMTPCampaignMessage = `-- name: SaveSMTPCampaignMessage :exec
+INSERT INTO smtp_campaign_messages(operation_id,event_id,intent_id,campaign_id,campaign_version,approval_binding,occurrence_id,occurrence_binding,provider_revision,person_id,mailbox,snapshot)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+ON CONFLICT(operation_id) DO NOTHING
+`
+
+type SaveSMTPCampaignMessageParams struct {
+	OperationID       uuid.UUID
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	ProviderRevision  string
+	PersonID          uuid.UUID
+	Mailbox           string
+	Snapshot          []byte
+}
+
+func (q *Queries) SaveSMTPCampaignMessage(ctx context.Context, arg SaveSMTPCampaignMessageParams) error {
+	_, err := q.db.Exec(ctx, saveSMTPCampaignMessage,
+		arg.OperationID,
+		arg.EventID,
+		arg.IntentID,
+		arg.CampaignID,
+		arg.CampaignVersion,
+		arg.ApprovalBinding,
+		arg.OccurrenceID,
+		arg.OccurrenceBinding,
+		arg.ProviderRevision,
+		arg.PersonID,
+		arg.Mailbox,
+		arg.Snapshot,
+	)
+	return err
 }
 
 const saveSMTPMessageSnapshot = `-- name: SaveSMTPMessageSnapshot :exec

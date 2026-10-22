@@ -203,6 +203,21 @@ func (s Service) ResolveApprovedCampaignInTransaction(
 	tx pgx.Tx,
 	eventID, id uuid.UUID,
 ) (ApprovedCampaign, error) {
+	return s.resolveApprovedPersonalCampaign(ctx, tx, eventID, id, uuid.Nil, false)
+}
+
+// ResolveApprovedPersonalCampaignInTransaction retains all current approval,
+// source and audience guards while rendering literal provider text. A nonzero
+// personID bounds recipient selection before rendering; zero resolves the batch.
+func (s Service) ResolveApprovedPersonalCampaignInTransaction(
+	ctx context.Context, tx pgx.Tx, eventID, id, personID uuid.UUID,
+) (ApprovedCampaign, error) {
+	return s.resolveApprovedPersonalCampaign(ctx, tx, eventID, id, personID, true)
+}
+
+func (s Service) resolveApprovedPersonalCampaign(
+	ctx context.Context, tx pgx.Tx, eventID, id, personID uuid.UUID, literal bool,
+) (ApprovedCampaign, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
 	if err != nil {
@@ -226,7 +241,14 @@ func (s Service) ResolveApprovedCampaignInTransaction(
 	if view.Status != "approved" || view.DueAt == nil || view.DueAt.After(s.now()) {
 		return ApprovedCampaign{}, ErrUnresolved
 	}
-	preview, err := s.ResolveApprovedInTransaction(ctx, tx, eventID, c.Approval.PreviewID)
+	preview, err := s.resolveApprovedProjection(
+		ctx,
+		tx,
+		eventID,
+		c.Approval.PreviewID,
+		personID,
+		literal,
+	)
 	if err != nil {
 		return ApprovedCampaign{}, err
 	}

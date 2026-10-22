@@ -104,7 +104,10 @@ func setup(t *testing.T) *fixture {
 	worker, err := jobs.New(
 		pool,
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
-		map[string]jobs.Handler{"communication_test_smtp": f.service},
+		map[string]jobs.Handler{
+			"communication_test_smtp":     f.service,
+			"communication_campaign_smtp": CampaignHandler{Service: f.service},
+		},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -232,7 +235,11 @@ func TestSMTPOutboxAcceptanceAndPrivateImmutableSnapshot(t *testing.T) {
 		"snapshot='{}'::jsonb",
 		"created_at=created_at+interval '1 second'",
 	} {
-		if _, err = f.pool.Exec(t.Context(), "UPDATE smtp_message_snapshots SET "+mutation+" WHERE operation_id=$1", d.ID); err == nil {
+		if _, err = f.pool.Exec(
+			t.Context(),
+			"UPDATE smtp_message_snapshots SET "+mutation+" WHERE operation_id=$1",
+			d.ID,
+		); err == nil {
 			t.Fatal("database permitted immutable SMTP attempt mutation")
 		}
 	}
@@ -505,7 +512,8 @@ func TestSMTPTestExpiryBoundaryAndUncertainReceiptSurviveCancellation(t *testing
 	f := setup(t)
 	d := f.queue()
 	var due time.Time
-	if err := f.pool.QueryRow(t.Context(), "SELECT due_at FROM operations WHERE id=$1", d.ID).Scan(&due); err != nil {
+	if err := f.pool.QueryRow(t.Context(), "SELECT due_at FROM operations WHERE id=$1", d.ID).
+		Scan(&due); err != nil {
 		t.Fatal(err)
 	}
 	f.now = due.Add(15*time.Minute - time.Microsecond)
@@ -566,12 +574,16 @@ func TestSMTPCalendarSnapshotSequenceChangesOnlyForChangedEventDetails(t *testin
 	f.exec("UPDATE events SET configuration=$2 WHERE id=$1", f.event, encoded)
 	updated, err := f.service.calendar(t.Context(), q, request)
 	if err != nil || updated.Sequence != first.Sequence+1 || updated.EventID != first.EventID ||
-		!updated.Start.Equal(configuration.LiveStart) || !updated.End.Equal(configuration.LiveEnd) ||
+		!updated.Start.Equal(
+			configuration.LiveStart,
+		) || !updated.End.Equal(configuration.LiveEnd) ||
 		updated.Timezone != configuration.Timezone {
 		t.Fatal("changed calendar lost stable identity, sequence or current event instants")
 	}
 	var liveRows int
-	if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM email_calendar_sequences WHERE event_id=$1 AND NOT test", f.event).Scan(&liveRows); err != nil || liveRows != 0 {
+	if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM email_calendar_sequences WHERE event_id=$1 AND NOT test", f.event).
+		Scan(&liveRows); err != nil ||
+		liveRows != 0 {
 		t.Fatal("self-test calendar changed production calendar sequence")
 	}
 }

@@ -41,7 +41,10 @@ func newCommunicationRuntime(
 	outbox, err := jobs.New(
 		pool,
 		logger,
-		map[string]jobs.Handler{"communication_test_smtp": provider},
+		map[string]jobs.Handler{
+			"communication_test_smtp":     provider,
+			"communication_campaign_smtp": smtpintegration.CampaignHandler{Service: provider},
+		},
 	)
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)

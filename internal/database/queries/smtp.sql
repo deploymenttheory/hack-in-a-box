@@ -21,3 +21,14 @@ RETURNING sequence;
 -- name: CancelExpiredSMTPTestOperations :execrows
 UPDATE operations SET cancelled=true,approved=false,state='cancelled',revision=revision+1,updated_at=now()
 WHERE kind='communication_test_smtp' AND state='pending' AND NOT cancelled AND due_at <= $1;
+
+-- name: SMTPCampaignMessage :one
+SELECT * FROM smtp_campaign_messages WHERE operation_id=$1;
+
+-- name: SaveSMTPCampaignMessage :exec
+INSERT INTO smtp_campaign_messages(operation_id,event_id,intent_id,campaign_id,campaign_version,approval_binding,occurrence_id,occurrence_binding,provider_revision,person_id,mailbox,snapshot)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+ON CONFLICT(operation_id) DO NOTHING;
+
+-- name: RecordSMTPCampaignReceipt :exec
+UPDATE smtp_campaign_messages SET state=$2,receipt_code=$3,updated_at=now() WHERE operation_id=$1;

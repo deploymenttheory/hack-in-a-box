@@ -58,7 +58,41 @@ CREATE TABLE email_calendar_sequences (
     PRIMARY KEY(event_id,test)
 );
 
+CREATE TABLE smtp_campaign_messages (
+    operation_id uuid PRIMARY KEY REFERENCES operations(id),
+    event_id uuid NOT NULL REFERENCES events(id),
+    intent_id uuid NOT NULL UNIQUE,
+    campaign_id uuid NOT NULL,
+    campaign_version bigint NOT NULL,
+    approval_binding text NOT NULL,
+    occurrence_id uuid NOT NULL,
+    occurrence_binding text NOT NULL,
+    provider_revision text NOT NULL,
+    person_id uuid NOT NULL REFERENCES people(id),
+    mailbox text NOT NULL,
+    snapshot jsonb NOT NULL,
+    state text NOT NULL DEFAULT 'queued' CHECK(state IN ('queued','prepared','accepted','retryable','permanent','ambiguous')),
+    receipt_code text NOT NULL DEFAULT '',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    FOREIGN KEY(event_id,campaign_id,campaign_version) REFERENCES communication_campaign_versions(event_id,id,version)
+);
+-- +goose StatementBegin
+CREATE FUNCTION protect_smtp_campaign_identity() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF ROW(NEW.operation_id,NEW.event_id,NEW.intent_id,NEW.campaign_id,NEW.campaign_version,NEW.approval_binding,NEW.occurrence_id,NEW.occurrence_binding,NEW.provider_revision,NEW.person_id,NEW.mailbox,NEW.snapshot,NEW.created_at)
+       IS DISTINCT FROM ROW(OLD.operation_id,OLD.event_id,OLD.intent_id,OLD.campaign_id,OLD.campaign_version,OLD.approval_binding,OLD.occurrence_id,OLD.occurrence_binding,OLD.provider_revision,OLD.person_id,OLD.mailbox,OLD.snapshot,OLD.created_at) THEN
+        RAISE EXCEPTION 'SMTP campaign identity and content are immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+-- +goose StatementEnd
+CREATE TRIGGER smtp_campaign_identity BEFORE UPDATE ON smtp_campaign_messages FOR EACH ROW EXECUTE FUNCTION protect_smtp_campaign_identity();
+
 -- +goose Down
+DROP TABLE smtp_campaign_messages;
+DROP FUNCTION protect_smtp_campaign_identity();
 DROP TABLE email_calendar_sequences;
 DROP TABLE smtp_message_snapshots;
 DROP FUNCTION protect_smtp_snapshot_identity();
