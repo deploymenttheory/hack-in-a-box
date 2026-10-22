@@ -9,7 +9,7 @@ type Provider = components['schemas']['ChannelReadiness']
 const templateID = 'c16fd14c-343f-4f3c-b656-cb065502ce95', audienceID = '1864ae7c-7e78-441b-afbc-6a39b096227b', previewID = '1e9d7260-4c36-4277-8d83-155fe87cc560'
 const attendeeID = '3263f548-bc52-41cf-8d76-3e2a2cb19565', waitlistID = 'fac4ac6a-d95b-4622-93f7-785a0077cb9e'
 const escape = (v: string) => v.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&#34;').replaceAll("'", '&#39;')
-async function prepare(page: Page, ready = true) {
+async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted' | 'ambiguous' = 'pending') {
   await mockWorkspace(page)
   let revision = 1, authorized = true
   const source: Source = { revision, variables: ['event.name', 'person.name', 'event.live_start', 'event.submission_cutoff'], preview: null, templates: [{ id: templateID, version: 1, name: 'Synthetic reminder', purpose: 'reminder', format: 'html', subject: 'Hello {{person.name}}', body: 'Synthetic public message for {{person.name}}', fact_id: null }], audiences: [{ id: audienceID, version: 1, name: 'Confirmed competitors', roles: ['attendee'], registration_states: [], teams: [], outstanding: '', fact_id: null }] }
@@ -32,6 +32,7 @@ async function prepare(page: Page, ready = true) {
     const req = route.request(), path = new URL(req.url()).pathname
     const fail = (status: number, code: string) => route.fulfill({ status, json: { error: { code, message: 'Synthetic reviewed-state rejection', request_id: 'synthetic' } } })
     if (!authorized) return fail(403, 'forbidden')
+    if (path.endsWith('/delivery')) return route.fulfill({ json: { state: receipt, reason: receipt === 'accepted' ? 'relay_accepted' : receipt === 'ambiguous' ? 'acceptance_unknown' : 'awaiting_submission', updated_at: '2026-10-22T12:00:00Z' } })
     const campaignPath = path.includes('/campaigns'), id = path.split('/').at(-1)!
     if (req.method() === 'GET') return route.fulfill({ json: campaignPath ? id === 'campaigns' ? index() : view(records.get(id)!) : { ...source, revision } })
     const body = req.postDataJSON(), reviewed = req.headers()['if-match']
@@ -179,4 +180,18 @@ test('hostile long message previews remain inert text and access loss preserves 
   await expect(page.getByText('This event does not permit campaign changes. Your draft is preserved.', { exact: true })).toBeVisible()
   await expect(page.getByLabel('Campaign name', { exact: true })).toHaveValue('Preserved after role loss')
   await expect(page.getByRole('button', { name: 'Save campaign draft', exact: true })).toBeDisabled()
+})
+
+for (const state of ['accepted', 'ambiguous'] as const) test(`SMTP test shows ${state} honestly without exposing its private envelope`, async ({ page }) => {
+  const data = await prepare(page, true, state)
+  await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Campaign saved as a draft')
+  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+  const receipt = page.getByRole('region', { name: 'SMTP test submission' })
+  await expect(receipt).toContainText(state === 'accepted' ? 'Inbox delivery and reading are unconfirmed.' : 'Submission is uncertain.')
+  if (state === 'ambiguous') await expect(receipt).toContainText('will not be retried automatically')
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
+  const body = data.requests.find(request => request.body.action === 'test_self')!.body
+  expect(body).not.toHaveProperty('email'); expect(body).not.toHaveProperty('recipient_id')
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage) + location.href)).not.toContain('@example.test')
 })

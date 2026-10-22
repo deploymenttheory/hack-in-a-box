@@ -1,3 +1,4 @@
+import { SMTPTestDelivery } from './smtp-test-delivery'
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, APIError, privateKey, unwrap, type EventRecord } from './api/client'
@@ -21,7 +22,7 @@ export function CampaignWorkspace({ event, onDirty }: { event: EventRecord; onDi
   return <Composer key={event.id} event={event} initialSource={source.data!} initialPage={campaigns.data!} teams={teams.data!.teams.filter(t => t.state === 'published')} onDirty={onDirty} />
 }
 function Composer({ event, initialSource, initialPage, teams, onDirty }: { event: EventRecord; initialSource: ComposerPage; initialPage: CampaignPage; teams: { id: string; name: string }[]; onDirty: (value: boolean) => void }) {
-  const identity = useIdentity(), [source, setSource] = useState(initialSource), [page, setPage] = useState(initialPage), [revision, setRevision] = useState(Math.max(initialSource.revision, initialPage.revision)), [message, setMessage] = useState(initialSource.templates[0] ?? blankTemplate), [savedMessage, setSavedMessage] = useState(message), [audience, setAudience] = useState(initialSource.audiences[0] ?? blankAudience), [savedAudience, setSavedAudience] = useState(audience), [definition, setDefinition] = useState(() => blankCampaign(initialSource)), [savedDefinition, setSavedDefinition] = useState(definition), [detail, setDetail] = useState<CampaignDetail>(), [reason, setReason] = useState(''), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false), [latest, setLatest] = useState<{ source: ComposerPage; page: CampaignPage; detail?: CampaignDetail }>(), [reviewed, setReviewed] = useState(false)
+  const identity = useIdentity(), [source, setSource] = useState(initialSource), [page, setPage] = useState(initialPage), [revision, setRevision] = useState(Math.max(initialSource.revision, initialPage.revision)), [message, setMessage] = useState(initialSource.templates[0] ?? blankTemplate), [savedMessage, setSavedMessage] = useState(message), [audience, setAudience] = useState(initialSource.audiences[0] ?? blankAudience), [savedAudience, setSavedAudience] = useState(audience), [definition, setDefinition] = useState(() => blankCampaign(initialSource)), [savedDefinition, setSavedDefinition] = useState(definition), [detail, setDetail] = useState<CampaignDetail>(), [reason, setReason] = useState(''), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [testChannel, setTestChannel] = useState<Channel>(), [conflict, setConflict] = useState(false), [latest, setLatest] = useState<{ source: ComposerPage; page: CampaignPage; detail?: CampaignDetail }>(), [reviewed, setReviewed] = useState(false)
   const dirtySources = !same(message, savedMessage) || !same(audience, savedAudience), dirtyDefinition = !same(definition, savedDefinition), dirty = dirtySources || dirtyDefinition
   const disabled = pending || conflict || !page.can_manage || !event.can_edit, actionDisabled = disabled || !reason.trim()
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
@@ -35,7 +36,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty }: { event
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const fresh = unwrap(await api.POST('/api/v1/events/{event_id}/communications', { params: { path, header }, body: { ...command, reason } }))
-      setSource(fresh); setRevision(fresh.revision)
+      setSource(fresh); setRevision(fresh.revision); setTestChannel(undefined)
       if (command.action === 'save_template') { const saved = fresh.templates.find(t => t.id === message.id)!; setMessage(saved); setSavedMessage(saved) }
       else { const saved = fresh.audiences.find(a => a.id === audience.id)!; setAudience(saved); setSavedAudience(saved) }
       const latest = await current(detail?.campaign.campaign.definition.id); setPage(latest.page); if (latest.detail) setDetail(latest.detail)
@@ -47,7 +48,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty }: { event
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const fresh = unwrap(await api.POST('/api/v1/events/{event_id}/communications/campaigns/{campaign_id}', { params: { path: { ...path, campaign_id: definition.id }, header }, body: { action, version: detail?.campaign.campaign.version ?? 0, reason, ...(action === 'save' ? { definition } : {}), ...(channel ? { channel } : {}) } }))
-      receive(fresh, action === 'save')
+      receive(fresh, action === 'save'); setTestChannel(action === 'test_self' ? channel : undefined)
       setNotice(action === 'test_self' ? 'Test queued for the requesting organiser only. Provider acceptance and delivery are not confirmed.' : action === 'approve' ? 'Campaign definition approved. This is not a delivery receipt.' : action === 'preview' ? 'Retained audience preview generated.' : action === 'cancel' ? 'Campaign cancelled. Obsolete queued self-tests have been cancelled.' : 'Campaign saved as a draft. Approval is required.')
     } catch (error) { await reject(error) } finally { setPending(false) }
   }
@@ -58,7 +59,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty }: { event
   }
   async function choose(id?: string) {
     if (dirty && !window.confirm('Leave this campaign with unsaved message, audience or schedule edits?')) return
-    setFailure(undefined); setNotice(''); setConflict(false); setLatest(undefined)
+    setFailure(undefined); setNotice(''); setTestChannel(undefined); setConflict(false); setLatest(undefined)
     if (!id) { const empty = blankCampaign(source); setDefinition(empty); setSavedDefinition(empty); setDetail(undefined); resetSources(source, empty); return }
     setPending(true)
     try { const fresh = await current(id); setSource(fresh.source); setPage(fresh.page); setRevision(fresh.page.revision); if (fresh.detail) { receive(fresh.detail, true); resetSources(fresh.source, fresh.detail.campaign.campaign.definition) } } catch (error) { await reject(error) } finally { setPending(false) }
@@ -92,6 +93,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty }: { event
     <CampaignPreview detail={detail} template={selectedTemplate} />
     <section className="panel" aria-label="Campaign approval and tests"><h3>Approval and test controls</h3>{detail && <p>Saved state: <strong>{detail.campaign.status}</strong></p>}{!versionSaved && <p>Save all edited source versions and the campaign draft before preview or approval.</p>}<div className="actions"><Button disabled={actionDisabled || !versionSaved || detail?.campaign.campaign.cancelled} onClick={() => void campaignChange('preview')}>Generate audience preview</Button><Button disabled={actionDisabled || !versionSaved || !currentPreview || !!preview?.blockers.length || approvalBlocked || detail?.campaign.campaign.cancelled} onClick={() => void campaignChange('approve')}>{detail?.campaign.campaign.approval ? 'Explicitly reapprove campaign' : 'Approve campaign'}</Button><Button variant="outline" disabled={actionDisabled || !detail || detail.campaign.campaign.cancelled} onClick={() => void campaignChange('cancel')}>Cancel campaign</Button></div>
     <p>Self-tests target only you, {identity.person.display_name}. They never reuse a selected recipient's personal preview.</p>{definition.channels.map(channel => { const provider = page.providers.find(p => p.channel === channel); return <div key={channel}>{provider?.supports_self_test ? <><Button variant="outline" disabled={actionDisabled || !versionSaved || !provider.self_test_available || detail?.campaign.campaign.cancelled} onClick={() => void campaignChange('test_self', channel)}>Queue {channelNames[channel]} test to myself</Button>{!provider.self_test_available && <p>{blockerText(provider.self_test_reason)}. <a href="#campaign-provider-setup">Review setup</a>.</p>}</> : <p>{channelNames[channel]} is a shared broadcast and cannot send a self-test only to you.</p>}</div> })}</section>
+    {page.can_manage && testChannel === 'smtp' && detail?.test_request_id && definition.channels.includes('smtp') && <SMTPTestDelivery eventID={event.id} testID={detail.test_request_id} />}
     <ProviderSetup page={page} refresh={() => void refresh()} />{pending && <p role="status">Updating reviewed campaign state…</p>}{notice && <p role="status">{notice}</p>}{!!failure && <Failure error={failure} />}
   </section>
 }

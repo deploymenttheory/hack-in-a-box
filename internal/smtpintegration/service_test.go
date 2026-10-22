@@ -226,6 +226,16 @@ func TestSMTPOutboxAcceptanceAndPrivateImmutableSnapshot(t *testing.T) {
 	if f.transport.count() != 1 {
 		t.Fatal("accepted test did not send once")
 	}
+	for _, mutation := range []string{
+		"mailbox='redirected@example.test'",
+		"message_id='<different@example.test>'",
+		"snapshot='{}'::jsonb",
+		"created_at=created_at+interval '1 second'",
+	} {
+		if _, err = f.pool.Exec(t.Context(), "UPDATE smtp_message_snapshots SET "+mutation+" WHERE operation_id=$1", d.ID); err == nil {
+			t.Fatal("database permitted immutable SMTP attempt mutation")
+		}
+	}
 	message := f.transport.messages[0]
 	if message.Recipient != "organiser@example.test" ||
 		!strings.Contains(message.Subject, "[TEST]") ||
@@ -488,5 +498,41 @@ func TestSMTPReceiptStorageFaultLeavesAmbiguousRatherThanResending(t *testing.T)
 		f.service.Deliver(t.Context(), d) != jobs.Ambiguous ||
 		f.transport.count() != 1 {
 		t.Fatal("lost acceptance receipt caused a duplicate send")
+	}
+}
+
+func TestSMTPTestExpiryBoundaryAndUncertainReceiptSurviveCancellation(t *testing.T) {
+	f := setup(t)
+	d := f.queue()
+	var due time.Time
+	if err := f.pool.QueryRow(t.Context(), "SELECT due_at FROM operations WHERE id=$1", d.ID).Scan(&due); err != nil {
+		t.Fatal(err)
+	}
+	f.now = due.Add(15*time.Minute - time.Microsecond)
+	if err := f.service.Maintain(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	status, err := f.service.Status(t.Context(), f.owner.ID, f.event, d.TargetID)
+	if err != nil || status.State != "pending" {
+		t.Fatal("test expired before exclusive lifetime boundary")
+	}
+	f.now = due.Add(15 * time.Minute)
+	if err = f.service.Maintain(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	status, err = f.service.Status(t.Context(), f.owner.ID, f.event, d.TargetID)
+	if err != nil || status.State != "cancelled" || f.transport.count() != 0 {
+		t.Fatal("expired pending test was not cancelled without an external effect")
+	}
+	f.now = time.Now().UTC()
+	uncertain := f.queue()
+	f.transport.state = maildelivery.Ambiguous
+	if f.service.Deliver(t.Context(), uncertain) != jobs.Ambiguous {
+		t.Fatal("fixture did not retain uncertain external effect")
+	}
+	f.exec("UPDATE operations SET cancelled=true,state='cancelled' WHERE id=$1", uncertain.ID)
+	status, err = f.service.Status(t.Context(), f.owner.ID, f.event, uncertain.TargetID)
+	if err != nil || status.State != "ambiguous" || f.transport.count() != 1 {
+		t.Fatal("cancellation obscured an uncertain external effect")
 	}
 }

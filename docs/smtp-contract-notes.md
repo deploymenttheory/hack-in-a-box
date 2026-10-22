@@ -19,7 +19,7 @@ retains the authorised calendar sequence and snapshot for each immutable deliver
 retrying reuses them and an approved update advances the sequence. DTSTART and
 DTEND use UTC instants, avoiding ambiguous floating dates or incomplete timezone
 components. The event's IANA timezone appears in the date details. Text escapes
-backslashes, commas, semicolons and newlines, and folding respects75UTF-8 octets
+backslashes, commas, semicolons and newlines, and folding respects 75 UTF-8 octets
 without splitting code points. See [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html)
 and [RFC 5546 PUBLISH](https://www.rfc-editor.org/rfc/rfc5546.html#section-3.2.1).
 

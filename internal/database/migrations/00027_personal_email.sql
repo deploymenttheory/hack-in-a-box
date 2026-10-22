@@ -37,6 +37,19 @@ CREATE TABLE smtp_message_snapshots (
     updated_at timestamptz NOT NULL DEFAULT now(),
     FOREIGN KEY(event_id,test_request_id) REFERENCES communication_test_requests(event_id,id)
 );
+-- +goose StatementBegin
+CREATE FUNCTION protect_smtp_snapshot_identity() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF ROW(NEW.operation_id,NEW.event_id,NEW.person_id,NEW.test_request_id,NEW.mailbox,NEW.message_id,NEW.snapshot,NEW.created_at)
+       IS DISTINCT FROM ROW(OLD.operation_id,OLD.event_id,OLD.person_id,OLD.test_request_id,OLD.mailbox,OLD.message_id,OLD.snapshot,OLD.created_at) THEN
+        RAISE EXCEPTION 'SMTP attempt identity and content are immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+-- +goose StatementEnd
+CREATE TRIGGER smtp_snapshot_identity BEFORE UPDATE ON smtp_message_snapshots FOR EACH ROW EXECUTE FUNCTION protect_smtp_snapshot_identity();
+
 CREATE TABLE email_calendar_sequences (
     event_id uuid NOT NULL REFERENCES events(id),
     test boolean NOT NULL,
@@ -48,5 +61,6 @@ CREATE TABLE email_calendar_sequences (
 -- +goose Down
 DROP TABLE email_calendar_sequences;
 DROP TABLE smtp_message_snapshots;
+DROP FUNCTION protect_smtp_snapshot_identity();
 DROP TABLE email_verifications;
 DROP TABLE person_email_contacts;

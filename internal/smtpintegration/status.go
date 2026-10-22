@@ -72,8 +72,13 @@ func (s Service) Status(
 		if stored.State == "accepted" || stored.State == "ambiguous" ||
 			stored.State == "permanent" {
 			return DeliveryStatus{
-				State:     stored.State,
-				Reason:    stored.ReceiptCode,
+				State: stored.State,
+				Reason: maildelivery.SafeReceipt(
+					maildelivery.Receipt{
+						State: maildelivery.State(stored.State),
+						Code:  stored.ReceiptCode,
+					},
+				).Code,
 				UpdatedAt: &updated,
 			}, nil
 		}
