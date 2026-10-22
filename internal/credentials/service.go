@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
@@ -24,14 +26,19 @@ type (
 	Service struct {
 		Pool *pgxpool.Pool
 		Keys *secretbox.Keyring
+		Now  func() time.Time
 	}
 	Metadata struct {
-		ID        uuid.UUID   `json:"id"`
-		Label     string      `json:"label"`
-		Version   int64       `json:"version"`
-		Active    bool        `json:"active"`
-		TeamIDs   []uuid.UUID `json:"team_ids"`
-		UpdatedAt time.Time   `json:"updated_at"`
+		ID           uuid.UUID   `json:"id"`
+		Label        string      `json:"label"`
+		Version      int64       `json:"version"`
+		Active       bool        `json:"active"`
+		TeamIDs      []uuid.UUID `json:"team_ids"`
+		UpdatedAt    time.Time   `json:"updated_at"`
+		ResourceType string      `json:"resource_type"`
+		AvailableAt  *time.Time  `json:"available_at"`
+		ExpiresAt    *time.Time  `json:"expires_at"`
+		Readiness    string      `json:"readiness"`
 	}
 )
 
@@ -44,11 +51,14 @@ type (
 	// Value exists only in set requests and explicit reveal responses. No arbitrary
 	// decision text is recorded here because it could accidentally contain a value.
 	Command struct {
-		Action  string      `json:"action"`
-		ID      uuid.UUID   `json:"id"`
-		Label   string      `json:"label"`
-		Value   string      `json:"value"`
-		TeamIDs []uuid.UUID `json:"team_ids"`
+		Action       string      `json:"action"`
+		ID           uuid.UUID   `json:"id"`
+		Label        string      `json:"label"`
+		Value        string      `json:"value"`
+		TeamIDs      []uuid.UUID `json:"team_ids"`
+		ResourceType string      `json:"resource_type"`
+		AvailableAt  *time.Time  `json:"available_at"`
+		ExpiresAt    *time.Time  `json:"expires_at"`
 	}
 )
 
@@ -79,8 +89,10 @@ func mayReveal(
 	q *dbgen.Queries,
 	actor uuid.UUID,
 	row dbgen.TeamCredential,
+	now time.Time,
 ) (bool, error) {
-	if !row.Active {
+	if !row.Active || (row.AvailableAt.Valid && now.Before(row.AvailableAt.Time)) ||
+		(row.ExpiresAt.Valid && !now.Before(row.ExpiresAt.Time)) {
 		return false, nil
 	}
 	assignments, err := q.CredentialAssignments(ctx, row.EventID)
@@ -109,24 +121,37 @@ func mayReveal(
 	return false, nil
 }
 
-func metadata(row dbgen.TeamCredential, assignments []dbgen.TeamCredentialAssignment) Metadata {
+func metadata(
+	row dbgen.TeamCredential,
+	assignments []dbgen.TeamCredentialAssignment,
+	now time.Time,
+) Metadata {
 	m := Metadata{
-		ID:        row.ID,
-		Label:     row.Label,
-		Version:   row.Version,
-		Active:    row.Active,
-		UpdatedAt: row.UpdatedAt,
-		TeamIDs:   []uuid.UUID{},
+		ID:           row.ID,
+		Label:        row.Label,
+		Version:      row.Version,
+		Active:       row.Active,
+		UpdatedAt:    row.UpdatedAt,
+		TeamIDs:      []uuid.UUID{},
+		ResourceType: row.ResourceType,
+		AvailableAt:  instant(row.AvailableAt), ExpiresAt: instant(row.ExpiresAt),
 	}
 	for _, a := range assignments {
 		if a.CredentialID == row.ID {
 			m.TeamIDs = append(m.TeamIDs, a.TeamID)
 		}
 	}
+	m.Readiness = readiness(row, len(m.TeamIDs), now)
 	return m
 }
 
-func load(ctx context.Context, q *dbgen.Queries, actor uuid.UUID, event dbgen.Event) (Page, error) {
+func load(
+	ctx context.Context,
+	q *dbgen.Queries,
+	actor uuid.UUID,
+	event dbgen.Event,
+	now time.Time,
+) (Page, error) {
 	p := Page{
 		Revision:  event.Revision,
 		CanManage: manager(ctx, q, actor, event.ID),
@@ -151,7 +176,7 @@ func load(ctx context.Context, q *dbgen.Queries, actor uuid.UUID, event dbgen.Ev
 	}
 	for _, row := range rows {
 		if !p.CanManage {
-			allowed, err := mayReveal(ctx, q, actor, row)
+			allowed, err := mayReveal(ctx, q, actor, row, now)
 			if err != nil {
 				return p, fmt.Errorf("read credential metadata: %w", err)
 			}
@@ -159,7 +184,7 @@ func load(ctx context.Context, q *dbgen.Queries, actor uuid.UUID, event dbgen.Ev
 				continue
 			}
 		}
-		m := metadata(row, assignments)
+		m := metadata(row, assignments, now)
 		if !p.CanManage {
 			m.TeamIDs = []uuid.UUID{}
 		} // No other team's audience metadata.
@@ -178,7 +203,7 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 		if err != nil {
 			return database.ErrDatabase
 		}
-		page, err = load(ctx, q, actor, row)
+		page, err = load(ctx, q, actor, row, s.now())
 		return err
 	})
 	if err != nil {
@@ -240,13 +265,16 @@ func (s Service) Change(
 		if err = q.SaveTeamCredential(
 			ctx,
 			dbgen.SaveTeamCredentialParams{
-				ID:         row.ID,
-				EventID:    eventID,
-				Label:      row.Label,
-				Version:    row.Version,
-				KeyID:      row.KeyID,
-				Ciphertext: row.Ciphertext,
-				Active:     row.Active,
+				ID:           row.ID,
+				EventID:      eventID,
+				Label:        row.Label,
+				Version:      row.Version,
+				KeyID:        row.KeyID,
+				Ciphertext:   row.Ciphertext,
+				Active:       row.Active,
+				ResourceType: row.ResourceType,
+				AvailableAt:  row.AvailableAt,
+				ExpiresAt:    row.ExpiresAt,
 			},
 		); err != nil {
 			return database.ErrDatabase
@@ -256,10 +284,8 @@ func (s Service) Change(
 		}
 
 		result := "success"
-		action := audit.CredentialChanged
-		if input.Action == "rotate" {
-			action = audit.CredentialRotated
-		}
+		action := map[string]audit.Action{"create": audit.CredentialCreated, "replace": audit.CredentialReplaced, "assign": audit.CredentialAssigned, "revoke": audit.CredentialRevoked, "metadata": audit.CredentialMetadataChanged, "rotate": audit.CredentialRotated}[input.Action]
+
 		if err = audit.Append(
 			ctx,
 			q,
@@ -278,7 +304,7 @@ func (s Service) Change(
 		if err != nil {
 			return database.ErrDatabase
 		}
-		page, err = load(ctx, q, actor, event)
+		page, err = load(ctx, q, actor, event, s.now())
 		return err
 	})
 	if err != nil {
@@ -323,7 +349,7 @@ func (s Service) Reveal(
 			case e != nil:
 				return database.ErrDatabase
 			default:
-				allowed, e := mayReveal(operationCtx, q, actor, row)
+				allowed, e := mayReveal(operationCtx, q, actor, row, s.now())
 				if e != nil {
 					return database.ErrDatabase
 				}
@@ -372,6 +398,12 @@ func (s Service) prepare(row dbgen.TeamCredential, input Command) (dbgen.TeamCre
 	var err error
 	switch input.Action {
 	case "create", "replace":
+		if input.Action == "create" {
+			row, err = publicMetadata(row, input)
+			if err != nil {
+				return row, err
+			}
+		}
 		if len(input.Value) < 1 || len(input.Value) > 16384 ||
 			strings.TrimSpace(input.Label) == "" ||
 			len(input.Label) > 120 {
@@ -384,6 +416,14 @@ func (s Service) prepare(row dbgen.TeamCredential, input Command) (dbgen.TeamCre
 		row.KeyID, row.Ciphertext, err = s.Keys.Seal([]byte(input.Value), binding(row))
 		if err != nil {
 			return row, fmt.Errorf("encrypt credential: %w", err)
+		}
+	case "metadata":
+		if input.Value != "" || len(input.TeamIDs) > 0 {
+			return row, access.ErrInvalid
+		}
+		row, err = publicMetadata(row, input)
+		if err != nil {
+			return row, err
 		}
 	case "assign":
 		if input.Value != "" || input.Label != "" {
@@ -452,4 +492,65 @@ func assign(ctx context.Context, q *dbgen.Queries, row dbgen.TeamCredential, inp
 		return access.ErrInvalid
 	}
 	return nil
+}
+
+func (s Service) now() time.Time {
+	if s.Now != nil {
+		return s.Now().UTC()
+	}
+	return time.Now().UTC()
+}
+
+func instant(value pgtype.Timestamptz) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	t := value.Time.UTC()
+	return &t
+}
+
+func nullable(value *time.Time) pgtype.Timestamptz {
+	if value == nil {
+		return pgtype.Timestamptz{}
+	}
+	return pgtype.Timestamptz{Time: value.UTC(), Valid: true}
+}
+
+func readiness(row dbgen.TeamCredential, assigned int, now time.Time) string {
+	switch {
+	case !row.Active:
+		return "revoked"
+	case row.ExpiresAt.Valid && !now.Before(row.ExpiresAt.Time):
+		return "expired"
+	case assigned == 0:
+		return "unassigned"
+	case row.AvailableAt.Valid && now.Before(row.AvailableAt.Time):
+		return "scheduled"
+	default:
+		return "ready"
+	}
+}
+
+func publicMetadata(row dbgen.TeamCredential, input Command) (dbgen.TeamCredential, error) {
+	kind := input.ResourceType
+	if kind == "" && input.Action == "create" {
+		kind = "credential"
+	}
+	if !slices.Contains(
+		[]string{"credential", "account", "licence", "access_code", "other"},
+		kind,
+	) ||
+		strings.TrimSpace(input.Label) == "" ||
+		len(input.Label) > 120 {
+		return row, access.ErrInvalid
+	}
+	if input.AvailableAt != nil && input.ExpiresAt != nil &&
+		!input.ExpiresAt.After(*input.AvailableAt) {
+		return row, access.ErrInvalid
+	}
+	row.Label = strings.TrimSpace(input.Label)
+	row.ResourceType = kind
+	row.AvailableAt = nullable(input.AvailableAt)
+	row.ExpiresAt = nullable(input.ExpiresAt)
+	return row, nil
 }

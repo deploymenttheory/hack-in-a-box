@@ -637,14 +637,17 @@ type SubmissionState struct {
 }
 
 type TeamCredential struct {
-	ID         uuid.UUID
-	EventID    uuid.UUID
-	Label      string
-	Version    int64
-	KeyID      string
-	Ciphertext []byte
-	Active     bool
-	UpdatedAt  time.Time
+	ID           uuid.UUID
+	EventID      uuid.UUID
+	Label        string
+	Version      int64
+	KeyID        string
+	Ciphertext   []byte
+	Active       bool
+	UpdatedAt    time.Time
+	ResourceType string
+	AvailableAt  pgtype.Timestamptz
+	ExpiresAt    pgtype.Timestamptz
 }
 
 type TeamCredentialAssignment struct {
