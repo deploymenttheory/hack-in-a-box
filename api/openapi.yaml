@@ -1233,6 +1233,40 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CredentialRevealed' }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/communications:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getCommunications
+      responses:
+        '200':
+          description: Current organiser-only message templates, saved audience selectors and approved variable catalog. No private recipient fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunicationPage'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: changeCommunications
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunicationCommand'
+      responses:
+        '200':
+          description: Immutable template/selector version or persisted recipient preview/approval. Every approval binds the exact current preview. Execution resolves current authority again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunicationPage'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/events/{event_id}/mentor-coverage:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -2755,6 +2789,100 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MentorGap'
+    CommunicationTemplate:
+      type: object
+      additionalProperties: false
+      required: [id, version, name, purpose, format, subject, body]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 0}
+        name: {type: string, minLength: 1, maxLength: 160}
+        purpose: {type: string, enum: [facilitator_selection, registration, offer, preparation, brief_release, challenge_release, reminder, feedback, results, postponement, help, clarification, rubric, outcome_review]}
+        format: {type: string, enum: [text, html, markdown]}
+        subject: {type: string, minLength: 1, maxLength: 200}
+        body: {type: string, maxLength: 10000}
+        fact_id: {type: string, format: uuid, nullable: true}
+    CommunicationAudience:
+      type: object
+      additionalProperties: false
+      required: [id, version, name, roles, registration_states, teams, outstanding]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 0}
+        name: {type: string, minLength: 1, maxLength: 160}
+        roles:
+          type: array
+          maxItems: 8
+          items: {type: string, enum: [attendee, organiser, mentor, judge, mc, logistics, photographer]}
+        registration_states:
+          type: array
+          maxItems: 8
+          items: {type: string, enum: [received, confirmed, waitlisted, offered, selected, backup]}
+        teams:
+          type: array
+          maxItems: 100
+          items: {type: string, format: uuid}
+        outstanding: {type: string, enum: ['', preparation, offer, help, outcome_review, clarification, rubric]}
+        fact_id: {type: string, format: uuid, nullable: true}
+    CommunicationRecipient:
+      type: object
+      additionalProperties: false
+      required: [person_id, name, subject, body, unresolved]
+      properties:
+        person_id: {type: string, format: uuid}
+        name: {type: string}
+        subject: {type: string}
+        body: {type: string}
+        unresolved:
+          type: array
+          items: {type: string}
+    CommunicationPreview:
+      type: object
+      nullable: true
+      additionalProperties: false
+      required: [id, template_id, template_version, audience_id, audience_version, recipients, blockers, fingerprint, approved]
+      properties:
+        id: {type: string, format: uuid}
+        template_id: {type: string, format: uuid}
+        template_version: {type: integer, format: int64}
+        audience_id: {type: string, format: uuid}
+        audience_version: {type: integer, format: int64}
+        recipients:
+          type: array
+          items: {$ref: '#/components/schemas/CommunicationRecipient'}
+        blockers:
+          type: array
+          items: {type: string}
+        fingerprint: {type: string}
+        approved: {type: boolean}
+    CommunicationPage:
+      type: object
+      additionalProperties: false
+      required: [revision, templates, audiences, variables, preview]
+      properties:
+        revision: {type: integer, format: int64}
+        templates:
+          type: array
+          items: {$ref: '#/components/schemas/CommunicationTemplate'}
+        audiences:
+          type: array
+          items: {$ref: '#/components/schemas/CommunicationAudience'}
+        variables:
+          type: array
+          items: {type: string}
+        preview: {$ref: '#/components/schemas/CommunicationPreview'}
+    CommunicationCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: {type: string, enum: [save_template, save_audience, preview, approve]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        template: {$ref: '#/components/schemas/CommunicationTemplate'}
+        audience: {$ref: '#/components/schemas/CommunicationAudience'}
+        template_id: {type: string, format: uuid}
+        audience_id: {type: string, format: uuid}
+        preview_id: {type: string, format: uuid}
     MentorPage:
       type: object
       additionalProperties: false

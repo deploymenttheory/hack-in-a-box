@@ -943,6 +943,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getCommunications"];
+        put?: never;
+        post: operations["changeCommunications"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/mentor-coverage": {
         parameters: {
             query?: never;
@@ -1766,6 +1784,80 @@ export interface components {
             revision: number;
             assignments: components["schemas"]["MentorAssignment"][];
             gaps: components["schemas"]["MentorGap"][];
+        };
+        CommunicationTemplate: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            name: string;
+            /** @enum {string} */
+            purpose: "facilitator_selection" | "registration" | "offer" | "preparation" | "brief_release" | "challenge_release" | "reminder" | "feedback" | "results" | "postponement" | "help" | "clarification" | "rubric" | "outcome_review";
+            /** @enum {string} */
+            format: "text" | "html" | "markdown";
+            subject: string;
+            body: string;
+            /** Format: uuid */
+            fact_id?: string | null;
+        };
+        CommunicationAudience: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            name: string;
+            roles: ("attendee" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer")[];
+            registration_states: ("received" | "confirmed" | "waitlisted" | "offered" | "selected" | "backup")[];
+            teams: string[];
+            /** @enum {string} */
+            outstanding: "" | "preparation" | "offer" | "help" | "outcome_review" | "clarification" | "rubric";
+            /** Format: uuid */
+            fact_id?: string | null;
+        };
+        CommunicationRecipient: {
+            /** Format: uuid */
+            person_id: string;
+            name: string;
+            subject: string;
+            body: string;
+            unresolved: string[];
+        };
+        CommunicationPreview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            template_id: string;
+            /** Format: int64 */
+            template_version: number;
+            /** Format: uuid */
+            audience_id: string;
+            /** Format: int64 */
+            audience_version: number;
+            recipients: components["schemas"]["CommunicationRecipient"][];
+            blockers: string[];
+            fingerprint: string;
+            approved: boolean;
+        } | null;
+        CommunicationPage: {
+            /** Format: int64 */
+            revision: number;
+            templates: components["schemas"]["CommunicationTemplate"][];
+            audiences: components["schemas"]["CommunicationAudience"][];
+            variables: string[];
+            preview: components["schemas"]["CommunicationPreview"];
+        };
+        CommunicationCommand: {
+            /** @enum {string} */
+            action: "save_template" | "save_audience" | "preview" | "approve";
+            reason: string;
+            template?: components["schemas"]["CommunicationTemplate"];
+            audience?: components["schemas"]["CommunicationAudience"];
+            /** Format: uuid */
+            template_id?: string;
+            /** Format: uuid */
+            audience_id?: string;
+            /** Format: uuid */
+            preview_id?: string;
         };
         MentorPage: {
             /** Format: int64 */
@@ -4284,6 +4376,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CredentialRevealed"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser-only message templates, saved audience selectors and approved variable catalog. No private recipient fields. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunicationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeCommunications: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunicationCommand"];
+            };
+        };
+        responses: {
+            /** @description Immutable template/selector version or persisted recipient preview/approval. Every approval binds the exact current preview. Execution resolves current authority again. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunicationPage"];
                 };
             };
             default: components["responses"]["Error"];
