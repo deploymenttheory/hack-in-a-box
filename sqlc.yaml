@@ -1,9 +1,7 @@
 version: '2'
 sql:
   - engine: postgresql
-    schema:
-      - internal/database/migrations
-      - internal/scorecards/schema.provisional.sql
+    schema: internal/database/migrations
     queries: internal/database/queries
     gen:
       go:

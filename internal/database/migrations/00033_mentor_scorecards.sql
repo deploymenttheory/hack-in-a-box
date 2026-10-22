@@ -1,5 +1,5 @@
--- Provisional schema for #101; normal ordered migration number is assigned only
--- after preceding schema32/33 are actually ready. No production migration yet.
+-- +goose Up
+-- Ordered upgrade from actual merged help schema32. Existing private history remains unchanged.
 CREATE TABLE scorecard_checkpoint_versions (
  event_id uuid NOT NULL REFERENCES events(id),
  id uuid NOT NULL,
@@ -63,3 +63,16 @@ CREATE TRIGGER scorecard_checkpoint_immutable BEFORE UPDATE OR DELETE OR TRUNCAT
 CREATE TRIGGER mentor_scorecard_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_scorecard_versions FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER mentor_scorecard_signoff_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_scorecard_signoffs FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER mentor_scorecard_signoff_cards_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_scorecard_signoff_cards FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
+
+-- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM scorecard_checkpoint_versions) OR EXISTS(SELECT 1 FROM mentor_scorecard_versions) OR EXISTS(SELECT 1 FROM mentor_scorecard_signoffs) THEN
+  RAISE EXCEPTION 'Scorecard configuration or immutable assessment history exists; preserve it before rollback';
+ END IF;
+END $$;
+-- +goose StatementEnd
+DROP TABLE mentor_scorecard_signoff_cards;
+DROP TABLE mentor_scorecard_signoffs;
+DROP TABLE mentor_scorecard_versions;
+DROP TABLE scorecard_checkpoint_versions;

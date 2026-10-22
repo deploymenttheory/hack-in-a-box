@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -40,13 +39,6 @@ type fixture struct {
 func setup(t *testing.T) *fixture {
 	t.Helper()
 	pool := testdb.New(t, true)
-	raw, err := os.ReadFile("schema.provisional.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(t.Context(), string(raw)); err != nil {
-		t.Fatal(err)
-	}
 	f := &fixture{
 		t:       t,
 		pool:    pool,
@@ -603,6 +595,14 @@ func TestFinalSignoffNeedsCompleteExactFrozenCardsAndCurrentRecordedOwner(t *tes
 		t.Fatal("signoff replay created records", err)
 	}
 
+	for _, query := range []string{"UPDATE mentor_scorecard_versions SET document='{}' WHERE event_id=$1", "DELETE FROM mentor_scorecard_versions WHERE event_id=$1", "UPDATE mentor_scorecard_signoffs SET proof='{}' WHERE event_id=$1", "DELETE FROM mentor_scorecard_signoff_cards WHERE event_id=$1"} {
+		if _, err = f.pool.Exec(ctx, query, f.event); err == nil {
+			t.Fatal("immutable scored/source proof was rewritten", query)
+		}
+	}
+	if _, err = f.pool.Exec(ctx, "TRUNCATE mentor_scorecard_signoffs CASCADE"); err == nil {
+		t.Fatal("signed source history truncated")
+	}
 	changed := proof
 	changed.Binding = "changed-source-without-new-version"
 	raw, _ = json.Marshal(changed)

@@ -1,9 +1,10 @@
 # Independent mentor scorecards (#101)
 
-This implementation is a backend checkpoint, not a delivered issue or completed
-huddle/result workflow. Its schema is intentionally provisional and unnumbered
-until the preceding migrations are merged. Final ordered upgrade/rollback proof,
-full affected checks and exact-head CI remain required.
+This backend is prepared on actual merged main `c351d275` (help schema32).
+Normal ordered migration33 adds immutable checkpoint/card/sign-off history.
+The actual populated32→33 preservation and guarded rollback proof passes3.948s.
+Full affected checks and exact-head CI remain the merge gate; actual #104 huddle
+and #110 result workflows are separate deliverables.
 
 ## Native assessment and private authors
 
@@ -44,7 +45,11 @@ reference in final evidence must identify that exact revision; an older retained
 working submission cannot be presented as the assessed frozen output. Factual
 observation and note references are explanatory context, not a different assessed
 submission or a source of automatic points. Cross-event/team and invented native
-evidence references are rejected.
+evidence references are rejected. Observation references call #99
+`AuthorizeEvidenceInTransaction`, reusing its exact current private read/live/
+assignment policy and metadata-only version check. An assessment-only resource
+grant cannot substitute for the author’s native observation grant; sign-off
+rechecks each card author, not the moderator’s broader note access.
 
 ## Typed moderation and sign-off seam
 
@@ -95,3 +100,25 @@ deliverables.
 - Go lint was clean and both bundles built before the final targeted evidence
   additions. Fresh lint/build/generation and final actual-main verification are
   still required after restacking and migration ordering.
+
+
+## Actual-main32/normal33 checkpoint
+
+The native-observation reference review reproduced an assessment-only reviewer
+using a scorecard reference for a note its owning API denied (red1.907s). The
+transaction-aware #99 seam fixes that without broadening observation grants or
+copying its policy SQL. Real PostgreSQL/race cases pass4.327s, including a sign-off
+where the author retains generic assessment authority but has lost native note
+access while the moderator may still read the note. On the real schema33 chain,
+these reference cases pass4.119s and the HTTP/privacy journey passes3.570s.
+
+`TestScorecardMigrationPreservesPopulated32AndGuardedRollback` passes3.948s:
+existing event/team/assignment/membership, native private help and transition,
+private observation, approved rubric and audit snapshots remain byte-equivalent
+through the normal upgrade. No independent scores or rubric publication are
+inferred. Empty33 rollback succeeds; once a checkpoint is explicitly configured,
+rollback fails atomically and retains configuration and all prior source data.
+The historical fixture asserts protected33 then restores latest for later
+compatible migrations. Full scorecard/native-owner/HTTP/runtime race checks are
+running on this final integrated source; this document does not predeclare them
+or future exact-head GitHub checks successful.
