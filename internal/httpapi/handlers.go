@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
@@ -38,23 +39,24 @@ import (
 )
 
 type Dependencies struct {
-	Credentials  credentials.Service
-	Mentors      mentors.Service
-	Content      content.Service
-	Submissions  submissions.Service
-	Attendance   attendance.Service
-	Preparation  preparation.Service
-	Teams        teams.Service
-	GitHub       *githubidentity.Service
-	Pool         *pgxpool.Pool
-	Auth         *identity.Auth
-	Audit        audit.Service
-	Files        files.Service
-	Permissions  permissions.Service
-	Events       event.Service
-	Privacy      privacy.Service
-	Templates    templates.Service
-	Registration registration.Service
+	Communications communications.Service
+	Credentials    credentials.Service
+	Mentors        mentors.Service
+	Content        content.Service
+	Submissions    submissions.Service
+	Attendance     attendance.Service
+	Preparation    preparation.Service
+	Teams          teams.Service
+	GitHub         *githubidentity.Service
+	Pool           *pgxpool.Pool
+	Auth           *identity.Auth
+	Audit          audit.Service
+	Files          files.Service
+	Permissions    permissions.Service
+	Events         event.Service
+	Privacy        privacy.Service
+	Templates      templates.Service
+	Registration   registration.Service
 }
 type handlers struct{ Dependencies }
 

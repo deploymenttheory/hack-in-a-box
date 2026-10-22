@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
@@ -101,16 +102,17 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		Credentials: credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
-		Mentors:     mentors.Service{Pool: pool},
-		Content:     content.Service{Pool: pool, Storage: storage},
-		Submissions: submissions.Service{Pool: pool},
-		Attendance:  attendance.Service{Pool: pool},
-		Preparation: preparation.Service{Pool: pool},
-		Teams:       teams.Service{Pool: pool},
-		GitHub:      github,
-		Pool:        pool,
-		Permissions: permissions.Service{Pool: pool},
+		Communications: communications.Service{Pool: pool},
+		Credentials:    credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
+		Mentors:        mentors.Service{Pool: pool},
+		Content:        content.Service{Pool: pool, Storage: storage},
+		Submissions:    submissions.Service{Pool: pool},
+		Attendance:     attendance.Service{Pool: pool},
+		Preparation:    preparation.Service{Pool: pool},
+		Teams:          teams.Service{Pool: pool},
+		GitHub:         github,
+		Pool:           pool,
+		Permissions:    permissions.Service{Pool: pool},
 		Events: event.Service{
 			Pool:              pool,
 			SettleSubmissions: (submissions.Service{Pool: pool}).Settle,

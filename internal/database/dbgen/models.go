@@ -51,6 +51,46 @@ type CateringSetting struct {
 	Buffer  int32
 }
 
+type CommunicationApproval struct {
+	EventID   uuid.UUID
+	PreviewID uuid.UUID
+	ActorID   uuid.UUID
+	Reason    string
+	CreatedAt time.Time
+}
+
+type CommunicationFact struct {
+	EventID    uuid.UUID
+	ID         uuid.UUID
+	Kind       string
+	Revision   int64
+	OwnerID    *uuid.UUID
+	ResourceID *uuid.UUID
+	Status     string
+}
+
+type CommunicationPreview struct {
+	EventID         uuid.UUID
+	ID              uuid.UUID
+	TemplateID      uuid.UUID
+	TemplateVersion int64
+	AudienceID      uuid.UUID
+	AudienceVersion int64
+	ActorID         uuid.UUID
+	Snapshot        []byte
+	CreatedAt       time.Time
+}
+
+type CommunicationVersion struct {
+	EventID   uuid.UUID
+	ID        uuid.UUID
+	Kind      string
+	Version   int64
+	Document  []byte
+	ActorID   uuid.UUID
+	CreatedAt time.Time
+}
+
 type CompetitionClaim struct {
 	EventID  uuid.UUID
 	PersonID uuid.UUID
