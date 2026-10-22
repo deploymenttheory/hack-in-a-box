@@ -2193,7 +2193,16 @@ export interface components {
         ContentNotices: {
             items: components["schemas"]["ContentNotice"][];
         };
+        SubmissionOrganiser: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         SubmissionPage: {
+            /** @description Current confirmed team member may read the private draft. Organisers and reviewers cannot. */
+            can_read_draft: boolean;
+            /** @description Current active organiser display names to contact about an exception. No private contact fields. */
+            organisers: components["schemas"]["SubmissionOrganiser"][];
             /** Format: int64 */
             event_revision: number;
             /** Format: int64 */

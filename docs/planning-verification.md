@@ -403,3 +403,52 @@ and challenge publication; the authoring regression also sets the required flag.
 Both reader layouts were visually inspected. Local production build, focused
 browser tests, component tests, non-database Go race tests and linters pass; the
 full PostgreSQL and container checks run in CI because local Docker is unresponsive.
+
+## #61 — personal preparation and team deliverable screens
+
+The event Deliverables tab exposes the person's assigned preparation separately
+from team competition evidence. Personal tasks show ownership, deadline, progress,
+checklist and references. Participants can update only the progress permitted by
+current task authority; they cannot change assignments, deadlines or dependency
+rules, grant waivers or fetch restricted staff/logistics data. Role-assigned
+attendee tasks are labelled as shared progress rather than personal completions.
+Conflicts load the current assignment and preserve progress without overwriting
+changed organiser definitions.
+
+Published teams see required/optional deliverables, their evidence kinds, due and
+late status, captain/ownership, current formal evidence and completion feedback.
+Private drafts and formal submissions have separate revision counters and actions.
+Nothing is accepted or reviewed formally before live start. The UI uses current
+server permissions, including an explicit `can_read_draft` projection: organisers
+can amend or review formal evidence but never request a team's private draft.
+Before actual challenge publication, no draft/evidence input is solicited.
+
+Uploads are scoped to the team and use a stable key for each selected file. A
+retry reads the latest event revision and reuses that key, so a lost response does
+not create another upload or discard completed references. Formal saves use the
+submission-state revision, preventing duplicate acceptance after a lost response
+or conflicting save. Repeating identical formal evidence is disabled. Draft and
+formal conflicts require explicit review of latest evidence before retrying; local
+fields remain intact. URL/repository evidence uses HTTP(S) references without
+embedded credentials, and downloaded files retain current access checks.
+
+At cutoff the screen displays the authoritative frozen, not-submitted or withdrawn
+outcome, preserves unsaved fields in a locked editor and explains that private
+preparation is not a submission. Disbanded teams solicit no evidence. An exception
+panel names current active organisers and provides the team reference, deadline
+and recorded outcome to give them through the event contact channel. Only public
+display names are projected; private contact/logistics fields are not exposed.
+Organiser amendments and completion reviews require recorded reasons, preserve
+history and never enable premature review. Completion feedback remains separate
+from mentor checkpoint scoring and final judging.
+
+Desktop/mobile browser coverage includes labelled file/repository evidence,
+required work, a committed upload whose response fails and is retried idempotently,
+private pre-live drafts, initial challenge embargo, cutoff locks, current feedback,
+formal/draft/personal conflicts, disbanding, revoked membership and reasoned
+organiser review/amendment. Both layouts were visually inspected. PostgreSQL and
+HTTP contract regressions check draft-read flags, current active organiser names,
+revocation and the pre-live/cutoff states, extending the boundary and race tests
+already delivered in #60. No schema migration is needed. Local build, linters,
+component and browser checks pass; real PostgreSQL and runtime container checks
+must pass in CI before merge because local Docker is unresponsive.

@@ -46,3 +46,7 @@ SELECT audience,submission_revision FROM submission_file_references WHERE event_
 
 -- name: SubmissionMaintenanceEvents :many
 SELECT id FROM events WHERE configuration->>'submission_cutoff' IS NOT NULL AND configuration->>'submission_cutoff' != '0001-01-01T00:00:00Z' AND (configuration->>'submission_cutoff')::timestamptz <= $1::timestamptz ORDER BY id;
+
+-- name: SubmissionOrganisers :many
+SELECT p.id,p.display_name FROM event_memberships m JOIN people p ON p.id=m.person_id
+WHERE m.event_id=$1 AND m.role='organiser' AND m.active AND p.active ORDER BY p.display_name,p.id;

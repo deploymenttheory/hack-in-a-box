@@ -367,6 +367,36 @@ func (q *Queries) SubmissionMaintenanceEvents(ctx context.Context, dollar_1 time
 	return items, nil
 }
 
+const submissionOrganisers = `-- name: SubmissionOrganisers :many
+SELECT p.id,p.display_name FROM event_memberships m JOIN people p ON p.id=m.person_id
+WHERE m.event_id=$1 AND m.role='organiser' AND m.active AND p.active ORDER BY p.display_name,p.id
+`
+
+type SubmissionOrganisersRow struct {
+	ID          uuid.UUID
+	DisplayName string
+}
+
+func (q *Queries) SubmissionOrganisers(ctx context.Context, eventID uuid.UUID) ([]SubmissionOrganisersRow, error) {
+	rows, err := q.db.Query(ctx, submissionOrganisers, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SubmissionOrganisersRow{}
+	for rows.Next() {
+		var i SubmissionOrganisersRow
+		if err := rows.Scan(&i.ID, &i.DisplayName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const submissionRevision = `-- name: SubmissionRevision :one
 SELECT event_id, team_id, revision, actor_id, submitted_at, late, reason, document FROM submission_revisions WHERE event_id=$1 AND team_id=$2 AND revision=$3
 `

@@ -1072,3 +1072,40 @@ func TestTeamFilesAndReviewerAudiences(t *testing.T) {
 		t.Fatalf("upload key reused across scopes: %v", err)
 	}
 }
+
+func TestSubmissionWorkspaceDraftAuthorityAndCurrentOrganisers(t *testing.T) {
+	pool := testdb.New(t, true)
+	f := newFixture(t, pool)
+	f.now = f.c.LiveStart.Add(-time.Hour)
+	member := f.read(f.member.ID, f.team)
+	owner := f.read(f.owner.ID, f.team)
+	if !member.CanReadDraft || !member.CanDraft || member.CanSubmit || owner.CanReadDraft || owner.CanDraft || owner.CanSubmit {
+		t.Fatalf("pre-live workspace authority: member=%+v owner=%+v", member, owner)
+	}
+	if len(member.Organisers) != 1 || member.Organisers[0].ID != f.owner.ID || member.Organisers[0].Name != f.owner.DisplayName {
+		t.Fatalf("organiser contact: %+v", member.Organisers)
+	}
+	second := testdb.Person(t, pool)
+	f.exec("INSERT INTO event_memberships(event_id,person_id,role,active) VALUES($1,$2,'organiser',true)", f.id, second.ID)
+	if got := f.read(f.member.ID, f.team); len(got.Organisers) != 2 {
+		t.Fatal("new active organiser unavailable")
+	}
+	f.exec("UPDATE people SET active=false WHERE id=$1", second.ID)
+	if got := f.read(f.member.ID, f.team); len(got.Organisers) != 1 {
+		t.Fatal("disabled organiser disclosed as contact")
+	}
+	f.exec("UPDATE people SET active=true WHERE id=$1", second.ID)
+	f.exec("UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'", f.id, second.ID)
+	if got := f.read(f.member.ID, f.team); len(got.Organisers) != 1 {
+		t.Fatal("revoked organiser disclosed as contact")
+	}
+	f.now = f.c.SubmissionCutoff
+	member = f.read(f.member.ID, f.team)
+	if !member.CanReadDraft || member.CanDraft || member.CanSubmit || member.Outcome != "not_submitted" {
+		t.Fatalf("cutoff workspace authority: %+v", member)
+	}
+	f.exec("UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2", f.id, f.member.ID)
+	if _, err := f.s.Read(t.Context(), f.member.ID, f.id, f.team); !errors.Is(err, access.ErrForbidden) {
+		t.Fatalf("revoked workspace access: %v", err)
+	}
+}

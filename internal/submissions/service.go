@@ -255,6 +255,16 @@ func (s Service) page(ctx context.Context, q *dbgen.Queries, v scope) (Page, err
 	if v.state.FrozenAt.Valid {
 		result.FrozenAt = &v.state.FrozenAt.Time
 	}
+	result.CanReadDraft = v.authority.Member && published(v.row, s.now())
+	result.Organisers = []Organiser{}
+	contacts, err := q.SubmissionOrganisers(ctx, v.row.ID)
+	if err != nil {
+		return result, fmt.Errorf("read submission organisers: %w", err)
+	}
+	for _, p := range contacts {
+		result.Organisers = append(result.Organisers, Organiser{ID: p.ID, Name: p.DisplayName})
+	}
+
 	defs, err := definitions(ctx, q, v.row, v.config)
 	if err != nil {
 		return result, err

@@ -198,3 +198,13 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .resource-acknowledgement { border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1rem; }
 
 .resource-library > .preparation-heading { margin-bottom: 1.5rem; }
+
+.team-deliverables > .personal-preparation { margin: 1.5rem 0 2rem; }
+.team-submission > .panel, .team-submission > .dates { margin: 1.5rem 0; }
+.deliverable-editor { max-width: 55rem; }
+.deliverable-editor fieldset { min-width: 0; }
+.deliverable-upload { margin-top: 1rem; }
+.deliverable-upload > button { margin-top: .75rem; }
+.organiser-help { overflow-wrap: anywhere; }
+.submission-history { margin: 2rem 0; }
+.team-submission .evidence-links a { overflow-wrap: anywhere; }
