@@ -2,6 +2,7 @@ package communications
 
 import (
 	"context"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -9,6 +10,8 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
+
+var opaqueChannelRevision = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`)
 
 var campaignChannels = []string{"in_app", "smtp", "teams"}
 
@@ -31,7 +34,11 @@ func (s Service) channelReadiness(
 				r.Reason = "readiness_unavailable"
 				r.SelfTestReason = "readiness_unavailable"
 			} else {
-				r.Available = current.Available
+				r.Available = current.Available &&
+					opaqueChannelRevision.MatchString(current.ConfigRevision)
+				if r.Available {
+					r.ConfigRevision = current.ConfigRevision
+				}
 				r.SelfTestAvailable = r.Available && r.SupportsSelfTest &&
 					current.SelfTestAvailable &&
 					s.Jobs != nil

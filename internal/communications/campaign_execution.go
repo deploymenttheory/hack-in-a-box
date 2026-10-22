@@ -27,6 +27,12 @@ func (s Service) selfMessage(
 		return TestMessage{}, "", err
 	}
 	purpose, format := t.Purpose, t.Format
+	providerRevision := ""
+	for _, ready := range s.channelReadiness(ctx, row.ID, actor) {
+		if ready.Channel == channel {
+			providerRevision = ready.ConfigRevision
+		}
+	}
 	// Rendering as literal text supplies the provider's plain MIME part. The
 	// provider escapes that text for branded HTML; template markup stays inert.
 	t.Format = "text"
@@ -48,15 +54,16 @@ func (s Service) selfMessage(
 	}
 	recipient := p.Recipients[index]
 	message := TestMessage{
-		ID:              id,
-		EventID:         row.ID,
-		ActorID:         actor,
-		Channel:         channel,
-		Purpose:         purpose,
-		Format:          format,
-		Subject:         "[TEST] " + recipient.Subject,
-		PlainText:       "This is a test for the requesting organiser only.\n\n" + recipient.Body,
-		IncludeCalendar: c.Definition.IncludeCalendar,
+		ID:               id,
+		EventID:          row.ID,
+		ActorID:          actor,
+		Channel:          channel,
+		Purpose:          purpose,
+		Format:           format,
+		Subject:          "[TEST] " + recipient.Subject,
+		PlainText:        "This is a test for the requesting organiser only.\n\n" + recipient.Body,
+		IncludeCalendar:  c.Definition.IncludeCalendar,
+		ProviderRevision: providerRevision,
 	}
 	fingerprint := digest(struct {
 		TemplateVersion, AudienceVersion int64
@@ -223,10 +230,79 @@ func (s Service) ResolveApprovedCampaignInTransaction(
 	if err != nil {
 		return ApprovedCampaign{}, err
 	}
+	template, _, err := basis.pair(c.Definition)
+	if err != nil {
+		return ApprovedCampaign{}, err
+	}
+
 	return ApprovedCampaign{
+		Approval:   *c.Approval,
+		Purpose:    template.Purpose,
+		Format:     template.Format,
 		Definition: c.Definition,
 		Version:    c.Version,
 		DueAt:      *view.DueAt,
 		Preview:    preview,
+	}, nil
+}
+
+func (s Service) ResolveApprovedBroadcastInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+) (BroadcastMessage, error) {
+	approved, err := s.ResolveApprovedCampaignInTransaction(ctx, tx, eventID, campaignID)
+	if err != nil {
+		return BroadcastMessage{}, err
+	}
+	if !slices.Contains(approved.Definition.Channels, "teams") {
+		return BroadcastMessage{}, access.ErrForbidden
+	}
+	q := dbgen.New(tx)
+	row, err := q.Event(ctx, eventID)
+	if err != nil {
+		return BroadcastMessage{}, contextError("read broadcast event", err)
+	}
+	template, audience, err := loadPair(
+		ctx,
+		q,
+		eventID,
+		approved.Definition.TemplateID,
+		approved.Definition.AudienceID,
+	)
+	if err != nil {
+		return BroadcastMessage{}, err
+	}
+	facts, err := q.CommunicationFacts(ctx, eventID)
+	if err != nil {
+		return BroadcastMessage{}, contextError("read broadcast facts", err)
+	}
+	if len(broadcastBlockers(template, audience, facts)) > 0 {
+		return BroadcastMessage{}, ErrUnresolved
+	}
+	template.Format = "text"
+	projection, err := s.build(ctx, q, row, template, audience)
+	if err != nil {
+		return BroadcastMessage{}, err
+	}
+	if len(projection.Recipients) == 0 || len(projection.Blockers) > 0 {
+		return BroadcastMessage{}, ErrUnresolved
+	}
+	first := projection.Recipients[0]
+	for _, recipient := range projection.Recipients {
+		if recipient.Subject != first.Subject || recipient.Body != first.Body ||
+			len(recipient.Unresolved) > 0 {
+			return BroadcastMessage{}, ErrUnresolved
+		}
+	}
+	return BroadcastMessage{
+		EventID:         eventID,
+		CampaignID:      campaignID,
+		CampaignVersion: approved.Version,
+		Approval:        approved.Approval,
+		DueAt:           approved.DueAt,
+		Purpose:         approved.Purpose,
+		Subject:         first.Subject,
+		PlainText:       first.Body,
 	}, nil
 }

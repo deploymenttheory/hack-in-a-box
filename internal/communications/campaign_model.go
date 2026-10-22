@@ -16,6 +16,7 @@ type ChannelProvider interface {
 
 type ChannelReadiness struct {
 	Channel           string `json:"channel"`
+	ConfigRevision    string `json:"config_revision"`
 	Available         bool   `json:"available"`
 	SupportsSelfTest  bool   `json:"supports_self_test"`
 	SelfTestAvailable bool   `json:"self_test_available"`
@@ -45,14 +46,15 @@ type CampaignDefinition struct {
 }
 
 type CampaignApproval struct {
-	PreviewID       uuid.UUID `json:"preview_id"`
-	TemplateVersion int64     `json:"template_version"`
-	AudienceVersion int64     `json:"audience_version"`
-	Fingerprint     string    `json:"fingerprint"`
-	Binding         string    `json:"binding"`
-	ActorID         uuid.UUID `json:"actor_id"`
-	ApprovedAt      time.Time `json:"approved_at"`
-	DueAt           time.Time `json:"due_at"`
+	ChannelRevisions map[string]string `json:"channel_revisions"`
+	PreviewID        uuid.UUID         `json:"preview_id"`
+	TemplateVersion  int64             `json:"template_version"`
+	AudienceVersion  int64             `json:"audience_version"`
+	Fingerprint      string            `json:"fingerprint"`
+	Binding          string            `json:"binding"`
+	ActorID          uuid.UUID         `json:"actor_id"`
+	ApprovedAt       time.Time         `json:"approved_at"`
+	DueAt            time.Time         `json:"due_at"`
 }
 
 type Campaign struct {
@@ -91,8 +93,8 @@ type CampaignDetail struct {
 type CampaignCommand struct {
 	Action     string              `json:"action"`
 	Version    int64               `json:"version"`
-	Definition *CampaignDefinition `json:"definition"`
-	Channel    string              `json:"channel"`
+	Definition *CampaignDefinition `json:"definition,omitempty"`
+	Channel    string              `json:"channel,omitempty"`
 	Reason     string              `json:"reason"`
 }
 
@@ -100,22 +102,40 @@ type CampaignCommand struct {
 // is literal interpolated text. Providers must escape it for branded HTML and
 // resolve the fixed actor's verified delivery destination privately.
 type TestMessage struct {
-	ID              uuid.UUID
-	EventID         uuid.UUID
-	ActorID         uuid.UUID
-	Channel         string
-	Purpose         string
-	Format          string
-	Subject         string
-	PlainText       string
-	IncludeCalendar bool
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	ActorID          uuid.UUID
+	Channel          string
+	Purpose          string
+	Format           string
+	Subject          string
+	PlainText        string
+	IncludeCalendar  bool
+	ProviderRevision string
 }
 
 // ApprovedCampaign is the transaction-bound execution seam for #82. Resolving
 // it never enqueues or sends. The caller retains its actual recipient attempts.
 type ApprovedCampaign struct {
+	Approval   CampaignApproval
+	Purpose    string
+	Format     string
 	Definition CampaignDefinition
 	Version    int64
 	DueAt      time.Time
 	Preview    Preview
+}
+
+// BroadcastMessage contains one common literal projection and no recipient list.
+// The adapter must compare its current connection version with the approval's
+// channel revision in the same transaction that records a delivery attempt.
+type BroadcastMessage struct {
+	EventID         uuid.UUID
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	Approval        CampaignApproval
+	DueAt           time.Time
+	Purpose         string
+	Subject         string
+	PlainText       string
 }

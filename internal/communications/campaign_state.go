@@ -158,7 +158,8 @@ func campaignBinding(d CampaignDefinition, due time.Time, zone string, a Campaig
 		PreviewID                        uuid.UUID
 		TemplateVersion, AudienceVersion int64
 		Fingerprint                      string
-	}{d, due, zone, a.PreviewID, a.TemplateVersion, a.AudienceVersion, a.Fingerprint})
+		ChannelRevisions                 map[string]string
+	}{d, due, zone, a.PreviewID, a.TemplateVersion, a.AudienceVersion, a.Fingerprint, a.ChannelRevisions})
 }
 
 func campaignView(c Campaign, b campaignBasis) CampaignView {
@@ -184,6 +185,17 @@ func campaignView(c Campaign, b campaignBasis) CampaignView {
 	v.Blockers = append(v.Blockers, channelAllowed(c.Definition.Channels, b.providers)...)
 	if c.Approval != nil {
 		approved := *c.Approval
+		for _, channel := range c.Definition.Channels {
+			index := slices.IndexFunc(
+				b.providers,
+				func(p ChannelReadiness) bool { return p.Channel == channel },
+			)
+			if index < 0 || approved.ChannelRevisions[channel] == "" ||
+				approved.ChannelRevisions[channel] != b.providers[index].ConfigRevision {
+				v.Blockers = append(v.Blockers, "provider_configuration_changed")
+				return v
+			}
+		}
 		if approved.TemplateVersion != t.Version || approved.AudienceVersion != a.Version ||
 			approved.Fingerprint != approvalFingerprint(b.event, t, b.config, b.facts, b.content) ||
 			v.DueAt == nil ||

@@ -26,7 +26,12 @@ import (
 type syntheticChannel struct{}
 
 func (syntheticChannel) Readiness(context.Context, uuid.UUID, uuid.UUID) (ChannelReadiness, error) {
-	return ChannelReadiness{Available: true, SupportsSelfTest: true, SelfTestAvailable: true}, nil
+	return ChannelReadiness{
+		Available:         true,
+		ConfigRevision:    "synthetic-v1",
+		SupportsSelfTest:  true,
+		SelfTestAvailable: true,
+	}, nil
 }
 
 func campaignDefinition(f *fixture) CampaignDefinition {
@@ -380,5 +385,107 @@ func TestCampaignTimingUsesExplicitDSTAndBusinessCalendar(t *testing.T) {
 	}
 	if due.Format(time.RFC3339) != "2027-05-28T09:00:00Z" {
 		t.Fatalf("working calendar ignored: %s", due)
+	}
+}
+
+type versionedSyntheticChannel struct{ revision string }
+
+func (p *versionedSyntheticChannel) Readiness(
+	context.Context,
+	uuid.UUID,
+	uuid.UUID,
+) (ChannelReadiness, error) {
+	return ChannelReadiness{
+		Available:         true,
+		ConfigRevision:    p.revision,
+		SelfTestAvailable: true,
+	}, nil
+}
+
+func TestCampaignProviderChangeAndRevertRequireExplicitReapprovalWithoutTimestampChange(
+	t *testing.T,
+) {
+	f := newFixture(t)
+	f.person(t)
+	provider := &versionedSyntheticChannel{revision: "connection-v1"}
+	f.s.Channels = map[string]ChannelProvider{"smtp": provider}
+	p := newCampaign(t, f)
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "preview"})
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "approve"})
+	oldApproval := *p.Campaign.Campaign.Approval
+	// All approvals and connection revisions deliberately share the same clock.
+	// Version identity, not a timestamp ordering, invalidates the previous target.
+	provider.revision = "connection-v2"
+	current, err := f.s.Campaign(
+		t.Context(),
+		f.owner.ID,
+		f.eventID,
+		p.Campaign.Campaign.Definition.ID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.Campaign.Status != "draft" ||
+		!slices.Contains(current.Campaign.Blockers, "provider_configuration_changed") {
+		t.Fatal("changed connection retained campaign approval")
+	}
+	p = campaignChange(t, f, current.Campaign.Campaign, CampaignCommand{Action: "approve"})
+	if p.Campaign.Campaign.Approval.Binding == oldApproval.Binding ||
+		!p.Campaign.Campaign.Approval.ApprovedAt.Equal(oldApproval.ApprovedAt) ||
+		p.Campaign.Campaign.Approval.ChannelRevisions["smtp"] != "connection-v2" {
+		t.Fatal("explicit reapproval did not bind the new opaque connection version")
+	}
+	provider.revision = "connection-v3-reverted-settings"
+	current, err = f.s.Campaign(
+		t.Context(),
+		f.owner.ID,
+		f.eventID,
+		p.Campaign.Campaign.Definition.ID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.Campaign.Status != "draft" {
+		t.Fatal("change/revert bypassed connection version binding")
+	}
+}
+
+func TestCampaignBroadcastResolverReturnsOnlyIdenticalCurrentCommonProjection(t *testing.T) {
+	f := newFixture(t)
+	f.person(t)
+	f.person(t)
+	f.t.Subject = "Common event announcement"
+	f.t.Body = "Literal <script>never active</script> {{event.name}}"
+	f.change(t, Command{Action: "save_template", Template: &f.t})
+	f.t.Version++
+	f.s.Channels = map[string]ChannelProvider{"teams": syntheticChannel{}}
+	p := newCampaign(t, f)
+	d := p.Campaign.Campaign.Definition
+	d.Channels = []string{"teams"}
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "save", Definition: &d})
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "preview"})
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "approve"})
+	f.now = p.Campaign.Campaign.Approval.DueAt
+	var message BroadcastMessage
+	err := database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var e error
+		message, e = f.s.ResolveApprovedBroadcastInTransaction(t.Context(), tx, f.eventID, d.ID)
+		return e
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if message.CampaignID != d.ID || message.Approval.ChannelRevisions["teams"] != "synthetic-v1" ||
+		!strings.Contains(message.PlainText, "Literal <script>never active</script>") ||
+		strings.Contains(message.PlainText, "person.name") {
+		t.Fatal("broadcast resolver did not return a bound common literal projection")
+	}
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "cancel"})
+	err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		_, e := f.s.ResolveApprovedBroadcastInTransaction(t.Context(), tx, f.eventID, d.ID)
+		return e
+	})
+	if !errors.Is(err, ErrUnresolved) {
+		t.Fatalf("cancelled broadcast resolved: %v", err)
 	}
 }

@@ -1078,6 +1078,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/communications/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getCampaign"];
+        put?: never;
+        post: operations["changeCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/mentor-coverage": {
         parameters: {
             query?: never;
@@ -1991,6 +2028,106 @@ export interface components {
             audience_id?: string;
             /** Format: uuid */
             preview_id?: string;
+        };
+        ChannelReadiness: {
+            /** @enum {string} */
+            channel: "in_app" | "smtp" | "teams";
+            config_revision: string;
+            available: boolean;
+            supports_self_test: boolean;
+            self_test_available: boolean;
+            reason: string;
+            self_test_reason: string;
+            setup_url: string;
+        };
+        CampaignTiming: {
+            /** @enum {string} */
+            kind: "fixed" | "relative";
+            wall_time: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+            /** @enum {string} */
+            anchor: "" | "live_start" | "submission_cutoff";
+            days: number;
+            minutes: number;
+            business_days: boolean;
+        };
+        CampaignDefinition: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            template_id: string;
+            /** Format: uuid */
+            audience_id: string;
+            channels: ("in_app" | "smtp" | "teams")[];
+            include_calendar: boolean;
+            timing: components["schemas"]["CampaignTiming"];
+        };
+        CampaignApproval: {
+            /** Format: uuid */
+            preview_id: string;
+            /** Format: int64 */
+            template_version: number;
+            /** Format: int64 */
+            audience_version: number;
+            fingerprint: string;
+            channel_revisions: {
+                [key: string]: string;
+            };
+            binding: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            approved_at: string;
+            /** Format: date-time */
+            due_at: string;
+        } | null;
+        Campaign: {
+            definition: components["schemas"]["CampaignDefinition"];
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            preview_id: string | null;
+            approval: components["schemas"]["CampaignApproval"];
+            cancelled: boolean;
+        };
+        CampaignView: {
+            campaign: components["schemas"]["Campaign"];
+            /** @enum {string} */
+            status: "draft" | "approved" | "blocked" | "cancelled";
+            /** Format: date-time */
+            due_at: string | null;
+            blockers: string[];
+        };
+        CampaignPage: {
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
+            can_manage: boolean;
+            campaigns: components["schemas"]["CampaignView"][];
+            providers: components["schemas"]["ChannelReadiness"][];
+        };
+        CampaignDetail: {
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
+            can_manage: boolean;
+            campaign: components["schemas"]["CampaignView"];
+            preview: components["schemas"]["CommunicationPreview"];
+            providers: components["schemas"]["ChannelReadiness"][];
+            /** Format: uuid */
+            test_request_id: string | null;
+        };
+        CampaignCommand: {
+            /** @enum {string} */
+            action: "save" | "preview" | "approve" | "cancel" | "test_self";
+            /** Format: int64 */
+            version: number;
+            reason: string;
+            definition?: components["schemas"]["CampaignDefinition"];
+            /** @enum {string} */
+            channel?: "in_app" | "smtp" | "teams";
         };
         MentorPage: {
             /** Format: int64 */
@@ -4869,6 +5006,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommunicationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCampaigns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser campaign definitions and real provider readiness; approval is distinct from dispatch or delivery. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Retained audience preview, bound approval and current readiness for one campaign. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeCampaign: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignCommand"];
+            };
+        };
+        responses: {
+            /** @description Reviewed campaign mutation. test_self records a typed pending intent for the requesting current organiser only; it never accepts a recipient/address or broadcasts to Teams, and does not prove provider acceptance or delivery. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
                 };
             };
             default: components["responses"]["Error"];

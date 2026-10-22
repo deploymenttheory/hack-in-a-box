@@ -337,7 +337,7 @@ func (s Service) approveCampaign(
 		return c, blocked("campaign_timing_review_required")
 	}
 	for _, code := range view.Blockers {
-		if code != "approval_outdated" {
+		if code != "approval_outdated" && code != "provider_configuration_changed" {
 			return c, blocked(code)
 		}
 	}
@@ -353,6 +353,12 @@ func (s Service) approveCampaign(
 		ActorID:         actor,
 		ApprovedAt:      s.now(),
 		DueAt:           *view.DueAt,
+	}
+	a.ChannelRevisions = map[string]string{}
+	for _, provider := range basis.providers {
+		if slices.Contains(c.Definition.Channels, provider.Channel) {
+			a.ChannelRevisions[provider.Channel] = provider.ConfigRevision
+		}
 	}
 	a.Binding = campaignBinding(c.Definition, a.DueAt, basis.config.Timezone, a)
 	c.Approval = &a

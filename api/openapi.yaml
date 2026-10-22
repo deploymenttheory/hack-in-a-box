@@ -1399,6 +1399,51 @@ paths:
                 $ref: '#/components/schemas/CommunicationPage'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/communications/campaigns:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getCampaigns
+      responses:
+        '200':
+          description: Current organiser campaign definitions and real provider readiness; approval is distinct from dispatch or delivery.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CampaignPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/communications/campaigns/{campaign_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: campaign_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getCampaign
+      responses:
+        '200':
+          description: Retained audience preview, bound approval and current readiness for one campaign.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CampaignDetail'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: changeCampaign
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CampaignCommand'}
+      responses:
+        '200':
+          description: Reviewed campaign mutation. test_self records a typed pending intent for the requesting current organiser only; it never accepts a recipient/address or broadcasts to Teams, and does not prove provider acceptance or delivery.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CampaignDetail'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/mentor-coverage:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -3036,6 +3081,124 @@ components:
         template_id: {type: string, format: uuid}
         audience_id: {type: string, format: uuid}
         preview_id: {type: string, format: uuid}
+    ChannelReadiness:
+      type: object
+      additionalProperties: false
+      required: [channel, config_revision, available, supports_self_test, self_test_available, reason, self_test_reason, setup_url]
+      properties:
+        channel: {type: string, enum: [in_app, smtp, teams]}
+        config_revision: {type: string, maxLength: 128}
+        available: {type: boolean}
+        supports_self_test: {type: boolean}
+        self_test_available: {type: boolean}
+        reason: {type: string}
+        self_test_reason: {type: string}
+        setup_url: {type: string}
+    CampaignTiming:
+      type: object
+      additionalProperties: false
+      required: [kind, wall_time, dst_choice, anchor, days, minutes, business_days]
+      properties:
+        kind: {type: string, enum: [fixed, relative]}
+        wall_time: {type: string}
+        dst_choice: {type: string, enum: ['', earlier, later]}
+        anchor: {type: string, enum: ['', live_start, submission_cutoff]}
+        days: {type: integer, minimum: -366, maximum: 366}
+        minutes: {type: integer, minimum: -1440, maximum: 1440}
+        business_days: {type: boolean}
+    CampaignDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, name, template_id, audience_id, channels, include_calendar, timing]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string, minLength: 1, maxLength: 160}
+        template_id: {type: string, format: uuid}
+        audience_id: {type: string, format: uuid}
+        channels:
+          type: array
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: {type: string, enum: [in_app, smtp, teams]}
+        include_calendar: {type: boolean}
+        timing: {$ref: '#/components/schemas/CampaignTiming'}
+    CampaignApproval:
+      type: object
+      nullable: true
+      additionalProperties: false
+      required: [preview_id, template_version, audience_version, fingerprint, binding, actor_id, approved_at, due_at, channel_revisions]
+      properties:
+        preview_id: {type: string, format: uuid}
+        template_version: {type: integer, format: int64}
+        audience_version: {type: integer, format: int64}
+        fingerprint: {type: string}
+        channel_revisions:
+          type: object
+          additionalProperties: {type: string}
+        binding: {type: string}
+        actor_id: {type: string, format: uuid}
+        approved_at: {type: string, format: date-time}
+        due_at: {type: string, format: date-time}
+    Campaign:
+      type: object
+      additionalProperties: false
+      required: [definition, version, preview_id, approval, cancelled]
+      properties:
+        definition: {$ref: '#/components/schemas/CampaignDefinition'}
+        version: {type: integer, format: int64, minimum: 1}
+        preview_id: {type: string, format: uuid, nullable: true}
+        approval: {$ref: '#/components/schemas/CampaignApproval'}
+        cancelled: {type: boolean}
+    CampaignView:
+      type: object
+      additionalProperties: false
+      required: [campaign, status, due_at, blockers]
+      properties:
+        campaign: {$ref: '#/components/schemas/Campaign'}
+        status: {type: string, enum: [draft, approved, blocked, cancelled]}
+        due_at: {type: string, format: date-time, nullable: true}
+        blockers:
+          type: array
+          items: {type: string}
+    CampaignPage:
+      type: object
+      additionalProperties: false
+      required: [revision, timezone, can_manage, campaigns, providers]
+      properties:
+        revision: {type: integer, format: int64}
+        timezone: {type: string}
+        can_manage: {type: boolean}
+        campaigns:
+          type: array
+          items: {$ref: '#/components/schemas/CampaignView'}
+        providers:
+          type: array
+          items: {$ref: '#/components/schemas/ChannelReadiness'}
+    CampaignDetail:
+      type: object
+      additionalProperties: false
+      required: [revision, timezone, can_manage, campaign, preview, providers, test_request_id]
+      properties:
+        revision: {type: integer, format: int64}
+        timezone: {type: string}
+        can_manage: {type: boolean}
+        campaign: {$ref: '#/components/schemas/CampaignView'}
+        preview: {$ref: '#/components/schemas/CommunicationPreview'}
+        providers:
+          type: array
+          items: {$ref: '#/components/schemas/ChannelReadiness'}
+        test_request_id: {type: string, format: uuid, nullable: true}
+    CampaignCommand:
+      type: object
+      additionalProperties: false
+      required: [action, version, reason]
+      properties:
+        action: {type: string, enum: [save, preview, approve, cancel, test_self]}
+        version: {type: integer, format: int64, minimum: 0}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        definition: {$ref: '#/components/schemas/CampaignDefinition'}
+        channel: {type: string, enum: [in_app, smtp, teams]}
     MentorPage:
       type: object
       additionalProperties: false
