@@ -32,6 +32,14 @@ not disclose its private workflow diagnostics to readers of the released version
 Authors retain the blocked diagnostic, but an already published challenge is not
 described as a missed initial publication requiring postponement.
 
+`TestSessionCookieChangesKeepPrivateResponsesUncacheable` additionally exercises
+the real router/session/timeout stack without PostgreSQL. Creating, renewing and
+deleting a session cookie must retain `no-store` on the transmitted response.
+The session middleware's cookie cache directive previously replaced the outer
+default when the timeout handler copied its separately buffered response headers.
+The private default is now also set on that inner writer before session handling;
+public bundle caching remains unchanged.
+
 ## Browser coverage
 
 `web/e2e/embargo.spec.ts` runs on desktop and mobile with deterministic API

@@ -40,6 +40,9 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if strings.HasPrefix(r.URL.Path, "/api/") ||
 					strings.HasPrefix(r.URL.Path, "/auth/") {
+					// TimeoutHandler buffers headers separately from identify's
+					// writer. Preserve no-store when SCS adds its cookie directive.
+					w.Header().Set("Cache-Control", "no-store")
 					session.ServeHTTP(w, r)
 				} else {
 					next.ServeHTTP(w, r)
