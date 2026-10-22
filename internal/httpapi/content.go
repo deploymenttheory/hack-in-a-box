@@ -21,7 +21,11 @@ func (h handlers) ListContent(
 		cursor = *r.Params.Cursor
 	}
 	preview := r.Params.Preview != nil && *r.Params.Preview
-	v, err := h.Content.List(ctx, actor(ctx).ID, r.EventId, cursor, limit, preview)
+	search := ""
+	if r.Params.Q != nil {
+		search = *r.Params.Q
+	}
+	v, err := h.Content.Search(ctx, actor(ctx).ID, r.EventId, cursor, limit, preview, search)
 	if err != nil {
 		return nil, fmt.Errorf("content library: %w", err)
 	}
@@ -133,4 +137,21 @@ func (h handlers) ContentReadiness(
 		return nil, fmt.Errorf("publication readiness: %w", err)
 	}
 	return convertDTO[contract.ContentReadiness200JSONResponse](v)
+}
+
+func (h handlers) AcknowledgeContent(
+	ctx context.Context,
+	r contract.AcknowledgeContentRequestObject,
+) (contract.AcknowledgeContentResponseObject, error) {
+	v, err := h.Content.Acknowledge(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.ContentId,
+		revision(r.Params.IfMatch),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("acknowledge content: %w", err)
+	}
+	return convertDTO[contract.AcknowledgeContent200JSONResponse](v)
 }

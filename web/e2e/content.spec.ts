@@ -6,8 +6,8 @@ import type { components } from '../src/api/schema.gen'
 type Content = components['schemas']['ContentPage']
 type Document = components['schemas']['ContentDocument']
 const pageID = '5883f880-1c49-4d89-b498-005df3f30986', challengeID = 'ddcc2a2d-aa18-49f5-a5a3-233f8fdd1ed0', teamID = '164a3cd9-7b9e-45da-b6c7-1b797f11f70c', fileID = 'e7c04139-482e-4b02-bbb2-2674f6acfbbe'
-function contentDocument(title = 'Team handbook'): Document { return { title, markdown: '# Welcome\n\nBuild together.\n\n[Guide](https://example.test/guide)', audience: { confirmed: true, roles: [], teams: [] }, attachments: [], scheduled_at: null } }
-function item(id = pageID): Content { return { id, kind: 'page', revision: 3, version: 1, state: 'approved', document: contentDocument(), released_version: null, released_at: null, attachment_details: [], can_manage: true, message: '' } }
+function contentDocument(title = 'Team handbook'): Document { return { title, require_acknowledgement: false, markdown: '# Welcome\n\nBuild together.\n\n[Guide](https://example.test/guide)', audience: { confirmed: true, roles: [], teams: [] }, attachments: [], scheduled_at: null } }
+function item(id = pageID): Content { return { id, kind: 'page', revision: 3, version: 1, state: 'approved', document: contentDocument(), released_version: null, released_at: null, attachment_details: [], acknowledged_at: null, can_manage: true, message: '' } }
 async function setup(page: Page) {
   const workspace = await mockWorkspace(page), event = workspace.events[0]
   event.stage = 'preparation'; event.confirmed_attendees = 32
@@ -63,10 +63,12 @@ test('editing approved content creates a draft and requires review again', async
   await page.getByRole('button', { name: 'Edit Team handbook', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Release approved version' })).toBeEnabled()
   await page.getByLabel('Markdown', { exact: true }).fill('# Updated handbook\n\nBring your curiosity.')
+  await page.getByLabel('Require readers to acknowledge this version').check()
   await expect(page.getByRole('button', { name: 'Release approved version' })).toBeDisabled()
   await page.getByRole('button', { name: 'Save new draft', exact: true }).click()
   await expect(page.getByText('Draft version 2 saved.', { exact: false })).toBeVisible()
   expect(writes.at(-1)?.revision).toBe('"3"')
+  expect((writes.at(-1)?.body as { document: Document }).document.require_acknowledgement).toBe(true)
   await page.getByRole('button', { name: 'Mark ready for review' }).click()
   await page.getByRole('button', { name: 'Approve version 2' }).click()
   await expect(page.getByRole('button', { name: 'Release approved version' })).toBeEnabled()

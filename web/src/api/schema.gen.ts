@@ -1184,6 +1184,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/content/{content_id}/acknowledgements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acknowledgeContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/content/{content_id}/history": {
         parameters: {
             query?: never;
@@ -2085,6 +2104,11 @@ export interface components {
             teams: string[];
         };
         ContentDocument: {
+            /**
+             * @description Explicitly require each reader to acknowledge this immutable version. Material updates with this flag require a new acknowledgement after release.
+             * @default false
+             */
+            require_acknowledgement: boolean;
             title: string;
             markdown: string;
             audience: components["schemas"]["ContentAudience"];
@@ -2101,6 +2125,11 @@ export interface components {
             document: components["schemas"]["ContentDocument"];
         };
         ContentPage: {
+            /**
+             * Format: date-time
+             * @description Current reader acknowledgement of the returned version only.
+             */
+            acknowledged_at: string | null;
             attachment_details: components["schemas"]["ContentAttachment"][];
             /** Format: uuid */
             id: string;
@@ -4388,6 +4417,8 @@ export interface operations {
     listContent: {
         parameters: {
             query?: {
+                /** @description Search titles and text only after current version/audience authorization. */
+                q?: string;
                 /** @description Explicit privileged preview; never grants the selected audience access. */
                 preview?: boolean;
                 cursor?: string;
@@ -4516,6 +4547,34 @@ export interface operations {
         };
         responses: {
             /** @description Version-bound workflow action. Initial challenge publication cannot be triggered manually. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    acknowledgeContent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted released version the reader explicitly acknowledges; never the authoring state revision. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Idempotent personal acknowledgement of the current required released version. Current audience access is rechecked even for retries. */
             200: {
                 headers: {
                     [name: string]: unknown;

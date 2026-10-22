@@ -13,6 +13,32 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const acknowledgeContent = `-- name: AcknowledgeContent :execrows
+INSERT INTO content_acknowledgements(event_id,content_id,version,person_id,acknowledged_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING
+`
+
+type AcknowledgeContentParams struct {
+	EventID        uuid.UUID
+	ContentID      uuid.UUID
+	Version        int64
+	PersonID       uuid.UUID
+	AcknowledgedAt time.Time
+}
+
+func (q *Queries) AcknowledgeContent(ctx context.Context, arg AcknowledgeContentParams) (int64, error) {
+	result, err := q.db.Exec(ctx, acknowledgeContent,
+		arg.EventID,
+		arg.ContentID,
+		arg.Version,
+		arg.PersonID,
+		arg.AcknowledgedAt,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const addContentFile = `-- name: AddContentFile :exec
 INSERT INTO content_files(event_id,content_id,version,file_id) VALUES($1,$2,$3,$4)
 `
@@ -32,6 +58,29 @@ func (q *Queries) AddContentFile(ctx context.Context, arg AddContentFileParams) 
 		arg.FileID,
 	)
 	return err
+}
+
+const contentAcknowledgement = `-- name: ContentAcknowledgement :one
+SELECT acknowledged_at FROM content_acknowledgements WHERE event_id=$1 AND content_id=$2 AND version=$3 AND person_id=$4
+`
+
+type ContentAcknowledgementParams struct {
+	EventID   uuid.UUID
+	ContentID uuid.UUID
+	Version   int64
+	PersonID  uuid.UUID
+}
+
+func (q *Queries) ContentAcknowledgement(ctx context.Context, arg ContentAcknowledgementParams) (time.Time, error) {
+	row := q.db.QueryRow(ctx, contentAcknowledgement,
+		arg.EventID,
+		arg.ContentID,
+		arg.Version,
+		arg.PersonID,
+	)
+	var acknowledged_at time.Time
+	err := row.Scan(&acknowledged_at)
+	return acknowledged_at, err
 }
 
 const contentChanges = `-- name: ContentChanges :many
