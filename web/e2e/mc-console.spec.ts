@@ -45,7 +45,7 @@ async function prepare(page: Page, data = fixture(), pausePolling = false) {
     return route.fulfill({ json: data.page })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Mc console', exact: true }).click()
+  await page.getByRole('button', { name: 'MC console', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'MC console', exact: true })).toBeVisible()
   await page.getByLabel('Reason for room changes').fill('Synthetic reviewed room operation')
   return data
@@ -150,7 +150,7 @@ test('retains the rehearsal but disables controls when current MC access is revo
   const data = await prepare(page)
   await page.getByLabel('Cue title', { exact: true }).fill('Draft retained after revocation')
   data.authorized = false
-  await expect(page.getByText('Your current role or the event\'s operating state has changed.', { exact: false })).toBeVisible()
+  await expect(page.getByText('The latest console snapshot could not be verified.', { exact: false })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save rehearsal', exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Hold countdown' })).toBeDisabled()
   await expect(page.getByLabel('Cue title', { exact: true })).toHaveValue('Draft retained after revocation')

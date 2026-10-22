@@ -230,6 +230,7 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
   .credential-inventory-table .actions button { white-space: normal; height: auto; min-height: 2.25rem; text-align: left; }
 }
 
+.mc-console > .panel { margin-block: 20px; }
 .mc-console .mc-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .mc-console fieldset { margin: 20px 0; min-width: 0; }
 .cue-preview { padding: 18px; border: 1px solid var(--border); border-radius: 12px; min-width: 0; overflow-wrap: anywhere; }
