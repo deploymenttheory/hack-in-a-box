@@ -2,8 +2,11 @@ package maildelivery
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 	"net"
@@ -27,6 +30,17 @@ func NewSMTP(settings Settings) (*SMTP, error) {
 	return &SMTP{settings: settings}, nil
 }
 func (s *SMTP) Configured() bool { return s != nil && s.settings.Configured() }
+
+// Revision binds approvals to the complete deployment settings without exposing
+// endpoint, identity or authentication material in campaign metadata.
+func (s *SMTP) Revision() string {
+	if !s.Configured() {
+		return ""
+	}
+	data, _ := json.Marshal(s.settings)
+	digest := sha256.Sum256(data)
+	return hex.EncodeToString(digest[:])
+}
 
 func failure(err error, uncertain bool, messageID string) Receipt {
 	var response *textproto.Error

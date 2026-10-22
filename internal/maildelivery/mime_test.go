@@ -189,3 +189,68 @@ func TestMIMERejectsHeaderAndCalendarInjection(t *testing.T) {
 		}
 	}
 }
+
+func TestCalendarUTCDisambiguatesRepeatedLocalHourAndTestUID(t *testing.T) {
+	message := personal()
+	start := time.Date(2027, 10, 31, 0, 30, 0, 0, time.UTC)
+	message.Calendar = &Calendar{
+		EventID:      uuid.New(),
+		Test:         true,
+		Sequence:     3,
+		Start:        start,
+		End:          start.Add(time.Hour),
+		Timezone:     "Europe/London",
+		Summary:      "[TEST] Synthetic event",
+		WorkspaceURL: "https://hack.example.test/events",
+	}
+	data, err := message.Calendar.render(settings(), message.SentAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(data, []byte("DTSTART:20271031T003000Z")) ||
+		!bytes.Contains(data, []byte("DTEND:20271031T013000Z")) ||
+		!bytes.Contains(data, []byte("UID:test-event-")) {
+		t.Fatal("calendar conflated repeated local hour or test/live UID")
+	}
+	details, err := DateDetails(*message.Calendar)
+	if err != nil || !strings.Contains(details, "01:30 BST") ||
+		!strings.Contains(details, "01:30 GMT") {
+		t.Fatal("ambiguous local event details lost their offsets")
+	}
+	message.Calendar.Test = false
+	live, err := message.Calendar.render(settings(), message.SentAt)
+	if err != nil || bytes.Contains(live, []byte("UID:test-event-")) ||
+		!bytes.Contains(live, []byte("UID:event-")) {
+		t.Fatal("test calendar could replace the live calendar")
+	}
+}
+
+func TestSMTPRevisionIsStableOpaqueAndSettingsBound(t *testing.T) {
+	cfg := settings()
+	first, err := NewSMTP(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	same, err := NewSMTP(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revision := first.Revision()
+	if len(revision) != 64 || revision != same.Revision() ||
+		strings.Contains(revision, cfg.Password) ||
+		strings.Contains(revision, cfg.Host) {
+		t.Fatal("revision is unstable or exposed settings")
+	}
+	for _, change := range []func(*Settings){func(s *Settings) { s.Password = "different-synthetic-password" }, func(s *Settings) { s.Host = "other.example.test" }, func(s *Settings) { s.From = "other@example.test" }, func(s *Settings) { s.Mode = "tls" }, func(s *Settings) { s.MessageDomain = "other.example.test" }} {
+		changed := cfg
+		change(&changed)
+		sender, err := NewSMTP(changed)
+		if err != nil || sender.Revision() == revision {
+			t.Fatal("changed SMTP configuration retained approval binding")
+		}
+	}
+	absent, err := NewSMTP(Settings{})
+	if err != nil || absent.Revision() != "" {
+		t.Fatal("unconfigured SMTP exposed a revision")
+	}
+}

@@ -13,6 +13,7 @@ import (
 // and timestamps with the attempt; retries must reuse it rather than recalculate.
 type Calendar struct {
 	EventID      uuid.UUID
+	Test         bool
 	Sequence     int64
 	Start, End   time.Time
 	Timezone     string
@@ -58,6 +59,10 @@ func (c Calendar) render(settings Settings, stamp time.Time) ([]byte, error) {
 	if !safeWorkspace(c.WorkspaceURL) {
 		return nil, ErrMessage
 	}
+	uidPrefix := "event-"
+	if c.Test {
+		uidPrefix = "test-event-"
+	}
 	lines := []string{
 		"BEGIN:VCALENDAR",
 		"VERSION:2.0",
@@ -65,7 +70,7 @@ func (c Calendar) render(settings Settings, stamp time.Time) ([]byte, error) {
 		"CALSCALE:GREGORIAN",
 		"METHOD:PUBLISH",
 		"BEGIN:VEVENT",
-		"UID:event-" + c.EventID.String() + "@" + settings.MessageDomain,
+		"UID:" + uidPrefix + c.EventID.String() + "@" + settings.MessageDomain,
 		fmt.Sprintf("SEQUENCE:%d", c.Sequence),
 		"DTSTAMP:" + stamp.UTC().Format("20060102T150405Z"),
 		"DTSTART:" + c.Start.UTC().Format("20060102T150405Z"),
