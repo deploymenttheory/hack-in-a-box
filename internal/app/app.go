@@ -33,6 +33,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
+	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -118,6 +119,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Mentors:        mentors.Service{Pool: pool},
 		Rubrics:        rubric.Service{Pool: pool},
 		Observations:   observations.Service{Pool: pool},
+		Scorecards:     scorecards.Service{Pool: pool},
 		Content:        content.Service{Pool: pool, Storage: storage},
 		Submissions:    submissions.Service{Pool: pool},
 		Attendance:     attendance.Service{Pool: pool},
