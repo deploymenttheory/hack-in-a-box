@@ -59,6 +59,16 @@ type CommunicationApproval struct {
 	CreatedAt time.Time
 }
 
+type CommunicationCampaignVersion struct {
+	EventID   uuid.UUID
+	ID        uuid.UUID
+	Version   int64
+	Document  []byte
+	ActorID   uuid.UUID
+	Reason    string
+	CreatedAt time.Time
+}
+
 type CommunicationFact struct {
 	EventID    uuid.UUID
 	ID         uuid.UUID
@@ -78,6 +88,19 @@ type CommunicationPreview struct {
 	AudienceVersion int64
 	ActorID         uuid.UUID
 	Snapshot        []byte
+	CreatedAt       time.Time
+}
+
+type CommunicationTestRequest struct {
+	EventID         uuid.UUID
+	ID              uuid.UUID
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	ActorID         uuid.UUID
+	Channel         string
+	Snapshot        []byte
+	Fingerprint     string
+	Reason          string
 	CreatedAt       time.Time
 }
 
