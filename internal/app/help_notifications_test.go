@@ -122,6 +122,54 @@ func TestNativeHelpRuntimeRecordsSafeInboxAndRevokesActualResource(t *testing.T)
 	if err != nil || len(hidden.Items) != 0 || hidden.Unread != 0 {
 		t.Fatal("cross-team preview leak", err)
 	}
+
+	// Native followups must work with no automation binding and no provider call.
+	clock := detail.Request.RequestedAt.Add(time.Minute)
+	runtime.Help.Clock = func() time.Time { return clock }
+	assertNativeCounts := func(want int) {
+		t.Helper()
+		var intents, bindings int
+		if err := pool.QueryRow(ctx, "SELECT count(*) FROM inbox_notifications WHERE event_id=$1 AND recipient_id=$2", eventID, member.ID).
+			Scan(&intents); err != nil {
+			t.Fatal(err)
+		}
+		if err := pool.QueryRow(ctx, "SELECT count(*) FROM communication_automation_versions WHERE event_id=$1", eventID).
+			Scan(&bindings); err != nil {
+			t.Fatal(err)
+		}
+		if intents != want || bindings != 0 {
+			t.Fatalf("native intent count%d want%d; optional bindings%d", intents, want, bindings)
+		}
+	}
+	if err = runtime.Help.Maintain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	assertNativeCounts(1)
+	clock = clock.Add(16 * time.Minute)
+	if _, err = pool.Exec(
+		ctx,
+		"UPDATE events SET stage='archived',writes_allowed=false WHERE id=$1",
+		eventID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err = runtime.Help.Maintain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	assertNativeCounts(1)
+	if _, err = pool.Exec(
+		ctx,
+		"UPDATE events SET stage='draft',writes_allowed=true WHERE id=$1",
+		eventID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	for range 2 {
+		if err = runtime.Help.Maintain(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	assertNativeCounts(2)
 	if _, err = pool.Exec(
 		ctx,
 		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",

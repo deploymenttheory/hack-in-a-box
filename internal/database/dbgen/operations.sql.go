@@ -43,7 +43,7 @@ func (q *Queries) CancelOperation(ctx context.Context, id uuid.UUID) (int64, err
 const claimOperation = `-- name: ClaimOperation :one
 UPDATE operations SET state = 'running', lease_token = $2, lease_until = $3,
 attempts = attempts + 1, updated_at = now()
-WHERE id = $1 AND state = 'pending' AND approved AND NOT cancelled AND due_at <= now() RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at
+WHERE id = $1 AND state = 'pending' AND approved AND NOT cancelled AND due_at <= now() RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id
 `
 
 type ClaimOperationParams struct {
@@ -71,12 +71,13 @@ func (q *Queries) ClaimOperation(ctx context.Context, arg ClaimOperationParams) 
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
 }
 
 const expiredOperations = `-- name: ExpiredOperations :many
-SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at FROM operations WHERE state = 'running' AND lease_until < now() FOR UPDATE SKIP LOCKED
+SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id FROM operations WHERE state = 'running' AND lease_until < now() FOR UPDATE SKIP LOCKED
 `
 
 func (q *Queries) ExpiredOperations(ctx context.Context) ([]Operation, error) {
@@ -104,6 +105,7 @@ func (q *Queries) ExpiredOperations(ctx context.Context) ([]Operation, error) {
 			&i.Revision,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.RetainedOccurrenceID,
 		); err != nil {
 			return nil, err
 		}
@@ -152,7 +154,7 @@ const insertOperation = `-- name: InsertOperation :one
 INSERT INTO operations(event_id, operation_key, kind, target_id, due_at, approved)
 VALUES ($1,$2,$3,$4,$5,$6)
 ON CONFLICT (event_id, operation_key) DO UPDATE SET operation_key = EXCLUDED.operation_key
-RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at
+RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id
 `
 
 type InsertOperationParams struct {
@@ -190,6 +192,7 @@ func (q *Queries) InsertOperation(ctx context.Context, arg InsertOperationParams
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
 }
@@ -222,7 +225,7 @@ func (q *Queries) JobMetrics(ctx context.Context) (JobMetricsRow, error) {
 }
 
 const lockOperation = `-- name: LockOperation :one
-SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at FROM operations WHERE id = $1 FOR UPDATE
+SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id FROM operations WHERE id = $1 FOR UPDATE
 `
 
 func (q *Queries) LockOperation(ctx context.Context, id uuid.UUID) (Operation, error) {
@@ -244,12 +247,13 @@ func (q *Queries) LockOperation(ctx context.Context, id uuid.UUID) (Operation, e
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
 }
 
 const operation = `-- name: Operation :one
-SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at FROM operations WHERE id = $1
+SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id FROM operations WHERE id = $1
 `
 
 func (q *Queries) Operation(ctx context.Context, id uuid.UUID) (Operation, error) {
@@ -271,12 +275,13 @@ func (q *Queries) Operation(ctx context.Context, id uuid.UUID) (Operation, error
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
 }
 
 const pendingOperations = `-- name: PendingOperations :many
-SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at FROM operations WHERE state = 'pending' AND approved AND NOT cancelled ORDER BY due_at
+SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id FROM operations WHERE state = 'pending' AND approved AND NOT cancelled ORDER BY due_at
 `
 
 func (q *Queries) PendingOperations(ctx context.Context) ([]Operation, error) {
@@ -304,6 +309,7 @@ func (q *Queries) PendingOperations(ctx context.Context) ([]Operation, error) {
 			&i.Revision,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.RetainedOccurrenceID,
 		); err != nil {
 			return nil, err
 		}
@@ -329,9 +335,26 @@ func (q *Queries) RecordReconciliation(ctx context.Context, arg RecordReconcilia
 	return err
 }
 
+const retainedCommunicationOccurrence = `-- name: RetainedCommunicationOccurrence :one
+SELECT retained_communication_occurrence($1::uuid,$2::uuid,$3::timestamptz)::boolean AS allowed
+`
+
+type RetainedCommunicationOccurrenceParams struct {
+	EventID      uuid.UUID
+	OccurrenceID uuid.UUID
+	AtTime       time.Time
+}
+
+func (q *Queries) RetainedCommunicationOccurrence(ctx context.Context, arg RetainedCommunicationOccurrenceParams) (bool, error) {
+	row := q.db.QueryRow(ctx, retainedCommunicationOccurrence, arg.EventID, arg.OccurrenceID, arg.AtTime)
+	var allowed bool
+	err := row.Scan(&allowed)
+	return allowed, err
+}
+
 const setApproval = `-- name: SetApproval :one
 UPDATE operations SET approved = $2, revision = revision + 1, updated_at = now()
-WHERE id = $1 AND revision = $3 AND state = 'pending' AND NOT cancelled RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at
+WHERE id = $1 AND revision = $3 AND state = 'pending' AND NOT cancelled RETURNING id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id
 `
 
 type SetApprovalParams struct {
@@ -359,6 +382,24 @@ func (q *Queries) SetApproval(ctx context.Context, arg SetApprovalParams) (Opera
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
+}
+
+const setRetainedOccurrence = `-- name: SetRetainedOccurrence :execrows
+UPDATE operations SET retained_occurrence_id=$2 WHERE id=$1 AND (retained_occurrence_id IS NULL OR retained_occurrence_id=$2)
+`
+
+type SetRetainedOccurrenceParams struct {
+	ID                   uuid.UUID
+	RetainedOccurrenceID *uuid.UUID
+}
+
+func (q *Queries) SetRetainedOccurrence(ctx context.Context, arg SetRetainedOccurrenceParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setRetainedOccurrence, arg.ID, arg.RetainedOccurrenceID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

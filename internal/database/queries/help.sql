@@ -55,3 +55,8 @@ INSERT INTO policy_resources(event_id,id,kind) VALUES($1,$2,'help') ON CONFLICT 
 SELECT r.id AS request_id,r.revision,h.occurred_at,h.action FROM help_requests r JOIN help_transitions h ON h.event_id=r.event_id AND h.request_id=r.id AND h.revision=r.revision
 WHERE r.event_id=sqlc.arg(event_id) AND EXISTS(SELECT 1 FROM policy_resources p WHERE p.event_id=r.event_id AND p.id=r.id AND p.kind='help') AND r.id>sqlc.arg(after_id) AND (sqlc.narg(requested_id)::uuid IS NULL OR r.id=sqlc.narg(requested_id)::uuid)
 ORDER BY r.id LIMIT sqlc.arg(page_size);
+
+-- name: HelpMaintenanceEvents :many
+SELECT DISTINCT r.event_id FROM help_requests r JOIN events e ON e.id=r.event_id
+WHERE r.event_id>$1 AND r.status IN ('waiting','claimed') AND e.writes_allowed
+ORDER BY r.event_id LIMIT 50;

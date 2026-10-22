@@ -428,6 +428,7 @@ func TestInboxReleasedResourceWithdrawnAndFutureOwnersUnavailable(t *testing.T) 
 }
 
 type syntheticScope struct {
+	review    *communications.ScopeReview
 	recipient uuid.UUID
 	binding   string
 }
@@ -442,6 +443,7 @@ func (p syntheticScope) ResolveInTransaction(
 ) (communications.ScopeAudience, error) {
 	return communications.ScopeAudience{
 		Binding:      p.binding,
+		Review:       p.review,
 		RecipientIDs: []uuid.UUID{p.recipient},
 	}, nil
 }
@@ -496,6 +498,43 @@ func TestInboxScopedOccurrencesDeduplicateIndependentlyAndIntersectCurrentAudien
 	f.service.ScopePolicy = syntheticScope{recipient: f.person.ID, binding: "changed-intent"}
 	if _, err = deliver(); !errors.Is(err, access.ErrConflict) {
 		t.Fatalf("changed scope binding silently reused: %v", err)
+	}
+	for _, proof := range []*communications.ScopeReview{
+		{OccurrenceID: uuid.New(), Revision: 1, Binding: "changed-intent"},
+		{OccurrenceID: scope.OccurrenceID, Revision: 1, Binding: "wrong-binding"},
+		{OccurrenceID: scope.OccurrenceID, Revision: 0, Binding: "changed-intent"},
+		{OccurrenceID: scope.OccurrenceID, Revision: -1, Binding: "changed-intent"},
+	} {
+		f.service.ScopePolicy = syntheticScope{
+			recipient: f.person.ID,
+			binding:   "changed-intent",
+			review:    proof,
+		}
+		if _, err = deliver(); !errors.Is(err, access.ErrConflict) {
+			t.Fatalf("invalid review proof allowed immutable reuse: %+v %v", proof, err)
+		}
+	}
+	f.service.ScopePolicy = syntheticScope{
+		recipient: f.person.ID,
+		binding:   "changed-intent",
+		review: &communications.ScopeReview{
+			OccurrenceID: scope.OccurrenceID,
+			Revision:     1,
+			Binding:      "changed-intent",
+		},
+	}
+	if count, reviewErr := deliver(); reviewErr != nil || count != 1 {
+		t.Fatalf(
+			"explicit validated review could not retain identical identity: %d %v",
+			count,
+			reviewErr,
+		)
+	}
+	var retainedBinding string
+	if err = f.pool.QueryRow(ctx, `SELECT scope_binding FROM inbox_notifications WHERE occurrence_id=$1`, scope.OccurrenceID).
+		Scan(&retainedBinding); err != nil ||
+		retainedBinding != "occurrence-v1" {
+		t.Fatalf("review rewrote historical binding: %q %v", retainedBinding, err)
 	}
 	scope.OccurrenceID = uuid.New()
 	f.service.ScopePolicy = syntheticScope{

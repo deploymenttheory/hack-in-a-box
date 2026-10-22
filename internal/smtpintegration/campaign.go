@@ -27,9 +27,10 @@ import (
 type (
 	CampaignHandler  struct{ Service *Service }
 	campaignSnapshot struct {
-		Subject   string               `json:"subject"`
-		PlainText string               `json:"plain_text"`
-		Message   maildelivery.Message `json:"message"`
+		Subject       string                        `json:"subject"`
+		PlainText     string                        `json:"plain_text"`
+		Message       maildelivery.Message          `json:"message"`
+		ScopeApproval *communications.ScopeApproval `json:"scope_approval,omitempty"`
 	}
 )
 
@@ -132,11 +133,13 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 	if !s.configured() || s.Campaigns == nil || s.Campaigns.Jobs == nil {
 		return QueueReport{}, mailcontact.ErrUnavailable
 	}
-	approved, err := s.Campaigns.ResolveApprovedPersonalCampaignInTransaction(
+	approved, err := s.resolveCampaign(
 		ctx,
 		tx,
 		eventID,
 		campaignID,
+		expectedVersion,
+		scope,
 		uuid.Nil,
 	)
 	if err != nil {
@@ -208,18 +211,21 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 			continue
 		}
 
-		op, err := s.Campaigns.Jobs.Enqueue(
-			ctx,
-			tx,
-			dbgen.InsertOperationParams{
-				EventID:      eventID,
-				TargetID:     target,
-				Kind:         "communication_campaign_smtp",
-				OperationKey: key,
-				DueAt:        approved.DueAt,
-				Approved:     true,
-			},
-		)
+		input := dbgen.InsertOperationParams{
+			EventID:      eventID,
+			TargetID:     target,
+			Kind:         "communication_campaign_smtp",
+			OperationKey: key,
+			DueAt:        approved.DueAt,
+			Approved:     true,
+		}
+		var op dbgen.Operation
+		if audience.AllowArchived {
+			op, err = s.Campaigns.Jobs.EnqueueRetained(ctx, tx, input, scope.OccurrenceID)
+		} else {
+			op, err = s.Campaigns.Jobs.Enqueue(ctx, tx, input)
+		}
+
 		if err != nil {
 			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
@@ -249,9 +255,10 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 		}
 		encoded, err := json.Marshal(
 			campaignSnapshot{
-				Subject:   recipient.Subject,
-				PlainText: recipient.Body,
-				Message:   message,
+				Subject:       recipient.Subject,
+				PlainText:     recipient.Body,
+				Message:       message,
+				ScopeApproval: approved.ScopeApproval,
 			},
 		)
 		if err != nil {
@@ -341,11 +348,13 @@ func (h CampaignHandler) prepare(
 			(audience.Binding != row.OccurrenceBinding || !slices.Contains(audience.RecipientIDs, row.PersonID)) {
 			return access.ErrForbidden
 		}
-		approved, err := s.Campaigns.ResolveApprovedPersonalCampaignInTransaction(
+		approved, err := s.resolveCampaign(
 			ctx,
 			tx,
 			d.EventID,
 			row.CampaignID,
+			row.CampaignVersion,
+			communications.DeliveryScope{OccurrenceID: row.OccurrenceID},
 			row.PersonID,
 		)
 		if err != nil {
@@ -384,8 +393,7 @@ func (h CampaignHandler) prepare(
 			return fmt.Errorf("prepare SMTP campaign: %w", err)
 		}
 		recipient := approved.Preview.Recipients[0]
-		if recipient.PersonID != row.PersonID || recipient.Subject != snapshot.Subject ||
-			recipient.Body != snapshot.PlainText {
+		if !campaignProjectionMatches(snapshot, approved.ScopeApproval, recipient, row.PersonID) {
 			return access.ErrConflict
 		}
 		prior = outcome(row.State)

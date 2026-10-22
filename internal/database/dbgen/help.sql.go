@@ -78,6 +78,32 @@ func (q *Queries) HelpCommand(ctx context.Context, arg HelpCommandParams) (HelpC
 	return i, err
 }
 
+const helpMaintenanceEvents = `-- name: HelpMaintenanceEvents :many
+SELECT DISTINCT r.event_id FROM help_requests r JOIN events e ON e.id=r.event_id
+WHERE r.event_id>$1 AND r.status IN ('waiting','claimed') AND e.writes_allowed
+ORDER BY r.event_id LIMIT 50
+`
+
+func (q *Queries) HelpMaintenanceEvents(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, helpMaintenanceEvents, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var event_id uuid.UUID
+		if err := rows.Scan(&event_id); err != nil {
+			return nil, err
+		}
+		items = append(items, event_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const helpNotificationSourcesPage = `-- name: HelpNotificationSourcesPage :many
 SELECT r.id AS request_id,r.revision,h.occurred_at,h.action FROM help_requests r JOIN help_transitions h ON h.event_id=r.event_id AND h.request_id=r.id AND h.revision=r.revision
 WHERE r.event_id=$1 AND EXISTS(SELECT 1 FROM policy_resources p WHERE p.event_id=r.event_id AND p.id=r.id AND p.kind='help') AND r.id>$2 AND ($3::uuid IS NULL OR r.id=$3::uuid)

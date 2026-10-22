@@ -112,8 +112,9 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Help:           communicationRuntime.Help,
 		Clarifications: *communicationRuntime.Clarifications,
 		Presentation:   presentation.Service{Pool: pool},
-		Communications: *communicationRuntime.Communications,
+		Automation:     communicationRuntime.Automation,
 		Inbox:          *communicationRuntime.Inbox,
+		Communications: *communicationRuntime.Communications,
 		MailContacts:   communicationRuntime.MailContacts,
 		SMTP:           communicationRuntime.SMTP,
 		TeamsWorkflow:  communicationRuntime.Teams,
@@ -189,7 +190,20 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	}
 	worker := communicationRuntime.Jobs
 	logger.Info("worker started", "jobs_enabled", true)
-	worker.FastMaintenance = (content.Service{Pool: pool, Storage: storage}).Maintain
+	worker.FastMaintenance = func(ctx context.Context) error {
+		// Guarded common publication has a bounded release window. Run it
+		// before support sweeps so their work or errors cannot delay release.
+		if err := (content.Service{Pool: pool, Storage: storage}).Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain actual content release: %w", err)
+		}
+		if err := communicationRuntime.Help.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain native help sources: %w", err)
+		}
+		if err := communicationRuntime.Automation.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain reviewed communication occurrences: %w", err)
+		}
+		return nil
+	}
 	worker.Maintenance = func(ctx context.Context) error {
 		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain submission outcomes: %w", err)

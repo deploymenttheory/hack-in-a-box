@@ -20,10 +20,13 @@ type DeliveryScope struct {
 // Binding identifies immutable occurrence/approval/source intent; it excludes
 // provider secrets and private content. Broadcast is false for private triggers.
 type ScopeAudience struct {
-	Binding       string
-	RecipientIDs  []uuid.UUID
-	Broadcast     bool
-	AllowArchived bool
+	Binding         string
+	RecipientIDs    []uuid.UUID
+	Broadcast       bool
+	RequireComplete bool
+	AllowArchived   bool
+	Approval        *ScopeApproval
+	Review          *ScopeReview
 }
 
 // ScopePolicy must lock the event in tx and recheck the current occurrence,
@@ -41,4 +44,31 @@ type ScopePolicy interface {
 		int64,
 		DeliveryScope,
 	) (ScopeAudience, error)
+}
+
+// ScopeApproval names an immutable typed lifecycle approval. It never changes
+// the approval status of the generic campaign draft.
+type ScopeApproval struct {
+	Kind          string    `json:"kind"`
+	ID            uuid.UUID `json:"id"`
+	Binding       string    `json:"binding"`
+	SourceID      uuid.UUID `json:"source_id"`
+	SourceVersion int64     `json:"source_version"`
+}
+
+// SameScopeApproval compares immutable typed provenance without pointer identity.
+func SameScopeApproval(left, right *ScopeApproval) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+	return *left == *right
+}
+
+// ScopeReview is internal proof of a current explicit review generation. The
+// canonical scope owner derives it from persisted state; no HTTP input supplies it.
+// It permits reuse of an identical historical inbox identity, never rewriting it.
+type ScopeReview struct {
+	OccurrenceID uuid.UUID
+	Revision     int64
+	Binding      string
 }

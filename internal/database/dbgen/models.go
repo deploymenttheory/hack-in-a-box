@@ -123,6 +123,38 @@ type CommunicationApproval struct {
 	CreatedAt time.Time
 }
 
+type CommunicationAutomationHistory struct {
+	ID           uuid.UUID
+	EventID      uuid.UUID
+	OccurrenceID *uuid.UUID
+	BindingID    *uuid.UUID
+	ActorID      *uuid.UUID
+	Action       string
+	Reason       string
+	CreatedAt    time.Time
+}
+
+type CommunicationAutomationSetting struct {
+	EventID   uuid.UUID
+	Paused    bool
+	Revision  int64
+	ActorID   uuid.UUID
+	Reason    string
+	UpdatedAt time.Time
+}
+
+type CommunicationAutomationVersion struct {
+	EventID         uuid.UUID
+	ID              uuid.UUID
+	Version         int64
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	Document        []byte
+	ActorID         uuid.UUID
+	Reason          string
+	CreatedAt       time.Time
+}
+
 type CommunicationCampaignVersion struct {
 	EventID   uuid.UUID
 	ID        uuid.UUID
@@ -143,6 +175,28 @@ type CommunicationFact struct {
 	Status     string
 }
 
+type CommunicationOccurrence struct {
+	ReviewRevision int64
+	ChannelReports []byte
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	BindingID      uuid.UUID
+	BindingVersion int64
+	SourceKind     string
+	SourceID       uuid.UUID
+	SourceRevision int64
+	SourceKey      string
+	DueAt          time.Time
+	Deadline       time.Time
+	ScopeBinding   string
+	State          string
+	Reason         string
+	ReviewUntil    pgtype.Timestamptz
+	OperationID    *uuid.UUID
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type CommunicationPreview struct {
 	EventID         uuid.UUID
 	ID              uuid.UUID
@@ -152,6 +206,22 @@ type CommunicationPreview struct {
 	AudienceVersion int64
 	ActorID         uuid.UUID
 	Snapshot        []byte
+	CreatedAt       time.Time
+}
+
+type CommunicationPublicationApproval struct {
+	Approved        bool
+	PreviewPlanID   *uuid.UUID
+	EventID         uuid.UUID
+	ID              uuid.UUID
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	SourceID        uuid.UUID
+	SourceVersion   int64
+	PreviewID       uuid.UUID
+	ActorID         uuid.UUID
+	Document        []byte
+	Reason          string
 	CreatedAt       time.Time
 }
 
@@ -537,6 +607,7 @@ type InboxNotification struct {
 	Format        string
 	CreatedAt     time.Time
 	ReadAt        pgtype.Timestamptz
+	ScopeApproval []byte
 }
 
 type LoginAttempt struct {
@@ -645,21 +716,22 @@ type MentorTeamStatusVersion struct {
 }
 
 type Operation struct {
-	ID           uuid.UUID
-	EventID      uuid.UUID
-	OperationKey string
-	Kind         string
-	TargetID     uuid.UUID
-	DueAt        time.Time
-	Approved     bool
-	Cancelled    bool
-	State        string
-	Attempts     int32
-	LeaseUntil   pgtype.Timestamptz
-	LeaseToken   *uuid.UUID
-	Revision     int64
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID                   uuid.UUID
+	EventID              uuid.UUID
+	OperationKey         string
+	Kind                 string
+	TargetID             uuid.UUID
+	DueAt                time.Time
+	Approved             bool
+	Cancelled            bool
+	State                string
+	Attempts             int32
+	LeaseUntil           pgtype.Timestamptz
+	LeaseToken           *uuid.UUID
+	Revision             int64
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	RetainedOccurrenceID *uuid.UUID
 }
 
 type OperationalProfile struct {
@@ -949,6 +1021,7 @@ type SmtpCampaignMessage struct {
 	ReceiptCode       string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	ScopeApproval     []byte
 }
 
 type SmtpCampaignOmission struct {
@@ -1101,6 +1174,9 @@ type TeamsWorkflowDelivery struct {
 	PreviewFingerprint pgtype.Text
 	RequestID          uuid.UUID
 	CreatedAt          time.Time
+	OccurrenceID       *uuid.UUID
+	ScopeBinding       string
+	ScopeApproval      []byte
 }
 
 type TeamsWorkflowReceipt struct {

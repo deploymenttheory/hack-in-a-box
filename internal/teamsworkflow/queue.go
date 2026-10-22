@@ -2,6 +2,7 @@ package teamsworkflow
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
@@ -122,43 +124,94 @@ func (s Service) QueueApprovedInTransaction(
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("resolve Teams broadcast: %w", err)
 	}
+	id, _, err := s.queueApprovedBroadcast(
+		ctx,
+		tx,
+		eventID,
+		campaignID,
+		expectedVersion,
+		message,
+		communications.DeliveryScope{},
+		communications.ScopeAudience{},
+	)
+	return id, err
+}
+
+func (s Service) queueApprovedBroadcast(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	expectedVersion int64,
+	message communications.BroadcastMessage,
+	scope communications.DeliveryScope,
+	audience communications.ScopeAudience,
+) (uuid.UUID, bool, error) {
 	if message.CampaignVersion != expectedVersion {
-		return uuid.Nil, access.ErrConflict
+		return uuid.Nil, false, access.ErrConflict
 	}
-	if _, err = card(message.Subject, message.PlainText, uuid.New()); err != nil {
-		return uuid.Nil, access.ErrInvalid
+	if _, err := card(message.Subject, message.PlainText, uuid.New()); err != nil {
+		return uuid.Nil, false, access.ErrInvalid
 	}
 	q := dbgen.New(tx)
-	existing, err := q.TeamsWorkflowCampaignDelivery(
-		ctx,
-		dbgen.TeamsWorkflowCampaignDeliveryParams{
-			EventID:         eventID,
-			CampaignID:      &campaignID,
-			CampaignVersion: pgtype.Int8{Int64: message.CampaignVersion, Valid: true},
-		},
-	)
+	var existing dbgen.TeamsWorkflowDelivery
+	var err error
+	if scope.OccurrenceID == uuid.Nil {
+		existing, err = q.TeamsWorkflowCampaignDelivery(
+			ctx,
+			dbgen.TeamsWorkflowCampaignDeliveryParams{
+				EventID:         eventID,
+				CampaignID:      &campaignID,
+				CampaignVersion: pgtype.Int8{Int64: message.CampaignVersion, Valid: true},
+			},
+		)
+	} else {
+		existing, err = q.TeamsWorkflowOccurrenceDelivery(
+			ctx,
+			dbgen.TeamsWorkflowOccurrenceDeliveryParams{
+				EventID:      eventID,
+				OccurrenceID: &scope.OccurrenceID,
+			},
+		)
+	}
+
 	if err == nil {
-		return existing.OperationID, nil
+		if existing.CampaignID == nil || *existing.CampaignID != campaignID ||
+			existing.CampaignVersion.Int64 != expectedVersion {
+			return uuid.Nil, false, access.ErrConflict
+		}
+		if existing.ScopeBinding != audience.Binding {
+			if guardErr := s.checkSettled(ctx, q, existing); guardErr != nil {
+				return uuid.Nil, false, guardErr
+			}
+		}
+		return existing.OperationID, false, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
-		return uuid.Nil, fmt.Errorf("find Teams campaign operation: %w", err)
+		return uuid.Nil, false, fmt.Errorf("find Teams campaign operation: %w", err)
 	}
 	connection, err := q.TeamsWorkflowConnection(ctx, eventID)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("read Teams broadcast connection: %w", err)
+		return uuid.Nil, false, fmt.Errorf("read Teams broadcast connection: %w", err)
 	}
 	current := revision(connection.ID, connection.Version)
 	if !connection.Active || message.Approval.ChannelRevisions["teams"] != current {
-		return uuid.Nil, access.ErrConflict
+		return uuid.Nil, false, access.ErrConflict
 	}
 	if _, err = s.open(connection); err != nil {
-		return uuid.Nil, secretbox.ErrUnavailable
+		return uuid.Nil, false, secretbox.ErrUnavailable
 	}
 	previewID := message.Approval.PreviewID
-	return s.enqueue(
+	proof, err := json.Marshal(message.ScopeApproval)
+	if err != nil {
+		return uuid.Nil, false, fmt.Errorf("retain Teams scoped approval: %w", err)
+	}
+	id, err := s.enqueue(
 		ctx,
 		tx,
 		dbgen.InsertTeamsWorkflowDeliveryParams{
+			OccurrenceID:       optionalOccurrence(scope),
+			ScopeBinding:       audience.Binding,
+			ScopeApproval:      proof,
 			EventID:            eventID,
 			ID:                 uuid.New(),
 			Kind:               "broadcast",
@@ -174,6 +227,7 @@ func (s Service) QueueApprovedInTransaction(
 			CreatedAt:          s.now(),
 		},
 	)
+	return id, true, err
 }
 
 func (s Service) QueueBroadcast(
@@ -233,6 +287,9 @@ func (s Service) enqueue(
 		return uuid.Nil, fmt.Errorf("enqueue Teams operation: %w", err)
 	}
 	input.OperationID = op.ID
+	if len(input.ScopeApproval) == 0 {
+		input.ScopeApproval = []byte("null")
+	}
 	if err = dbgen.New(tx).InsertTeamsWorkflowDelivery(ctx, input); err != nil {
 		return uuid.Nil, fmt.Errorf("retain Teams delivery intent: %w", err)
 	}

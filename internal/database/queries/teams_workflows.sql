@@ -19,11 +19,11 @@ SELECT * FROM teams_workflow_deliveries WHERE event_id=$1 AND id=$2;
 SELECT * FROM teams_workflow_deliveries WHERE event_id=$1 AND request_id=$2;
 
 -- name: TeamsWorkflowCampaignDelivery :one
-SELECT * FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3;
+SELECT * FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3 AND occurrence_id IS NULL;
 
 -- name: InsertTeamsWorkflowDelivery :exec
-INSERT INTO teams_workflow_deliveries(event_id,id,operation_id,kind,connection_id,connection_version,channel_revision,actor_id,campaign_id,campaign_version,preview_id,preview_fingerprint,request_id,created_at)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14);
+INSERT INTO teams_workflow_deliveries(event_id,id,operation_id,kind,connection_id,connection_version,channel_revision,actor_id,campaign_id,campaign_version,preview_id,preview_fingerprint,request_id,created_at,occurrence_id,scope_binding,scope_approval)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17);
 
 -- name: TeamsWorkflowLatestAttempt :one
 SELECT a.*,r.outcome,r.http_status,r.reason,r.retry_at,r.recorded_at FROM teams_workflow_attempts a
@@ -47,3 +47,6 @@ LEFT JOIN LATERAL (
  WHERE a.event_id=d.event_id AND a.delivery_id=d.id ORDER BY a.attempt_number DESC LIMIT 1
 ) r ON true
 WHERE d.event_id=$1 ORDER BY d.created_at DESC,d.id DESC LIMIT 100;
+
+-- name: TeamsWorkflowOccurrenceDelivery :one
+SELECT * FROM teams_workflow_deliveries WHERE event_id=$1 AND occurrence_id=$2;

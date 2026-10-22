@@ -766,6 +766,47 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/LogisticsPage'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/communications/automation:
+    get:
+      operationId: getCommunicationAutomation
+      parameters:
+        - $ref: '#/components/parameters/EventID'
+        - in: query
+          name: bindings_after
+          description: Exclusive UUID cursor for current bindings; independent of occurrences_after.
+          schema: {type: string, format: uuid}
+        - in: query
+          name: occurrences_after
+          description: Exclusive UUID cursor for occurrences; retain the final cursor of an exhausted collection while paging the other.
+          schema: {type: string, format: uuid}
+        - in: query
+          name: limit
+          schema: {type: integer, minimum: 1, maximum: 200, default: 50}
+      responses:
+        '200':
+          description: Current organiser-only automation bindings, pause and durable review states.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AutomationPage'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: changeCommunicationAutomation
+      parameters:
+        - $ref: '#/components/parameters/EventID'
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AutomationCommand'}
+      responses:
+        '200':
+          description: Explicit reviewed automation change; never a content-publication or external-send operation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AutomationChange'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/teams-workflow:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -7150,3 +7191,107 @@ components:
       properties:
         id: {type: string, format: uuid}
         name: {type: string}
+    AutomationDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, campaign_id, campaign_version, trigger, maximum_lateness_seconds, retain_after_archive]
+      properties:
+        id: {type: string, format: uuid}
+        campaign_id: {type: string, format: uuid}
+        campaign_version: {type: integer, format: int64, minimum: 1}
+        trigger: {type: string, enum: [scheduled, preparation.reminder, follow_up, facilitator.selected, registration.offer, registration.place_changed, teams.published, mentors.published, challenge.released, brief.released, event.rescheduled, help.updated, clarification.published, rubric.published, results.published, outcome.follow_up]}
+        source_id: {type: string, format: uuid, nullable: true}
+        source_version: {type: integer, format: int64, minimum: 0}
+        maximum_lateness_seconds: {type: integer, format: int64, minimum: 1, maximum: 86400, description: Explicit reviewed lateness window; later work requires individual review.}
+        retain_after_archive: {type: boolean, description: Only an explicitly retained open outcome follow-up may opt in.}
+        retain_until: {type: string, format: date-time, nullable: true}
+    AutomationBinding:
+      type: object
+      additionalProperties: false
+      required: [definition, version, campaign_approval, actor_id, approved_at, cancelled, publication_approval_id]
+      properties:
+        definition: {$ref: '#/components/schemas/AutomationDefinition'}
+        version: {type: integer, format: int64, minimum: 1}
+        campaign_approval: {type: string}
+        actor_id: {type: string, format: uuid}
+        approved_at: {type: string, format: date-time, nullable: true}
+        due_at: {type: string, format: date-time}
+        cancelled: {type: boolean}
+        publication_approval_id: {type: string, format: uuid, nullable: true}
+    AutomationOccurrence:
+      type: object
+      additionalProperties: false
+      required: [id, binding_id, binding_version, source_kind, source_id, source_revision, due_at, deadline, state, reason, review_until, review_revision, channel_reports]
+      properties:
+        id: {type: string, format: uuid}
+        binding_id: {type: string, format: uuid}
+        binding_version: {type: integer, format: int64, minimum: 1}
+        source_kind: {type: string}
+        source_id: {type: string, format: uuid}
+        source_revision: {type: integer, format: int64, minimum: 1}
+        due_at: {type: string, format: date-time}
+        deadline: {type: string, format: date-time}
+        state: {type: string, enum: [pending, paused, missed, blocked, queued, partially_queued, cancelled]}
+        reason: {type: string}
+        review_until: {type: string, format: date-time, nullable: true}
+        review_revision: {type: integer, format: int64, minimum: 0}
+        channel_reports:
+          type: object
+          additionalProperties: {$ref: '#/components/schemas/AutomationChannelReport'}
+    AutomationChannelReport:
+      type: object
+      additionalProperties: false
+      required: [queued, unavailable, local_persisted, preexisting]
+      description: Local dispatch evidence only. Queued is newly persisted provider intent; accepted means provider acceptance, never proof of human receipt.
+      properties:
+        queued: {type: integer, minimum: 0}
+        unavailable: {type: integer, minimum: 0}
+        local_persisted: {type: integer, minimum: 0}
+        preexisting:
+          type: object
+          additionalProperties: {type: integer, minimum: 0}
+    AutomationPage:
+      type: object
+      additionalProperties: false
+      required: [revision, paused, bindings, occurrences, next_binding_cursor, next_occurrence_cursor]
+      properties:
+        revision: {type: integer, format: int64}
+        paused: {type: boolean}
+        bindings: {type: array, items: {$ref: '#/components/schemas/AutomationBinding'}}
+        occurrences: {type: array, items: {$ref: '#/components/schemas/AutomationOccurrence'}}
+        next_binding_cursor: {type: string, format: uuid, nullable: true}
+        next_occurrence_cursor: {type: string, format: uuid, nullable: true}
+    PublicationPlanPreview:
+      type: object
+      additionalProperties: false
+      required: [plan_id, source_id, source_version, subject_template, body_template, deferred_variables, eligible_recipients, generic_campaign_approved]
+      properties:
+        plan_id: {type: string, format: uuid}
+        source_id: {type: string, format: uuid}
+        source_version: {type: integer, format: int64, minimum: 1}
+        subject_template: {type: string}
+        body_template: {type: string}
+        deferred_variables: {type: array, items: {type: string}, description: Values deliberately unresolved until actual successful guarded source publication.}
+        eligible_recipients: {type: integer, minimum: 0}
+        generic_campaign_approved: {type: boolean, enum: [false]}
+    AutomationCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: {type: string, enum: [save, approve, cancel, pause, resume, review_occurrence, cancel_occurrence, preview_publication, approve_publication]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        definition: {$ref: '#/components/schemas/AutomationDefinition'}
+        binding_id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 0}
+        occurrence_id: {type: string, format: uuid}
+        preview_plan_id: {type: string, format: uuid}
+    AutomationChange:
+      type: object
+      additionalProperties: false
+      required: [page, publication_preview]
+      properties:
+        page: {$ref: '#/components/schemas/AutomationPage'}
+        publication_preview:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/PublicationPlanPreview'}]

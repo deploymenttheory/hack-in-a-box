@@ -13,12 +13,13 @@ import (
 )
 
 type Service struct {
-	Pool     *pgxpool.Pool
-	Keys     *secretbox.Keyring
-	Jobs     *jobs.Service
-	Composer communications.Service
-	Now      func() time.Time
-	network  *adapter
+	ScopePolicy communications.ScopePolicy
+	Pool        *pgxpool.Pool
+	Keys        *secretbox.Keyring
+	Jobs        *jobs.Service
+	Composer    communications.Service
+	Now         func() time.Time
+	network     *adapter
 }
 
 func (s Service) now() time.Time {
