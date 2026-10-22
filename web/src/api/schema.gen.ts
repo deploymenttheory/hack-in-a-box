@@ -1293,6 +1293,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams/{team_id}/mentor-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current assigned primary/second mentors and organisers only. Formal evidence remains unavailable before the scheduled live start and actual common publication. */
+        get: operations["getMentorObservations"];
+        put?: never;
+        /** @description Current assigned mentors only. Original authors edit their own observations. Operational status changes cannot change scores. */
+        post: operations["changeMentorObservations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/mentor-observations/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getMentorObservationHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/mentor-coverage": {
         parameters: {
             query?: never;
@@ -2450,6 +2490,65 @@ export interface components {
             published: components["schemas"]["MentorAssignment"][];
             gaps: components["schemas"]["MentorGap"][];
             published_gaps: components["schemas"]["MentorGap"][];
+        };
+        MentorEvidence: {
+            category: string;
+            evidence: string;
+            outcome: string;
+            /** @description Private human reference to related feedback. Stored as inert text; it grants no access and does not publish feedback. */
+            feedback_reference?: string;
+        };
+        MentorObservation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: date-time */
+            observed_at: string;
+            /** Format: date-time */
+            changed_at: string;
+            evidence: components["schemas"]["MentorEvidence"];
+        };
+        MentorOperationalStatus: {
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** @enum {string} */
+            state: "on_track" | "at_risk" | "blocked";
+            reason: string;
+            next_action: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        MentorObservationPage: {
+            /** Format: int64 */
+            revision: number;
+            can_record: boolean;
+            can_change_status: boolean;
+            observations: components["schemas"]["MentorObservation"][];
+            status: components["schemas"]["MentorOperationalStatus"] | null;
+        };
+        MentorObservationCommand: {
+            /** @enum {string} */
+            action: "observation" | "status";
+            /** Format: uuid */
+            id?: string;
+            /** Format: int64 */
+            version: number;
+            evidence?: components["schemas"]["MentorEvidence"];
+            /** @enum {string} */
+            state?: "on_track" | "at_risk" | "blocked";
+            reason?: string;
+            next_action?: string;
+        };
+        MentorObservationHistory: {
+            observations: components["schemas"]["MentorObservation"][];
+            statuses: components["schemas"]["MentorOperationalStatus"][];
         };
         MentorCommand: {
             /** @enum {string} */
@@ -5918,6 +6017,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMentorObservations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private observations and separate operational status; never a score or participant projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorObservationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeMentorObservations: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MentorObservationCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed private view with current event revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorObservationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMentorObservationHistory: {
+        parameters: {
+            query?: {
+                observation_id?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised operational history, and the requested observation's immutable history after formal review opens. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorObservationHistory"];
                 };
             };
             default: components["responses"]["Error"];

@@ -26,6 +26,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
+	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
@@ -115,6 +116,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Credentials:    credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
 		Mentors:        mentors.Service{Pool: pool},
 		Rubrics:        rubric.Service{Pool: pool},
+		Observations:   observations.Service{Pool: pool},
 		Content:        content.Service{Pool: pool, Storage: storage},
 		Submissions:    submissions.Service{Pool: pool},
 		Attendance:     attendance.Service{Pool: pool},

@@ -442,6 +442,20 @@ type MentorConflict struct {
 	Kind         string
 }
 
+type MentorObservationVersion struct {
+	EventID           uuid.UUID
+	TeamID            uuid.UUID
+	ID                uuid.UUID
+	Version           int64
+	AuthorID          uuid.UUID
+	ObservedAt        time.Time
+	ChangedAt         time.Time
+	Category          string
+	Evidence          string
+	Outcome           string
+	FeedbackReference string
+}
+
 type MentorProfile struct {
 	EventID      uuid.UUID
 	PersonID     uuid.UUID
@@ -459,6 +473,17 @@ type MentorTeamSkill struct {
 	EventID uuid.UUID
 	TeamID  uuid.UUID
 	Skills  []string
+}
+
+type MentorTeamStatusVersion struct {
+	EventID    uuid.UUID
+	TeamID     uuid.UUID
+	Version    int64
+	ActorID    uuid.UUID
+	State      string
+	Reason     string
+	NextAction string
+	ChangedAt  time.Time
 }
 
 type Operation struct {
