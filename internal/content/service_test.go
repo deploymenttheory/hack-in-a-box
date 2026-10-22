@@ -14,7 +14,9 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
@@ -32,10 +34,14 @@ type fixture struct {
 	id, team                    uuid.UUID
 	c                           event.Configuration
 	now, due                    time.Time
+	rubric                      rubric.Reference
 }
 
 func newFixture(t *testing.T, pool *pgxpool.Pool) *fixture {
 	t.Helper()
+	if err := database.Migrate(t.Context(), pool, 31); err != nil {
+		t.Fatal(err)
+	}
 	f := &fixture{
 		t:      t,
 		pool:   pool,
@@ -100,6 +106,7 @@ func newFixture(t *testing.T, pool *pgxpool.Pool) *fixture {
 		MaxBytes:   1000,
 		EventQuota: 100000,
 	}
+	f.rubric = testdb.ApprovedRubric(t, pool, f.owner.ID, f.id)
 	return f
 }
 
@@ -121,6 +128,10 @@ func (f *fixture) row() dbgen.Event {
 
 func (f *fixture) save(old content.Page, in content.Input) content.Page {
 	f.t.Helper()
+	if in.Kind == "challenge" && in.Document.Rubric == nil {
+		ref := f.rubric
+		in.Document.Rubric = &ref
+	}
 	if old.ID == uuid.Nil {
 		old.ID = uuid.New()
 	}
