@@ -46,7 +46,42 @@ the real PostgreSQL embargo matrix and 146 desktop/mobile browser tests in #154.
 | 4 | [#67](https://github.com/deploymenttheory/hack-in-a-box/issues/67) | Mentor coverage administration | Combines #65 and #66 into workload previews, explicit gap decisions and permitted published rosters. |
 | 5 | [#68](https://github.com/deploymenttheory/hack-in-a-box/issues/68) | Allocation and publication race verification | Exercises the complete suggestion-to-publication path, withdrawals, hard freeze and mentor access changes. |
 
-The dependencies outside this batch (#59, #63 and #34) are merged. Completing
-reviewed allocation and mentor coverage supplies assignment facts used by later
-resource inventory and mentor workspaces. Readiness exports (#62) remain an open
-deliverable; sequencing them later does not mark them complete or skipped.
+Delivered in PRs #168–#171 and #174. Independent aggregate team verification
+followed in #176 / PR #178; epic #13 is closed after that evidence was reconciled.
+
+## Batch 4 — exports and reusable integration foundations
+
+| Issue | Deliverable | Why it is here |
+| --- | --- | --- |
+| [#62](https://github.com/deploymenttheory/hack-in-a-box/issues/62) | Readiness reports and printable run sheets | Completes the existing preparation/logistics/submission views using current audience checks. |
+| [#73](https://github.com/deploymenttheory/hack-in-a-box/issues/73) | Encrypted team credentials | Establishes protected storage, current-member reveal and audited operations for resource UI and GitHub App configuration. |
+| [#77](https://github.com/deploymenttheory/hack-in-a-box/issues/77) | Versioned message templates and audience resolution | Supplies safe variables, retained previews and current recipient selection for later delivery channels. |
+| [#85](https://github.com/deploymenttheory/hack-in-a-box/issues/85) | Presentation cues and protected display streams | Establishes the scoped, revocable server projection needed by MC and room-screen interfaces. |
+| [#91](https://github.com/deploymenttheory/hack-in-a-box/issues/91) | GitHub App installation configuration | Supplies encrypted App identity and trusted installation/template verification before repository provisioning. |
+
+#62, #73 and #77 are delivered in PRs #175, #177 and #179. #85 remains in
+PR #182. #91 remains in draft PR #181: deterministic provider and PostgreSQL
+checks do not replace its required live verification. The sandbox/App do not yet
+exist; the setup ticket/resource preview is awaiting approval. This sequencing
+condition does not mark #91 complete or skipped.
+
+The planning aggregate audit found an inconsistent prepublication definition
+projection after #62. Priority follow-up [#180](https://github.com/deploymenttheory/hack-in-a-box/issues/180)
+was delivered in PR #183. Epic #11 is closed after the corrected boundary and
+aggregate acceptance were verified against merged commit `2f51475`.
+
+## Batch 5 — usable resource and presentation workflows
+
+| Issue | Deliverable | Why it is here |
+| --- | --- | --- |
+| [#74](https://github.com/deploymenttheory/hack-in-a-box/issues/74) | Organiser resource inventory | Makes the merged credential storage usable for assignment, safe availability/expiry metadata and provider follow-up. |
+| [#75](https://github.com/deploymenttheory/hack-in-a-box/issues/75) | Deliberate participant reveal and copy | Connects assigned resources to the participant library with temporary visibility and no persisted secrets. |
+| [#76](https://github.com/deploymenttheory/hack-in-a-box/issues/76) | Credential confidentiality and recovery verification | Tests both completed resource interfaces and restored-key failure behavior before the content epic can close. |
+| [#86](https://github.com/deploymenttheory/hack-in-a-box/issues/86) | MC console and rehearsal controls | Uses #85's approved revision/state contract to activate cues and urgent overrides deliberately. |
+| [#87](https://github.com/deploymenttheory/hack-in-a-box/issues/87) | Branded room displays | Uses the same allowlisted stream for legible cues, safe QR destinations and honest disconnected state. |
+
+Run three implementation workstreams concurrently in isolated worktrees. #74 and
+#75 use the merged #73 contract and coordinate any shared metadata extension;
+#76 follows both. #86 and #87 require #85's final backend contract. Each task keeps
+its own PR, relevant verification and exact-head CI merge gate. A waiting live
+provider setup does not prevent unrelated ready resource or presentation work.

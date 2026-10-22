@@ -284,10 +284,8 @@ func (s Service) Change(
 		}
 
 		result := "success"
-		action := audit.CredentialChanged
-		if input.Action == "rotate" {
-			action = audit.CredentialRotated
-		}
+		action := map[string]audit.Action{"create": audit.CredentialCreated, "replace": audit.CredentialReplaced, "assign": audit.CredentialAssigned, "revoke": audit.CredentialRevoked, "metadata": audit.CredentialMetadataChanged, "rotate": audit.CredentialRotated}[input.Action]
+
 		if err = audit.Append(
 			ctx,
 			q,
