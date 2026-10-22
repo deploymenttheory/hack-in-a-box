@@ -118,6 +118,7 @@ func TestTeamRebalancingFreezeAndWithdrawalFacts(t *testing.T) {
 	) {
 		t.Fatalf("froze team below three: %v", err)
 	}
+	teamAct(t, s, f.owner.ID, f.event.ID, teams.Command{Action: "unlock", TeamID: first, Reason: "Approve reassignment of the depleted team"})
 	for _, i := range []int{1, 2} {
 		teamAct(
 			t,

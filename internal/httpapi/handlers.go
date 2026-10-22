@@ -275,16 +275,16 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		writeJSON(w, 409, body)
 		return
 	}
+	if code, message := teamConflict(err); code != "" {
+		writeError(w, r, 409, code, message)
+		return
+	}
 	status, code, message := 500, "internal_error", "An internal error occurred."
 	switch {
 	case errors.Is(err, registration.ErrClosed):
 		status, code, message = 409, "registration_closed", registration.ErrClosed.Error()
 	case errors.Is(err, registration.ErrDuplicate):
 		status, code, message = 409, "registration_exists", registration.ErrDuplicate.Error()
-	case errors.Is(err, teams.ErrFrozen):
-		status, code, message = 409, "teams_frozen", teams.ErrFrozen.Error()
-	case errors.Is(err, teams.ErrUnready):
-		status, code, message = 409, "teams_unready", teams.ErrUnready.Error()
 	case errors.Is(err, registration.ErrCapacity):
 		status, code, message = 409, "capacity_unavailable", registration.ErrCapacity.Error()
 	case errors.Is(err, permissions.ErrWithdrawal):

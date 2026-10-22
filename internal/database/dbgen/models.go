@@ -273,6 +273,8 @@ type HackTeam struct {
 	PublishedCaptainID *uuid.UUID
 	State              string
 	Frozen             bool
+	AllocationLocked   bool
+	Capacity           pgtype.Int4
 }
 
 type HackTeamMember struct {

@@ -22,8 +22,10 @@ import (
 )
 
 var (
-	ErrFrozen  = errors.New("team membership is frozen")
-	ErrUnready = errors.New(
+	ErrFrozen   = errors.New("team membership is frozen")
+	ErrLocked   = errors.New("explicitly unlock the team before moving its members")
+	ErrCapacity = errors.New("the team has reached its configured hard capacity")
+	ErrUnready  = errors.New(
 		"resolve missing captains, unassigned competitors and teams below three before publication or freeze",
 	)
 )
@@ -56,6 +58,8 @@ type (
 		Draft            []Person   `json:"draft"`
 		Published        []Person   `json:"published"`
 		Frozen           bool       `json:"frozen"`
+		AllocationLocked bool       `json:"allocation_locked"`
+		Capacity         *int       `json:"capacity"`
 	}
 	Request struct {
 		ID        uuid.UUID `json:"id"`
@@ -81,6 +85,7 @@ type (
 		Code      uuid.UUID `json:"invitation_code"`
 		Name      string    `json:"name"`
 		Reason    string    `json:"reason"`
+		Capacity  *int      `json:"capacity"`
 	}
 )
 
@@ -345,6 +350,8 @@ func (s Service) command(
 		return decideRequest(ctx, q, actor, row.ID, manage, input)
 	case "move":
 		return move(ctx, q, row.ID, input.TeamID, input.PersonID)
+	case "lock", "unlock", "capacity":
+		return allocationControl(ctx, q, row.ID, input)
 	case "captain":
 		return captain(ctx, q, row, input.TeamID, input.PersonID)
 	case "publish":
@@ -417,6 +424,9 @@ func move(ctx context.Context, q *dbgen.Queries, eventID, teamID, person uuid.UU
 	t, err := q.HackTeam(ctx, dbgen.HackTeamParams{EventID: eventID, ID: teamID})
 	if err != nil || t.State == "disbanded" {
 		return access.ErrNotFound
+	}
+	if err := checkAllocationMove(ctx, q, eventID, t, person); err != nil {
+		return err
 	}
 	if err := q.SetDraftTeamMember(
 		ctx,
@@ -589,8 +599,13 @@ func teamView(r dbgen.HackTeam, members []dbgen.HackTeamMembersRow, showCode boo
 		Captain:          r.CaptainID,
 		PublishedCaptain: r.PublishedCaptainID,
 		Frozen:           r.Frozen,
+		AllocationLocked: r.AllocationLocked,
 		Draft:            []Person{},
 		Published:        []Person{},
+	}
+	if r.Capacity.Valid {
+		capacity := int(r.Capacity.Int32)
+		t.Capacity = &capacity
 	}
 	if showCode {
 		t.Code = &r.InvitationCode

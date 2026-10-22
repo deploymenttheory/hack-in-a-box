@@ -843,6 +843,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/allocation-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Organiser-only, read-only proposal from a current confirmed roster. No memberships or notifications change. Use the event revision in If-Match. Explicit declarations contain only selected allocation features; never send raw registration answers or operational profiles. */
+        post: operations["suggestTeamAllocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -1516,6 +1535,8 @@ export interface components {
             /** Format: uuid */
             invitation_code: string | null;
             frozen: boolean;
+            allocation_locked?: boolean;
+            capacity?: number | null;
             draft: components["schemas"]["TeamPerson"][];
             published: components["schemas"]["TeamPerson"][];
         };
@@ -1541,7 +1562,7 @@ export interface components {
         };
         TeamCommand: {
             /** @enum {string} */
-            action: "create" | "join" | "approve" | "decline" | "move" | "captain" | "publish" | "freeze" | "disband";
+            action: "create" | "join" | "approve" | "decline" | "move" | "captain" | "publish" | "freeze" | "disband" | "lock" | "unlock" | "capacity";
             /** Format: uuid */
             team_id?: string;
             /** Format: uuid */
@@ -1552,6 +1573,57 @@ export interface components {
             invitation_code?: string;
             name?: string;
             reason?: string;
+            capacity?: number | null;
+        };
+        AllocationCandidate: {
+            /** Format: uuid */
+            id: string;
+            skills: string[];
+            /** @description 0 unknown, 1 starting out, 2 some experience, 3 experienced. An explicit declaration, not an inference from private fields. */
+            experience: number;
+            prefer_with: string[];
+        };
+        AllocationLimits: {
+            maximum_size: number | null;
+            maximum_teams: number | null;
+        };
+        AllocationRequest: {
+            seed: string;
+            limits: components["schemas"]["AllocationLimits"];
+            /** @description Explicit organiser-selected declarations for confirmed people. Missing declarations stay unknown; identities and group membership come from the server. */
+            declarations: components["schemas"]["AllocationCandidate"][];
+        };
+        AllocationIssue: {
+            code: string;
+            people: string[];
+            /** Format: uuid */
+            team_id: string | null;
+            message: string;
+        };
+        ProposedAllocationTeam: {
+            /** Format: uuid */
+            id: string;
+            existing: boolean;
+            locked: boolean;
+            capacity: number | null;
+            members: string[];
+            reasons: string[];
+        };
+        AllocationSuggestion: {
+            /** Format: int64 */
+            revision: number;
+            seed: string;
+            preferences: {
+                target: number;
+                preferred_min: number;
+                preferred_max: number;
+                minimum: number;
+            };
+            limits: components["schemas"]["AllocationLimits"];
+            teams: components["schemas"]["ProposedAllocationTeam"][];
+            unresolved: string[];
+            retired_teams: string[];
+            issues: components["schemas"]["AllocationIssue"][];
         };
         Applicant: {
             registration: components["schemas"]["Registration"];
@@ -3803,6 +3875,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeamPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    suggestTeamAllocation: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllocationRequest"];
+            };
+        };
+        responses: {
+            /** @description Deterministic proposal and hard/soft constraint explanations requiring organiser review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllocationSuggestion"];
                 };
             };
             default: components["responses"]["Error"];
