@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 )
 
@@ -28,6 +29,7 @@ var (
 
 // Config is shared by the API and worker processes. HTTP fields apply to the API.
 type Config struct {
+	SMTP               maildelivery.Settings
 	CredentialKeys     *secretbox.Keyring
 	Surface            string
 	DatabaseURL        string
@@ -78,7 +80,12 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	keys, keyErr := secretbox.Parse(getenv("HACKBOX_CREDENTIAL_KEYRING"))
 	cfg.CredentialKeys = keys
+	smtp, smtpErr := loadSMTP(getenv)
+	cfg.SMTP = smtp
 	var problems []error
+	if smtpErr != nil {
+		problems = append(problems, smtpErr)
+	}
 	if keyErr != nil {
 		problems = append(problems, keyErr)
 	}
