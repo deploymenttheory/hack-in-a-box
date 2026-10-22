@@ -1552,6 +1552,82 @@ paths:
                 $ref: '#/components/schemas/AllocationSuggestion'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/github-app:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    get:
+      operationId: getGitHubAppIntegration
+      description: Current organiser-only configuration and live installation/template permission diagnostics. No private keys, JWTs or tokens are returned.
+      responses:
+        '200':
+          description: Safe integration metadata and actionable provider status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubAppStatus' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: configureGitHubAppIntegration
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GitHubAppCommand' }
+      responses:
+        '200':
+          description: Safe committed integration metadata; configure resets the installation and pending attempts. Rotation preserves the installation. Disconnect removes app configuration only.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubAppStatus' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/github-app/installation-authorizations:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    post:
+      operationId: authorizeGitHubAppInstallation
+      description: Creates an expiring single-use event/organiser/browser-session-bound installation state. No GitHub credentials enter this URL.
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      responses:
+        '200':
+          description: Fixed GitHub App installation URL with an opaque state nonce.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [url]
+                properties:
+                  url: { type: string, format: uri }
+        default: { $ref: '#/components/responses/Error' }
+  /auth/github-app/callback:
+    get:
+      operationId: completeGitHubAppInstallation
+      security: []
+      description: GitHub App setup redirect. Handler requires the current app session and consumes its bound state once; the app-authenticated installation/account check never trusts the installation_id query alone. This is separate from participant GitHub OAuth linking.
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - name: installation_id
+          in: query
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: setup_action
+          in: query
+          schema: { type: string, enum: [install, update] }
+      responses:
+        '303':
+          description: Fixed local event destination after successful installation validation.
+          headers:
+            Location:
+              required: true
+              schema: { type: string }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/credentials:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -6267,6 +6343,56 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeamRequest'
+    GitHubAppConfiguration:
+      type: object
+      additionalProperties: false
+      required: [app_id, app_slug, organization_id, organization, template_repository]
+      properties:
+        app_id: { type: integer, format: int64, minimum: 1 }
+        app_slug: { type: string, maxLength: 100 }
+        organization_id: { type: integer, format: int64, minimum: 1 }
+        organization: { type: string, maxLength: 100 }
+        template_repository: { type: string, maxLength: 100 }
+    GitHubAppCommand:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: { type: string, enum: [configure, rotate, disconnect] }
+        app_id: { type: integer, format: int64, minimum: 1 }
+        app_slug: { type: string, maxLength: 100 }
+        organization_id: { type: integer, format: int64, minimum: 1 }
+        organization: { type: string, maxLength: 100 }
+        template_repository: { type: string, maxLength: 100 }
+        private_key: { type: string, maxLength: 32768, writeOnly: true }
+    GitHubAppPermissionCheck:
+      type: object
+      additionalProperties: false
+      required: [operation, required, allowed]
+      properties:
+        operation: { type: string, enum: [read_template, create_repository, manage_repository_invitations, read_repository_activity] }
+        required: { type: array, items: { type: string } }
+        allowed: { type: boolean }
+    GitHubAppDiagnostics:
+      type: object
+      additionalProperties: false
+      required: [code, checks, checked_at]
+      properties:
+        code:
+          type: string
+          enum: [not_configured, installation_required, healthy, permissions_missing, installation_removed, installation_suspended, organization_mismatch, app_mismatch, template_inaccessible, template_invalid, credentials_unavailable, credentials_invalid, provider_unavailable, permission_denied, rate_limited]
+        checks: { type: array, items: { $ref: '#/components/schemas/GitHubAppPermissionCheck' } }
+        checked_at: { type: string, format: date-time }
+    GitHubAppStatus:
+      type: object
+      additionalProperties: false
+      required: [revision, configured, installation_id, diagnostics]
+      properties:
+        revision: { type: integer, format: int64 }
+        configured: { type: boolean }
+        installation_id: { type: integer, format: int64 }
+        configuration: { $ref: '#/components/schemas/GitHubAppConfiguration' }
+        diagnostics: { $ref: '#/components/schemas/GitHubAppDiagnostics' }
     CredentialMetadata:
       type: object
       additionalProperties: false

@@ -15,22 +15,24 @@ import (
 type Action string
 
 const (
-	SurveyChanged             Action = "survey.changed"
-	SurveyResponded           Action = "survey.responded"
-	SurveyReportChanged       Action = "survey.report_changed"
-	SurveyPersonalRemoved     Action = "survey.personal_removed"
-	FeedbackChanged           Action = "feedback.changed"
-	ClarificationChanged      Action = "clarification.changed"
-	RubricChanged             Action = "rubric.changed"
-	CommunicationChanged      Action = "communication.changed"
-	CredentialCreated         Action = "credential.created"          // #nosec G101 -- Audit action name, not a credential.
-	CredentialReplaced        Action = "credential.replaced"         // #nosec G101 -- Audit action name, not a credential.
-	CredentialAssigned        Action = "credential.assigned"         // #nosec G101 -- Audit action name, not a credential.
-	CredentialRevoked         Action = "credential.revoked"          // #nosec G101 -- Audit action name, not a credential.
-	CredentialMetadataChanged Action = "credential.metadata_changed" // #nosec G101 -- Audit action name, not a credential.
-	CredentialRotated         Action = "credential.rotated"          // #nosec G101 -- Audit action identifier, not a credential.
-	CredentialChanged         Action = "credential.changed"          // #nosec G101 -- Audit action identifier, not a credential.
-	CredentialRevealed        Action = "credential.revealed"         // #nosec G101 -- Audit action identifier, not a credential.
+	GitHubIntegrationConfigured Action = "github.integration_configured"
+	GitHubIntegrationInstalled  Action = "github.integration_installed"
+	SurveyChanged               Action = "survey.changed"
+	SurveyResponded             Action = "survey.responded"
+	SurveyReportChanged         Action = "survey.report_changed"
+	SurveyPersonalRemoved       Action = "survey.personal_removed"
+	FeedbackChanged             Action = "feedback.changed"
+	ClarificationChanged        Action = "clarification.changed"
+	RubricChanged               Action = "rubric.changed"
+	CommunicationChanged        Action = "communication.changed"
+	CredentialCreated           Action = "credential.created"          // #nosec G101 -- Audit action name, not a credential.
+	CredentialReplaced          Action = "credential.replaced"         // #nosec G101 -- Audit action name, not a credential.
+	CredentialAssigned          Action = "credential.assigned"         // #nosec G101 -- Audit action name, not a credential.
+	CredentialRevoked           Action = "credential.revoked"          // #nosec G101 -- Audit action name, not a credential.
+	CredentialMetadataChanged   Action = "credential.metadata_changed" // #nosec G101 -- Audit action name, not a credential.
+	CredentialRotated           Action = "credential.rotated"          // #nosec G101 -- Audit action identifier, not a credential.
+	CredentialChanged           Action = "credential.changed"          // #nosec G101 -- Audit action identifier, not a credential.
+	CredentialRevealed          Action = "credential.revealed"         // #nosec G101 -- Audit action identifier, not a credential.
 )
 
 const (
@@ -123,7 +125,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case SurveyChanged,
+	case GitHubIntegrationConfigured, GitHubIntegrationInstalled, SurveyChanged,
 		SurveyResponded,
 		SurveyReportChanged,
 		SurveyPersonalRemoved,

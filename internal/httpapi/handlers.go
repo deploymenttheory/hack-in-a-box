@@ -28,6 +28,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
@@ -56,6 +57,7 @@ import (
 )
 
 type Dependencies struct {
+	GitHubApp       githubapp.Service
 	Surveys         *surveys.Service
 	Objectives      objectives.Service
 	Feedback        feedback.Service
@@ -367,6 +369,8 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		errors.Is(err, database.ErrDatabase),
 		errors.Is(err, database.ErrSchema):
 		status, code, message = 503, "unavailable", "A required service is temporarily unavailable."
+	case errors.Is(err, githubapp.ErrIntegration):
+		status, code, message = 400, "github_app_invalid", "GitHub App installation could not be verified. Start installation again and check the intended organization, App and permissions."
 	case errors.Is(err, githubidentity.ErrLink):
 		status, code, message = 400, "github_link_failed", githubidentity.ErrLink.Error()
 	case errors.Is(err, githubidentity.ErrDisabled):
