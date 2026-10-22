@@ -46,6 +46,9 @@ test('connection failure retains a local copy with unconfirmed server state; rev
   store.save(target, 8, 0, text)
   expect(await store.review(target, async () => { throw { status: 403 } })).toEqual({ status: 'blocked' })
   expect(sessionStorage.length).toBe(0)
+  store.save(target, 8, 0, text)
+  expect(await store.review(target, async () => { throw { status: 409 } })).toEqual({ status: 'blocked' })
+  expect(sessionStorage.length).toBe(0)
 })
 
 test('absolute30-minute expiry is not extended by typing or repeated writes after expiry', async () => {
@@ -110,4 +113,10 @@ test('typing during an authority refresh invalidates its older text instead of o
   resolve(current)
   expect(await pending).toEqual({ status: 'invalidated' })
   expect(await store.review(target, async () => current)).toMatchObject({ status: 'ready', text: { evidence: 'Newer unsent words' } })
+})
+
+test('storage denial never reports a successful local recovery copy', () => {
+  const denied: Storage = { length: 0, clear() {}, key() { return null }, getItem() { return null }, removeItem() {}, setItem() { throw new DOMException('Synthetic storage denial', 'QuotaExceededError') } }
+  const store = new MentorDraftStore(denied)
+  expect(store.save(target, 8, 0, text)).toEqual({ status: 'unavailable' })
 })

@@ -113,7 +113,7 @@ export class MentorDraftStore {
     } catch (error) {
       if (started !== generation) return { status: 'invalidated' }
       const status = (error as { status?: number } | null)?.status
-      if (status === 401 || status === 403 || status === 404) { this.remove(target); return { status: 'blocked' } }
+      if (status === 401 || status === 403 || status === 404 || status === 409) { this.remove(target); return { status: 'blocked' } }
       return { status: 'unavailable' }
     }
   }
