@@ -42,6 +42,9 @@ storage. Older corrections and native private histories have bounded keyset page
   notice and unreleased-review evidence all fail closed. Three PostgreSQL/race
   runs also exercise publication against current-source and native organiser-role
   changes; either serial order leaves complete publication/inbox state or none.
+- Publication also races actual registration withdrawal, including frozen-team
+  removal. Both serial orders retain one publication and a valid current recipient
+  set; the departed attendee cannot read the answer or retained inbox references.
 - HTTP tests validate responses against the generated OpenAPI contract and cover
   authentication, CSRF, malformed input, no-store, private history/triage/drafts,
   distinct approve/publish, common search and generic log privacy. Positive team

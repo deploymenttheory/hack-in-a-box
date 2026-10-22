@@ -472,10 +472,14 @@ func TestClarificationRuntimePublishesOnlyReviewedCommonAnswersAndActualPrivateI
 		teamID,
 		question.ID,
 	)
-	exec(
-		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
-		eventID,
+	verifyClarificationWithdrawalPublicationRace(
+		t,
+		runtime,
+		owner.ID,
+		author.ID,
 		other.ID,
+		eventID,
+		teamID,
 	)
 	if page, listErr := runtime.Inbox.List(
 		ctx,
