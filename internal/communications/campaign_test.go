@@ -584,3 +584,45 @@ func TestCampaignEffectiveApprovalMatchesCurrentCampaignAndPreviewApproverAuthor
 		})
 	}
 }
+
+func TestCampaignChallengeWithoutPlaceholderCannotApproveBeforeGuardedPublication(t *testing.T) {
+	f := newFixture(t)
+	f.person(t)
+	f.s.Channels = map[string]ChannelProvider{"smtp": syntheticChannel{}}
+	f.t.Purpose = "challenge_release"
+	f.t.Body = "The official challenge is ready."
+	f.change(t, Command{Action: "save_template", Template: &f.t})
+	f.t.Version++
+	p := newCampaign(t, f)
+	p = campaignChange(t, f, p.Campaign.Campaign, CampaignCommand{Action: "preview"})
+	if p.Preview == nil || !slices.Contains(p.Preview.Blockers, "unresolved_placeholders") {
+		t.Fatal("literal challenge campaign bypassed the common publication guard")
+	}
+	_, err := f.s.ChangeCampaign(
+		t.Context(),
+		f.owner.ID,
+		f.eventID,
+		p.Campaign.Campaign.Definition.ID,
+		f.revision(t),
+		CampaignCommand{
+			Action:  "approve",
+			Version: p.Campaign.Campaign.Version,
+			Reason:  "Early challenge must be blocked",
+		},
+	)
+	if err == nil {
+		t.Fatal("approved an early literal challenge campaign")
+	}
+	current, err := f.s.Campaign(
+		t.Context(),
+		f.owner.ID,
+		f.eventID,
+		p.Campaign.Campaign.Definition.ID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.Campaign.Campaign.Approval != nil || current.Campaign.Status == "approved" {
+		t.Fatal("rejected challenge approval persisted")
+	}
+}
