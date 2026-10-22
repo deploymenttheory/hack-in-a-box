@@ -25,7 +25,10 @@ Evidence notes and scores are memory-only. This workflow does not use mentor
 text recovery, sessionStorage, localStorage, offline queues or automatic replay.
 Leaving, reloading, changing event/team/session or a current native resource
 denial clears the editor. Current checkpoint and own-card reads refresh every
-15 seconds. A network failure cannot authorize a write. Observation references
+15 seconds. A transient current-read failure hides stale saved evidence and entry
+while keeping the editor mounted in memory; a successful current read restores
+that unsent input. Native authority/source denial unmounts and clears it. A
+network failure cannot authorize a write. Observation references
 use their native exact retained-version endpoint, including its current private
 read policy. Formal submission references open actual submitted artifacts via
 current protected downloads or safe HTTP(S) references, never working drafts or
