@@ -98,7 +98,7 @@ func (q *Queries) InboxCommunicationVersion(ctx context.Context, arg InboxCommun
 }
 
 const inboxNotification = `-- name: InboxNotification :one
-SELECT n.id, n.event_id, n.recipient_id, n.source_kind, n.source_id, n.occurrence_id, n.scope_binding, n.source_version, n.provenance, n.subject, n.body, n.format, n.created_at, n.read_at,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
+SELECT n.id, n.event_id, n.recipient_id, n.source_kind, n.source_id, n.occurrence_id, n.scope_binding, n.source_version, n.provenance, n.subject, n.body, n.format, n.created_at, n.read_at, n.scope_approval,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
 WHERE n.id=$1 AND n.recipient_id=$2
 `
 
@@ -122,6 +122,7 @@ type InboxNotificationRow struct {
 	Format        string
 	CreatedAt     time.Time
 	ReadAt        pgtype.Timestamptz
+	ScopeApproval []byte
 	EventName     string
 }
 
@@ -143,6 +144,7 @@ func (q *Queries) InboxNotification(ctx context.Context, arg InboxNotificationPa
 		&i.Format,
 		&i.CreatedAt,
 		&i.ReadAt,
+		&i.ScopeApproval,
 		&i.EventName,
 	)
 	return i, err
@@ -152,7 +154,7 @@ const insertInboxNotification = `-- name: InsertInboxNotification :one
 INSERT INTO inbox_notifications(id,event_id,recipient_id,source_kind,source_id,source_version,provenance,subject,body,format,occurrence_id,scope_binding)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 ON CONFLICT(event_id,recipient_id,source_kind,source_id,source_version,occurrence_id) DO UPDATE SET source_id=EXCLUDED.source_id
-RETURNING id, event_id, recipient_id, source_kind, source_id, occurrence_id, scope_binding, source_version, provenance, subject, body, format, created_at, read_at
+RETURNING id, event_id, recipient_id, source_kind, source_id, occurrence_id, scope_binding, source_version, provenance, subject, body, format, created_at, read_at, scope_approval
 `
 
 type InsertInboxNotificationParams struct {
@@ -201,6 +203,7 @@ func (q *Queries) InsertInboxNotification(ctx context.Context, arg InsertInboxNo
 		&i.Format,
 		&i.CreatedAt,
 		&i.ReadAt,
+		&i.ScopeApproval,
 	)
 	return i, err
 }

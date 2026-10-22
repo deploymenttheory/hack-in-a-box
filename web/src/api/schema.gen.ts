@@ -591,6 +591,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/automation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCommunicationAutomation"];
+        put?: never;
+        post: operations["changeCommunicationAutomation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams-workflow": {
         parameters: {
             query?: never;
@@ -4342,7 +4358,6 @@ export interface components {
             /** Format: int64 */
             completion_seconds: number | null;
             overdue: boolean;
-            assignee_name: string;
         };
         HelpPage: {
             event_name: string;
@@ -4355,8 +4370,6 @@ export interface components {
             can_resolve: boolean;
             can_reopen: boolean;
             can_cancel: boolean;
-            assignee_name: string;
-            transfer_targets: components["schemas"]["HelpHelperTarget"][];
         };
         HelpTransition: {
             /** Format: int64 */
@@ -4378,8 +4391,6 @@ export interface components {
             resolved: number;
             cancelled: number;
             can_manage: boolean;
-            can_request: boolean;
-            request_team: components["schemas"]["HelpTeamReference"] | null;
         };
         HelpConfiguration: {
             /** Format: int64 */
@@ -4401,15 +4412,119 @@ export interface components {
             output_threshold_seconds: number;
             meeting_hosts: string[];
         };
-        HelpHelperTarget: {
-            /** Format: uuid */
-            person_id: string;
-            name: string;
-        };
-        HelpTeamReference: {
+        AutomationDefinition: {
             /** Format: uuid */
             id: string;
-            name: string;
+            /** Format: uuid */
+            campaign_id: string;
+            /** Format: int64 */
+            campaign_version: number;
+            /** @enum {string} */
+            trigger: "scheduled" | "preparation.reminder" | "follow_up" | "facilitator.selected" | "registration.offer" | "registration.place_changed" | "teams.published" | "mentors.published" | "challenge.released" | "brief.released" | "event.rescheduled" | "help.updated" | "clarification.published" | "rubric.published" | "results.published" | "outcome.follow_up";
+            /** Format: uuid */
+            source_id?: string | null;
+            /** Format: int64 */
+            source_version?: number;
+            /**
+             * Format: int64
+             * @description Explicit reviewed lateness window; later work requires individual review.
+             */
+            maximum_lateness_seconds: number;
+            /** @description Only an explicitly retained open outcome follow-up may opt in. */
+            retain_after_archive: boolean;
+            /** Format: date-time */
+            retain_until?: string | null;
+        };
+        AutomationBinding: {
+            definition: components["schemas"]["AutomationDefinition"];
+            /** Format: int64 */
+            version: number;
+            campaign_approval: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            approved_at: string | null;
+            /** Format: date-time */
+            due_at?: string;
+            cancelled: boolean;
+            /** Format: uuid */
+            publication_approval_id: string | null;
+        };
+        AutomationOccurrence: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            binding_id: string;
+            /** Format: int64 */
+            binding_version: number;
+            source_kind: string;
+            /** Format: uuid */
+            source_id: string;
+            /** Format: int64 */
+            source_revision: number;
+            /** Format: date-time */
+            due_at: string;
+            /** Format: date-time */
+            deadline: string;
+            /** @enum {string} */
+            state: "pending" | "paused" | "missed" | "blocked" | "queued" | "partially_queued" | "cancelled";
+            reason: string;
+            /** Format: date-time */
+            review_until: string | null;
+            /** Format: int64 */
+            review_revision: number;
+            channel_reports: {
+                [key: string]: components["schemas"]["AutomationChannelReport"];
+            };
+        };
+        /** @description Local dispatch evidence only. Queued is newly persisted provider intent; accepted means provider acceptance, never proof of human receipt. */
+        AutomationChannelReport: {
+            queued: number;
+            unavailable: number;
+            local_persisted: number;
+            preexisting: {
+                [key: string]: number;
+            };
+        };
+        AutomationPage: {
+            /** Format: int64 */
+            revision: number;
+            paused: boolean;
+            bindings: components["schemas"]["AutomationBinding"][];
+            occurrences: components["schemas"]["AutomationOccurrence"][];
+        };
+        PublicationPlanPreview: {
+            /** Format: uuid */
+            plan_id: string;
+            /** Format: uuid */
+            source_id: string;
+            /** Format: int64 */
+            source_version: number;
+            subject_template: string;
+            body_template: string;
+            /** @description Values deliberately unresolved until actual successful guarded source publication. */
+            deferred_variables: string[];
+            eligible_recipients: number;
+            /** @enum {boolean} */
+            generic_campaign_approved: false;
+        };
+        AutomationCommand: {
+            /** @enum {string} */
+            action: "save" | "approve" | "cancel" | "pause" | "resume" | "review_occurrence" | "cancel_occurrence" | "preview_publication" | "approve_publication";
+            reason: string;
+            definition?: components["schemas"]["AutomationDefinition"];
+            /** Format: uuid */
+            binding_id?: string;
+            /** Format: int64 */
+            version?: number;
+            /** Format: uuid */
+            occurrence_id?: string;
+            /** Format: uuid */
+            preview_plan_id?: string;
+        };
+        AutomationChange: {
+            page: components["schemas"]["AutomationPage"];
+            publication_preview: components["schemas"]["PublicationPlanPreview"] | null;
         };
     };
     responses: {
@@ -5506,6 +5621,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogisticsPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunicationAutomation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser-only automation bindings, pause and durable review states. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeCommunicationAutomation: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutomationCommand"];
+            };
+        };
+        responses: {
+            /** @description Explicit reviewed automation change; never a content-publication or external-send operation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationChange"];
                 };
             };
             default: components["responses"]["Error"];

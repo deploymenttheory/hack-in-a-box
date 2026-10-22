@@ -105,6 +105,11 @@ func (s Service) reconcileEvent(ctx context.Context, eventID uuid.UUID) error {
 		if err != nil {
 			return fmt.Errorf("lock communication reconciliation: %w", err)
 		}
+		if s.SourceMaintenance != nil {
+			if err = s.SourceMaintenance(ctx, tx, eventID); err != nil {
+				return fmt.Errorf("maintain native communication sources: %w", err)
+			}
+		}
 		paused, err := q.AutomationPaused(ctx, eventID)
 		if err != nil {
 			return fmt.Errorf("read reconciliation pause: %w", err)

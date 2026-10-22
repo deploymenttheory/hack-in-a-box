@@ -115,7 +115,6 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Automation:     communicationRuntime.Automation,
 		Inbox:          *communicationRuntime.Inbox,
 		Communications: *communicationRuntime.Communications,
-		Inbox:          *communicationRuntime.Inbox,
 		MailContacts:   communicationRuntime.MailContacts,
 		SMTP:           communicationRuntime.SMTP,
 		TeamsWorkflow:  communicationRuntime.Teams,

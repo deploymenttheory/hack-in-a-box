@@ -28,13 +28,14 @@ type ChannelReport struct {
 type ReviewGuard func(context.Context, pgx.Tx, uuid.UUID, uuid.UUID, int64, communications.DeliveryScope) error
 
 type Service struct {
-	ReviewGuards map[string]ReviewGuard
-	Pool         *pgxpool.Pool
-	Composer     *communications.Service
-	Jobs         *jobs.Service
-	Providers    map[string]ProviderQueue
-	Sources      map[string]SourcePolicy
-	Now          func() time.Time
+	SourceMaintenance func(context.Context, pgx.Tx, uuid.UUID) error
+	ReviewGuards      map[string]ReviewGuard
+	Pool              *pgxpool.Pool
+	Composer          *communications.Service
+	Jobs              *jobs.Service
+	Providers         map[string]ProviderQueue
+	Sources           map[string]SourcePolicy
+	Now               func() time.Time
 }
 
 func (s Service) now() time.Time {

@@ -63,3 +63,27 @@ Discovery applies a requested source ID before the page limit. Built-in metadata
 Declared future help, clarification, rubric and results journeys may be saved as drafts, but cannot be approved without their authoritative owning-domain adapter. All four previously returned successful approval without an adapter (red 1.924s). The new gate does not fabricate source facts or mark a future journey resolved. Actual #159/#161 runtime integration, final migration ordering and exact-head CI remain required; this is still an incomplete #82 checkpoint.
 
 Final targeted discovery/owning-adapter PostgreSQL/race checks pass **11.831s**; scoped lint reports **0 issues**. The broader automation run completed in 105.576s with one disposable PostgreSQL startup failure: Docker's container inspect request timed out before the `partially_queued` fixture could run. Its isolated report regression rerun passes **4.180s**. All other tests in that broader run passed; this is not reported as a clean full-suite result or a final merged-base gate.
+
+## Actual-main32 integration checkpoint
+
+Only automation-owned commits were replayed onto merged recovery main
+`ebfe86d4d6f332a7915c3ec6c9741aae41e93d2c`; old SMTP/Teams/inbox dependency
+commits were dropped. Native help, observation, rubric and recovery routes,
+`Session.draft_scope`, canonical attendee `WorkspaceOrigin`, and the single
+shared inbox/help owner graph are retained. The additive automation schema is
+explicitly provisional and unnumbered; no migration slot or final upgrade proof
+is claimed yet. Focused app/HTTP fixtures apply that provisional SQL directly.
+
+The native help adapter consumes actual latest transitions through the owner's
+metadata paging and current-audience API. Automation's same-transaction source
+maintenance generates a real overdue transition before discovery; stale
+revisions and withdrawn recipients lose dispatch authority. Routing carries no
+request description or location. Real PostgreSQL/race proofs pass automation
+3.050s, app5.562s and HTTP3.722s; scoped Go lint reports zero issues and generation
+succeeds. These are focused proofs, not a final full-suite/CI claim.
+
+Actual clarification and rubric publication adapters remain pending at this
+checkpoint. Results #112 has no implemented native publisher: unknown results
+approval remains fail-closed, and full #82 must remain open until that real
+integration is verified. Delivered historical receipts/links retain exact
+provenance; corrections invalidate old pending dispatch and never replay it.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 
@@ -20,6 +21,13 @@ import (
 
 func TestCommunicationRuntimeProducesAndConsumesApprovedInAppOccurrence(t *testing.T) {
 	pool := testdb.New(t, true)
+	provisionalSQL, readErr := os.ReadFile("../automation/schema.provisional.sql")
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
+		t.Fatal(applyErr)
+	}
 	ctx := t.Context()
 	owner := testdb.Person(t, pool)
 	person := testdb.Person(t, pool)

@@ -66,6 +66,10 @@ func newCommunicationRuntime(
 	}
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
+	auto.Sources = map[string]automation.SourcePolicy{
+		"help.updated": automation.HelpSource{Help: helpProvider},
+	}
+	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	outbox, err := jobs.New(
 		pool,
 		logger,

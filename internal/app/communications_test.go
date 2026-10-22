@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 
@@ -21,6 +22,13 @@ import (
 
 func TestCommunicationFactoryUsesCanonicalWorkspaceAcrossSeparateSurfaces(t *testing.T) {
 	pool := testdb.New(t, true)
+	provisionalSQL, readErr := os.ReadFile("../automation/schema.provisional.sql")
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
+		t.Fatal(applyErr)
+	}
 	owner := testdb.Person(t, pool)
 	eventID := testdb.Event(t, pool, owner.ID)
 	const workspace = "http://127.0.0.1:8080"

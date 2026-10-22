@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
-	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
@@ -48,9 +48,13 @@ type fixture struct {
 }
 
 func newFixture(t *testing.T) *fixture {
-	pool := testdb.New(t, false)
-	if err := database.Migrate(t.Context(), pool, 30); err != nil {
-		t.Fatal(err)
+	pool := testdb.New(t, true)
+	provisionalSQL, readErr := os.ReadFile("schema.provisional.sql")
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
+		t.Fatal(applyErr)
 	}
 	f := &fixture{
 		t:      t,
