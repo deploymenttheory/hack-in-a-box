@@ -15,7 +15,11 @@ func (h handlers) GetMentorObservations(
 	ctx context.Context,
 	r contract.GetMentorObservationsRequestObject,
 ) (contract.GetMentorObservationsResponseObject, error) {
-	result, err := h.Observations.Read(ctx, actor(ctx).ID, r.EventId, r.TeamId)
+	options := observations.ReadOptions{Cursor: r.Params.Cursor}
+	if r.Params.Limit != nil {
+		options.Limit = *r.Params.Limit
+	}
+	result, err := h.Observations.ReadPage(ctx, actor(ctx).ID, r.EventId, r.TeamId, options)
 	if err != nil {
 		return nil, fmt.Errorf("read private mentor evidence: %w", err)
 	}
@@ -55,7 +59,14 @@ func (h handlers) GetMentorObservationHistory(
 	if r.Params.ObservationId != nil {
 		id = *r.Params.ObservationId
 	}
-	result, err := h.Observations.History(ctx, actor(ctx).ID, r.EventId, r.TeamId, id)
+	options := observations.HistoryOptions{
+		ObservationID: id, ObservationCursor: r.Params.ObservationCursor,
+		StatusCursor: r.Params.StatusCursor,
+	}
+	if r.Params.Limit != nil {
+		options.Limit = *r.Params.Limit
+	}
+	result, err := h.Observations.HistoryPage(ctx, actor(ctx).ID, r.EventId, r.TeamId, options)
 	if err != nil {
 		return nil, fmt.Errorf("read private mentor history: %w", err)
 	}

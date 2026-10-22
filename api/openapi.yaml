@@ -1669,6 +1669,13 @@ paths:
     get:
       operationId: getMentorObservations
       description: Current assigned primary/second mentors and organisers only. Formal evidence remains unavailable before the scheduled live start and actual common publication.
+      parameters:
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100}
       responses:
         '200':
           description: Private observations and separate operational status; never a score or participant projection.
@@ -1712,6 +1719,15 @@ paths:
         - name: observation_id
           in: query
           schema: {type: string, format: uuid}
+        - name: observation_cursor
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - name: status_cursor
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100}
       responses:
         '200':
           description: Currently authorised operational history, and the requested observation's immutable history after formal review opens.
@@ -3698,8 +3714,9 @@ components:
     MentorObservationPage:
       type: object
       additionalProperties: false
-      required: [revision, can_record, can_change_status, observations, status]
+      required: [revision, can_record, can_change_status, observations, status, next_cursor]
       properties:
+        next_cursor: {type: string, format: uuid, nullable: true}
         revision: {type: integer, format: int64}
         can_record: {type: boolean}
         can_change_status: {type: boolean}
@@ -3727,8 +3744,10 @@ components:
     MentorObservationHistory:
       type: object
       additionalProperties: false
-      required: [observations, statuses]
+      required: [observations, statuses, next_observation_cursor, next_status_cursor]
       properties:
+        next_observation_cursor: {type: integer, format: int64, nullable: true}
+        next_status_cursor: {type: integer, format: int64, nullable: true}
         observations:
           type: array
           items:

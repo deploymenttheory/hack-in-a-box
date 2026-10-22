@@ -77,11 +77,17 @@ func TestObservationMigrationPreservesExistingRecordsAndProtectsRollback(t *test
 		t.Fatal("rollback discarded populated private history")
 	}
 	version, err := migrator.GetDBVersion(ctx)
-	if err != nil || version != database.SchemaVersion {
+	if err != nil || version != 31 {
 		t.Fatalf("failed rollback changed the current schema: version=%d err=%v", version, err)
 	}
 	var evidence string
 	if err = pool.QueryRow(ctx, "SELECT evidence FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3", id, team, note).Scan(&evidence); err != nil || evidence != "Synthetic retained evidence" {
 		t.Fatalf("failed rollback lost retained history: %v", err)
+	}
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err = database.CheckSchema(ctx, pool); err != nil {
+		t.Fatal(err)
 	}
 }

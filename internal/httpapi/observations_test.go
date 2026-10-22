@@ -156,6 +156,45 @@ func TestMentorObservationHTTPPrivacyAndCurrentSessionAuthority(t *testing.T) {
 		t.Fatal("author's valid private response lost evidence")
 	}
 	check(request(mentor, http.MethodPost, path, noteBody, stale, true), http.StatusConflict)
+	for version := 1; version <= 2; version++ {
+		noteBody["version"] = version
+		check(request(mentor, http.MethodPost, path, noteBody, revision(), true), http.StatusOK)
+	}
+	for range 2 {
+		body := map[string]any{"action": note.Action, "id": uuid.New(), "version": 0, "evidence": note.Evidence}
+		check(request(mentor, http.MethodPost, path, body, revision(), true), http.StatusOK)
+	}
+	currentIDs := map[uuid.UUID]bool{}
+	pagePath := path + "?limit=1"
+	for {
+		w = request(mentor, http.MethodGet, pagePath, nil, revision(), true)
+		check(w, http.StatusOK)
+		var page observations.Page
+		if err = json.Unmarshal(w.Body.Bytes(), &page); err != nil || len(page.Observations) != 1 || currentIDs[page.Observations[0].ID] {
+			t.Fatalf("current-note HTTP cursor repeated or lost a record: %v", err)
+		}
+		currentIDs[page.Observations[0].ID] = true
+		if page.NextCursor == nil {
+			break
+		}
+		pagePath = path + "?limit=1&cursor=" + page.NextCursor.String()
+	}
+	if len(currentIDs) != 3 {
+		t.Fatal("HTTP pagination lost an accepted note")
+	}
+	w = request(mentor, http.MethodGet, path+"/history?observation_id="+note.ID.String()+"&limit=1", nil, revision(), true)
+	check(w, http.StatusOK)
+	var history observations.History
+	if err = json.Unmarshal(w.Body.Bytes(), &history); err != nil || len(history.Observations) != 1 || history.Observations[0].Version != 3 || history.NextObservationCursor == nil {
+		t.Fatalf("history HTTP response did not expose its continuation: %v", err)
+	}
+	w = request(mentor, http.MethodGet, fmt.Sprintf("%s/history?observation_id=%s&limit=1&observation_cursor=%d", path, note.ID, *history.NextObservationCursor), nil, revision(), true)
+	check(w, http.StatusOK)
+	if err = json.Unmarshal(w.Body.Bytes(), &history); err != nil || len(history.Observations) != 1 || history.Observations[0].Version != 2 {
+		t.Fatalf("history HTTP continuation lost its version: %v", err)
+	}
+	check(request(mentor, http.MethodGet, path+"?limit=101", nil, revision(), true), http.StatusBadRequest)
+	check(request(mentor, http.MethodGet, path+"/history?observation_cursor=0", nil, revision(), true), http.StatusBadRequest)
 	check(request(mentor, http.MethodGet, path+"/history?observation_id="+note.ID.String(), nil, revision(), true), http.StatusOK)
 	check(request(owner, http.MethodGet, path, nil, revision(), true), http.StatusOK)
 	privateFree := func(w *httptest.ResponseRecorder, required string) {

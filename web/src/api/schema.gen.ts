@@ -2526,6 +2526,8 @@ export interface components {
             changed_at: string;
         };
         MentorObservationPage: {
+            /** Format: uuid */
+            next_cursor: string | null;
             /** Format: int64 */
             revision: number;
             can_record: boolean;
@@ -2547,6 +2549,10 @@ export interface components {
             next_action?: string;
         };
         MentorObservationHistory: {
+            /** Format: int64 */
+            next_observation_cursor: number | null;
+            /** Format: int64 */
+            next_status_cursor: number | null;
             observations: components["schemas"]["MentorObservation"][];
             statuses: components["schemas"]["MentorOperationalStatus"][];
         };
@@ -6024,7 +6030,10 @@ export interface operations {
     };
     getMentorObservations: {
         parameters: {
-            query?: never;
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
             header?: never;
             path: {
                 event_id: components["parameters"]["EventID"];
@@ -6082,6 +6091,9 @@ export interface operations {
         parameters: {
             query?: {
                 observation_id?: string;
+                observation_cursor?: number;
+                status_cursor?: number;
+                limit?: number;
             };
             header?: never;
             path: {

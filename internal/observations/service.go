@@ -98,8 +98,20 @@ func status(row dbgen.MentorTeamStatusVersion) Status {
 }
 
 func (s Service) Read(ctx context.Context, actor, eventID, teamID uuid.UUID) (Page, error) {
+	return s.ReadPage(ctx, actor, eventID, teamID, ReadOptions{})
+}
+
+func (s Service) ReadPage(
+	ctx context.Context,
+	actor, eventID, teamID uuid.UUID,
+	options ReadOptions,
+) (Page, error) {
 	page := Page{Observations: []Observation{}}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	limit, err := pageLimit(options.Limit)
+	if err != nil {
+		return page, err
+	}
+	err = database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
 		row, assigned, err := guard(ctx, q, actor, eventID, teamID)
 		if err != nil {
 			return err
@@ -114,28 +126,33 @@ func (s Service) Read(ctx context.Context, actor, eventID, teamID uuid.UUID) (Pa
 		if open {
 			notes, readErr := q.CurrentMentorObservations(
 				ctx,
-				dbgen.CurrentMentorObservationsParams{EventID: eventID, TeamID: teamID},
+				dbgen.CurrentMentorObservationsParams{
+					EventID: eventID, TeamID: teamID, AfterID: options.Cursor,
+					PageSize: limit + 1,
+				},
 			)
 			if readErr != nil {
 				return fmt.Errorf("read private mentor observations: %w", readErr)
 			}
-			if len(notes) > 1000 {
-				return access.ErrInvalid
+			if len(notes) > int(limit) {
+				notes = notes[:limit]
+				cursor := notes[len(notes)-1].ID
+				page.NextCursor = &cursor
 			}
 			for _, note := range notes {
 				page.Observations = append(page.Observations, observation(note))
 			}
 		}
-		rows, err := q.MentorStatusHistory(
+		current, err := q.CurrentMentorStatus(
 			ctx,
-			dbgen.MentorStatusHistoryParams{EventID: eventID, TeamID: teamID},
+			dbgen.CurrentMentorStatusParams{EventID: eventID, TeamID: teamID},
 		)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("read operational status: %w", err)
 		}
-		if len(rows) > 0 {
-			current := status(rows[0])
-			page.Status = &current
+		if err == nil {
+			value := status(current)
+			page.Status = &value
 		}
 		return nil
 	})
@@ -243,16 +260,15 @@ func (s Service) writeObservation(
 	actor, eventID, teamID uuid.UUID,
 	input Command,
 ) error {
-	rows, err := q.MentorObservationHistory(
+	prior, err := q.LatestMentorObservation(
 		ctx,
-		dbgen.MentorObservationHistoryParams{EventID: eventID, TeamID: teamID, ID: input.ID},
+		dbgen.LatestMentorObservationParams{EventID: eventID, TeamID: teamID, ID: input.ID},
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("read original observation: %w", err)
 	}
 	observed := s.now()
-	if len(rows) > 0 {
-		prior := rows[0]
+	if err == nil {
 		if prior.AuthorID != actor {
 			return access.ErrForbidden
 		}
@@ -291,16 +307,16 @@ func (s Service) writeStatus(
 	actor, eventID, teamID uuid.UUID,
 	input Command,
 ) error {
-	rows, err := q.MentorStatusHistory(
+	current, err := q.CurrentMentorStatus(
 		ctx,
-		dbgen.MentorStatusHistoryParams{EventID: eventID, TeamID: teamID},
+		dbgen.CurrentMentorStatusParams{EventID: eventID, TeamID: teamID},
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("read current operational status: %w", err)
 	}
 	version := int64(0)
-	if len(rows) > 0 {
-		version = rows[0].Version
+	if err == nil {
+		version = current.Version
 	}
 	if version != input.Version {
 		return access.ErrConflict

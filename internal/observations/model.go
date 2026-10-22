@@ -41,6 +41,7 @@ type Status struct {
 }
 
 type Page struct {
+	NextCursor      *uuid.UUID    `json:"next_cursor"`
 	Revision        int64         `json:"revision"`
 	CanRecord       bool          `json:"can_record"`
 	CanChangeStatus bool          `json:"can_change_status"`
@@ -59,8 +60,22 @@ type Command struct {
 }
 
 type History struct {
-	Observations []Observation `json:"observations"`
-	Statuses     []Status      `json:"statuses"`
+	NextObservationCursor *int64        `json:"next_observation_cursor"`
+	NextStatusCursor      *int64        `json:"next_status_cursor"`
+	Observations          []Observation `json:"observations"`
+	Statuses              []Status      `json:"statuses"`
+}
+
+type ReadOptions struct {
+	Cursor *uuid.UUID
+	Limit  int
+}
+
+type HistoryOptions struct {
+	ObservationID     uuid.UUID
+	ObservationCursor *int64
+	StatusCursor      *int64
+	Limit             int
 }
 
 func (s Service) now() time.Time {

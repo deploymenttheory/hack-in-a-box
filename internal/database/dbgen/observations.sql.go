@@ -10,19 +10,29 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const currentMentorObservations = `-- name: CurrentMentorObservations :many
-SELECT DISTINCT ON(id) event_id, team_id, id, version, author_id, observed_at, changed_at, category, evidence, outcome, feedback_reference FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 ORDER BY id,version DESC LIMIT 1001
+SELECT DISTINCT ON(id) event_id, team_id, id, version, author_id, observed_at, changed_at, category, evidence, outcome, feedback_reference FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2
+AND ($3::uuid IS NULL OR id>$3::uuid)
+ORDER BY id,version DESC LIMIT $4::integer
 `
 
 type CurrentMentorObservationsParams struct {
-	EventID uuid.UUID
-	TeamID  uuid.UUID
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	AfterID  *uuid.UUID
+	PageSize int32
 }
 
 func (q *Queries) CurrentMentorObservations(ctx context.Context, arg CurrentMentorObservationsParams) ([]MentorObservationVersion, error) {
-	rows, err := q.db.Query(ctx, currentMentorObservations, arg.EventID, arg.TeamID)
+	rows, err := q.db.Query(ctx, currentMentorObservations,
+		arg.EventID,
+		arg.TeamID,
+		arg.AfterID,
+		arg.PageSize,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +61,31 @@ func (q *Queries) CurrentMentorObservations(ctx context.Context, arg CurrentMent
 		return nil, err
 	}
 	return items, nil
+}
+
+const currentMentorStatus = `-- name: CurrentMentorStatus :one
+SELECT event_id, team_id, version, actor_id, state, reason, next_action, changed_at FROM mentor_team_status_versions WHERE event_id=$1 AND team_id=$2 ORDER BY version DESC LIMIT 1
+`
+
+type CurrentMentorStatusParams struct {
+	EventID uuid.UUID
+	TeamID  uuid.UUID
+}
+
+func (q *Queries) CurrentMentorStatus(ctx context.Context, arg CurrentMentorStatusParams) (MentorTeamStatusVersion, error) {
+	row := q.db.QueryRow(ctx, currentMentorStatus, arg.EventID, arg.TeamID)
+	var i MentorTeamStatusVersion
+	err := row.Scan(
+		&i.EventID,
+		&i.TeamID,
+		&i.Version,
+		&i.ActorID,
+		&i.State,
+		&i.Reason,
+		&i.NextAction,
+		&i.ChangedAt,
+	)
+	return i, err
 }
 
 const insertMentorObservation = `-- name: InsertMentorObservation :one
@@ -144,18 +179,57 @@ func (q *Queries) InsertMentorStatus(ctx context.Context, arg InsertMentorStatus
 	return i, err
 }
 
-const mentorObservationHistory = `-- name: MentorObservationHistory :many
-SELECT event_id, team_id, id, version, author_id, observed_at, changed_at, category, evidence, outcome, feedback_reference FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3 ORDER BY version DESC LIMIT 1001
+const latestMentorObservation = `-- name: LatestMentorObservation :one
+SELECT event_id, team_id, id, version, author_id, observed_at, changed_at, category, evidence, outcome, feedback_reference FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3 ORDER BY version DESC LIMIT 1
 `
 
-type MentorObservationHistoryParams struct {
+type LatestMentorObservationParams struct {
 	EventID uuid.UUID
 	TeamID  uuid.UUID
 	ID      uuid.UUID
 }
 
+func (q *Queries) LatestMentorObservation(ctx context.Context, arg LatestMentorObservationParams) (MentorObservationVersion, error) {
+	row := q.db.QueryRow(ctx, latestMentorObservation, arg.EventID, arg.TeamID, arg.ID)
+	var i MentorObservationVersion
+	err := row.Scan(
+		&i.EventID,
+		&i.TeamID,
+		&i.ID,
+		&i.Version,
+		&i.AuthorID,
+		&i.ObservedAt,
+		&i.ChangedAt,
+		&i.Category,
+		&i.Evidence,
+		&i.Outcome,
+		&i.FeedbackReference,
+	)
+	return i, err
+}
+
+const mentorObservationHistory = `-- name: MentorObservationHistory :many
+SELECT event_id, team_id, id, version, author_id, observed_at, changed_at, category, evidence, outcome, feedback_reference FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3
+AND ($4::bigint IS NULL OR version<$4::bigint)
+ORDER BY version DESC LIMIT $5::integer
+`
+
+type MentorObservationHistoryParams struct {
+	EventID       uuid.UUID
+	TeamID        uuid.UUID
+	ID            uuid.UUID
+	BeforeVersion pgtype.Int8
+	PageSize      int32
+}
+
 func (q *Queries) MentorObservationHistory(ctx context.Context, arg MentorObservationHistoryParams) ([]MentorObservationVersion, error) {
-	rows, err := q.db.Query(ctx, mentorObservationHistory, arg.EventID, arg.TeamID, arg.ID)
+	rows, err := q.db.Query(ctx, mentorObservationHistory,
+		arg.EventID,
+		arg.TeamID,
+		arg.ID,
+		arg.BeforeVersion,
+		arg.PageSize,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -187,16 +261,25 @@ func (q *Queries) MentorObservationHistory(ctx context.Context, arg MentorObserv
 }
 
 const mentorStatusHistory = `-- name: MentorStatusHistory :many
-SELECT event_id, team_id, version, actor_id, state, reason, next_action, changed_at FROM mentor_team_status_versions WHERE event_id=$1 AND team_id=$2 ORDER BY version DESC LIMIT 1001
+SELECT event_id, team_id, version, actor_id, state, reason, next_action, changed_at FROM mentor_team_status_versions WHERE event_id=$1 AND team_id=$2
+AND ($3::bigint IS NULL OR version<$3::bigint)
+ORDER BY version DESC LIMIT $4::integer
 `
 
 type MentorStatusHistoryParams struct {
-	EventID uuid.UUID
-	TeamID  uuid.UUID
+	EventID       uuid.UUID
+	TeamID        uuid.UUID
+	BeforeVersion pgtype.Int8
+	PageSize      int32
 }
 
 func (q *Queries) MentorStatusHistory(ctx context.Context, arg MentorStatusHistoryParams) ([]MentorTeamStatusVersion, error) {
-	rows, err := q.db.Query(ctx, mentorStatusHistory, arg.EventID, arg.TeamID)
+	rows, err := q.db.Query(ctx, mentorStatusHistory,
+		arg.EventID,
+		arg.TeamID,
+		arg.BeforeVersion,
+		arg.PageSize,
+	)
 	if err != nil {
 		return nil, err
 	}
