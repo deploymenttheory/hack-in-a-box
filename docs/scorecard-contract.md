@@ -97,9 +97,8 @@ deliverables.
   private score rejection and revoked-cookie access loss. Populated participant,
   logistics/export, MC and paired room payloads, and actual approved in-app
   notification persistence/list/detail exclude stored private score evidence.
-- Go lint was clean and both bundles built before the final targeted evidence
-  additions. Fresh lint/build/generation and final actual-main verification are
-  still required after restacking and migration ordering.
+- Final scoped Go lint reports zero issues; both frontend bundles build and
+  web lint passes. Generated contracts were regenerated against actual schema33.
 
 
 ## Actual-main32/normal33 checkpoint
@@ -119,6 +118,13 @@ through the normal upgrade. No independent scores or rubric publication are
 inferred. Empty33 rollback succeeds; once a checkpoint is explicitly configured,
 rollback fails atomically and retains configuration and all prior source data.
 The historical fixture asserts protected33 then restores latest for later
-compatible migrations. Full scorecard/native-owner/HTTP/runtime race checks are
-running on this final integrated source; this document does not predeclare them
-or future exact-head GitHub checks successful.
+compatible migrations. The final full affected PostgreSQL/race suite passes:
+scorecards20.639s, observations17.957s, rubric15.001s, HTTP75.888s and
+application runtime8.153s. Independent final-source review additionally passes
+5.845s for actual32→33/rollback and native99 evidence authority at write and
+each-author sign-off. Earlier independent lifecycle/sign-off/restart coverage
+passes8.018s and HTTP privacy3.738s.
+
+These local results do not predeclare the separate exact-head GitHub CI merge
+gate successful. The persisted synthetic moderation-owner fixture proves the
+canonical typed contract; actual #104 huddle integration remains future work.
