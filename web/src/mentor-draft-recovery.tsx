@@ -26,6 +26,7 @@ function Recovery({ store, target, readCurrent, onRecover, onInvalidate }: Props
       const next = await store.review(target, readCurrent)
       if (signal.aborted || ticket !== operation.current) return
       setReview(next)
+      if (next.status === 'blocked') onInvalidate()
       if (recover && next.status === 'ready') onRecover(next)
     } finally { if (!signal.aborted && ticket === operation.current) setPending(false) }
   }

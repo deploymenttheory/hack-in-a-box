@@ -37,3 +37,25 @@ test('remote scope invalidation immediately calls the actual editor clear bounda
   expect(editorText).toBe('')
   expect(sessionStorage.length).toBe(0)
 })
+
+test.each([0, 403, 404, 409])('current resource denial%s clears text that was already restored while the session stays valid', async status => {
+  const store = new MentorDraftStore()
+  store.save(target, 7, 0, { category: 'technical', evidence: 'PRIVATE-RESTORED-TEXT', outcome: '' })
+  let denied = false, editorText = ''
+  const read = async () => {
+    if (denied && status) throw { status }
+    return { eventID: target.eventID, teamID: target.teamID, noteID: target.noteID, revision: 7, noteVersion: 0, canWrite: !denied, reviewOpen: true }
+  }
+  const clear = vi.fn(() => { editorText = '' })
+  render(<MentorDraftRecovery store={store} target={target} readCurrent={read} onRecover={review => { editorText = review.text.evidence }} onInvalidate={clear} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Check for local text' }))
+  await screen.findByText(/Unsent text is available/)
+  fireEvent.click(screen.getByRole('button', { name: 'Restore text to the editor' }))
+  await waitFor(() => expect(editorText).toBe('PRIVATE-RESTORED-TEXT'))
+  denied = true
+  fireEvent.click(screen.getByRole('button', { name: 'Check for local text' }))
+  await screen.findByText(/does not allow recovery/)
+  expect(clear).toHaveBeenCalledOnce()
+  expect(editorText).toBe('')
+  expect(sessionStorage.length).toBe(0)
+})
