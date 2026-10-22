@@ -127,6 +127,10 @@ func (s Service) authorize(
 			destination.ResourceID == source.ID {
 			return &destination, nil
 		}
+		if source.Kind == "clarification" && destination.Kind == "clarification" &&
+			destination.ResourceID == source.ID {
+			return &destination, nil
+		}
 		return nil, access.ErrNotFound
 	}
 }

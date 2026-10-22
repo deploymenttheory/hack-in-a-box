@@ -2,7 +2,6 @@ package rubric
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -201,59 +200,8 @@ func (s Service) Public(ctx context.Context, actor, eventID uuid.UUID) (PublicPa
 		if version == 0 {
 			return access.ErrNotFound
 		}
-		publication, err := q.RubricPublication(
-			ctx,
-			dbgen.RubricPublicationParams{
-				EventID:          eventID,
-				ChallengeID:      challenge.ID,
-				ChallengeVersion: version,
-			},
-		)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return access.ErrNotFound
-		}
-		if err != nil {
-			return fmt.Errorf("read released rubric publication: %w", err)
-		}
-		content, err := q.ContentVersion(
-			ctx,
-			dbgen.ContentVersionParams{EventID: eventID, ContentID: challenge.ID, Version: version},
-		)
-		if err != nil {
-			return fmt.Errorf("read released challenge reference: %w", err)
-		}
-		var document struct {
-			Rubric *Reference `json:"rubric"`
-		}
-		if err = json.Unmarshal(content.Document, &document); err != nil {
-			return fmt.Errorf("decode common rubric reference: %w", err)
-		}
-		ref := document.Rubric
-		if ref == nil || ref.ID != publication.RubricID || ref.Version != publication.Version ||
-			ref.Digest != publication.PublicDigest {
-			return access.ErrConflict
-		}
-		rubric, err := q.RubricVersion(
-			ctx,
-			dbgen.RubricVersionParams{EventID: eventID, RubricID: ref.ID, Version: ref.Version},
-		)
-		if err != nil {
-			return fmt.Errorf("read released common rubric: %w", err)
-		}
-		var definition PublicDefinition
-		if err = json.Unmarshal(rubric.PublicDocument, &definition); err != nil {
-			return fmt.Errorf("decode released common criteria: %w", err)
-		}
-		if (Definition{PublicDefinition: definition}).PublicDigest() != ref.Digest {
-			return access.ErrConflict
-		}
-		out = PublicPage{
-			Reference:   *ref,
-			Definition:  definition,
-			PublishedAt: publication.PublishedAt,
-			Notice:      publication.ReviewedNotice,
-		}
-		return nil
+		out, err = releasedSnapshot(ctx, q, eventID, challenge.ID, version)
+		return err
 	})
 	if err != nil {
 		return out, fmt.Errorf("common rubric: %w", err)

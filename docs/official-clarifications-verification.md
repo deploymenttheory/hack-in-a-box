@@ -1,0 +1,60 @@
+# Official clarification verification checkpoint
+
+This local #161 checkpoint implements the native private-question and common
+answer contract. It is not a release/CI or ordered-migration completion claim.
+The complete question and staff workspace remains #162.
+
+Questions require current confirmed admission and published team membership;
+explicit current organisers can triage them. Current authority and actual common
+challenge/rubric publication are rechecked inside the event transaction. Archive
+keeps authorised historical reads and freezes writes. Private attachment bytes
+additionally require exact question/file/team association; staff byte access
+opens only at live start. Verified storage reads do not widen generic file policy.
+
+Answer authoring, exact-version approval and publication are distinct immutable
+records. Corrections retain prior published versions. Public queries and DTOs
+exclude the private question ID, team, body and attachments. Material-change kinds
+require real owning released versions; rubric changes also require the owning
+impact review and reviewed notice. The consuming source resolver and the common
+rubric reader share exact publication/document/digest validation.
+
+Publication and fixed-label native inbox references commit together. A notification
+contains answer ID/version only and rechecks current confirmed status on list,
+open and read. The canonical read-only route is
+`/events/<event-id>/clarifications/<answer-id>`. Its current and historical bodies
+use the same safe Markdown renderer as released resources. The account-scoped
+cache is ephemeral, clears on navigation or denial, and never persists to browser
+storage. Older corrections and native private histories have bounded keyset pages.
+
+## Evidence before final rebase
+
+- Real PostgreSQL/race tests exercise actual T−7 content release, private team and
+  staff isolation, request replay/conflict, withdrawal, staff revocation, archive,
+  bounded private/history continuation and common-source validation.
+- The actual shared production runtime exercises native publication and inbox
+  list/open, correction history and concurrent duplicate publication. A fault
+  after actual recipient inserts rolls back publication and every notification;
+  retries create one retained notification per revision/current recipient.
+- HTTP tests validate responses against the generated OpenAPI contract and cover
+  authentication, CSRF, malformed input, no-store, private history/triage/drafts,
+  distinct approve/publish, common search and generic log privacy. Positive team
+  and post-live staff attachment reads return exact bytes; other teams, pre-live
+  staff and revoked readers receive no bytes or private metadata.
+- A positive attachment regression first reproduced two HTTP500 responses from
+  wrapping a nil storage error. Success now returns nil after verification;
+  guarded error wrapping remains intact.
+- Twelve combined inbox/canonical-reader browser cases pass on desktop/mobile
+  in each independently built public and admin surface. They cover actual route
+  navigation, author/time/source labels, superseded/corrected history continuation,
+  denied copied links, sanitisation, active-authority clearing and no persistence.
+- Both web builds, web lint, scoped Go lint and Go formatting pass.
+
+## Remaining release gates
+
+The local migration number is provisional. Rebase directly onto the actual merged
+predecessor, preserving help/runtime/inbox owner-map unions, and prove a populated
+normal ordered upgrade plus guarded rollback before opening CI. Finish real owning
+material-change cases and source/current-role races, then obtain exact-head CI and
+review. Source adapters for #82 must derive metadata and current audience from
+actual immutable publications with source-ID/keyset filtering before bounds;
+orchestration is not implemented here.

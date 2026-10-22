@@ -105,10 +105,12 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	communicationRuntime.Clarifications.Storage = storage
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
 		Help:           communicationRuntime.Help,
+		Clarifications: *communicationRuntime.Clarifications,
 		Presentation:   presentation.Service{Pool: pool},
 		Communications: *communicationRuntime.Communications,
 		Inbox:          *communicationRuntime.Inbox,

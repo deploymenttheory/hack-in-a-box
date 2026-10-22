@@ -1673,6 +1673,195 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listTeamQuestions"];
+        put?: never;
+        post: operations["askTeamQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPrivateTeamQuestion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPrivateQuestionHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}/triage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["triageTeamQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getClarificationConfiguration"];
+        put: operations["saveClarificationDraft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/clarifications/{answer_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviewClarification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/clarifications/{answer_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPublishedClarificationHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}/attachments/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getQuestionAttachment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/clarifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["searchPublishedClarifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/clarifications/{answer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPublishedClarification"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/rubric": {
         parameters: {
             query?: never;
@@ -2650,7 +2839,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content" | "help";
+            kind: "content" | "help" | "clarification";
             /** Format: uuid */
             resource_id: string;
         };
@@ -2662,7 +2851,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content" | "help";
+                kind: "content" | "help" | "clarification";
                 /** Format: uuid */
                 resource_id: string;
             } | null;
@@ -3516,6 +3705,129 @@ export interface components {
             items: components["schemas"]["EventGuidanceItem"][];
             warnings: components["schemas"]["Blocker"][];
             can_manage: boolean;
+        };
+        PrivateQuestionInput: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            command_id: string;
+            /** @enum {string} */
+            topic: "challenge" | "rubric";
+            body: string;
+            attachments: string[];
+        };
+        PrivateQuestion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            revision: number;
+            /** @enum {string} */
+            topic: "challenge" | "rubric";
+            body: string;
+            attachments: string[];
+            source: components["schemas"]["ClarificationSource"];
+            /** @enum {string} */
+            status: "open" | "triaged" | "closed" | "answered";
+            /** Format: date-time */
+            created_at: string;
+        };
+        PrivateQuestionList: {
+            items: components["schemas"]["PrivateQuestion"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        QuestionTriage: {
+            /** @enum {string} */
+            action: "triage" | "close" | "reopen";
+        };
+        QuestionTransition: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number | null;
+            /** @enum {string} */
+            action: "asked" | "triaged" | "closed" | "reopened" | "authored" | "approved" | "published";
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+        };
+        PrivateQuestionHistory: {
+            items: components["schemas"]["QuestionTransition"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ClarificationConfiguration: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            question_id: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number;
+            document: components["schemas"]["ClarificationDocument"];
+            source: components["schemas"]["ClarificationSource"];
+            approved: boolean;
+            published: boolean;
+        };
+        ClarificationCommand: {
+            /** @enum {string} */
+            action: "approve" | "publish";
+            /** Format: int64 */
+            version: number;
+        };
+        ClarificationHistory: {
+            items: components["schemas"]["PublishedClarification"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        ClarificationSource: {
+            /** Format: uuid */
+            challenge_id: string;
+            /** Format: int64 */
+            challenge_version: number;
+            rubric: components["schemas"]["RubricReference"];
+        };
+        ClarificationDocument: {
+            title: string;
+            body: string;
+            /** @enum {string} */
+            kind: "clarification" | "challenge_change" | "rubric_change";
+        };
+        PublishedClarification: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            document: components["schemas"]["ClarificationDocument"];
+            source: components["schemas"]["ClarificationSource"];
+            author_name: string;
+            /** Format: date-time */
+            authored_at: string;
+            /** Format: date-time */
+            approved_at: string;
+            /** Format: date-time */
+            published_at: string;
+            current: boolean;
+            source_current: boolean;
+        };
+        ClarificationPage: {
+            answer: components["schemas"]["PublishedClarification"];
+            history: components["schemas"]["PublishedClarification"][];
+            history_has_more: boolean;
+            archived: boolean;
+        };
+        ClarificationList: {
+            items: components["schemas"]["PublishedClarification"][];
+            /** Format: uuid */
+            next_cursor: string | null;
         };
         RubricReference: {
             /** Format: uuid */
@@ -7271,6 +7583,334 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTeamQuestions: {
+        parameters: {
+            query?: {
+                team_id?: string;
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-team private questions or explicit organiser triage; no common discovery. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateQuestionList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    askTeamQuestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivateQuestionInput"];
+            };
+        };
+        responses: {
+            /** @description Private question bound server-side to the exact actually released common source. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateQuestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPrivateTeamQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised team or explicit staff only, including archived current-authority reads. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateQuestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPrivateQuestionHistory: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private actor/time/action history without question or answer prose. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateQuestionHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    triageTeamQuestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionTriage"];
+            };
+        };
+        responses: {
+            /** @description Explicit current-organiser triage; never scoring or a formal submission. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivateQuestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getClarificationConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staff-only latest immutable draft and exact source, never the common projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveClarificationDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClarificationDocument"];
+            };
+        };
+        responses: {
+            /** @description Separate authored immutable version; material-change labels require real owning released versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    reviewClarification: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClarificationCommand"];
+            };
+        };
+        responses: {
+            /** @description Distinct exact-version approval or publication with atomic current-recipient inbox references. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPublishedClarificationHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published corrections only, descending by exact answer version. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQuestionAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised private attachment bytes after exact question association and current live-start staff gate. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    searchPublishedClarifications: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+                search?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Common published answers only; never private question text, drafts or attachments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPublishedClarification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                answer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical common answer and immutable published corrections, authorised against current actual common release. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationPage"];
                 };
             };
             default: components["responses"]["Error"];

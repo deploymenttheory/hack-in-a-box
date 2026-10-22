@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
@@ -19,6 +20,7 @@ import (
 
 type communicationRuntime struct {
 	Help           help.Service
+	Clarifications *clarification.Service
 	Inbox          *inbox.Service
 	Communications *communications.Service
 	SMTP           *smtpintegration.Service
@@ -46,10 +48,13 @@ func newCommunicationRuntime(
 	}
 	provider.Campaigns = composer
 	inboxProvider := &inbox.Service{Pool: pool, Communications: composer}
+	answers := &clarification.Service{Pool: pool}
+	answers.Notifications = clarificationInboxSink{Inbox: inboxProvider}
 	composer.Channels["in_app"] = inboxProvider
 	helpProvider := help.Service{Pool: pool}
 	inboxProvider.Owners = map[string]inbox.ResourceOwner{
-		"help": helpInboxOwner{Help: helpProvider},
+		"help":          helpInboxOwner{Help: helpProvider},
+		"clarification": clarificationInboxOwner{Answers: answers},
 	}
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: inboxProvider}
@@ -70,6 +75,7 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
+		Clarifications: answers,
 		Communications: composer,
 		Inbox:          inboxProvider,
 		Help:           helpProvider,

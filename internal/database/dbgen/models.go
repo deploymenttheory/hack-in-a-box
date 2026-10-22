@@ -51,6 +51,70 @@ type CateringSetting struct {
 	Buffer  int32
 }
 
+type ClarificationAnswer struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	QuestionID       uuid.UUID
+	Revision         int64
+	LatestVersion    int64
+	ApprovedVersion  pgtype.Int8
+	PublishedVersion pgtype.Int8
+}
+
+type ClarificationApproval struct {
+	EventID    uuid.UUID
+	AnswerID   uuid.UUID
+	Version    int64
+	ActorID    uuid.UUID
+	ApprovedAt time.Time
+}
+
+type ClarificationChange struct {
+	EventID    uuid.UUID
+	ID         uuid.UUID
+	QuestionID *uuid.UUID
+	AnswerID   *uuid.UUID
+	Revision   int64
+	Version    pgtype.Int8
+	Action     string
+	ActorID    uuid.UUID
+	OccurredAt time.Time
+}
+
+type ClarificationPublication struct {
+	EventID     uuid.UUID
+	AnswerID    uuid.UUID
+	Version     int64
+	ActorID     uuid.UUID
+	PublishedAt time.Time
+}
+
+type ClarificationQuestion struct {
+	EventID       uuid.UUID
+	ID            uuid.UUID
+	TeamID        uuid.UUID
+	AuthorID      uuid.UUID
+	CommandID     uuid.UUID
+	RequestDigest string
+	Topic         string
+	Body          string
+	Attachments   []uuid.UUID
+	Source        []byte
+	Revision      int64
+	Status        string
+	CreatedAt     time.Time
+}
+
+type ClarificationVersion struct {
+	EventID    uuid.UUID
+	AnswerID   uuid.UUID
+	Version    int64
+	Document   []byte
+	Source     []byte
+	AuthorID   uuid.UUID
+	AuthoredAt time.Time
+}
+
 type CommunicationApproval struct {
 	EventID   uuid.UUID
 	PreviewID uuid.UUID

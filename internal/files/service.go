@@ -181,6 +181,16 @@ func VerifyStored(ctx context.Context, storage Storage, file dbgen.File) error {
 	return err
 }
 
+// ReadAuthorizedStored verifies immutable metadata and returns stored bytes. The
+// native resource owner must first authorise its current reader and exact file
+// association using its existing transaction; this helper grants no file access.
+func ReadAuthorizedStored(ctx context.Context, storage Storage, file dbgen.File) ([]byte, error) {
+	if storage == nil {
+		return nil, ErrMissing
+	}
+	return readStored(ctx, storage, file)
+}
+
 func readStored(ctx context.Context, storage Storage, file dbgen.File) ([]byte, error) {
 	data, err := storage.Read(ctx, file.ObjectKey, file.SizeBytes)
 	if err != nil {
