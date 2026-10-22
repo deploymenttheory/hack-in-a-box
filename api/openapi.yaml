@@ -1453,6 +1453,22 @@ paths:
                 $ref: '#/components/schemas/CommunicationPage'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/communications/tests/{test_id}/delivery:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - name: test_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getCommunicationTestDelivery
+      responses:
+        '200':
+          description: Bounded SMTP submission receipt for the current requesting organiser; acceptance is not proof of delivery or reading.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SMTPTestDeliveryStatus' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/communications/campaigns:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -2283,6 +2299,14 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    SMTPTestDeliveryStatus:
+      type: object
+      additionalProperties: false
+      required: [state, reason, updated_at]
+      properties:
+        state: { type: string, enum: [pending, accepted, retryable, permanent, ambiguous, cancelled] }
+        reason: { type: string }
+        updated_at: { type: string, format: date-time, nullable: true }
     AccountEmailStatus:
       type: object
       additionalProperties: false

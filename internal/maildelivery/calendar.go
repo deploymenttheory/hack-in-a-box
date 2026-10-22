@@ -12,13 +12,14 @@ import (
 // Calendar is an authorised, immutable event snapshot. Callers persist sequence
 // and timestamps with the attempt; retries must reuse it rather than recalculate.
 type Calendar struct {
-	EventID      uuid.UUID
-	Test         bool
-	Sequence     int64
-	Start, End   time.Time
-	Timezone     string
-	Summary      string
-	WorkspaceURL string
+	EventID      uuid.UUID `json:"event_id"`
+	Test         bool      `json:"test"`
+	Sequence     int64     `json:"sequence"`
+	Start        time.Time `json:"start"`
+	End          time.Time `json:"end"`
+	Timezone     string    `json:"timezone"`
+	Summary      string    `json:"summary"`
+	WorkspaceURL string    `json:"workspace_url"`
 }
 
 func escapeCalendar(value string) string {

@@ -640,16 +640,17 @@ type Session struct {
 }
 
 type SmtpMessageSnapshot struct {
-	OperationID uuid.UUID
-	EventID     uuid.UUID
-	PersonID    uuid.UUID
-	Mailbox     string
-	MessageID   string
-	Snapshot    []byte
-	State       string
-	ReceiptCode string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	OperationID   uuid.UUID
+	EventID       uuid.UUID
+	PersonID      uuid.UUID
+	TestRequestID uuid.UUID
+	Mailbox       string
+	MessageID     string
+	Snapshot      []byte
+	State         string
+	ReceiptCode   string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type SubmissionChange struct {

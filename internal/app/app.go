@@ -14,7 +14,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
-	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
@@ -26,9 +25,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
-	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
-	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
-	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
@@ -58,10 +54,6 @@ func Main(component string, run func(context.Context, config.Config, *slog.Logge
 }
 
 func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
-	smtp, err := maildelivery.NewSMTP(cfg.SMTP)
-	if err != nil {
-		return fmt.Errorf("configure SMTP: %w", err)
-	}
 	pool, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
@@ -106,12 +98,17 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("configure GitHub identity: %w", err)
 	}
+	communicationRuntime, err := newCommunicationRuntime(pool, cfg, logger)
+	if err != nil {
+		return err
+	}
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
 		Presentation:   presentation.Service{Pool: pool},
-		Communications: communications.Service{Pool: pool},
-		MailContacts:   mailcontact.Service{Pool: pool, Sender: smtp},
+		Communications: *communicationRuntime.Communications,
+		MailContacts:   communicationRuntime.MailContacts,
+		SMTP:           communicationRuntime.SMTP,
 		Credentials:    credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
 		Mentors:        mentors.Service{Pool: pool},
 		Content:        content.Service{Pool: pool, Storage: storage},
@@ -175,10 +172,11 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	if err := storage.Cleanup(ctx, dbgen.New(pool).ObjectExists); err != nil {
 		return fmt.Errorf("cleanup: %w", err)
 	}
-	worker, err := jobs.New(pool, logger, map[string]jobs.Handler{})
+	communicationRuntime, err := newCommunicationRuntime(pool, cfg, logger)
 	if err != nil {
-		return fmt.Errorf("new: %w", err)
+		return err
 	}
+	worker := communicationRuntime.Jobs
 	logger.Info("worker started", "jobs_enabled", true)
 	worker.FastMaintenance = (content.Service{Pool: pool, Storage: storage}).Maintain
 	worker.Maintenance = func(ctx context.Context) error {
@@ -194,7 +192,10 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		if err := (registration.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain registration responses: %w", err)
 		}
-		if err := (mailcontact.Service{Pool: pool}).Maintain(ctx); err != nil {
+		if err := communicationRuntime.SMTP.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain SMTP tests: %w", err)
+		}
+		if err := communicationRuntime.MailContacts.Maintain(ctx); err != nil {
 			return fmt.Errorf("retain email confirmations: %w", err)
 		}
 		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {

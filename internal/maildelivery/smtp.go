@@ -2,6 +2,7 @@ package maildelivery
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -16,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type SMTP struct {
@@ -37,9 +40,27 @@ func (s *SMTP) Revision() string {
 	if !s.Configured() {
 		return ""
 	}
-	data, _ := json.Marshal(s.settings)
-	digest := sha256.Sum256(data)
-	return hex.EncodeToString(digest[:])
+	data, _ := json.Marshal(
+		[]string{
+			s.settings.Host,
+			strconv.Itoa(s.settings.Port),
+			s.settings.Mode,
+			s.settings.Username,
+			s.settings.From,
+			s.settings.MessageDomain,
+			s.settings.Timeout.String(),
+		},
+	)
+	mac := hmac.New(sha256.New, []byte(s.settings.Password))
+	_, _ = mac.Write(data)
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+func (s *SMTP) MessageID(id uuid.UUID) string {
+	if !s.Configured() || id == uuid.Nil {
+		return ""
+	}
+	return "<hbox." + id.String() + "@" + s.settings.MessageDomain + ">"
 }
 
 func failure(err error, uncertain bool, messageID string) Receipt {

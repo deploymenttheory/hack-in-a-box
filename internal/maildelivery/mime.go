@@ -7,6 +7,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
+	"net"
 	"net/mail"
 	"net/textproto"
 	"net/url"
@@ -16,8 +17,13 @@ import (
 
 func safeWorkspace(value string) bool {
 	parsed, err := url.Parse(value)
-	return err == nil && parsed.Scheme == "https" && parsed.Host != "" && parsed.User == nil &&
-		parsed.RawQuery == "" &&
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(parsed.Hostname())
+	secure := parsed.Scheme == "https" ||
+		(parsed.Scheme == "http" && (parsed.Hostname() == "localhost" || (ip != nil && ip.IsLoopback())))
+	return secure && parsed.Host != "" && parsed.User == nil && parsed.RawQuery == "" &&
 		parsed.Fragment == "" &&
 		header(value, 2048)
 }

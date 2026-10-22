@@ -113,21 +113,26 @@ func header(value string, limit int) bool {
 }
 
 type (
-	Brand   struct{ Name, Primary, Background, Foreground string }
+	Brand struct {
+		Name       string `json:"name"`
+		Primary    string `json:"primary"`
+		Background string `json:"background"`
+		Foreground string `json:"foreground"`
+	}
 	Message struct {
-		ID        uuid.UUID
-		Recipient string
-		Subject   string
-		PlainText string
-		Brand     Brand
-		SentAt    time.Time
-		Calendar  *Calendar
+		ID        uuid.UUID `json:"id"`
+		Recipient string    `json:"recipient"`
+		Subject   string    `json:"subject"`
+		PlainText string    `json:"plain_text"`
+		Brand     Brand     `json:"brand"`
+		SentAt    time.Time `json:"sent_at"`
+		Calendar  *Calendar `json:"calendar"`
 	}
 )
 
 func (m Message) validate() error {
 	if m.ID == uuid.Nil || !Mailbox(m.Recipient) || strings.TrimSpace(m.Subject) == "" ||
-		!header(m.Subject, 200) ||
+		!header(m.Subject, 256) ||
 		!header(m.Brand.Name, 160) ||
 		len(m.PlainText) > 65536 ||
 		!utf8.ValidString(m.PlainText) ||
@@ -141,4 +146,28 @@ func (m Message) validate() error {
 		}
 	}
 	return nil
+}
+
+// SafeReceipt bounds third-party/mock adapter outcomes before persistence.
+func SafeReceipt(receipt Receipt) Receipt {
+	switch receipt.State {
+	case Accepted, Retryable, Permanent, Ambiguous:
+	default:
+		receipt.State = Ambiguous
+	}
+	switch receipt.Code {
+	case "relay_accepted",
+		"relay_temporary_rejection",
+		"relay_rejection",
+		"acceptance_unknown",
+		"relay_unavailable",
+		"tls_verification_failed",
+		"tls_required",
+		"authentication_unavailable",
+		"invalid_message",
+		"smtp_not_configured":
+	default:
+		receipt.Code = "unknown"
+	}
+	return receipt
 }

@@ -27,13 +27,15 @@ CREATE TABLE smtp_message_snapshots (
     operation_id uuid PRIMARY KEY REFERENCES operations(id),
     event_id uuid NOT NULL REFERENCES events(id),
     person_id uuid NOT NULL REFERENCES people(id),
+    test_request_id uuid NOT NULL,
     mailbox text NOT NULL,
     message_id text NOT NULL,
     snapshot jsonb NOT NULL,
     state text NOT NULL DEFAULT 'prepared' CHECK (state IN ('prepared','accepted','retryable','permanent','ambiguous')),
     receipt_code text NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    FOREIGN KEY(event_id,test_request_id) REFERENCES communication_test_requests(event_id,id)
 );
 CREATE TABLE email_calendar_sequences (
     event_id uuid NOT NULL REFERENCES events(id),

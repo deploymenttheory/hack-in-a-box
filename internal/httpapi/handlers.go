@@ -35,12 +35,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
+	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	SMTP           *smtpintegration.Service
 	MailContacts   mailcontact.Service
 	Presentation   presentation.Service
 	Communications communications.Service

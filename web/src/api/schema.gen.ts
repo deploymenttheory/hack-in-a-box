@@ -1126,6 +1126,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/tests/{test_id}/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                test_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getCommunicationTestDelivery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/communications/campaigns": {
         parameters: {
             query?: never;
@@ -1619,6 +1638,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SMTPTestDeliveryStatus: {
+            /** @enum {string} */
+            state: "pending" | "accepted" | "retryable" | "permanent" | "ambiguous" | "cancelled";
+            reason: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
         AccountEmailStatus: {
             configured: boolean;
             verified: boolean;
@@ -5203,6 +5229,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommunicationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunicationTestDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                test_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded SMTP submission receipt for the current requesting organiser; acceptance is not proof of delivery or reading. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SMTPTestDeliveryStatus"];
                 };
             };
             default: components["responses"]["Error"];
