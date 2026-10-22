@@ -30,6 +30,7 @@ async function fixture(page: Page) {
       if (state.rejectWrite) return error(409, 'conflict')
       expect(request.headers()['if-match']).toBe(`"${state.revision}"`)
       if (input.action === 'observation') {
+        if (new TextEncoder().encode(input.evidence?.feedback_reference ?? '').length > 256) return error(400, 'invalid')
         if (!state.open) return error(409, 'event_blocked')
         const old = state.notes.find(n => n.id === input.id)
         expect(input.version).toBe(old?.version ?? 0)
@@ -217,3 +218,14 @@ for (const mode of ['expired', 'new-person'] as const) {
     expect(state.commands).toHaveLength(0)
   })
 }
+
+test('native byte-limit validation rejection retains unsent text and is never reported as ambiguous or saved', async ({ page }) => {
+  const state = await fixture(page); await openNew(page); await typeNote(page)
+  await page.getByLabel('Feedback reference (private, not locally recovered)').fill('é'.repeat(200))
+  await page.getByRole('button', { name: 'Save private observation', exact: true }).click()
+  const notice = page.getByRole('status', { name: 'Observation save state' })
+  await expect(notice).toContainText('Validation rejected this input'); await expect(notice).toContainText('no server save was made')
+  await expect(notice).not.toContainText('unconfirmed'); await expect(notice).not.toContainText('Saved on the server')
+  await expect(page.getByRole('alert')).toBeVisible(); expect(await copies(page)).toBe(1); expect(state.notes).toHaveLength(0)
+  await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveValue('UNSENT PRIVATE <script> literal evidence')
+})
