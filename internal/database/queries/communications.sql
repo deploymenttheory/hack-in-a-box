@@ -26,7 +26,7 @@ SELECT p.id,p.display_name,COALESCE(c.state,'')::text AS competition_state,
  COALESCE((SELECT t.team_id FROM hack_team_members t JOIN hack_teams h ON h.event_id=t.event_id AND h.id=t.team_id AND h.state='published' JOIN competition_entries e ON e.event_id=t.event_id AND e.team_id=t.team_id AND e.active WHERE t.event_id=$1 AND t.person_id=p.id AND t.snapshot='published'), '00000000-0000-0000-0000-000000000000'::uuid)::uuid AS team_id,
  EXISTS(SELECT 1 FROM registration_offers o JOIN registrations r ON r.event_id=o.event_id AND r.id=o.registration_id WHERE o.event_id=$1 AND r.person_id=p.id AND r.state='offered' AND o.state='pending' AND o.expires_at>sqlc.arg(at)::timestamptz) AS offer_pending
 FROM people p LEFT JOIN competition_claims c ON c.event_id=$1 AND c.person_id=p.id
-WHERE p.active AND COALESCE(c.state,'')<>'withdrawn' AND (
+WHERE p.active AND (
  c.state='confirmed' OR EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=$1 AND m.person_id=p.id AND m.active)
  OR EXISTS(SELECT 1 FROM registrations r WHERE r.event_id=$1 AND r.person_id=p.id AND r.state NOT IN ('withdrawn','declined'))
 ) ORDER BY p.id LIMIT 10001;

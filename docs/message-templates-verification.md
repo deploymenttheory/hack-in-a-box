@@ -23,7 +23,10 @@ scores. Names rendered for one recipient are never reused for another.
 
 Saved selectors combine selected current roles, active registration states or
 published teams (OR), then apply an optional outstanding-action filter (AND).
-Withdrawn/inactive people are excluded. Team selection requires a current
+Inactive people and withdrawn competitor registrations are excluded from their
+respective audiences. An attendee who withdraws and then receives an independent
+staff role remains eligible for that current staff selector; withdrawal does not
+revoke staff authority. Team selection requires a current
 confirmed place and an active published entry. Offer selection checks the pending
 offer's expiry at resolution, without waiting for a maintenance worker.
 Preparation selection uses current task ownership/status and current role grants.
@@ -74,7 +77,8 @@ to #78, and no SMTP, Teams or in-app delivery implementation is included here.
 
 Verification uses synthetic fixtures and real PostgreSQL with `-race`: concurrent
 version saves, actual registration withdrawal between preview/approval/execution,
-current team and scoped outcome-review grants, approver revocation, planned
+current team and scoped outcome-review grants, withdrawn-attendee-to-staff
+transitions and staff revocation, approver revocation, planned
 challenge embargo, approved postponed dates, changed official revisions, owned
 help status, preparation roles and pending offer expiry. Pure rendering tests
 exercise HTML/Markdown escaping, forbidden/malformed variables and single-pass

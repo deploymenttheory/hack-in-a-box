@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -267,6 +268,57 @@ func TestActualWithdrawalBetweenPreviewApprovalAndExecution(t *testing.T) {
 	}
 	if len(resolved.Recipients) != 1 || resolved.Recipients[0].PersonID != survivor.ID {
 		t.Fatalf("withdrawn recipient retained: %+v", resolved)
+	}
+
+	// Competition withdrawal does not revoke an independently granted staff role.
+	roleService := permissions.Service{Pool: f.pool}
+	grant := permissions.Change{
+		Actor:                             f.owner.ID,
+		Event:                             f.eventID,
+		Person:                            person.ID,
+		Role:                              "organiser",
+		Active:                            true,
+		AcknowledgeCompetitionRestriction: true,
+		Revision:                          f.revision(t),
+	}
+	if _, err = roleService.Change(ctx, grant); err != nil {
+		t.Fatal(err)
+	}
+	staffAudience := Audience{
+		ID:                 uuid.New(),
+		Name:               "Current organisers",
+		Roles:              []string{"organiser"},
+		RegistrationStates: []string{},
+		Teams:              []uuid.UUID{},
+	}
+	f.change(t, Command{Action: "save_audience", Audience: &staffAudience})
+	staffPreview := *f.change(t, Command{Action: "preview", TemplateID: f.t.ID, AudienceID: staffAudience.ID}).Preview
+	if !slices.ContainsFunc(
+		staffPreview.Recipients,
+		func(r Recipient) bool { return r.PersonID == person.ID },
+	) {
+		t.Fatalf("withdrawn attendee's current staff authority lost: %+v", staffPreview)
+	}
+	f.approve(t, staffPreview)
+	attendeePreview := f.preview(t)
+	if slices.ContainsFunc(
+		attendeePreview.Recipients,
+		func(r Recipient) bool { return r.PersonID == person.ID },
+	) {
+		t.Fatal("staff grant restored withdrawn attendee eligibility")
+	}
+	grant.Active = false
+	grant.Revision = f.revision(t)
+	if _, err = roleService.Change(ctx, grant); err != nil {
+		t.Fatal(err)
+	}
+	staffResolved, resolveErr := f.s.ResolveApproved(ctx, f.eventID, staffPreview.ID)
+	if resolveErr != nil ||
+		slices.ContainsFunc(
+			staffResolved.Recipients,
+			func(r Recipient) bool { return r.PersonID == person.ID },
+		) {
+		t.Fatalf("revoked staff still selected: %+v %v", staffResolved, resolveErr)
 	}
 	f.t.Body = "Revised reminder {{person.name}}"
 	f.change(t, Command{Action: "save_template", Template: &f.t})
