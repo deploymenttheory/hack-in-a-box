@@ -54,6 +54,60 @@ paths:
       responses:
         '204': { description: Server session invalidated. }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/account/email:
+    get:
+      operationId: getAccountEmail
+      responses:
+        '200':
+          description: Private masked mailbox confirmation status for the current account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountEmailStatus' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/account/email/verification:
+    post:
+      operationId: requestEmailVerification
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, minLength: 3, maxLength: 254 }
+      responses:
+        '202':
+          description: Neutral one-use confirmation requested; SMTP acceptance does not prove inbox delivery.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountEmailStatus' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/account/email/confirmation:
+    post:
+      operationId: confirmAccountEmail
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code]
+              properties:
+                code: { type: string, pattern: '^[0-9]{8}$' }
+      responses:
+        '200':
+          description: Current account proved control of its pending mailbox; the code was consumed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountEmailStatus' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/audit:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -1399,6 +1453,22 @@ paths:
                 $ref: '#/components/schemas/CommunicationPage'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/communications/tests/{test_id}/delivery:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - name: test_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      operationId: getCommunicationTestDelivery
+      responses:
+        '200':
+          description: Bounded SMTP submission receipt for the current requesting organiser; acceptance is not proof of delivery or reading.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SMTPTestDeliveryStatus' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/communications/campaigns:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -2229,6 +2299,27 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    SMTPTestDeliveryStatus:
+      type: object
+      additionalProperties: false
+      required: [state, reason, updated_at]
+      properties:
+        state: { type: string, enum: [pending, accepted, retryable, permanent, ambiguous, cancelled] }
+        reason: { type: string }
+        updated_at: { type: string, format: date-time, nullable: true }
+    AccountEmailStatus:
+      type: object
+      additionalProperties: false
+      required: [configured, verified, masked_mailbox, provenance, pending, request_state, expires_at, retry_after_seconds]
+      properties:
+        configured: { type: boolean }
+        verified: { type: boolean }
+        masked_mailbox: { type: string }
+        provenance: { type: string, enum: ['', oidc_verified, code_confirmed] }
+        pending: { type: boolean }
+        request_state: { type: string, enum: ['', prepared, accepted, retryable, permanent, ambiguous] }
+        expires_at: { type: string, format: date-time, nullable: true }
+        retry_after_seconds: { type: integer, format: int64, minimum: 0 }
     Health:
       type: object
       required: [status]

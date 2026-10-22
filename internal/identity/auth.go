@@ -22,6 +22,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 )
 
 var (
@@ -71,7 +72,7 @@ func New(ctx context.Context, pool *pgxpool.Pool, settings Settings) (*Auth, err
 		ClientSecret: settings.ClientSecret,
 		Endpoint:     provider.Endpoint(),
 		RedirectURL:  settings.Origin + "/auth/callback",
-		Scopes:       []string{oidc.ScopeOpenID, "profile"},
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
 	return auth, nil
 }
@@ -152,6 +153,8 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) error {
 	}
 	var profile struct {
 		Name            string `json:"name"`
+		Email           string `json:"email"`
+		EmailVerified   bool   `json:"email_verified"`
 		AuthorizedParty string `json:"azp"`
 	}
 	if err := claims.Claims(&profile); err != nil {
@@ -180,6 +183,15 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) error {
 		}
 		if !person.Active {
 			return access.ErrUnauthenticated
+		}
+		if err := mailcontact.SyncClaimInTransaction(
+			ctx,
+			q,
+			person.ID,
+			profile.Email,
+			profile.EmailVerified,
+		); err != nil {
+			return fmt.Errorf("sync private email contact: %w", err)
 		}
 		if claims.Subject == a.settings.BootstrapSubject && a.settings.BootstrapSubject != "" {
 			changed, err := q.BootstrapAdmin(ctx, person.ID)

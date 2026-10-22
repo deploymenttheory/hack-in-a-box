@@ -27,6 +27,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
@@ -34,12 +35,15 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
+	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	SMTP           *smtpintegration.Service
+	MailContacts   mailcontact.Service
 	Presentation   presentation.Service
 	Communications communications.Service
 	Credentials    credentials.Service
@@ -282,6 +286,10 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		}
 		body.Error.Blockers = &items
 		writeJSON(w, 409, body)
+		return
+	}
+	if status, code, message := emailError(err); status != 0 {
+		writeError(w, r, status, code, message)
 		return
 	}
 	if code, message := assignmentConflict(err); code != "" {

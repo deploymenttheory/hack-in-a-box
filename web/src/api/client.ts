@@ -7,6 +7,9 @@ export type Blocker = components['schemas']['Blocker']
 export class APIError extends Error {
   constructor(public status: number, public code: string, public requestID?: string, public blockers: Blocker[] = []) {
     const messages: Record<string, string> = {
+      email_code_invalid: 'The confirmation code is invalid or expired. Request a new code when available.',
+      email_rate_limited: 'Wait before requesting another confirmation code.',
+      email_unavailable: 'Personal email is not available for this installation.',
       withdrawal_required: 'This person must explicitly withdraw their active or waitlisted attendee registration before receiving this role.',
       competition_ineligible: 'Previous organiser or early brief access permanently prevents competition in this event.',
       assessment_conflict: 'A person cannot compete and assess in the same event.',

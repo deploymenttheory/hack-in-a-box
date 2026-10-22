@@ -343,6 +343,12 @@ func (s Service) ResolveApprovedInTransaction(
 	tx pgx.Tx,
 	eventID, previewID uuid.UUID,
 ) (Preview, error) {
+	return s.resolveApprovedProjection(ctx, tx, eventID, previewID, uuid.Nil, false)
+}
+
+func (s Service) resolveApprovedProjection(
+	ctx context.Context, tx pgx.Tx, eventID, previewID, personID uuid.UUID, literal bool,
+) (Preview, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
 	if err != nil {
@@ -376,7 +382,7 @@ func (s Service) ResolveApprovedInTransaction(
 	if t.Version != saved.TemplateVersion || a.Version != saved.AudienceVersion {
 		return Preview{}, ErrUnresolved
 	}
-	fresh, err := s.build(ctx, q, row, t, a)
+	fresh, err := s.buildProjection(ctx, q, row, t, a, personID, literal)
 	if err != nil {
 		return Preview{}, contextError("ResolveApprovedInTransaction", err)
 	}

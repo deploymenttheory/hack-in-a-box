@@ -68,6 +68,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAccountEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/email/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requestEmailVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/email/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmAccountEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/audit": {
         parameters: {
             query?: never;
@@ -1078,6 +1126,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/tests/{test_id}/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                test_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getCommunicationTestDelivery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/communications/campaigns": {
         parameters: {
             query?: never;
@@ -1571,6 +1638,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SMTPTestDeliveryStatus: {
+            /** @enum {string} */
+            state: "pending" | "accepted" | "retryable" | "permanent" | "ambiguous" | "cancelled";
+            reason: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        AccountEmailStatus: {
+            configured: boolean;
+            verified: boolean;
+            masked_mailbox: string;
+            /** @enum {string} */
+            provenance: "" | "oidc_verified" | "code_confirmed";
+            pending: boolean;
+            /** @enum {string} */
+            request_state: "" | "prepared" | "accepted" | "retryable" | "permanent" | "ambiguous";
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: int64 */
+            retry_after_seconds: number;
+        };
         Health: {
             /** @enum {string} */
             status: "ok";
@@ -3208,6 +3296,85 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getAccountEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private masked mailbox confirmation status for the current account. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountEmailStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    requestEmailVerification: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Neutral one-use confirmation requested; SMTP acceptance does not prove inbox delivery. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountEmailStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    confirmAccountEmail: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Current account proved control of its pending mailbox; the code was consumed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountEmailStatus"];
+                };
             };
             default: components["responses"]["Error"];
         };
@@ -5062,6 +5229,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommunicationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunicationTestDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                test_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded SMTP submission receipt for the current requesting organiser; acceptance is not proof of delivery or reading. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SMTPTestDeliveryStatus"];
                 };
             };
             default: components["responses"]["Error"];

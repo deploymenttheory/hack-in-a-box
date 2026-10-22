@@ -205,6 +205,28 @@ type DisplayPairing struct {
 	LastSeenAt pgtype.Timestamptz
 }
 
+type EmailCalendarSequence struct {
+	EventID     uuid.UUID
+	Test        bool
+	Fingerprint []byte
+	Sequence    int32
+}
+
+type EmailVerification struct {
+	ID              uuid.UUID
+	PersonID        uuid.UUID
+	SessionRevision int64
+	Mailbox         string
+	MailboxHash     []byte
+	CodeHash        []byte
+	FailedAttempts  int32
+	RequestedAt     time.Time
+	ExpiresAt       time.Time
+	ConsumedAt      pgtype.Timestamptz
+	DeliveryState   string
+	ReceiptCode     string
+}
+
 type Event struct {
 	ID            uuid.UUID
 	Name          string
@@ -459,6 +481,13 @@ type Person struct {
 	UpdatedAt       time.Time
 }
 
+type PersonEmailContact struct {
+	PersonID   uuid.UUID
+	Mailbox    string
+	Provenance string
+	VerifiedAt time.Time
+}
+
 type PolicyResource struct {
 	EventID uuid.UUID
 	ID      uuid.UUID
@@ -608,6 +637,67 @@ type Session struct {
 	Token  string
 	Data   []byte
 	Expiry time.Time
+}
+
+type SmtpCampaignMessage struct {
+	OperationID       uuid.UUID
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	ProviderRevision  string
+	PersonID          uuid.UUID
+	Mailbox           string
+	Snapshot          []byte
+	State             string
+	ReceiptCode       string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
+
+type SmtpCampaignOmission struct {
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	PersonID          uuid.UUID
+	Reason            string
+	RecordedAt        time.Time
+}
+
+type SmtpMessageSnapshot struct {
+	OperationID   uuid.UUID
+	EventID       uuid.UUID
+	PersonID      uuid.UUID
+	TestRequestID uuid.UUID
+	Mailbox       string
+	MessageID     string
+	Snapshot      []byte
+	State         string
+	ReceiptCode   string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type SmtpSubmissionAttempt struct {
+	ID            uuid.UUID
+	OperationID   uuid.UUID
+	SourceKind    string
+	AttemptNumber int32
+	PreparedAt    time.Time
+}
+
+type SmtpSubmissionReceipt struct {
+	AttemptID   uuid.UUID
+	Outcome     string
+	ReceiptCode string
+	RecordedAt  time.Time
 }
 
 type SubmissionChange struct {

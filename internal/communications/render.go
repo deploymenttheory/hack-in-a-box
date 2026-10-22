@@ -242,6 +242,13 @@ func (s Service) build(
 	t Template,
 	a Audience,
 ) (Preview, error) {
+	return s.buildProjection(ctx, q, row, t, a, uuid.Nil, false)
+}
+
+func (s Service) buildProjection(
+	ctx context.Context, q *dbgen.Queries, row dbgen.Event, t Template, a Audience,
+	personID uuid.UUID, literal bool,
+) (Preview, error) {
 	if err := validateTemplate(t); err != nil {
 		return Preview{}, contextError("build", err)
 	}
@@ -267,7 +274,7 @@ func (s Service) build(
 	}
 	people, err := q.CommunicationPeople(
 		ctx,
-		dbgen.CommunicationPeopleParams{EventID: row.ID, At: s.now()},
+		dbgen.CommunicationPeopleParams{EventID: row.ID, At: s.now(), PersonID: personID},
 	)
 	if err != nil {
 		return result, contextError("build", err)
@@ -329,7 +336,11 @@ func (s Service) build(
 			return result, contextError("build", err)
 		}
 		subject, missing := Render(t.Subject, "text", values)
-		body, missingBody := Render(t.Body, t.Format, values)
+		format := t.Format
+		if literal {
+			format = "text"
+		}
+		body, missingBody := Render(t.Body, format, values)
 		missing = append(missing, missingBody...)
 		slices.Sort(missing)
 		missing = slices.Compact(missing)

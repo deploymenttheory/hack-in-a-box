@@ -124,3 +124,54 @@ func TestCredentialKeyringConfigurationErrorsAreSafe(t *testing.T) {
 		t.Fatalf("unsafe key configuration error: %v", err)
 	}
 }
+
+func TestWorkspaceOriginIsIndependentAndSafelyValidated(t *testing.T) {
+	t.Parallel()
+	for _, value := range []string{"ftp://secret-host", "https://user:secret-password@example.test", "https://example.test/path", "https://example.test?secret-query", "https://example.test#secret-fragment"} {
+		_, err := config.Load(func(key string) string {
+			if key == "HACKBOX_ENV" {
+				return "test"
+			}
+			if key == "HACKBOX_WORKSPACE_ORIGIN" {
+				return value
+			}
+			return ""
+		})
+		if err == nil || !strings.Contains(err.Error(), "HACKBOX_WORKSPACE_ORIGIN") ||
+			strings.Contains(err.Error(), "secret-") {
+			t.Fatalf("unsafe or absent origin validation: %v", err)
+		}
+	}
+	cfg, err := config.Load(func(key string) string {
+		if key == "HACKBOX_ENV" {
+			return "test"
+		}
+		if key == "HACKBOX_PUBLIC_ORIGIN" {
+			return "http://localhost:8081"
+		}
+		return ""
+	})
+	if err != nil || cfg.WorkspaceOrigin != cfg.PublicOrigin {
+		t.Fatal("single-surface workspace fallback failed")
+	}
+	_, err = config.Load(func(key string) string {
+		switch key {
+		case "HACKBOX_ENV":
+			return "production"
+		case "HACKBOX_PUBLIC_ORIGIN":
+			return "https://admin.example.test"
+		case "HACKBOX_WORKSPACE_ORIGIN":
+			return "http://workspace.example.test"
+		case "HACKBOX_OIDC_ISSUER":
+			return "https://issuer.example.test"
+		case "HACKBOX_OIDC_CLIENT_ID":
+			return "synthetic"
+		case "HACKBOX_METRICS_TOKEN":
+			return "synthetic-metrics-token-32-characters"
+		}
+		return ""
+	})
+	if err == nil || !strings.Contains(err.Error(), "HACKBOX_WORKSPACE_ORIGIN") {
+		t.Fatal("production workspace HTTP accepted")
+	}
+}
