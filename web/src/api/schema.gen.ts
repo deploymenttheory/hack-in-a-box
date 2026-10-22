@@ -1689,6 +1689,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/clarification-workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getClarificationWorkspace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/questions": {
         parameters: {
             query?: never;
@@ -1758,6 +1776,25 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["triageTeamQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/questions/{question_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getClarificationReview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3731,6 +3768,23 @@ export interface components {
             topic: "challenge" | "rubric";
             body: string;
             attachments: string[];
+        };
+        ClarificationReview: {
+            draft: components["schemas"]["ClarificationConfiguration"] | null;
+            workspace: components["schemas"]["ClarificationWorkspace"];
+        };
+        ClarificationWorkspace: {
+            source: components["schemas"]["ClarificationSource"];
+            archived: boolean;
+            /** Format: uuid */
+            team_id: string | null;
+            can_ask: boolean;
+            can_review: boolean;
+            staff_attachments_open: boolean;
+            review_audience: {
+                label: string;
+                count: number;
+            } | null;
         };
         PrivateQuestion: {
             /** Format: uuid */
@@ -7797,6 +7851,29 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    getClarificationWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native question capabilities after actual common publication; aggregate review audience is organiser-only. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationWorkspace"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listTeamQuestions: {
         parameters: {
             query?: {
@@ -7930,6 +8007,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PrivateQuestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getClarificationReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicit organiser review of an existing private question, nullable draft and current common audience/source, atomically authorised. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClarificationReview"];
                 };
             };
             default: components["responses"]["Error"];

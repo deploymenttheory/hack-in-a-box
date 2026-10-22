@@ -265,9 +265,30 @@ func TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttac
 	check(request(first, "POST", base+"/questions", input, 0, true), 404, false)
 	check(request(owner, "GET", base+"/questions", nil, 0, true), 404, false)
 	check(request(other, "GET", base+"/clarifications", nil, 0, true), 404, false)
+	for _, person := range []dbgen.Person{owner, first} {
+		check(request(person, "GET", base+"/clarification-workspace", nil, 0, true), 404, false)
+	}
 	now = due
 	if err = contentService.Dispatch(ctx, eventID, challenge.ID, challenge.Revision); err != nil {
 		t.Fatal(err)
+	}
+	check(request(dbgen.Person{}, "GET", base+"/clarification-workspace", nil, 0, true), 401, false)
+	for _, person := range []dbgen.Person{owner, first} {
+		response := request(person, "GET", base+"/clarification-workspace", nil, 0, true)
+		check(response, 200, false)
+		var workspace clarification.Workspace
+		if err = json.Unmarshal(response.Body.Bytes(), &workspace); err != nil {
+			t.Fatal(err)
+		}
+		if person.ID == owner.ID {
+			if !workspace.CanReview || workspace.ReviewAudience == nil ||
+				workspace.ReviewAudience.Count != 2 ||
+				workspace.CanAsk {
+				t.Fatal("staff current audience preview mismatch", workspace)
+			}
+		} else if workspace.ReviewAudience != nil || workspace.CanReview || !workspace.CanAsk || workspace.TeamID == nil || *workspace.TeamID != teamID {
+			t.Fatal("participant context leaked review audience or another team", workspace)
+		}
 	}
 	policy := access.EventPolicy{Queries: dbgen.New(pool), Clock: clock}
 	workingFiles := files.Service{
@@ -315,6 +336,18 @@ func TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttac
 		t.Fatal(err)
 	}
 	questionPath := base + "/questions/" + question.ID.String()
+	check(request(first, "GET", questionPath+"/review", nil, 0, true), 404, false)
+	check(request(other, "GET", questionPath+"/review", nil, 0, true), 404, false)
+	reviewResponse := request(owner, "GET", questionPath+"/review", nil, 0, true)
+	check(reviewResponse, 200, false)
+	var review clarification.Review
+	if err = json.Unmarshal(
+		reviewResponse.Body.Bytes(),
+		&review,
+	); err != nil || review.Draft != nil ||
+		review.Workspace.ReviewAudience == nil {
+		t.Fatal("authorised empty review response lost its nullable draft boundary", err)
+	}
 	check(request(other, "GET", questionPath, nil, 0, true), 404, false)
 	check(request(other, "GET", questionPath+"/history", nil, 0, true), 404, false)
 	check(request(owner, "GET", questionPath, nil, 0, true), 200, true)
@@ -403,6 +436,7 @@ func TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttac
 		first.ID,
 	)
 	check(request(first, "GET", questionPath, nil, 0, true), 404, false)
+	check(request(first, "GET", base+"/clarification-workspace", nil, 0, true), 404, false)
 	check(request(first, "GET", attachmentPath, nil, 0, true), 404, false)
 	exec(
 		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'",
@@ -410,6 +444,8 @@ func TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttac
 		owner.ID,
 	)
 	check(request(owner, "GET", questionPath, nil, 0, true), 404, false)
+	check(request(owner, "GET", base+"/clarification-workspace", nil, 0, true), 404, false)
+	check(request(owner, "GET", questionPath+"/review", nil, 0, true), 404, false)
 	check(request(owner, "GET", attachmentPath, nil, 0, true), 404, false)
 	if strings.Contains(logs.String(), input.Body) ||
 		strings.Contains(logs.String(), "SYNTHETIC-PRIVATE-ATTACHMENT") ||
