@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { ExportDownloads } from './export-downloads'
 import { useQuery } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
@@ -11,7 +12,7 @@ export function MentorRoster({ event }: { event: EventRecord }) {
   const query = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'mentors'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/mentor-coverage', { params: { path: { event_id: event.id } } })), refetchOnWindowFocus: 'always', refetchOnMount: 'always' })
   if (query.isPending) return <Loading />
   if (query.error) return <Failure error={query.error} retry={() => void query.refetch()} />
-  return <section className="panel"><h2>Your mentor coverage</h2><ExportDownloads eventID={event.id} audience="mentor" /><PublishedMentorRoster event={event} value={query.data} /></section>
+  return <section className="panel"><h2>Your mentor coverage</h2><Link to="/events/$eventId/mentor" params={{ eventId: event.id }}>Open mentor workspace</Link><ExportDownloads eventID={event.id} audience="mentor" /><PublishedMentorRoster event={event} value={query.data} /></section>
 }
 export function PublishedMentorRoster({ event, value }: { event: EventRecord; value: MentorPage }) {
   const names = new Map(value.profiles.map(p => [p.person_id, p.name])), teamNames = new Map(value.teams.map(t => [t.id, t.name]))

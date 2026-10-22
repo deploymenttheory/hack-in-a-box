@@ -148,7 +148,7 @@ normal ordered upgrade verification and exact-head green CI remain merge gates.
 
 Keep three independent workstreams active with separate PRs and exact-head CI.
 Dependencies follow the actual owning contracts:89→100,99+107→101,159→160 and
-161→162. A reusable recovery core can merge before #100, but #89 remains open
+161→162. The recovery core merged in #202. The actual #100 workspace is now under implementation and verification; #89 remains open
 until the actual mentor form's interrupted-save, team-switch, conflict and
 recovered pre-live denial journeys pass. No arbitrary scratchpad, fake saved
 observation, offline judging or unimplemented deep link substitutes for those

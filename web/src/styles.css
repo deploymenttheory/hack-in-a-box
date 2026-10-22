@@ -296,3 +296,10 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 
 .connection-status { padding: .5rem clamp(1rem, 3vw, 2rem); margin: 0; font-size: .875rem; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .connection-offline, .connection-unavailable, .connection-recovering { background: var(--muted); }
+
+.mentor-workspace { overflow-wrap: anywhere; }
+.mentor-team-links { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1rem; }
+.mentor-team-links a { padding: .5rem; border: 1px solid var(--border); border-radius: .5rem; }
+.mentor-editor { border-block: 1px solid var(--border); padding-block: 1rem; margin-block: 1rem; }
+.mentor-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mentor-note { border-block-start: 1px solid var(--border); margin-block-start: 1rem; padding-block: 1rem; }

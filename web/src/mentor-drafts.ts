@@ -10,6 +10,13 @@ export function mentorSessionGeneration() { return sessionGeneration }
 let activeScope: string | undefined
 let activeSessionScope: string | undefined
 export function currentMentorDraftScope() { return activeSessionScope }
+// Native owner denial is resource scoped; it must not erase another team's
+// independent unsent work. No text is read or returned during invalidation.
+export function discardMentorTeamDrafts(personID: string, sessionScope: string, eventID: string, teamID: string, storage = browserStorage()) {
+  if (![personID, sessionScope, eventID, teamID].every(id => uuid.test(id)) || !storage) return
+  const match = `${prefix}${personID}:${sessionScope}:${eventID}:${teamID}:`
+  try { for (let i = storage.length - 1; i >= 0; i--) { const name = storage.key(i); if (name?.startsWith(match)) { storage.removeItem(name); generation++ } } } catch { /* A failed store remains unavailable, never authorised. */ }
+}
 export type DraftTarget = { personID: string; sessionScope: string; eventID: string; teamID: string; noteID: string }
 export type MentorText = { category: string; evidence: string; outcome: string }
 export type CurrentDraftTarget = { eventID: string; teamID: string; noteID: string; revision: number; noteVersion: number; canWrite: boolean; reviewOpen: boolean }
