@@ -15,11 +15,14 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 )
 
 type Service struct {
-	Pool *pgxpool.Pool
-	Now  func() time.Time
+	Channels map[string]ChannelProvider
+	Jobs     *jobs.Service
+	Pool     *pgxpool.Pool
+	Now      func() time.Time
 }
 
 func (s Service) now() time.Time {

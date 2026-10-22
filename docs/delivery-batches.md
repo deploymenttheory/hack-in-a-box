@@ -84,3 +84,28 @@ Run three implementation workstreams concurrently in isolated worktrees. #74 and
 #76 follows both. #86 and #87 require #85's final backend contract. Each task keeps
 its own PR, relevant verification and exact-head CI merge gate. A waiting live
 provider setup does not prevent unrelated ready resource or presentation work.
+
+#74 is delivered in PR #184. The remaining Batch 5 tickets retain their own
+acceptance and merge gates; their presence in this plan does not mark them done.
+Registration epic #12 is closed after the aggregate audit in PR #185, merged at
+`2baf40e`; that verification does not substitute for resource or presentation work.
+
+## Batch 6 — reviewed campaigns and real delivery channels
+
+| Issue | Deliverable | Why it is here |
+| --- | --- | --- |
+| [#78](https://github.com/deploymenttheory/hack-in-a-box/issues/78) | Campaign composer and bound approval | Gives organisers a retained review of content, current audience, channels, calendar selection and timing before delivery. |
+| [#79](https://github.com/deploymenttheory/hack-in-a-box/issues/79) | SMTP, calendar attachments and verified own mailbox | Establishes real accepted/ambiguous outcomes and an organiser-only self-test destination without accepting arbitrary addresses. |
+| [#80](https://github.com/deploymenttheory/hack-in-a-box/issues/80) | Teams Workflows broadcasts | Adds protected shared-channel configuration and literal public-only projection, with an explicit broadcast connection test separate from self-test. |
+| [#81](https://github.com/deploymenttheory/hack-in-a-box/issues/81) | In-app inbox | Gives currently eligible recipients their own retained messages through the normal application access boundary. |
+| [#82](https://github.com/deploymenttheory/hack-in-a-box/issues/82) | Automated approved reminders | Executes only reviewed current content and recipients after real provider, receipt and reconciliation contracts are available. |
+
+Run three workstreams concurrently in isolated worktrees, beginning with the
+campaign boundary, SMTP adapter and Teams adapter. Keep an individual PR and
+exact-head green CI for each issue, with ordered schema upgrades. Provider work
+can use the reviewed campaign contract while its final integration waits for the
+prerequisite merge. Approval retains the reviewed versions and official facts;
+dispatch rechecks current authority, recipients, embargoes and opaque provider
+configuration revisions. These safety and receipt contracts precede unattended
+scheduling. An unavailable provider remains visible and cannot be silently dropped
+or reported as delivered. No Batch 6 ticket is marked complete by this plan.

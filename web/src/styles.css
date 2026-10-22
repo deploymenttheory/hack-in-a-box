@@ -269,3 +269,14 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .team-access-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-top: 1rem; }
 .credential-value { margin: 1rem 0; min-height: 3rem; padding: .75rem; border: 1px solid var(--border); border-radius: .5rem; overflow-wrap: anywhere; user-select: text; }
 @media print { .private-team-access { display: none !important; } }
+.campaign-composer > .panel { margin-block: 20px; }
+.campaign-composer fieldset { margin-block: 16px; }
+.campaign-composer .actions { flex-wrap: wrap; }
+.campaign-composer button { white-space: normal; height: auto; min-height: 40px; }
+.campaign-composer select, .campaign-composer input, .campaign-composer textarea { max-width: 100%; }
+.campaign-variables { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; padding: 0; }
+.campaign-message-preview { border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-block: 20px; overflow-wrap: anywhere; }
+.campaign-message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.campaign-composer > details.panel { margin-block: 20px; }
+.campaign-composer > details > summary { cursor: pointer; font-weight: 650; }

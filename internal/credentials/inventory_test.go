@@ -135,7 +135,7 @@ func TestCredentialInventoryUpgradeAndRollbackGate(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	if err := database.Migrate(ctx, pool, 0); err != nil {
+	if err := database.Migrate(ctx, pool, 25); err != nil {
 		t.Fatal(err)
 	}
 	row, err := dbgen.New(pool).
@@ -167,7 +167,21 @@ func TestCredentialInventoryUpgradeAndRollbackGate(t *testing.T) {
 	if _, err = migrator.DownTo(ctx, 24); err == nil {
 		t.Fatal("rollback silently removed the disclosure gate")
 	}
+	// This historical fixture isolates migration25's rollback gate. Later
+	// migrations may independently roll down before Goose reaches the gate.
+	version, err := migrator.GetDBVersion(ctx)
+	if err != nil || version != 25 {
+		t.Fatalf("failed rollback changed protected schema: %d %v", version, err)
+	}
+	retained, err := dbgen.New(pool).
+		TeamCredential(ctx, dbgen.TeamCredentialParams{EventID: eventID, ID: id})
+	if err != nil || !retained.AvailableAt.Valid {
+		t.Fatalf("failed rollback removed disclosure metadata: %v", err)
+	}
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
-		t.Fatalf("failed rollback changed schema: %v", err)
+		t.Fatalf("normal upgrade after protected rollback failed: %v", err)
 	}
 }

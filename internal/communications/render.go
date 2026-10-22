@@ -293,20 +293,7 @@ func (s Service) build(
 			result.Blockers = append(result.Blockers, "unresolved_official_fact")
 		}
 	}
-	approvedFacts := []dbgen.CommunicationFact{}
-	if t.FactID != nil {
-		for _, f := range facts {
-			if f.ID == *t.FactID {
-				approvedFacts = append(approvedFacts, f)
-			}
-		}
-	}
-	result.Fingerprint = digest(struct {
-		Name          string
-		Configuration event.Configuration
-		Facts         []dbgen.CommunicationFact
-		Content       []dbgen.ContentItem
-	}{row.Name, c, approvedFacts, items})
+	result.Fingerprint = approvalFingerprint(row, t, c, facts, items)
 	for _, person := range people {
 		if !selected(person, a) {
 			continue
@@ -456,4 +443,27 @@ func factRecipient(
 	}
 	// An unavailable source must remain unresolved; no placeholder is fabricated.
 	return true, nil
+}
+
+func approvalFingerprint(
+	row dbgen.Event,
+	t Template,
+	c event.Configuration,
+	facts []dbgen.CommunicationFact,
+	items []dbgen.ContentItem,
+) string {
+	approvedFacts := []dbgen.CommunicationFact{}
+	if t.FactID != nil {
+		for _, f := range facts {
+			if f.ID == *t.FactID {
+				approvedFacts = append(approvedFacts, f)
+			}
+		}
+	}
+	return digest(struct {
+		Name          string
+		Configuration event.Configuration
+		Facts         []dbgen.CommunicationFact
+		Content       []dbgen.ContentItem
+	}{row.Name, c, approvedFacts, items})
 }
