@@ -16,6 +16,12 @@ const Image = "postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7
 
 func New(t *testing.T, migrate bool) *pgxpool.Pool {
 	t.Helper()
+	pool, _ := newInstance(t, migrate)
+	return pool
+}
+
+func newInstance(t *testing.T, migrate bool) (*pgxpool.Pool, *postgres.PostgresContainer) {
+	t.Helper()
 	if os.Getenv("HACKBOX_INTEGRATION") != "1" {
 		t.Skip("set HACKBOX_INTEGRATION=1 to run real PostgreSQL integration tests")
 	}
@@ -50,5 +56,5 @@ func New(t *testing.T, migrate bool) *pgxpool.Pool {
 			t.Fatal(err)
 		}
 	}
-	return pool
+	return pool, container
 }
