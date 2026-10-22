@@ -31,13 +31,14 @@ func publish(
 	if err != nil {
 		return fmt.Errorf("read publication membership: %w", err)
 	}
+	changed := publicationChanged(records, members)
 	assigned := map[uuid.UUID]bool{}
 	total := 0
+	var retire []uuid.UUID
 	for _, t := range records {
 		if t.State == "disbanded" {
 			continue
 		}
-		total++
 		count := 0
 		hasCaptain := false
 		for _, m := range members {
@@ -53,6 +54,11 @@ func publish(
 				hasCaptain = true
 			}
 		}
+		if count == 0 && !t.AllocationLocked {
+			retire = append(retire, t.ID)
+			continue
+		}
+		total++
 		if count < 3 || !hasCaptain || (t.Capacity.Valid && count > int(t.Capacity.Int32)) {
 			return ErrUnready
 		}
@@ -69,6 +75,11 @@ func publish(
 			return ErrUnready
 		}
 	}
+	for _, id := range retire {
+		if err := disband(ctx, q, row.ID, id); err != nil {
+			return err
+		}
+	}
 	if err := q.DeletePublishedTeamMembers(ctx, row.ID); err != nil {
 		return fmt.Errorf("replace previous allocations: %w", err)
 	}
@@ -77,6 +88,29 @@ func publish(
 	}
 	if err := q.PublishHackTeams(ctx, row.ID); err != nil {
 		return fmt.Errorf("publish team records: %w", err)
+	}
+	return finishPublication(ctx, tx, q, row, freeze, changed, now)
+}
+
+func finishPublication(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	row dbgen.Event,
+	freeze, changed bool,
+	now time.Time,
+) error {
+	if changed {
+		if _, err := q.InsertOperation(ctx, dbgen.InsertOperationParams{
+			EventID:      row.ID,
+			OperationKey: fmt.Sprintf("teams-published:%d", row.Revision+1),
+			Kind:         "teams.published",
+			TargetID:     row.ID,
+			DueAt:        now.UTC(),
+			Approved:     true,
+		}); err != nil {
+			return fmt.Errorf("record published allocation change: %w", err)
+		}
 	}
 	if freeze {
 		if err := q.CloseTeamRequests(ctx, row.ID); err != nil {
@@ -177,4 +211,38 @@ func Withdraw(ctx context.Context, tx pgx.Tx, eventID, person uuid.UUID) error {
 		}
 	}
 	return recordFacts(ctx, tx, q, row)
+}
+
+// One event per changed publication, with the committed event revision in its
+// unique key. Downstream communications/repository owners reconcile the latest
+// published roster; drafts and repeated unchanged publication enqueue nothing.
+func publicationChanged(groups []dbgen.HackTeam, members []dbgen.HackTeamMembersRow) bool {
+	for _, group := range groups {
+		if group.State == "draft" {
+			return true
+		}
+		if (group.CaptainID == nil) != (group.PublishedCaptainID == nil) {
+			return true
+		}
+		if group.CaptainID != nil && *group.CaptainID != *group.PublishedCaptainID {
+			return true
+		}
+	}
+	draft, published := map[uuid.UUID]uuid.UUID{}, map[uuid.UUID]uuid.UUID{}
+	for _, member := range members {
+		if member.Snapshot == "draft" {
+			draft[member.PersonID] = member.TeamID
+		} else {
+			published[member.PersonID] = member.TeamID
+		}
+	}
+	if len(draft) != len(published) {
+		return true
+	}
+	for person, team := range draft {
+		if published[person] != team {
+			return true
+		}
+	}
+	return false
 }
