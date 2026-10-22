@@ -4492,6 +4492,10 @@ export interface components {
             paused: boolean;
             bindings: components["schemas"]["AutomationBinding"][];
             occurrences: components["schemas"]["AutomationOccurrence"][];
+            /** Format: uuid */
+            next_binding_cursor: string | null;
+            /** Format: uuid */
+            next_occurrence_cursor: string | null;
         };
         PublicationPlanPreview: {
             /** Format: uuid */
@@ -5628,7 +5632,13 @@ export interface operations {
     };
     getCommunicationAutomation: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Exclusive UUID cursor for current bindings; independent of occurrences_after. */
+                bindings_after?: string;
+                /** @description Exclusive UUID cursor for occurrences; retain the final cursor of an exhausted collection while paging the other. */
+                occurrences_after?: string;
+                limit?: number;
+            };
             header?: never;
             path: {
                 event_id: components["parameters"]["EventID"];

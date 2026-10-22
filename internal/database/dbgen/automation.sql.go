@@ -39,12 +39,18 @@ func (q *Queries) AutomationBinding(ctx context.Context, arg AutomationBindingPa
 	return i, err
 }
 
-const automationBindings = `-- name: AutomationBindings :many
-SELECT DISTINCT ON(id) event_id, id, version, campaign_id, campaign_version, document, actor_id, reason, created_at FROM communication_automation_versions WHERE event_id=$1 ORDER BY id,version DESC LIMIT 1001
+const automationBindingsPage = `-- name: AutomationBindingsPage :many
+SELECT DISTINCT ON(id) event_id, id, version, campaign_id, campaign_version, document, actor_id, reason, created_at FROM communication_automation_versions WHERE event_id=$1 AND id>$2::uuid ORDER BY id,version DESC LIMIT $3
 `
 
-func (q *Queries) AutomationBindings(ctx context.Context, eventID uuid.UUID) ([]CommunicationAutomationVersion, error) {
-	rows, err := q.db.Query(ctx, automationBindings, eventID)
+type AutomationBindingsPageParams struct {
+	EventID  uuid.UUID
+	AfterID  uuid.UUID
+	PageSize int32
+}
+
+func (q *Queries) AutomationBindingsPage(ctx context.Context, arg AutomationBindingsPageParams) ([]CommunicationAutomationVersion, error) {
+	rows, err := q.db.Query(ctx, automationBindingsPage, arg.EventID, arg.AfterID, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +139,18 @@ func (q *Queries) AutomationOccurrence(ctx context.Context, arg AutomationOccurr
 	return i, err
 }
 
-const automationOccurrences = `-- name: AutomationOccurrences :many
-SELECT review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 ORDER BY created_at DESC,id DESC LIMIT 200
+const automationOccurrencesPage = `-- name: AutomationOccurrencesPage :many
+SELECT review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 AND id>$2::uuid ORDER BY id LIMIT $3
 `
 
-func (q *Queries) AutomationOccurrences(ctx context.Context, eventID uuid.UUID) ([]CommunicationOccurrence, error) {
-	rows, err := q.db.Query(ctx, automationOccurrences, eventID)
+type AutomationOccurrencesPageParams struct {
+	EventID  uuid.UUID
+	AfterID  uuid.UUID
+	PageSize int32
+}
+
+func (q *Queries) AutomationOccurrencesPage(ctx context.Context, arg AutomationOccurrencesPageParams) ([]CommunicationOccurrence, error) {
+	rows, err := q.db.Query(ctx, automationOccurrencesPage, arg.EventID, arg.AfterID, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}

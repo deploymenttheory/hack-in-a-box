@@ -46,7 +46,8 @@ func validateDefinition(d Definition) error {
 		) {
 		return access.ErrInvalid
 	}
-	if d.SourceVersion < 0 || (d.SourceVersion > 0 && d.SourceID == nil) || (d.SourceID != nil && *d.SourceID == uuid.Nil) {
+	if d.SourceVersion < 0 || (d.SourceVersion > 0 && d.SourceID == nil) ||
+		(d.SourceID != nil && *d.SourceID == uuid.Nil) {
 		return access.ErrInvalid
 	}
 	if d.RetainAfterArchive &&
@@ -311,6 +312,9 @@ func (s Service) approvePublicationBinding(
 	binding Binding,
 	input Command,
 ) (Binding, error) {
+	if !s.sourceAvailable(binding.Definition.Trigger) {
+		return binding, communications.ErrUnresolved
+	}
 	plan, err := s.Composer.ApproveExpectedPublicationInTransaction(
 		ctx,
 		tx,

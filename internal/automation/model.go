@@ -105,10 +105,12 @@ type Occurrence struct {
 	ReviewUntil    *time.Time               `json:"review_until"`
 }
 type Page struct {
-	Revision    int64        `json:"revision"`
-	Paused      bool         `json:"paused"`
-	Bindings    []Binding    `json:"bindings"`
-	Occurrences []Occurrence `json:"occurrences"`
+	NextBindingCursor    *uuid.UUID   `json:"next_binding_cursor"`
+	NextOccurrenceCursor *uuid.UUID   `json:"next_occurrence_cursor"`
+	Revision             int64        `json:"revision"`
+	Paused               bool         `json:"paused"`
+	Bindings             []Binding    `json:"bindings"`
+	Occurrences          []Occurrence `json:"occurrences"`
 }
 type Command struct {
 	PreviewPlanID uuid.UUID   `json:"preview_plan_id"`

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -21,13 +20,6 @@ import (
 
 func TestNativeHelpRuntimeRecordsSafeInboxAndRevokesActualResource(t *testing.T) {
 	pool := testdb.New(t, true)
-	provisionalSQL, readErr := os.ReadFile("../automation/schema.provisional.sql")
-	if readErr != nil {
-		t.Fatal(readErr)
-	}
-	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
-		t.Fatal(applyErr)
-	}
 	ctx := t.Context()
 
 	cfg, err := config.Load(func(key string) string {

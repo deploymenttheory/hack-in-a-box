@@ -114,38 +114,52 @@ func (s Service) reconcileEvent(ctx context.Context, eventID uuid.UUID) error {
 		if err != nil {
 			return fmt.Errorf("read reconciliation pause: %w", err)
 		}
-		rows, err := q.AutomationBindings(ctx, eventID)
-		if err != nil {
-			return fmt.Errorf("read reconciliation bindings: %w", err)
-		}
-		for _, raw := range rows {
-			var binding Binding
-			if err = json.Unmarshal(raw.Document, &binding); err != nil {
-				return fmt.Errorf("decode reconciliation binding: %w", err)
-			}
-			if binding.Cancelled || binding.ApprovedAt == nil {
-				continue
-			}
-			sources, err := s.discover(ctx, tx, eventID, binding)
-			if errors.Is(err, communications.ErrUnresolved) {
-				continue
-			}
+		afterBinding := uuid.Nil
+		for {
+			rows, err := q.AutomationBindingsPage(
+				ctx,
+				dbgen.AutomationBindingsPageParams{
+					EventID:  eventID,
+					AfterID:  afterBinding,
+					PageSize: 200,
+				},
+			)
 			if err != nil {
-				return fmt.Errorf("dispatch communication: %w", err)
+				return fmt.Errorf("read reconciliation bindings: %w", err)
 			}
-			for _, source := range sources {
-				if err = s.reconcileOccurrence(
-					ctx,
-					tx,
-					q,
-					event,
-					binding,
-					source,
-					paused,
-				); err != nil {
-					return err
+			for _, raw := range rows {
+				var binding Binding
+				if err = json.Unmarshal(raw.Document, &binding); err != nil {
+					return fmt.Errorf("decode reconciliation binding: %w", err)
+				}
+				if binding.Cancelled || binding.ApprovedAt == nil {
+					continue
+				}
+				sources, err := s.discover(ctx, tx, eventID, binding)
+				if errors.Is(err, communications.ErrUnresolved) {
+					continue
+				}
+				if err != nil {
+					return fmt.Errorf("dispatch communication: %w", err)
+				}
+				for _, source := range sources {
+					if err = s.reconcileOccurrence(
+						ctx,
+						tx,
+						q,
+						event,
+						binding,
+						source,
+						paused,
+					); err != nil {
+						return err
+					}
 				}
 			}
+			if len(rows) < 200 {
+				break
+			}
+			afterBinding = rows[len(rows)-1].ID
 		}
 		return s.reconcilePending(ctx, tx, event, paused)
 	})

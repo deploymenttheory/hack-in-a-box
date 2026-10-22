@@ -1,5 +1,5 @@
--- name: AutomationBindings :many
-SELECT DISTINCT ON(id) * FROM communication_automation_versions WHERE event_id=$1 ORDER BY id,version DESC LIMIT 1001;
+-- name: AutomationBindingsPage :many
+SELECT DISTINCT ON(id) * FROM communication_automation_versions WHERE event_id=$1 AND id>sqlc.arg(after_id)::uuid ORDER BY id,version DESC LIMIT sqlc.arg(page_size);
 
 -- name: AutomationBinding :one
 SELECT * FROM communication_automation_versions WHERE event_id=$1 AND id=$2 ORDER BY version DESC LIMIT 1;
@@ -14,8 +14,8 @@ SELECT COALESCE((SELECT paused FROM communication_automation_settings WHERE even
 INSERT INTO communication_automation_settings(event_id,paused,actor_id,reason) VALUES($1,$2,$3,$4)
 ON CONFLICT(event_id) DO UPDATE SET paused=$2,actor_id=$3,reason=$4,revision=communication_automation_settings.revision+1,updated_at=now();
 
--- name: AutomationOccurrences :many
-SELECT * FROM communication_occurrences WHERE event_id=$1 ORDER BY created_at DESC,id DESC LIMIT 200;
+-- name: AutomationOccurrencesPage :many
+SELECT * FROM communication_occurrences WHERE event_id=$1 AND id>sqlc.arg(after_id)::uuid ORDER BY id LIMIT sqlc.arg(page_size);
 
 -- name: AutomationOccurrence :one
 SELECT * FROM communication_occurrences WHERE event_id=$1 AND id=$2;

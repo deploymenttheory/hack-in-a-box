@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -24,13 +23,6 @@ import (
 
 func TestAutomationHTTPCurrentAuthorityAndReviewControls(t *testing.T) {
 	pool := testdb.New(t, true)
-	provisionalSQL, readErr := os.ReadFile("../automation/schema.provisional.sql")
-	if readErr != nil {
-		t.Fatal(readErr)
-	}
-	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
-		t.Fatal(applyErr)
-	}
 	ctx := t.Context()
 	owner, outsider, admin := testdb.Person(t, pool), testdb.Person(t, pool), testdb.Person(t, pool)
 	eventID := testdb.Event(t, pool, owner.ID)
@@ -128,6 +120,20 @@ func TestAutomationHTTPCurrentAuthorityAndReviewControls(t *testing.T) {
 	body := map[string]any{"action": "pause", "reason": "Explicit synthetic pause"}
 	check(request(owner, "POST", base, body, rev(), false), 403)
 	check(request(outsider, "POST", base, body, rev(), true), 403)
+	check(
+		request(
+			owner,
+			"GET",
+			base+"?limit=1&bindings_after="+uuid.NewString()+"&occurrences_after="+uuid.NewString(),
+			nil,
+			rev(),
+			true,
+		),
+		200,
+	)
+	for _, query := range []string{"?limit=0", "?limit=201", "?bindings_after=bad", "?occurrences_after=bad"} {
+		check(request(owner, "GET", base+query, nil, rev(), true), 400)
+	}
 	previousRevision := rev()
 	result := request(owner, "POST", base, body, previousRevision, true)
 	check(result, 200)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
@@ -18,7 +20,25 @@ func (h handlers) GetCommunicationAutomation(
 	if h.Automation == nil {
 		return nil, database.ErrDatabase
 	}
-	page, err := h.Automation.Read(ctx, actor(ctx).ID, r.EventId)
+	bindingsAfter, occurrencesAfter := uuid.Nil, uuid.Nil
+	if r.Params.BindingsAfter != nil {
+		bindingsAfter = *r.Params.BindingsAfter
+	}
+	if r.Params.OccurrencesAfter != nil {
+		occurrencesAfter = *r.Params.OccurrencesAfter
+	}
+	limit := int32(50)
+	if r.Params.Limit != nil {
+		limit = int32(*r.Params.Limit)
+	}
+	page, err := h.Automation.ReadPage(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		bindingsAfter,
+		occurrencesAfter,
+		limit,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("read communication automation: %w", err)
 	}

@@ -771,6 +771,17 @@ paths:
       operationId: getCommunicationAutomation
       parameters:
         - $ref: '#/components/parameters/EventID'
+        - in: query
+          name: bindings_after
+          description: Exclusive UUID cursor for current bindings; independent of occurrences_after.
+          schema: {type: string, format: uuid}
+        - in: query
+          name: occurrences_after
+          description: Exclusive UUID cursor for occurrences; retain the final cursor of an exhausted collection while paging the other.
+          schema: {type: string, format: uuid}
+        - in: query
+          name: limit
+          schema: {type: integer, minimum: 1, maximum: 200, default: 50}
       responses:
         '200':
           description: Current organiser-only automation bindings, pause and durable review states.
@@ -7242,12 +7253,14 @@ components:
     AutomationPage:
       type: object
       additionalProperties: false
-      required: [revision, paused, bindings, occurrences]
+      required: [revision, paused, bindings, occurrences, next_binding_cursor, next_occurrence_cursor]
       properties:
         revision: {type: integer, format: int64}
         paused: {type: boolean}
         bindings: {type: array, items: {$ref: '#/components/schemas/AutomationBinding'}}
         occurrences: {type: array, items: {$ref: '#/components/schemas/AutomationOccurrence'}}
+        next_binding_cursor: {type: string, format: uuid, nullable: true}
+        next_occurrence_cursor: {type: string, format: uuid, nullable: true}
     PublicationPlanPreview:
       type: object
       additionalProperties: false

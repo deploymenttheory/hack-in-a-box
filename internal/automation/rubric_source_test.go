@@ -2,6 +2,7 @@ package automation
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
@@ -49,6 +51,28 @@ func TestNativeRubricPublicationQueuesApprovedLocalMessageOnce(t *testing.T) {
 	if preview == nil || preview.GenericCampaignApproved {
 		t.Fatal("typed plan misrepresented generic approval")
 	}
+
+	owners := f.s.Sources
+	f.s.Sources = nil
+	if _, _, err = f.s.Change(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		f.revision(),
+		Command{
+			Action:        "approve_publication",
+			BindingID:     binding.Definition.ID,
+			Version:       binding.Version,
+			PreviewPlanID: preview.PlanID,
+			Reason:        "A saved preview cannot substitute for a missing native owner",
+		},
+	); !errors.Is(
+		err,
+		communications.ErrUnresolved,
+	) {
+		t.Fatalf("missing native rubric owner approved typed plan: %v", err)
+	}
+	f.s.Sources = owners
 	f.change(
 		Command{
 			Action:        "approve_publication",
@@ -89,7 +113,10 @@ func TestNativeRubricPublicationQueuesApprovedLocalMessageOnce(t *testing.T) {
 	}
 }
 
-func prepareNativeCommonChallenge(t *testing.T, f *fixture) (rubric.Service, content.Service, content.Page, uuid.UUID) {
+func prepareNativeCommonChallenge(
+	t *testing.T,
+	f *fixture,
+) (rubric.Service, content.Service, content.Page, uuid.UUID) {
 	t.Helper()
 	rubrics := rubric.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
 	cfg := event.DefaultConfiguration()

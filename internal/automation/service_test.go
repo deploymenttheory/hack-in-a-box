@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"os"
 	"testing"
 	"time"
 
@@ -48,14 +47,10 @@ type fixture struct {
 }
 
 func newFixture(t *testing.T) *fixture {
-	pool := testdb.New(t, true)
-	provisionalSQL, readErr := os.ReadFile("schema.provisional.sql")
-	if readErr != nil {
-		t.Fatal(readErr)
-	}
-	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
-		t.Fatal(applyErr)
-	}
+	return newFixtureWithPool(t, testdb.New(t, true))
+}
+
+func newFixtureWithPool(t *testing.T, pool *pgxpool.Pool) *fixture {
 	f := &fixture{
 		t:      t,
 		pool:   pool,

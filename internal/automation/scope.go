@@ -310,7 +310,13 @@ func (s Service) loadScope(
 	return scopeBasis{Event: event, Occurrence: row, Binding: binding}, nil
 }
 
-func (s Service) verifyPinnedSource(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, d Definition, source Source) error {
+func (s Service) verifyPinnedSource(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	d Definition,
+	source Source,
+) error {
 	if d.SourceID != nil && source.ID != *d.SourceID {
 		return communications.ErrUnresolved
 	}
