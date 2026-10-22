@@ -7,7 +7,7 @@ const answerPath = `/events/${firstID}/clarifications/${answerID}`
 type AnswerPage = components['schemas']['ClarificationPage']
 async function prepare(page: Page) {
   await mockWorkspace(page)
-  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
+  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false, draft_scope: '48e4056e-ce21-4b45-8fc1-6dc7dde63572' } }))
   let allowed = true
   const current: AnswerPage['answer'] = { id: answerID, version: 2, document: { title: 'Reviewed common interpretation', body: 'SYNTHETIC-COMMON-CORRECTION\n\n<script>window.CLARIFICATION_PWNED=true</script>', kind: 'clarification' }, source: { challenge_id: '64bb2e85-04a2-4715-aab0-8f50030d804a', challenge_version: 1, rubric: { id: '122700b0-acf4-4e13-ae54-d339af614225', version: 1, digest: 'a'.repeat(64) } }, author_name: 'Synthetic organiser', authored_at: '2027-06-19T08:00:00Z', approved_at: '2027-06-19T08:30:00Z', published_at: '2027-06-19T09:00:00Z', current: true, source_current: false }
   current.version = 3
