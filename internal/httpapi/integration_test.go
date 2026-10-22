@@ -135,8 +135,22 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 	if result := request("GET", "/api/v1/session", nil, false); result.Code != 401 {
 		t.Fatalf("anonymous session: %d %s", result.Code, result.Body)
 	}
-	if result := request("GET", "/api/v1/session", nil, true); result.Code != 200 {
-		t.Fatalf("session: %d %s", result.Code, result.Body)
+	var priorScope string
+	for i := 0; i < 2; i++ {
+		result := request("GET", "/api/v1/session", nil, true)
+		if result.Code != 200 || result.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("session: %d %s", result.Code, result.Body)
+		}
+		var session contract.Session
+		if err := json.Unmarshal(result.Body.Bytes(), &session); err != nil {
+			t.Fatal(err)
+		}
+		if session.DraftScope == uuid.Nil || session.DraftScope.String() == token ||
+			session.DraftScope.String() == csrf ||
+			(priorScope != "" && priorScope != session.DraftScope.String()) {
+			t.Fatal("draft scope exposed credentials or changed within one authenticated session")
+		}
+		priorScope = session.DraftScope.String()
 	}
 	base := "/api/v1/events/" + event.String()
 	payload, _ := json.Marshal(

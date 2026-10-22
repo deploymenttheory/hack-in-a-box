@@ -108,8 +108,10 @@ dispatch rechecks current authority, recipients, embargoes and opaque provider
 configuration revisions. These safety and receipt contracts precede unattended
 scheduling. An unavailable provider remains visible and cannot be silently dropped
 or reported as delivered. #78 and #79 are delivered in PRs #189 and #194.
-#80 is in PR #196 with its live shared-channel setup still outstanding; #81 and
-#82 retain their complete issue acceptance.
+#80's implementation merged in PR #196; its required live shared-channel check
+remains outstanding. #81's core merged in PR #198, while the named help,
+clarification and outcome-review journeys (#159/#161/#117) remain open. #82's
+unattended automation still retains its complete issue acceptance.
 
 ## Batch 7 — fair assessment contracts and event-day support
 
@@ -125,10 +127,31 @@ Keep three independent implementation lanes active when their prerequisites are
 ready. These five tasks establish the assessment, rules and support contracts
 needed by later mentor/judge workspaces and event-day views. They do not declare
 future scoring, private assessment disclosure or provider integration complete.
-#158 is delivered in PR #195. #107's versioned rubric contract is implemented
-in this change; #99's private-observation lane is prepared independently. #159
-and #161 keep their complete operational and privacy acceptance.
+#158 is delivered in PR #195. #107 merged in PR #197 and is closed; #99 merged
+in PR #200 and is closed. #159's PR #201 is on final merged main with exact-head
+CI running. #161 is in progress. Outstanding provider and aggregate acceptance
+is not implied complete by these implementation merges.
 
 Each issue keeps its own PR and acceptance reconciliation. Migration numbers
 follow actual ready delivery order rather than inventing feature dependencies;
 normal ordered upgrade verification and exact-head green CI remain merge gates.
+
+
+## Batch 8 — recoverable mentor work and complete support surfaces
+
+| Issue | Deliverable | Why it is here |
+| --- | --- | --- |
+| [#89](https://github.com/deploymenttheory/hack-in-a-box/issues/89) | Connection recovery and private local text | Establishes session-scoped recovery before the actual mentor form, preserving current authority and honest unsent/server states. |
+| [#100](https://github.com/deploymenttheory/hack-in-a-box/issues/100) | Mobile mentor workspace and observation timeline | Uses #99's real owning API and #89's recovery controller for the actual interrupted-save and conflict journeys; it has its own addressable route. |
+| [#101](https://github.com/deploymenttheory/hack-in-a-box/issues/101) | Mentor checkpoint assessments | Uses merged #99 and #107 contracts to bind provisional checkpoints to the common rubric and current assignments/live gate, without waiting for the full workspace frontend. |
+| [#160](https://github.com/deploymenttheory/hack-in-a-box/issues/160) | Team help request and helper controls | Uses #159's scoped state machine and real source/destination contract for the complete request/queue/action experience. |
+| [#162](https://github.com/deploymenttheory/hack-in-a-box/issues/162) | Reviewed clarification feed | Uses #161's actual publication/current-audience boundary to present common answers equally without disclosing private questions. |
+
+Keep three independent workstreams active with separate PRs and exact-head CI.
+Dependencies follow the actual owning contracts:89→100,99+107→101,159→160 and
+161→162. A reusable recovery core can merge before #100, but #89 remains open
+until the actual mentor form's interrupted-save, team-switch, conflict and
+recovered pre-live denial journeys pass. No arbitrary scratchpad, fake saved
+observation, offline judging or unimplemented deep link substitutes for those
+journeys. Full support surfaces use the real owning APIs independently of the
+aggregate Today dashboard. These are selected work, not delivered claims.

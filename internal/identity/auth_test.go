@@ -15,6 +15,7 @@ import (
 	"time"
 
 	jose "github.com/go-jose/go-jose/v4"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
@@ -192,6 +193,11 @@ func TestOIDCStatePKCENonceAudienceAndRevocation(t *testing.T) {
 				t.Fatal(err)
 			}
 			person, err := auth.Current(ctx)
+			if _, scopeErr := uuid.Parse(
+				auth.Sessions.GetString(ctx, "draft_scope"),
+			); scopeErr != nil {
+				t.Fatal("successful sign-in omitted isolated non-authorizing draft scope")
+			}
 			if len(auth.Sessions.GetString(ctx, "csrf")) < 32 {
 				t.Fatal("CSRF token does not satisfy the API contract")
 			}

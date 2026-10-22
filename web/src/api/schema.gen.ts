@@ -1958,6 +1958,11 @@ export interface components {
                 platform_admin: boolean;
             };
             csrf_token: string;
+            /**
+             * Format: uuid
+             * @description Non-authorizing session metadata for isolating private local text drafts. Never an authentication or CSRF credential.
+             */
+            draft_scope: string;
             can_create_events: boolean;
         };
         AuditEvent: {
