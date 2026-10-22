@@ -65,6 +65,11 @@ func insert(ctx context.Context, q *dbgen.Queries, d Delivery) (dbgen.InboxNotif
 			ScopeBinding:  d.ScopeBinding,
 		},
 	)
+	var retained communications.InboxProvenance
+	if err == nil &&
+		(json.Unmarshal(row.Provenance, &retained) != nil || retained != d.Provenance) {
+		return row, access.ErrConflict
+	}
 	if err == nil &&
 		(row.Subject != d.Subject || row.Body != d.Body || row.Format != d.Format || row.ScopeBinding != d.ScopeBinding) {
 		return row, access.ErrConflict

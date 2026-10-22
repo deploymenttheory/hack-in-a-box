@@ -210,6 +210,11 @@ func TestInboxCurrentRecipientDedupReadAndRevocation(t *testing.T) {
 		t.Fatal("list exposed personal body or subject")
 	}
 	id := page.Items[0].ID
+	for _, statement := range []string{"UPDATE inbox_notifications SET body='Changed immutable body' WHERE id=$1", "UPDATE inbox_notifications SET provenance='{}'::jsonb WHERE id=$1"} {
+		if _, err = f.pool.Exec(ctx, statement, id); err == nil {
+			t.Fatal("delivered message identity/provenance was mutable")
+		}
+	}
 	if _, err = f.service.Open(ctx, f.owner.ID, id, nil); !errors.Is(err, access.ErrNotFound) {
 		t.Fatalf("other recipient read: %v", err)
 	}
