@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 )
 
 func campaignEvent(
@@ -219,7 +220,7 @@ func (s Service) ChangeCampaign(
 				Metadata: audit.Metadata{ReferenceID: testID},
 			},
 		); err != nil {
-			return err
+			return contextError("audit campaign change", err)
 		}
 		row, err = q.BumpEventRevision(ctx, eventID)
 		if err != nil {
@@ -257,7 +258,11 @@ func (s Service) applyCampaign(
 			return c, err
 		}
 		if _, err = campaignDue(basis.config, d.Timing); err != nil {
-			return c, err
+			return c, &event.Blocked{Issues: []event.Issue{{
+				Field:   "timing",
+				Code:    "campaign_timing_invalid",
+				Message: err.Error(),
+			}}}
 		}
 		c.Definition = d
 		c.Approval = nil
@@ -297,7 +302,7 @@ func (s Service) previewCampaign(
 	}
 	raw, err := json.Marshal(p)
 	if err != nil {
-		return c, err
+		return c, contextError("encode campaign preview", err)
 	}
 	err = q.SaveCommunicationPreview(
 		ctx,
@@ -340,6 +345,10 @@ func (s Service) approveCampaign(
 		if code != "approval_outdated" && code != "provider_configuration_changed" {
 			return c, blocked(code)
 		}
+	}
+	if previewActor, exists := basis.previewApprovers[*c.PreviewID]; exists &&
+		!basis.organisers[previewActor] {
+		return c, blocked("preview_approver_authority_review_required")
 	}
 	preview, err := s.approve(ctx, q, row, actor, Command{PreviewID: *c.PreviewID, Reason: reason})
 	if err != nil {

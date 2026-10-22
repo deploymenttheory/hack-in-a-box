@@ -83,6 +83,63 @@ func (q *Queries) CommunicationCampaigns(ctx context.Context, eventID uuid.UUID)
 	return items, nil
 }
 
+const communicationCurrentOrganisers = `-- name: CommunicationCurrentOrganisers :many
+SELECT m.person_id FROM event_memberships m JOIN people p ON p.id=m.person_id
+WHERE m.event_id=$1 AND m.role='organiser' AND m.active AND p.active ORDER BY m.person_id
+`
+
+func (q *Queries) CommunicationCurrentOrganisers(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, communicationCurrentOrganisers, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var person_id uuid.UUID
+		if err := rows.Scan(&person_id); err != nil {
+			return nil, err
+		}
+		items = append(items, person_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const communicationPreviewApprovers = `-- name: CommunicationPreviewApprovers :many
+SELECT a.preview_id,a.actor_id FROM communication_approvals a
+JOIN (SELECT DISTINCT ON (cv.id) cv.document FROM communication_campaign_versions cv WHERE cv.event_id=$1 ORDER BY cv.id,cv.version DESC LIMIT 1001) c
+ON a.preview_id=(c.document->>'preview_id')::uuid
+WHERE a.event_id=$1 ORDER BY a.preview_id
+`
+
+type CommunicationPreviewApproversRow struct {
+	PreviewID uuid.UUID
+	ActorID   uuid.UUID
+}
+
+func (q *Queries) CommunicationPreviewApprovers(ctx context.Context, eventID uuid.UUID) ([]CommunicationPreviewApproversRow, error) {
+	rows, err := q.db.Query(ctx, communicationPreviewApprovers, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CommunicationPreviewApproversRow{}
+	for rows.Next() {
+		var i CommunicationPreviewApproversRow
+		if err := rows.Scan(&i.PreviewID, &i.ActorID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const communicationTestRequest = `-- name: CommunicationTestRequest :one
 SELECT event_id, id, campaign_id, campaign_version, actor_id, channel, snapshot, fingerprint, reason, created_at FROM communication_test_requests WHERE event_id=$1 AND id=$2
 `

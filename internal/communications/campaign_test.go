@@ -489,3 +489,98 @@ func TestCampaignBroadcastResolverReturnsOnlyIdenticalCurrentCommonProjection(t 
 		t.Fatalf("cancelled broadcast resolved: %v", err)
 	}
 }
+
+func TestCampaignEffectiveApprovalMatchesCurrentCampaignAndPreviewApproverAuthority(t *testing.T) {
+	for _, mode := range []string{"campaign_role", "campaign_inactive", "preview_role"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newFixture(t)
+			p := readyCampaign(t, f)
+			ctx := t.Context()
+			other := testdb.Person(t, f.pool)
+			f.exec(
+				t,
+				"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'organiser')",
+				f.eventID,
+				other.ID,
+			)
+			if mode == "preview_role" {
+				var err error
+				p, err = f.s.ChangeCampaign(
+					ctx,
+					other.ID,
+					f.eventID,
+					p.Campaign.Campaign.Definition.ID,
+					f.revision(t),
+					CampaignCommand{
+						Action:  "approve",
+						Version: p.Campaign.Campaign.Version,
+						Reason:  "Another current organiser explicitly reapproves",
+					},
+				)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if p.Campaign.Campaign.Approval.ActorID != other.ID {
+					t.Fatal("second organiser not retained as campaign approver")
+				}
+			}
+			if mode == "campaign_inactive" {
+				f.exec(t, "UPDATE people SET active=false WHERE id=$1", f.owner.ID)
+			} else {
+				f.exec(
+					t,
+					"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'",
+					f.eventID,
+					f.owner.ID,
+				)
+			}
+			index, err := f.s.Campaigns(ctx, other.ID, f.eventID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			detail, err := f.s.Campaign(ctx, other.ID, f.eventID, p.Campaign.Campaign.Definition.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			blocker := "approver_authority_review_required"
+			if mode == "preview_role" {
+				blocker = "preview_approver_authority_review_required"
+			}
+			if len(index.Campaigns) != 1 || index.Campaigns[0].Status == "approved" ||
+				detail.Campaign.Status == "approved" ||
+				!slices.Contains(index.Campaigns[0].Blockers, blocker) ||
+				!slices.Contains(detail.Campaign.Blockers, blocker) {
+				t.Fatal("current viewer saw effective approval after its approver lost authority")
+			}
+			f.now = p.Campaign.Campaign.Approval.DueAt
+			err = database.Within(ctx, f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+				_, e := f.s.ResolveApprovedCampaignInTransaction(
+					ctx,
+					tx,
+					f.eventID,
+					p.Campaign.Campaign.Definition.ID,
+				)
+				return e
+			})
+			if err == nil {
+				t.Fatal("revoked approver executed campaign")
+			}
+			// Match77's current-authority contract; restoring a legitimate grant may
+			// restore effective approval, without inventing permanent revocation epochs.
+			f.exec(t, "UPDATE people SET active=true WHERE id=$1", f.owner.ID)
+			f.exec(
+				t,
+				"UPDATE event_memberships SET active=true WHERE event_id=$1 AND person_id=$2 AND role='organiser'",
+				f.eventID,
+				f.owner.ID,
+			)
+			detail, err = f.s.Campaign(ctx, other.ID, f.eventID, p.Campaign.Campaign.Definition.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if detail.Campaign.Status != "approved" {
+				t.Fatal("legitimate restored authority did not match77 semantics")
+			}
+		})
+	}
+}

@@ -196,6 +196,20 @@ func TestCampaignHTTPContractsCurrentAuthorityAndOrganiserOnlyTestIntent(t *test
 	if w := request(owner, "POST", path, command, revision(), false); w.Code != 403 {
 		t.Fatalf("CSRF bypass: %d", w.Code)
 	}
+	for _, wall := range []string{"2027-03-28T01:30:00", "2027-10-31T01:30:00"} {
+		invalid := d
+		invalid.Timing = communications.CampaignTiming{Kind: "fixed", WallTime: wall}
+		attempt := command
+		attempt.Definition = &invalid
+		before := revision()
+		response := request(owner, "POST", path, attempt, before, true)
+		if response.Code != 409 || !strings.Contains(response.Body.String(), "campaign_timing_invalid") {
+			t.Fatalf("DST timing must be a reviewed validation failure: %d %s", response.Code, response.Body)
+		}
+		if revision() != before {
+			t.Fatal("rejected DST timing changed event revision")
+		}
+	}
 	w := request(owner, "POST", path, command, revision(), true)
 	if w.Code != 200 {
 		t.Fatalf("save contract: %d %s", w.Code, w.Body)

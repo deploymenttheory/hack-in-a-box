@@ -18,12 +18,14 @@ import (
 )
 
 type campaignBasis struct {
-	event     dbgen.Event
-	config    event.Configuration
-	composer  Page
-	facts     []dbgen.CommunicationFact
-	content   []dbgen.ContentItem
-	providers []ChannelReadiness
+	organisers       map[uuid.UUID]bool
+	previewApprovers map[uuid.UUID]uuid.UUID
+	event            dbgen.Event
+	config           event.Configuration
+	composer         Page
+	facts            []dbgen.CommunicationFact
+	content          []dbgen.ContentItem
+	providers        []ChannelReadiness
 }
 
 func validateCampaign(d CampaignDefinition) error {
@@ -70,10 +72,11 @@ func validateCampaign(d CampaignDefinition) error {
 
 func campaignDue(c event.Configuration, t CampaignTiming) (time.Time, error) {
 	if t.Kind == "fixed" {
-		return schedule.ResolveLocal(t.WallTime, c.Timezone, t.DSTChoice)
+		instant, err := schedule.ResolveLocal(t.WallTime, c.Timezone, t.DSTChoice)
+		return instant, contextError("resolve campaign wall time", err)
 	}
 	c.DSTChoice = t.DSTChoice
-	return event.Plan(
+	instant, err := event.Plan(
 		c,
 		event.AgendaItem{
 			ID:           uuid.New(),
@@ -85,6 +88,7 @@ func campaignDue(c event.Configuration, t CampaignTiming) (time.Time, error) {
 			BusinessDays: t.BusinessDays,
 		},
 	)
+	return instant, contextError("resolve campaign relative time", err)
 }
 
 func loadCampaign(ctx context.Context, q *dbgen.Queries, eventID, id uuid.UUID) (Campaign, error) {
@@ -111,7 +115,12 @@ func (s Service) campaignBasis(
 	row dbgen.Event,
 	actor uuid.UUID,
 ) (campaignBasis, error) {
-	b := campaignBasis{event: row, config: event.DefaultConfiguration()}
+	b := campaignBasis{
+		event:            row,
+		config:           event.DefaultConfiguration(),
+		organisers:       map[uuid.UUID]bool{},
+		previewApprovers: map[uuid.UUID]uuid.UUID{},
+	}
 	if err := json.Unmarshal(row.Configuration, &b.config); err != nil {
 		return b, contextError("decode campaign timezone", err)
 	}
@@ -130,6 +139,20 @@ func (s Service) campaignBasis(
 	)
 	if err != nil {
 		return b, contextError("campaign content", err)
+	}
+	organisers, err := q.CommunicationCurrentOrganisers(ctx, row.ID)
+	if err != nil {
+		return b, contextError("current campaign organisers", err)
+	}
+	for _, personID := range organisers {
+		b.organisers[personID] = true
+	}
+	approvers, err := q.CommunicationPreviewApprovers(ctx, row.ID)
+	if err != nil {
+		return b, contextError("current preview approvers", err)
+	}
+	for _, approval := range approvers {
+		b.previewApprovers[approval.PreviewID] = approval.ActorID
 	}
 	b.providers = s.channelReadiness(ctx, row.ID, actor)
 	return b, nil
@@ -185,6 +208,15 @@ func campaignView(c Campaign, b campaignBasis) CampaignView {
 	v.Blockers = append(v.Blockers, channelAllowed(c.Definition.Channels, b.providers)...)
 	if c.Approval != nil {
 		approved := *c.Approval
+		if !b.organisers[approved.ActorID] {
+			v.Blockers = append(v.Blockers, "approver_authority_review_required")
+			return v
+		}
+		previewActor, exists := b.previewApprovers[approved.PreviewID]
+		if !exists || !b.organisers[previewActor] {
+			v.Blockers = append(v.Blockers, "preview_approver_authority_review_required")
+			return v
+		}
 		for _, channel := range c.Definition.Channels {
 			index := slices.IndexFunc(
 				b.providers,

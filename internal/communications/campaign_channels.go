@@ -42,6 +42,9 @@ func (s Service) channelReadiness(
 				r.SelfTestAvailable = r.Available && r.SupportsSelfTest &&
 					current.SelfTestAvailable &&
 					s.Jobs != nil
+				if allowed := map[string]string{"smtp": "#smtp-provider-setup", "teams": "#teams-workflow-setup", "in_app": "#in-app-provider-setup"}[channel]; current.SetupURL == allowed {
+					r.SetupURL = allowed
+				}
 				if r.Available {
 					r.Reason = "ready"
 				}
