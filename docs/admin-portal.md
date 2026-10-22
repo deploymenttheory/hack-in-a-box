@@ -11,3 +11,13 @@ For development, `npm --prefix web run dev` serves participants and `npm --prefi
 `sh scripts/smoke-compose.sh` creates an isolated database and file volume, stops the public app, and verifies admin health, database readiness, deep links, protected API response and authenticated operational metrics. It then verifies restart persistence and removes only its synthetic project. Its uniquely tagged images do not replace a running preview image.
 
 Shared database, file storage, identity provider and Docker host failures can still affect both apps. Schema changes must remain compatible with both deployments. Independent containers provide process and release isolation, not disaster recovery for shared infrastructure.
+
+`HACKBOX_PUBLIC_ORIGIN` remains the origin of each individual HTTP surface for
+authentication, sessions and CSRF checks. Set `HACKBOX_WORKSPACE_ORIGIN` to the
+canonical attendee application origin, identically for the public API, admin API
+and worker. Compose supplies that shared value from the attendee/public origin;
+the admin override does not replace it. SMTP approvals bind this canonical origin
+and attendee email/calendar links use it, so they point to the attendee app even
+when an organiser approves the message through the separate admin portal. For a
+single-surface deployment, omitting the workspace setting defaults to that
+process's public origin; separate deployments must share it explicitly.

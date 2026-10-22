@@ -10,6 +10,9 @@ var (
 	errOrigin = errors.New(
 		"HACKBOX_PUBLIC_ORIGIN must be an HTTP origin (HTTPS in production), with no path, query, fragment or credentials",
 	)
+	errWorkspaceOrigin = errors.New(
+		"HACKBOX_WORKSPACE_ORIGIN must be an HTTP origin (HTTPS in production), with no path, query, fragment or credentials",
+	)
 	errOIDC = errors.New(
 		"HACKBOX_OIDC_ISSUER and HACKBOX_OIDC_CLIENT_ID must be configured together; production requires HTTPS OIDC",
 	)
@@ -47,14 +50,11 @@ func loadFoundation(cfg *Config, getenv func(string) string) []error {
 
 func validateEndpoints(cfg *Config) []error {
 	var problems []error
-	origin, err := url.Parse(cfg.PublicOrigin)
-	if err != nil || origin.Host == "" || (origin.Scheme != "http" && origin.Scheme != "https") ||
-		origin.Path != "" ||
-		origin.RawQuery != "" ||
-		origin.Fragment != "" ||
-		origin.User != nil ||
-		(cfg.Environment == "production" && origin.Scheme != "https") {
+	if !validOrigin(cfg.PublicOrigin, cfg.Environment) {
 		problems = append(problems, errOrigin)
+	}
+	if !validOrigin(cfg.WorkspaceOrigin, cfg.Environment) {
+		problems = append(problems, errWorkspaceOrigin)
 	}
 	if cfg.OIDCIssuer != "" || cfg.OIDCClientID != "" || cfg.Environment == "production" {
 		issuer, err := url.Parse(cfg.OIDCIssuer)
@@ -66,4 +66,15 @@ func validateEndpoints(cfg *Config) []error {
 		}
 	}
 	return problems
+}
+
+func validOrigin(raw, environment string) bool {
+	origin, err := url.Parse(raw)
+	return err == nil && origin.Host != "" &&
+		(origin.Scheme == "http" || origin.Scheme == "https") &&
+		origin.Path == "" &&
+		origin.RawQuery == "" &&
+		origin.Fragment == "" &&
+		origin.User == nil &&
+		(environment != "production" || origin.Scheme == "https")
 }

@@ -34,6 +34,7 @@ type Config struct {
 	Surface            string
 	DatabaseURL        string
 	PublicOrigin       string
+	WorkspaceOrigin    string
 	GitHubClientID     string
 	GitHubClientSecret string
 	GitHubTokenKey     string
@@ -78,6 +79,7 @@ func Load(getenv func(string) string) (Config, error) {
 		RequestTimeout:     10 * time.Second,
 		ShutdownTimeout:    20 * time.Second,
 	}
+	cfg.WorkspaceOrigin = valueOr(getenv("HACKBOX_WORKSPACE_ORIGIN"), cfg.PublicOrigin)
 	keys, keyErr := secretbox.Parse(getenv("HACKBOX_CREDENTIAL_KEYRING"))
 	cfg.CredentialKeys = keys
 	smtp, smtpErr := loadSMTP(getenv)

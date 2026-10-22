@@ -6,6 +6,7 @@ a transport is present. Runtime construction and readiness checks send no mail.
 
 | Variable | Value |
 | --- | --- |
+| `HACKBOX_WORKSPACE_ORIGIN` | Canonical attendee origin shared by public/admin APIs and worker; HTTPS in production |
 | `HACKBOX_SMTP_HOST` | Relay DNS host with a trusted TLS certificate |
 | `HACKBOX_SMTP_PORT` | Relay port; default 587 |
 | `HACKBOX_SMTP_TLS_MODE` | `starttls` (default, mandatory upgrade) or `tls` |
@@ -19,7 +20,7 @@ Use a relay authorised to send from the configured sender. Configure that domain
 SPF/DKIM/DMARC with the relay operator. The application requires authenticated TLS
 with certificate verification; there is no insecure certificate or plaintext
 fallback. Keep credentials outside source control and database backups. Configuration
-errors are bounded and do not echo credential values. A transport, public origin
+errors are bounded and do not echo credential values. A transport, canonical workspace origin
 or branding change invalidates approval binding; review and approve again.
 
 Each signed-in person can confirm their own mailbox on Account using a neutral,

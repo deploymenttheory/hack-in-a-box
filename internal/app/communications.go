@@ -32,7 +32,7 @@ func newCommunicationRuntime(
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure SMTP: %w", err)
 	}
-	provider := &smtpintegration.Service{Pool: pool, Transport: smtp, Origin: cfg.PublicOrigin}
+	provider := &smtpintegration.Service{Pool: pool, Transport: smtp, Origin: cfg.WorkspaceOrigin}
 	composer := &communications.Service{
 		Pool:     pool,
 		Channels: map[string]communications.ChannelProvider{"smtp": provider},
