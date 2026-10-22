@@ -1,3 +1,4 @@
+import { PublishedMentorRoster } from './mentor-roster'
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
@@ -42,7 +43,7 @@ function MentorControls({ event, value, onDirty }: { event: EventRecord; value: 
   const format = (instant: string) => localDate(instant, event.configuration.timezone)
   return <section className="panel section-heading"><h2>Mentor coverage</h2>
     <p>Team freeze prevents competitor reassignment. Mentor replacements and second-review assignments remain available. Depleted frozen teams may continue or withdraw; changing mentors does not move competitors.</p>
-    <section aria-label="Published mentor roster"><h3>Published mentor roster</h3>{!value.published.length ? <p>No published mentor assignments are available to you.</p> : <ul>{value.published.map(a => <li key={`${a.team_id}-${a.slot}`}>{teamNames.get(a.team_id) ?? a.team_id} · {a.team_id.slice(0, 8)}…{a.team_id.slice(-4)} · {slotLabel(a.slot)}: {names.get(a.person_id) ?? a.person_id} · {format(a.window.start)}–{format(a.window.end)} ({event.configuration.timezone})</li>)}</ul>}</section>
+    <PublishedMentorRoster event={event} value={value} />
     {value.can_manage && <>
       <label htmlFor="mentor-reason">Mentor decision reason</label><textarea id="mentor-reason" value={reason} maxLength={2000} onChange={e => setReason(e.target.value)} />
       <p>Default maximum: {value.default_capacity} assigned teams per mentor.</p><Button variant="outline" disabled={pending || !!edit || !event.can_edit} onClick={() => setEdit({ revision: value.revision, settings: true })}>Edit event mentor capacity</Button>

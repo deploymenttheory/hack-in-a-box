@@ -1,3 +1,4 @@
+import { MentorRoster } from './mentor-roster'
 import { useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
@@ -35,7 +36,7 @@ function EventContent({ eventID }: { eventID: string }) {
   if (query.error) return <Failure error={query.error} retry={() => void query.refetch()} />
   const event = query.data
   return <section className="workspace"><Link to="/">← Switch event</Link><div className="page-heading"><div><p className="eyebrow">{event.stage} · {event.configuration.timezone}</p><h1>{event.name}</h1><p>{event.configuration.description}</p></div></div>
-    <nav className="tabs" aria-label="Event sections">{['overview', 'resources', 'deliverables'].map(name => <button key={name} className={tab === name ? 'active' : ''} aria-current={tab === name ? 'page' : undefined} onClick={() => { if (!unsaved || window.confirm('Leave this section with unsaved changes?')) setTab(name) }}>{name[0].toUpperCase() + name.slice(1)}</button>)}</nav>
-    {tab === 'resources' ? <ResourceLibrary event={event} /> : tab === 'deliverables' ? <TeamDeliverables event={event} onDirty={setUnsaved} /> : <section className="panel"><h2>Event dates</h2><dl className="dates">{[['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></section>}
+    <nav className="tabs" aria-label="Event sections">{['overview', 'resources', 'deliverables', 'mentors'].map(name => <button key={name} className={tab === name ? 'active' : ''} aria-current={tab === name ? 'page' : undefined} onClick={() => { if (!unsaved || window.confirm('Leave this section with unsaved changes?')) setTab(name) }}>{name[0].toUpperCase() + name.slice(1)}</button>)}</nav>
+    {tab === 'mentors' ? <MentorRoster event={event} /> : tab === 'resources' ? <ResourceLibrary event={event} /> : tab === 'deliverables' ? <TeamDeliverables event={event} onDirty={setUnsaved} /> : <section className="panel"><h2>Event dates</h2><dl className="dates">{[['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></section>}
   </section>
 }
