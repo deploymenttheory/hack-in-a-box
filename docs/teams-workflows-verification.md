@@ -15,18 +15,18 @@ The adapter owns encrypted per-event connection configuration, immutable channel
 
 The root's transport review identified missing IPv6 exclusions. Added failing cases for `5f00::1`, `fec0::1` and the current IANA dummy prefix `100:0:0:1::1`; all fail against the old policy and pass after the exclusions, while ordinary public IPv6 remains accepted. Primary registry links and the endpoint policy's supported public-cloud scope are in the setup guide.
 
-The actual River worker test reproduced a completed River job with a still-pending Teams operation before the shared jobs fix: `River completed a temporarily ineligible Teams operation` (4.77s). With the shared pending-operation snooze fix, the same worker test passes (35.77s), delivering the initial rejected attempt, its accepted retry, and the second intent queued during the shared rate window. Direct manual calls alone would miss this integration failure. This branch temporarily includes that separately owned fix while its PR is pending; it must be dropped on the final rebase after merge.
+The actual River worker test reproduced a completed River job with a still-pending Teams operation before the shared jobs fix: `River completed a temporarily ineligible Teams operation` (4.77s). With the shared pending-operation snooze fix, the same worker test passes (35.77s), delivering the initial rejected attempt, its accepted retry, and the second intent queued during the shared rate window. Direct manual calls alone would miss this integration failure. The shared worker fix is already merged on main; this PR retains no duplicate jobs implementation.
 
 ## Checks run
 
-- Teams package real PostgreSQL/race suite: pass (42.416s), including actual River client execution.
+- Actual-main schema-27 rebase: focused Teams PostgreSQL/race/transport suite passes (53.861s), including ordered 27→28 upgrade/guarded rollback and actual River client execution; current-authority HTTP regression passes (3.748s). Earlier full Teams suite passed (42.416s).
 - Additional current-source, retry-cap and crash-recovery PostgreSQL/race cases: pass (13.379s).
 - Current-organiser/CSRF/If-Match/idempotence/secret-canary HTTP test: pass (1.999s).
 - Schema upgrade and actual guarded rollback PostgreSQL/race: pass (3.242s).
-- Desktop/mobile setup browser scenarios: 6 pass (2.5s), isolated port 4380; combined existing composer and setup regression: 18 pass (9.3s). Scoped component cases: 4 pass.
+- Desktop/mobile setup browser scenarios: 6 pass (2.5s), isolated port 4380; combined existing composer, SMTP receipt and setup regression after the actual schema-27 rebase: 22 pass (9.0s). Scoped component cases: 4 pass.
 - Scoped Go lint: zero issues. Web lint and public/admin production builds pass.
 
-These are local results, not claims about a future exact-head GitHub CI run. Final merge must follow #78/schema26 and #79/schema27 and include the merged #74/schema25; temporary dependency commits must be removed when rebasing onto main. Regenerate both Go and TypeScript contracts after that rebase.
+These are local results, not claims about a future exact-head GitHub CI run. The branch is rebased onto actual merged main `6d7ae5f` (#194/schema27), including #74/schema25, #78/schema26 and the merged worker lock-order/snooze fixes. Only Teams commits remain in its diff. Both generated Go and TypeScript contracts reproduce without a diff; the shared runtime preserves SMTP campaign/self-test handlers and canonical participant workspace URLs. Final merge still requires green exact-head GitHub checks.
 
 ## External verification still required
 
