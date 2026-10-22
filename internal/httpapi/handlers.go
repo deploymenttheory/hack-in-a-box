@@ -25,6 +25,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
@@ -51,6 +52,7 @@ type Dependencies struct {
 	MailContacts   mailcontact.Service
 	Rubrics        rubric.Service
 	Inbox          inbox.Service
+	Help           help.Service
 	Presentation   presentation.Service
 	Communications communications.Service
 	Credentials    credentials.Service

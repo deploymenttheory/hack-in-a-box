@@ -60,7 +60,7 @@ func selected(p dbgen.CommunicationPeopleRow, a Audience) bool {
 	return p.CompetitionState == "confirmed" && slices.Contains(a.Teams, p.TeamID)
 }
 
-func factAllowed(
+func (s Service) factAllowed(
 	ctx context.Context,
 	q *dbgen.Queries,
 	p dbgen.CommunicationPeopleRow,
@@ -68,6 +68,12 @@ func factAllowed(
 ) (bool, error) {
 	if f.Status == "withdrawn" {
 		return false, nil
+	}
+	if f.Kind == "help" {
+		if owner := s.FactOwners[f.Kind]; owner != nil {
+			allowed, err := owner.AuthorizeCommunicationFact(ctx, q, p.ID, f)
+			return allowed, contextError("authorize owning communication fact", err)
+		}
 	}
 	if f.Kind == "help" || f.Kind == "outcome_review" {
 		if f.OwnerID == nil || *f.OwnerID != p.ID {
@@ -86,7 +92,7 @@ func factAllowed(
 	return allowed, contextError("factAllowed", err)
 }
 
-func outstanding(
+func (s Service) outstanding(
 	ctx context.Context,
 	q *dbgen.Queries,
 	p dbgen.CommunicationPeopleRow,
@@ -107,7 +113,7 @@ func outstanding(
 			if f.Kind == a.Outstanding &&
 				(f.Status == "open" || ((f.Kind == "clarification" || f.Kind == "rubric") && f.Status == "published")) &&
 				(a.FactID == nil || f.ID == *a.FactID) {
-				ok, err := factAllowed(ctx, q, p, f)
+				ok, err := s.factAllowed(ctx, q, p, f)
 				if err != nil || ok {
 					return ok, contextError("outstanding", err)
 				}
@@ -139,7 +145,7 @@ func eventValues(row dbgen.Event, c event.Configuration) map[string]string {
 	return values
 }
 
-func resourceValues(
+func (s Service) resourceValues(
 	ctx context.Context,
 	q *dbgen.Queries,
 	p dbgen.CommunicationPeopleRow,
@@ -162,7 +168,7 @@ func resourceValues(
 	}
 	for _, f := range facts {
 		if f.ID == *t.FactID {
-			ok, err := factAllowed(ctx, q, p, f)
+			ok, err := s.factAllowed(ctx, q, p, f)
 			if err != nil {
 				return contextError("resourceValues", err)
 			}
@@ -306,21 +312,21 @@ func (s Service) buildProjection(
 			continue
 		}
 
-		allowed, err := factRecipient(ctx, q, person, t.FactID, facts)
+		allowed, err := s.factRecipient(ctx, q, person, t.FactID, facts)
 		if err != nil {
 			return result, contextError("build fact audience", err)
 		}
 		if !allowed {
 			continue
 		}
-		allowed, err = factRecipient(ctx, q, person, a.FactID, facts)
+		allowed, err = s.factRecipient(ctx, q, person, a.FactID, facts)
 		if err != nil {
 			return result, contextError("build selector fact", err)
 		}
 		if !allowed {
 			continue
 		}
-		keep, err := outstanding(ctx, q, person, a, row.ID, facts)
+		keep, err := s.outstanding(ctx, q, person, a, row.ID, facts)
 		if err != nil {
 			return result, contextError("build", err)
 		}
@@ -329,7 +335,7 @@ func (s Service) buildProjection(
 		}
 		values := eventValues(row, c)
 		values["person.name"] = person.DisplayName
-		if err = resourceValues(ctx, q, person, t, row.ID, values, facts); err != nil {
+		if err = s.resourceValues(ctx, q, person, t, row.ID, values, facts); err != nil {
 			return result, contextError("build", err)
 		}
 		if err = s.contentValues(ctx, q, row, person, values); err != nil {
@@ -344,7 +350,7 @@ func (s Service) buildProjection(
 		missing = append(missing, missingBody...)
 		slices.Sort(missing)
 		missing = slices.Compact(missing)
-		more, err := purposeMissing(ctx, q, row, t, values, c, facts, person)
+		more, err := s.purposeMissing(ctx, q, row, t, values, c, facts, person)
 		if err != nil {
 			return result, contextError("build", err)
 		}
@@ -372,7 +378,7 @@ func (s Service) buildProjection(
 	return result, nil
 }
 
-func purposeMissing(
+func (s Service) purposeMissing(
 	ctx context.Context,
 	q *dbgen.Queries,
 	row dbgen.Event,
@@ -397,7 +403,7 @@ func purposeMissing(
 		for _, f := range facts {
 			if f.Kind == "results" && f.Status == "published" && t.FactID != nil &&
 				f.ID == *t.FactID {
-				allowed, err := factAllowed(ctx, q, person, f)
+				allowed, err := s.factAllowed(ctx, q, person, f)
 				published = allowed
 				if err != nil {
 					return nil, contextError("purposeMissing", err)
@@ -437,7 +443,7 @@ func purposeMissing(
 	return missing, nil
 }
 
-func factRecipient(
+func (s Service) factRecipient(
 	ctx context.Context,
 	q *dbgen.Queries,
 	person dbgen.CommunicationPeopleRow,
@@ -449,7 +455,7 @@ func factRecipient(
 	}
 	for _, f := range facts {
 		if f.ID == *id {
-			return factAllowed(ctx, q, person, f)
+			return s.factAllowed(ctx, q, person, f)
 		}
 	}
 	// An unavailable source must remain unresolved; no placeholder is fabricated.

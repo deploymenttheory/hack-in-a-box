@@ -68,7 +68,7 @@ export function Shell() {
       {session.data && !session.error ? <Account session={session.data} /> : <a className="sign-in" href={loginURL()}>Sign in</a>}
     </header>
     <main id="main" tabIndex={-1}>
-      {!(import.meta.env.MODE === 'admin' ? /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/resources\/[a-f0-9-]+$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) : /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/resources\/[a-f0-9-]+$|^\/account$|^\/events\/[a-f0-9-]+$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
+      {!(import.meta.env.MODE === 'admin' ? /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help)\/[a-f0-9-]+$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) : /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help)\/[a-f0-9-]+$|^\/account$|^\/events\/[a-f0-9-]+$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
         signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={session.data.person.id}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
     </main>
     <footer>Make something worth sharing.</footer>

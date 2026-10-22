@@ -399,6 +399,65 @@ type HackTeamRequest struct {
 	CreatedAt time.Time
 }
 
+type HelpCommand struct {
+	EventID          uuid.UUID
+	ActorID          uuid.UUID
+	CommandID        uuid.UUID
+	RequestID        uuid.UUID
+	PayloadDigest    string
+	ResponseRevision int64
+}
+
+type HelpFollowup struct {
+	EventID          uuid.UUID
+	RequestID        uuid.UUID
+	WaitingCycle     int64
+	SettingsRevision int64
+	ThresholdSeconds int64
+	CreatedAt        time.Time
+}
+
+type HelpRequest struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	TeamID         uuid.UUID
+	RequesterID    uuid.UUID
+	Revision       int64
+	Category       string
+	Description    string
+	Location       string
+	MeetingUrl     string
+	Status         string
+	AssigneeID     *uuid.UUID
+	WaitingCycle   int64
+	RequestedAt    time.Time
+	WaitingSince   time.Time
+	FirstClaimedAt pgtype.Timestamptz
+	ClaimedAt      pgtype.Timestamptz
+	ResolvedAt     pgtype.Timestamptz
+	UpdatedAt      time.Time
+}
+
+type HelpSetting struct {
+	EventID                   uuid.UUID
+	Revision                  int64
+	SetupThresholdSeconds     int64
+	LogisticsThresholdSeconds int64
+	OutputThresholdSeconds    int64
+	MeetingHosts              []string
+}
+
+type HelpTransition struct {
+	EventID    uuid.UUID
+	RequestID  uuid.UUID
+	Revision   int64
+	Action     string
+	Status     string
+	ActorID    *uuid.UUID
+	AssigneeID *uuid.UUID
+	OccurredAt time.Time
+}
+
 type InboxNotification struct {
 	ID            uuid.UUID
 	EventID       uuid.UUID

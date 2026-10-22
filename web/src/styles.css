@@ -290,3 +290,6 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .inbox .panel, .inbox-body { overflow-wrap: anywhere; min-width: 0; }
 .inbox-body { white-space: pre-wrap; margin-block: 1rem; }
 .inbox-detail .primary-link { display: block; margin-block: 1rem; }
+.help-reader { max-width: 64rem; margin-inline: auto; padding: clamp(1rem, 3vw, 2rem); overflow-wrap: anywhere; }
+.help-reader > .panel { margin-block: 1.5rem; }
+.help-problem { white-space: pre-wrap; overflow-wrap: anywhere; }
