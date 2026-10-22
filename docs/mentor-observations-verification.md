@@ -51,6 +51,10 @@ rollback retains the schema version and private evidence. The fixture exercises
   the clock reaches its approved future due instant, and the current mentor
   reads its persisted list/detail through HTTP. Both payloads exclude the
   already-stored private evidence. This exercises delivery beyond a preview.
+- The concrete30-to31 populated upgrade and guarded rollback pass with race
+  detection (3.637 seconds). Historical inbox and rubric rollback fixtures also
+  pass under schema31 (3.791/3.856 seconds). Full application Go lint and web
+  lint report zero issues, both portal builds pass, and generated code reproduces.
 
 The PR is prepared on the reviewed inbox branch so it can be reviewed in
 parallel. Before merging it must be rebased onto the actual merged preceding
