@@ -48,9 +48,17 @@ type ScopePolicy interface {
 // ScopeApproval names an immutable typed lifecycle approval. It never changes
 // the approval status of the generic campaign draft.
 type ScopeApproval struct {
-	Kind          string
-	ID            uuid.UUID
-	Binding       string
-	SourceID      uuid.UUID
-	SourceVersion int64
+	Kind          string    `json:"kind"`
+	ID            uuid.UUID `json:"id"`
+	Binding       string    `json:"binding"`
+	SourceID      uuid.UUID `json:"source_id"`
+	SourceVersion int64     `json:"source_version"`
+}
+
+// SameScopeApproval compares immutable typed provenance without pointer identity.
+func SameScopeApproval(left, right *ScopeApproval) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+	return *left == *right
 }

@@ -23,6 +23,56 @@ func (s Service) ResolveApprovedScopedCampaignInTransaction(
 	scope DeliveryScope,
 	policy ScopePolicy,
 ) (ApprovedCampaign, error) {
+	return s.resolveApprovedScopedCampaign(
+		ctx,
+		tx,
+		eventID,
+		campaignID,
+		version,
+		scope,
+		policy,
+		scopedProjection{},
+	)
+}
+
+// ResolveApprovedScopedPersonalCampaignInTransaction uses the same persisted
+// scope proof while rendering literal text for only the requested current person.
+// A zero person resolves the batch during transactional queue creation.
+func (s Service) ResolveApprovedScopedPersonalCampaignInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	version int64,
+	scope DeliveryScope,
+	policy ScopePolicy,
+	personID uuid.UUID,
+) (ApprovedCampaign, error) {
+	return s.resolveApprovedScopedCampaign(
+		ctx,
+		tx,
+		eventID,
+		campaignID,
+		version,
+		scope,
+		policy,
+		scopedProjection{personID: personID, literal: true},
+	)
+}
+
+type scopedProjection struct {
+	personID uuid.UUID
+	literal  bool
+}
+
+func (s Service) resolveApprovedScopedCampaign(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	version int64,
+	scope DeliveryScope,
+	policy ScopePolicy,
+	projection scopedProjection,
+) (ApprovedCampaign, error) {
 	if scope.OccurrenceID == uuid.Nil || policy == nil {
 		return ApprovedCampaign{}, access.ErrForbidden
 	}
@@ -32,6 +82,10 @@ func (s Service) ResolveApprovedScopedCampaignInTransaction(
 	}
 	if audience.Binding == "" || len(audience.RecipientIDs) == 0 {
 		return ApprovedCampaign{}, ErrUnresolved
+	}
+	if projection.personID != uuid.Nil &&
+		!slices.Contains(audience.RecipientIDs, projection.personID) {
+		return ApprovedCampaign{}, access.ErrForbidden
 	}
 	var approved ApprovedCampaign
 	switch {
@@ -44,6 +98,7 @@ func (s Service) ResolveApprovedScopedCampaignInTransaction(
 			version,
 			scope,
 			audience,
+			projection,
 		)
 	case audience.AllowArchived:
 		approved, err = s.resolveRetainedFollowUp(
@@ -54,9 +109,17 @@ func (s Service) ResolveApprovedScopedCampaignInTransaction(
 			version,
 			scope,
 			audience,
+			projection,
 		)
 	default:
-		approved, err = s.ResolveApprovedCampaignInTransaction(ctx, tx, eventID, campaignID)
+		approved, err = s.resolveApprovedPersonalCampaign(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			projection.personID,
+			projection.literal,
+		)
 	}
 	if err != nil {
 		return ApprovedCampaign{}, err
@@ -70,6 +133,11 @@ func (s Service) ResolveApprovedScopedCampaignInTransaction(
 	)
 	if audience.RequireComplete {
 		for _, id := range audience.RecipientIDs {
+			// Queue creation validates the complete common projection; a worker
+			// rechecks its one current recipient without rendering other people.
+			if projection.personID != uuid.Nil && id != projection.personID {
+				continue
+			}
 			if !slices.ContainsFunc(
 				approved.Preview.Recipients,
 				func(r Recipient) bool { return r.PersonID == id },
@@ -91,6 +159,7 @@ func (s Service) resolveExpectedPublication(
 	version int64,
 	scope DeliveryScope,
 	audience ScopeAudience,
+	projection scopedProjection,
 ) (ApprovedCampaign, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
@@ -149,7 +218,15 @@ func (s Service) resolveExpectedPublication(
 	}
 	// Only now invoke the ordinary current-reader renderer. No privileged source
 	// text has been projected into a recipient before actual common publication.
-	preview, err := s.build(ctx, q, row, template, selector)
+	preview, err := s.buildProjection(
+		ctx,
+		q,
+		row,
+		template,
+		selector,
+		projection.personID,
+		projection.literal,
+	)
 	if err != nil {
 		return ApprovedCampaign{}, err
 	}
@@ -206,6 +283,7 @@ func (s Service) resolveRetainedFollowUp(
 	version int64,
 	scope DeliveryScope,
 	audience ScopeAudience,
+	projection scopedProjection,
 ) (ApprovedCampaign, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
@@ -269,7 +347,7 @@ func (s Service) resolveRetainedFollowUp(
 		slices.Contains(c.Definition.Channels, "teams") {
 		return ApprovedCampaign{}, ErrUnresolved
 	}
-	fresh, err := s.retainedProjection(ctx, tx, row, c, template, selector)
+	fresh, err := s.retainedProjection(ctx, tx, row, c, template, selector, projection)
 	if err != nil {
 		return ApprovedCampaign{}, err
 	}
@@ -412,6 +490,7 @@ func (s Service) retainedProjection(
 	c Campaign,
 	template Template,
 	selector Audience,
+	projection scopedProjection,
 ) (Preview, error) {
 	q := dbgen.New(tx)
 	eventID := row.ID
@@ -439,7 +518,15 @@ func (s Service) retainedProjection(
 	if saved.TemplateVersion != template.Version || saved.AudienceVersion != selector.Version {
 		return Preview{}, ErrUnresolved
 	}
-	fresh, err := s.build(ctx, q, row, template, selector)
+	fresh, err := s.buildProjection(
+		ctx,
+		q,
+		row,
+		template,
+		selector,
+		projection.personID,
+		projection.literal,
+	)
 	if err != nil {
 		return Preview{}, err
 	}

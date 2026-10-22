@@ -104,6 +104,9 @@ CREATE FUNCTION retained_communication_occurrence(e uuid,o uuid,at_time timestam
  );
 $$;
 -- +goose StatementEnd
+-- Typed approval provenance stays attached to immutable message/recipient data.
+ALTER TABLE smtp_campaign_messages ADD COLUMN scope_approval jsonb GENERATED ALWAYS AS(snapshot->'scope_approval') STORED;
+ALTER TABLE inbox_notifications ADD COLUMN scope_approval jsonb GENERATED ALWAYS AS(provenance->'scope_approval') STORED;
 -- Scoped Teams intents coexist with the original one-shot campaign route.
 ALTER TABLE teams_workflow_deliveries ADD COLUMN occurrence_id uuid;
 ALTER TABLE teams_workflow_deliveries ADD COLUMN scope_binding text NOT NULL DEFAULT '';
@@ -118,6 +121,8 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- +goose StatementEnd
+ALTER TABLE inbox_notifications DROP COLUMN scope_approval;
+ALTER TABLE smtp_campaign_messages DROP COLUMN scope_approval;
 DROP INDEX teams_workflow_occurrence_once;
 DROP INDEX teams_workflow_campaign_once;
 ALTER TABLE teams_workflow_deliveries DROP COLUMN scope_binding;

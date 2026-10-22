@@ -147,7 +147,10 @@ func (f *fixture) change(c Command) (Page, *communications.PublicationPlanPrevie
 	return p, preview
 }
 
-func (f *fixture) campaign(purpose, body string, approve bool) {
+func (f *fixture) campaign(purpose, body string, approve bool, channels ...string) {
+	if len(channels) == 0 {
+		channels = []string{"smtp"}
+	}
 	f.t.Helper()
 	ctx := f.t.Context()
 	template := communications.Template{
@@ -181,7 +184,7 @@ func (f *fixture) campaign(purpose, body string, approve bool) {
 		Name:       "Synthetic campaign",
 		TemplateID: template.ID,
 		AudienceID: audience.ID,
-		Channels:   []string{"smtp"},
+		Channels:   channels,
 		Timing: communications.CampaignTiming{
 			Kind:     "fixed",
 			WallTime: f.now.Add(time.Minute).In(loc).Format("2006-01-02T15:04:05"),

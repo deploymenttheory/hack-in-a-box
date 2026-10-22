@@ -607,6 +607,7 @@ type InboxNotification struct {
 	Format        string
 	CreatedAt     time.Time
 	ReadAt        pgtype.Timestamptz
+	ScopeApproval []byte
 }
 
 type LoginAttempt struct {
@@ -1020,6 +1021,7 @@ type SmtpCampaignMessage struct {
 	ReceiptCode       string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	ScopeApproval     []byte
 }
 
 type SmtpCampaignOmission struct {

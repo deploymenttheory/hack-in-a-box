@@ -67,7 +67,7 @@ func insert(ctx context.Context, q *dbgen.Queries, d Delivery) (dbgen.InboxNotif
 	)
 	var retained communications.InboxProvenance
 	if err == nil &&
-		(json.Unmarshal(row.Provenance, &retained) != nil || retained != d.Provenance) {
+		(json.Unmarshal(row.Provenance, &retained) != nil || !sameProvenance(retained, d.Provenance)) {
 		return row, access.ErrConflict
 	}
 	if err == nil &&
@@ -123,12 +123,27 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 			return 0, access.ErrForbidden
 		}
 	}
-	approved, err := s.Communications.ResolveApprovedCampaignInTransaction(
-		ctx,
-		tx,
-		eventID,
-		campaignID,
-	)
+	var approved communications.ApprovedCampaign
+	var err error
+	if scope.OccurrenceID == uuid.Nil {
+		approved, err = s.Communications.ResolveApprovedCampaignInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+		)
+	} else {
+		approved, err = s.Communications.ResolveApprovedScopedCampaignInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			expectedVersion,
+			scope,
+			s.ScopePolicy,
+		)
+	}
+
 	if err != nil {
 		return 0, wrap("resolve campaign delivery", err)
 	}
@@ -149,6 +164,7 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 	if err != nil {
 		return 0, wrap("resolve campaign delivery", err)
 	}
+	provenance.ScopeApproval = approved.ScopeApproval
 	count := 0
 	for _, recipient := range approved.Preview.Recipients {
 		if scope.OccurrenceID != uuid.Nil &&
@@ -296,4 +312,11 @@ func (h TestHandler) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome 
 // delivery can only return the same immutable recipient item.
 func (h TestHandler) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 	return h.Deliver(ctx, d)
+}
+
+func sameProvenance(left, right communications.InboxProvenance) bool {
+	approvalEqual := communications.SameScopeApproval(left.ScopeApproval, right.ScopeApproval)
+	left.ScopeApproval = nil
+	right.ScopeApproval = nil
+	return approvalEqual && left == right
 }

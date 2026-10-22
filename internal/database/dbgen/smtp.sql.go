@@ -165,7 +165,7 @@ func (q *Queries) RecordSMTPSubmissionReceipt(ctx context.Context, arg RecordSMT
 }
 
 const sMTPCampaignIntent = `-- name: SMTPCampaignIntent :one
-SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at FROM smtp_campaign_messages WHERE event_id=$1 AND intent_id=$2
+SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at, scope_approval FROM smtp_campaign_messages WHERE event_id=$1 AND intent_id=$2
 `
 
 type SMTPCampaignIntentParams struct {
@@ -193,12 +193,13 @@ func (q *Queries) SMTPCampaignIntent(ctx context.Context, arg SMTPCampaignIntent
 		&i.ReceiptCode,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ScopeApproval,
 	)
 	return i, err
 }
 
 const sMTPCampaignMessage = `-- name: SMTPCampaignMessage :one
-SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at FROM smtp_campaign_messages WHERE operation_id=$1
+SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at, scope_approval FROM smtp_campaign_messages WHERE operation_id=$1
 `
 
 func (q *Queries) SMTPCampaignMessage(ctx context.Context, operationID uuid.UUID) (SmtpCampaignMessage, error) {
@@ -221,12 +222,13 @@ func (q *Queries) SMTPCampaignMessage(ctx context.Context, operationID uuid.UUID
 		&i.ReceiptCode,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ScopeApproval,
 	)
 	return i, err
 }
 
 const sMTPCampaignOccurrenceIntents = `-- name: SMTPCampaignOccurrenceIntents :many
-SELECT m.operation_id, m.event_id, m.intent_id, m.campaign_id, m.campaign_version, m.approval_binding, m.occurrence_id, m.occurrence_binding, m.provider_revision, m.person_id, m.mailbox, m.snapshot, m.state, m.receipt_code, m.created_at, m.updated_at,o.state AS operation_state FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+SELECT m.operation_id, m.event_id, m.intent_id, m.campaign_id, m.campaign_version, m.approval_binding, m.occurrence_id, m.occurrence_binding, m.provider_revision, m.person_id, m.mailbox, m.snapshot, m.state, m.receipt_code, m.created_at, m.updated_at, m.scope_approval,o.state AS operation_state FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
 WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.approval_binding=$4 AND m.occurrence_id=$5
 ORDER BY m.person_id
 `
@@ -256,6 +258,7 @@ type SMTPCampaignOccurrenceIntentsRow struct {
 	ReceiptCode       string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	ScopeApproval     []byte
 	OperationState    string
 }
 
@@ -291,6 +294,7 @@ func (q *Queries) SMTPCampaignOccurrenceIntents(ctx context.Context, arg SMTPCam
 			&i.ReceiptCode,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ScopeApproval,
 			&i.OperationState,
 		); err != nil {
 			return nil, err
