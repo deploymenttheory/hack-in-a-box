@@ -45,6 +45,6 @@ export function draftPage(input: ContentInput): ContentPage {
   return { id: crypto.randomUUID(), kind: input.kind, document: structuredClone(input.document), version: 0, revision: 0, state: 'draft', released_version: null, released_at: null, attachment_details: [], acknowledged_at: null, can_manage: true, message: '' }
 }
 export function changedContent(a: ContentDocument, b: ContentDocument) {
-  const labels: Record<keyof ContentDocument, string> = { purpose: 'Page purpose', contacts: 'Contact routes', require_acknowledgement: 'Required acknowledgement', title: 'Title', markdown: 'Page text', audience: 'Release audience', attachments: 'Attachments', scheduled_at: 'Release schedule' }
+  const labels: Record<keyof ContentDocument, string> = { rubric: 'Approved common rubric', purpose: 'Page purpose', contacts: 'Contact routes', require_acknowledgement: 'Required acknowledgement', title: 'Title', markdown: 'Page text', audience: 'Release audience', attachments: 'Attachments', scheduled_at: 'Release schedule' }
   return (Object.keys(labels) as (keyof ContentDocument)[]).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k])).map(k => labels[k])
 }

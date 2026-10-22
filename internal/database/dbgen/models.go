@@ -692,15 +692,6 @@ type RubricPublication struct {
 	ReviewedNotice   string
 }
 
-type RubricRunBinding struct {
-	EventID            uuid.UUID
-	RunID              uuid.UUID
-	TeamID             uuid.UUID
-	SubmissionRevision pgtype.Int8
-	ActorID            uuid.UUID
-	BoundAt            time.Time
-}
-
 type RubricVersion struct {
 	EventID        uuid.UUID
 	RubricID       uuid.UUID

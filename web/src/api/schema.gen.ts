@@ -1581,6 +1581,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/rubric": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getPublishedRubric"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/rubric/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getRubricHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/rubric/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getRubricConfiguration"];
+        put?: never;
+        post: operations["changeRubricConfiguration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/content-readiness": {
         parameters: {
             query?: never;
@@ -2740,6 +2794,8 @@ export interface components {
             body: string;
         };
         TemplateCriterion: {
+            min_score?: number;
+            anchors?: components["schemas"]["RubricAnchor"][];
             /** Format: uuid */
             id: string;
             label: string;
@@ -2748,6 +2804,13 @@ export interface components {
             weight: number;
         };
         TemplateRubric: {
+            /** @enum {string} */
+            mode?: "all_teams" | "mentor_qualification";
+            required_judge_count?: number;
+            finalist_count?: number;
+            reserve_count?: number;
+            prizes?: components["schemas"]["RubricPrize"][];
+            side_quests?: components["schemas"]["RubricSideQuest"][];
             /** Format: uuid */
             id: string;
             name: string;
@@ -2975,6 +3038,132 @@ export interface components {
             warnings: components["schemas"]["Blocker"][];
             can_manage: boolean;
         };
+        RubricReference: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            digest: string;
+        };
+        RubricAnchor: {
+            score: number;
+            description: string;
+        };
+        RubricCategory: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            min_score: number;
+            max_score: number;
+            weight: number;
+            guidance: string;
+            anchors: components["schemas"]["RubricAnchor"][];
+        };
+        RubricPrize: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string;
+            /** Format: uuid */
+            category_id: string | null;
+        };
+        RubricSideQuest: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            evidence_guidance: string;
+        };
+        PublicRubricDefinition: {
+            name: string;
+            /** @enum {string} */
+            mode: "all_teams" | "mentor_qualification";
+            categories: components["schemas"]["RubricCategory"][];
+            required_judge_count: number;
+            finalist_count: number;
+            reserve_count: number;
+            prizes: components["schemas"]["RubricPrize"][];
+            side_quests: components["schemas"]["RubricSideQuest"][];
+        };
+        PrivateRubricDefinition: {
+            private_judge_guidance: string;
+            name: string;
+            /** @enum {string} */
+            mode: "all_teams" | "mentor_qualification";
+            categories: components["schemas"]["RubricCategory"][];
+            required_judge_count: number;
+            finalist_count: number;
+            reserve_count: number;
+            prizes: components["schemas"]["RubricPrize"][];
+            side_quests: components["schemas"]["RubricSideQuest"][];
+        };
+        RubricRun: {
+            /** Format: uuid */
+            id: string;
+            reference: components["schemas"]["RubricReference"];
+            /** @enum {string} */
+            purpose: "checkpoint" | "mentor_final" | "judge_final";
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: uuid */
+            previous_id: string | null;
+        };
+        /** @description Version zero and an empty digest identify unapproved defaults without a persisted snapshot. */
+        RubricDraftReference: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            digest: string;
+        };
+        RubricConfiguration: {
+            /** Format: int64 */
+            revision: number;
+            reference: components["schemas"]["RubricDraftReference"];
+            definition: components["schemas"]["PrivateRubricDefinition"];
+            approved: boolean;
+            /** Format: int64 */
+            published_version: number | null;
+            runs: components["schemas"]["RubricRun"][];
+        };
+        PublishedRubric: {
+            reference: components["schemas"]["RubricReference"];
+            definition: components["schemas"]["PublicRubricDefinition"];
+            /** Format: date-time */
+            published_at: string;
+            notice: string;
+        };
+        RubricChange: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "saved" | "approved" | "impact_reviewed" | "published" | "run_created" | "run_restarted";
+            /** Format: uuid */
+            actor_id: string | null;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        RubricHistory: {
+            items: components["schemas"]["RubricChange"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        RubricCommand: {
+            /** @enum {string} */
+            action: "save" | "approve" | "review_impact" | "create_run" | "restart_run";
+            /** Format: int64 */
+            version?: number;
+            definition?: components["schemas"]["PrivateRubricDefinition"];
+            reason: string;
+            impact_review?: string;
+            notice?: string;
+            /** @enum {string} */
+            purpose?: "checkpoint" | "mentor_final" | "judge_final";
+            /** Format: uuid */
+            previous_run_id?: string;
+        };
         ContentDocument: {
             /**
              * @description Optional native-page guidance purpose. Never valid on a challenge or role brief.
@@ -2982,6 +3171,7 @@ export interface components {
              */
             purpose?: "" | "rules" | "support" | "conduct";
             contacts?: components["schemas"]["ContentContact"][];
+            rubric?: components["schemas"]["RubricReference"];
             /**
              * @description Explicitly require each reader to acknowledge this immutable version. Material updates with this flag require a new acknowledgement after release.
              * @default false
@@ -6309,6 +6499,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPublishedRubric: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Identical confirmed-attendee rubric derived from the actual released common challenge; no independent early disclosure. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishedRubric"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRubricHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-organiser-only version and restart decisions; historical definitions use the configuration version parameter. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RubricHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRubricConfiguration: {
+        parameters: {
+            query?: {
+                version?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only exact version including private judge guidance and current run references. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RubricConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeRubricConfiguration: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RubricCommand"];
+            };
+        };
+        responses: {
+            /** @description Explicitly saved, approved, reviewed or restarted immutable rubric configuration. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RubricConfiguration"];
                 };
             };
             default: components["responses"]["Error"];

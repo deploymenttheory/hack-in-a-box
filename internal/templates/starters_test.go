@@ -37,11 +37,18 @@ func TestStartersPreserveAgreedProcess(t *testing.T) {
 				b.Event.AdmissionCutoff.After(b.Event.TeamFreeze) {
 				t.Fatal("invalid admission/freeze order")
 			}
+			if qualification &&
+				(b.Definitions.Rubrics[0].Mode != "mentor_qualification" || b.Definitions.Rubrics[0].FinalistCount != 3 || b.Definitions.Rubrics[0].ReserveCount != 1) {
+				t.Fatal("qualification defaults missing")
+			}
+			if !qualification && b.Definitions.Rubrics[0].Mode != "all_teams" {
+				t.Fatal("all-team defaults missing")
+			}
 			if len(b.Definitions.Rubrics[0].Criteria) != 5 {
 				t.Fatal("missing default criteria")
 			}
 			for _, c := range b.Definitions.Rubrics[0].Criteria {
-				if c.MaxScore != 10 || c.Weight != 1 {
+				if c.MinScore != 1 || c.MaxScore != 10 || c.Weight != 1 || len(c.Anchors) != 3 {
 					t.Fatal("unbalanced scoring defaults")
 				}
 			}

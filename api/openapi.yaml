@@ -2170,6 +2170,71 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ContentList'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/rubric:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: getPublishedRubric
+      responses:
+        '200':
+          description: Identical confirmed-attendee rubric derived from the actual released common challenge; no independent early disclosure.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublishedRubric'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/rubric/history:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: getRubricHistory
+      parameters:
+        - name: cursor
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Current-organiser-only version and restart decisions; historical definitions use the configuration version parameter.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RubricHistory'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/rubric/configuration:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: getRubricConfiguration
+      parameters:
+        - name: version
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: Organiser-only exact version including private judge guidance and current run references.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RubricConfiguration'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: changeRubricConfiguration
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RubricCommand'}
+      responses:
+        '200':
+          description: Explicitly saved, approved, reviewed or restarted immutable rubric configuration.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RubricConfiguration'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/content-readiness:
     parameters:
       - {$ref: '#/components/parameters/EventID'}
@@ -4117,6 +4182,8 @@ components:
         - max_score
         - weight
       properties:
+        min_score: {type: integer, minimum: 0, maximum: 999}
+        anchors: {type: array, maxItems: 30, items: {$ref: '#/components/schemas/RubricAnchor'}}
         id:
           type: string
           format: uuid
@@ -4143,6 +4210,12 @@ components:
         - name
         - criteria
       properties:
+        mode: {type: string, enum: [all_teams, mentor_qualification]}
+        required_judge_count: {type: integer, minimum: 1, maximum: 50}
+        finalist_count: {type: integer, minimum: 0, maximum: 100}
+        reserve_count: {type: integer, minimum: 0, maximum: 100}
+        prizes: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricPrize'}}
+        side_quests: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricSideQuest'}}
         id:
           type: string
           format: uuid
@@ -4642,6 +4715,147 @@ components:
         items: {type: array, items: {$ref: '#/components/schemas/EventGuidanceItem'}}
         warnings: {type: array, items: {$ref: '#/components/schemas/Blocker'}}
         can_manage: {type: boolean}
+    RubricReference:
+      type: object
+      additionalProperties: false
+      required: [id, version, digest]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 1}
+        digest: {type: string, pattern: '^[a-f0-9]{64}$'}
+    RubricAnchor:
+      type: object
+      additionalProperties: false
+      required: [score, description]
+      properties:
+        score: {type: integer, minimum: 0, maximum: 1000}
+        description: {type: string, minLength: 1, maxLength: 2000}
+    RubricCategory:
+      type: object
+      additionalProperties: false
+      required: [id, label, min_score, max_score, weight, guidance, anchors]
+      properties:
+        id: {type: string, format: uuid}
+        label: {type: string, minLength: 1, maxLength: 160}
+        min_score: {type: integer, minimum: 0, maximum: 999}
+        max_score: {type: integer, minimum: 1, maximum: 1000}
+        weight: {type: integer, minimum: 1, maximum: 1000}
+        guidance: {type: string, maxLength: 10000}
+        anchors: {type: array, maxItems: 30, items: {$ref: '#/components/schemas/RubricAnchor'}}
+    RubricPrize:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, category_id]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string, minLength: 1, maxLength: 160}
+        description: {type: string, maxLength: 10000}
+        category_id: {type: string, format: uuid, nullable: true}
+    RubricSideQuest:
+      type: object
+      additionalProperties: false
+      required: [id, title, evidence_guidance]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 160}
+        evidence_guidance: {type: string, maxLength: 10000}
+    PublicRubricDefinition:
+      type: object
+      additionalProperties: false
+      required: [name, mode, categories, required_judge_count, finalist_count, reserve_count, prizes, side_quests]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 160}
+        mode: {type: string, enum: [all_teams, mentor_qualification]}
+        categories: {type: array, minItems: 1, maxItems: 20, items: {$ref: '#/components/schemas/RubricCategory'}}
+        required_judge_count: {type: integer, minimum: 1, maximum: 50}
+        finalist_count: {type: integer, minimum: 0, maximum: 100}
+        reserve_count: {type: integer, minimum: 0, maximum: 100}
+        prizes: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricPrize'}}
+        side_quests: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricSideQuest'}}
+    PrivateRubricDefinition:
+      type: object
+      additionalProperties: false
+      required: [name, mode, categories, required_judge_count, finalist_count, reserve_count, prizes, side_quests, private_judge_guidance]
+      properties:
+        private_judge_guidance: {type: string, maxLength: 10000}
+        name: {type: string, minLength: 1, maxLength: 160}
+        mode: {type: string, enum: [all_teams, mentor_qualification]}
+        categories: {type: array, minItems: 1, maxItems: 20, items: {$ref: '#/components/schemas/RubricCategory'}}
+        required_judge_count: {type: integer, minimum: 1, maximum: 50}
+        finalist_count: {type: integer, minimum: 0, maximum: 100}
+        reserve_count: {type: integer, minimum: 0, maximum: 100}
+        prizes: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricPrize'}}
+        side_quests: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/RubricSideQuest'}}
+    RubricRun:
+      type: object
+      additionalProperties: false
+      required: [id, reference, purpose, started_at, previous_id]
+      properties:
+        id: {type: string, format: uuid}
+        reference: {$ref: '#/components/schemas/RubricReference'}
+        purpose: {type: string, enum: [checkpoint, mentor_final, judge_final]}
+        started_at: {type: string, format: date-time, nullable: true}
+        previous_id: {type: string, format: uuid, nullable: true}
+    RubricDraftReference:
+      type: object
+      additionalProperties: false
+      description: Version zero and an empty digest identify unapproved defaults without a persisted snapshot.
+      required: [id, version, digest]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 0}
+        digest: {type: string, pattern: '^$|^[a-f0-9]{64}$'}
+    RubricConfiguration:
+      type: object
+      additionalProperties: false
+      required: [revision, reference, definition, approved, published_version, runs]
+      properties:
+        revision: {type: integer, format: int64, minimum: 0}
+        reference: {$ref: '#/components/schemas/RubricDraftReference'}
+        definition: {$ref: '#/components/schemas/PrivateRubricDefinition'}
+        approved: {type: boolean}
+        published_version: {type: integer, format: int64, nullable: true}
+        runs: {type: array, items: {$ref: '#/components/schemas/RubricRun'}}
+    PublishedRubric:
+      type: object
+      additionalProperties: false
+      required: [reference, definition, published_at, notice]
+      properties:
+        reference: {$ref: '#/components/schemas/RubricReference'}
+        definition: {$ref: '#/components/schemas/PublicRubricDefinition'}
+        published_at: {type: string, format: date-time}
+        notice: {type: string, maxLength: 4000}
+    RubricChange:
+      type: object
+      additionalProperties: false
+      required: [revision, version, action, actor_id, reason, at]
+      properties:
+        revision: {type: integer, format: int64, minimum: 1}
+        version: {type: integer, format: int64, minimum: 1}
+        action: {type: string, enum: [saved, approved, impact_reviewed, published, run_created, run_restarted]}
+        actor_id: {type: string, format: uuid, nullable: true}
+        reason: {type: string, maxLength: 2000}
+        at: {type: string, format: date-time}
+    RubricHistory:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/RubricChange'}}
+        next_cursor: {type: integer, format: int64, nullable: true}
+    RubricCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: {type: string, enum: [save, approve, review_impact, create_run, restart_run]}
+        version: {type: integer, format: int64, minimum: 1}
+        definition: {$ref: '#/components/schemas/PrivateRubricDefinition'}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        impact_review: {type: string, maxLength: 10000}
+        notice: {type: string, maxLength: 4000}
+        purpose: {type: string, enum: [checkpoint, mentor_final, judge_final]}
+        previous_run_id: {type: string, format: uuid}
     ContentDocument:
       type: object
       additionalProperties: false
@@ -4649,6 +4863,7 @@ components:
       properties:
         purpose: {type: string, enum: ['', rules, support, conduct], description: Optional native-page guidance purpose. Never valid on a challenge or role brief.}
         contacts: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ContentContact'}}
+        rubric: {$ref: '#/components/schemas/RubricReference'}
         require_acknowledgement:
           type: boolean
           default: false

@@ -23,8 +23,9 @@ import (
 
 type (
 	Service struct {
-		Pool  *pgxpool.Pool
-		Clock func() time.Time
+		Pool      *pgxpool.Pool
+		Clock     func() time.Time
+		Finalists FinalistPolicy
 	}
 	Run struct {
 		ID         uuid.UUID  `json:"id"`
@@ -189,8 +190,9 @@ func (s Service) Configuration(
 		}
 		h, err := q.EventRubric(ctx, eventID)
 		if errors.Is(err, pgx.ErrNoRows) && version == 0 {
-			out = Configuration{Definition: Default(AllTeams, eventID), Runs: []Run{}}
-			return nil
+			definition, defaultErr := templateDefault(ctx, q, eventID)
+			out = Configuration{Definition: definition, Runs: []Run{}}
+			return defaultErr
 		}
 		if err != nil {
 			return fmt.Errorf("read rubric configuration: %w", err)
@@ -298,7 +300,8 @@ func (s Service) Change(
 			return err
 		}
 		h, err := q.EventRubric(ctx, eventID)
-		if errors.Is(err, pgx.ErrNoRows) && expected == 0 && input.Action == "save" {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows) && expected == 0 && input.Action == "save":
 			h = dbgen.EventRubric{EventID: eventID, ID: uuid.New()}
 			if err = q.CreateEventRubric(
 				ctx,
@@ -306,7 +309,9 @@ func (s Service) Change(
 			); err != nil {
 				return fmt.Errorf("create rubric: %w", err)
 			}
-		} else if err != nil {
+		case errors.Is(err, pgx.ErrNoRows):
+			return access.ErrConflict
+		case err != nil:
 			return fmt.Errorf("read rubric state: %w", err)
 		}
 		if h.Revision != expected {

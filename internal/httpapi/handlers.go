@@ -34,6 +34,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
@@ -46,6 +47,7 @@ type Dependencies struct {
 	TeamsWorkflow  *teamsworkflow.Service
 	SMTP           *smtpintegration.Service
 	MailContacts   mailcontact.Service
+	Rubrics        rubric.Service
 	Presentation   presentation.Service
 	Communications communications.Service
 	Credentials    credentials.Service

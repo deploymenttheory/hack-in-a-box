@@ -95,19 +95,8 @@ BEGIN
 END;
 $$;
 -- +goose StatementEnd
+CREATE TRIGGER rubric_runs_retained BEFORE DELETE OR TRUNCATE ON rubric_assessment_runs FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER rubric_run_identity BEFORE UPDATE ON rubric_assessment_runs FOR EACH ROW EXECUTE FUNCTION protect_rubric_run_identity();
-CREATE TABLE rubric_run_bindings (
- event_id uuid NOT NULL,
- run_id uuid NOT NULL,
- team_id uuid NOT NULL,
- submission_revision bigint,
- actor_id uuid NOT NULL REFERENCES people(id),
- bound_at timestamptz NOT NULL,
- PRIMARY KEY(event_id,run_id,team_id,actor_id),
- FOREIGN KEY(event_id,run_id) REFERENCES rubric_assessment_runs(event_id,id),
- FOREIGN KEY(event_id,team_id) REFERENCES competition_entries(event_id,team_id),
- FOREIGN KEY(event_id,team_id,submission_revision) REFERENCES submission_revisions(event_id,team_id,revision)
-);
 CREATE TABLE rubric_changes (
  event_id uuid NOT NULL,
  rubric_id uuid NOT NULL,
@@ -125,12 +114,10 @@ CREATE TRIGGER rubric_approvals_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON
 CREATE TRIGGER rubric_reviews_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_impact_reviews FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER rubric_publications_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_publications FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER rubric_notices_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_notice_recipients FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
-CREATE TRIGGER rubric_bindings_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_run_bindings FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER rubric_changes_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_changes FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 
 -- +goose Down
 DROP TABLE rubric_changes;
-DROP TABLE rubric_run_bindings;
 DROP TABLE rubric_assessment_runs;
 DROP FUNCTION protect_rubric_run_identity();
 DROP TABLE rubric_notice_recipients;

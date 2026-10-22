@@ -38,31 +38,6 @@ func (q *Queries) ApproveRubricVersion(ctx context.Context, arg ApproveRubricVer
 	return err
 }
 
-const bindRubricRun = `-- name: BindRubricRun :exec
-INSERT INTO rubric_run_bindings(event_id,run_id,team_id,submission_revision,actor_id,bound_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING
-`
-
-type BindRubricRunParams struct {
-	EventID            uuid.UUID
-	RunID              uuid.UUID
-	TeamID             uuid.UUID
-	SubmissionRevision pgtype.Int8
-	ActorID            uuid.UUID
-	BoundAt            time.Time
-}
-
-func (q *Queries) BindRubricRun(ctx context.Context, arg BindRubricRunParams) error {
-	_, err := q.db.Exec(ctx, bindRubricRun,
-		arg.EventID,
-		arg.RunID,
-		arg.TeamID,
-		arg.SubmissionRevision,
-		arg.ActorID,
-		arg.BoundAt,
-	)
-	return err
-}
-
 const createEventRubric = `-- name: CreateEventRubric :exec
 INSERT INTO event_rubrics(event_id,id) VALUES($1,$2)
 `
@@ -317,6 +292,37 @@ func (q *Queries) RubricApproval(ctx context.Context, arg RubricApprovalParams) 
 		&i.ApprovedAt,
 	)
 	return i, err
+}
+
+const rubricAssignedJudges = `-- name: RubricAssignedJudges :many
+SELECT m.person_id FROM event_memberships m JOIN people p ON p.id=m.person_id AND p.active
+JOIN resource_assignments a ON a.event_id=m.event_id AND a.person_id=m.person_id AND a.resource_id=$2
+WHERE m.event_id=$1 AND m.role='judge' AND m.active ORDER BY m.person_id
+`
+
+type RubricAssignedJudgesParams struct {
+	EventID    uuid.UUID
+	ResourceID uuid.UUID
+}
+
+func (q *Queries) RubricAssignedJudges(ctx context.Context, arg RubricAssignedJudgesParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, rubricAssignedJudges, arg.EventID, arg.ResourceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var person_id uuid.UUID
+		if err := rows.Scan(&person_id); err != nil {
+			return nil, err
+		}
+		items = append(items, person_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const rubricChallenge = `-- name: RubricChallenge :one

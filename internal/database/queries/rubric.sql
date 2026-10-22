@@ -53,11 +53,13 @@ UPDATE rubric_assessment_runs SET status='superseded' WHERE event_id=$1 AND id=$
 -- name: StartRubricRun :exec
 UPDATE rubric_assessment_runs SET started_at=coalesce(started_at,$3) WHERE event_id=$1 AND id=$2;
 
--- name: BindRubricRun :exec
-INSERT INTO rubric_run_bindings(event_id,run_id,team_id,submission_revision,actor_id,bound_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING;
-
 -- name: RecordRubricChange :exec
 INSERT INTO rubric_changes(event_id,rubric_id,revision,version,action,actor_id,reason,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8);
 
 -- name: RubricChanges :many
 SELECT * FROM rubric_changes WHERE event_id=$1 AND rubric_id=$2 AND revision<sqlc.arg(before)::bigint ORDER BY revision DESC LIMIT sqlc.arg(page_size);
+
+-- name: RubricAssignedJudges :many
+SELECT m.person_id FROM event_memberships m JOIN people p ON p.id=m.person_id AND p.active
+JOIN resource_assignments a ON a.event_id=m.event_id AND a.person_id=m.person_id AND a.resource_id=$2
+WHERE m.event_id=$1 AND m.role='judge' AND m.active ORDER BY m.person_id;
