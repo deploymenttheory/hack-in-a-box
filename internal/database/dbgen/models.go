@@ -296,6 +296,15 @@ type EventPrivacy struct {
 	DraftDays     int32
 }
 
+type EventRubric struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	Revision         int64
+	LatestVersion    int64
+	ApprovedVersion  pgtype.Int8
+	PublishedVersion pgtype.Int8
+}
+
 type File struct {
 	ID             uuid.UUID
 	EventID        uuid.UUID
@@ -619,6 +628,88 @@ type ResourceAssignment struct {
 	EventID    uuid.UUID
 	ResourceID uuid.UUID
 	PersonID   uuid.UUID
+}
+
+type RubricApproval struct {
+	EventID    uuid.UUID
+	RubricID   uuid.UUID
+	Version    int64
+	ActorID    uuid.UUID
+	Reason     string
+	ApprovedAt time.Time
+}
+
+type RubricAssessmentRun struct {
+	EventID       uuid.UUID
+	ID            uuid.UUID
+	RubricID      uuid.UUID
+	RubricVersion int64
+	Purpose       string
+	Status        string
+	PreviousID    *uuid.UUID
+	Reason        string
+	ActorID       uuid.UUID
+	CreatedAt     time.Time
+	StartedAt     pgtype.Timestamptz
+}
+
+type RubricChange struct {
+	EventID    uuid.UUID
+	RubricID   uuid.UUID
+	Revision   int64
+	Version    int64
+	Action     string
+	ActorID    *uuid.UUID
+	Reason     string
+	OccurredAt time.Time
+}
+
+type RubricImpactReview struct {
+	EventID      uuid.UUID
+	RubricID     uuid.UUID
+	Version      int64
+	ImpactReview string
+	Notice       string
+	ActorID      uuid.UUID
+	ReviewedAt   time.Time
+}
+
+type RubricNoticeRecipient struct {
+	EventID          uuid.UUID
+	ChallengeID      uuid.UUID
+	ChallengeVersion int64
+	PersonID         uuid.UUID
+}
+
+type RubricPublication struct {
+	EventID          uuid.UUID
+	RubricID         uuid.UUID
+	Version          int64
+	ChallengeID      uuid.UUID
+	ChallengeVersion int64
+	PublicDigest     string
+	PublishedAt      time.Time
+	ReviewedNotice   string
+}
+
+type RubricRunBinding struct {
+	EventID            uuid.UUID
+	RunID              uuid.UUID
+	TeamID             uuid.UUID
+	SubmissionRevision pgtype.Int8
+	ActorID            uuid.UUID
+	BoundAt            time.Time
+}
+
+type RubricVersion struct {
+	EventID        uuid.UUID
+	RubricID       uuid.UUID
+	Version        int64
+	Document       []byte
+	PublicDocument []byte
+	PublicDigest   string
+	ActorID        uuid.UUID
+	CreatedAt      time.Time
 }
 
 type ScheduleItem struct {

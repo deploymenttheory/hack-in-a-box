@@ -85,8 +85,7 @@ Run three implementation workstreams concurrently in isolated worktrees. #74 and
 its own PR, relevant verification and exact-head CI merge gate. A waiting live
 provider setup does not prevent unrelated ready resource or presentation work.
 
-#74 is delivered in PR #184. The remaining Batch 5 tickets retain their own
-acceptance and merge gates; their presence in this plan does not mark them done.
+#74, #75, #76, #86 and #87 are delivered in PRs #184, #186, #192, #187 and #190. Each ticket was reconciled against its own acceptance and exact-head merge gate.
 Registration epic #12 is closed after the aggregate audit in PR #185, merged at
 `2baf40e`; that verification does not substitute for resource or presentation work.
 
@@ -108,4 +107,21 @@ prerequisite merge. Approval retains the reviewed versions and official facts;
 dispatch rechecks current authority, recipients, embargoes and opaque provider
 configuration revisions. These safety and receipt contracts precede unattended
 scheduling. An unavailable provider remains visible and cannot be silently dropped
-or reported as delivered. No Batch 6 ticket is marked complete by this plan.
+or reported as delivered. #78 is delivered in PR #189. #79 is in PR #194; its current exact-head CI remains a merge gate. #80 is prepared locally with its live shared-channel setup still outstanding; #81 and #82 retain their complete issue acceptance.
+
+## Batch 7 — fair assessment contracts and event-day support
+
+| Order | Issue | Deliverable | Why it is here |
+| --- | --- | --- | --- |
+| 1 | [#107](https://github.com/deploymenttheory/hack-in-a-box/issues/107) | Versioned common judging rubric | Uses merged content publication; establishes exact approved criteria and immutable assessment versions before checkpoint and final-score consumers. |
+| 2 | [#99](https://github.com/deploymenttheory/hack-in-a-box/issues/99) | Private mentor observations | Uses current published assignments and live review gates, keeping operational status separate from private evidence and scores. |
+| 3 | [#158](https://github.com/deploymenttheory/hack-in-a-box/issues/158) | Rules, conduct and support guidance | Reuses native content, exact-version acknowledgement and personal readiness to make event expectations and contact paths discoverable. |
+| 4 | [#159](https://github.com/deploymenttheory/hack-in-a-box/issues/159) | Team help requests | Adds an independently authorised operational support workflow without waiting for private observation or score records. |
+| 5 | [#161](https://github.com/deploymenttheory/hack-in-a-box/issues/161) | Private questions and common clarifications | Separates private questions from equally available reviewed official answers and preserves challenge/rubric publication gates. |
+
+Keep three independent implementation lanes active when their prerequisites are
+ready. These five tasks establish the assessment, rules and support contracts
+needed by later mentor/judge workspaces and event-day views. They do not declare
+future scoring, private assessment disclosure or provider integration complete.
+Each issue keeps its own PR and acceptance reconciliation. Migration numbers follow actual ready delivery order rather than inventing feature dependencies;
+normal ordered upgrade verification and exact-head green CI remain merge gates.
