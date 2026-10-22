@@ -26,7 +26,7 @@ export function InboxPage() {
   </section>
 }
 function literalHTML(source: string) {
-  return source.replace(/<br>\n/g, '\n').replace(/&(amp|lt|gt|#34|#39);/g, (_, entity: string) => ({ amp: '&', lt: '<', gt: '>', '#34': '"', '#39': "'" })[entity] ?? '')
+  return source.split('<br>\n').join('\n').replace(/&(amp|lt|gt|#34|#39);/g, (_, entity: string) => ({ amp: '&', lt: '<', gt: '>', '#34': '"', '#39': "'" })[entity] ?? '')
 }
 function Notification({ id, back }: { id: string; back: () => void }) {
   const identity = useIdentity(), cache = useQueryClient(), heading = useRef<HTMLHeadingElement>(null), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>()

@@ -9,7 +9,7 @@ async function prepare(page: Page) {
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
   let allowed = true, read = false
   const requests: unknown[] = []
-  const detail = (): Detail => ({ item: { id: notificationID, event_id: firstID, event_name: 'Synthetic event', label: 'Released event resource', created_at: '2027-06-19T09:00:00Z', read_at: read ? '2027-06-19T10:00:00Z' : null }, subject: 'Synthetic message for you', body: '&lt;script&gt;window.INBOX_PWNED=true&lt;/script&gt;\n' + 'LongHarmlessText'.repeat(80), format: 'html', destination: { kind: 'content', resource_id: resourceID } })
+  const detail = (): Detail => ({ item: { id: notificationID, event_id: firstID, event_name: 'Synthetic event', label: 'Released event resource', created_at: '2027-06-19T09:00:00Z', read_at: read ? '2027-06-19T10:00:00Z' : null }, subject: 'Synthetic message for you', body: 'First line<br>\nSecond line<br>\n&lt;script&gt;window.INBOX_PWNED=true&lt;/script&gt;\n' + 'LongHarmlessText'.repeat(80), format: 'html', destination: { kind: 'content', resource_id: resourceID } })
   await page.route('**/api/v1/inbox**', route => {
     const request = route.request(), url = new URL(request.url()), id = url.pathname.split('/')[4]
     if (!id) return route.fulfill({ json: { items: allowed && url.searchParams.get('event_id') !== secondID ? [detail().item] : [], next_cursor: null, unread: allowed && !read && url.searchParams.get('event_id') !== secondID ? 1 : 0 } })
@@ -29,6 +29,8 @@ test('keyboard opens safe preview and recipient read state toggles without arbit
   await open.focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole('heading', { name: 'Synthetic message for you' })).toBeFocused()
   await expect(page.locator('.inbox-body')).toContainText('<script>window.INBOX_PWNED=true</script>')
+  await expect(page.locator('.inbox-body')).toContainText('First line\nSecond line\n<script>')
+  await expect(page.locator('.inbox-body')).not.toContainText('<br>')
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).INBOX_PWNED)).toBeUndefined()
   await page.getByRole('button', { name: 'Mark read', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Mark unread', exact: true })).toBeVisible()
