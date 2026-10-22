@@ -315,3 +315,9 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .scorecard-category input[type="checkbox"] { width: auto; margin-right: .5rem; }
 .scorecard-category details { margin: .8rem 0; }
 .scorecard-editor fieldset:disabled { opacity: .8; }
+.clarification-workspace { min-width: 0; }
+.clarification-workspace textarea { width: 100%; min-height: 8rem; resize: vertical; }
+.clarification-workspace .private-question-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.clarification-workspace .panel, .clarification-workspace a, .clarification-workspace p { overflow-wrap: anywhere; }
+.clarification-workspace fieldset { min-width: 0; }
+@media print { .clarification-private { display: none !important; } }

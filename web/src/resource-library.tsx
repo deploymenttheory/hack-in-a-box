@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
@@ -17,6 +18,7 @@ export function ResourceLibrary({ event }: { event: EventRecord }) {
   const items = pages.data?.pages.flatMap(p => p.items) ?? []
   function refresh() { void cache.invalidateQueries({ queryKey: key }); void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-reader') }) }
   return <section className="resource-library"><div className="preparation-heading"><div><p className="eyebrow">Your event library</p><h2>Resources</h2><p>Released pages and attachments available to your current role and team.</p></div><Button variant="outline" onClick={refresh}>Refresh resources</Button></div>
+    <p><Link to="/events/$eventId/clarifications" params={{ eventId: event.id }}>Questions and official clarifications</Link></p>
     {selected ? <ResourceReader key={selected} id={selected} event={event} back={() => setSelected(undefined)} /> : <>
       <EventGuidance event={event} open={setSelected} />
       <form className="resource-search" role="search" onSubmit={e => { e.preventDefault(); setQuery(search.trim()) }}><label htmlFor="resource-search">Search resources</label><div className="actions"><input id="resource-search" type="search" maxLength={200} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search page titles and text" /><Button type="submit">Search</Button>{query && <Button type="button" variant="outline" onClick={() => { setQuery(''); setSearch('') }}>Clear search</Button>}</div></form>
