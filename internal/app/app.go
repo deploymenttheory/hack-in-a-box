@@ -191,11 +191,13 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	worker := communicationRuntime.Jobs
 	logger.Info("worker started", "jobs_enabled", true)
 	worker.FastMaintenance = func(ctx context.Context) error {
-		if err := communicationRuntime.Help.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain native help sources: %w", err)
-		}
+		// Guarded common publication has a bounded release window. Run it
+		// before support sweeps so their work or errors cannot delay release.
 		if err := (content.Service{Pool: pool, Storage: storage}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain actual content release: %w", err)
+		}
+		if err := communicationRuntime.Help.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain native help sources: %w", err)
 		}
 		if err := communicationRuntime.Automation.Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain reviewed communication occurrences: %w", err)
