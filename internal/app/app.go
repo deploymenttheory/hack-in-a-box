@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
@@ -95,6 +96,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
+		Attendance:   attendance.Service{Pool: pool},
 		Preparation:  preparation.Service{Pool: pool},
 		Teams:        teams.Service{Pool: pool},
 		GitHub:       github,

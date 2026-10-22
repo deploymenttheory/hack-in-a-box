@@ -11,6 +11,29 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AttendanceChange struct {
+	EventID          uuid.UUID
+	RequestID        uuid.UUID
+	PersonID         uuid.UUID
+	AttendanceDay    pgtype.Date
+	Present          bool
+	ExpectedRevision int64
+	Revision         int64
+	ActorID          uuid.UUID
+	Reason           string
+	Changed          bool
+	CreatedAt        time.Time
+}
+
+type AttendanceRecord struct {
+	EventID       uuid.UUID
+	PersonID      uuid.UUID
+	AttendanceDay pgtype.Date
+	Present       bool
+	Revision      int64
+	UpdatedAt     time.Time
+}
+
 type AuditEvent struct {
 	Sequence   int64
 	ID         uuid.UUID
@@ -21,6 +44,11 @@ type AuditEvent struct {
 	ReasonCode string
 	Metadata   []byte
 	OccurredAt time.Time
+}
+
+type CateringSetting struct {
+	EventID uuid.UUID
+	Buffer  int32
 }
 
 type CompetitionClaim struct {
@@ -240,16 +268,18 @@ type Operation struct {
 }
 
 type OperationalProfile struct {
-	ID            uuid.UUID
-	EventID       uuid.UUID
-	PersonID      uuid.UUID
-	ContactEmail  string
-	ContactPhone  string
-	Dietary       string
-	Accessibility string
-	PhotoConsent  string
-	Revision      int64
-	UpdatedAt     time.Time
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	PersonID         uuid.UUID
+	ContactEmail     string
+	ContactPhone     string
+	Dietary          string
+	Accessibility    string
+	PhotoConsent     string
+	Revision         int64
+	UpdatedAt        time.Time
+	TravelDetails    string
+	SocialAttendance string
 }
 
 type Person struct {

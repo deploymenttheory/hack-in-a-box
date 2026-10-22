@@ -2,10 +2,10 @@
 SELECT p.*,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id WHERE p.event_id=$1 AND p.person_id=$2;
 
 -- name: SaveOperationalProfile :one
-INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent)
-VALUES($1,$2,$3,$4,$5,$6,$7)
+INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent,travel_details,social_attendance)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 ON CONFLICT(event_id,person_id) DO UPDATE SET contact_email=EXCLUDED.contact_email,contact_phone=EXCLUDED.contact_phone,
-dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,revision=operational_profiles.revision+1,updated_at=now()
+dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
 RETURNING *;
 
 -- name: ListOperationalProfiles :many

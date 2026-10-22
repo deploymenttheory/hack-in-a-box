@@ -527,6 +527,124 @@ paths:
                 type: string
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/attendance:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getAttendance
+      description: Organiser/logistics shared check-in roster, without sensitive fields. Only confirmed competitors appear. Counts and roster_as_of describe the current transaction snapshot; physical arrival never changes admission or the event minimum.
+      parameters:
+        - {name: day, in: query, schema: {type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'}}
+      responses:
+        '200':
+          description: Event-local day roster and separate competitor, staff, overlap and catering counts.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AttendancePage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/attendance/catering:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    put:
+      operationId: configureCatering
+      description: Organiser-only buffer configuration using the event revision in If-Match. Staff already competing are counted once in catering, while only confirmed competitors count toward the minimum.
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [buffer]
+              properties:
+                buffer: {type: integer, minimum: 0, maximum: 10000}
+      responses:
+        '200':
+          description: Updated event revision and current headcounts.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AttendancePage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/attendance/{person_id}/{day}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - {name: person_id, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: day, in: path, required: true, schema: {type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'}}
+    put:
+      operationId: recordAttendance
+      description: Use the person's attendance revision for this day in If-Match, zero for no record. Retrying the same request_id returns current state; reuse with different content conflicts. Only current confirmed competitors can be checked in. Corrections require a reason. An old retry cannot undo a later correction.
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AttendanceCommand'}
+      responses:
+        '200':
+          description: Current per-day arrival state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AttendanceEntry'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/attendance/{person_id}/{day}/history:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - {name: person_id, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: day, in: path, required: true, schema: {type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'}}
+    get:
+      operationId: attendanceHistory
+      description: Up to 200 immutable arrival/correction records, newest first. Current organiser/logistics permission is required, including after a participant withdraws. Duplicate scans do not create another change.
+      responses:
+        '200':
+          description: Restricted correction history.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: {type: array, items: {$ref: '#/components/schemas/AttendanceChange'}}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/logistics:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getLogistics
+      description: Logistics-role-only contact, dietary, accessibility, travel and social data for current confirmed competitors and active staff. Unknown social attendance is not consent. Photo consent remains in the photographer profile interface. Each page rechecks current roles and roster membership.
+      parameters:
+        - {name: after, in: query, schema: {type: string, format: uuid}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+      responses:
+        '200':
+          description: Current operational projection, excluding photo consent and all registration answers.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LogisticsPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/logistics/export:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: exportLogistics
+      description: Audited paginated JSON export. Current logistics role is required for every page; organisers and platform administrators have no implicit sensitive-field access.
+      parameters:
+        - {name: after, in: query, schema: {type: string, format: uuid}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+      responses:
+        '200':
+          description: Operational roster export page; follow next_cursor until null.
+          headers:
+            Content-Disposition:
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LogisticsPage'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/preparation/tasks:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -1726,6 +1844,10 @@ components:
           type: boolean
         can_read_staff:
           type: boolean
+        can_read_attendance:
+          type: boolean
+        can_read_logistics:
+          type: boolean
         can_transition:
           type: boolean
     EventPage:
@@ -1873,6 +1995,12 @@ components:
             - unknown
             - 'yes'
             - 'no'
+        travel_details:
+          type: string
+          maxLength: 2000
+        social_attendance:
+          type: string
+          enum: [unknown, 'yes', 'no']
     OperationalProfile:
       type: object
       additionalProperties: false
@@ -1915,6 +2043,12 @@ components:
             - unknown
             - 'yes'
             - 'no'
+        travel_details:
+          type: string
+          maxLength: 2000
+        social_attendance:
+          type: string
+          enum: [unknown, 'yes', 'no']
     ProfilePage:
       type: object
       additionalProperties: false
@@ -2200,6 +2334,85 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Registration'
+    AttendanceEntry:
+      type: object
+      additionalProperties: false
+      required: [person_id, display_name, active, present, revision, updated_at]
+      properties:
+        person_id: {type: string, format: uuid}
+        display_name: {type: string}
+        active: {type: boolean}
+        present: {type: boolean}
+        revision: {type: integer, format: int64}
+        updated_at: {type: string, format: date-time, nullable: true}
+    AttendanceCounts:
+      type: object
+      additionalProperties: false
+      required: [confirmed_competitors, minimum_competitors, checked_in_competitors, staff, staff_also_competing, catering_buffer, catering_total]
+      properties:
+        confirmed_competitors: {type: integer}
+        minimum_competitors: {type: integer}
+        checked_in_competitors: {type: integer}
+        staff: {type: integer}
+        staff_also_competing: {type: integer}
+        catering_buffer: {type: integer}
+        catering_total: {type: integer}
+    AttendancePage:
+      type: object
+      additionalProperties: false
+      required: [revision, day, days, timezone, roster_as_of, can_check_in, can_configure, can_read_logistics, counts, items]
+      properties:
+        revision: {type: integer, format: int64}
+        day: {type: string}
+        days: {type: array, items: {type: string}}
+        timezone: {type: string}
+        roster_as_of: {type: string, format: date-time}
+        can_check_in: {type: boolean}
+        can_configure: {type: boolean}
+        can_read_logistics: {type: boolean}
+        counts: {$ref: '#/components/schemas/AttendanceCounts'}
+        items: {type: array, items: {$ref: '#/components/schemas/AttendanceEntry'}}
+    AttendanceCommand:
+      type: object
+      additionalProperties: false
+      required: [request_id, present, reason]
+      properties:
+        request_id: {type: string, format: uuid}
+        present: {type: boolean}
+        reason: {type: string, maxLength: 500}
+    AttendanceChange:
+      type: object
+      additionalProperties: false
+      required: [request_id, actor_id, present, revision, reason, at]
+      properties:
+        request_id: {type: string, format: uuid}
+        actor_id: {type: string, format: uuid}
+        present: {type: boolean}
+        revision: {type: integer, format: int64}
+        reason: {type: string}
+        at: {type: string, format: date-time}
+    LogisticsEntry:
+      type: object
+      additionalProperties: false
+      required: [person_id, display_name, competing]
+      properties:
+        person_id: {type: string, format: uuid}
+        display_name: {type: string}
+        competing: {type: boolean}
+        contact_email: {type: string}
+        contact_phone: {type: string}
+        dietary: {type: string}
+        accessibility: {type: string}
+        travel_details: {type: string}
+        social_attendance: {type: string, enum: [unknown, 'yes', 'no']}
+    LogisticsPage:
+      type: object
+      additionalProperties: false
+      required: [roster_as_of, items, next_cursor]
+      properties:
+        roster_as_of: {type: string, format: date-time}
+        items: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/LogisticsEntry'}}
+        next_cursor: {type: string, format: uuid, nullable: true}
     PreparationEvidence:
       type: object
       additionalProperties: false

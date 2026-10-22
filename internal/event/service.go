@@ -283,6 +283,14 @@ func (s Service) view(
 		}
 	}
 	view.CanReadStaff = policy.Authorize(ctx, actor, row.ID, row.ID, access.StaffRead) == nil
+	view.CanReadAttendance = policy.Authorize(ctx, actor, row.ID, row.ID, access.RosterRead) == nil
+	view.CanReadLogistics = policy.Authorize(
+		ctx,
+		actor,
+		row.ID,
+		row.ID,
+		access.ProfileExport,
+	) == nil
 	view.CanTransition = view.CanReadStaff && row.Stage != "archived"
 	if row.PublishedAt.Valid {
 		at := row.PublishedAt.Time

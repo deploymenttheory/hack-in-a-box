@@ -81,6 +81,8 @@ type View struct {
 	CanEdit              bool          `json:"can_edit"`
 	CanManageOwner       bool          `json:"can_manage_owner"`
 	CanReadStaff         bool          `json:"can_read_staff"`
+	CanReadAttendance    bool          `json:"can_read_attendance"`
+	CanReadLogistics     bool          `json:"can_read_logistics"`
 	CanTransition        bool          `json:"can_transition"`
 }
 

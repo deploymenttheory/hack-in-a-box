@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
@@ -32,6 +33,7 @@ import (
 )
 
 type Dependencies struct {
+	Attendance   attendance.Service
 	Preparation  preparation.Service
 	Teams        teams.Service
 	GitHub       *githubidentity.Service
