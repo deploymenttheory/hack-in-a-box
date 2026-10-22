@@ -5,12 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
-	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
@@ -34,8 +34,9 @@ func TestPresentationUpgradeFromSchema23PreservesCredentialAndCommunicationState
 	); err != nil {
 		t.Fatal(err)
 	}
-	// A synthetic key and supplied value exercise the existing domain instead of
-	// inserting an invalid pretend ciphertext. Neither is printed in failures.
+	// Seed only schema23 columns: current domain queries may require columns
+	// introduced by later migrations. Keep real authenticated ciphertext and
+	// event/resource/version binding; never print the synthetic supplied value.
 	raw, _ := json.Marshal(
 		map[string]any{
 			"active": "synthetic-upgrade",
@@ -50,33 +51,26 @@ func TestPresentationUpgradeFromSchema23PreservesCredentialAndCommunicationState
 	if err != nil {
 		t.Fatal(err)
 	}
-	credentialService := credentials.Service{Pool: pool, Keys: keys}
-	row, err := q.Event(ctx, eventID)
+	credentialID := uuid.New()
+	const supplied = "Synthetic upgrade-only supplied value"
+	binding := []byte(fmt.Sprintf("hackbox:team-credential:v1:%s:%s:1", eventID, credentialID))
+	keyID, ciphertext, err := keys.Seal([]byte(supplied), binding)
 	if err != nil {
 		t.Fatal(err)
 	}
-	page, err := credentialService.Change(
+	if _, err = pool.Exec(
 		ctx,
-		owner.ID,
+		"INSERT INTO team_credentials(id,event_id,label,key_id,ciphertext) VALUES($1,$2,'Synthetic retained credential',$3,$4)",
+		credentialID,
 		eventID,
-		row.Revision,
-		credentials.Command{
-			Action: "create",
-			Label:  "Synthetic retained credential",
-			Value:  "Synthetic upgrade-only supplied value",
-		},
-	)
-	if err != nil {
+		keyID,
+		ciphertext,
+	); err != nil {
 		t.Fatal(err)
 	}
-	if len(page.Items) != 1 {
-		t.Fatal("missing pre-upgrade credential")
-	}
-	before, err := q.TeamCredential(
-		ctx,
-		dbgen.TeamCredentialParams{EventID: eventID, ID: page.Items[0].ID},
-	)
-	if err != nil {
+	var before dbgen.TeamCredential
+	if err = pool.QueryRow(ctx, "SELECT id,version,key_id,ciphertext,active FROM team_credentials WHERE event_id=$1 AND id=$2", eventID, credentialID).
+		Scan(&before.ID, &before.Version, &before.KeyID, &before.Ciphertext, &before.Active); err != nil {
 		t.Fatal(err)
 	}
 	comm := communications.Service{Pool: pool}
@@ -110,7 +104,7 @@ func TestPresentationUpgradeFromSchema23PreservesCredentialAndCommunicationState
 		t.Fatal(err)
 	}
 	if err = database.CheckSchema(ctx, pool); !errors.Is(err, database.ErrSchema) {
-		t.Fatalf("old schema unexpectedly accepted by schema24 app: %v", err)
+		t.Fatalf("old schema unexpectedly accepted by current app: %v", err)
 	}
 	// Normal ordered Goose migration: no out-of-order or allow-missing policy.
 	if err = database.Migrate(ctx, pool, 0); err != nil {
@@ -126,7 +120,11 @@ func TestPresentationUpgradeFromSchema23PreservesCredentialAndCommunicationState
 	if before.Version != after.Version || before.KeyID != after.KeyID ||
 		!bytes.Equal(before.Ciphertext, after.Ciphertext) ||
 		before.Active != after.Active {
-		t.Fatal("schema24 altered the existing supplied credential")
+		t.Fatal("upgrade altered the existing supplied credential")
+	}
+	decrypted, err := keys.Open(after.KeyID, after.Ciphertext, binding)
+	if err != nil || string(decrypted) != supplied {
+		t.Fatal("upgrade broke authenticated credential recovery")
 	}
 	messages, err := comm.Read(ctx, owner.ID, eventID)
 	if err != nil {
@@ -134,7 +132,7 @@ func TestPresentationUpgradeFromSchema23PreservesCredentialAndCommunicationState
 	}
 	if len(messages.Templates) != 1 || messages.Templates[0].Version != 1 ||
 		messages.Templates[0].Body != "Synthetic unchanged body" {
-		t.Fatal("schema24 altered existing communication history")
+		t.Fatal("upgrade altered existing communication history")
 	}
 	service := Service{Pool: pool}
 	program, err := service.Read(ctx, mc.ID, eventID)
