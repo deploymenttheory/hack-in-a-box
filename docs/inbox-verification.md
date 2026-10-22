@@ -1,10 +1,11 @@
 # Recipient inbox and source-owner activation
 
 Issue #81 owns recipient persistence/read state, current-authority filtered inbox
-projections and safe resource navigation. Schema29 follows SMTP27 and Teams28.
-Final ordered28→29 upgrade evidence and app-runtime composition must be recorded
-before this implementation can merge; local fresh-schema tests alone do not prove
-that sequence.
+projections and safe resource navigation. Schema30 follows SMTP27, Teams28 and versioned rubrics29.
+The real ordered29→30 upgrade preserves the approved unpublished rubric reference,
+public digest and private judge guidance, verified mailbox, immutable template history
+and event state. The shared API/worker factory exercises actual organiser-only local
+delivery while retaining SMTP and Teams handlers.
 
 Every list, body-open and read-state mutation rechecks the active recipient and
 current source authority under event locks. Hidden notifications contribute no
@@ -41,7 +42,7 @@ the same unique identity. It never reuses a competitor's personalised preview.
 | Approved campaign | Current-recipient transactional local persistence; no unattended scheduling | #78 approval, #81 persistence, #82 automation |
 | Organiser-only test | Actual local job delivery/reconciliation | #78 intent, #81 handler |
 | Released content | Authorised typed resource reference and real participant/admin reader route; trusted source-owner transaction can record a fixed-recipient notification | Existing #69/#71 resource policy |
-| Help-request update | Explicitly unavailable; no invented item or destination | #159 source/claiming and #160 helper UI |
+| Help-request update | Explicitly unavailable; no invented item or destination | #159 source and actual read-only help detail route; #160 owns full controls |
 | Reviewed common clarification | Explicitly unavailable; no invented item or destination | #161 official reviewed source and #162 feed |
 | Outcome-review reminder | Explicitly unavailable; no invented item or destination | #117 owner/review schedule/evidence and #82 approved trigger |
 
@@ -71,4 +72,12 @@ contracts check recipient isolation, CSRF, no-store, open/read revocation and
 filtered counts. Six desktop/mobile participant browser flows verify keyboard
 opening/focus, safe hostile text, read/unread, event filters and the actual resource
 route's revoked-access response. Both application bundles and lint pass locally.
-Final exact-head CI and ordered migrations remain merge gates.
+On the concrete SMTP27/Teams28/rubric29 base, real PostgreSQL/race checks pass:
+inbox13.568s, inbox HTTP5.441s, shared runtime (including canonical SMTP factory)6.216s,
+and full communications25.992s. Ordered29→30 preservation passes2.929s; historical
+credential, SMTP, Teams and database upgrade/rollback suites pass4.162/3.948/4.096/4.032s.
+Six admin desktop/mobile browser cases pass2.1s and the same six participant-bundle
+cases pass2.2s on isolated preview ports. Current render-shaped HTML fixtures use
+actual newlines after generated `<br>` tags; escaped hostile markup stays inert text.
+Both bundles, Go/web lint and generated contracts pass. Final exact-head CI remains
+a merge gate. Inbox30 permits empty rollback but refuses to discard recipient history.

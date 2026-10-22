@@ -32,5 +32,12 @@ $$;
 CREATE TRIGGER inbox_identity BEFORE UPDATE ON inbox_notifications FOR EACH ROW EXECUTE FUNCTION protect_inbox_identity();
 
 -- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM inbox_notifications) THEN
+  RAISE EXCEPTION 'Inbox recipient history exists; rollback requires an explicit preservation plan';
+ END IF;
+END $$;
+-- +goose StatementEnd
 DROP TABLE inbox_notifications;
 DROP FUNCTION protect_inbox_identity();
