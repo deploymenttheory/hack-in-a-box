@@ -110,7 +110,8 @@ func (h handlers) GetSession(
 ) (contract.GetSessionResponseObject, error) {
 	person := actor(ctx)
 	response := contract.GetSession200JSONResponse{
-		CsrfToken: h.Auth.Sessions.GetString(ctx, "csrf"),
+		CsrfToken:  h.Auth.Sessions.GetString(ctx, "csrf"),
+		DraftScope: h.Auth.DraftScope(ctx),
 	}
 	response.Person.Id = person.ID
 	response.Person.DisplayName = person.DisplayName

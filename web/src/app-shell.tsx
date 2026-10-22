@@ -1,5 +1,8 @@
 import { EmailAccount } from './email-account'
 import { InboxLink } from './inbox'
+import { ConnectionStatus } from './connection-status'
+import { installDraftInvalidation } from './private-draft-lifecycle'
+import { retainMentorDraftScope } from './mentor-drafts'
 import { GitHubAccount } from './github-account'
 import { useEffect, useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
@@ -15,7 +18,7 @@ import { IdentityContext, useIdentity } from './session'
 export const sessionCache = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 function PrivateCache({ children }: { children: ReactNode }) {
-  const [cache] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 15_000 } } }))
+  const [cache] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 15_000, refetchOnReconnect: 'always' } } }))
   useEffect(() => () => { void cache.cancelQueries(); cache.clear() }, [cache])
   return <QueryClientProvider client={cache}>{children}</QueryClientProvider>
 }
@@ -58,7 +61,18 @@ export function Shell() {
     window.addEventListener('session-expired', expire)
     return () => window.removeEventListener('session-expired', expire)
   }, [])
-  useEffect(() => { if (session.data?.person.id) clearPrivateDrafts(session.data.person.id) }, [session.data?.person.id])
+  useEffect(() => installDraftInvalidation(() => { setExpired(true); const cancelled = sessionCache.cancelQueries({ queryKey: ['session'] }); sessionCache.setQueryData(['session'], null); void cancelled.then(() => sessionCache.invalidateQueries({ queryKey: ['session'] })) }), [])
+  useEffect(() => {
+    const clear = () => sessionCache.removeQueries({ queryKey: ['private'] })
+    window.addEventListener('mentor-draft-invalidated', clear)
+    return () => window.removeEventListener('mentor-draft-invalidated', clear)
+  }, [])
+  useEffect(() => {
+    if (session.data?.person.id && !session.error) {
+      clearPrivateDrafts(session.data.person.id)
+      retainMentorDraftScope(session.data.person.id, session.data.draft_scope)
+    }
+  }, [session.data?.person.id, session.data?.draft_scope, session.error])
   const signedOut = session.data === null || (session.error instanceof APIError && session.error.status === 401)
   return <Theme>
     <a className="skip-link" href="#main">Skip to content</a>
@@ -67,16 +81,17 @@ export function Shell() {
       <nav aria-label="Main navigation"><Link to="/">Workspace</Link>{session.data && !session.error && <IdentityContext.Provider value={session.data}><InboxLink /></IdentityContext.Provider>}{import.meta.env.MODE !== 'admin' && <Link to="/register">Find events</Link>}<span className="event-context">{pathname.startsWith('/events/') ? 'Event workspace' : 'No event selected'}</span></nav>
       {session.data && !session.error ? <Account session={session.data} /> : <a className="sign-in" href={loginURL()}>Sign in</a>}
     </header>
+    <ConnectionStatus />
     <main id="main" tabIndex={-1}>
       {!(import.meta.env.MODE === 'admin' ? /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help)\/[a-f0-9-]+$|^\/account$|^\/events\/(new|[a-f0-9-]+)$/i.test(pathname) : /^\/$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help)\/[a-f0-9-]+$|^\/account$|^\/events\/[a-f0-9-]+$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
-        signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={session.data.person.id}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
+        signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={`${session.data.person.id}:${session.data.draft_scope}`}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
     </main>
     <footer>Make something worth sharing.</footer>
   </Theme>
 }
 
 function Welcome({ expired = false }: { expired?: boolean }) {
-  return <section className="welcome"><p className="eyebrow">{import.meta.env.MODE === 'admin' ? 'Administration' : 'Build together'}</p><h1>{expired ? 'Sign in to continue.' : <>Big ideas.<br />A place to begin.</>}</h1><p>{expired ? 'Your session has expired. Sign in again to return to this page. Safe event setup drafts remain available to the same account.' : 'Bring your curiosity, meet your team, and turn a shared challenge into something real.'}</p><a className="primary-link" href={loginURL()}>Sign in with your organisation <span aria-hidden="true">↗</span></a><p className="muted">Sign in to access your events and team workspace.</p></section>
+  return <section className="welcome"><p className="eyebrow">{import.meta.env.MODE === 'admin' ? 'Administration' : 'Build together'}</p><h1>{expired ? 'Sign in to continue.' : <>Big ideas.<br />A place to begin.</>}</h1><p>{expired ? 'Your session has expired. Sign in again to return to this page. Safe event setup drafts remain available to the same account. Private unsent mentor drafts are cleared when your session ends.' : 'Bring your curiosity, meet your team, and turn a shared challenge into something real.'}</p><a className="primary-link" href={loginURL()}>Sign in with your organisation <span aria-hidden="true">↗</span></a><p className="muted">Sign in to access your events and team workspace.</p></section>
 }
 
 export function AccountPage() {

@@ -2869,7 +2869,7 @@ components:
             blockers: { type: array, items: { $ref: '#/components/schemas/Blocker' } }
     Session:
       type: object
-      required: [person, csrf_token, can_create_events]
+      required: [person, csrf_token, can_create_events, draft_scope]
       properties:
         person:
           type: object
@@ -2879,6 +2879,10 @@ components:
             display_name: { type: string }
             platform_admin: { type: boolean }
         csrf_token: { type: string }
+        draft_scope:
+          type: string
+          format: uuid
+          description: Non-authorizing session metadata for isolating private local text drafts. Never an authentication or CSRF credential.
         can_create_events: { type: boolean }
     AuditEvent:
       type: object

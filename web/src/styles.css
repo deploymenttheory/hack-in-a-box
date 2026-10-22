@@ -293,3 +293,6 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .help-reader { max-width: 64rem; margin-inline: auto; padding: clamp(1rem, 3vw, 2rem); overflow-wrap: anywhere; }
 .help-reader > .panel { margin-block: 1.5rem; }
 .help-problem { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.connection-status { padding: .5rem clamp(1rem, 3vw, 2rem); margin: 0; font-size: .875rem; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.connection-offline, .connection-unavailable, .connection-recovering { background: var(--muted); }

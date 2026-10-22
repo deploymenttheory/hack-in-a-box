@@ -1,4 +1,5 @@
 import createClient from 'openapi-fetch'
+import { mentorSessionGeneration, retainMentorDraftScope, invalidateMentorDrafts } from '../mentor-drafts'
 import type { paths, components } from './schema.gen'
 
 export type Session = components['schemas']['Session']
@@ -36,12 +37,16 @@ export function unwrap<T>(result: { data?: T; error?: components['schemas']['Err
   return result.data
 }
 export const api = createClient<paths>({ credentials: 'same-origin' })
-api.use({ onResponse({ response }) {
-  if (response.status === 401) window.dispatchEvent(new Event('session-expired'))
+const requestSessions = new WeakMap<Request, number>()
+api.use({ onRequest({ request }) { requestSessions.set(request, mentorSessionGeneration()) }, onError({ error }) { if (!(error instanceof Error && error.name === 'AbortError')) window.dispatchEvent(new Event('workspace-network-unavailable')) }, onResponse({ request, response }) {
+  window.dispatchEvent(new Event('workspace-response'))
+  if (response.status === 401 && requestSessions.get(request) === mentorSessionGeneration()) { window.dispatchEvent(new Event('session-expired')); invalidateMentorDrafts() }
 } })
 export const privateKey = (person: string, event: string, resource: string) => ['private', person, event, resource] as const
-export async function getSession(): Promise<Session> {
-  const { data, error, response } = await api.GET('/api/v1/session')
+export async function getSession(context?: { signal?: AbortSignal }): Promise<Session> {
+  const { data, error, response } = await api.GET('/api/v1/session', { signal: context?.signal })
   if (error || !data) throw new APIError(response.status, error?.error.code ?? 'unavailable', error?.error.request_id)
+  if (context?.signal?.aborted) throw context.signal.reason
+  retainMentorDraftScope(data.person.id, data.draft_scope)
   return data
 }

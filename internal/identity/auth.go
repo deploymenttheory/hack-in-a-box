@@ -237,8 +237,21 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) error {
 	a.Sessions.Put(ctx, "person_id", person.ID.String())
 	a.Sessions.Put(ctx, "session_revision", person.SessionRevision)
 	a.Sessions.Put(ctx, "csrf", rand.Text()+rand.Text())
+	a.Sessions.Put(ctx, "draft_scope", uuid.NewString())
 	http.Redirect(w, r, SafeReturnTo(attempt.ReturnTo), http.StatusSeeOther)
 	return nil
+}
+
+// DraftScope is non-authorizing metadata for private browser draft isolation.
+// It is not a session token and is never accepted as an authentication proof.
+// Existing signed-in sessions receive it lazily without exposing their token.
+func (a *Auth) DraftScope(ctx context.Context) uuid.UUID {
+	scope, err := uuid.Parse(a.Sessions.GetString(ctx, "draft_scope"))
+	if err != nil || scope == uuid.Nil {
+		scope = uuid.New()
+		a.Sessions.Put(ctx, "draft_scope", scope.String())
+	}
+	return scope
 }
 
 // SafeReturnTo accepts only local application pages, including on callback.
