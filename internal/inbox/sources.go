@@ -121,12 +121,20 @@ func (s Service) authorize(
 		if ownerErr != nil {
 			return nil, wrap("authorize owning resource", ownerErr)
 		}
-		// An owner cannot introduce arbitrary browser destinations or activate a
-		// journey before that route has been implemented and reviewed here.
-		if source.Kind == "help" && destination.Kind == "help" &&
-			destination.ResourceID == source.ID {
-			return &destination, nil
-		}
+		return nativeDestination(source, destination)
+	}
+}
+
+// An owner cannot introduce arbitrary browser destinations or activate a journey
+// before that route has been implemented and reviewed here.
+func nativeDestination(source Source, destination Destination) (*Destination, error) {
+	if destination.Kind != source.Kind || destination.ResourceID != source.ID {
+		return nil, access.ErrNotFound
+	}
+	switch source.Kind {
+	case "help", "clarification":
+		return &destination, nil
+	default:
 		return nil, access.ErrNotFound
 	}
 }

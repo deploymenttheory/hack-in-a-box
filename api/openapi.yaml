@@ -2311,6 +2311,249 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ContentList'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: listTeamQuestions
+      parameters:
+        - name: team_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Current-team private questions or explicit organiser triage; no common discovery.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrivateQuestionList'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: askTeamQuestion
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PrivateQuestionInput'}
+      responses:
+        '200':
+          description: Private question bound server-side to the exact actually released common source.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrivateQuestion'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getPrivateTeamQuestion
+      responses:
+        '200':
+          description: Currently authorised team or explicit staff only, including archived current-authority reads.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrivateQuestion'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}/history:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getPrivateQuestionHistory
+      parameters:
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Private actor/time/action history without question or answer prose.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrivateQuestionHistory'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}/triage:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: triageTeamQuestion
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"[0-9]+"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/QuestionTriage'}
+      responses:
+        '200':
+          description: Explicit current-organiser triage; never scoring or a formal submission.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PrivateQuestion'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}/answer:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getClarificationConfiguration
+      responses:
+        '200':
+          description: Staff-only latest immutable draft and exact source, never the common projection.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationConfiguration'}
+        default: {$ref: '#/components/responses/Error'}
+    put:
+      operationId: saveClarificationDraft
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"[0-9]+"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ClarificationDocument'}
+      responses:
+        '200':
+          description: Separate authored immutable version; material-change labels require real owning released versions.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationConfiguration'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/clarifications/{answer_id}/actions:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: answer_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: reviewClarification
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"[0-9]+"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ClarificationCommand'}
+      responses:
+        '200':
+          description: Distinct exact-version approval or publication with atomic current-recipient inbox references.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationConfiguration'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/clarifications/{answer_id}/history:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: answer_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getPublishedClarificationHistory
+      parameters:
+        - name: cursor
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Published corrections only, descending by exact answer version.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationHistory'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}/attachments/{file_id}:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      - name: file_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getQuestionAttachment
+      responses:
+        '200':
+          description: Authorised private attachment bytes after exact question association and current live-start staff gate.
+          content:
+            application/octet-stream:
+              schema: {type: string, format: binary}
+          headers:
+            Content-Disposition:
+              schema: {type: string}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/clarifications:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: searchPublishedClarifications
+      parameters:
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - {$ref: '#/components/parameters/Limit'}
+        - name: search
+          in: query
+          schema: {type: string, maxLength: 200}
+      responses:
+        '200':
+          description: Common published answers only; never private question text, drafts or attachments.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationList'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/clarifications/{answer_id}:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: answer_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getPublishedClarification
+      responses:
+        '200':
+          description: Canonical common answer and immutable published corrections, authorised against current actual common release.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationPage'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/rubric:
     parameters:
       - {$ref: '#/components/parameters/EventID'}
@@ -4285,7 +4528,7 @@ components:
       additionalProperties: false
       required: [kind, resource_id]
       properties:
-        kind: {type: string, enum: [content, help]}
+        kind: {type: string, enum: [content, help, clarification]}
         resource_id: {type: string, format: uuid}
     InboxDetail:
       type: object
@@ -4302,7 +4545,7 @@ components:
           additionalProperties: false
           required: [kind, resource_id]
           properties:
-            kind: {type: string, enum: [content, help]}
+            kind: {type: string, enum: [content, help, clarification]}
             resource_id: {type: string, format: uuid}
     InboxPage:
       type: object
@@ -5766,6 +6009,159 @@ components:
         items: {type: array, items: {$ref: '#/components/schemas/EventGuidanceItem'}}
         warnings: {type: array, items: {$ref: '#/components/schemas/Blocker'}}
         can_manage: {type: boolean}
+    PrivateQuestionInput:
+      type: object
+      additionalProperties: false
+      required: [team_id, command_id, topic, body, attachments]
+      properties:
+        team_id: {type: string, format: uuid}
+        command_id: {type: string, format: uuid}
+        topic: {type: string, enum: [challenge, rubric]}
+        body: {type: string, minLength: 1, maxLength: 8000}
+        attachments:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    PrivateQuestion:
+      type: object
+      additionalProperties: false
+      required: [id, team_id, author_id, revision, topic, body, attachments, source, status, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        team_id: {type: string, format: uuid}
+        author_id: {type: string, format: uuid}
+        revision: {type: integer, format: int64, minimum: 1}
+        topic: {type: string, enum: [challenge, rubric]}
+        body: {type: string, minLength: 1, maxLength: 8000}
+        attachments:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        source: {$ref: '#/components/schemas/ClarificationSource'}
+        status: {type: string, enum: [open, triaged, closed, answered]}
+        created_at: {type: string, format: date-time}
+    PrivateQuestionList:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/PrivateQuestion'}
+        next_cursor: {type: string, format: uuid, nullable: true}
+    QuestionTriage:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: {type: string, enum: [triage, close, reopen]}
+    QuestionTransition:
+      type: object
+      additionalProperties: false
+      required: [id, revision, version, action, actor_id, at]
+      properties:
+        id: {type: string, format: uuid}
+        revision: {type: integer, format: int64, minimum: 1}
+        version: {type: integer, format: int64, minimum: 1, nullable: true}
+        action: {type: string, enum: [asked, triaged, closed, reopened, authored, approved, published]}
+        actor_id: {type: string, format: uuid}
+        at: {type: string, format: date-time}
+    PrivateQuestionHistory:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/QuestionTransition'}
+        next_cursor: {type: string, format: uuid, nullable: true}
+    ClarificationConfiguration:
+      type: object
+      additionalProperties: false
+      required: [id, question_id, revision, version, document, source, approved, published]
+      properties:
+        id: {type: string, format: uuid}
+        question_id: {type: string, format: uuid}
+        revision: {type: integer, format: int64, minimum: 1}
+        version: {type: integer, format: int64, minimum: 1}
+        document: {$ref: '#/components/schemas/ClarificationDocument'}
+        source: {$ref: '#/components/schemas/ClarificationSource'}
+        approved: {type: boolean}
+        published: {type: boolean}
+    ClarificationCommand:
+      type: object
+      additionalProperties: false
+      required: [action, version]
+      properties:
+        action: {type: string, enum: [approve, publish]}
+        version: {type: integer, format: int64, minimum: 1}
+    ClarificationHistory:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/PublishedClarification'}
+        next_cursor: {type: integer, format: int64, minimum: 1, nullable: true}
+    ClarificationSource:
+      type: object
+      additionalProperties: false
+      required: [challenge_id, challenge_version, rubric]
+      properties:
+        challenge_id: {type: string, format: uuid}
+        challenge_version: {type: integer, format: int64, minimum: 1}
+        rubric: {$ref: '#/components/schemas/RubricReference'}
+    ClarificationDocument:
+      type: object
+      additionalProperties: false
+      required: [title, body, kind]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 200}
+        body: {type: string, minLength: 1, maxLength: 16000}
+        kind: {type: string, enum: [clarification, challenge_change, rubric_change]}
+    PublishedClarification:
+      type: object
+      additionalProperties: false
+      required: [id, version, document, source, author_name, authored_at, approved_at, published_at, current, source_current]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64, minimum: 1}
+        document: {$ref: '#/components/schemas/ClarificationDocument'}
+        source: {$ref: '#/components/schemas/ClarificationSource'}
+        author_name: {type: string}
+        authored_at: {type: string, format: date-time}
+        approved_at: {type: string, format: date-time}
+        published_at: {type: string, format: date-time}
+        current: {type: boolean}
+        source_current: {type: boolean}
+    ClarificationPage:
+      type: object
+      additionalProperties: false
+      required: [answer, history, history_has_more, archived]
+      properties:
+        answer: {$ref: '#/components/schemas/PublishedClarification'}
+        history:
+          type: array
+          maxItems: 500
+          items: {$ref: '#/components/schemas/PublishedClarification'}
+        history_has_more: {type: boolean}
+        archived: {type: boolean}
+    ClarificationList:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/PublishedClarification'}
+        next_cursor: {type: string, format: uuid, nullable: true}
     RubricReference:
       type: object
       additionalProperties: false

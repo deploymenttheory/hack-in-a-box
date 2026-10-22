@@ -15,6 +15,7 @@ import (
 type Action string
 
 const (
+	ClarificationChanged      Action = "clarification.changed"
 	RubricChanged             Action = "rubric.changed"
 	CommunicationChanged      Action = "communication.changed"
 	CredentialCreated         Action = "credential.created"          // #nosec G101 -- Audit action name, not a credential.
@@ -116,7 +117,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case RubricChanged, TeamsConnectionSaved,
+	case ClarificationChanged, RubricChanged, TeamsConnectionSaved,
 		TeamsConnectionRevoked,
 		TeamsConnectionRotated,
 		TeamsTestQueued,
