@@ -55,6 +55,13 @@ func (s Service) release(
 			"Briefs remain privileged until the common challenge publication.",
 		)
 	}
+	doc, err := document(ctx, q, *item, item.Version)
+	if err != nil {
+		return err
+	}
+	if err = s.verifyAttachments(ctx, q, *item.ApprovedBy, row.ID, doc); err != nil {
+		return err
+	}
 	item.State = "released"
 	item.ReleasedVersion = pgtype.Int8{Int64: item.Version, Valid: true}
 	item.ReleasedAt = timestamp(&now)

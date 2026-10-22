@@ -1621,6 +1621,18 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ContentList'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content-readiness:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: contentReadiness
+      responses:
+        '200':
+          description: Organiser-only publication gates, evaluated by the same domain rules used at scheduled publication.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentReadiness'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/content/{content_id}:
     parameters:
       - {$ref: '#/components/parameters/EventID'}
@@ -3455,6 +3467,25 @@ components:
         evidence:
           type: array
           items: {$ref: '#/components/schemas/SubmissionEvidence'}
+    ContentReadiness:
+      type: object
+      additionalProperties: false
+      required: [published_at, blockers]
+      properties:
+        published_at: {type: string, format: date-time, nullable: true}
+        blockers:
+          type: array
+          items: {$ref: '#/components/schemas/Blocker'}
+    ContentAttachment:
+      type: object
+      additionalProperties: false
+      required: [id, filename, media_type, size, can_download]
+      properties:
+        id: {type: string, format: uuid}
+        filename: {type: string}
+        media_type: {type: string}
+        size: {type: integer, format: int64}
+        can_download: {type: boolean}
     ContentAudience:
       type: object
       additionalProperties: false
@@ -3499,8 +3530,11 @@ components:
     ContentPage:
       type: object
       additionalProperties: false
-      required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message]
+      required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message, attachment_details]
       properties:
+        attachment_details:
+          type: array
+          items: {$ref: '#/components/schemas/ContentAttachment'}
         id: {type: string, format: uuid}
         kind: {type: string, enum: [page, brief, challenge]}
         revision: {type: integer, format: int64}

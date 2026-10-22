@@ -91,6 +91,7 @@ func newFixture(t *testing.T, pool *pgxpool.Pool) *fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = store.Close() })
+	f.s.Storage = store
 	f.fs = files.Service{
 		Pool:       pool,
 		Storage:    store,
@@ -800,4 +801,66 @@ func TestEventOverviewHonoursChallengeDispatchAllowance(t *testing.T) {
 			t.Fatalf("at offset %s overview missed=%t", offset, missed)
 		}
 	}
+}
+
+func TestAuthoringReadinessMetadataAndAttachmentIntegrity(t *testing.T) {
+	pool := testdb.New(t, true)
+	t.Run("readiness is current and organiser only", func(t *testing.T) {
+		f := newFixture(t, pool)
+		status, err := f.s.PublicationStatus(t.Context(), f.owner.ID, f.id)
+		if err != nil || len(status.Blockers) != 0 || status.PublishedAt != nil {
+			t.Fatalf("ready status %+v %v", status, err)
+		}
+		f.exec("UPDATE event_gate_facts SET frozen_teams=0 WHERE event_id=$1", f.id)
+		status, err = f.s.PublicationStatus(t.Context(), f.owner.ID, f.id)
+		if err != nil || len(status.Blockers) == 0 || status.Blockers[0].Code != "teams_unready" {
+			t.Fatalf("stale readiness %+v %v", status, err)
+		}
+		if _, err = f.s.PublicationStatus(t.Context(), f.member.ID, f.id); !errors.Is(err, access.ErrForbidden) {
+			t.Fatal("attendee obtained authoring gates")
+		}
+	})
+	t.Run("missing attachment blocks approval", func(t *testing.T) {
+		f := newFixture(t, pool)
+		id := f.upload()
+		in := input("page")
+		in.Document.Attachments = []uuid.UUID{id}
+		p := f.act(f.save(content.Page{}, in), "review")
+		if len(p.AttachmentDetails) != 1 || p.AttachmentDetails[0].Filename != "notes.txt" || !p.AttachmentDetails[0].CanDownload {
+			t.Fatalf("attachment description %+v", p.AttachmentDetails)
+		}
+		file, err := f.q.File(t.Context(), dbgen.FileParams{EventID: f.id, ID: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = f.fs.Storage.Remove(file.ObjectKey); err != nil {
+			t.Fatal(err)
+		}
+		_, err = f.s.Action(t.Context(), f.owner.ID, f.id, p.ID, p.Revision, "approve", "")
+		expectBlocked(t, err)
+		if f.preview(p).State != "review" {
+			t.Fatal("missing attachment was approved")
+		}
+	})
+	t.Run("attachment lost after approval blocks scheduled release", func(t *testing.T) {
+		f := newFixture(t, pool)
+		id := f.upload()
+		in := input("page")
+		in.Document.Attachments = []uuid.UUID{id}
+		due := f.now.Add(time.Minute)
+		in.Document.ScheduledAt = &due
+		p := f.approve(f.save(content.Page{}, in))
+		file, err := f.q.File(t.Context(), dbgen.FileParams{EventID: f.id, ID: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = f.fs.Storage.Remove(file.ObjectKey); err != nil {
+			t.Fatal(err)
+		}
+		f.now = due
+		f.dispatch(p)
+		if f.preview(p).State != "blocked" {
+			t.Fatal("missing attachment was released")
+		}
+	})
 }

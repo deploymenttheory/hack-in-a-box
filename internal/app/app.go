@@ -98,7 +98,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		Content:     content.Service{Pool: pool},
+		Content:     content.Service{Pool: pool, Storage: storage},
 		Submissions: submissions.Service{Pool: pool},
 		Attendance:  attendance.Service{Pool: pool},
 		Preparation: preparation.Service{Pool: pool},
@@ -164,7 +164,7 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		return fmt.Errorf("new: %w", err)
 	}
 	logger.Info("worker started", "jobs_enabled", true)
-	worker.FastMaintenance = (content.Service{Pool: pool}).Maintain
+	worker.FastMaintenance = (content.Service{Pool: pool, Storage: storage}).Maintain
 	worker.Maintenance = func(ctx context.Context) error {
 		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain submission outcomes: %w", err)

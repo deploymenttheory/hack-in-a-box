@@ -325,3 +325,44 @@ T−7+0 seconds while the worker correctly allowed dispatch through +60 seconds.
 Both now use the same scheduling constant. The test fails before the correction
 and passes at 0, 60 and just over 60 seconds afterward; the content, event and
 schedule PostgreSQL/race suites and final Go lint pass with the correction.
+
+
+## #70 — organiser content authoring and release workspace
+
+The event Content tab now supports native Markdown with safe preview, reusable
+challenge/role/FAQ/resource starters, event-template role briefs and copies of
+existing pages. Audience preview names the selected role or team and current
+release state without issuing grants or publication actions. Markdown omits raw
+HTML and remote images; links allow only HTTP(S), mailto and local anchors, reject
+embedded credentials, and isolate opened tabs.
+
+Organisers can upload protected attachments, compare immutable versions, review,
+approve, schedule, cancel and withdraw content. Saving an approved page creates a
+new private draft. Release controls require the saved, approved version; stale
+revision conflicts retain local edits and require explicit review of the latest
+version. Event-local schedules use the shared server time resolver with an explicit
+DST choice. Placeholders, missing attachments and past/invalid schedules block
+approval. Storage integrity and current access are checked on both approval and
+actual release, including when a file disappears after approval.
+
+Initial challenge authoring displays its fixed seven-calendar-day publication
+instant, confirmed competitor minimum and current team-freeze gates. The read-only
+readiness endpoint uses the same domain gate as the worker. Approval cannot waive
+those gates; there is no initial manual challenge release. The UI explains the
+60-second dispatch allowance and the postponement/cancellation outcome. Privileged
+access links to the existing staff workflow and explains lasting competition
+exclusion and the active/waitlisted-registration conflict.
+
+The public contract adds authorised attachment metadata and organiser-only
+publication readiness. No database migration is required. The released reader
+library and required acknowledgements remain #71.
+
+Verification covers desktop/mobile editing of approved pages, role/team preview,
+unsafe Markdown, reusable starters, attachments, placeholder and schedule blockers,
+optimistic conflicts, revoked permissions, unsaved navigation and withdrawal.
+Real PostgreSQL regressions cover current readiness, protected metadata and missing
+storage at approval/dispatch; authenticated HTTP tests validate the new responses.
+Local build, component tests, non-database Go race tests and both linters pass.
+The full local browser run hit host disk exhaustion; local database tests could
+not start because Docker stopped responding. The PR CI must pass the full browser,
+PostgreSQL race, generated-contract and runtime-image checks before merge.

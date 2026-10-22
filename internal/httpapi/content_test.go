@@ -67,7 +67,7 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 		Dependencies{
 			Pool:    pool,
 			Auth:    auth,
-			Content: content.Service{Pool: pool},
+			Content: content.Service{Pool: pool, Storage: store},
 			Files: files.Service{
 				Pool:       pool,
 				Storage:    store,
@@ -165,6 +165,11 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 	check(request(owner, "PUT", path, in, 0, false), 403)
 	check(request(member, "PUT", path, in, 0, true), 403)
 	p := decode(request(owner, "PUT", path, in, 0, true))
+	if len(p.AttachmentDetails) != 1 || p.AttachmentDetails[0].Filename != "notes.txt" {
+		t.Fatal("missing authorised attachment metadata")
+	}
+	check(request(owner, "GET", base+"/content-readiness", nil, 0, true), 200)
+	check(request(member, "GET", base+"/content-readiness", nil, 0, true), 403)
 	check(request(member, "GET", path, nil, 0, true), 404)
 	check(request(member, "GET", path+"?preview=true", nil, 0, true), 404)
 	check(request(member, "GET", filePath, nil, 0, true), 403)

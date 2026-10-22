@@ -1128,6 +1128,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/content-readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["contentReadiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/content/{content_id}": {
         parameters: {
             query?: never;
@@ -2047,6 +2065,20 @@ export interface components {
             definitions: components["schemas"]["SubmissionDefinition"][];
             evidence: components["schemas"]["SubmissionEvidence"][];
         };
+        ContentReadiness: {
+            /** Format: date-time */
+            published_at: string | null;
+            blockers: components["schemas"]["Blocker"][];
+        };
+        ContentAttachment: {
+            /** Format: uuid */
+            id: string;
+            filename: string;
+            media_type: string;
+            /** Format: int64 */
+            size: number;
+            can_download: boolean;
+        };
         ContentAudience: {
             confirmed: boolean;
             roles: ("organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer" | "early_brief_access")[];
@@ -2069,6 +2101,7 @@ export interface components {
             document: components["schemas"]["ContentDocument"];
         };
         ContentPage: {
+            attachment_details: components["schemas"]["ContentAttachment"][];
             /** Format: uuid */
             id: string;
             /** @enum {string} */
@@ -4375,6 +4408,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    contentReadiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only publication gates, evaluated by the same domain rules used at scheduled publication. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReadiness"];
                 };
             };
             default: components["responses"]["Error"];
