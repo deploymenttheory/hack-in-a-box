@@ -109,6 +109,8 @@ Numbered schema32 proof: help15.777 s, HTTP6.647 s, shared runtime3.942 s and
 inbox12.854 s pass with PostgreSQL/race. Historical credential/rubric/SMTP/Teams/
 database migration suites pass3.670/3.614/3.327/3.561/3.402 s. The observation31
 historical fixture exposed the expected partial-Down/latest assertion edge under32;
-its owning200 PR is supplying explicit31 retention plus latest restoration.
-That parent correction and final main restacking remain required. No claim of
-full stacked CI green is made before those concrete changes are integrated.
+its owning200 checkpoint now asserts explicit31 retention and restores latest.
+The corrected parent composes cleanly: numbered help18.186 s, observation upgrade/
+rollback3.523 s, actual shared runtime7.852 s and help HTTP4.191 s pass. Both builds,
+Go/web lint and generated contracts pass. Final main restacking and exact-head CI
+remain required; local stacked checks do not replace them.
