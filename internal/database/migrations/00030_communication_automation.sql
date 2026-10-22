@@ -64,6 +64,7 @@ CREATE TABLE communication_occurrences (
  FOREIGN KEY(event_id,binding_id,binding_version) REFERENCES communication_automation_versions(event_id,id,version),
  UNIQUE(event_id,binding_id,binding_version,source_key)
 );
+CREATE INDEX communication_occurrences_source ON communication_occurrences(event_id,binding_id,binding_version,source_kind,source_id,source_revision);
 CREATE TABLE communication_automation_history (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  event_id uuid NOT NULL REFERENCES events(id),

@@ -356,6 +356,9 @@ func (s Service) approveGenericBinding(
 	eventID uuid.UUID,
 	binding Binding,
 ) (Binding, error) {
+	if !s.sourceAvailable(binding.Definition.Trigger) {
+		return binding, communications.ErrUnresolved
+	}
 	approved, err := s.Composer.ReviewCampaignApprovalInTransaction(
 		ctx,
 		tx,

@@ -61,6 +61,31 @@ func (s Service) sourcePolicy(kind string) SourcePolicy {
 	return builtinSource{service: s, kind: kind}
 }
 
+// sourceAvailable excludes declared future journeys until their owning domain
+// has supplied an authoritative adapter. Saving their draft is still permitted.
+func (s Service) sourceAvailable(kind string) bool {
+	if s.Sources[kind] != nil {
+		return true
+	}
+	return slices.Contains(
+		[]string{
+			"scheduled",
+			"preparation.reminder",
+			"follow_up",
+			"outcome.follow_up",
+			"registration.offer",
+			"registration.place_changed",
+			"facilitator.selected",
+			"teams.published",
+			"mentors.published",
+			"event.rescheduled",
+			"challenge.released",
+			"brief.released",
+		},
+		kind,
+	)
+}
+
 func commonRecipients(
 	ctx context.Context,
 	q *dbgen.Queries,

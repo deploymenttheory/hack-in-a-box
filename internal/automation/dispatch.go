@@ -82,8 +82,17 @@ func (s Service) discover(
 			},
 		}, nil
 	}
-	sources, err := s.sourcePolicy(b.Definition.Trigger).
-		DiscoverInTransaction(ctx, tx, eventID, b.Definition)
+	policy := s.sourcePolicy(b.Definition.Trigger)
+	if paged, ok := policy.(interface {
+		DiscoverUnknownInTransaction(context.Context, pgx.Tx, uuid.UUID, Binding) ([]Source, error)
+	}); ok {
+		sources, err := paged.DiscoverUnknownInTransaction(ctx, tx, eventID, b)
+		if err != nil {
+			return nil, fmt.Errorf("discover unknown lifecycle sources: %w", err)
+		}
+		return sources, nil
+	}
+	sources, err := policy.DiscoverInTransaction(ctx, tx, eventID, b.Definition)
 	if err != nil {
 		return nil, fmt.Errorf("discover communication source: %w", err)
 	}

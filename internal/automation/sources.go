@@ -26,31 +26,81 @@ func (b builtinSource) DiscoverInTransaction(
 	eventID uuid.UUID,
 	d Definition,
 ) ([]Source, error) {
-	var query string
-	args := []any{eventID}
+	result := []Source{}
+	after := Source{}
+	for {
+		page, err := b.discoverPage(ctx, tx, eventID, d, after, nil)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, page...)
+		if len(page) < 200 {
+			return result, nil
+		}
+		after = page[len(page)-1]
+	}
+}
+
+// DiscoverUnknownInTransaction advances through the durable set difference for
+// this exact reviewed binding version. Starting at the lowest remaining key on
+// every pass also catches late inserts whose UUID sorts before a previous page.
+func (b builtinSource) DiscoverUnknownInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	binding Binding,
+) ([]Source, error) {
+	return b.discoverPage(ctx, tx, eventID, binding.Definition, Source{}, &binding)
+}
+
+func (b builtinSource) discoverPage(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	d Definition,
+	after Source,
+	binding *Binding,
+) ([]Source, error) {
+	var sourceQuery string
 	switch b.kind {
 	case "registration.offer":
-		query = `SELECT f.id,1::bigint,o.due_at FROM registration_offers f JOIN operations o ON o.event_id=f.event_id AND o.target_id=f.id AND o.kind='registration.offer' WHERE f.event_id=$1 ORDER BY o.due_at,f.id LIMIT 1001`
+		sourceQuery = `SELECT f.id,1::bigint,o.due_at FROM registration_offers f JOIN operations o ON o.event_id=f.event_id AND o.target_id=f.id AND o.kind='registration.offer' WHERE f.event_id=$1`
 	case "registration.place_changed":
-		query = `SELECT h.id,1::bigint,h.created_at FROM registration_history h JOIN registrations r ON r.event_id=h.event_id AND r.id=h.registration_id WHERE h.event_id=$1 AND r.kind='attendee' AND h.from_state<>h.to_state ORDER BY h.created_at,h.id LIMIT 1001`
+		sourceQuery = `SELECT h.id,1::bigint,h.created_at FROM registration_history h JOIN registrations r ON r.event_id=h.event_id AND r.id=h.registration_id WHERE h.event_id=$1 AND r.kind='attendee' AND h.from_state<>h.to_state`
 	case "facilitator.selected":
-		query = `SELECT h.id,1::bigint,h.created_at FROM registration_history h JOIN registrations r ON r.event_id=h.event_id AND r.id=h.registration_id WHERE h.event_id=$1 AND r.kind='facilitator' AND h.to_state='selected' ORDER BY h.created_at,h.id LIMIT 1001`
+		sourceQuery = `SELECT h.id,1::bigint,h.created_at FROM registration_history h JOIN registrations r ON r.event_id=h.event_id AND r.id=h.registration_id WHERE h.event_id=$1 AND r.kind='facilitator' AND h.to_state='selected'`
 	case "teams.published", "mentors.published", "event.rescheduled":
-		query = `SELECT id,revision,due_at FROM operations WHERE event_id=$1 AND kind=$2 ORDER BY due_at,id LIMIT 1001`
-		args = append(args, b.kind)
+		sourceQuery = `SELECT id,revision,due_at FROM operations WHERE event_id=$1 AND kind=$2`
 	case "challenge.released", "brief.released":
-		query = `SELECT c.content_id,c.revision,c.occurred_at FROM content_changes c JOIN content_items i ON i.event_id=c.event_id AND i.id=c.content_id WHERE c.event_id=$1 AND c.action='released' AND i.kind=$2 AND i.state='released' AND i.released_version=c.version AND i.revision=c.revision ORDER BY c.occurred_at,c.content_id LIMIT 1001`
-		kind := "challenge"
-		if b.kind == "brief.released" {
-			kind = "brief"
-		}
-		args = append(args, kind)
+		sourceQuery = `SELECT c.content_id,c.revision,c.occurred_at FROM content_changes c JOIN content_items i ON i.event_id=c.event_id AND i.id=c.content_id WHERE c.event_id=$1 AND c.action='released' AND i.kind=split_part($2::text,'.',1) AND i.state='released' AND i.released_version=c.version AND i.revision=c.revision`
 	default:
 		return nil, communications.ErrUnresolved
 	}
-	rows, err := tx.Query(ctx, query, args...)
+	var bindingID *uuid.UUID
+	var version int64
+	if binding != nil {
+		bindingID = &binding.Definition.ID
+		version = binding.Version
+	}
+	query := `WITH source(id,revision,occurred_at) AS (` + sourceQuery + `)
+ SELECT id,revision,min(occurred_at) AS occurred_at FROM source
+ WHERE ($3::uuid IS NULL OR id=$3) AND (id,revision)>($4::uuid,$5::bigint)
+ AND ($7::uuid IS NULL OR NOT EXISTS(SELECT 1 FROM communication_occurrences co WHERE co.event_id=$1 AND co.binding_id=$7 AND co.binding_version=$8 AND co.source_kind=$2::text AND co.source_id=source.id AND co.source_revision=source.revision))
+ GROUP BY id,revision ORDER BY id,revision LIMIT $6`
+	rows, err := tx.Query(
+		ctx,
+		query,
+		eventID,
+		b.kind,
+		d.SourceID,
+		after.ID,
+		after.Revision,
+		200,
+		bindingID,
+		version,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("discover authoritative lifecycle sources: %w", err)
+		return nil, fmt.Errorf("discover authoritative lifecycle source page: %w", err)
 	}
 	defer rows.Close()
 	result := []Source{}
@@ -59,15 +109,10 @@ func (b builtinSource) DiscoverInTransaction(
 		if err = rows.Scan(&source.ID, &source.Revision, &source.OccurredAt); err != nil {
 			return nil, fmt.Errorf("read lifecycle source metadata: %w", err)
 		}
-		if d.SourceID == nil || *d.SourceID == source.ID {
-			result = append(result, source)
-		}
+		result = append(result, source)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate lifecycle sources: %w", err)
-	}
-	if len(result) > 1000 {
-		return nil, access.ErrInvalid
+		return nil, fmt.Errorf("iterate lifecycle source page: %w", err)
 	}
 	return result, nil
 }
