@@ -266,3 +266,6 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .room-display footer { display: flex; gap: 2vw; border-top: 2px solid currentColor; padding: 1vh 0 0; color: var(--room-foreground); font-size: clamp(1.4rem, 2.3vw, 2.8rem); }
 @media (max-width: 700px) { .room-display { padding: 1rem; } .room-controls { flex-direction: column; } .room-current { grid-template-columns: 1fr; } .room-instructions { max-height: none; } .room-qr svg { width: min(60vw, 20rem); } .room-logo { max-width: 25vw; } }
 @media print { .room-display { display: none !important; } }
+.team-access-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-top: 1rem; }
+.credential-value { margin: 1rem 0; min-height: 3rem; padding: .75rem; border: 1px solid var(--border); border-radius: .5rem; overflow-wrap: anywhere; user-select: text; }
+@media print { .private-team-access { display: none !important; } }
