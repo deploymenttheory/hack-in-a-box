@@ -82,3 +82,54 @@ captured as Playwright artifacts and inspected at both viewport sizes.
 
 Synthetic visual evidence: [desktop board](media/preparation-board-desktop.png) and
 [mobile board](media/preparation-board-mobile.png).
+
+## Attendance and restricted logistics — #52
+
+Migration 16 stores per-person, per-local-day arrival state, immutable correction
+history and organiser-configured catering buffers. The shared roster contains
+current confirmed competitors and arrival metadata only. Organisers and logistics
+staff can read it and record arrivals; the server checks current event roles,
+write permission and confirmation under the event lock for each request.
+
+Arrival writes use the person's revision for the selected day. A request UUID
+identifies the exact actor, person, date and command. Duplicate scans do not create
+another arrival or history revision. A replay returns current state, so retrying
+an old successful scan after a correction cannot restore the earlier state.
+Different intent with a stale revision conflicts. Corrections require a reason.
+Withdrawn people disappear from the current roster and cannot be checked in; their
+restricted history remains available and a mistaken historical arrival can still
+be cleared with a reason. Generic audit records carry identifiers, not correction
+prose or personal fields.
+
+The roster identifies its observation time and event timezone. Live-day choices
+follow calendar dates across DST, with an exclusive end instant; an event ending
+at midnight does not gain an extra day. A draft without live dates still exposes
+headcounts but does not allow check-in. Configured dates outside a maximum
+366-day attendance window must be corrected before arrival operations.
+
+Headcounts report confirmed competitors, their physical check-ins for the selected
+day, distinct active staff, staff also competing, buffer and catering total.
+Catering counts a person with both roles once. Only the confirmed competitor count
+feeds the existing event minimum; arrivals, staff and buffer never update admission
+claims or lifecycle facts. Buffer edits require the current event revision and
+organiser permission.
+
+The paginated logistics query and JSON export require an explicit current logistics
+role. Each page rechecks current roster membership; only confirmed competitors and
+active staff appear, once each. Contact, dietary, accessibility, travel and social
+fields remain separate from shared check-in. Photo consent retains the existing
+photographer/self policy and is never inferred from social attendance or included
+in a logistics export. Missing/unknown social answers do not mean yes. Every export
+page records its actor, event and result count. Revocation takes effect on the next
+page/request. New travel/social profile fields support participant correction;
+older clients preserve them when omitted, and profile deletion/retention removes
+them with the other operational fields.
+
+Real PostgreSQL tests cover concurrent duplicate requests, distinct repeated scans,
+reasoned corrections and immutable history, stale retry protection, independent
+days, DST boundaries, invalid dates, withdrawn participants, role revocation,
+cross-event access, read-only events, deduplicated catering, unchanged admission,
+pagination, audited exports and sensitive-field projections. HTTP tests validate
+the generated request/response schemas, CSRF, current permissions, per-day revision
+conflicts, export headers and withdrawal behavior. Existing privacy retention tests
+also include the new fields.

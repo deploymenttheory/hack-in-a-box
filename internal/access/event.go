@@ -14,6 +14,8 @@ import (
 
 const (
 	EventRead        Action = "event.read"
+	RosterRead       Action = "attendance.read"
+	AttendanceManage Action = "attendance.manage"
 	EventEdit        Action = "event.edit"
 	StaffManage      Action = "staff.manage"
 	StaffRead        Action = "staff.read"
@@ -68,6 +70,10 @@ func (p EventPolicy) Authorize(
 		}
 		return ErrForbidden
 	}
+	switch action {
+	case RosterRead, AttendanceManage:
+		return attendancePolicy(action, roles, record.WritesAllowed)
+	}
 	if action == EventRead {
 		visible, err := p.Queries.VisibleEvent(
 			ctx,
@@ -100,6 +106,16 @@ func (p EventPolicy) Authorize(
 		return p.file(ctx, event, target, organiser)
 	}
 	return p.resource(ctx, actor, event, target, action, roles)
+}
+
+func attendancePolicy(action Action, roles []string, writesAllowed bool) error {
+	if !slices.Contains(roles, "organiser") && !slices.Contains(roles, "logistics") {
+		return ErrForbidden
+	}
+	if action == AttendanceManage && !writesAllowed {
+		return ErrForbidden
+	}
+	return nil
 }
 
 func (p EventPolicy) resource(

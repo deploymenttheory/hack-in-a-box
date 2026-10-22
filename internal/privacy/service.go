@@ -22,23 +22,27 @@ import (
 )
 
 type Fields struct {
-	ContactEmail  string `json:"contact_email"`
-	ContactPhone  string `json:"contact_phone"`
-	Dietary       string `json:"dietary"`
-	Accessibility string `json:"accessibility"`
-	PhotoConsent  string `json:"photo_consent"`
+	ContactEmail     string  `json:"contact_email"`
+	ContactPhone     string  `json:"contact_phone"`
+	Dietary          string  `json:"dietary"`
+	Accessibility    string  `json:"accessibility"`
+	PhotoConsent     string  `json:"photo_consent"`
+	TravelDetails    *string `json:"travel_details,omitempty"`
+	SocialAttendance *string `json:"social_attendance,omitempty"`
 }
 type View struct {
-	ID            uuid.UUID `json:"id"`
-	EventID       uuid.UUID `json:"event_id"`
-	PersonID      uuid.UUID `json:"person_id"`
-	DisplayName   string    `json:"display_name"`
-	Revision      int64     `json:"revision"`
-	ContactEmail  *string   `json:"contact_email,omitempty"`
-	ContactPhone  *string   `json:"contact_phone,omitempty"`
-	Dietary       *string   `json:"dietary,omitempty"`
-	Accessibility *string   `json:"accessibility,omitempty"`
-	PhotoConsent  *string   `json:"photo_consent,omitempty"`
+	ID               uuid.UUID `json:"id"`
+	EventID          uuid.UUID `json:"event_id"`
+	PersonID         uuid.UUID `json:"person_id"`
+	DisplayName      string    `json:"display_name"`
+	Revision         int64     `json:"revision"`
+	ContactEmail     *string   `json:"contact_email,omitempty"`
+	ContactPhone     *string   `json:"contact_phone,omitempty"`
+	Dietary          *string   `json:"dietary,omitempty"`
+	Accessibility    *string   `json:"accessibility,omitempty"`
+	PhotoConsent     *string   `json:"photo_consent,omitempty"`
+	TravelDetails    *string   `json:"travel_details,omitempty"`
+	SocialAttendance *string   `json:"social_attendance,omitempty"`
 }
 type (
 	Settings struct {
@@ -59,6 +63,10 @@ func (s Service) now() time.Time {
 }
 
 func validate(f Fields) error {
+	if (f.TravelDetails != nil && len(*f.TravelDetails) > 2000) ||
+		(f.SocialAttendance != nil && !slices.Contains([]string{"unknown", "yes", "no"}, *f.SocialAttendance)) {
+		return access.ErrInvalid
+	}
 	if len(f.ContactEmail) > 320 || len(f.ContactPhone) > 80 || len(f.Dietary) > 2000 ||
 		len(f.Accessibility) > 2000 ||
 		!slices.Contains([]string{"unknown", "yes", "no"}, f.PhotoConsent) {
@@ -94,6 +102,8 @@ func project(row dbgen.OperationalProfileRow, roles []string, self bool) View {
 		v.ContactPhone = &row.ContactPhone
 		v.Dietary = &row.Dietary
 		v.Accessibility = &row.Accessibility
+		v.TravelDetails = &row.TravelDetails
+		v.SocialAttendance = &row.SocialAttendance
 	}
 	if self || slices.Contains(roles, "photographer") {
 		v.PhotoConsent = &row.PhotoConsent
@@ -185,16 +195,28 @@ func (s Service) Correct(
 		case previous.Revision != revision:
 			return access.ErrConflict
 		}
+		travel, social := previous.TravelDetails, previous.SocialAttendance
+		if social == "" {
+			social = "unknown"
+		}
+		if fields.TravelDetails != nil {
+			travel = *fields.TravelDetails
+		}
+		if fields.SocialAttendance != nil {
+			social = *fields.SocialAttendance
+		}
 		saved, err := q.SaveOperationalProfile(
 			ctx,
 			dbgen.SaveOperationalProfileParams{
-				EventID:       event,
-				PersonID:      actor,
-				ContactEmail:  strings.TrimSpace(fields.ContactEmail),
-				ContactPhone:  fields.ContactPhone,
-				Dietary:       fields.Dietary,
-				Accessibility: fields.Accessibility,
-				PhotoConsent:  fields.PhotoConsent,
+				EventID:          event,
+				PersonID:         actor,
+				ContactEmail:     strings.TrimSpace(fields.ContactEmail),
+				ContactPhone:     fields.ContactPhone,
+				Dietary:          fields.Dietary,
+				Accessibility:    fields.Accessibility,
+				PhotoConsent:     fields.PhotoConsent,
+				TravelDetails:    travel,
+				SocialAttendance: social,
 			},
 		)
 		if err != nil {

@@ -373,6 +373,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Organiser/logistics shared check-in roster, without sensitive fields. Only confirmed competitors appear. Counts and roster_as_of describe the current transaction snapshot; physical arrival never changes admission or the event minimum. */
+        get: operations["getAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/attendance/catering": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Organiser-only buffer configuration using the event revision in If-Match. Staff already competing are counted once in catering, while only confirmed competitors count toward the minimum. */
+        put: operations["configureCatering"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/attendance/{person_id}/{day}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+                day: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Use the person's attendance revision for this day in If-Match, zero for no record. Retrying the same request_id returns current state; reuse with different content conflicts. Only current confirmed competitors can be checked in. Corrections require a reason. An old retry cannot undo a later correction. */
+        put: operations["recordAttendance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/attendance/{person_id}/{day}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+                day: string;
+            };
+            cookie?: never;
+        };
+        /** @description Up to 200 immutable arrival/correction records, newest first. Current organiser/logistics permission is required, including after a participant withdraws. Duplicate scans do not create another change. */
+        get: operations["attendanceHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/logistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Logistics-role-only contact, dietary, accessibility, travel and social data for current confirmed competitors and active staff. Unknown social attendance is not consent. Photo consent remains in the photographer profile interface. Each page rechecks current roles and roster membership. */
+        get: operations["getLogistics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/logistics/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Audited paginated JSON export. Current logistics role is required for every page; organisers and platform administrators have no implicit sensitive-field access. */
+        get: operations["exportLogistics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/preparation/tasks": {
         parameters: {
             query?: never;
@@ -1065,6 +1183,8 @@ export interface components {
             can_edit: boolean;
             can_manage_owner: boolean;
             can_read_staff: boolean;
+            can_read_attendance?: boolean;
+            can_read_logistics?: boolean;
             can_transition: boolean;
         };
         EventPage: {
@@ -1116,6 +1236,9 @@ export interface components {
             accessibility: string;
             /** @enum {string} */
             photo_consent: "unknown" | "yes" | "no";
+            travel_details?: string;
+            /** @enum {string} */
+            social_attendance?: "unknown" | "yes" | "no";
         };
         OperationalProfile: {
             /** Format: uuid */
@@ -1133,6 +1256,9 @@ export interface components {
             accessibility?: string;
             /** @enum {string} */
             photo_consent?: "unknown" | "yes" | "no";
+            travel_details?: string;
+            /** @enum {string} */
+            social_attendance?: "unknown" | "yes" | "no";
         };
         ProfilePage: {
             items: components["schemas"]["OperationalProfile"][];
@@ -1334,6 +1460,78 @@ export interface components {
             event: components["schemas"]["RegistrationEvent"];
             forms: components["schemas"]["PublishedRegistrationForm"][];
             registrations: components["schemas"]["Registration"][];
+        };
+        AttendanceEntry: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            active: boolean;
+            present: boolean;
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        AttendanceCounts: {
+            confirmed_competitors: number;
+            minimum_competitors: number;
+            checked_in_competitors: number;
+            staff: number;
+            staff_also_competing: number;
+            catering_buffer: number;
+            catering_total: number;
+        };
+        AttendancePage: {
+            /** Format: int64 */
+            revision: number;
+            day: string;
+            days: string[];
+            timezone: string;
+            /** Format: date-time */
+            roster_as_of: string;
+            can_check_in: boolean;
+            can_configure: boolean;
+            can_read_logistics: boolean;
+            counts: components["schemas"]["AttendanceCounts"];
+            items: components["schemas"]["AttendanceEntry"][];
+        };
+        AttendanceCommand: {
+            /** Format: uuid */
+            request_id: string;
+            present: boolean;
+            reason: string;
+        };
+        AttendanceChange: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            present: boolean;
+            /** Format: int64 */
+            revision: number;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        LogisticsEntry: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            competing: boolean;
+            contact_email?: string;
+            contact_phone?: string;
+            dietary?: string;
+            accessibility?: string;
+            travel_details?: string;
+            /** @enum {string} */
+            social_attendance?: "unknown" | "yes" | "no";
+        };
+        LogisticsPage: {
+            /** Format: date-time */
+            roster_as_of: string;
+            items: components["schemas"]["LogisticsEntry"][];
+            /** Format: uuid */
+            next_cursor: string | null;
         };
         PreparationEvidence: {
             /** Format: uuid */
@@ -2351,6 +2549,177 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfilePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getAttendance: {
+        parameters: {
+            query?: {
+                day?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event-local day roster and separate competitor, staff, overlap and catering counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendancePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureCatering: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    buffer: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated event revision and current headcounts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendancePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    recordAttendance: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+                day: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceCommand"];
+            };
+        };
+        responses: {
+            /** @description Current per-day arrival state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceEntry"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    attendanceHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                person_id: string;
+                day: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Restricted correction history. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["AttendanceChange"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getLogistics: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current operational projection, excluding photo consent and all registration answers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportLogistics: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operational roster export page; follow next_cursor until null. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogisticsPage"];
                 };
             };
             default: components["responses"]["Error"];

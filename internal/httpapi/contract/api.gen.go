@@ -237,6 +237,27 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for LogisticsEntrySocialAttendance.
+const (
+	LogisticsEntrySocialAttendanceNo      LogisticsEntrySocialAttendance = "no"
+	LogisticsEntrySocialAttendanceUnknown LogisticsEntrySocialAttendance = "unknown"
+	LogisticsEntrySocialAttendanceYes     LogisticsEntrySocialAttendance = "yes"
+)
+
+// Valid indicates whether the value is a known member of the LogisticsEntrySocialAttendance enum.
+func (e LogisticsEntrySocialAttendance) Valid() bool {
+	switch e {
+	case LogisticsEntrySocialAttendanceNo:
+		return true
+	case LogisticsEntrySocialAttendanceUnknown:
+		return true
+	case LogisticsEntrySocialAttendanceYes:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for OperationalProfilePhotoConsent.
 const (
 	OperationalProfilePhotoConsentNo      OperationalProfilePhotoConsent = "no"
@@ -252,6 +273,27 @@ func (e OperationalProfilePhotoConsent) Valid() bool {
 	case OperationalProfilePhotoConsentUnknown:
 		return true
 	case OperationalProfilePhotoConsentYes:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OperationalProfileSocialAttendance.
+const (
+	OperationalProfileSocialAttendanceNo      OperationalProfileSocialAttendance = "no"
+	OperationalProfileSocialAttendanceUnknown OperationalProfileSocialAttendance = "unknown"
+	OperationalProfileSocialAttendanceYes     OperationalProfileSocialAttendance = "yes"
+)
+
+// Valid indicates whether the value is a known member of the OperationalProfileSocialAttendance enum.
+func (e OperationalProfileSocialAttendance) Valid() bool {
+	switch e {
+	case OperationalProfileSocialAttendanceNo:
+		return true
+	case OperationalProfileSocialAttendanceUnknown:
+		return true
+	case OperationalProfileSocialAttendanceYes:
 		return true
 	default:
 		return false
@@ -375,6 +417,27 @@ func (e ProfileFieldsPhotoConsent) Valid() bool {
 	case ProfileFieldsPhotoConsentUnknown:
 		return true
 	case ProfileFieldsPhotoConsentYes:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ProfileFieldsSocialAttendance.
+const (
+	ProfileFieldsSocialAttendanceNo      ProfileFieldsSocialAttendance = "no"
+	ProfileFieldsSocialAttendanceUnknown ProfileFieldsSocialAttendance = "unknown"
+	ProfileFieldsSocialAttendanceYes     ProfileFieldsSocialAttendance = "yes"
+)
+
+// Valid indicates whether the value is a known member of the ProfileFieldsSocialAttendance enum.
+func (e ProfileFieldsSocialAttendance) Valid() bool {
+	switch e {
+	case ProfileFieldsSocialAttendanceNo:
+		return true
+	case ProfileFieldsSocialAttendanceUnknown:
+		return true
+	case ProfileFieldsSocialAttendanceYes:
 		return true
 	default:
 		return false
@@ -976,6 +1039,58 @@ type ApplicationInput struct {
 // ApplicationInputTeamPreference defines model for ApplicationInput.TeamPreference.
 type ApplicationInputTeamPreference string
 
+// AttendanceChange defines model for AttendanceChange.
+type AttendanceChange struct {
+	ActorId   openapi_types.UUID `json:"actor_id"`
+	At        time.Time          `json:"at"`
+	Present   bool               `json:"present"`
+	Reason    string             `json:"reason"`
+	RequestId openapi_types.UUID `json:"request_id"`
+	Revision  int64              `json:"revision"`
+}
+
+// AttendanceCommand defines model for AttendanceCommand.
+type AttendanceCommand struct {
+	Present   bool               `json:"present"`
+	Reason    string             `json:"reason"`
+	RequestId openapi_types.UUID `json:"request_id"`
+}
+
+// AttendanceCounts defines model for AttendanceCounts.
+type AttendanceCounts struct {
+	CateringBuffer       int `json:"catering_buffer"`
+	CateringTotal        int `json:"catering_total"`
+	CheckedInCompetitors int `json:"checked_in_competitors"`
+	ConfirmedCompetitors int `json:"confirmed_competitors"`
+	MinimumCompetitors   int `json:"minimum_competitors"`
+	Staff                int `json:"staff"`
+	StaffAlsoCompeting   int `json:"staff_also_competing"`
+}
+
+// AttendanceEntry defines model for AttendanceEntry.
+type AttendanceEntry struct {
+	Active      bool               `json:"active"`
+	DisplayName string             `json:"display_name"`
+	PersonId    openapi_types.UUID `json:"person_id"`
+	Present     bool               `json:"present"`
+	Revision    int64              `json:"revision"`
+	UpdatedAt   *time.Time         `json:"updated_at"`
+}
+
+// AttendancePage defines model for AttendancePage.
+type AttendancePage struct {
+	CanCheckIn       bool              `json:"can_check_in"`
+	CanConfigure     bool              `json:"can_configure"`
+	CanReadLogistics bool              `json:"can_read_logistics"`
+	Counts           AttendanceCounts  `json:"counts"`
+	Day              string            `json:"day"`
+	Days             []string          `json:"days"`
+	Items            []AttendanceEntry `json:"items"`
+	Revision         int64             `json:"revision"`
+	RosterAsOf       time.Time         `json:"roster_as_of"`
+	Timezone         string            `json:"timezone"`
+}
+
 // AuditEvent defines model for AuditEvent.
 type AuditEvent struct {
 	Action   string              `json:"action"`
@@ -1049,6 +1164,8 @@ type Event struct {
 	Blockers             []Blocker           `json:"blockers"`
 	CanEdit              bool                `json:"can_edit"`
 	CanManageOwner       bool                `json:"can_manage_owner"`
+	CanReadAttendance    *bool               `json:"can_read_attendance,omitempty"`
+	CanReadLogistics     *bool               `json:"can_read_logistics,omitempty"`
 	CanReadStaff         bool                `json:"can_read_staff"`
 	CanTransition        bool                `json:"can_transition"`
 	ChallengePublication *time.Time          `json:"challenge_publication"`
@@ -1212,6 +1329,29 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// LogisticsEntry defines model for LogisticsEntry.
+type LogisticsEntry struct {
+	Accessibility    *string                         `json:"accessibility,omitempty"`
+	Competing        bool                            `json:"competing"`
+	ContactEmail     *string                         `json:"contact_email,omitempty"`
+	ContactPhone     *string                         `json:"contact_phone,omitempty"`
+	Dietary          *string                         `json:"dietary,omitempty"`
+	DisplayName      string                          `json:"display_name"`
+	PersonId         openapi_types.UUID              `json:"person_id"`
+	SocialAttendance *LogisticsEntrySocialAttendance `json:"social_attendance,omitempty"`
+	TravelDetails    *string                         `json:"travel_details,omitempty"`
+}
+
+// LogisticsEntrySocialAttendance defines model for LogisticsEntry.SocialAttendance.
+type LogisticsEntrySocialAttendance string
+
+// LogisticsPage defines model for LogisticsPage.
+type LogisticsPage struct {
+	Items      []LogisticsEntry    `json:"items"`
+	NextCursor *openapi_types.UUID `json:"next_cursor"`
+	RosterAsOf time.Time           `json:"roster_as_of"`
+}
+
 // OfferPolicyInput defines model for OfferPolicyInput.
 type OfferPolicyInput struct {
 	Automated   bool `json:"automated"`
@@ -1227,20 +1367,25 @@ type OfferSettings struct {
 
 // OperationalProfile defines model for OperationalProfile.
 type OperationalProfile struct {
-	Accessibility *string                         `json:"accessibility,omitempty"`
-	ContactEmail  *string                         `json:"contact_email,omitempty"`
-	ContactPhone  *string                         `json:"contact_phone,omitempty"`
-	Dietary       *string                         `json:"dietary,omitempty"`
-	DisplayName   string                          `json:"display_name"`
-	EventId       openapi_types.UUID              `json:"event_id"`
-	Id            openapi_types.UUID              `json:"id"`
-	PersonId      openapi_types.UUID              `json:"person_id"`
-	PhotoConsent  *OperationalProfilePhotoConsent `json:"photo_consent,omitempty"`
-	Revision      int64                           `json:"revision"`
+	Accessibility    *string                             `json:"accessibility,omitempty"`
+	ContactEmail     *string                             `json:"contact_email,omitempty"`
+	ContactPhone     *string                             `json:"contact_phone,omitempty"`
+	Dietary          *string                             `json:"dietary,omitempty"`
+	DisplayName      string                              `json:"display_name"`
+	EventId          openapi_types.UUID                  `json:"event_id"`
+	Id               openapi_types.UUID                  `json:"id"`
+	PersonId         openapi_types.UUID                  `json:"person_id"`
+	PhotoConsent     *OperationalProfilePhotoConsent     `json:"photo_consent,omitempty"`
+	Revision         int64                               `json:"revision"`
+	SocialAttendance *OperationalProfileSocialAttendance `json:"social_attendance,omitempty"`
+	TravelDetails    *string                             `json:"travel_details,omitempty"`
 }
 
 // OperationalProfilePhotoConsent defines model for OperationalProfile.PhotoConsent.
 type OperationalProfilePhotoConsent string
+
+// OperationalProfileSocialAttendance defines model for OperationalProfile.SocialAttendance.
+type OperationalProfileSocialAttendance string
 
 // PreparationChange defines model for PreparationChange.
 type PreparationChange struct {
@@ -1332,15 +1477,20 @@ type PrivacySettings struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
-	Accessibility string                    `json:"accessibility"`
-	ContactEmail  string                    `json:"contact_email"`
-	ContactPhone  string                    `json:"contact_phone"`
-	Dietary       string                    `json:"dietary"`
-	PhotoConsent  ProfileFieldsPhotoConsent `json:"photo_consent"`
+	Accessibility    string                         `json:"accessibility"`
+	ContactEmail     string                         `json:"contact_email"`
+	ContactPhone     string                         `json:"contact_phone"`
+	Dietary          string                         `json:"dietary"`
+	PhotoConsent     ProfileFieldsPhotoConsent      `json:"photo_consent"`
+	SocialAttendance *ProfileFieldsSocialAttendance `json:"social_attendance,omitempty"`
+	TravelDetails    *string                        `json:"travel_details,omitempty"`
 }
 
 // ProfileFieldsPhotoConsent defines model for ProfileFields.PhotoConsent.
 type ProfileFieldsPhotoConsent string
+
+// ProfileFieldsSocialAttendance defines model for ProfileFields.SocialAttendance.
+type ProfileFieldsSocialAttendance string
 
 // ProfilePage defines model for ProfilePage.
 type ProfilePage struct {
@@ -1778,6 +1928,32 @@ type UpdateEventParams struct {
 	IfMatch Revision `json:"If-Match"`
 }
 
+// GetAttendanceParams defines parameters for GetAttendance.
+type GetAttendanceParams struct {
+	Day *string `form:"day,omitempty" json:"day,omitempty"`
+}
+
+// ConfigureCateringJSONBody defines parameters for ConfigureCatering.
+type ConfigureCateringJSONBody struct {
+	Buffer int `json:"buffer"`
+}
+
+// ConfigureCateringParams defines parameters for ConfigureCatering.
+type ConfigureCateringParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision.
+	IfMatch ProfileRevision `json:"If-Match"`
+}
+
+// RecordAttendanceParams defines parameters for RecordAttendance.
+type RecordAttendanceParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision.
+	IfMatch ProfileRevision `json:"If-Match"`
+}
+
 // ListAuditParams defines parameters for ListAudit.
 type ListAuditParams struct {
 	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
@@ -1829,6 +2005,18 @@ type UploadFileParams struct {
 
 // UploadFileJSONBodyMediaType defines parameters for UploadFile.
 type UploadFileJSONBodyMediaType string
+
+// GetLogisticsParams defines parameters for GetLogistics.
+type GetLogisticsParams struct {
+	After *openapi_types.UUID `form:"after,omitempty" json:"after,omitempty"`
+	Limit *int                `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ExportLogisticsParams defines parameters for ExportLogistics.
+type ExportLogisticsParams struct {
+	After *openapi_types.UUID `form:"after,omitempty" json:"after,omitempty"`
+	Limit *int                `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // TransferOwnerJSONBody defines parameters for TransferOwner.
 type TransferOwnerJSONBody struct {
@@ -2106,6 +2294,12 @@ type CreateEventJSONRequestBody = EventInput
 // UpdateEventJSONRequestBody defines body for UpdateEvent for application/json ContentType.
 type UpdateEventJSONRequestBody = EventInput
 
+// ConfigureCateringJSONRequestBody defines body for ConfigureCatering for application/json ContentType.
+type ConfigureCateringJSONRequestBody ConfigureCateringJSONBody
+
+// RecordAttendanceJSONRequestBody defines body for RecordAttendance for application/json ContentType.
+type RecordAttendanceJSONRequestBody = AttendanceCommand
+
 // UpdateEventBrandingJSONRequestBody defines body for UpdateEventBranding for application/json ContentType.
 type UpdateEventBrandingJSONRequestBody = TemplateBranding
 
@@ -2208,6 +2402,18 @@ type ServerInterface interface {
 	// (PUT /api/v1/events/{event_id})
 	UpdateEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params UpdateEventParams)
 
+	// (GET /api/v1/events/{event_id}/attendance)
+	GetAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, params GetAttendanceParams)
+
+	// (PUT /api/v1/events/{event_id}/attendance/catering)
+	ConfigureCatering(w http.ResponseWriter, r *http.Request, eventId EventID, params ConfigureCateringParams)
+
+	// (PUT /api/v1/events/{event_id}/attendance/{person_id}/{day})
+	RecordAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string, params RecordAttendanceParams)
+
+	// (GET /api/v1/events/{event_id}/attendance/{person_id}/{day}/history)
+	AttendanceHistory(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string)
+
 	// (GET /api/v1/events/{event_id}/audit)
 	ListAudit(w http.ResponseWriter, r *http.Request, eventId EventID, params ListAuditParams)
 
@@ -2237,6 +2443,12 @@ type ServerInterface interface {
 
 	// (GET /api/v1/events/{event_id}/files/{file_id})
 	DownloadFile(w http.ResponseWriter, r *http.Request, eventId EventID, fileId openapi_types.UUID)
+
+	// (GET /api/v1/events/{event_id}/logistics)
+	GetLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params GetLogisticsParams)
+
+	// (GET /api/v1/events/{event_id}/logistics/export)
+	ExportLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportLogisticsParams)
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams)
@@ -2421,6 +2633,26 @@ func (_ Unimplemented) UpdateEvent(w http.ResponseWriter, r *http.Request, event
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// (GET /api/v1/events/{event_id}/attendance)
+func (_ Unimplemented) GetAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, params GetAttendanceParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/attendance/catering)
+func (_ Unimplemented) ConfigureCatering(w http.ResponseWriter, r *http.Request, eventId EventID, params ConfigureCateringParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/attendance/{person_id}/{day})
+func (_ Unimplemented) RecordAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string, params RecordAttendanceParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/attendance/{person_id}/{day}/history)
+func (_ Unimplemented) AttendanceHistory(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // (GET /api/v1/events/{event_id}/audit)
 func (_ Unimplemented) ListAudit(w http.ResponseWriter, r *http.Request, eventId EventID, params ListAuditParams) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -2468,6 +2700,16 @@ func (_ Unimplemented) UploadFile(w http.ResponseWriter, r *http.Request, eventI
 
 // (GET /api/v1/events/{event_id}/files/{file_id})
 func (_ Unimplemented) DownloadFile(w http.ResponseWriter, r *http.Request, eventId EventID, fileId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/logistics)
+func (_ Unimplemented) GetLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params GetLogisticsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/logistics/export)
+func (_ Unimplemented) ExportLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportLogisticsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3099,6 +3341,264 @@ func (siw *ServerInterfaceWrapper) UpdateEvent(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// GetAttendance operation middleware
+func (siw *ServerInterfaceWrapper) GetAttendance(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAttendanceParams
+
+	// ------------- Optional query parameter "day" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "day", r.URL.Query(), &params.Day, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "day"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "day", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAttendance(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ConfigureCatering operation middleware
+func (siw *ServerInterfaceWrapper) ConfigureCatering(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ConfigureCateringParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch ProfileRevision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConfigureCatering(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RecordAttendance operation middleware
+func (siw *ServerInterfaceWrapper) RecordAttendance(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "person_id" -------------
+	var personId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "person_id", chi.URLParam(r, "person_id"), &personId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "day" -------------
+	var day string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "day", chi.URLParam(r, "day"), &day, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "day", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RecordAttendanceParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch ProfileRevision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RecordAttendance(w, r, eventId, personId, day, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AttendanceHistory operation middleware
+func (siw *ServerInterfaceWrapper) AttendanceHistory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "person_id" -------------
+	var personId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "person_id", chi.URLParam(r, "person_id"), &personId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "day" -------------
+	var day string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "day", chi.URLParam(r, "day"), &day, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "day", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AttendanceHistory(w, r, eventId, personId, day)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListAudit operation middleware
 func (siw *ServerInterfaceWrapper) ListAudit(w http.ResponseWriter, r *http.Request) {
 
@@ -3621,6 +4121,116 @@ func (siw *ServerInterfaceWrapper) DownloadFile(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DownloadFile(w, r, eventId, fileId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLogistics operation middleware
+func (siw *ServerInterfaceWrapper) GetLogistics(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLogisticsParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLogistics(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportLogistics operation middleware
+func (siw *ServerInterfaceWrapper) ExportLogistics(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExportLogisticsParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportLogistics(w, r, eventId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6330,6 +6940,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/v1/events/{event_id}/profiles/export", wrapper.ExportOperationalProfiles)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/attendance", wrapper.GetAttendance)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/attendance/catering", wrapper.ConfigureCatering)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/attendance/{person_id}/{day}", wrapper.RecordAttendance)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/attendance/{person_id}/{day}/history", wrapper.AttendanceHistory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/logistics", wrapper.GetLogistics)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/logistics/export", wrapper.ExportLogistics)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/events/{event_id}/preparation/tasks", wrapper.ListPreparationTasks)
 	})
 	r.Group(func(r chi.Router) {
@@ -6802,6 +7430,189 @@ func (response UpdateEventdefaultJSONResponse) VisitUpdateEventResponse(w http.R
 	return err
 }
 
+type GetAttendanceRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  GetAttendanceParams
+}
+
+type GetAttendanceResponseObject interface {
+	VisitGetAttendanceResponse(w http.ResponseWriter) error
+}
+
+type GetAttendance200JSONResponse AttendancePage
+
+func (response GetAttendance200JSONResponse) VisitGetAttendanceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetAttendancedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetAttendancedefaultJSONResponse) VisitGetAttendanceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfigureCateringRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ConfigureCateringParams
+	Body    *ConfigureCateringJSONRequestBody
+}
+
+type ConfigureCateringResponseObject interface {
+	VisitConfigureCateringResponse(w http.ResponseWriter) error
+}
+
+type ConfigureCatering200JSONResponse AttendancePage
+
+func (response ConfigureCatering200JSONResponse) VisitConfigureCateringResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ConfigureCateringdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ConfigureCateringdefaultJSONResponse) VisitConfigureCateringResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordAttendanceRequestObject struct {
+	EventId  EventID            `json:"event_id"`
+	PersonId openapi_types.UUID `json:"person_id"`
+	Day      string             `json:"day"`
+	Params   RecordAttendanceParams
+	Body     *RecordAttendanceJSONRequestBody
+}
+
+type RecordAttendanceResponseObject interface {
+	VisitRecordAttendanceResponse(w http.ResponseWriter) error
+}
+
+type RecordAttendance200JSONResponse AttendanceEntry
+
+func (response RecordAttendance200JSONResponse) VisitRecordAttendanceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RecordAttendancedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response RecordAttendancedefaultJSONResponse) VisitRecordAttendanceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AttendanceHistoryRequestObject struct {
+	EventId  EventID            `json:"event_id"`
+	PersonId openapi_types.UUID `json:"person_id"`
+	Day      string             `json:"day"`
+}
+
+type AttendanceHistoryResponseObject interface {
+	VisitAttendanceHistoryResponse(w http.ResponseWriter) error
+}
+
+type AttendanceHistory200JSONResponse struct {
+	Items []AttendanceChange `json:"items"`
+}
+
+func (response AttendanceHistory200JSONResponse) VisitAttendanceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AttendanceHistorydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response AttendanceHistorydefaultJSONResponse) VisitAttendanceHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListAuditRequestObject struct {
 	EventId EventID `json:"event_id"`
 	Params  ListAuditParams
@@ -7253,6 +8064,104 @@ type DownloadFiledefaultJSONResponse struct {
 }
 
 func (response DownloadFiledefaultJSONResponse) VisitDownloadFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLogisticsRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  GetLogisticsParams
+}
+
+type GetLogisticsResponseObject interface {
+	VisitGetLogisticsResponse(w http.ResponseWriter) error
+}
+
+type GetLogistics200JSONResponse LogisticsPage
+
+func (response GetLogistics200JSONResponse) VisitGetLogisticsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLogisticsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetLogisticsdefaultJSONResponse) VisitGetLogisticsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportLogisticsRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ExportLogisticsParams
+}
+
+type ExportLogisticsResponseObject interface {
+	VisitExportLogisticsResponse(w http.ResponseWriter) error
+}
+
+type ExportLogistics200ResponseHeaders struct {
+	ContentDisposition *string
+}
+
+type ExportLogistics200JSONResponse struct {
+	Body    LogisticsPage
+	Headers ExportLogistics200ResponseHeaders
+}
+
+func (response ExportLogistics200JSONResponse) VisitExportLogisticsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.ContentDisposition != nil {
+		w.Header().Set("Content-Disposition", fmt.Sprint(*response.Headers.ContentDisposition))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportLogisticsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ExportLogisticsdefaultJSONResponse) VisitExportLogisticsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -9338,6 +10247,18 @@ type StrictServerInterface interface {
 	// (PUT /api/v1/events/{event_id})
 	UpdateEvent(ctx context.Context, request UpdateEventRequestObject) (UpdateEventResponseObject, error)
 
+	// (GET /api/v1/events/{event_id}/attendance)
+	GetAttendance(ctx context.Context, request GetAttendanceRequestObject) (GetAttendanceResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/attendance/catering)
+	ConfigureCatering(ctx context.Context, request ConfigureCateringRequestObject) (ConfigureCateringResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/attendance/{person_id}/{day})
+	RecordAttendance(ctx context.Context, request RecordAttendanceRequestObject) (RecordAttendanceResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/attendance/{person_id}/{day}/history)
+	AttendanceHistory(ctx context.Context, request AttendanceHistoryRequestObject) (AttendanceHistoryResponseObject, error)
+
 	// (GET /api/v1/events/{event_id}/audit)
 	ListAudit(ctx context.Context, request ListAuditRequestObject) (ListAuditResponseObject, error)
 
@@ -9367,6 +10288,12 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/events/{event_id}/files/{file_id})
 	DownloadFile(ctx context.Context, request DownloadFileRequestObject) (DownloadFileResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/logistics)
+	GetLogistics(ctx context.Context, request GetLogisticsRequestObject) (GetLogisticsResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/logistics/export)
+	ExportLogistics(ctx context.Context, request ExportLogisticsRequestObject) (ExportLogisticsResponseObject, error)
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(ctx context.Context, request TransferOwnerRequestObject) (TransferOwnerResponseObject, error)
@@ -9788,6 +10715,131 @@ func (sh *strictHandler) UpdateEvent(w http.ResponseWriter, r *http.Request, eve
 	}
 }
 
+// GetAttendance operation middleware
+func (sh *strictHandler) GetAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, params GetAttendanceParams) {
+	var request GetAttendanceRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAttendance(ctx, request.(GetAttendanceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAttendance")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetAttendanceResponseObject); ok {
+		if err := validResponse.VisitGetAttendanceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ConfigureCatering operation middleware
+func (sh *strictHandler) ConfigureCatering(w http.ResponseWriter, r *http.Request, eventId EventID, params ConfigureCateringParams) {
+	var request ConfigureCateringRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	var body ConfigureCateringJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfigureCatering(ctx, request.(ConfigureCateringRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConfigureCatering")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ConfigureCateringResponseObject); ok {
+		if err := validResponse.VisitConfigureCateringResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordAttendance operation middleware
+func (sh *strictHandler) RecordAttendance(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string, params RecordAttendanceParams) {
+	var request RecordAttendanceRequestObject
+
+	request.EventId = eventId
+	request.PersonId = personId
+	request.Day = day
+	request.Params = params
+
+	var body RecordAttendanceJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordAttendance(ctx, request.(RecordAttendanceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordAttendance")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RecordAttendanceResponseObject); ok {
+		if err := validResponse.VisitRecordAttendanceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AttendanceHistory operation middleware
+func (sh *strictHandler) AttendanceHistory(w http.ResponseWriter, r *http.Request, eventId EventID, personId openapi_types.UUID, day string) {
+	var request AttendanceHistoryRequestObject
+
+	request.EventId = eventId
+	request.PersonId = personId
+	request.Day = day
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AttendanceHistory(ctx, request.(AttendanceHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AttendanceHistory")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AttendanceHistoryResponseObject); ok {
+		if err := validResponse.VisitAttendanceHistoryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListAudit operation middleware
 func (sh *strictHandler) ListAudit(w http.ResponseWriter, r *http.Request, eventId EventID, params ListAuditParams) {
 	var request ListAuditRequestObject
@@ -10076,6 +11128,60 @@ func (sh *strictHandler) DownloadFile(w http.ResponseWriter, r *http.Request, ev
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DownloadFileResponseObject); ok {
 		if err := validResponse.VisitDownloadFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLogistics operation middleware
+func (sh *strictHandler) GetLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params GetLogisticsParams) {
+	var request GetLogisticsRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLogistics(ctx, request.(GetLogisticsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLogistics")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLogisticsResponseObject); ok {
+		if err := validResponse.VisitGetLogisticsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportLogistics operation middleware
+func (sh *strictHandler) ExportLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportLogisticsParams) {
+	var request ExportLogisticsRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportLogistics(ctx, request.(ExportLogisticsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportLogistics")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportLogisticsResponseObject); ok {
+		if err := validResponse.VisitExportLogisticsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -11462,139 +12568,161 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

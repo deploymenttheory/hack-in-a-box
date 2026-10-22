@@ -73,7 +73,7 @@ func (q *Queries) ExpiredProfiles(ctx context.Context, completedAt pgtype.Timest
 }
 
 const listOperationalProfiles = `-- name: ListOperationalProfiles :many
-SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id
+SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id
 WHERE p.event_id=$1 AND p.id>$2 ORDER BY p.id LIMIT $3
 `
 
@@ -84,17 +84,19 @@ type ListOperationalProfilesParams struct {
 }
 
 type ListOperationalProfilesRow struct {
-	ID            uuid.UUID
-	EventID       uuid.UUID
-	PersonID      uuid.UUID
-	ContactEmail  string
-	ContactPhone  string
-	Dietary       string
-	Accessibility string
-	PhotoConsent  string
-	Revision      int64
-	UpdatedAt     time.Time
-	DisplayName   string
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	PersonID         uuid.UUID
+	ContactEmail     string
+	ContactPhone     string
+	Dietary          string
+	Accessibility    string
+	PhotoConsent     string
+	Revision         int64
+	UpdatedAt        time.Time
+	TravelDetails    string
+	SocialAttendance string
+	DisplayName      string
 }
 
 func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperationalProfilesParams) ([]ListOperationalProfilesRow, error) {
@@ -117,6 +119,8 @@ func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperation
 			&i.PhotoConsent,
 			&i.Revision,
 			&i.UpdatedAt,
+			&i.TravelDetails,
+			&i.SocialAttendance,
 			&i.DisplayName,
 		); err != nil {
 			return nil, err
@@ -130,7 +134,7 @@ func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperation
 }
 
 const operationalProfile = `-- name: OperationalProfile :one
-SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id WHERE p.event_id=$1 AND p.person_id=$2
+SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id WHERE p.event_id=$1 AND p.person_id=$2
 `
 
 type OperationalProfileParams struct {
@@ -139,17 +143,19 @@ type OperationalProfileParams struct {
 }
 
 type OperationalProfileRow struct {
-	ID            uuid.UUID
-	EventID       uuid.UUID
-	PersonID      uuid.UUID
-	ContactEmail  string
-	ContactPhone  string
-	Dietary       string
-	Accessibility string
-	PhotoConsent  string
-	Revision      int64
-	UpdatedAt     time.Time
-	DisplayName   string
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	PersonID         uuid.UUID
+	ContactEmail     string
+	ContactPhone     string
+	Dietary          string
+	Accessibility    string
+	PhotoConsent     string
+	Revision         int64
+	UpdatedAt        time.Time
+	TravelDetails    string
+	SocialAttendance string
+	DisplayName      string
 }
 
 func (q *Queries) OperationalProfile(ctx context.Context, arg OperationalProfileParams) (OperationalProfileRow, error) {
@@ -166,6 +172,8 @@ func (q *Queries) OperationalProfile(ctx context.Context, arg OperationalProfile
 		&i.PhotoConsent,
 		&i.Revision,
 		&i.UpdatedAt,
+		&i.TravelDetails,
+		&i.SocialAttendance,
 		&i.DisplayName,
 	)
 	return i, err
@@ -215,21 +223,23 @@ func (q *Queries) RemovePersonDrafts(ctx context.Context, arg RemovePersonDrafts
 }
 
 const saveOperationalProfile = `-- name: SaveOperationalProfile :one
-INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent)
-VALUES($1,$2,$3,$4,$5,$6,$7)
+INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent,travel_details,social_attendance)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 ON CONFLICT(event_id,person_id) DO UPDATE SET contact_email=EXCLUDED.contact_email,contact_phone=EXCLUDED.contact_phone,
-dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,revision=operational_profiles.revision+1,updated_at=now()
-RETURNING id, event_id, person_id, contact_email, contact_phone, dietary, accessibility, photo_consent, revision, updated_at
+dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
+RETURNING id, event_id, person_id, contact_email, contact_phone, dietary, accessibility, photo_consent, revision, updated_at, travel_details, social_attendance
 `
 
 type SaveOperationalProfileParams struct {
-	EventID       uuid.UUID
-	PersonID      uuid.UUID
-	ContactEmail  string
-	ContactPhone  string
-	Dietary       string
-	Accessibility string
-	PhotoConsent  string
+	EventID          uuid.UUID
+	PersonID         uuid.UUID
+	ContactEmail     string
+	ContactPhone     string
+	Dietary          string
+	Accessibility    string
+	PhotoConsent     string
+	TravelDetails    string
+	SocialAttendance string
 }
 
 func (q *Queries) SaveOperationalProfile(ctx context.Context, arg SaveOperationalProfileParams) (OperationalProfile, error) {
@@ -241,6 +251,8 @@ func (q *Queries) SaveOperationalProfile(ctx context.Context, arg SaveOperationa
 		arg.Dietary,
 		arg.Accessibility,
 		arg.PhotoConsent,
+		arg.TravelDetails,
+		arg.SocialAttendance,
 	)
 	var i OperationalProfile
 	err := row.Scan(
@@ -254,6 +266,8 @@ func (q *Queries) SaveOperationalProfile(ctx context.Context, arg SaveOperationa
 		&i.PhotoConsent,
 		&i.Revision,
 		&i.UpdatedAt,
+		&i.TravelDetails,
+		&i.SocialAttendance,
 	)
 	return i, err
 }

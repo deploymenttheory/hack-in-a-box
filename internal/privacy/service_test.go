@@ -28,12 +28,15 @@ func TestProfileFieldPoliciesCorrectionsAndExport(t *testing.T) {
 		ctx,
 		dbgen.SetCompetitionStateParams{EventID: event, PersonID: person.ID, State: "confirmed"},
 	)
+	travel, social := "private-travel", "yes"
 	fields := privacy.Fields{
-		ContactEmail:  "sensitive@example.test",
-		ContactPhone:  "private-phone",
-		Dietary:       "private-dietary",
-		Accessibility: "private-accessibility",
-		PhotoConsent:  "no",
+		ContactEmail:     "sensitive@example.test",
+		ContactPhone:     "private-phone",
+		Dietary:          "private-dietary",
+		Accessibility:    "private-accessibility",
+		PhotoConsent:     "no",
+		TravelDetails:    &travel,
+		SocialAttendance: &social,
 	}
 	profile, err := s.Correct(ctx, person.ID, event, 0, fields)
 	if err != nil {
@@ -44,6 +47,13 @@ func TestProfileFieldPoliciesCorrectionsAndExport(t *testing.T) {
 	}
 	if _, err := s.Correct(ctx, person.ID, event, 0, fields); !errors.Is(err, access.ErrConflict) {
 		t.Fatal("stale profile correction accepted")
+	}
+	legacy := fields
+	legacy.TravelDetails, legacy.SocialAttendance = nil, nil
+	current, err := s.Correct(ctx, person.ID, event, profile.Revision, legacy)
+	if err != nil || current.TravelDetails == nil || *current.TravelDetails != travel ||
+		current.SocialAttendance == nil || *current.SocialAttendance != social {
+		t.Fatalf("legacy profile correction lost logistics fields: %+v %v", current, err)
 	}
 	for _, role := range []string{"organiser", "mentor", "judge", "mc", "logistics", "photographer"} {
 		viewer := testdb.Person(t, pool)
@@ -68,12 +78,15 @@ func TestProfileFieldPoliciesCorrectionsAndExport(t *testing.T) {
 		}
 		wire, _ := json.Marshal(view)
 		if role == "photographer" {
-			if view.PhotoConsent == nil || strings.Contains(string(wire), "private-") ||
+			if view.PhotoConsent == nil || view.SocialAttendance != nil ||
+				strings.Contains(string(wire), "private-") ||
 				strings.Contains(string(wire), "contact_email") {
 				t.Fatalf("photographer received operational fields: %s", wire)
 			}
 		} else {
-			if view.Dietary == nil || view.Accessibility == nil || view.PhotoConsent != nil {
+			if view.Dietary == nil || view.Accessibility == nil || view.TravelDetails == nil ||
+				view.SocialAttendance == nil ||
+				view.PhotoConsent != nil {
 				t.Fatalf("logistics field policy: %s", wire)
 			}
 			exported, err := s.Export(ctx, viewer.ID, event, uuid.Nil, 50)
@@ -149,10 +162,13 @@ func TestRetentionRemovesFieldsAndDraftsButPreservesSafeHistory(t *testing.T) {
 	owner := testdb.Person(t, pool)
 	event := testdb.Event(t, pool, owner.ID)
 	other := testdb.Event(t, pool, owner.ID)
+	travel, social := "never-keep-this-travel", "yes"
 	fields := privacy.Fields{
-		Dietary:       "never-keep-this-diet",
-		Accessibility: "never-keep-this-accessibility",
-		PhotoConsent:  "unknown",
+		Dietary:          "never-keep-this-diet",
+		Accessibility:    "never-keep-this-accessibility",
+		PhotoConsent:     "unknown",
+		TravelDetails:    &travel,
+		SocialAttendance: &social,
 	}
 	if _, err := s.Correct(ctx, owner.ID, event, 0, fields); err != nil {
 		t.Fatal(err)
