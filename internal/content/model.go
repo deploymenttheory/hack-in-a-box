@@ -13,7 +13,19 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 )
 
+type Contact struct {
+	Label string `json:"label"`
+	URL   string `json:"url"`
+}
+
+type Acknowledgement struct {
+	Version int64     `json:"version"`
+	At      time.Time `json:"at"`
+}
+
 type Document struct {
+	Purpose                string                 `json:"purpose,omitempty"`
+	Contacts               []Contact              `json:"contacts,omitempty"`
 	RequireAcknowledgement bool                   `json:"require_acknowledgement"`
 	Title                  string                 `json:"title"`
 	Markdown               string                 `json:"markdown"`
@@ -26,18 +38,19 @@ type Input struct {
 	Document Document `json:"document"`
 }
 type Page struct {
-	AcknowledgedAt    *time.Time   `json:"acknowledged_at"`
-	AttachmentDetails []Attachment `json:"attachment_details"`
-	ID                uuid.UUID    `json:"id"`
-	Kind              string       `json:"kind"`
-	Revision          int64        `json:"revision"`
-	Version           int64        `json:"version"`
-	State             string       `json:"state"`
-	Document          Document     `json:"document"`
-	ReleasedVersion   *int64       `json:"released_version"`
-	ReleasedAt        *time.Time   `json:"released_at"`
-	CanManage         bool         `json:"can_manage"`
-	Message           string       `json:"message"`
+	PreviousAcknowledgement *Acknowledgement `json:"previous_acknowledgement,omitempty"`
+	AcknowledgedAt          *time.Time       `json:"acknowledged_at"`
+	AttachmentDetails       []Attachment     `json:"attachment_details"`
+	ID                      uuid.UUID        `json:"id"`
+	Kind                    string           `json:"kind"`
+	Revision                int64            `json:"revision"`
+	Version                 int64            `json:"version"`
+	State                   string           `json:"state"`
+	Document                Document         `json:"document"`
+	ReleasedVersion         *int64           `json:"released_version"`
+	ReleasedAt              *time.Time       `json:"released_at"`
+	CanManage               bool             `json:"can_manage"`
+	Message                 string           `json:"message"`
 }
 type List struct {
 	Items      []Page     `json:"items"`
@@ -70,6 +83,9 @@ func blocked(code, message string) error {
 
 func validate(input Input) error {
 	d := input.Document
+	if err := validateGuidance(input); err != nil {
+		return err
+	}
 	if !slices.Contains([]string{"page", "brief", "challenge"}, input.Kind) ||
 		strings.TrimSpace(d.Title) == "" ||
 		len(d.Title) > 200 ||

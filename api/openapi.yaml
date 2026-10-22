@@ -1980,6 +1980,19 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/SubmissionPage'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/guidance:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getEventGuidance
+      responses:
+        '200':
+          description: Current released rules/contact summaries and personal version receipts. Missing common contacts are organiser-only warnings, not lifecycle blockers. No report contents are accepted or collected.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EventGuidance'}
+        default: {$ref: '#/components/responses/Error'}
+
   /api/v1/events/{event_id}/content:
     parameters:
       - {$ref: '#/components/parameters/EventID'}
@@ -4418,11 +4431,51 @@ components:
           maxItems: 100
           uniqueItems: true
           items: {type: string, format: uuid}
+
+    ContentContact:
+      type: object
+      additionalProperties: false
+      required: [label, url]
+      properties:
+        label: {type: string, maxLength: 160}
+        url: {type: string, maxLength: 2048, description: Approved HTTP/HTTPS or a single mailto contact without embedded credentials. Draft placeholders must be resolved before approval.}
+    ContentAcknowledgementReceipt:
+      type: object
+      additionalProperties: false
+      required: [version, at]
+      properties:
+        version: {type: integer, format: int64, minimum: 1}
+        at: {type: string, format: date-time}
+    EventGuidanceItem:
+      type: object
+      additionalProperties: false
+      required: [id, purpose, title, version, contacts, require_acknowledgement, acknowledged_at, previous_acknowledgement]
+      properties:
+        id: {type: string, format: uuid}
+        purpose: {type: string, enum: [rules, support, conduct]}
+        title: {type: string}
+        version: {type: integer, format: int64}
+        contacts: {type: array, items: {$ref: '#/components/schemas/ContentContact'}}
+        require_acknowledgement: {type: boolean}
+        acknowledged_at: {type: string, format: date-time, nullable: true}
+        previous_acknowledgement:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/ContentAcknowledgementReceipt'}]
+    EventGuidance:
+      type: object
+      additionalProperties: false
+      required: [items, warnings, can_manage]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/EventGuidanceItem'}}
+        warnings: {type: array, items: {$ref: '#/components/schemas/Blocker'}}
+        can_manage: {type: boolean}
     ContentDocument:
       type: object
       additionalProperties: false
       required: [title, markdown, audience, attachments, scheduled_at]
       properties:
+        purpose: {type: string, enum: ['', rules, support, conduct], description: Optional native-page guidance purpose. Never valid on a challenge or role brief.}
+        contacts: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ContentContact'}}
         require_acknowledgement:
           type: boolean
           default: false
@@ -4452,6 +4505,10 @@ components:
       additionalProperties: false
       required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message, attachment_details, acknowledged_at]
       properties:
+        previous_acknowledgement:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/ContentAcknowledgementReceipt'}]
+          description: Current reader's latest earlier-version receipt, returned only after current resource authorization.
         acknowledged_at: {type: string, format: date-time, nullable: true, description: Current reader acknowledgement of the returned version only.}
         attachment_details:
           type: array

@@ -1419,6 +1419,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/guidance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getEventGuidance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/content": {
         parameters: {
             query?: never;
@@ -2780,7 +2798,43 @@ export interface components {
             roles: ("organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer" | "early_brief_access")[];
             teams: string[];
         };
+        ContentContact: {
+            label: string;
+            /** @description Approved HTTP/HTTPS or a single mailto contact without embedded credentials. Draft placeholders must be resolved before approval. */
+            url: string;
+        };
+        ContentAcknowledgementReceipt: {
+            /** Format: int64 */
+            version: number;
+            /** Format: date-time */
+            at: string;
+        };
+        EventGuidanceItem: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            purpose: "rules" | "support" | "conduct";
+            title: string;
+            /** Format: int64 */
+            version: number;
+            contacts: components["schemas"]["ContentContact"][];
+            require_acknowledgement: boolean;
+            /** Format: date-time */
+            acknowledged_at: string | null;
+            previous_acknowledgement: components["schemas"]["ContentAcknowledgementReceipt"] | null;
+        };
+        EventGuidance: {
+            items: components["schemas"]["EventGuidanceItem"][];
+            warnings: components["schemas"]["Blocker"][];
+            can_manage: boolean;
+        };
         ContentDocument: {
+            /**
+             * @description Optional native-page guidance purpose. Never valid on a challenge or role brief.
+             * @enum {string}
+             */
+            purpose?: "" | "rules" | "support" | "conduct";
+            contacts?: components["schemas"]["ContentContact"][];
             /**
              * @description Explicitly require each reader to acknowledge this immutable version. Material updates with this flag require a new acknowledgement after release.
              * @default false
@@ -2802,6 +2856,8 @@ export interface components {
             document: components["schemas"]["ContentDocument"];
         };
         ContentPage: {
+            /** @description Current reader's latest earlier-version receipt, returned only after current resource authorization. */
+            previous_acknowledgement?: components["schemas"]["ContentAcknowledgementReceipt"] | null;
             /**
              * Format: date-time
              * @description Current reader acknowledgement of the returned version only.
@@ -5781,6 +5837,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubmissionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getEventGuidance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current released rules/contact summaries and personal version receipts. Missing common contacts are organiser-only warnings, not lifecycle blockers. No report contents are accepted or collected. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventGuidance"];
                 };
             };
             default: components["responses"]["Error"];

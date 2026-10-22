@@ -59,3 +59,8 @@ SELECT acknowledged_at FROM content_acknowledgements WHERE event_id=$1 AND conte
 
 -- name: AcknowledgeContent :execrows
 INSERT INTO content_acknowledgements(event_id,content_id,version,person_id,acknowledged_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING;
+
+-- name: ContentPriorAcknowledgement :one
+SELECT version,acknowledged_at FROM content_acknowledgements
+WHERE event_id=$1 AND content_id=$2 AND person_id=$3 AND version<sqlc.arg(version)::bigint
+ORDER BY version DESC LIMIT 1;

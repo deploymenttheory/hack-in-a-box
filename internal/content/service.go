@@ -153,6 +153,25 @@ func projection(
 		result.AcknowledgedAt = &ack
 	}
 
+	prior, priorErr := q.ContentPriorAcknowledgement(
+		ctx,
+		dbgen.ContentPriorAcknowledgementParams{
+			EventID:   item.EventID,
+			ContentID: item.ID,
+			PersonID:  actor,
+			Version:   allowed,
+		},
+	)
+	if priorErr != nil && !errors.Is(priorErr, pgx.ErrNoRows) {
+		return result, fmt.Errorf("read prior personal acknowledgement: %w", priorErr)
+	}
+	if priorErr == nil {
+		result.PreviousAcknowledgement = &Acknowledgement{
+			Version: prior.Version,
+			At:      prior.AcknowledgedAt,
+		}
+	}
+
 	if !preview {
 		result.State = "released"
 		result.Revision = allowed
