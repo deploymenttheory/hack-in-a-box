@@ -25,6 +25,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
@@ -35,6 +36,7 @@ import (
 )
 
 type Dependencies struct {
+	Mentors      mentors.Service
 	Content      content.Service
 	Submissions  submissions.Service
 	Attendance   attendance.Service
@@ -275,7 +277,7 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		writeJSON(w, 409, body)
 		return
 	}
-	if code, message := teamConflict(err); code != "" {
+	if code, message := assignmentConflict(err); code != "" {
 		writeError(w, r, 409, code, message)
 		return
 	}

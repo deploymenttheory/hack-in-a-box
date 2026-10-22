@@ -67,7 +67,7 @@ func (s Service) scoped(
 		return v, fmt.Errorf("authorize team submission: %w", err)
 	}
 	a := v.authority
-	if !a.Member && !a.Organiser && !a.Mentor && !a.Judge {
+	if !a.Member && !a.Organiser && !a.Mentor && !a.Reviewer && !a.Judge {
 		return v, access.ErrForbidden
 	}
 	v.config, err = configuration(row)
@@ -78,7 +78,7 @@ func (s Service) scoped(
 		(!published(row, s.now()) || v.config.LiveStart.IsZero() || s.now().Before(v.config.LiveStart)) {
 		return v, access.ErrForbidden
 	}
-	if !a.Member && !a.Organiser && !a.Mentor &&
+	if !a.Member && !a.Organiser && !a.Mentor && !a.Reviewer &&
 		(v.config.SubmissionCutoff.IsZero() || s.now().Before(v.config.SubmissionCutoff)) {
 		return v, access.ErrForbidden
 	}
@@ -98,7 +98,7 @@ func (s Service) scoped(
 	if err != nil {
 		return v, fmt.Errorf("read submission state: %w", err)
 	}
-	if !a.Member && !a.Organiser && !a.Mentor && v.state.Outcome != "frozen" {
+	if !a.Member && !a.Organiser && !a.Mentor && !a.Reviewer && v.state.Outcome != "frozen" {
 		return v, access.ErrForbidden
 	}
 	v.entry, err = q.CompetitionEntry(
@@ -184,7 +184,8 @@ func definitions(
 }
 
 func visible(d Definition, a access.TeamAuthority) bool {
-	return a.Member || a.Organiser || (a.Mentor && slices.Contains(audience(d), "mentor")) ||
+	return a.Member || a.Organiser ||
+		((a.Mentor || a.Reviewer) && slices.Contains(audience(d), "mentor")) ||
 		(a.Judge && slices.Contains(audience(d), "judge"))
 }
 

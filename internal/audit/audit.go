@@ -24,6 +24,7 @@ const (
 	OrganiserGranted         Action = "organiser.granted"
 	PrivilegedAccessGranted  Action = "privileged_access.granted"
 	AttendanceException      Action = "attendance.exception"
+	MentorCoverageChanged    Action = "mentor.coverage_changed"
 	TeamFrozen               Action = "team.frozen"
 	TeamRebalanced           Action = "team.rebalanced"
 	ChallengeApproved        Action = "challenge.approved"
@@ -88,7 +89,11 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case ContentAcknowledged, ContentChanged, ContentReleased, SubmissionReviewed,
+	case MentorCoverageChanged,
+		ContentAcknowledged,
+		ContentChanged,
+		ContentReleased,
+		SubmissionReviewed,
 		SubmissionOutcomeChanged,
 		AttendanceChanged,
 		CateringConfigured,
