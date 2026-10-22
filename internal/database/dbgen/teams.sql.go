@@ -76,7 +76,8 @@ func (q *Queries) CopyPublishedTeamMembers(ctx context.Context, eventID uuid.UUI
 }
 
 const createCompetitionEntry = `-- name: CreateCompetitionEntry :exec
-INSERT INTO competition_entries(event_id,team_id) VALUES($1,$2) ON CONFLICT DO NOTHING
+WITH entry AS (INSERT INTO competition_entries(event_id,team_id) VALUES($1,$2) ON CONFLICT(event_id,team_id) DO UPDATE SET team_id=EXCLUDED.team_id RETURNING id, event_id, team_id, active)
+INSERT INTO policy_resources(event_id,id,kind) SELECT event_id,team_id,'team' FROM entry UNION ALL SELECT event_id,id,'assessment' FROM entry ON CONFLICT DO NOTHING
 `
 
 type CreateCompetitionEntryParams struct {

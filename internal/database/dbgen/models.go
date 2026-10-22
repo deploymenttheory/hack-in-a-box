@@ -160,6 +160,7 @@ type File struct {
 	Checksum       string
 	SizeBytes      int64
 	CreatedAt      time.Time
+	TeamID         *uuid.UUID
 }
 
 type FormResponse struct {
@@ -429,6 +430,55 @@ type Session struct {
 	Token  string
 	Data   []byte
 	Expiry time.Time
+}
+
+type SubmissionChange struct {
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	Revision       int64
+	ActorID        *uuid.UUID
+	Action         string
+	ActiveRevision pgtype.Int8
+	ReviewStatus   string
+	Reason         string
+	OccurredAt     time.Time
+}
+
+type SubmissionDraft struct {
+	EventID   uuid.UUID
+	TeamID    uuid.UUID
+	Revision  int64
+	ActorID   uuid.UUID
+	UpdatedAt time.Time
+	Evidence  []byte
+}
+
+type SubmissionFileReference struct {
+	EventID            uuid.UUID
+	TeamID             uuid.UUID
+	SubmissionRevision int64
+	FileID             uuid.UUID
+	Audience           []string
+}
+
+type SubmissionRevision struct {
+	EventID     uuid.UUID
+	TeamID      uuid.UUID
+	Revision    int64
+	ActorID     uuid.UUID
+	SubmittedAt time.Time
+	Late        bool
+	Reason      string
+	Document    []byte
+}
+
+type SubmissionState struct {
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	Revision       int64
+	ActiveRevision pgtype.Int8
+	Outcome        string
+	FrozenAt       pgtype.Timestamptz
 }
 
 type Template struct {

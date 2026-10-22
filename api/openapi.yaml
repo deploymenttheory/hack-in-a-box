@@ -104,6 +104,8 @@ paths:
               additionalProperties: false
               required: [filename, media_type, content]
               properties:
+                team_id: { type: string, format: uuid, description: Optional team scope. Requires current published membership or authorised organiser submission work. }
+                reason: { type: string, maxLength: 2000, description: Required for organiser team uploads after the shared cutoff. }
                 filename: { type: string, minLength: 1, maxLength: 160 }
                 media_type: { type: string, enum: [application/pdf, image/png, image/jpeg, text/plain] }
                 content: { type: string, format: byte }
@@ -1443,6 +1445,161 @@ paths:
               properties:
                 acknowledge_invitation_impact:
                   type: boolean
+  /api/v1/events/{event_id}/teams/{team_id}/submission:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: team_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getTeamSubmission
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionPage'}
+        default: {$ref: '#/components/responses/Error'}
+    put:
+      operationId: submitTeamEvidence
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionCommand'
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams/{team_id}/submission/draft:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: team_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getTeamDraft
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionDraft'}
+        default: {$ref: '#/components/responses/Error'}
+    put:
+      operationId: saveTeamDraft
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionDraftInput'
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionDraft'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams/{team_id}/submission/history:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: team_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: teamSubmissionHistory
+      parameters:
+        - name: before
+          in: query
+          schema: {type: integer, format: int64, minimum: 0}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionHistory'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams/{team_id}/submission/review:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: team_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: reviewTeamSubmission
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionReviewInput'
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams/{team_id}/submission/outcome:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: team_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: setSubmissionOutcome
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionOutcomeInput'
+      responses:
+        '200':
+          description: Current authorised submission result. Private drafts are never accepted competition evidence.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmissionPage'}
+        default: {$ref: '#/components/responses/Error'}
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -2655,6 +2812,18 @@ components:
         - description
         - required
       properties:
+        evidence_kinds:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items: {type: string, enum: [file, url, repository]}
+          description: Empty means any supported evidence kind.
+        audience:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items: {type: string, enum: [organiser, mentor, judge]}
+          description: Allowed reviewer roles; current team members and organisers retain access. Empty uses all reviewer roles. Role grants also require current resource assignment.
         id:
           type: string
           format: uuid
@@ -3067,3 +3236,138 @@ components:
         url:
           type: string
           format: uri
+
+    SubmissionDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, title, description, required, due_at]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        description: {type: string}
+        required: {type: boolean}
+        schedule_id: {type: string, format: uuid}
+        due_at: {type: string, format: date-time}
+        evidence_kinds:
+          type: array
+          items: {type: string, enum: [file, url, repository]}
+        audience:
+          type: array
+          items: {type: string, enum: [organiser, mentor, judge]}
+    SubmissionEvidence:
+      type: object
+      additionalProperties: false
+      required: [deliverable_id, kind, label, url, file_id]
+      properties:
+        deliverable_id: {type: string, format: uuid}
+        kind: {type: string, enum: [file, url, repository]}
+        label: {type: string, minLength: 1, maxLength: 300}
+        url: {type: string, maxLength: 2048}
+        file_id: {type: string, format: uuid, nullable: true}
+    SubmissionDraftInput:
+      type: object
+      additionalProperties: false
+      required: [evidence]
+      properties:
+        evidence:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/SubmissionEvidence'}
+    SubmissionCommand:
+      type: object
+      additionalProperties: false
+      required: [evidence, reason]
+      properties:
+        evidence:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/SubmissionEvidence'}
+        reason: {type: string, maxLength: 2000}
+    SubmissionReviewInput:
+      type: object
+      additionalProperties: false
+      required: [submission_revision, status, reason]
+      properties:
+        submission_revision: {type: integer, format: int64, minimum: 1}
+        status: {type: string, enum: [pending, accepted, changes_requested]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    SubmissionOutcomeInput:
+      type: object
+      additionalProperties: false
+      required: [outcome, reason]
+      properties:
+        outcome: {type: string, enum: [withdrawn, not_submitted]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    SubmissionDraft:
+      type: object
+      additionalProperties: false
+      required: [revision, evidence, updated_at]
+      properties:
+        revision: {type: integer, format: int64}
+        updated_at: {type: string, format: date-time, nullable: true}
+        evidence:
+          type: array
+          items: {$ref: '#/components/schemas/SubmissionEvidence'}
+    SubmissionRevision:
+      type: object
+      additionalProperties: false
+      required: [revision, actor_id, submitted_at, late, reason, review_status, definitions, evidence]
+      properties:
+        revision: {type: integer, format: int64}
+        actor_id: {type: string, format: uuid}
+        submitted_at: {type: string, format: date-time}
+        late: {type: boolean}
+        reason: {type: string}
+        review_status: {type: string, enum: [pending, accepted, changes_requested]}
+        definitions:
+          type: array
+          items: {$ref: '#/components/schemas/SubmissionDefinition'}
+        evidence:
+          type: array
+          items: {$ref: '#/components/schemas/SubmissionEvidence'}
+    SubmissionPage:
+      type: object
+      additionalProperties: false
+      required: [event_revision, revision, entry_id, team_id, outcome, frozen_at, can_draft, can_submit, can_review, live_start, cutoff, definitions, final]
+      properties:
+        event_revision: {type: integer, format: int64}
+        revision: {type: integer, format: int64}
+        entry_id: {type: string, format: uuid}
+        team_id: {type: string, format: uuid}
+        outcome: {type: string, enum: [open, frozen, not_submitted, withdrawn]}
+        frozen_at: {type: string, format: date-time, nullable: true}
+        can_draft: {type: boolean}
+        can_submit: {type: boolean}
+        can_review: {type: boolean}
+        live_start: {type: string, format: date-time}
+        cutoff: {type: string, format: date-time}
+        definitions:
+          type: array
+          items: {$ref: '#/components/schemas/SubmissionDefinition'}
+        final:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/SubmissionRevision'}]
+    SubmissionChange:
+      type: object
+      additionalProperties: false
+      required: [revision, actor_id, action, active_revision, review_status, reason, at, submission]
+      properties:
+        revision: {type: integer, format: int64}
+        actor_id: {type: string, format: uuid, nullable: true}
+        action: {type: string, enum: [submitted, frozen, not_submitted, withdrawn, reviewed]}
+        active_revision: {type: integer, format: int64, nullable: true}
+        review_status: {type: string}
+        reason: {type: string}
+        at: {type: string, format: date-time}
+        submission:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/SubmissionRevision'}]
+    SubmissionHistory:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/SubmissionChange'}
+        next_cursor: {type: integer, format: int64, nullable: true}

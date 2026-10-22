@@ -1,6 +1,6 @@
 -- name: InsertFile :one
-INSERT INTO files(id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *;
+INSERT INTO files(id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, team_id)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;
 
 -- name: File :one
 SELECT * FROM files WHERE event_id = $1 AND id = $2;

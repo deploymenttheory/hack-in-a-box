@@ -28,6 +28,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
@@ -96,13 +97,17 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		Attendance:   attendance.Service{Pool: pool},
-		Preparation:  preparation.Service{Pool: pool},
-		Teams:        teams.Service{Pool: pool},
-		GitHub:       github,
-		Pool:         pool,
-		Permissions:  permissions.Service{Pool: pool},
-		Events:       event.Service{Pool: pool},
+		Submissions: submissions.Service{Pool: pool},
+		Attendance:  attendance.Service{Pool: pool},
+		Preparation: preparation.Service{Pool: pool},
+		Teams:       teams.Service{Pool: pool},
+		GitHub:      github,
+		Pool:        pool,
+		Permissions: permissions.Service{Pool: pool},
+		Events: event.Service{
+			Pool:              pool,
+			SettleSubmissions: (submissions.Service{Pool: pool}).Settle,
+		},
 		Privacy:      privacy.Service{Pool: pool},
 		Templates:    templates.Service{Pool: pool},
 		Registration: registration.Service{Pool: pool},
@@ -158,6 +163,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	}
 	logger.Info("worker started", "jobs_enabled", true)
 	worker.Maintenance = func(ctx context.Context) error {
+		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain submission outcomes: %w", err)
+		}
 		if err := (registration.Service{Pool: pool}).MaintainOffers(ctx); err != nil {
 			return fmt.Errorf("maintain attendee offers: %w", err)
 		}

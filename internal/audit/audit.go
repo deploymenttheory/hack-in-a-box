@@ -15,41 +15,43 @@ import (
 type Action string
 
 const (
-	AdminBootstrapped       Action = "admin.bootstrapped"
-	SignedIn                Action = "identity.signed_in"
-	FileUploaded            Action = "file.uploaded"
-	OrganiserGranted        Action = "organiser.granted"
-	PrivilegedAccessGranted Action = "privileged_access.granted"
-	AttendanceException     Action = "attendance.exception"
-	TeamFrozen              Action = "team.frozen"
-	TeamRebalanced          Action = "team.rebalanced"
-	ChallengeApproved       Action = "challenge.approved"
-	ChallengePostponed      Action = "challenge.postponed"
-	SubmissionFinalized     Action = "submission.finalized"
-	RoleGranted             Action = "role.granted"
-	RoleRevoked             Action = "role.revoked"
-	OwnerTransferred        Action = "owner.transferred"
-	EventCreated            Action = "event.created"
-	EventUpdated            Action = "event.updated"
-	EventStageChanged       Action = "event.stage_changed"
-	EventDecision           Action = "event.decision"
-	ScheduleApproved        Action = "schedule.approved"
-	ProfileCorrected        Action = "profile.corrected"
-	ProfileExported         Action = "profile.exported"
-	ProfileRemoved          Action = "profile.removed"
-	PrivacyConfigured       Action = "privacy.configured"
-	TemplateCreated         Action = "template.created"
-	TemplateUpdated         Action = "template.updated"
-	TemplatePublished       Action = "template.published"
-	DefinitionsUpdated      Action = "definitions.updated"
-	EventCloned             Action = "event.cloned"
-	RegistrationChanged     Action = "registration.changed"
-	PreparationChanged      Action = "preparation.changed"
-	AttendanceChanged       Action = "attendance.changed"
-	CateringConfigured      Action = "catering.configured"
-	GitHubLinked            Action = "github.linked"
-	GitHubRelinked          Action = "github.relinked"
-	GitHubUnlinked          Action = "github.unlinked"
+	AdminBootstrapped        Action = "admin.bootstrapped"
+	SignedIn                 Action = "identity.signed_in"
+	FileUploaded             Action = "file.uploaded"
+	OrganiserGranted         Action = "organiser.granted"
+	PrivilegedAccessGranted  Action = "privileged_access.granted"
+	AttendanceException      Action = "attendance.exception"
+	TeamFrozen               Action = "team.frozen"
+	TeamRebalanced           Action = "team.rebalanced"
+	ChallengeApproved        Action = "challenge.approved"
+	ChallengePostponed       Action = "challenge.postponed"
+	SubmissionFinalized      Action = "submission.finalized"
+	SubmissionReviewed       Action = "submission.reviewed"
+	SubmissionOutcomeChanged Action = "submission.outcome_changed"
+	RoleGranted              Action = "role.granted"
+	RoleRevoked              Action = "role.revoked"
+	OwnerTransferred         Action = "owner.transferred"
+	EventCreated             Action = "event.created"
+	EventUpdated             Action = "event.updated"
+	EventStageChanged        Action = "event.stage_changed"
+	EventDecision            Action = "event.decision"
+	ScheduleApproved         Action = "schedule.approved"
+	ProfileCorrected         Action = "profile.corrected"
+	ProfileExported          Action = "profile.exported"
+	ProfileRemoved           Action = "profile.removed"
+	PrivacyConfigured        Action = "privacy.configured"
+	TemplateCreated          Action = "template.created"
+	TemplateUpdated          Action = "template.updated"
+	TemplatePublished        Action = "template.published"
+	DefinitionsUpdated       Action = "definitions.updated"
+	EventCloned              Action = "event.cloned"
+	RegistrationChanged      Action = "registration.changed"
+	PreparationChanged       Action = "preparation.changed"
+	AttendanceChanged        Action = "attendance.changed"
+	CateringConfigured       Action = "catering.configured"
+	GitHubLinked             Action = "github.linked"
+	GitHubRelinked           Action = "github.relinked"
+	GitHubUnlinked           Action = "github.unlinked"
 )
 
 type Reason string
@@ -83,7 +85,12 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case AttendanceChanged, CateringConfigured, PreparationChanged, AdminBootstrapped,
+	case SubmissionReviewed,
+		SubmissionOutcomeChanged,
+		AttendanceChanged,
+		CateringConfigured,
+		PreparationChanged,
+		AdminBootstrapped,
 		SignedIn,
 		FileUploaded,
 		OrganiserGranted,
@@ -93,7 +100,28 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		TeamRebalanced,
 		ChallengeApproved,
 		ChallengePostponed,
-		SubmissionFinalized, RoleGranted, RoleRevoked, OwnerTransferred, EventCreated, EventUpdated, EventStageChanged, EventDecision, ScheduleApproved, ProfileCorrected, ProfileExported, ProfileRemoved, PrivacyConfigured, TemplateCreated, TemplateUpdated, TemplatePublished, DefinitionsUpdated, EventCloned, RegistrationChanged, GitHubLinked, GitHubRelinked, GitHubUnlinked:
+		SubmissionFinalized,
+		RoleGranted,
+		RoleRevoked,
+		OwnerTransferred,
+		EventCreated,
+		EventUpdated,
+		EventStageChanged,
+		EventDecision,
+		ScheduleApproved,
+		ProfileCorrected,
+		ProfileExported,
+		ProfileRemoved,
+		PrivacyConfigured,
+		TemplateCreated,
+		TemplateUpdated,
+		TemplatePublished,
+		DefinitionsUpdated,
+		EventCloned,
+		RegistrationChanged,
+		GitHubLinked,
+		GitHubRelinked,
+		GitHubUnlinked:
 	default:
 		return access.ErrInvalid
 	}

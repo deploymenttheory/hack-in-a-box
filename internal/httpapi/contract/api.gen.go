@@ -624,6 +624,180 @@ func (e StaffRole) Valid() bool {
 	}
 }
 
+// Defines values for SubmissionChangeAction.
+const (
+	SubmissionChangeActionFrozen       SubmissionChangeAction = "frozen"
+	SubmissionChangeActionNotSubmitted SubmissionChangeAction = "not_submitted"
+	SubmissionChangeActionReviewed     SubmissionChangeAction = "reviewed"
+	SubmissionChangeActionSubmitted    SubmissionChangeAction = "submitted"
+	SubmissionChangeActionWithdrawn    SubmissionChangeAction = "withdrawn"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionChangeAction enum.
+func (e SubmissionChangeAction) Valid() bool {
+	switch e {
+	case SubmissionChangeActionFrozen:
+		return true
+	case SubmissionChangeActionNotSubmitted:
+		return true
+	case SubmissionChangeActionReviewed:
+		return true
+	case SubmissionChangeActionSubmitted:
+		return true
+	case SubmissionChangeActionWithdrawn:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionDefinitionAudience.
+const (
+	SubmissionDefinitionAudienceJudge     SubmissionDefinitionAudience = "judge"
+	SubmissionDefinitionAudienceMentor    SubmissionDefinitionAudience = "mentor"
+	SubmissionDefinitionAudienceOrganiser SubmissionDefinitionAudience = "organiser"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionDefinitionAudience enum.
+func (e SubmissionDefinitionAudience) Valid() bool {
+	switch e {
+	case SubmissionDefinitionAudienceJudge:
+		return true
+	case SubmissionDefinitionAudienceMentor:
+		return true
+	case SubmissionDefinitionAudienceOrganiser:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionDefinitionEvidenceKinds.
+const (
+	SubmissionDefinitionEvidenceKindsFile       SubmissionDefinitionEvidenceKinds = "file"
+	SubmissionDefinitionEvidenceKindsRepository SubmissionDefinitionEvidenceKinds = "repository"
+	SubmissionDefinitionEvidenceKindsUrl        SubmissionDefinitionEvidenceKinds = "url"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionDefinitionEvidenceKinds enum.
+func (e SubmissionDefinitionEvidenceKinds) Valid() bool {
+	switch e {
+	case SubmissionDefinitionEvidenceKindsFile:
+		return true
+	case SubmissionDefinitionEvidenceKindsRepository:
+		return true
+	case SubmissionDefinitionEvidenceKindsUrl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionEvidenceKind.
+const (
+	SubmissionEvidenceKindFile       SubmissionEvidenceKind = "file"
+	SubmissionEvidenceKindRepository SubmissionEvidenceKind = "repository"
+	SubmissionEvidenceKindUrl        SubmissionEvidenceKind = "url"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionEvidenceKind enum.
+func (e SubmissionEvidenceKind) Valid() bool {
+	switch e {
+	case SubmissionEvidenceKindFile:
+		return true
+	case SubmissionEvidenceKindRepository:
+		return true
+	case SubmissionEvidenceKindUrl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionOutcomeInputOutcome.
+const (
+	SubmissionOutcomeInputOutcomeNotSubmitted SubmissionOutcomeInputOutcome = "not_submitted"
+	SubmissionOutcomeInputOutcomeWithdrawn    SubmissionOutcomeInputOutcome = "withdrawn"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionOutcomeInputOutcome enum.
+func (e SubmissionOutcomeInputOutcome) Valid() bool {
+	switch e {
+	case SubmissionOutcomeInputOutcomeNotSubmitted:
+		return true
+	case SubmissionOutcomeInputOutcomeWithdrawn:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionPageOutcome.
+const (
+	SubmissionPageOutcomeFrozen       SubmissionPageOutcome = "frozen"
+	SubmissionPageOutcomeNotSubmitted SubmissionPageOutcome = "not_submitted"
+	SubmissionPageOutcomeOpen         SubmissionPageOutcome = "open"
+	SubmissionPageOutcomeWithdrawn    SubmissionPageOutcome = "withdrawn"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionPageOutcome enum.
+func (e SubmissionPageOutcome) Valid() bool {
+	switch e {
+	case SubmissionPageOutcomeFrozen:
+		return true
+	case SubmissionPageOutcomeNotSubmitted:
+		return true
+	case SubmissionPageOutcomeOpen:
+		return true
+	case SubmissionPageOutcomeWithdrawn:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionReviewInputStatus.
+const (
+	SubmissionReviewInputStatusAccepted         SubmissionReviewInputStatus = "accepted"
+	SubmissionReviewInputStatusChangesRequested SubmissionReviewInputStatus = "changes_requested"
+	SubmissionReviewInputStatusPending          SubmissionReviewInputStatus = "pending"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionReviewInputStatus enum.
+func (e SubmissionReviewInputStatus) Valid() bool {
+	switch e {
+	case SubmissionReviewInputStatusAccepted:
+		return true
+	case SubmissionReviewInputStatusChangesRequested:
+		return true
+	case SubmissionReviewInputStatusPending:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SubmissionRevisionReviewStatus.
+const (
+	SubmissionRevisionReviewStatusAccepted         SubmissionRevisionReviewStatus = "accepted"
+	SubmissionRevisionReviewStatusChangesRequested SubmissionRevisionReviewStatus = "changes_requested"
+	SubmissionRevisionReviewStatusPending          SubmissionRevisionReviewStatus = "pending"
+)
+
+// Valid indicates whether the value is a known member of the SubmissionRevisionReviewStatus enum.
+func (e SubmissionRevisionReviewStatus) Valid() bool {
+	switch e {
+	case SubmissionRevisionReviewStatusAccepted:
+		return true
+	case SubmissionRevisionReviewStatusChangesRequested:
+		return true
+	case SubmissionRevisionReviewStatusPending:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TeamCommandAction.
 const (
 	TeamCommandActionApprove TeamCommandAction = "approve"
@@ -696,6 +870,48 @@ func (e TemplateAssetMediaType) Valid() bool {
 	case TemplateAssetMediaTypeImagejpeg:
 		return true
 	case TemplateAssetMediaTypeImagepng:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateDeliverableAudience.
+const (
+	TemplateDeliverableAudienceJudge     TemplateDeliverableAudience = "judge"
+	TemplateDeliverableAudienceMentor    TemplateDeliverableAudience = "mentor"
+	TemplateDeliverableAudienceOrganiser TemplateDeliverableAudience = "organiser"
+)
+
+// Valid indicates whether the value is a known member of the TemplateDeliverableAudience enum.
+func (e TemplateDeliverableAudience) Valid() bool {
+	switch e {
+	case TemplateDeliverableAudienceJudge:
+		return true
+	case TemplateDeliverableAudienceMentor:
+		return true
+	case TemplateDeliverableAudienceOrganiser:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TemplateDeliverableEvidenceKinds.
+const (
+	TemplateDeliverableEvidenceKindsFile       TemplateDeliverableEvidenceKinds = "file"
+	TemplateDeliverableEvidenceKindsRepository TemplateDeliverableEvidenceKinds = "repository"
+	TemplateDeliverableEvidenceKindsUrl        TemplateDeliverableEvidenceKinds = "url"
+)
+
+// Valid indicates whether the value is a known member of the TemplateDeliverableEvidenceKinds enum.
+func (e TemplateDeliverableEvidenceKinds) Valid() bool {
+	switch e {
+	case TemplateDeliverableEvidenceKindsFile:
+		return true
+	case TemplateDeliverableEvidenceKindsRepository:
+		return true
+	case TemplateDeliverableEvidenceKindsUrl:
 		return true
 	default:
 		return false
@@ -1667,6 +1883,129 @@ type StaffPage struct {
 // StaffRole defines model for StaffRole.
 type StaffRole string
 
+// SubmissionChange defines model for SubmissionChange.
+type SubmissionChange struct {
+	Action         SubmissionChangeAction `json:"action"`
+	ActiveRevision *int64                 `json:"active_revision"`
+	ActorId        *openapi_types.UUID    `json:"actor_id"`
+	At             time.Time              `json:"at"`
+	Reason         string                 `json:"reason"`
+	ReviewStatus   string                 `json:"review_status"`
+	Revision       int64                  `json:"revision"`
+	Submission     *SubmissionRevision    `json:"submission"`
+}
+
+// SubmissionChangeAction defines model for SubmissionChange.Action.
+type SubmissionChangeAction string
+
+// SubmissionCommand defines model for SubmissionCommand.
+type SubmissionCommand struct {
+	Evidence []SubmissionEvidence `json:"evidence"`
+	Reason   string               `json:"reason"`
+}
+
+// SubmissionDefinition defines model for SubmissionDefinition.
+type SubmissionDefinition struct {
+	Audience      *[]SubmissionDefinitionAudience      `json:"audience,omitempty"`
+	Description   string                               `json:"description"`
+	DueAt         time.Time                            `json:"due_at"`
+	EvidenceKinds *[]SubmissionDefinitionEvidenceKinds `json:"evidence_kinds,omitempty"`
+	Id            openapi_types.UUID                   `json:"id"`
+	Required      bool                                 `json:"required"`
+	ScheduleId    *openapi_types.UUID                  `json:"schedule_id,omitempty"`
+	Title         string                               `json:"title"`
+}
+
+// SubmissionDefinitionAudience defines model for SubmissionDefinition.Audience.
+type SubmissionDefinitionAudience string
+
+// SubmissionDefinitionEvidenceKinds defines model for SubmissionDefinition.EvidenceKinds.
+type SubmissionDefinitionEvidenceKinds string
+
+// SubmissionDraft defines model for SubmissionDraft.
+type SubmissionDraft struct {
+	Evidence  []SubmissionEvidence `json:"evidence"`
+	Revision  int64                `json:"revision"`
+	UpdatedAt *time.Time           `json:"updated_at"`
+}
+
+// SubmissionDraftInput defines model for SubmissionDraftInput.
+type SubmissionDraftInput struct {
+	Evidence []SubmissionEvidence `json:"evidence"`
+}
+
+// SubmissionEvidence defines model for SubmissionEvidence.
+type SubmissionEvidence struct {
+	DeliverableId openapi_types.UUID     `json:"deliverable_id"`
+	FileId        *openapi_types.UUID    `json:"file_id"`
+	Kind          SubmissionEvidenceKind `json:"kind"`
+	Label         string                 `json:"label"`
+	Url           string                 `json:"url"`
+}
+
+// SubmissionEvidenceKind defines model for SubmissionEvidence.Kind.
+type SubmissionEvidenceKind string
+
+// SubmissionHistory defines model for SubmissionHistory.
+type SubmissionHistory struct {
+	Items      []SubmissionChange `json:"items"`
+	NextCursor *int64             `json:"next_cursor"`
+}
+
+// SubmissionOutcomeInput defines model for SubmissionOutcomeInput.
+type SubmissionOutcomeInput struct {
+	Outcome SubmissionOutcomeInputOutcome `json:"outcome"`
+	Reason  string                        `json:"reason"`
+}
+
+// SubmissionOutcomeInputOutcome defines model for SubmissionOutcomeInput.Outcome.
+type SubmissionOutcomeInputOutcome string
+
+// SubmissionPage defines model for SubmissionPage.
+type SubmissionPage struct {
+	CanDraft      bool                   `json:"can_draft"`
+	CanReview     bool                   `json:"can_review"`
+	CanSubmit     bool                   `json:"can_submit"`
+	Cutoff        time.Time              `json:"cutoff"`
+	Definitions   []SubmissionDefinition `json:"definitions"`
+	EntryId       openapi_types.UUID     `json:"entry_id"`
+	EventRevision int64                  `json:"event_revision"`
+	Final         *SubmissionRevision    `json:"final"`
+	FrozenAt      *time.Time             `json:"frozen_at"`
+	LiveStart     time.Time              `json:"live_start"`
+	Outcome       SubmissionPageOutcome  `json:"outcome"`
+	Revision      int64                  `json:"revision"`
+	TeamId        openapi_types.UUID     `json:"team_id"`
+}
+
+// SubmissionPageOutcome defines model for SubmissionPage.Outcome.
+type SubmissionPageOutcome string
+
+// SubmissionReviewInput defines model for SubmissionReviewInput.
+type SubmissionReviewInput struct {
+	Reason             string                      `json:"reason"`
+	Status             SubmissionReviewInputStatus `json:"status"`
+	SubmissionRevision int64                       `json:"submission_revision"`
+}
+
+// SubmissionReviewInputStatus defines model for SubmissionReviewInput.Status.
+type SubmissionReviewInputStatus string
+
+// SubmissionRevision defines model for SubmissionRevision.
+type SubmissionRevision struct {
+	ActorId      openapi_types.UUID             `json:"actor_id"`
+	Definitions  []SubmissionDefinition         `json:"definitions"`
+	Evidence     []SubmissionEvidence           `json:"evidence"`
+	Late         bool                           `json:"late"`
+	Reason       string                         `json:"reason"`
+	ReviewStatus SubmissionRevisionReviewStatus `json:"review_status"`
+	Revision     int64                          `json:"revision"`
+	SubmittedAt  time.Time                      `json:"submitted_at"`
+}
+
+// SubmissionRevisionReviewStatus defines model for SubmissionRevision.ReviewStatus.
+type SubmissionRevisionReviewStatus string
+
 // TeamCommand defines model for TeamCommand.
 type TeamCommand struct {
 	Action         TeamCommandAction   `json:"action"`
@@ -1759,12 +2098,23 @@ type TemplateCriterion struct {
 
 // TemplateDeliverable defines model for TemplateDeliverable.
 type TemplateDeliverable struct {
-	Description string              `json:"description"`
-	Id          openapi_types.UUID  `json:"id"`
-	Required    bool                `json:"required"`
-	ScheduleId  *openapi_types.UUID `json:"schedule_id,omitempty"`
-	Title       string              `json:"title"`
+	// Audience Allowed reviewer roles; current team members and organisers retain access. Empty uses all reviewer roles. Role grants also require current resource assignment.
+	Audience    *[]TemplateDeliverableAudience `json:"audience,omitempty"`
+	Description string                         `json:"description"`
+
+	// EvidenceKinds Empty means any supported evidence kind.
+	EvidenceKinds *[]TemplateDeliverableEvidenceKinds `json:"evidence_kinds,omitempty"`
+	Id            openapi_types.UUID                  `json:"id"`
+	Required      bool                                `json:"required"`
+	ScheduleId    *openapi_types.UUID                 `json:"schedule_id,omitempty"`
+	Title         string                              `json:"title"`
 }
+
+// TemplateDeliverableAudience defines model for TemplateDeliverable.Audience.
+type TemplateDeliverableAudience string
+
+// TemplateDeliverableEvidenceKinds defines model for TemplateDeliverable.EvidenceKinds.
+type TemplateDeliverableEvidenceKinds string
 
 // TemplateField defines model for TemplateField.
 type TemplateField struct {
@@ -1992,6 +2342,12 @@ type UploadFileJSONBody struct {
 	Content   []byte                      `json:"content"`
 	Filename  string                      `json:"filename"`
 	MediaType UploadFileJSONBodyMediaType `json:"media_type"`
+
+	// Reason Required for organiser team uploads after the shared cutoff.
+	Reason *string `json:"reason,omitempty"`
+
+	// TeamId Optional team scope. Requires current published membership or authorised organiser submission work.
+	TeamId *openapi_types.UUID `json:"team_id,omitempty"`
 }
 
 // UploadFileParams defines parameters for UploadFile.
@@ -2193,6 +2549,44 @@ type ChangeTeamsParams struct {
 	IfMatch Revision `json:"If-Match"`
 }
 
+// SubmitTeamEvidenceParams defines parameters for SubmitTeamEvidence.
+type SubmitTeamEvidenceParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+	IfMatch string `json:"If-Match"`
+}
+
+// SaveTeamDraftParams defines parameters for SaveTeamDraft.
+type SaveTeamDraftParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+	IfMatch string `json:"If-Match"`
+}
+
+// TeamSubmissionHistoryParams defines parameters for TeamSubmissionHistory.
+type TeamSubmissionHistoryParams struct {
+	Before *int64 `form:"before,omitempty" json:"before,omitempty"`
+	Limit  *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SetSubmissionOutcomeParams defines parameters for SetSubmissionOutcome.
+type SetSubmissionOutcomeParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+	IfMatch string `json:"If-Match"`
+}
+
+// ReviewTeamSubmissionParams defines parameters for ReviewTeamSubmission.
+type ReviewTeamSubmissionParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record.
+	IfMatch string `json:"If-Match"`
+}
+
 // TransitionEventJSONBody defines parameters for TransitionEvent.
 type TransitionEventJSONBody struct {
 	AttendanceException bool                         `json:"attendance_exception"`
@@ -2356,6 +2750,18 @@ type ChangeStaffJSONRequestBody = StaffChange
 
 // ChangeTeamsJSONRequestBody defines body for ChangeTeams for application/json ContentType.
 type ChangeTeamsJSONRequestBody = TeamCommand
+
+// SubmitTeamEvidenceJSONRequestBody defines body for SubmitTeamEvidence for application/json ContentType.
+type SubmitTeamEvidenceJSONRequestBody = SubmissionCommand
+
+// SaveTeamDraftJSONRequestBody defines body for SaveTeamDraft for application/json ContentType.
+type SaveTeamDraftJSONRequestBody = SubmissionDraftInput
+
+// SetSubmissionOutcomeJSONRequestBody defines body for SetSubmissionOutcome for application/json ContentType.
+type SetSubmissionOutcomeJSONRequestBody = SubmissionOutcomeInput
+
+// ReviewTeamSubmissionJSONRequestBody defines body for ReviewTeamSubmission for application/json ContentType.
+type ReviewTeamSubmissionJSONRequestBody = SubmissionReviewInput
 
 // TransitionEventJSONRequestBody defines body for TransitionEvent for application/json ContentType.
 type TransitionEventJSONRequestBody TransitionEventJSONBody
@@ -2542,6 +2948,27 @@ type ServerInterface interface {
 
 	// (POST /api/v1/events/{event_id}/teams)
 	ChangeTeams(w http.ResponseWriter, r *http.Request, eventId EventID, params ChangeTeamsParams)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission)
+	GetTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID)
+
+	// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission)
+	SubmitTeamEvidence(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SubmitTeamEvidenceParams)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+	GetTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID)
+
+	// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+	SaveTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SaveTeamDraftParams)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/history)
+	TeamSubmissionHistory(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params TeamSubmissionHistoryParams)
+
+	// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/outcome)
+	SetSubmissionOutcome(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SetSubmissionOutcomeParams)
+
+	// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/review)
+	ReviewTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params ReviewTeamSubmissionParams)
 
 	// (POST /api/v1/events/{event_id}/transition)
 	TransitionEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params TransitionEventParams)
@@ -2865,6 +3292,41 @@ func (_ Unimplemented) GetTeams(w http.ResponseWriter, r *http.Request, eventId 
 
 // (POST /api/v1/events/{event_id}/teams)
 func (_ Unimplemented) ChangeTeams(w http.ResponseWriter, r *http.Request, eventId EventID, params ChangeTeamsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/teams/{team_id}/submission)
+func (_ Unimplemented) GetTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission)
+func (_ Unimplemented) SubmitTeamEvidence(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SubmitTeamEvidenceParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+func (_ Unimplemented) GetTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+func (_ Unimplemented) SaveTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SaveTeamDraftParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/history)
+func (_ Unimplemented) TeamSubmissionHistory(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params TeamSubmissionHistoryParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/outcome)
+func (_ Unimplemented) SetSubmissionOutcome(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SetSubmissionOutcomeParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/review)
+func (_ Unimplemented) ReviewTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params ReviewTeamSubmissionParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6109,6 +6571,484 @@ func (siw *ServerInterfaceWrapper) ChangeTeams(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// GetTeamSubmission operation middleware
+func (siw *ServerInterfaceWrapper) GetTeamSubmission(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTeamSubmission(w, r, eventId, teamId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SubmitTeamEvidence operation middleware
+func (siw *ServerInterfaceWrapper) SubmitTeamEvidence(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SubmitTeamEvidenceParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SubmitTeamEvidence(w, r, eventId, teamId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTeamDraft operation middleware
+func (siw *ServerInterfaceWrapper) GetTeamDraft(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTeamDraft(w, r, eventId, teamId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SaveTeamDraft operation middleware
+func (siw *ServerInterfaceWrapper) SaveTeamDraft(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SaveTeamDraftParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SaveTeamDraft(w, r, eventId, teamId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// TeamSubmissionHistory operation middleware
+func (siw *ServerInterfaceWrapper) TeamSubmissionHistory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TeamSubmissionHistoryParams
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TeamSubmissionHistory(w, r, eventId, teamId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetSubmissionOutcome operation middleware
+func (siw *ServerInterfaceWrapper) SetSubmissionOutcome(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SetSubmissionOutcomeParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetSubmissionOutcome(w, r, eventId, teamId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReviewTeamSubmission operation middleware
+func (siw *ServerInterfaceWrapper) ReviewTeamSubmission(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "team_id" -------------
+	var teamId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "team_id", chi.URLParam(r, "team_id"), &teamId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "team_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ReviewTeamSubmissionParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReviewTeamSubmission(w, r, eventId, teamId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // TransitionEvent operation middleware
 func (siw *ServerInterfaceWrapper) TransitionEvent(w http.ResponseWriter, r *http.Request) {
 
@@ -7067,6 +8007,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/v1/account/github/authorize", wrapper.AuthorizeGitHub)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission", wrapper.GetTeamSubmission)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission", wrapper.SubmitTeamEvidence)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/draft", wrapper.GetTeamDraft)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/draft", wrapper.SaveTeamDraft)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/history", wrapper.TeamSubmissionHistory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/review", wrapper.ReviewTeamSubmission)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/outcome", wrapper.SetSubmissionOutcome)
 	})
 
 	return r
@@ -9572,6 +10533,323 @@ func (response ChangeTeamsdefaultJSONResponse) VisitChangeTeamsResponse(w http.R
 	return err
 }
 
+type GetTeamSubmissionRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+}
+
+type GetTeamSubmissionResponseObject interface {
+	VisitGetTeamSubmissionResponse(w http.ResponseWriter) error
+}
+
+type GetTeamSubmission200JSONResponse SubmissionPage
+
+func (response GetTeamSubmission200JSONResponse) VisitGetTeamSubmissionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTeamSubmissiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetTeamSubmissiondefaultJSONResponse) VisitGetTeamSubmissionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SubmitTeamEvidenceRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+	Params  SubmitTeamEvidenceParams
+	Body    *SubmitTeamEvidenceJSONRequestBody
+}
+
+type SubmitTeamEvidenceResponseObject interface {
+	VisitSubmitTeamEvidenceResponse(w http.ResponseWriter) error
+}
+
+type SubmitTeamEvidence200JSONResponse SubmissionPage
+
+func (response SubmitTeamEvidence200JSONResponse) VisitSubmitTeamEvidenceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SubmitTeamEvidencedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SubmitTeamEvidencedefaultJSONResponse) VisitSubmitTeamEvidenceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTeamDraftRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+}
+
+type GetTeamDraftResponseObject interface {
+	VisitGetTeamDraftResponse(w http.ResponseWriter) error
+}
+
+type GetTeamDraft200JSONResponse SubmissionDraft
+
+func (response GetTeamDraft200JSONResponse) VisitGetTeamDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTeamDraftdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetTeamDraftdefaultJSONResponse) VisitGetTeamDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveTeamDraftRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+	Params  SaveTeamDraftParams
+	Body    *SaveTeamDraftJSONRequestBody
+}
+
+type SaveTeamDraftResponseObject interface {
+	VisitSaveTeamDraftResponse(w http.ResponseWriter) error
+}
+
+type SaveTeamDraft200JSONResponse SubmissionDraft
+
+func (response SaveTeamDraft200JSONResponse) VisitSaveTeamDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveTeamDraftdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SaveTeamDraftdefaultJSONResponse) VisitSaveTeamDraftResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type TeamSubmissionHistoryRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+	Params  TeamSubmissionHistoryParams
+}
+
+type TeamSubmissionHistoryResponseObject interface {
+	VisitTeamSubmissionHistoryResponse(w http.ResponseWriter) error
+}
+
+type TeamSubmissionHistory200JSONResponse SubmissionHistory
+
+func (response TeamSubmissionHistory200JSONResponse) VisitTeamSubmissionHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type TeamSubmissionHistorydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response TeamSubmissionHistorydefaultJSONResponse) VisitTeamSubmissionHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetSubmissionOutcomeRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+	Params  SetSubmissionOutcomeParams
+	Body    *SetSubmissionOutcomeJSONRequestBody
+}
+
+type SetSubmissionOutcomeResponseObject interface {
+	VisitSetSubmissionOutcomeResponse(w http.ResponseWriter) error
+}
+
+type SetSubmissionOutcome200JSONResponse SubmissionPage
+
+func (response SetSubmissionOutcome200JSONResponse) VisitSetSubmissionOutcomeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetSubmissionOutcomedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SetSubmissionOutcomedefaultJSONResponse) VisitSetSubmissionOutcomeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ReviewTeamSubmissionRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TeamId  openapi_types.UUID `json:"team_id"`
+	Params  ReviewTeamSubmissionParams
+	Body    *ReviewTeamSubmissionJSONRequestBody
+}
+
+type ReviewTeamSubmissionResponseObject interface {
+	VisitReviewTeamSubmissionResponse(w http.ResponseWriter) error
+}
+
+type ReviewTeamSubmission200JSONResponse SubmissionPage
+
+func (response ReviewTeamSubmission200JSONResponse) VisitReviewTeamSubmissionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ReviewTeamSubmissiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ReviewTeamSubmissiondefaultJSONResponse) VisitReviewTeamSubmissionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type TransitionEventRequestObject struct {
 	EventId EventID `json:"event_id"`
 	Params  TransitionEventParams
@@ -10387,6 +11665,27 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/events/{event_id}/teams)
 	ChangeTeams(ctx context.Context, request ChangeTeamsRequestObject) (ChangeTeamsResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission)
+	GetTeamSubmission(ctx context.Context, request GetTeamSubmissionRequestObject) (GetTeamSubmissionResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission)
+	SubmitTeamEvidence(ctx context.Context, request SubmitTeamEvidenceRequestObject) (SubmitTeamEvidenceResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+	GetTeamDraft(ctx context.Context, request GetTeamDraftRequestObject) (GetTeamDraftResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/teams/{team_id}/submission/draft)
+	SaveTeamDraft(ctx context.Context, request SaveTeamDraftRequestObject) (SaveTeamDraftResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/teams/{team_id}/submission/history)
+	TeamSubmissionHistory(ctx context.Context, request TeamSubmissionHistoryRequestObject) (TeamSubmissionHistoryResponseObject, error)
+
+	// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/outcome)
+	SetSubmissionOutcome(ctx context.Context, request SetSubmissionOutcomeRequestObject) (SetSubmissionOutcomeResponseObject, error)
+
+	// (POST /api/v1/events/{event_id}/teams/{team_id}/submission/review)
+	ReviewTeamSubmission(ctx context.Context, request ReviewTeamSubmissionRequestObject) (ReviewTeamSubmissionResponseObject, error)
 
 	// (POST /api/v1/events/{event_id}/transition)
 	TransitionEvent(ctx context.Context, request TransitionEventRequestObject) (TransitionEventResponseObject, error)
@@ -12134,6 +13433,228 @@ func (sh *strictHandler) ChangeTeams(w http.ResponseWriter, r *http.Request, eve
 	}
 }
 
+// GetTeamSubmission operation middleware
+func (sh *strictHandler) GetTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID) {
+	var request GetTeamSubmissionRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTeamSubmission(ctx, request.(GetTeamSubmissionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTeamSubmission")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTeamSubmissionResponseObject); ok {
+		if err := validResponse.VisitGetTeamSubmissionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SubmitTeamEvidence operation middleware
+func (sh *strictHandler) SubmitTeamEvidence(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SubmitTeamEvidenceParams) {
+	var request SubmitTeamEvidenceRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+	request.Params = params
+
+	var body SubmitTeamEvidenceJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SubmitTeamEvidence(ctx, request.(SubmitTeamEvidenceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SubmitTeamEvidence")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SubmitTeamEvidenceResponseObject); ok {
+		if err := validResponse.VisitSubmitTeamEvidenceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTeamDraft operation middleware
+func (sh *strictHandler) GetTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID) {
+	var request GetTeamDraftRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTeamDraft(ctx, request.(GetTeamDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTeamDraft")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTeamDraftResponseObject); ok {
+		if err := validResponse.VisitGetTeamDraftResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SaveTeamDraft operation middleware
+func (sh *strictHandler) SaveTeamDraft(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SaveTeamDraftParams) {
+	var request SaveTeamDraftRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+	request.Params = params
+
+	var body SaveTeamDraftJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SaveTeamDraft(ctx, request.(SaveTeamDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SaveTeamDraft")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SaveTeamDraftResponseObject); ok {
+		if err := validResponse.VisitSaveTeamDraftResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// TeamSubmissionHistory operation middleware
+func (sh *strictHandler) TeamSubmissionHistory(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params TeamSubmissionHistoryParams) {
+	var request TeamSubmissionHistoryRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.TeamSubmissionHistory(ctx, request.(TeamSubmissionHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TeamSubmissionHistory")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(TeamSubmissionHistoryResponseObject); ok {
+		if err := validResponse.VisitTeamSubmissionHistoryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetSubmissionOutcome operation middleware
+func (sh *strictHandler) SetSubmissionOutcome(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params SetSubmissionOutcomeParams) {
+	var request SetSubmissionOutcomeRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+	request.Params = params
+
+	var body SetSubmissionOutcomeJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetSubmissionOutcome(ctx, request.(SetSubmissionOutcomeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetSubmissionOutcome")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetSubmissionOutcomeResponseObject); ok {
+		if err := validResponse.VisitSetSubmissionOutcomeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReviewTeamSubmission operation middleware
+func (sh *strictHandler) ReviewTeamSubmission(w http.ResponseWriter, r *http.Request, eventId EventID, teamId openapi_types.UUID, params ReviewTeamSubmissionParams) {
+	var request ReviewTeamSubmissionRequestObject
+
+	request.EventId = eventId
+	request.TeamId = teamId
+	request.Params = params
+
+	var body ReviewTeamSubmissionJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ReviewTeamSubmission(ctx, request.(ReviewTeamSubmissionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReviewTeamSubmission")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ReviewTeamSubmissionResponseObject); ok {
+		if err := validResponse.VisitReviewTeamSubmissionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // TransitionEvent operation middleware
 func (sh *strictHandler) TransitionEvent(w http.ResponseWriter, r *http.Request, eventId EventID, params TransitionEventParams) {
 	var request TransitionEventRequestObject
@@ -12568,161 +14089,179 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

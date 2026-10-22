@@ -28,11 +28,13 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	Submissions  submissions.Service
 	Attendance   attendance.Service
 	Preparation  preparation.Service
 	Teams        teams.Service
@@ -201,6 +203,8 @@ func (h handlers) UploadFile(
 		ctx,
 		files.Upload{
 			Actor:     actor(ctx).ID,
+			TeamID:    r.Body.TeamId,
+			Reason:    valueOrEmpty(r.Body.Reason),
 			Event:     r.EventId,
 			Key:       r.Params.IdempotencyKey,
 			Revision:  revision,
@@ -321,4 +325,11 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		status, code, message = 401, "login_failed", "Sign-in could not be completed. Start sign-in again."
 	}
 	writeError(w, r, status, code, message)
+}
+
+func valueOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

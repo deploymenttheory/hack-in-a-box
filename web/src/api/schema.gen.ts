@@ -1015,6 +1015,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTeamSubmission"];
+        put: operations["submitTeamEvidence"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTeamDraft"];
+        put: operations["saveTeamDraft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["teamSubmissionHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviewTeamSubmission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission/outcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setSubmissionOutcome"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1653,6 +1748,10 @@ export interface components {
             schedule_id?: string;
         };
         TemplateDeliverable: {
+            /** @description Empty means any supported evidence kind. */
+            evidence_kinds?: ("file" | "url" | "repository")[];
+            /** @description Allowed reviewer roles; current team members and organisers retain access. Empty uses all reviewer roles. Role grants also require current resource assignment. */
+            audience?: ("organiser" | "mentor" | "judge")[];
             /** Format: uuid */
             id: string;
             title: string;
@@ -1791,6 +1890,112 @@ export interface components {
         GitHubAuthorization: {
             /** Format: uri */
             url: string;
+        };
+        SubmissionDefinition: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            required: boolean;
+            /** Format: uuid */
+            schedule_id?: string;
+            /** Format: date-time */
+            due_at: string;
+            evidence_kinds?: ("file" | "url" | "repository")[];
+            audience?: ("organiser" | "mentor" | "judge")[];
+        };
+        SubmissionEvidence: {
+            /** Format: uuid */
+            deliverable_id: string;
+            /** @enum {string} */
+            kind: "file" | "url" | "repository";
+            label: string;
+            url: string;
+            /** Format: uuid */
+            file_id: string | null;
+        };
+        SubmissionDraftInput: {
+            evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        SubmissionCommand: {
+            evidence: components["schemas"]["SubmissionEvidence"][];
+            reason: string;
+        };
+        SubmissionReviewInput: {
+            /** Format: int64 */
+            submission_revision: number;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "changes_requested";
+            reason: string;
+        };
+        SubmissionOutcomeInput: {
+            /** @enum {string} */
+            outcome: "withdrawn" | "not_submitted";
+            reason: string;
+        };
+        SubmissionDraft: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            updated_at: string | null;
+            evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        SubmissionRevision: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            submitted_at: string;
+            late: boolean;
+            reason: string;
+            /** @enum {string} */
+            review_status: "pending" | "accepted" | "changes_requested";
+            definitions: components["schemas"]["SubmissionDefinition"][];
+            evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        SubmissionPage: {
+            /** Format: int64 */
+            event_revision: number;
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            entry_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            outcome: "open" | "frozen" | "not_submitted" | "withdrawn";
+            /** Format: date-time */
+            frozen_at: string | null;
+            can_draft: boolean;
+            can_submit: boolean;
+            can_review: boolean;
+            /** Format: date-time */
+            live_start: string;
+            /** Format: date-time */
+            cutoff: string;
+            definitions: components["schemas"]["SubmissionDefinition"][];
+            final: components["schemas"]["SubmissionRevision"] | null;
+        };
+        SubmissionChange: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            actor_id: string | null;
+            /** @enum {string} */
+            action: "submitted" | "frozen" | "not_submitted" | "withdrawn" | "reviewed";
+            /** Format: int64 */
+            active_revision: number | null;
+            review_status: string;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+            submission: components["schemas"]["SubmissionRevision"] | null;
+        };
+        SubmissionHistory: {
+            items: components["schemas"]["SubmissionChange"][];
+            /** Format: int64 */
+            next_cursor: number | null;
         };
     };
     responses: {
@@ -1982,6 +2187,13 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description Optional team scope. Requires current published membership or authorised organiser submission work.
+                     */
+                    team_id?: string;
+                    /** @description Required for organiser team uploads after the shared cutoff. */
+                    reason?: string;
                     filename: string;
                     /** @enum {string} */
                     media_type: "application/pdf" | "image/png" | "image/jpeg" | "text/plain";
@@ -3755,6 +3967,209 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GitHubAuthorization"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeamSubmission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    submitTeamEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionCommand"];
+            };
+        };
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeamDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionDraft"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveTeamDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionDraft"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    teamSubmissionHistory: {
+        parameters: {
+            query?: {
+                before?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    reviewTeamSubmission: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewInput"];
+            };
+        };
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setSubmissionOutcome: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted submission state revision, or private draft revision for the draft route. Use zero for a new record. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionOutcomeInput"];
+            };
+        };
+        responses: {
+            /** @description Current authorised submission result. Private drafts are never accepted competition evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionPage"];
                 };
             };
             default: components["responses"]["Error"];

@@ -22,8 +22,9 @@ import (
 )
 
 type Service struct {
-	Pool  *pgxpool.Pool
-	Clock func() time.Time
+	Pool              *pgxpool.Pool
+	Clock             func() time.Time
+	SettleSubmissions func(context.Context, pgx.Tx, dbgen.Event, time.Time) error
 }
 
 func (s Service) now() time.Time {
@@ -357,6 +358,22 @@ func (s Service) Update(
 		if err := s.rescheduleRules(row, previous, input); err != nil {
 			return err
 		}
+		deadlineChanged, err := submissionDeadlineChange(
+			ctx,
+			q,
+			row,
+			previous,
+			input.Configuration,
+			input.Reason,
+		)
+		if err != nil {
+			return err
+		}
+		if s.SettleSubmissions != nil {
+			if err := s.SettleSubmissions(ctx, tx, row, s.now()); err != nil {
+				return fmt.Errorf("settle before rescheduling: %w", err)
+			}
+		}
 		data, err := json.Marshal(input.Configuration)
 		if err != nil {
 			return fmt.Errorf("encode configuration: %w", err)
@@ -389,6 +406,19 @@ func (s Service) Update(
 				return err
 			}
 			if err := notice(ctx, tx, id, changed.Revision, input.Configuration); err != nil {
+				return err
+			}
+		}
+		if deadlineChanged {
+			if err := s.decision(
+				ctx,
+				q,
+				actor,
+				id,
+				"deliverable_deadline_change",
+				input.Reason,
+				changed.Revision,
+			); err != nil {
 				return err
 			}
 		}
@@ -478,7 +508,7 @@ func (s Service) Transition(
 	attendanceException bool,
 ) (View, error) {
 	var result View
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		row, err := q.LockEvent(ctx, id)
 		if err != nil {
 			return fmt.Errorf("lock lifecycle: %w", err)
@@ -509,6 +539,11 @@ func (s Service) Transition(
 		c, err := decode(row)
 		if err != nil {
 			return fmt.Errorf("decode lifecycle configuration: %w", err)
+		}
+		if to == "assessment" && s.SettleSubmissions != nil {
+			if err := s.SettleSubmissions(ctx, tx, row, s.now()); err != nil {
+				return fmt.Errorf("settle assessment submissions: %w", err)
+			}
 		}
 		f, err := q.EventFacts(ctx, id)
 		if err != nil {
