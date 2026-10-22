@@ -133,3 +133,45 @@ pagination, audited exports and sensitive-field projections. HTTP tests validate
 the generated request/response schemas, CSRF, current permissions, per-day revision
 conflicts, export headers and withdrawal behavior. Existing privacy retention tests
 also include the new fields.
+
+## Attendance and venue readiness screens — #53
+
+The attendance workspace supports name/status search, keyboard check-in and
+reasoned corrections for each local hack day. It shows confirmed competitors and
+their configured minimum separately from physical arrivals, staff and deduplicated
+catering totals. The source roster observation time and timezone remain visible.
+Organisers can configure buffer places; a stale event revision preserves the
+proposed value and requires loading current headcounts before saving again.
+
+An interrupted initial arrival retains its request UUID for retry. Corrections
+show history, retain drafts on errors and require explicit review of the latest
+arrival after a revision conflict. Current permissions disable further edits when
+revoked. Unsaved corrections cannot silently disappear during navigation.
+
+Restricted logistics is a separate, explicitly authorised screen. It loads contact,
+dietary, accessibility, travel and social details only while open, discards inactive
+query pages immediately and does not write private data to browser storage. Search
+is scoped to the current page. Each downloaded page uses the audited export API and
+rechecks current permissions. Returning to shared check-in removes those fields.
+Unknown social attendance remains visibly unconfirmed.
+
+Venue, AV and catering presets reuse preparation tasks and require a named owner
+and deadline. The organiser overview displays logistics blockers with those owners
+and local due times. Logistics assignees have a progress-only checklist editor,
+without staff-directory access or definition/waiver controls. Progress requires a
+valid owner and deadline; conflict review preserves current task structure and new
+checklist items. These tasks do not override the confirmed-competitor go decision.
+
+Local verification: production build, zero-warning ESLint, five component tests and
+all 86 desktop/mobile browser scenarios passed, including 20 new attendance and
+logistics cases. The browser fixtures cover keyboard use, independent days, retry
+identifiers, correction history/conflicts, unsaved drafts, revoked permissions,
+buffer revisions, restricted pagination/export, checklist assignment and progress,
+and organiser readiness. The PostgreSQL transaction, authorisation and concurrency
+coverage is supplied by the merged #47/#52 integration suites and the PR's full Go
+race-test job. This ticket changes no backend API or database schema.
+
+Synthetic screenshots were inspected on desktop and mobile, including narrow-screen
+wrapping and absence of horizontal overflow. Evidence:
+[desktop readiness](media/attendance-readiness-desktop.png) and
+[mobile logistics checklist](media/attendance-checklist-mobile.png).

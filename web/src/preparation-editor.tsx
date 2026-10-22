@@ -27,7 +27,7 @@ function values(task: PreparationTask, timezone: string): TaskValues {
   return { definition: task.definition, reason: '', override_dependencies: false, due: wallTime(task.definition.fixed_due_at ?? undefined, timezone), dst_choice: '' }
 }
 
-export function TaskEditor({ event, initial, revision, page, owners, onDirty, close }: { event: EventRecord; initial: PreparationTask; revision: number; page: PreparationPage; owners: Owner[]; onDirty: (dirty: boolean) => void; close: () => void }) {
+export function TaskEditor({ event, initial, revision, page, owners, onDirty, close, requireAssignment = false }: { requireAssignment?: boolean; event: EventRecord; initial: PreparationTask; revision: number; page: PreparationPage; owners: Owner[]; onDirty: (dirty: boolean) => void; close: () => void }) {
   const identity = useIdentity(), cache = useQueryClient()
   const [baseRevision, setBaseRevision] = useState(revision), [saved, setSaved] = useState(initial), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState('')
   const [latest, setLatest] = useState<PreparationPage>(), [ack, setAck] = useState(false), [uploading, setUploading] = useState(false), [reviewing, setReviewing] = useState(false)
@@ -54,6 +54,7 @@ export function TaskEditor({ event, initial, revision, page, owners, onDirty, cl
   async function save(v: TaskValues) {
     if (!canEdit || (conflict && (!latest || !ack))) return
     setNotice('')
+    if ((requireAssignment || (v.definition.owner_role === 'logistics' && v.definition.status === 'blocked')) && (!v.definition.owner_id || (!v.definition.schedule_id && !v.due))) { form.setError('root', { message: 'Assign a named owner and a deadline for this operational checklist.' }); return }
     try {
       let due = v.definition.fixed_due_at
       if (!v.definition.schedule_id && v.due !== wallTime(v.definition.fixed_due_at ?? undefined, page.timezone)) {
@@ -79,7 +80,7 @@ export function TaskEditor({ event, initial, revision, page, owners, onDirty, cl
     <TaskEvidence form={form} eventID={event.id} revision={conflict && latest && ack ? latest.revision : baseRevision} reportFailure={setFailure} disabled={!canEdit || form.formState.isSubmitting || reviewing} uploading={uploading} setUploading={setUploading} />
     {saved.restricted_evidence_count > 0 && <p>{saved.restricted_evidence_count} restricted evidence items are hidden.</p>}
     <fieldset disabled={!canEdit || busy}><legend>Decision record</legend><label htmlFor="task-reason">Reason for this change</label><textarea id="task-reason" maxLength={2000} {...form.register('reason')} /><p>Required for blocking, completion, waivers and overrides. A task waiver does not change an event gate.</p>{definition.status === 'complete' && <label className="check"><input type="checkbox" {...form.register('override_dependencies')} />Override unfinished dependencies or checklist items with this reason</label>}</fieldset>
-    {Object.keys(form.formState.errors).length > 0 && <div role="alert" className="field-error">{form.formState.errors.reason?.message ?? 'Check the task title, checklist labels and evidence links before saving.'}</div>}
+    {Object.keys(form.formState.errors).length > 0 && <div role="alert" className="field-error">{form.formState.errors.root?.message ?? form.formState.errors.reason?.message ?? 'Check the task title, checklist labels and evidence links before saving.'}</div>}
     {conflict ? <section className="panel" role="alert"><h3>Another change was saved</h3><p>Your draft is preserved. Review the latest saved version before applying it again.</p><Button type="button" variant="outline" disabled={busy} onClick={() => void reviewLatest()}>Review latest version</Button>{latest && <><SavedComparison all={latest.items} task={latest.items.find(t => t.definition.id === initial.definition.id)} event={event} owners={owners} /><label className="check"><input type="checkbox" checked={ack} onChange={e => setAck(e.target.checked)} />I reviewed the latest version and want to apply my draft.</label></>}</section> : !!failure && <Failure error={failure} />}
     <div className="actions"><Button type="submit" disabled={!canEdit || busy || (conflict && (!latest || !ack))}>Save task</Button></div>{notice && <p role="status">{notice}</p>}
     {saved.revision > 0 && <TaskHistory event={event} taskID={initial.definition.id} owners={owners} />}

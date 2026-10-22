@@ -13,10 +13,24 @@ function newTask(): PreparationTask {
   return { definition: { id: crypto.randomUUID(), title: '', description: '', owner_id: null, owner_role: '', status: 'not_started', schedule_id: null, fixed_due_at: null, depends_on: [], checklist: [], evidence: [] }, reason: '', override_dependencies: false, revision: 0, due_at: null, scheduling_issue: false, blocked: false, overdue: false, unowned: true, can_edit: true, restricted_evidence_count: 0, hidden_dependencies: 0 }
 }
 
+const operationalChecks = {
+  Venue: ['Confirm venue access and opening times', 'Check accessible facilities and routes', 'Verify connectivity and power'],
+  AV: ['Test display and audio', 'Check presentation connections', 'Prepare spare cables and adapters'],
+  Catering: ['Review the confirmed roster cutoff and catering buffer', 'Confirm dietary arrangements through restricted logistics', 'Confirm delivery and serving times'],
+} as const
+function operationalTask(kind: keyof typeof operationalChecks, event: EventRecord) {
+  const task = newTask()
+  task.definition.title = `${kind} readiness`
+  task.definition.owner_role = 'logistics'
+  task.definition.fixed_due_at = event.configuration.live_start.startsWith('0001-') ? null : event.configuration.live_start
+  task.definition.checklist = operationalChecks[kind].map(title => ({ id: crypto.randomUUID(), title, complete: false }))
+  return task
+}
+
 export function PreparationBoard({ event, onDirty, openSection }: { event: EventRecord; onDirty: (dirty: boolean) => void; openSection: (section: string) => void }) {
   const identity = useIdentity()
   const [view, setView] = useState('board'), [status, setStatus] = useState(''), [owner, setOwner] = useState(''), [role, setRole] = useState(''), [flag, setFlag] = useState('')
-  const [selected, setSelected] = useState<{ task: PreparationTask; revision: number; selection: string }>(), [dirty, setDirty] = useState(false)
+  const [selected, setSelected] = useState<{ task: PreparationTask; revision: number; selection: string; requireAssignment: boolean }>(), [dirty, setDirty] = useState(false)
   const query = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'preparation'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/preparation/tasks', { params: { path: { event_id: event.id } } })), refetchOnWindowFocus: 'always' })
   const staff = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'staff'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/staff', { params: { path: { event_id: event.id } } })) })
   const teams = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'teams'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/teams', { params: { path: { event_id: event.id } } })) })
@@ -26,11 +40,12 @@ export function PreparationBoard({ event, onDirty, openSection }: { event: Event
   const page = query.data
   const owners: Owner[] = [...new Map([...(staff.data?.items.filter(p => p.active).map(p => ({ id: p.person_id, name: p.display_name })) ?? []), ...(teams.data?.people ?? [])].map(p => [p.id, p])).values()]
   const items = page.items.filter(t => (!status || t.definition.status === status) && (!owner || t.definition.owner_id === owner) && (!role || t.definition.owner_role === role) && (!flag || (flag === 'overdue' ? t.overdue : flag === 'blocked' ? t.blocked : t.unowned)))
-  function choose(task: PreparationTask) {
-    if (!dirty || window.confirm('Leave this task with unsaved changes?')) { setSelected({ task, revision: page.revision, selection: crypto.randomUUID() }); setDirty(false) }
+  function choose(task: PreparationTask, requireAssignment = false) {
+    if (!dirty || window.confirm('Leave this task with unsaved changes?')) { setSelected({ task, revision: page.revision, selection: crypto.randomUUID(), requireAssignment }); setDirty(false) }
   }
   function navigate(section: string) { if (!dirty || window.confirm('Leave this task with unsaved changes?')) openSection(section) }
   return <section className="preparation-workspace" aria-label="Event preparation"><div className="preparation-heading"><div><h2>Preparation</h2><p>Assign the work, resolve dependencies and keep the event ready.</p></div>{page.can_manage && <Button onClick={() => choose(newTask())}>New task</Button>}</div>
+    {page.can_manage && <div className="actions" aria-label="Operational checklist presets">{(Object.keys(operationalChecks) as (keyof typeof operationalChecks)[]).map(kind => <Button key={kind} variant="outline" onClick={() => choose(operationalTask(kind, event), true)}>New {kind.toLowerCase()} checklist</Button>)}</div>}
     <Readiness event={event} openSection={navigate} />
     <div className="actions" aria-label="Preparation views">{['board', 'list', 'run sheet'].map(v => <Button key={v} variant={view === v ? 'default' : 'outline'} aria-pressed={view === v} onClick={() => setView(v)}>{v[0].toUpperCase() + v.slice(1)}</Button>)}</div>
     <div className="preparation-filters"><div><label htmlFor="task-filter-status">Filter by status</label><select id="task-filter-status" value={status} onChange={e => setStatus(e.target.value)}><option value="">All statuses</option>{taskStatuses.map(s => <option key={s} value={s}>{words(s)}</option>)}</select></div>
@@ -41,7 +56,7 @@ export function PreparationBoard({ event, onDirty, openSection }: { event: Event
     <p role="status">{items.length} of {page.items.length} tasks · Times in {page.timezone}</p>
     {view === 'run sheet' ? <RunSheet event={event} tasks={items} owners={owners} choose={choose} /> : view === 'board' ? <div className="preparation-columns">{taskStatuses.map(s => <section key={s} aria-label={`${words(s)} tasks`}><h3>{words(s)} <span className="badge">{items.filter(t => t.definition.status === s).length}</span></h3>{items.filter(t => t.definition.status === s).map(t => <TaskCard key={t.definition.id} task={t} all={page.items} owners={owners} timezone={page.timezone} choose={choose} />)}</section>)}</div> : <div className="preparation-list">{items.map(t => <TaskCard key={t.definition.id} task={t} all={page.items} owners={owners} timezone={page.timezone} choose={choose} />)}</div>}
     {!page.items.length && <p className="notice">No preparation tasks yet. Create a task to assign the next piece of work.</p>}
-    {selected && <TaskEditor key={selected.selection} event={event} initial={selected.task} revision={selected.revision} page={page} owners={owners} onDirty={setDirty} close={() => { if (!dirty || window.confirm('Leave this task with unsaved changes?')) setSelected(undefined) }} />}
+    {selected && <TaskEditor key={selected.selection} requireAssignment={selected.requireAssignment} event={event} initial={selected.task} revision={selected.revision} page={page} owners={owners} onDirty={setDirty} close={() => { if (!dirty || window.confirm('Leave this task with unsaved changes?')) setSelected(undefined) }} />}
   </section>
 }
 

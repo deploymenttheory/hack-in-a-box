@@ -141,3 +141,25 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .preparation-workspace [aria-label="Latest saved task"] { overflow-wrap: anywhere; }
 @media (max-width: 1000px) { .preparation-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .preparation-columns, .run-sheet > li, .checklist-row { grid-template-columns: 1fr; } .preparation-heading { flex-wrap: wrap; } }
+
+.attendance-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 28px 0 18px; }
+.attendance-counts > div { border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.attendance-counts dt { font-size: 14px; font-weight: 600; }
+.attendance-counts dd { font-size: 36px; font-weight: 650; margin: 10px 0; }
+.attendance-counts small { display: block; line-height: 1.6; }
+.attendance-workspace button, .logistics-workspace button { white-space: normal; height: auto; min-height: 40px; }
+.arrival-list { list-style: none; padding: 0; }
+.arrival-list > li { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.arrival-list > li > div { min-width: 0; overflow-wrap: anywhere; }
+.arrival-list p { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.arrival-list button { flex: 0 0 auto; max-width: 45%; }
+.logistics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; margin-top: 24px; }
+.logistics-grid article { overflow-wrap: anywhere; min-width: 0; }
+.logistics-grid h3 { margin-top: 0; }
+@media (max-width: 850px) { .attendance-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .attendance-counts { grid-template-columns: 1fr; } .arrival-list > li { align-items: flex-start; flex-direction: column; } .arrival-list button { max-width: 100%; } }
+
+.venue-readiness { margin-bottom: 24px; }
+.venue-readiness .item-list > li > div { min-width: 0; overflow-wrap: anywhere; }
+.venue-readiness button { white-space: normal; height: auto; min-height: 40px; }
+@media (max-width: 600px) { .venue-readiness .item-list > li { flex-direction: column; align-items: flex-start; } .venue-readiness .item-list button { max-width: 100%; } }
