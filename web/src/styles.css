@@ -280,3 +280,8 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 
 .campaign-composer > details.panel { margin-block: 20px; }
 .campaign-composer > details > summary { cursor: pointer; font-weight: 650; }
+
+.event-guidance { margin-block: 1.5rem; }
+.guidance-card, .guidance-contact { min-width: 0; overflow-wrap: anywhere; }
+.guidance-card li { margin-block: .5rem; }
+.guidance-contact { display: grid; gap: .5rem; margin-block: 1rem; }

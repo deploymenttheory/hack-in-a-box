@@ -300,6 +300,36 @@ func (q *Queries) ContentNotices(ctx context.Context, arg ContentNoticesParams) 
 	return items, nil
 }
 
+const contentPriorAcknowledgement = `-- name: ContentPriorAcknowledgement :one
+SELECT version,acknowledged_at FROM content_acknowledgements
+WHERE event_id=$1 AND content_id=$2 AND person_id=$3 AND version<$4::bigint
+ORDER BY version DESC LIMIT 1
+`
+
+type ContentPriorAcknowledgementParams struct {
+	EventID   uuid.UUID
+	ContentID uuid.UUID
+	PersonID  uuid.UUID
+	Version   int64
+}
+
+type ContentPriorAcknowledgementRow struct {
+	Version        int64
+	AcknowledgedAt time.Time
+}
+
+func (q *Queries) ContentPriorAcknowledgement(ctx context.Context, arg ContentPriorAcknowledgementParams) (ContentPriorAcknowledgementRow, error) {
+	row := q.db.QueryRow(ctx, contentPriorAcknowledgement,
+		arg.EventID,
+		arg.ContentID,
+		arg.PersonID,
+		arg.Version,
+	)
+	var i ContentPriorAcknowledgementRow
+	err := row.Scan(&i.Version, &i.AcknowledgedAt)
+	return i, err
+}
+
 const contentTeamMember = `-- name: ContentTeamMember :one
 SELECT EXISTS(SELECT 1 FROM hack_team_members m JOIN hack_teams t ON t.event_id=m.event_id AND t.id=m.team_id WHERE m.event_id=$1 AND m.person_id=$2 AND m.snapshot='published' AND t.state!='disbanded' AND m.team_id=ANY($3::uuid[]))
 `

@@ -153,6 +153,7 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 		Kind: "page",
 		Document: content.Document{
 			RequireAcknowledgement: true,
+			Purpose:                "rules",
 			Title:                  "Embargoed title",
 			Markdown:               "Draft excerpt",
 			Audience: access.ContentAudience{
@@ -171,6 +172,12 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 	}
 	check(request(owner, "GET", base+"/content-readiness", nil, 0, true), 200)
 	check(request(member, "GET", base+"/content-readiness", nil, 0, true), 403)
+	guidanceDraft := request(member, "GET", base+"/guidance", nil, 0, true)
+	check(guidanceDraft, 200)
+	if strings.Contains(guidanceDraft.Body.String(), "Embargoed") {
+		t.Fatal("draft guidance leaked")
+	}
+	check(request(stranger, "GET", base+"/guidance", nil, 0, true), 403)
 	check(request(member, "GET", path, nil, 0, true), 404)
 	check(request(member, "GET", path+"?preview=true", nil, 0, true), 404)
 	check(request(member, "GET", filePath, nil, 0, true), 403)
@@ -197,6 +204,11 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 	}
 	p = action(action(p, "review"), "approve")
 	p = action(p, "release")
+	guidanceReleased := request(member, "GET", base+"/guidance", nil, 0, true)
+	check(guidanceReleased, 200)
+	if !strings.Contains(guidanceReleased.Body.String(), "Embargoed title") || guidanceReleased.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("released guidance contract or cache protection missing")
+	}
 	check(request(member, "GET", path, nil, 0, true), 200)
 	check(request(member, "POST", path+"/acknowledgements", nil, p.Version, false), 403)
 	check(request(member, "POST", path+"/acknowledgements", nil, p.Version+1, true), 409)

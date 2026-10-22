@@ -291,6 +291,9 @@ func (s Service) change(
 				"Resolve template placeholders before approval.",
 			)
 		}
+		if err = approveGuidance(d); err != nil {
+			return err
+		}
 		if err = canonicalSchedule(row, &d, item.Kind); err != nil {
 			return err
 		}
