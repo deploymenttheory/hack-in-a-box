@@ -25,6 +25,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
@@ -58,6 +59,9 @@ type embargoFixture struct {
 
 func newEmbargoFixture(t *testing.T, pool *pgxpool.Pool, live time.Time) *embargoFixture {
 	t.Helper()
+	if err := database.Migrate(t.Context(), pool, 29); err != nil {
+		t.Fatal(err)
+	}
 	f := &embargoFixture{t: t, pool: pool, q: dbgen.New(pool), tokens: map[uuid.UUID]string{}}
 	f.owner, f.mentor, f.judge, f.stranger = testdb.Person(t, pool), testdb.Person(t, pool), testdb.Person(t, pool), testdb.Person(t, pool)
 	f.id = testdb.Event(t, pool, f.owner.ID)
@@ -224,6 +228,10 @@ func (f *embargoFixture) upload(label string) uuid.UUID {
 func (f *embargoFixture) makePage(kind, label string, audience access.ContentAudience) content.Page {
 	f.t.Helper()
 	in := content.Input{Kind: kind, Document: content.Document{Title: f.prefix + " title " + label, Markdown: f.prefix + " body " + label, Audience: audience, Attachments: []uuid.UUID{f.upload(label)}, ScheduledAt: &f.due, RequireAcknowledgement: true}}
+	if kind == "challenge" {
+		ref := testdb.ApprovedRubric(f.t, f.pool, f.owner.ID, f.id)
+		in.Document.Rubric = &ref
+	}
 	p := f.page(f.request(f.owner, "PUT", f.path(uuid.New()), in, 0))
 	return f.action(f.action(p, "review"), "approve")
 }

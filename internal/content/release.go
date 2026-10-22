@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
@@ -61,6 +62,11 @@ func (s Service) release(
 	}
 	if err = s.verifyAttachments(ctx, q, *item.ApprovedBy, row.ID, doc); err != nil {
 		return err
+	}
+	if item.Kind == "challenge" {
+		if err = rubric.PublishInTransaction(ctx, tx, row, *item, doc.Rubric, now); err != nil {
+			return fmt.Errorf("publish common rubric: %w", err)
+		}
 	}
 	item.State = "released"
 	item.ReleasedVersion = pgtype.Int8{Int64: item.Version, Valid: true}

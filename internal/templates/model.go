@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
@@ -42,16 +43,24 @@ type (
 		Body string    `json:"body"`
 	}
 	Criterion struct {
-		ID       uuid.UUID `json:"id"`
-		Label    string    `json:"label"`
-		Guidance string    `json:"guidance"`
-		MaxScore int       `json:"max_score"`
-		Weight   int       `json:"weight"`
+		ID       uuid.UUID       `json:"id"`
+		Label    string          `json:"label"`
+		Guidance string          `json:"guidance"`
+		MinScore int             `json:"min_score"`
+		Anchors  []rubric.Anchor `json:"anchors"`
+		MaxScore int             `json:"max_score"`
+		Weight   int             `json:"weight"`
 	}
 	Rubric struct {
-		ID       uuid.UUID   `json:"id"`
-		Name     string      `json:"name"`
-		Criteria []Criterion `json:"criteria"`
+		ID                 uuid.UUID          `json:"id"`
+		Name               string             `json:"name"`
+		Criteria           []Criterion        `json:"criteria"`
+		Mode               string             `json:"mode,omitempty"`
+		RequiredJudgeCount int                `json:"required_judge_count,omitempty"`
+		FinalistCount      int                `json:"finalist_count,omitempty"`
+		ReserveCount       int                `json:"reserve_count,omitempty"`
+		Prizes             []rubric.Prize     `json:"prizes,omitempty"`
+		SideQuests         []rubric.SideQuest `json:"side_quests,omitempty"`
 	}
 	Message struct {
 		ID         uuid.UUID  `json:"id"`
@@ -252,6 +261,38 @@ func validateTasks(tasks []Task) error {
 }
 
 func validateRubric(r Rubric) error {
+	if r.Mode != "" {
+		d := rubric.Definition{
+			PublicDefinition: rubric.PublicDefinition{
+				Name:               r.Name,
+				Mode:               r.Mode,
+				RequiredJudgeCount: r.RequiredJudgeCount,
+				FinalistCount:      r.FinalistCount,
+				ReserveCount:       r.ReserveCount,
+				Prizes:             r.Prizes,
+				SideQuests:         r.SideQuests,
+			},
+		}
+		for _, c := range r.Criteria {
+			d.Categories = append(
+				d.Categories,
+				rubric.Category{
+					ID:       c.ID,
+					Label:    c.Label,
+					Guidance: c.Guidance,
+					MinScore: c.MinScore,
+					MaxScore: c.MaxScore,
+					Weight:   c.Weight,
+					Anchors:  c.Anchors,
+				},
+			)
+		}
+		if err := d.Validate(); err != nil {
+			return fmt.Errorf("validate scoring defaults: %w", err)
+		}
+		return nil
+	}
+
 	if r.Name == "" || len(r.Name) > 160 || len(r.Criteria) > 50 {
 		return access.ErrInvalid
 	}
@@ -306,6 +347,12 @@ func visitIDs(b *Bundle, visit func(*uuid.UUID)) {
 		for j := range r.Criteria {
 			visit(&r.Criteria[j].ID)
 		}
+		for j := range r.Prizes {
+			visit(&r.Prizes[j].ID)
+		}
+		for j := range r.SideQuests {
+			visit(&r.SideQuests[j].ID)
+		}
 	}
 	for i := range b.Definitions.Messages {
 		visit(&b.Definitions.Messages[i].ID)
@@ -358,6 +405,11 @@ func Remap(source Bundle, input CloneInput) (Bundle, error) {
 	}
 	for i := range result.Definitions.Deliverables {
 		link(&result.Definitions.Deliverables[i].ScheduleID)
+	}
+	for i := range result.Definitions.Rubrics {
+		for j := range result.Definitions.Rubrics[i].Prizes {
+			link(&result.Definitions.Rubrics[i].Prizes[j].CategoryID)
+		}
 	}
 	for i := range result.Definitions.Messages {
 		link(&result.Definitions.Messages[i].ScheduleID)

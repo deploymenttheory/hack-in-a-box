@@ -10,6 +10,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
 type Starter struct {
@@ -210,20 +211,40 @@ func starter(qualification bool) Starter {
 		d.RoleBriefs[2].Body += " Submit final mentor cards for moderation after the cutoff; qualification uses moderated final cards, not checkpoint totals."
 		d.RoleBriefs[3].Body += " The final is a fresh assessment of three finalists, with a reserve by default. Judges do not receive mentor scores or rankings. All eligible teams remain eligible for category awards."
 	}
-	criteria := make([]Criterion, 0, 5)
-	for _, label := range []string{"Demo", "Technical approach", "UX", "Feature fit", "Innovation"} {
+	mode := rubric.AllTeams
+	if qualification {
+		mode = rubric.MentorQualification
+	}
+	defaults := rubric.Default(mode, id("rubric"))
+	criteria := make([]Criterion, 0, len(defaults.Categories))
+	for _, category := range defaults.Categories {
 		criteria = append(
 			criteria,
 			Criterion{
-				ID:       id("criterion-" + label),
-				Label:    label,
-				Guidance: "Use recorded evidence against the challenge and explain the score.",
-				MaxScore: 10,
-				Weight:   1,
+				ID:       category.ID,
+				Label:    category.Label,
+				Guidance: category.Guidance,
+				MinScore: category.MinScore,
+				MaxScore: category.MaxScore,
+				Weight:   category.Weight,
+				Anchors:  category.Anchors,
 			},
 		)
 	}
-	d.Rubrics = []Rubric{{ID: id("rubric"), Name: name, Criteria: criteria}}
+	d.Rubrics = []Rubric{
+		{
+			ID:                 id("rubric"),
+			Name:               name,
+			Criteria:           criteria,
+			Mode:               mode,
+			RequiredJudgeCount: defaults.RequiredJudgeCount,
+			FinalistCount:      defaults.FinalistCount,
+			ReserveCount:       defaults.ReserveCount,
+			Prizes:             defaults.Prizes,
+			SideQuests:         defaults.SideQuests,
+		},
+	}
+
 	d.Messages = []Message{
 		{
 			ID:         id("message-challenge"),

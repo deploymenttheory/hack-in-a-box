@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
@@ -150,6 +151,11 @@ func (s Service) Save(
 		d := input.Document
 		if err = canonicalSchedule(row, &d, item.Kind); err != nil {
 			return err
+		}
+		if d.Rubric != nil {
+			if err = rubric.ValidateReference(ctx, q, eventID, d.Rubric, false); err != nil {
+				return fmt.Errorf("validate authored rubric reference: %w", err)
+			}
 		}
 		if err = checkReferences(ctx, q, eventID, id, d); err != nil {
 			return err
@@ -293,6 +299,11 @@ func (s Service) change(
 		}
 		if err = approveGuidance(d); err != nil {
 			return err
+		}
+		if item.Kind == "challenge" {
+			if err = rubric.ValidateReference(ctx, q, row.ID, d.Rubric, true); err != nil {
+				return fmt.Errorf("validate approved rubric reference: %w", err)
+			}
 		}
 		if err = canonicalSchedule(row, &d, item.Kind); err != nil {
 			return err

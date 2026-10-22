@@ -11,6 +11,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
 type Contact struct {
@@ -26,6 +27,7 @@ type Acknowledgement struct {
 type Document struct {
 	Purpose                string                 `json:"purpose,omitempty"`
 	Contacts               []Contact              `json:"contacts,omitempty"`
+	Rubric                 *rubric.Reference      `json:"rubric,omitempty"`
 	RequireAcknowledgement bool                   `json:"require_acknowledgement"`
 	Title                  string                 `json:"title"`
 	Markdown               string                 `json:"markdown"`
@@ -85,6 +87,9 @@ func validate(input Input) error {
 	d := input.Document
 	if err := validateGuidance(input); err != nil {
 		return err
+	}
+	if input.Kind != "challenge" && d.Rubric != nil {
+		return access.ErrInvalid
 	}
 	if !slices.Contains([]string{"page", "brief", "challenge"}, input.Kind) ||
 		strings.TrimSpace(d.Title) == "" ||
