@@ -86,3 +86,12 @@ WHERE c.event_id=$1 AND c.state='confirmed' ORDER BY c.person_id;
 
 -- name: ClarificationOwningRelease :one
 SELECT EXISTS(SELECT 1 FROM content_changes WHERE event_id=$1 AND content_id=$2 AND version=$3 AND action='released')::bool;
+
+-- name: ClarificationReviewedRubricRelease :one
+SELECT EXISTS(
+ SELECT 1 FROM rubric_publications p
+ JOIN content_changes c ON c.event_id=p.event_id AND c.content_id=p.challenge_id
+  AND c.version=p.challenge_version AND c.action='released'
+ WHERE p.event_id=$1 AND p.rubric_id=$2 AND p.version=$3 AND p.public_digest=$4
+  AND p.challenge_id=$5 AND p.challenge_version <= $6 AND p.reviewed_notice=$7
+)::bool;

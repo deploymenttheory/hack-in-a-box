@@ -450,6 +450,28 @@ func TestClarificationRuntimePublishesOnlyReviewedCommonAnswersAndActualPrivateI
 	); err == nil {
 		t.Fatal("retained official answer versions were mutable")
 	}
+	answer = verifyMaterialClarificationWorkflow(
+		t,
+		runtime,
+		nativeContent,
+		owner.ID,
+		author.ID,
+		eventID,
+		question.ID,
+		answer.ID,
+		func() time.Time { return now },
+	)
+	verifyClarificationSourceAndRoleRaces(
+		t,
+		runtime,
+		nativeContent,
+		owner.ID,
+		author.ID,
+		approver.ID,
+		eventID,
+		teamID,
+		question.ID,
+	)
 	exec(
 		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
 		eventID,
@@ -481,7 +503,7 @@ func TestClarificationRuntimePublishesOnlyReviewedCommonAnswersAndActualPrivateI
 		eventID,
 		answer.ID,
 	); readErr != nil || !page.Archived ||
-		page.Answer.Version != 2 {
+		page.Answer.Version != answer.Version {
 		t.Fatal("archive erased currently authorised common answer history", page, readErr)
 	}
 	if _, err = runtime.Clarifications.ActAnswer(

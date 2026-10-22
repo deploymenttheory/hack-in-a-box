@@ -103,19 +103,25 @@ func owningChange(
 	if err != nil {
 		return fmt.Errorf("verify owning rubric impact review: %w", err)
 	}
-	publication, err := q.RubricPublication(
+	// A later challenge-only release keeps the same immutable criteria without
+	// repeating its change notice. Retain the actual owning release as evidence.
+	publication, err := q.ClarificationReviewedRubricRelease(
 		ctx,
-		dbgen.RubricPublicationParams{
+		dbgen.ClarificationReviewedRubricReleaseParams{
 			EventID:          eventID,
+			RubricID:         current.Rubric.ID,
+			Version:          current.Rubric.Version,
+			PublicDigest:     current.Rubric.Digest,
 			ChallengeID:      current.ChallengeID,
 			ChallengeVersion: current.ChallengeVersion,
+			ReviewedNotice:   review.Notice,
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("verify material rubric publication: %w", err)
 	}
 	if strings.TrimSpace(review.ImpactReview) == "" || strings.TrimSpace(review.Notice) == "" ||
-		publication.ReviewedNotice != review.Notice {
+		!publication {
 		return access.ErrConflict
 	}
 	return nil

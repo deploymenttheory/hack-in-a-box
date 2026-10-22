@@ -263,6 +263,41 @@ func (q *Queries) ClarificationRecipients(ctx context.Context, eventID uuid.UUID
 	return items, nil
 }
 
+const clarificationReviewedRubricRelease = `-- name: ClarificationReviewedRubricRelease :one
+SELECT EXISTS(
+ SELECT 1 FROM rubric_publications p
+ JOIN content_changes c ON c.event_id=p.event_id AND c.content_id=p.challenge_id
+  AND c.version=p.challenge_version AND c.action='released'
+ WHERE p.event_id=$1 AND p.rubric_id=$2 AND p.version=$3 AND p.public_digest=$4
+  AND p.challenge_id=$5 AND p.challenge_version <= $6 AND p.reviewed_notice=$7
+)::bool
+`
+
+type ClarificationReviewedRubricReleaseParams struct {
+	EventID          uuid.UUID
+	RubricID         uuid.UUID
+	Version          int64
+	PublicDigest     string
+	ChallengeID      uuid.UUID
+	ChallengeVersion int64
+	ReviewedNotice   string
+}
+
+func (q *Queries) ClarificationReviewedRubricRelease(ctx context.Context, arg ClarificationReviewedRubricReleaseParams) (bool, error) {
+	row := q.db.QueryRow(ctx, clarificationReviewedRubricRelease,
+		arg.EventID,
+		arg.RubricID,
+		arg.Version,
+		arg.PublicDigest,
+		arg.ChallengeID,
+		arg.ChallengeVersion,
+		arg.ReviewedNotice,
+	)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const clarificationStaffQuestions = `-- name: ClarificationStaffQuestions :many
 SELECT event_id, id, team_id, author_id, command_id, request_digest, topic, body, attachments, source, revision, status, created_at FROM clarification_questions WHERE event_id=$1 AND id>$2::uuid ORDER BY id LIMIT $3
 `

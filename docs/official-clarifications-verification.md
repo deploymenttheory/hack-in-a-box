@@ -35,6 +35,13 @@ storage. Older corrections and native private histories have bounded keyset page
   list/open, correction history and concurrent duplicate publication. A fault
   after actual recipient inserts rolls back publication and every notification;
   retries create one retained notification per revision/current recipient.
+- Actual owning rubric/challenge changes require their native released versions,
+  reviewed impact and attendee notice. A reproduced retained-evidence regression
+  is fixed: a later challenge-only release cannot erase the exact earlier rubric
+  publication's reviewed notice. Foreign event/challenge/rubric, version, digest,
+  notice and unreleased-review evidence all fail closed. Three PostgreSQL/race
+  runs also exercise publication against current-source and native organiser-role
+  changes; either serial order leaves complete publication/inbox state or none.
 - HTTP tests validate responses against the generated OpenAPI contract and cover
   authentication, CSRF, malformed input, no-store, private history/triage/drafts,
   distinct approve/publish, common search and generic log privacy. Positive team
@@ -53,8 +60,7 @@ storage. Older corrections and native private histories have bounded keyset page
 
 The local migration number is provisional. Rebase directly onto the actual merged
 predecessor, preserving help/runtime/inbox owner-map unions, and prove a populated
-normal ordered upgrade plus guarded rollback before opening CI. Finish real owning
-material-change cases and source/current-role races, then obtain exact-head CI and
-review. Source adapters for #82 must derive metadata and current audience from
+normal ordered upgrade plus guarded rollback before opening CI, then obtain
+exact-head CI and review. Source adapters for #82 must derive metadata and current audience from
 actual immutable publications with source-ID/keyset filtering before bounds;
 orchestration is not implemented here.
