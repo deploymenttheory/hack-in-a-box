@@ -29,7 +29,8 @@ staff role remains eligible for that current staff selector; withdrawal does not
 revoke staff authority. Team selection requires a current
 confirmed place and an active published entry. Offer selection checks the pending
 offer's expiry at resolution, without waiting for a maintenance worker.
-Preparation selection uses current task ownership/status and current role grants.
+Preparation selection includes unmaterialized template tasks and uses current
+task ownership/status and required role grants, including named owners.
 
 Help/outcome-review facts are owned status/revision records. Official clarification,
 rubric and result facts must be explicitly published. Optional resource scope is

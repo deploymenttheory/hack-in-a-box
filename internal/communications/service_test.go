@@ -692,6 +692,48 @@ func TestOutstandingPreparationAndCurrentStaffAudience(t *testing.T) {
 	if err != nil || len(actual.Recipients) != 0 {
 		t.Fatalf("revoked staff audience: %+v %v", actual, err)
 	}
+	// Seeded role tasks are outstanding before the first operational save.
+	f.exec(
+		t,
+		"UPDATE event_memberships SET active=true WHERE event_id=$1 AND person_id=$2",
+		f.eventID,
+		staff.ID,
+	)
+	f.exec(
+		t,
+		`UPDATE preparation_tasks SET document='{"definition":{"status":"complete","owner_role":"mentor","owner_id":null}}' WHERE event_id=$1`,
+		f.eventID,
+	)
+	seeds := map[string]any{
+		"tasks": []map[string]any{
+			{"id": uuid.New(), "title": "Unmaterialized mentor task", "owner_role": "mentor"},
+		},
+	}
+	data, _ := json.Marshal(seeds)
+	f.exec(t, "INSERT INTO event_definitions(event_id,definitions) VALUES($1,$2)", f.eventID, data)
+	seeded := f.preview(t)
+	if len(seeded.Recipients) != 1 || seeded.Recipients[0].PersonID != staff.ID {
+		t.Fatalf("seeded preparation assignment missing: %+v", seeded)
+	}
+	// A named owner also needs the task's required current role.
+	f.exec(
+		t,
+		`UPDATE event_definitions SET definitions='{"tasks":[]}' WHERE event_id=$1`,
+		f.eventID,
+	)
+	definition := map[string]any{
+		"definition": map[string]any{
+			"status":     "in_progress",
+			"owner_role": "judge",
+			"owner_id":   staff.ID,
+		},
+	}
+	data, _ = json.Marshal(definition)
+	f.exec(t, "UPDATE preparation_tasks SET document=$2 WHERE event_id=$1", f.eventID, data)
+	actual, err = f.s.ResolveApproved(ctx, f.eventID, p.ID)
+	if err != nil || len(actual.Recipients) != 0 {
+		t.Fatalf("named task owner bypassed required role: %+v %v", actual, err)
+	}
 }
 
 func TestOfferAudienceExpiresBeforeExecution(t *testing.T) {

@@ -106,9 +106,9 @@ func outstanding(
 		count, err := q.CommunicationOutstandingTasks(
 			ctx,
 			dbgen.CommunicationOutstandingTasksParams{
-				EventID: eventID,
-				Column2: p.ID.String(),
-				Roles:   roles,
+				EventID:  eventID,
+				PersonID: p.ID.String(),
+				Roles:    roles,
 			},
 		)
 		return count > 0, contextError("outstanding", err)

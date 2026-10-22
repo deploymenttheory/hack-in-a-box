@@ -42,4 +42,13 @@ ON CONFLICT(event_id,id) DO UPDATE SET revision=EXCLUDED.revision,owner_id=EXCLU
 SELECT name FROM hack_teams WHERE event_id=$1 AND id=$2 AND state='published';
 
 -- name: CommunicationOutstandingTasks :one
-SELECT count(*) FROM preparation_tasks WHERE event_id=$1 AND document->'definition'->>'status' NOT IN ('complete','waived') AND (document->'definition'->>'owner_id'=$2::text OR (document->'definition'->>'owner_id' IS NULL AND document->'definition'->>'owner_role'=ANY(sqlc.arg(roles)::text[])));
+WITH owned_tasks AS (
+ SELECT p.id,p.document->'definition' AS definition FROM preparation_tasks p WHERE p.event_id=$1
+ UNION ALL
+ SELECT (seed->>'id')::uuid,jsonb_build_object('status','not_started','owner_role',seed->>'owner_role','owner_id',NULL)
+ FROM event_definitions e CROSS JOIN LATERAL jsonb_array_elements(e.definitions->'tasks') seed
+ WHERE e.event_id=$1 AND NOT EXISTS(SELECT 1 FROM preparation_tasks p WHERE p.event_id=e.event_id AND p.id=(seed->>'id')::uuid)
+)
+SELECT count(*) FROM owned_tasks WHERE definition->>'status' NOT IN ('complete','waived')
+AND (COALESCE(definition->>'owner_role','')='' OR definition->>'owner_role'=ANY(sqlc.arg(roles)::text[]))
+AND (definition->>'owner_id'=sqlc.arg(person_id)::text OR (definition->>'owner_id' IS NULL AND definition->>'owner_role'=ANY(sqlc.arg(roles)::text[])));
