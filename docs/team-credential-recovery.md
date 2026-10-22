@@ -26,3 +26,40 @@ App revocation removes only app disclosure access. Someone who previously reveal
 ## Verification
 
 Real PostgreSQL tests cover current confirmed published membership, withdrawal, cross-team draft isolation, retired/disbanded teams, inactive identities, audience/resource revocation, stale revisions, ciphertext tampering, missing keys, rotation rollback/recovery, replacement and audit-storage failure. HTTP tests validate the generated contract, no-store responses, explicit-only disclosure and absence of values in metadata, audit and request logs. Encryption tests cover random nonce uniqueness, wrong-key authentication and event/resource/version context substitution.
+
+
+## Restoring a database without deployment keys
+
+A PostgreSQL backup is insufficient to recover credential values. Restore it into
+an empty database, run the matching schema check, and configure authentication
+before granting users access. Safe resource metadata remains available without
+`HACKBOX_CREDENTIAL_KEYRING`; deliberate disclosure returns unavailable and records
+an unavailable audit result. Do not replace ciphertext, clear assignments or
+remove availability/expiry controls to make that error disappear.
+
+Recover the exact protected key material under every key identifier required by
+the restored rows. An unrelated key under the correct identifier cannot decrypt
+the backup. Selecting a fresh active key also does not recover older ciphertext.
+Retain the original keys alongside the new active key, verify deliberate disclosure
+through current team authority, then rotate resources with current organiser
+permission and revisions. Only retire older keys once live ciphertext and all
+retained backups no longer need them. Database restoration does not revoke actual
+provider credentials or invalidate copies that users obtained previously.
+
+`TestCredentialLogicalRestoreRequiresExternalRetainedKeys` runs `pg_dump` and
+restores its SQL with `psql` into a new empty database on isolated PostgreSQL. It
+checks that the dump includes ciphertext but contains neither supplied values nor
+deployment keys; verifies preserved envelopes, audience and time metadata; and
+exercises missing keys, wrong material, missing old keys, retained-key recovery and
+rotation followed by old-key retirement. Source writes after backup remain
+independent of the restored database. Key failures must leave values empty and
+commit redacted audit evidence.
+
+The HTTP confidentiality check keeps an existing authenticated session through
+assignment removal, published reassignment, absent/draft membership and
+withdrawal. Direct requests must follow current authority. Protected CSV/HTML
+exports, metadata, logs and audit records are checked with synthetic values;
+responses remain `no-store`. A populated approved room snapshot excludes resource
+metadata and values, and its capability cannot authenticate to credential list or
+reveal routes. Participant browser storage and temporary visibility
+are covered by the controlled reveal interface tests.

@@ -40,7 +40,11 @@ func keyring(t *testing.T, active string, ids ...string) *secretbox.Keyring {
 }
 
 func setup(t *testing.T) *fixture {
-	p := testdb.New(t, true)
+	return setupWithPool(t, testdb.New(t, true))
+}
+
+func setupWithPool(t *testing.T, p *pgxpool.Pool) *fixture {
+	t.Helper()
 	f := &fixture{
 		t:      t,
 		pool:   p,

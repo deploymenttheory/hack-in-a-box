@@ -17,6 +17,8 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -95,9 +97,11 @@ func TestCredentialsHTTPPrivacyExplicitRevealAndFailures(t *testing.T) {
 		cfg,
 		slog.New(slog.NewTextHandler(&logs, nil)),
 		Dependencies{
-			Pool:        pool,
-			Auth:        auth,
-			Credentials: credentials.Service{Pool: pool, Keys: keys},
+			Pool:         pool,
+			Auth:         auth,
+			Credentials:  credentials.Service{Pool: pool, Keys: keys},
+			Preparation:  preparation.Service{Pool: pool},
+			Presentation: presentation.Service{Pool: pool},
 		},
 	)
 	csrf := strings.Repeat("a", 32)
@@ -188,6 +192,157 @@ func TestCredentialsHTTPPrivacyExplicitRevealAndFailures(t *testing.T) {
 	if !strings.Contains(w.Body.String(), "SYNTHETIC-HTTP-SECRET") {
 		t.Fatal("explicit reveal missing value")
 	}
+	// The authenticated browser keeps the same session throughout these changes.
+	// Every direct disclosure and list must consult current published authority.
+	check(
+		request(
+			owner,
+			"POST",
+			base,
+			map[string]any{"action": "assign", "id": id, "team_ids": []uuid.UUID{}},
+			true,
+		),
+		200,
+	)
+	check(request(member, "POST", reveal, nil, true), 403)
+	w = request(member, "GET", base, nil, true)
+	check(w, 200)
+	if strings.Contains(w.Body.String(), id.String()) {
+		t.Fatal("removed audience retained masked inventory")
+	}
+	check(
+		request(
+			owner,
+			"POST",
+			base,
+			map[string]any{"action": "assign", "id": id, "team_ids": []uuid.UUID{team}},
+			true,
+		),
+		200,
+	)
+	otherTeam := uuid.New()
+	exec(
+		"INSERT INTO hack_teams(id,event_id,name,state) VALUES($1,$2,'Other published team','published')",
+		otherTeam,
+		eventID,
+	)
+	if err := q.CreateCompetitionEntry(
+		ctx,
+		dbgen.CreateCompetitionEntryParams{EventID: eventID, TeamID: otherTeam},
+	); err != nil {
+		t.Fatal(err)
+	}
+	exec(
+		"UPDATE hack_team_members SET team_id=$3 WHERE event_id=$1 AND person_id=$2 AND snapshot='published'",
+		eventID,
+		member.ID,
+		otherTeam,
+	)
+	check(request(member, "POST", reveal, nil, true), 403)
+	w = request(member, "GET", base, nil, true)
+	check(w, 200)
+	if strings.Contains(w.Body.String(), id.String()) {
+		t.Fatal("reassigned member retained previous team's inventory")
+	}
+	exec(
+		"UPDATE hack_team_members SET team_id=$3 WHERE event_id=$1 AND person_id=$2 AND snapshot='published'",
+		eventID,
+		member.ID,
+		team,
+	)
+	exec(
+		"DELETE FROM hack_team_members WHERE event_id=$1 AND person_id=$2 AND snapshot='published'",
+		eventID,
+		member.ID,
+	)
+	check(request(member, "POST", reveal, nil, true), 403)
+	exec(
+		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'draft')",
+		eventID,
+		team,
+		member.ID,
+	)
+	check(request(member, "POST", reveal, nil, true), 403)
+	exec("DELETE FROM hack_team_members WHERE event_id=$1 AND person_id=$2", eventID, member.ID)
+	exec(
+		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",
+		eventID,
+		team,
+		member.ID,
+	)
+	// Protected download routes use separate report projections. Neither their
+	// wire bodies nor filenames may inherit resource values or encrypted blobs.
+	for _, viewer := range []struct {
+		person   dbgen.Person
+		audience string
+	}{{owner, "organiser"}, {member, "participant"}} {
+		for _, format := range []string{"readiness.csv", "run-sheet.html"} {
+			download := request(
+				viewer.person,
+				"GET",
+				"/api/v1/events/"+eventID.String()+"/exports/"+format+"?audience="+viewer.audience,
+				nil,
+				true,
+			)
+			check(download, 200)
+			if strings.Contains(download.Body.String(), "SECRET") ||
+				strings.Contains(download.Body.String(), "ciphertext") ||
+				strings.Contains(download.Header().Get("Content-Disposition"), "SECRET") {
+				t.Fatal("protected export leaked resource")
+			}
+		}
+	}
+	// The public display capability projects only its approved room program;
+	// it grants no participant identity or credential disclosure authority.
+	room := presentation.Service{Pool: pool}
+	program, err := room.Read(ctx, owner.ID, eventID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, command := range []presentation.Command{{Action: "save", Reason: "Synthetic public cue", Cues: []presentation.Cue{{ID: uuid.New(), Title: "Approved public room cue"}}}, {Action: "publish", Reason: "Approved room program"}, {Action: "advance", Reason: "Start public cue"}} {
+		program, err = room.Change(ctx, owner.ID, eventID, program.Revision, command)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	pairing, err := room.Pair(
+		ctx,
+		owner.ID,
+		eventID,
+		program.Revision,
+		presentation.PairInput{
+			Label:   "Synthetic protected room",
+			Minutes: 60,
+			Reason:  "Confidentiality verification",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, route := range []struct {
+		method, path string
+		status       int
+	}{{"GET", "/api/v1/events/" + eventID.String() + "/display/snapshot", 200}, {"POST", reveal, 401}, {"GET", base, 401}} {
+		r := httptest.NewRequest(route.method, route.path, nil)
+		r.Header.Set("Authorization", "Bearer "+pairing.Token)
+		r.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision()))
+		r.Header.Set("Origin", cfg.PublicOrigin)
+		r.Header.Set("X-CSRF-Token", csrf)
+		displayed := httptest.NewRecorder()
+		router.ServeHTTP(displayed, r)
+		validateResponse(t, r, displayed)
+		check(displayed, route.status)
+		if strings.Contains(displayed.Body.String(), "SECRET") ||
+			strings.Contains(displayed.Body.String(), "ciphertext") ||
+			strings.Contains(displayed.Body.String(), "Synthetic service") ||
+			strings.Contains(displayed.Body.String(), id.String()) {
+			t.Fatal("room capability exposed resource data")
+		}
+		if route.status == 200 &&
+			!strings.Contains(displayed.Body.String(), "Approved public room cue") {
+			t.Fatal("display projection was empty rather than safely scoped")
+		}
+	}
 	exec("UPDATE team_credentials SET ciphertext='\\x00' WHERE id=$1", id)
 	w = request(member, "POST", reveal, nil, true)
 	check(w, 503)
@@ -208,7 +363,7 @@ func TestCredentialsHTTPPrivacyExplicitRevealAndFailures(t *testing.T) {
 	var count int
 	if e = pool.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE action='credential.revealed' AND target_id=$1", id).
 		Scan(&count); e != nil ||
-		count != 5 {
+		count != 9 {
 		t.Fatalf("audit attempts %d %v", count, e)
 	}
 	var auditText string
