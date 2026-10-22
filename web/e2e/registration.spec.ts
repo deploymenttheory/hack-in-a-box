@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { mockWorkspace, firstID } from './fixtures'
+import { firstID } from './fixtures'
 import { defaultBranding } from '../src/branding'
 import type { components } from '../src/api/schema.gen'
 
-import { registrationEvent, questionID, attendeeForm, fixtureRegistration } from './registration-fixtures'
+import { registrationEvent, questionID, attendeeForm, fixtureRegistration, mockApplicantWorkspace } from './registration-fixtures'
 test('attendee discovery and retry preserve one application identity', async ({ page }) => {
-  await mockWorkspace(page)
+  await mockApplicantWorkspace(page)
   let registrations: components['schemas']['Registration'][] = [], attempts = 0, firstRequest = ''
   await page.route('**/api/v1/registration/events**', route => route.fulfill({ json: new URL(route.request().url()).pathname.endsWith(firstID) ? { event: registrationEvent, branding: defaultBranding, forms: [attendeeForm], registrations } : { items: [registrationEvent], next_cursor: null } }))
   await page.route(`**/events/${firstID}/registrations`, async route => {
@@ -23,7 +23,7 @@ test('attendee discovery and retry preserve one application identity', async ({ 
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
 })
 test('facilitator receipt and a closed waitlist show distinct outcomes', async ({ page }) => {
-  await mockWorkspace(page)
+  await mockApplicantWorkspace(page)
   const received = { ...fixtureRegistration('received'), id: '00000000-0000-4000-8000-000000000005', kind: 'facilitator', audience: 'mentor' }
   await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: { ...registrationEvent, open: false, stage: 'preparation' }, branding: defaultBranding, forms: [], registrations: [fixtureRegistration('waitlisted'), received] } }))
   await page.goto(`/register/${firstID}`)
@@ -33,7 +33,7 @@ test('facilitator receipt and a closed waitlist show distinct outcomes', async (
 })
 
 test('facilitator application records fallback preference without enrolling a competitor', async ({ page }) => {
-  await mockWorkspace(page)
+  await mockApplicantWorkspace(page)
   const form = { ...attendeeForm, definition: { ...attendeeForm.definition, audience: 'mentor', name: 'Mentor application' } }
   let registrations: components['schemas']['Registration'][] = []
   await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [form], registrations } }))
@@ -49,4 +49,31 @@ test('facilitator application records fallback preference without enrolling a co
   await expect(page.getByText('Your facilitator application has been received for review.')).toBeVisible()
   await expect(page.getByText('Your competitor place is confirmed.')).toHaveCount(0)
   expect(registrations).toHaveLength(1)
+})
+
+test('ordinary applicant branches stay conditional and permanent ineligibility has a safe explanation', async ({ page }) => {
+  await mockApplicantWorkspace(page)
+  const choice = '00000000-0000-4000-8000-000000000011', details = '00000000-0000-4000-8000-000000000012'
+  const form = { ...attendeeForm, definition: { ...attendeeForm.definition, fields: [
+    { id: choice, label: 'Need equipment?', type: 'checkbox', required: true, help: '', choices: [] },
+    { id: details, label: 'Equipment details', type: 'text', required: true, help: '', choices: [], visible_when: { field_id: choice, equals: 'true' } },
+  ] } }
+  await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [form], registrations: [] } }))
+  let attempts = 0
+  await page.route(`**/events/${firstID}/registrations`, route => {
+    const body = route.request().postDataJSON(); attempts++
+    expect(body.form_version).toBe(1); expect(body.answers[choice]).toBe(false)
+    return route.fulfill({ status: 409, json: { error: { code: 'competition_ineligible', message: 'Safe fixture', request_id: 'synthetic' } } })
+  })
+  await page.goto(`/register/${firstID}`)
+  await expect(page.getByLabel('Equipment details (required)')).toHaveCount(0)
+  await page.getByLabel('Need equipment? (required)').selectOption('true')
+  await page.getByLabel('Equipment details (required)').fill('Synthetic branch answer')
+  await page.getByLabel('Need equipment? (required)').selectOption('false')
+  await expect(page.getByLabel('Equipment details (required)')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Submit application' }).click()
+  await expect(page.getByRole('alert')).toContainText('Previous organiser or early brief access permanently prevents competition in this event.')
+  await expect(page.getByText('Your competitor place is confirmed.')).toHaveCount(0)
+  await expect(page.getByLabel('Need equipment? (required)')).toHaveValue('false')
+  expect(attempts).toBe(1)
 })

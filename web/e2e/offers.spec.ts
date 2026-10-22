@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
-import { mockWorkspace, firstID } from './fixtures'
-import { registrationEvent, fixtureRegistration, attendeeForm, questionID } from './registration-fixtures'
+import { firstID } from './fixtures'
+import { registrationEvent, fixtureRegistration, attendeeForm, questionID, mockApplicantWorkspace } from './registration-fixtures'
 import { defaultBranding } from '../src/branding'
 
 for (const expired of [false, true]) test(`offer response shows ${expired ? 'expiry' : 'acceptance and withdrawal'}`, async ({ page }) => {
-  await mockWorkspace(page)
+  await mockApplicantWorkspace(page)
   let registration = { ...fixtureRegistration('offered'), offer: { id: '00000000-0000-4000-8000-000000000006', expires_at: '2027-06-12T09:00:00Z', state: 'pending' } }
   let responses = 0
   await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [], registrations: [registration] } }))
@@ -28,7 +28,7 @@ for (const expired of [false, true]) test(`offer response shows ${expired ? 'exp
 })
 
 test('applicant progresses from waitlist to offer, corrects answers and withdraws', async ({ page }) => {
-  await mockWorkspace(page)
+  await mockApplicantWorkspace(page)
   let registration: ReturnType<typeof fixtureRegistration> | undefined
   let answer = 'Teamwork'
   await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [attendeeForm], registrations: registration ? [registration] : [] } }))
@@ -55,6 +55,25 @@ test('applicant progresses from waitlist to offer, corrects answers and withdraw
   await expect.poll(() => answer).toBe('Accessible collaboration')
   await expect(page.getByRole('button', { name: 'Save corrected answers' })).toBeEnabled()
   page.once('dialog', dialog => void dialog.accept())
+  await page.getByRole('button', { name: 'Withdraw application' }).click()
+  await expect(page.getByText('This application has been withdrawn.')).toBeVisible()
+})
+
+test('post-freeze withdrawal explains the smaller team without promising reassignment', async ({ page }) => {
+  await mockApplicantWorkspace(page)
+  let registration = fixtureRegistration('confirmed')
+  await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: { ...registrationEvent, team_frozen: true }, branding: defaultBranding, forms: [], registrations: [registration] } }))
+  await page.route(`**/registrations/${registration.id}/respond`, route => {
+    expect(route.request().postDataJSON().action).toBe('withdraw')
+    registration = { ...registration, state: 'withdrawn', revision: registration.revision + 1 }
+    return route.fulfill({ json: registration })
+  })
+  await page.goto(`/register/${firstID}`)
+  await expect(page.getByText('Teams are frozen.', { exact: false })).toContainText('The remaining team may continue or withdraw.')
+  page.once('dialog', dialog => {
+    expect(dialog.message()).toContain('Reassignment and backfill are unavailable after team freeze.')
+    void dialog.accept()
+  })
   await page.getByRole('button', { name: 'Withdraw application' }).click()
   await expect(page.getByText('This application has been withdrawn.')).toBeVisible()
 })
