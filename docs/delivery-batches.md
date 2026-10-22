@@ -32,3 +32,21 @@ Delivered in PRs #145–#149. All five issues are closed after green CI.
 All prerequisite foundations are merged. Existing manual allocation supplies frozen
 teams; suggested allocation and mentor coverage can follow this usable preparation
 and submission path.
+
+Delivered in PRs #150–#154. All five issues are closed after green CI, including
+the real PostgreSQL embargo matrix and 146 desktop/mobile browser tests in #154.
+
+## Batch 3 — reviewed allocations and mentor coverage
+
+| Order | Issue | Deliverable | Why it is here |
+| --- | --- | --- | --- |
+| 1 | [#64](https://github.com/deploymenttheory/hack-in-a-box/issues/64) | Explainable team allocation suggestions | Uses confirmed membership from #59 and supplies proposals without changing published assignments. |
+| 2 | [#65](https://github.com/deploymenttheory/hack-in-a-box/issues/65) | Allocation review and explicit publication | Makes #64 usable while enforcing locked groups, current revisions and the hard competitor freeze. |
+| 3 | [#66](https://github.com/deploymenttheory/hack-in-a-box/issues/66) | Mentor capacity and conflict-aware assignment | Adds scoped primary/second-review assignments to the reviewed teams without reopening competitor membership. |
+| 4 | [#67](https://github.com/deploymenttheory/hack-in-a-box/issues/67) | Mentor coverage administration | Combines #65 and #66 into workload previews, explicit gap decisions and permitted published rosters. |
+| 5 | [#68](https://github.com/deploymenttheory/hack-in-a-box/issues/68) | Allocation and publication race verification | Exercises the complete suggestion-to-publication path, withdrawals, hard freeze and mentor access changes. |
+
+The dependencies outside this batch (#59, #63 and #34) are merged. Completing
+reviewed allocation and mentor coverage supplies assignment facts used by later
+resource inventory and mentor workspaces. Readiness exports (#62) remain an open
+deliverable; sequencing them later does not mark them complete or skipped.
