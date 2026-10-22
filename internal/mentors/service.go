@@ -81,6 +81,7 @@ func ownTeam(ctx context.Context, q *dbgen.Queries, eventID, actor uuid.UUID) (u
 }
 
 func restricted(page Page, actor, own uuid.UUID, mentor bool) Page {
+	conflicts := page.Conflicts
 	page.Draft = []Assignment{}
 	page.Conflicts = []Conflict{}
 	page.Gaps = []Gap{}
@@ -92,6 +93,10 @@ func restricted(page Page, actor, own uuid.UUID, mentor bool) Page {
 		active[p.PersonID] = p.Active
 	}
 	for _, a := range page.Published {
+		index := slices.IndexFunc(page.Teams, func(t Team) bool { return t.ID == a.TeamID })
+		if index < 0 || conflicted(conflicts, page.Teams[index], a.PersonID) {
+			continue
+		}
 		if active[a.PersonID] && (a.TeamID == own || (mentor && a.PersonID == actor)) {
 			visible = append(visible, a)
 			teams[a.TeamID] = true
