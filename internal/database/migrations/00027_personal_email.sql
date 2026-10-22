@@ -90,7 +90,36 @@ $$;
 -- +goose StatementEnd
 CREATE TRIGGER smtp_campaign_identity BEFORE UPDATE ON smtp_campaign_messages FOR EACH ROW EXECUTE FUNCTION protect_smtp_campaign_identity();
 
+-- Each network attempt has an immutable prepared barrier and at most one
+-- append-only bounded receipt. Snapshots retain the current UI projection.
+CREATE TABLE smtp_submission_attempts (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    operation_id uuid NOT NULL REFERENCES operations(id),
+    source_kind text NOT NULL CHECK(source_kind IN ('test','campaign')),
+    attempt_number integer NOT NULL CHECK(attempt_number>0),
+    prepared_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(operation_id,attempt_number)
+);
+CREATE TABLE smtp_submission_receipts (
+    attempt_id uuid PRIMARY KEY REFERENCES smtp_submission_attempts(id),
+    outcome text NOT NULL CHECK(outcome IN ('accepted','retryable','permanent','ambiguous')),
+    receipt_code text NOT NULL CHECK(receipt_code IN ('relay_accepted','relay_temporary_rejection','relay_rejection','acceptance_unknown','relay_unavailable','tls_verification_failed','tls_required','authentication_unavailable','invalid_message','smtp_not_configured','unknown')),
+    recorded_at timestamptz NOT NULL DEFAULT now()
+);
+-- +goose StatementBegin
+CREATE FUNCTION protect_smtp_submission_evidence() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'SMTP submission evidence is append-only';
+END;
+$$;
+-- +goose StatementEnd
+CREATE TRIGGER smtp_attempt_append_only BEFORE UPDATE OR DELETE ON smtp_submission_attempts FOR EACH ROW EXECUTE FUNCTION protect_smtp_submission_evidence();
+CREATE TRIGGER smtp_receipt_append_only BEFORE UPDATE OR DELETE ON smtp_submission_receipts FOR EACH ROW EXECUTE FUNCTION protect_smtp_submission_evidence();
+
 -- +goose Down
+DROP TABLE smtp_submission_receipts;
+DROP TABLE smtp_submission_attempts;
+DROP FUNCTION protect_smtp_submission_evidence();
 DROP TABLE smtp_campaign_messages;
 DROP FUNCTION protect_smtp_campaign_identity();
 DROP TABLE email_calendar_sequences;

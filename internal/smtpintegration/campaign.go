@@ -313,7 +313,7 @@ func (h CampaignHandler) prepare(
 		if err != nil {
 			return fmt.Errorf("prepare SMTP campaign: %w", err)
 		}
-		if !campaignOperationCurrent(operation, d, s.now()) {
+		if !mailOperationCurrent(operation, d, s.now(), "communication_campaign_smtp") {
 			return access.ErrForbidden
 		}
 		var snapshot campaignSnapshot
@@ -338,6 +338,12 @@ func (h CampaignHandler) prepare(
 			},
 		); err != nil {
 			return fmt.Errorf("prepare SMTP campaign: %w", err)
+		}
+		if _, err = q.PrepareSMTPSubmissionAttempt(
+			ctx,
+			dbgen.PrepareSMTPSubmissionAttemptParams{OperationID: d.ID, SourceKind: "campaign"},
+		); err != nil {
+			return fmt.Errorf("retain prepared SMTP campaign attempt: %w", err)
 		}
 		message = snapshot.Message
 		ready = true
@@ -378,14 +384,7 @@ func (h CampaignHandler) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outc
 	if !ready {
 		return prior
 	}
-	receipt := maildelivery.SafeReceipt(s.Transport.Send(ctx, message))
-	cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-	defer cancel()
-	if err = dbgen.New(s.Pool).
-		RecordSMTPCampaignReceipt(cleanup, dbgen.RecordSMTPCampaignReceiptParams{OperationID: d.ID, State: string(receipt.State), ReceiptCode: receipt.Code}); err != nil {
-		return jobs.Ambiguous
-	}
-	return outcome(string(receipt.State))
+	return s.sendPrepared(ctx, d, message, "campaign")
 }
 
 func (h CampaignHandler) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Outcome {
@@ -407,9 +406,14 @@ func (h CampaignHandler) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Ou
 	return jobs.Retryable
 }
 
-func campaignOperationCurrent(operation dbgen.Operation, d jobs.Delivery, now time.Time) bool {
+func mailOperationCurrent(
+	operation dbgen.Operation,
+	d jobs.Delivery,
+	now time.Time,
+	kind string,
+) bool {
 	return operation.EventID == d.EventID && operation.TargetID == d.TargetID &&
-		operation.Kind == "communication_campaign_smtp" &&
+		operation.Kind == kind &&
 		operation.Approved &&
 		!operation.Cancelled &&
 		!operation.DueAt.After(now) &&

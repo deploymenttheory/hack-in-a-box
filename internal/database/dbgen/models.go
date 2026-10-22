@@ -672,6 +672,21 @@ type SmtpMessageSnapshot struct {
 	UpdatedAt     time.Time
 }
 
+type SmtpSubmissionAttempt struct {
+	ID            uuid.UUID
+	OperationID   uuid.UUID
+	SourceKind    string
+	AttemptNumber int32
+	PreparedAt    time.Time
+}
+
+type SmtpSubmissionReceipt struct {
+	AttemptID   uuid.UUID
+	Outcome     string
+	ReceiptCode string
+	RecordedAt  time.Time
+}
+
 type SubmissionChange struct {
 	EventID        uuid.UUID
 	TeamID         uuid.UUID

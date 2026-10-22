@@ -60,6 +60,13 @@ temporary rejection may retry with the same immutable message ID, body, calendar
 UID and sequence. A connection loss after DATA with no definite reply is ambiguous;
 review relay evidence before requesting another test. Do not reset prepared or
 ambiguous snapshots to pending: they may already have caused an external effect.
+Each network attempt retains an append-only prepared record linked to its
+operation, source and attempt number. Its bounded receipt (outcome, safe code and
+time) appends separately and commits atomically with the current status projection.
+Retries preserve prior attempt receipts; unresolved prepared attempts have no
+invented result. Operator reconciliation reads `smtp_submission_attempts` joined
+with `smtp_submission_receipts`, rather than reconstructing overwritten snapshot
+status. These history tables contain no addresses, content or raw relay replies.
 A receipt-storage failure is also uncertain. Restoring a backup does not prove a
 message was unsent; keep workers paused while reconciling unresolved effects.
 

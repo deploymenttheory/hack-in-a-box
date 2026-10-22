@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const cancelExpiredSMTPTestOperations = `-- name: CancelExpiredSMTPTestOperations :execrows
@@ -23,6 +24,23 @@ func (q *Queries) CancelExpiredSMTPTestOperations(ctx context.Context, dueAt tim
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const latestSMTPSubmissionAttempt = `-- name: LatestSMTPSubmissionAttempt :one
+SELECT id, operation_id, source_kind, attempt_number, prepared_at FROM smtp_submission_attempts WHERE operation_id=$1 ORDER BY attempt_number DESC LIMIT 1
+`
+
+func (q *Queries) LatestSMTPSubmissionAttempt(ctx context.Context, operationID uuid.UUID) (SmtpSubmissionAttempt, error) {
+	row := q.db.QueryRow(ctx, latestSMTPSubmissionAttempt, operationID)
+	var i SmtpSubmissionAttempt
+	err := row.Scan(
+		&i.ID,
+		&i.OperationID,
+		&i.SourceKind,
+		&i.AttemptNumber,
+		&i.PreparedAt,
+	)
+	return i, err
 }
 
 const nextEmailCalendarSequence = `-- name: NextEmailCalendarSequence :one
@@ -44,6 +62,31 @@ func (q *Queries) NextEmailCalendarSequence(ctx context.Context, arg NextEmailCa
 	var sequence int32
 	err := row.Scan(&sequence)
 	return sequence, err
+}
+
+const prepareSMTPSubmissionAttempt = `-- name: PrepareSMTPSubmissionAttempt :one
+INSERT INTO smtp_submission_attempts(operation_id,source_kind,attempt_number)
+SELECT $1::uuid,$2::text,coalesce(max(attempt_number),0)+1
+FROM smtp_submission_attempts WHERE operation_id=$1::uuid
+RETURNING id, operation_id, source_kind, attempt_number, prepared_at
+`
+
+type PrepareSMTPSubmissionAttemptParams struct {
+	OperationID uuid.UUID
+	SourceKind  string
+}
+
+func (q *Queries) PrepareSMTPSubmissionAttempt(ctx context.Context, arg PrepareSMTPSubmissionAttemptParams) (SmtpSubmissionAttempt, error) {
+	row := q.db.QueryRow(ctx, prepareSMTPSubmissionAttempt, arg.OperationID, arg.SourceKind)
+	var i SmtpSubmissionAttempt
+	err := row.Scan(
+		&i.ID,
+		&i.OperationID,
+		&i.SourceKind,
+		&i.AttemptNumber,
+		&i.PreparedAt,
+	)
+	return i, err
 }
 
 const recordSMTPCampaignReceipt = `-- name: RecordSMTPCampaignReceipt :exec
@@ -73,6 +116,21 @@ type RecordSMTPReceiptParams struct {
 
 func (q *Queries) RecordSMTPReceipt(ctx context.Context, arg RecordSMTPReceiptParams) error {
 	_, err := q.db.Exec(ctx, recordSMTPReceipt, arg.OperationID, arg.State, arg.ReceiptCode)
+	return err
+}
+
+const recordSMTPSubmissionReceipt = `-- name: RecordSMTPSubmissionReceipt :exec
+INSERT INTO smtp_submission_receipts(attempt_id,outcome,receipt_code) VALUES($1,$2,$3)
+`
+
+type RecordSMTPSubmissionReceiptParams struct {
+	AttemptID   uuid.UUID
+	Outcome     string
+	ReceiptCode string
+}
+
+func (q *Queries) RecordSMTPSubmissionReceipt(ctx context.Context, arg RecordSMTPSubmissionReceiptParams) error {
+	_, err := q.db.Exec(ctx, recordSMTPSubmissionReceipt, arg.AttemptID, arg.Outcome, arg.ReceiptCode)
 	return err
 }
 
@@ -125,6 +183,52 @@ func (q *Queries) SMTPMessageSnapshot(ctx context.Context, operationID uuid.UUID
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const sMTPSubmissionHistory = `-- name: SMTPSubmissionHistory :many
+SELECT a.id,a.operation_id,a.source_kind,a.attempt_number,a.prepared_at,r.outcome,r.receipt_code,r.recorded_at
+FROM smtp_submission_attempts a LEFT JOIN smtp_submission_receipts r ON r.attempt_id=a.id
+WHERE a.operation_id=$1 ORDER BY a.attempt_number
+`
+
+type SMTPSubmissionHistoryRow struct {
+	ID            uuid.UUID
+	OperationID   uuid.UUID
+	SourceKind    string
+	AttemptNumber int32
+	PreparedAt    time.Time
+	Outcome       pgtype.Text
+	ReceiptCode   pgtype.Text
+	RecordedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) SMTPSubmissionHistory(ctx context.Context, operationID uuid.UUID) ([]SMTPSubmissionHistoryRow, error) {
+	rows, err := q.db.Query(ctx, sMTPSubmissionHistory, operationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SMTPSubmissionHistoryRow{}
+	for rows.Next() {
+		var i SMTPSubmissionHistoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OperationID,
+			&i.SourceKind,
+			&i.AttemptNumber,
+			&i.PreparedAt,
+			&i.Outcome,
+			&i.ReceiptCode,
+			&i.RecordedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const sMTPTestOperation = `-- name: SMTPTestOperation :one

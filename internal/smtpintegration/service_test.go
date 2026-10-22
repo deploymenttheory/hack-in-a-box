@@ -482,6 +482,12 @@ func TestSMTPTemporaryRejectionRetriesThroughActualRiverWorker(t *testing.T) {
 		outcomes != "retryable,delivered" {
 		t.Fatal("River retry lost durable provider attempt evidence")
 	}
+	submissions := history(t, f, d.ID)
+	if len(submissions) != 2 || submissions[0].ReceiptCode.String != "relay_temporary_rejection" ||
+		submissions[1].ReceiptCode.String != "relay_accepted" ||
+		submissions[0].ID == submissions[1].ID {
+		t.Fatal("actual River retry overwrote bounded SMTP attempt receipts")
+	}
 }
 
 func TestSMTPReceiptStorageFaultLeavesAmbiguousRatherThanResending(t *testing.T) {
@@ -499,6 +505,12 @@ func TestSMTPReceiptStorageFaultLeavesAmbiguousRatherThanResending(t *testing.T)
 	); result != jobs.Ambiguous ||
 		f.transport.count() != 1 {
 		t.Fatal("receipt outage was reported as safe retry or acceptance")
+	}
+	submissions := history(t, f, d.ID)
+	if len(submissions) != 1 || submissions[0].Outcome.Valid || submissions[0].RecordedAt.Valid {
+		t.Fatal(
+			"receipt outage lost its unresolved prepared barrier or invented acceptance evidence",
+		)
 	}
 	f.exec("DROP TRIGGER smtp_receipt_fault ON smtp_message_snapshots")
 	if f.service.Reconcile(t.Context(), d) != jobs.Ambiguous ||

@@ -32,3 +32,20 @@ ON CONFLICT(operation_id) DO NOTHING;
 
 -- name: RecordSMTPCampaignReceipt :exec
 UPDATE smtp_campaign_messages SET state=$2,receipt_code=$3,updated_at=now() WHERE operation_id=$1;
+
+-- name: PrepareSMTPSubmissionAttempt :one
+INSERT INTO smtp_submission_attempts(operation_id,source_kind,attempt_number)
+SELECT sqlc.arg(operation_id)::uuid,sqlc.arg(source_kind)::text,coalesce(max(attempt_number),0)+1
+FROM smtp_submission_attempts WHERE operation_id=sqlc.arg(operation_id)::uuid
+RETURNING *;
+
+-- name: LatestSMTPSubmissionAttempt :one
+SELECT * FROM smtp_submission_attempts WHERE operation_id=$1 ORDER BY attempt_number DESC LIMIT 1;
+
+-- name: RecordSMTPSubmissionReceipt :exec
+INSERT INTO smtp_submission_receipts(attempt_id,outcome,receipt_code) VALUES($1,$2,$3);
+
+-- name: SMTPSubmissionHistory :many
+SELECT a.id,a.operation_id,a.source_kind,a.attempt_number,a.prepared_at,r.outcome,r.receipt_code,r.recorded_at
+FROM smtp_submission_attempts a LEFT JOIN smtp_submission_receipts r ON r.attempt_id=a.id
+WHERE a.operation_id=$1 ORDER BY a.attempt_number;

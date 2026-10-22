@@ -81,7 +81,7 @@ func TestSMTPUpgradeFromSchema26PreservesPeopleCampaignsAndOperations(t *testing
 		retained["synthetic"] != expected["synthetic"] {
 		t.Fatal("SMTP upgrade changed reviewed campaign document")
 	}
-	for _, table := range []string{"person_email_contacts", "email_verifications", "smtp_message_snapshots", "smtp_campaign_messages", "email_calendar_sequences"} {
+	for _, table := range []string{"person_email_contacts", "email_verifications", "smtp_message_snapshots", "smtp_campaign_messages", "email_calendar_sequences", "smtp_submission_attempts", "smtp_submission_receipts"} {
 		var count int
 		if err = pool.QueryRow(t.Context(), "SELECT count(*) FROM "+table).
 			Scan(&count); err != nil ||

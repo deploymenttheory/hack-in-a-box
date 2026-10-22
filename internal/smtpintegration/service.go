@@ -315,10 +315,7 @@ func (s Service) prepare(
 		if err != nil {
 			return fmt.Errorf("read SMTP operation: %w", err)
 		}
-		if operation.EventID != d.EventID || operation.TargetID != d.TargetID ||
-			operation.Kind != "communication_test_smtp" ||
-			!operation.Approved ||
-			operation.Cancelled || operation.DueAt.After(s.now()) || (operation.State != "running" && operation.State != "pending") {
+		if !mailOperationCurrent(operation, d, s.now(), "communication_test_smtp") {
 			return access.ErrForbidden
 		}
 		revision, err := s.revision(ctx, q, d.EventID)
@@ -361,6 +358,12 @@ func (s Service) prepare(
 			); err != nil {
 				return fmt.Errorf("prepare SMTP retry: %w", err)
 			}
+			if _, err = q.PrepareSMTPSubmissionAttempt(
+				ctx,
+				dbgen.PrepareSMTPSubmissionAttemptParams{OperationID: d.ID, SourceKind: "test"},
+			); err != nil {
+				return fmt.Errorf("retain prepared SMTP test attempt: %w", err)
+			}
 			message = snapshot.Message
 			ready = true
 			return nil
@@ -391,6 +394,12 @@ func (s Service) prepare(
 			},
 		); err != nil {
 			return fmt.Errorf("retain private SMTP attempt: %w", err)
+		}
+		if _, err = q.PrepareSMTPSubmissionAttempt(
+			ctx,
+			dbgen.PrepareSMTPSubmissionAttemptParams{OperationID: d.ID, SourceKind: "test"},
+		); err != nil {
+			return fmt.Errorf("retain prepared SMTP test attempt: %w", err)
 		}
 		ready = true
 		return nil
@@ -431,14 +440,7 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 	if !ready {
 		return previous
 	}
-	receipt := maildelivery.SafeReceipt(s.Transport.Send(ctx, message))
-	cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-	defer cancel()
-	if err = dbgen.New(s.Pool).
-		RecordSMTPReceipt(cleanup, dbgen.RecordSMTPReceiptParams{OperationID: d.ID, State: string(receipt.State), ReceiptCode: receipt.Code}); err != nil {
-		return jobs.Ambiguous
-	}
-	return outcome(string(receipt.State))
+	return s.sendPrepared(ctx, d, message, "test")
 }
 
 func (s Service) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Outcome {
