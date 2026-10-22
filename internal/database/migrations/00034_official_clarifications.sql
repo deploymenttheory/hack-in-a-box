@@ -1,5 +1,5 @@
 -- +goose Up
--- Provisional local version: renumber against the actual merged predecessor before publication.
+-- Ordered upgrade from actual merged checkpoint scorecard schema33.
 CREATE TABLE clarification_questions (
  event_id uuid NOT NULL REFERENCES events(id),
  id uuid NOT NULL,

@@ -1,7 +1,7 @@
-# Official clarification verification checkpoint
+# Official clarification verification
 
-This local #161 checkpoint implements the native private-question and common
-answer contract. It is not a release/CI or ordered-migration completion claim.
+This #161 implementation supplies the native private-question and common answer
+contract. Merge remains subject to exact-head CI and review.
 The complete question and staff workspace remains #162.
 
 Questions require current confirmed admission and published team membership;
@@ -26,7 +26,7 @@ use the same safe Markdown renderer as released resources. The account-scoped
 cache is ephemeral, clears on navigation or denial, and never persists to browser
 storage. Older corrections and native private histories have bounded keyset pages.
 
-## Evidence before final rebase
+## Evidence
 
 - Real PostgreSQL/race tests exercise actual T−7 content release, private team and
   staff isolation, request replay/conflict, withdrawal, staff revocation, archive,
@@ -53,17 +53,27 @@ storage. Older corrections and native private histories have bounded keyset page
 - A positive attachment regression first reproduced two HTTP500 responses from
   wrapping a nil storage error. Success now returns nil after verification;
   guarded error wrapping remains intact.
-- Twelve combined inbox/canonical-reader browser cases pass on desktop/mobile
-  in each independently built public and admin surface. They cover actual route
+- Thirty combined guidance/help/inbox/recovery/canonical-reader browser cases
+  pass on desktop/mobile in each independently built public and admin surface.
+  They cover actual route
   navigation, author/time/source labels, superseded/corrected history continuation,
   denied copied links, sanitisation, active-authority clearing and no persistence.
 - Both web builds, web lint, scoped Go lint and Go formatting pass.
+- The actual normal schema33→34 upgrade preserves a checkpoint and mentor card
+  created by the native scorecard services before upgrading, their exact native
+  reader projection, common rubric/run, private help and observation history,
+  inbox, event, authority and audit records. Empty rollback preserves that state;
+  populated rollback refuses to discard a private question or its source history.
+- Final actual-main focused PostgreSQL/race checks pass for the native question
+  service, actual runtime/material/current-role/withdrawal cases and strict HTTP
+  routes. The full HTTP PostgreSQL/race suite also passed before the final
+  scorecard-only ancestry rebase.
 
 ## Remaining release gates
 
-The local migration number is provisional. Rebase directly onto the actual merged
-predecessor, preserving help/runtime/inbox owner-map unions, and prove a populated
-normal ordered upgrade plus guarded rollback before opening CI, then obtain
-exact-head CI and review. Source adapters for #82 must derive metadata and current audience from
+The concrete migration34 is based on actual merged scorecard schema33. Recovery
+session/draft-scope cache behavior, help/runtime/inbox owner maps and scorecard
+contracts are preserved. Exact-head CI and review remain merge gates.
+Source adapters for #82 must derive metadata and current audience from
 actual immutable publications with source-ID/keyset filtering before bounds;
 orchestration is not implemented here.

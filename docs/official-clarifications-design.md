@@ -67,6 +67,7 @@ component visibility. Verify material-change rejection until the owning approved
 release and impact/notice workflow completes. The minimal reader must not persist
 private question bodies or mix them into common answer caches.
 
-This is a design checkpoint, not a claim that the feature or migration is delivered.
-Migration numbering follows the actual merged schema when the implementation is
-ready; no provisional number blocks another lane.
+The implementation uses migration34 after the actual merged scorecard schema33.
+Ordered populated upgrade and rollback preservation are verified separately from
+the exact-head CI/review merge gate. Full question and staff surfaces remain #162;
+automation remains #82 and consumes actual publications through native adapters.
