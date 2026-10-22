@@ -243,7 +243,7 @@ func (s Service) view(
 	blockers := gateBlockers(row, c, facts, count, next, s.now(), false, "")
 	if row.Stage == "preparation" && !row.PublishedAt.Valid {
 		publication, err := schedule.ChallengePublication(c.LiveStart, c.Timezone, c.DSTChoice)
-		if err == nil && !s.now().Before(publication) {
+		if err == nil && s.now().After(publication.Add(schedule.ChallengeDispatchTolerance)) {
 			blockers = append(
 				blockers,
 				Issue{

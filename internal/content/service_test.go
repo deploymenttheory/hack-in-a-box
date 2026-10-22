@@ -776,3 +776,28 @@ func TestContentReschedulingAndNotices(t *testing.T) {
 		}
 	})
 }
+
+func TestEventOverviewHonoursChallengeDispatchAllowance(t *testing.T) {
+	pool := testdb.New(t, true)
+	f := newFixture(t, pool)
+	for _, offset := range []time.Duration{0, 60 * time.Second, 60*time.Second + time.Nanosecond} {
+		f.now = f.due.Add(offset)
+		v, err := (event.Service{Pool: pool, Clock: func() time.Time { return f.now }}).Read(
+			t.Context(),
+			f.owner.ID,
+			f.id,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		missed := false
+		for _, b := range v.Blockers {
+			if b.Code == "publication_missed" {
+				missed = true
+			}
+		}
+		if missed != (offset > 60*time.Second) {
+			t.Fatalf("at offset %s overview missed=%t", offset, missed)
+		}
+	}
+}

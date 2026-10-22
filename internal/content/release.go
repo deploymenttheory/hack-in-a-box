@@ -15,11 +15,8 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
-
-// ChallengeDispatchTolerance is the explicitly agreed allowance for worker
-// scheduling delay. Missed windows never catch up after a worker restart.
-const ChallengeDispatchTolerance = 60 * time.Second
 
 func (s Service) release(
 	ctx context.Context,
@@ -93,7 +90,7 @@ func (s Service) challengeGate(
 	if err = canonicalSchedule(row, &doc, item.Kind); err != nil {
 		return err
 	}
-	if now.After(item.ScheduledAt.Time.Add(ChallengeDispatchTolerance)) {
+	if now.After(item.ScheduledAt.Time.Add(schedule.ChallengeDispatchTolerance)) {
 		return blocked(
 			"missed_publication",
 			"The challenge publication window was missed. Postpone the hack to preserve the full preparation week or cancel it.",
@@ -140,7 +137,7 @@ func (s Service) Dispatch(
 		}
 		item.State = "blocked"
 		if item.Kind == "challenge" && !row.PublishedAt.Valid &&
-			s.now().After(item.ScheduledAt.Time.Add(ChallengeDispatchTolerance)) {
+			s.now().After(item.ScheduledAt.Time.Add(schedule.ChallengeDispatchTolerance)) {
 			item.State = "missed"
 		}
 		item.Revision++

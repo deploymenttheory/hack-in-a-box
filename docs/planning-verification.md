@@ -319,3 +319,9 @@ Local verification passed: the full command/package suite against real PostgreSQ
 with `-race` and serial package execution; the affected content suite after the
 final dispatch-order refinement; zero-issue Go lint; and the web production build
 with regenerated API types. The existing web bundle-size advisory remains.
+
+A focused regression caught the event overview reporting a missed publication at
+T−7+0 seconds while the worker correctly allowed dispatch through +60 seconds.
+Both now use the same scheduling constant. The test fails before the correction
+and passes at 0, 60 and just over 60 seconds afterward; the content, event and
+schedule PostgreSQL/race suites and final Go lint pass with the correction.
