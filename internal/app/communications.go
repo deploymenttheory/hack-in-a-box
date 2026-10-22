@@ -45,9 +45,9 @@ func newCommunicationRuntime(
 		pool,
 		logger,
 		map[string]jobs.Handler{
-			"communication_test_smtp": provider,
+			"communication_test_smtp":     provider,
 			"communication_campaign_smtp": smtpintegration.CampaignHandler{Service: provider},
-			teamsworkflow.HandlerKind(): teams,
+			teamsworkflow.HandlerKind():   teams,
 		},
 	)
 	if err != nil {

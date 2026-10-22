@@ -23,7 +23,7 @@ The actual River worker test reproduced a completed River job with a still-pendi
 - Additional current-source, retry-cap and crash-recovery PostgreSQL/race cases: pass (13.379s).
 - Current-organiser/CSRF/If-Match/idempotence/secret-canary HTTP test: pass (1.999s).
 - Schema upgrade and actual guarded rollback PostgreSQL/race: pass (3.242s).
-- Desktop/mobile setup browser scenarios: 6 pass (2.5s), isolated port 4380. Scoped component cases: 4 pass.
+- Desktop/mobile setup browser scenarios: 6 pass (2.5s), isolated port 4380; combined existing composer and setup regression: 18 pass (9.3s). Scoped component cases: 4 pass.
 - Scoped Go lint: zero issues. Web lint and public/admin production builds pass.
 
 These are local results, not claims about a future exact-head GitHub CI run. Final merge must follow #78/schema26 and #79/schema27 and include the merged #74/schema25; temporary dependency commits must be removed when rebasing onto main. Regenerate both Go and TypeScript contracts after that rebase.

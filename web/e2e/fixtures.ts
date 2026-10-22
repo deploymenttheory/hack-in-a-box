@@ -26,6 +26,7 @@ export async function mockWorkspace(page: Page) {
     const event = events.find(event => path.startsWith('/api/v1/events/' + event.id))
     if (!event) return error(404, 'not_found')
     if (path.endsWith('/guidance')) return route.fulfill({ json: { items: [], warnings: [], can_manage: false } })
+    if (path.endsWith('/teams-workflow')) return route.fulfill({ json: { revision: event.revision, encryption_ready: true, connection: null, history: [] } })
     if (path.endsWith('/preparation/tasks')) return route.fulfill({ json: { revision: event.revision, timezone: event.configuration.timezone, can_manage: event.can_edit, items: [] } })
     if (path.endsWith('/teams')) return route.fulfill({ json: { revision: event.revision, can_manage: false, can_create: true, frozen: false, freeze_at: event.configuration.team_freeze, teams: [], people: [], requests: [] } })
     if (path.endsWith('/branding')) return route.fulfill({ json: { revision: event.revision, branding: defaultBranding } })
