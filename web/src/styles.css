@@ -308,3 +308,10 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .help-workspace fieldset { min-inline-size: 0; border: 0; padding: 0; }
 .help-queue { list-style: none; padding: 0; display: grid; gap: 1rem; }
 .help-queue > li { border-block-start: 1px solid var(--border); padding-block: 1rem; }
+
+.scorecard-workspace, .scorecard-editor, .scorecard-category { min-width: 0; overflow-wrap: anywhere; }
+.scorecard-category { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .6rem; }
+.scorecard-category legend { font-weight: 700; padding: 0 .4rem; }
+.scorecard-category input[type="checkbox"] { width: auto; margin-right: .5rem; }
+.scorecard-category details { margin: .8rem 0; }
+.scorecard-editor fieldset:disabled { opacity: .8; }

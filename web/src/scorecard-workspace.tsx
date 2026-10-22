@@ -1,0 +1,89 @@
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams } from '@tanstack/react-router'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { api, APIError, privateKey, unwrap } from './api/client'
+import { useIdentity } from './session'
+import { Button } from './components/ui/button'
+import { Failure, Loading } from './components/states'
+import { useCurrentTime } from './use-current-time'
+import { localDate } from './event-time'
+import { checkpointPage, currentCard, reconcileCard } from './scorecard-api'
+import { entries, matchesReceipt, scores, validate, type Card, type Checkpoint, type Entry, type Intent, type Issue } from './scorecard-model'
+import { EvidencePicker, EvidencePreview } from './scorecard-evidence'
+
+function invalidatesEditor(error: unknown) { return error instanceof APIError && [401, 403, 404, 409].includes(error.status) }
+
+export function ScorecardWorkspace() {
+  const { eventId, teamId } = useParams({ strict: false }), identity = useIdentity()
+  return <ScorecardTeam key={`${identity.person.id}:${identity.draft_scope}:${eventId}:${teamId}`} eventID={eventId!} teamID={teamId!} />
+}
+function ScorecardTeam({ eventID, teamID }: { eventID: string; teamID: string }) {
+  const identity = useIdentity(), [selected, select] = useState<string>()
+  const query = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, eventID, 'scorecard-checkpoints'), teamID], initialPageParam: undefined as string | undefined, queryFn: ({ pageParam, signal }) => checkpointPage(eventID, teamID, pageParam, signal), getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
+  const checkpoints = query.data?.pages.flatMap(p => p.items) ?? []
+  const checkpoint = checkpoints.find(c => `${c.definition.id}:${c.version}:${c.definition.run_id}` === selected)
+  return <section className="workspace scorecard-workspace"><Link to="/events/$eventId/mentor/$teamId" params={{ eventId: eventID, teamId: teamID }} search={{ note: undefined, fresh: false }}>← Team mentor workspace</Link><h1>Your independent scorecards</h1><p>Private scores and evidence belong to your own assessment. No other assessor's scores are shown. Huddles, moderation and sign-off require their own authorised workflow.</p><p>Unsent scores and evidence notes stay in this page's memory only. They are lost when you leave or reload; scores cannot be recovered or submitted offline.</p>
+    {query.isPending ? <Loading /> : query.error && (!query.data || invalidatesEditor(query.error)) ? <><p>Scorecards require current assignment or review authority, common challenge publication and the scheduled live start. A cached page cannot override current access.</p><Failure error={query.error} retry={() => void query.refetch()} /></> : <>{query.error && <><p>Current server access could not be checked. Your unsent input remains in this page memory; scoring stays hidden until a current read succeeds.</p><Failure error={query.error} retry={() => void query.refetch()} /></>}<div hidden={!!query.error}><h2>Checkpoint schedule and rubric</h2>{!checkpoints.length && <p>No current published checkpoints are available.</p>}<div className="event-grid">{checkpoints.map(cp => { const key = `${cp.definition.id}:${cp.version}:${cp.definition.run_id}`; return <article className="panel" key={key}><h3>{cp.definition.name}</h3><p>{cp.purpose === 'checkpoint' ? 'Live checkpoint · provisional assessment' : 'Final mentor qualification · frozen formal output'}</p><p>{localDate(cp.opens_at, cp.timezone)} — {localDate(cp.closes_at, cp.timezone)} · {cp.timezone}</p><p>Rubric version {cp.rubric.version} · Checkpoint version {cp.version}</p><Button variant="outline" aria-pressed={selected === key} onClick={() => select(key)}>Open {cp.definition.name}</Button></article> })}</div>{query.hasNextPage && <Button variant="outline" onClick={() => void query.fetchNextPage()}>More checkpoints</Button>}{checkpoint && <CardLoader key={`${selected}:${identity.draft_scope}`} eventID={eventID} teamID={teamID} checkpoint={checkpoint} />}{selected && !checkpoint && <p role="alert">The selected checkpoint/run changed or is no longer available. Its private editor has been cleared; choose a current checkpoint.</p>}</div></>}
+  </section>
+}
+function CardLoader({ eventID, teamID, checkpoint }: { eventID: string; teamID: string; checkpoint: Checkpoint }) {
+  const identity = useIdentity()
+  const query = useQuery({ queryKey: [...privateKey(identity.person.id, eventID, 'scorecard-current'), teamID, checkpoint.definition.id, checkpoint.version], queryFn: ({ signal }) => currentCard(eventID, teamID, checkpoint, identity.person.id, signal), refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
+  if (query.isPending) return <Loading />
+  if (query.error && (!query.data || invalidatesEditor(query.error))) return <><p>Entry is unavailable until current authority and the assessment source are confirmed. Final qualification requires the actual post-cutoff frozen formal submission; a working draft cannot open final scoring.</p><Failure error={query.error} retry={() => void query.refetch()} /></>
+  return <>{query.error && <><p>Current card/source read is unavailable. Your unsent input remains in memory; saved evidence and entry are hidden until a fresh read succeeds.</p><Failure error={query.error} retry={() => void query.refetch()} /></>}<div hidden={!!query.error}><CardEditor eventID={eventID} teamID={teamID} checkpoint={checkpoint} initial={query.data!} refresh={() => query.refetch()} /></div></>
+}
+function CardEditor({ eventID, teamID, checkpoint, initial, refresh }: { eventID: string; teamID: string; checkpoint: Checkpoint; initial: { revision: number; card: Card | null }; refresh: () => Promise<unknown> }) {
+  const identity = useIdentity(), [values, setValues] = useState(() => entries(checkpoint, initial.card ?? undefined)), [issues, setIssues] = useState<Issue[]>([]), [notice, setNotice] = useState(initial.card ? `Loaded your saved ${initial.card.state} version ${initial.card.reference.version}.` : 'All categories are Pending/unobserved. No server save exists yet.'), [busy, setBusy] = useState(false), [failure, setFailure] = useState<unknown>(), [uncertain, setUncertain] = useState<Intent>(), [review, setReview] = useState<Awaited<ReturnType<typeof currentCard>>>(), [receipt, setReceipt] = useState<Card | null>(initial.card)
+  const clock = useCurrentTime()
+  const base = useRef({ revision: initial.revision, version: initial.card?.reference.version ?? 0 }), generation = useRef(0)
+  useEffect(() => () => { generation.current++ }, [])
+  const inWindow = clock >= Date.parse(checkpoint.opens_at) && clock < Date.parse(checkpoint.closes_at)
+  function change(index: number, next: Entry) { setValues(values.map((e, i) => i === index ? next : e)); setIssues([]); setNotice('Unsent private changes in page memory only. No new server save confirmed.') }
+  function confirmed(card: Card) { setUncertain(undefined); setReview(undefined); setReceipt(card); base.current = { revision: card.revision, version: card.reference.version }; setNotice(`Confirmed your exact ${card.state} version ${card.reference.version} is saved on the server. ${card.scores.filter(s => s.pending).length} categories remain pending; this is not moderation or sign-off.`); void refresh() }
+  async function send(intent: Intent) {
+    const ticket = generation.current; setBusy(true); setFailure(undefined)
+    try {
+      const card = unwrap(await api.POST('/api/v1/events/{event_id}/teams/{team_id}/scorecards', { params: { path: { event_id: eventID, team_id: teamID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.revision}"` } }, body: intent.command }))
+      if (ticket !== generation.current) return
+      if (!matchesReceipt(card, intent)) throw new Error('The response did not confirm the exact scorecard version and content.')
+      confirmed(card)
+    } catch (error) {
+      if (ticket !== generation.current) return
+      setFailure(error)
+      if (error instanceof APIError && [400, 401, 403, 404, 409].includes(error.status)) {
+        if ([401, 403, 404].includes(error.status)) { setValues([]); setUncertain(undefined); setReview(undefined); setReceipt(null); setNotice('Current access was denied. Private scores and evidence have been cleared.'); void refresh() }
+        else if (error.status === 400) { setUncertain(undefined); setNotice('Validation rejected this input; no server save was made. Your entered scores and notes remain unsent in memory.') }
+        else { setUncertain(intent); setNotice('The server rejected this version. Check the exact saved version before reviewing a newer base; no write will be replayed automatically.') }
+      } else { setUncertain(intent); setNotice('Save outcome is unconfirmed. Your original version-bound intent is retained in page memory. Check the exact saved version; do not assume a save or retry blindly.') }
+    } finally { setBusy(false) }
+  }
+  async function save(submit: boolean) {
+    const invalid = validate(checkpoint, values, submit); setIssues(invalid)
+    if (invalid.length) { setNotice('Resolve the highlighted categories. Your entered notes remain unsent.'); document.getElementById(`score-${invalid[0].categoryID}`)?.focus(); return }
+    const ticket = generation.current; setBusy(true); setFailure(undefined)
+    try {
+      const current = await currentCard(eventID, teamID, checkpoint, identity.person.id)
+      if (ticket !== generation.current) return
+      if (current.revision !== base.current.revision || (current.card?.reference.version ?? 0) !== base.current.version) { setReview(current); setNotice('The server changed. Review the current saved card below, then explicitly choose it as the base before saving your unsent work.'); return }
+      const intent: Intent = { revision: current.revision, command: { action: submit ? 'submit' : 'save', checkpoint_id: checkpoint.definition.id, checkpoint_version: checkpoint.version, version: base.current.version, scores: scores(values) }, authorID: identity.person.id, teamID, checkpoint, expectedVersion: base.current.version + 1, frozenRevision: current.frozenRevision }
+      await send(intent)
+    } catch (error) { if (ticket === generation.current) { setFailure(error); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { setValues([]); setReceipt(null); setNotice('Current authority was denied; private editor cleared.'); void refresh() } else setNotice('Current server authority/output could not be confirmed. No write was sent; your input remains unsent.') } } finally { setBusy(false) }
+  }
+  async function check() {
+    if (!uncertain) return
+    const ticket = generation.current; setBusy(true); setFailure(undefined)
+    try { const exact = await reconcileCard(eventID, uncertain); if (ticket !== generation.current) return; if (exact) confirmed(exact); else { const current = await currentCard(eventID, teamID, checkpoint, identity.person.id); if (ticket !== generation.current) return; setReview(current); setNotice('The original intent is not confirmed saved. Review current server state; no request was replayed. Explicitly release the old intent before a new save.') } } catch (error) { if (ticket === generation.current) { setFailure(error); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { setValues([]); setUncertain(undefined); setReceipt(null); void refresh() } } } finally { setBusy(false) }
+  }
+  const pending = values.filter(e => e.pending).length
+  return <section className="panel scorecard-editor" aria-label="Your private scorecard"><h2>{checkpoint.definition.name}</h2><p>{checkpoint.purpose === 'checkpoint' ? 'PROVISIONAL live checkpoint. This is not a final score or a running total.' : 'FINAL qualification uses the native post-cutoff frozen formal submission only. Live checkpoint scores are never copied or averaged here.'}</p><p>{pending} of {checkpoint.criteria.categories.length} categories pending. Pending/unobserved is not zero or poor performance.</p><p>{inWindow ? 'Configured checkpoint window is open; the server rechecks live/final gates and current authority on every save.' : 'Outside the configured checkpoint window. Saving is unavailable; unsent work remains in this page only.'}</p>{receipt?.submission_revision != null && <p>Saved against frozen submission revision {receipt.submission_revision}.</p>}
+    <form onSubmit={e => { e.preventDefault(); void save(false) }}><fieldset disabled={busy || !!uncertain || !values.length}>{values.map((entry, i) => { const category = checkpoint.criteria.categories.find(c => c.id === entry.categoryID)!; const errors = issues.filter(e => e.categoryID === category.id); return <fieldset className="scorecard-category" key={category.id}><legend>{category.label}</legend><p>{category.guidance}</p><p>Score range {category.min_score}–{category.max_score} · Weight {category.weight}</p><details><summary>Rubric score anchors</summary><ul>{category.anchors.map(a => <li key={a.score}>{a.score}: {a.description}</li>)}</ul></details><label><input type="checkbox" checked={entry.pending} onChange={e => change(i, { ...entry, pending: e.target.checked })} />Pending/unobserved — no numeric score</label><label htmlFor={`score-${category.id}`}>{category.label} score (explicit zero is allowed when within range)</label><input id={`score-${category.id}`} type="number" min={category.min_score} max={category.max_score} step="1" disabled={entry.pending} value={entry.pending ? '' : entry.value} aria-invalid={!!errors.length} aria-describedby={errors.length ? `errors-${category.id}` : undefined} onChange={e => change(i, { ...entry, value: e.target.value })} /><label htmlFor={`evidence-${category.id}`}>Private evidence note for {category.label}</label><textarea id={`evidence-${category.id}`} rows={4} value={entry.note} onChange={e => change(i, { ...entry, note: e.target.value })} />{!!errors.length && <ul id={`errors-${category.id}`} role="alert">{errors.map(e => <li key={e.message}>{e.message}</li>)}</ul>}<EvidencePicker eventID={eventID} teamID={teamID} add={ref => { if (!entry.references.some(r => r.kind === ref.kind && r.id === ref.id && r.version === ref.version)) change(i, { ...entry, references: [...entry.references, ref] }) }} />{entry.references.map((ref, ri) => <div key={ri}><EvidencePreview eventID={eventID} teamID={teamID} reference={ref} /><Button type="button" variant="outline" onClick={() => change(i, { ...entry, references: entry.references.filter((_, n) => n !== ri) })}>Remove evidence reference {ri + 1}</Button></div>)}</fieldset> })}<div className="actions"><Button type="submit" disabled={!inWindow}>Save private draft</Button><Button type="button" disabled={!inWindow} onClick={() => void save(true)}>{pending ? `Submit independent card with ${pending} pending` : 'Submit independent card'}</Button></div></fieldset></form>
+    <p role="status" aria-label="Scorecard save state">{notice}</p>{!!failure && <Failure error={failure} />}{uncertain && <Button variant="outline" disabled={busy} onClick={() => void check()}>Check exact saved version</Button>}{review && <section aria-label="Review current server card"><h3>Current saved server card</h3>{review.card ? <SavedCard card={review.card} eventID={eventID} teamID={teamID} /> : <p>No current own card for this checkpoint version.</p>}<Button variant="outline" disabled={busy} onClick={() => { base.current = { revision: review.revision, version: review.card?.reference.version ?? 0 }; setReview(undefined); setUncertain(undefined); setNotice('Explicitly reviewed current server base. Your input remains unsent; choose Save or Submit to create a new intent.') }}>Use reviewed current version as base (keep unsent input)</Button></section>}{receipt && <CardHistory eventID={eventID} teamID={teamID} card={receipt} />}
+  </section>
+}
+function SavedCard({ card, eventID, teamID }: { card: Card; eventID: string; teamID: string }) { return <div><p>Your {card.state} version {card.reference.version} · {card.changed_at}</p><ul>{card.scores.map(s => <li key={s.category_id}>{card.criteria.categories.find(c => c.id === s.category_id)?.label ?? s.category_id}: {s.pending ? 'Pending/unobserved (no score)' : s.value}{s.evidence.map((e, i) => <EvidencePreview key={i} eventID={eventID} teamID={teamID} reference={e} />)}</li>)}</ul></div> }
+function CardHistory({ eventID, teamID, card }: { eventID: string; teamID: string; card: Card }) {
+  const identity = useIdentity(), [open, setOpen] = useState(false)
+  const query = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, eventID, 'scorecard-history'), teamID, card.reference.id, card.reference.version], enabled: open, initialPageParam: undefined as number | undefined, queryFn: async ({ pageParam }) => { const page = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/scorecards/{card_id}/history', { params: { path: { event_id: eventID, team_id: teamID, card_id: card.reference.id }, query: { cursor: pageParam, limit: 50 } } })); if (page.items.some(c => c.author_id !== identity.person.id || c.team_id !== teamID)) throw new APIError(403, 'unexpected_private_author'); return page }, getNextPageParam: p => p.next_cursor ?? undefined, refetchInterval: 15_000 })
+  return <section><Button variant="outline" onClick={() => setOpen(!open)}>{open ? 'Hide' : 'Show'} your saved card history</Button>{open && (query.isPending ? <Loading /> : query.error ? <Failure error={query.error} /> : <>{query.data.pages.flatMap(p => p.items).map(c => <SavedCard key={c.reference.version} card={c} eventID={eventID} teamID={teamID} />)}{query.hasNextPage && <Button variant="outline" onClick={() => void query.fetchNextPage()}>Earlier card versions</Button>}</>)}</section>
+}
