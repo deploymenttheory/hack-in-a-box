@@ -80,12 +80,16 @@ func authority(
 	if err != nil {
 		return event, database.ErrDatabase
 	}
+	action := access.EventEdit
+	if revision == nil {
+		action = access.StaffRead
+	}
 	if err = (access.EventPolicy{Queries: q}).Authorize(
 		ctx,
 		actor,
 		eventID,
 		eventID,
-		access.EventEdit,
+		action,
 	); err != nil {
 		return event, fmt.Errorf("authorize GitHub App configuration: %w", err)
 	}

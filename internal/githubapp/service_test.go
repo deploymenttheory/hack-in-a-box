@@ -321,3 +321,28 @@ func TestAppKeyFaultRotationRecoveryAndDisconnect(t *testing.T) {
 		t.Fatalf("disconnect: %+v %v", status, err)
 	}
 }
+
+func TestAppHealthRemainsReadableWhenEventWritesAreDisabled(t *testing.T) {
+	f := setupApp(t)
+	f.configure()
+	if err := f.complete(f.begin()); err != nil {
+		t.Fatal(err)
+	}
+	f.exec("UPDATE events SET writes_allowed=false WHERE id=$1", f.event)
+	status, err := f.s.Status(t.Context(), f.owner.ID, f.event)
+	if err != nil || status.Diagnostics.Code != "healthy" {
+		t.Fatalf("read-only event health: %+v %v", status, err)
+	}
+	if err = f.s.Configure(
+		t.Context(),
+		f.owner.ID,
+		f.event,
+		f.revision(),
+		Command{Action: "disconnect"},
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatalf("read-only event allowed configuration: %v", err)
+	}
+}
