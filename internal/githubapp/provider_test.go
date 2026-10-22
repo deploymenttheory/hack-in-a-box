@@ -130,6 +130,15 @@ func TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens(t *testi
 			appID:       42,
 		},
 	}
+	missingTemplate := tests[0]
+	missingTemplate.name = "template not installed"
+	missingTemplate.code = "template_inaccessible"
+	missingTemplate.tokenStatus = 422
+	rateLimited := tests[0]
+	rateLimited.name = "token rate limit"
+	rateLimited.code = "rate_limited"
+	rateLimited.tokenStatus = 429
+	tests = append(tests, missingTemplate, rateLimited)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tokens := 0

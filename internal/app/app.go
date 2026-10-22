@@ -219,6 +219,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		if err := (registration.Service{Pool: pool}).MaintainOffers(ctx); err != nil {
 			return fmt.Errorf("maintain attendee offers: %w", err)
 		}
+		if err := dbgen.New(pool).ExpireGitHubAppAttempts(ctx); err != nil {
+			return fmt.Errorf("expire GitHub App installation attempts: %w", err)
+		}
 		if err := dbgen.New(pool).ExpireGitHubLinkAttempts(ctx); err != nil {
 			return fmt.Errorf("expire GitHub verification attempts: %w", err)
 		}

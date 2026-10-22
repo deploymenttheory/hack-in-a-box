@@ -205,6 +205,11 @@ func (p *RESTProvider) Inspect(
 	}
 	repo, response, err := scoped.Repositories.Get(ctx, c.Organization, c.TemplateRepository)
 	if err != nil {
+		var tokenFailure *ghinstallation.HTTPError
+		if errors.As(err, &tokenFailure) && tokenFailure.Response != nil &&
+			tokenFailure.Response.StatusCode == 422 {
+			return diagnostic("template_inaccessible")
+		}
 		d := providerFailure(response, err)
 		if response != nil && response.StatusCode == 404 {
 			d.Code = "template_inaccessible"

@@ -20,3 +20,6 @@ INSERT INTO github_app_install_attempts(state_hash,event_id,actor_id,session_has
 
 -- name: ConsumeGitHubAppAttempt :one
 DELETE FROM github_app_install_attempts WHERE state_hash=$1 AND actor_id=$2 AND session_hash=$3 AND expires_at>now() RETURNING *;
+
+-- name: ExpireGitHubAppAttempts :exec
+DELETE FROM github_app_install_attempts WHERE expires_at<=now();

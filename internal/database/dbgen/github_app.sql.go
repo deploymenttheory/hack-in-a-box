@@ -55,6 +55,15 @@ func (q *Queries) DeleteGitHubAppIntegration(ctx context.Context, eventID uuid.U
 	return err
 }
 
+const expireGitHubAppAttempts = `-- name: ExpireGitHubAppAttempts :exec
+DELETE FROM github_app_install_attempts WHERE expires_at<=now()
+`
+
+func (q *Queries) ExpireGitHubAppAttempts(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, expireGitHubAppAttempts)
+	return err
+}
+
 const gitHubAppIntegration = `-- name: GitHubAppIntegration :one
 SELECT event_id, app_id, app_slug, organization_id, organization, template_repository, credential_version, key_id, private_key_encrypted, installation_id, updated_at FROM github_app_integrations WHERE event_id=$1
 `
