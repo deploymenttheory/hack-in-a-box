@@ -338,7 +338,17 @@ func (s Service) projection(
 	if err = json.Unmarshal(row.Configuration, &config); err != nil {
 		return Page{}, wrap("project help event timezone", err)
 	}
-	p := Page{EventName: row.Name, Timezone: config.Timezone, Request: r, History: []Transition{}}
+	p := Page{
+		EventName:       row.Name,
+		Timezone:        config.Timezone,
+		Request:         r,
+		History:         []Transition{},
+		TransferTargets: []HelperTarget{},
+	}
+	p.AssigneeName, err = assigneeName(ctx, q, r)
+	if err != nil {
+		return p, err
+	}
 	for _, h := range rows {
 		p.History = append(
 			p.History,
@@ -363,7 +373,49 @@ func (s Service) projection(
 	p.CanReopen = (r.Status == "resolved" || r.Status == "cancelled") &&
 		(a.Organiser || a.TeamMember)
 	p.CanCancel = (r.Status == "waiting" || r.Status == "claimed") && (a.Organiser || a.TeamMember)
+	if p.CanTransfer {
+		candidates, candidateErr := q.HelpRecipientCandidates(
+			ctx,
+			dbgen.HelpRecipientCandidatesParams{EventID: r.EventID, TeamID: r.TeamID},
+		)
+		if candidateErr != nil {
+			return p, wrap("read transfer candidates", candidateErr)
+		}
+		for _, id := range candidates {
+			if r.AssigneeID != nil && id == *r.AssigneeID {
+				continue
+			}
+			eligible, eligibilityErr := s.authority(ctx, q, id, r)
+			if errors.Is(eligibilityErr, access.ErrNotFound) {
+				continue
+			}
+			if eligibilityErr != nil {
+				return p, eligibilityErr
+			}
+			if !eligible.Helper {
+				continue
+			}
+			person, personErr := q.Person(ctx, id)
+			if personErr != nil {
+				return p, wrap("read eligible transfer name", personErr)
+			}
+			p.TransferTargets = append(
+				p.TransferTargets,
+				HelperTarget{PersonID: id, Name: person.DisplayName},
+			)
+		}
+	}
 	return p, nil
+}
+
+// The request is authorised before this projection; names identify only its
+// already disclosed current owner, not a browsable staff directory.
+func assigneeName(ctx context.Context, q *dbgen.Queries, r Request) (string, error) {
+	if r.AssigneeID == nil {
+		return "", nil
+	}
+	p, err := q.Person(ctx, *r.AssigneeID)
+	return p.DisplayName, wrap("read current help owner name", err)
 }
 
 func (s Service) Read(ctx context.Context, actor, eventID, id uuid.UUID) (Page, error) {

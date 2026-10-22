@@ -154,3 +154,21 @@ recovered pre-live denial journeys pass. No arbitrary scratchpad, fake saved
 observation, offline judging or unimplemented deep link substitutes for those
 journeys. Full support surfaces use the real owning APIs independently of the
 aggregate Today dashboard. These are selected work, not delivered claims.
+
+
+## Batch9 — complete the mentor review workflow
+
+| Issue | Work | Why it follows now |
+| --- | --- | --- |
+| #102 | Mentor scorecard UI | Uses the merged #99/#100/#101 observation, recovery and versioned checkpoint contracts for an actual deliberate scoring surface. |
+| #103 | Reviewed shared feedback and actions | Separates private mentor evidence from reviewed participant-facing feedback, supplying the publication boundary before #104. |
+| #104 | Huddles, second reviews and sign-off owner | Uses #103's reviewed outputs and explicit decision ownership; private notes never become released feedback implicitly. |
+| #105 | Organiser/panel/progress UI | Follows #102/#104/#160 so its links and state come from actual scoring, review and help owners. |
+| #106 | Aggregate mentor privacy and fairness verification | Verifies the complete workflow and current authority across all those owners before aggregate acceptance. |
+
+This batch completes mentor workflows on merged #99/#100/#101/#159. #103
+precedes #104; #105 follows #102/#104/#160; #106 verifies all of them. Keep
+three independent implementation/PR lanes and require final exact-head CI plus
+reviewed evidence for each merge. Git-dependent #108 and aggregate Today #88
+wait for real #96/#93 contracts: no fabricated Git receipts or readiness claims.
+These are selected work, not delivery claims.

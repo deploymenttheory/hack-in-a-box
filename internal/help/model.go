@@ -85,16 +85,28 @@ type Transition struct {
 }
 
 type Page struct {
-	EventName   string       `json:"event_name"`
-	Timezone    string       `json:"timezone"`
-	Request     Request      `json:"request"`
-	History     []Transition `json:"history"`
-	CanClaim    bool         `json:"can_claim"`
-	CanRelease  bool         `json:"can_release"`
-	CanTransfer bool         `json:"can_transfer"`
-	CanResolve  bool         `json:"can_resolve"`
-	CanReopen   bool         `json:"can_reopen"`
-	CanCancel   bool         `json:"can_cancel"`
+	EventName       string         `json:"event_name"`
+	Timezone        string         `json:"timezone"`
+	Request         Request        `json:"request"`
+	History         []Transition   `json:"history"`
+	CanClaim        bool           `json:"can_claim"`
+	CanRelease      bool           `json:"can_release"`
+	CanTransfer     bool           `json:"can_transfer"`
+	CanResolve      bool           `json:"can_resolve"`
+	CanReopen       bool           `json:"can_reopen"`
+	CanCancel       bool           `json:"can_cancel"`
+	AssigneeName    string         `json:"assignee_name"`
+	TransferTargets []HelperTarget `json:"transfer_targets"`
+}
+
+type HelperTarget struct {
+	PersonID uuid.UUID `json:"person_id"`
+	Name     string    `json:"name"`
+}
+
+type TeamReference struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 func threshold(settings Settings, category string) time.Duration {

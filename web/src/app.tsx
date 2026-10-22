@@ -1,3 +1,4 @@
+import { HelpWorkspace } from './help-workspace'
 import { MentorWorkspace } from './mentor-workspace'
 import { InboxPage, ResourcePage } from './inbox'
 import { ClarificationReader } from './clarification-reader'
@@ -18,6 +19,7 @@ const home = createRoute({ getParentRoute: () => root, path: '/', component: Eve
 const event = createRoute({ getParentRoute: () => root, path: '/events/$eventId', component: EventWorkspace })
 const mentor = createRoute({ getParentRoute: () => root, path: '/events/$eventId/mentor', component: MentorWorkspace })
 const mentorTeam = createRoute({ getParentRoute: () => root, path: '/events/$eventId/mentor/$teamId', validateSearch: (s: Record<string, unknown>) => ({ note: typeof s.note === 'string' && /^[a-f0-9-]{36}$/i.test(s.note) ? s.note : undefined, fresh: s.fresh === true || s.fresh === 'true' }), component: MentorWorkspace })
+const helpQueue = createRoute({ getParentRoute: () => root, path: '/events/$eventId/help', component: HelpWorkspace })
 const help = createRoute({ getParentRoute: () => root, path: '/events/$eventId/help/$requestId', component: HelpPage })
 const newEvent = createRoute({ getParentRoute: () => root, path: '/events/new', component: NewEvent })
 const templates = createRoute({ getParentRoute: () => root, path: '/templates', component: TemplatesPage })
@@ -25,6 +27,6 @@ const template = createRoute({ getParentRoute: () => root, path: '/templates/$te
 const registration = createRoute({ getParentRoute: () => root, path: '/register/$eventId', component: RegistrationPage })
 const registrations = createRoute({ getParentRoute: () => root, path: '/register', component: RegistrationDirectory })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([mentor, mentorTeam, help, inbox, resource, clarification, home, newEvent, event, account, templates, template, registrations, registration]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, home, newEvent, event, account, templates, template, registrations, registration]), defaultPendingComponent: Loading })
 declare module '@tanstack/react-router' { interface Register { router: typeof router } }
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

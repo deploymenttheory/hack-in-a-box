@@ -6831,7 +6831,8 @@ components:
           "waiting_seconds",
           "response_seconds",
           "completion_seconds",
-          "overdue"
+          "overdue",
+          "assignee_name"
         ],
         "properties": {
           "id": {
@@ -6888,6 +6889,9 @@ components:
           },
           "overdue": {
             "type": "boolean"
+          },
+          "assignee_name": {
+            "type": "string"
           }
         }
       }
@@ -6905,11 +6909,17 @@ components:
           "can_transfer",
           "can_resolve",
           "can_reopen",
-          "can_cancel"
+          "can_cancel",
+          "assignee_name",
+          "transfer_targets"
         ],
         "properties": {
-          "event_name": {"type":"string"},
-          "timezone": {"type":"string"},
+          "event_name": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
           "request": {
             "$ref": "#/components/schemas/HelpRequest"
           },
@@ -6936,6 +6946,15 @@ components:
           },
           "can_cancel": {
             "type": "boolean"
+          },
+          "assignee_name": {
+            "type": "string"
+          },
+          "transfer_targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpHelperTarget"
+            }
           }
         }
       }
@@ -6994,7 +7013,9 @@ components:
           "claimed",
           "resolved",
           "cancelled",
-          "can_manage"
+          "can_manage",
+          "can_request",
+          "request_team"
         ],
         "properties": {
           "items": {
@@ -7017,6 +7038,17 @@ components:
           },
           "can_manage": {
             "type": "boolean"
+          },
+          "can_request": {
+            "type": "boolean"
+          },
+          "request_team": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HelpTeamReference"
+              }
+            ]
           }
         }
       }
@@ -7103,3 +7135,18 @@ components:
           }
         }
       }
+
+    HelpHelperTarget:
+      type: object
+      additionalProperties: false
+      required: [person_id, name]
+      properties:
+        person_id: {type: string, format: uuid}
+        name: {type: string}
+    HelpTeamReference:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
