@@ -415,13 +415,17 @@ attendee tasks are labelled as shared progress rather than personal completions.
 Conflicts load the current assignment and preserve progress without overwriting
 changed organiser definitions.
 
-Published teams see required/optional deliverables, their evidence kinds, due and
-late status, captain/ownership, current formal evidence and completion feedback.
+After actual common challenge publication, published teams see required/optional
+deliverables, their evidence kinds, due and late status, captain/ownership, current
+formal evidence and completion feedback.
 Private drafts and formal submissions have separate revision counters and actions.
 Nothing is accepted or reviewed formally before live start. The UI uses current
 server permissions, including an explicit `can_read_draft` projection: organisers
 can amend or review formal evidence but never request a team's private draft.
-Before actual challenge publication, no draft/evidence input is solicited.
+Before actual challenge publication, competition definition titles/descriptions
+and draft/evidence inputs are withheld. Assigned personal preparation remains
+available. The aggregate audit and #180 regression are recorded in
+[planning-aggregate-audit.md](planning-aggregate-audit.md).
 
 Uploads are scoped to the team and use a stable key for each selected file. A
 retry reads the latest event revision and reuses that key, so a lost response does

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -1107,5 +1108,76 @@ func TestSubmissionWorkspaceDraftAuthorityAndCurrentOrganisers(t *testing.T) {
 	f.exec("UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2", f.id, f.member.ID)
 	if _, err := f.s.Read(t.Context(), f.member.ID, f.id, f.team); !errors.Is(err, access.ErrForbidden) {
 		t.Fatalf("revoked workspace access: %v", err)
+	}
+}
+
+func TestCompetitionDefinitionsWaitForActualCommonPublication(t *testing.T) {
+	pool := testdb.New(t, true)
+	f := newFixture(t, pool)
+	ctx := t.Context()
+	f.now = f.c.LiveStart.Add(-7 * 24 * time.Hour).Add(time.Hour)
+	f.defs.Deliverables[0].Title = "SYNTHETIC-THEME-CANARY"
+	f.defs.Deliverables[0].Description = "SYNTHETIC-EVIDENCE-INSTRUCTIONS-CANARY"
+	f.saveDefs()
+	f.exec("UPDATE events SET published_at=NULL WHERE id=$1", f.id)
+	assertHidden := func() {
+		t.Helper()
+		page := f.read(f.member.ID, f.team)
+		data, _ := json.Marshal(page)
+		if len(page.Definitions) != 0 || strings.Contains(string(data), "CANARY") ||
+			page.CanDraft ||
+			page.CanSubmit ||
+			page.CanReview ||
+			page.CanReadDraft {
+			t.Fatalf("unreleased competition definitions exposed: %s", data)
+		}
+	}
+	assertHidden()
+	owner := f.read(f.owner.ID, f.team)
+	if len(owner.Definitions) != 3 || owner.Definitions[0].Title != "SYNTHETIC-THEME-CANARY" {
+		t.Fatalf("organiser authoring view lost: %+v", owner)
+	}
+	if _, err := f.s.Draft(ctx, f.member.ID, f.id, f.team); !errors.Is(err, access.ErrForbidden) {
+		t.Fatalf("early draft access: %v", err)
+	}
+	if _, err := f.s.History(
+		ctx,
+		f.member.ID,
+		f.id,
+		f.team,
+		0,
+		10,
+	); !errors.Is(
+		err,
+		event.ErrBlocked,
+	) {
+		t.Fatalf("early history: %v", err)
+	}
+	// The planned T−7 instant has passed, but a future actual-release timestamp
+	// must not disclose the common challenge or its competition requirements.
+	f.exec("UPDATE events SET published_at=$2 WHERE id=$1", f.id, f.now.Add(time.Minute))
+	assertHidden()
+	f.exec("UPDATE events SET published_at=$2 WHERE id=$1", f.id, f.now)
+	released := f.read(f.member.ID, f.team)
+	if len(released.Definitions) != 3 ||
+		released.Definitions[0].Title != "SYNTHETIC-THEME-CANARY" ||
+		released.Definitions[0].Description != "SYNTHETIC-EVIDENCE-INSTRUCTIONS-CANARY" ||
+		!released.Definitions[0].DueAt.Equal(f.c.SubmissionCutoff) ||
+		!released.CanDraft ||
+		!released.CanReadDraft ||
+		released.CanSubmit ||
+		released.CanReview {
+		t.Fatalf("released pre-live requirements: %+v", released)
+	}
+	if _, err := f.s.Read(ctx, f.other.ID, f.id, f.team); !errors.Is(err, access.ErrForbidden) {
+		t.Fatalf("cross-team requirements: %v", err)
+	}
+	f.exec(
+		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
+		f.id,
+		f.member.ID,
+	)
+	if _, err := f.s.Read(ctx, f.member.ID, f.id, f.team); !errors.Is(err, access.ErrForbidden) {
+		t.Fatalf("withdrawn requirements: %v", err)
 	}
 }

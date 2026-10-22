@@ -20,6 +20,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -134,6 +135,8 @@ func TestSubmissionHTTPContractsAndProtectedFiles(t *testing.T) {
 			Pool:        pool,
 			Auth:        auth,
 			Submissions: service,
+			Templates:   templates.Service{Pool: pool},
+			Preparation: preparation.Service{Pool: pool, Now: func() time.Time { return now }},
 			Files: files.Service{
 				Pool:       pool,
 				Storage:    storage,
@@ -190,6 +193,60 @@ func TestSubmissionHTTPContractsAndProtectedFiles(t *testing.T) {
 		},
 	}
 	command := submissions.Command{Evidence: evidence}
+
+	// An elapsed planned publication instant is not an actual release.
+	defs.Deliverables[0].Title = "SYNTHETIC-THEME-CANARY"
+	defs.Deliverables[0].Description = "SYNTHETIC-EVIDENCE-INSTRUCTIONS-CANARY"
+	data, _ = json.Marshal(defs)
+	exec("UPDATE event_definitions SET definitions=$2 WHERE event_id=$1", id, data)
+	exec("UPDATE events SET published_at=NULL WHERE id=$1", id)
+	hidden := request(member, "GET", path, nil, 0, true)
+	check(hidden, 200)
+	var withheld submissions.Page
+	if err = json.Unmarshal(hidden.Body.Bytes(), &withheld); err != nil {
+		t.Fatal(err)
+	}
+	if len(withheld.Definitions) != 0 || strings.Contains(hidden.Body.String(), "CANARY") ||
+		withheld.CanReadDraft ||
+		withheld.CanDraft ||
+		withheld.CanSubmit ||
+		withheld.CanReview {
+		t.Fatalf("early HTTP definition disclosure: %s", hidden.Body)
+	}
+	authoring := request(owner, "GET", path, nil, 0, true)
+	check(authoring, 200)
+	if !strings.Contains(authoring.Body.String(), "SYNTHETIC-THEME-CANARY") {
+		t.Fatalf("organiser authoring lost: %s", authoring.Body)
+	}
+	check(request(member, "GET", base+"/configuration-snapshot", nil, 0, true), 403)
+	check(request(member, "GET", path+"/draft", nil, 0, true), 403)
+	check(request(member, "GET", path+"/history", nil, 0, true), 409)
+	exportPath := base + "/exports/run-sheet.html?audience=participant"
+	exported := request(member, "GET", exportPath, nil, 0, true)
+	check(exported, 200)
+	if strings.Contains(exported.Body.String(), "CANARY") {
+		t.Fatal("early export definition disclosure")
+	}
+	exec("UPDATE events SET published_at=$2 WHERE id=$1", id, now)
+	releasedResponse := request(member, "GET", path, nil, 0, true)
+	check(releasedResponse, 200)
+	if !strings.Contains(releasedResponse.Body.String(), "SYNTHETIC-THEME-CANARY") ||
+		!strings.Contains(
+			releasedResponse.Body.String(),
+			"SYNTHETIC-EVIDENCE-INSTRUCTIONS-CANARY",
+		) {
+		t.Fatalf("actual release did not reveal requirements: %s", releasedResponse.Body)
+	}
+	exported = request(member, "GET", exportPath, nil, 0, true)
+	check(exported, 200)
+	if !strings.Contains(exported.Body.String(), "SYNTHETIC-THEME-CANARY") {
+		t.Fatal("released export disagrees with API")
+	}
+	defs.Deliverables[0].Title = "Repository"
+	defs.Deliverables[0].Description = ""
+	data, _ = json.Marshal(defs)
+	exec("UPDATE event_definitions SET definitions=$2 WHERE event_id=$1", id, data)
+	exec("UPDATE events SET published_at=$2 WHERE id=$1", id, c.LiveStart.Add(-7*24*time.Hour))
 	check(request(member, "GET", path, nil, 0, true), 200)
 	check(request(member, "GET", path+"/draft", nil, 0, true), 200)
 	check(
@@ -237,7 +294,8 @@ func TestSubmissionHTTPContractsAndProtectedFiles(t *testing.T) {
 	if err = json.Unmarshal(submitted.Body.Bytes(), &current); err != nil {
 		t.Fatal(err)
 	}
-	if !current.CanReadDraft || len(current.Organisers) != 1 || current.Organisers[0].ID != owner.ID {
+	if !current.CanReadDraft || len(current.Organisers) != 1 ||
+		current.Organisers[0].ID != owner.ID {
 		t.Fatalf("workspace projection missing: %+v", current)
 	}
 	if current.Final == nil || current.Final.Revision != 1 {
