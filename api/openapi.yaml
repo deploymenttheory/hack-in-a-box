@@ -4,7 +4,9 @@ info:
   version: 0.2.0
   description: |
     Same-origin REST API. Person is the shared identity; registration does not
-    imply confirmed attendance. Cookies authenticate; resource policies authorize.
+    imply confirmed attendance. Cookies authenticate person operations; scoped
+    Authorization Bearer capabilities authenticate display snapshots/streams.
+    Resource policies authorize.
     Mutations require CSRF protection. Action retries reuse an Idempotency-Key;
     reusing a key for different content returns 409. Mutable resource actions use
     If-Match with the observed revision and return 409 on stale revisions.
@@ -646,6 +648,116 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/LogisticsPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/presentation:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getPresentation
+      description: Current organiser/MC-only cue drafts, published program, timers and pairing metadata. No pairing secrets are returned.
+      responses:
+        '200':
+          description: Current controller state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PresentationPage'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: changePresentation
+      description: Explicitly save drafts, approve/publish room fields, advance/back/activate, hold/resume/adjust timers, urgent override or return to schedule. All actions resolve current organiser/MC authority and serialize by revision. Saving/rehearsal does not activate room content; publishing resets the display until explicit advance. Urgent override freezes the planned position/timer; return restores them. Planned activation is blocked during override.
+      parameters:
+        - $ref: '#/components/parameters/PresentationRevision'
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PresentationCommand'}
+      responses:
+        '200':
+          description: Updated controller state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PresentationPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/presentation/pairings:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: pairDisplay
+      description: Create an event-scoped, expiring display capability. The opaque bearer secret is returned once, stored only as a hash and never placed in a URL or log. Revoking the issuer's event authority also revokes access.
+      parameters:
+        - $ref: '#/components/parameters/PresentationRevision'
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DisplayPairInput'}
+      responses:
+        '201':
+          description: One-time display secret and pairing metadata.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PairedDisplay'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/presentation/pairings/{pairing_id}/revoke:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - {name: pairing_id, in: path, required: true, schema: {type: string, format: uuid}}
+    post:
+      operationId: revokeDisplay
+      description: Revoke a display pairing. Current streams recheck authority on each snapshot, at most one second apart under normal database operation, and close when revoked.
+      parameters:
+        - $ref: '#/components/parameters/PresentationRevision'
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: {type: string, minLength: 1, maxLength: 2000}
+      responses:
+        '200':
+          description: Updated controller state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PresentationPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/display/snapshot:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getDisplaySnapshot
+      security: [{display: []}]
+      description: Display capability only; person cookies grant no access. Supply Authorization Bearer using authenticated fetch. URL query parameters, including tokens, are rejected. Returns only approved public-to-room fields and currently released common content titles, never private account/application data.
+      responses:
+        '200':
+          description: Current allowlisted display snapshot.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DisplaySnapshot'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/display/stream:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: streamDisplay
+      security: [{display: []}]
+      description: |
+        Authenticated fetch streaming with Authorization Bearer; native EventSource cannot set this header and must not use a URL token. No person cookies or URL query parameters are accepted as credentials. Sends event snapshot with id equal to the current cue revision immediately and every second, containing server_now and server-derived timer values. Last-Event-ID is accepted but never replays historical cues: reconnect always starts from the latest complete snapshot. Clients replace their snapshot on every message, even when a timer update retains the same cue revision. Event revoked closes the stream after pairing/issuer authority is lost; event reconnect closes on temporary dependency failure. Streams are bounded to five minutes with per-query/write deadlines; reconnect using the same still-valid header token.
+      parameters:
+        - {name: Last-Event-ID, in: header, schema: {type: string, maxLength: 100}}
+      responses:
+        '200':
+          description: Server-sent current snapshots; no stale cue replay.
+          content:
+            text/event-stream:
+              schema: {type: string, format: binary}
         default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/exports/readiness.csv:
     parameters:
@@ -1974,6 +2086,10 @@ paths:
         default: {$ref: '#/components/responses/Error'}
 components:
   securitySchemes:
+    display:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
     session: { type: apiKey, in: cookie, name: hackbox_session }
   parameters:
     EventID:
@@ -1991,6 +2107,12 @@ components:
       in: header
       required: true
       schema: { type: string, format: uuid }
+    PresentationRevision:
+      name: If-Match
+      in: header
+      required: true
+      description: Quoted presentation revision, starting at "0".
+      schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
     Revision:
       name: If-Match
       in: header
@@ -4264,3 +4386,109 @@ components:
           type: array
           items: {$ref: '#/components/schemas/SubmissionChange'}
         next_cursor: {type: integer, format: int64, nullable: true}
+    PresentationCue:
+      type: object
+      additionalProperties: false
+      required: [id, title, text, url, duration_seconds, content_id]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 200}
+        text: {type: string, maxLength: 4000}
+        url: {type: string, maxLength: 2048}
+        duration_seconds: {type: integer, minimum: 0, maximum: 86400}
+        content_id: {type: string, format: uuid, nullable: true}
+    DisplayPairing:
+      type: object
+      additionalProperties: false
+      required: [id, label, created_at, expires_at, revoked_at, last_seen_at, stale]
+      properties:
+        last_seen_at: {type: string, format: date-time, nullable: true}
+        stale: {type: boolean, description: True if no successful authorized snapshot was recorded in the past ten seconds. Last-seen is factual recent contact and does not claim that a stream is currently connected or a screen rendered.}
+        id: {type: string, format: uuid}
+        label: {type: string}
+        created_at: {type: string, format: date-time}
+        expires_at: {type: string, format: date-time}
+        revoked_at: {type: string, format: date-time, nullable: true}
+    PresentationPage:
+      type: object
+      additionalProperties: false
+      required: [revision, server_now, timezone, draft, published, current_index, mode, remaining_seconds, timer_ends_at, pairings, can_control, override, override_mode, override_remaining_seconds, override_timer_ends_at]
+      properties:
+        can_control: {type: boolean}
+        override:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/PresentationCue'}]
+        override_mode: {type: string, enum: [held, running]}
+        override_remaining_seconds: {type: integer, minimum: 0}
+        override_timer_ends_at: {type: string, format: date-time, nullable: true}
+        revision: {type: integer, format: int64}
+        server_now: {type: string, format: date-time}
+        timezone: {type: string}
+        draft: {type: array, items: {$ref: '#/components/schemas/PresentationCue'}}
+        published: {type: array, items: {$ref: '#/components/schemas/PresentationCue'}}
+        current_index: {type: integer, minimum: -1}
+        mode: {type: string, enum: [held, running]}
+        remaining_seconds: {type: integer, minimum: 0}
+        timer_ends_at: {type: string, format: date-time, nullable: true}
+        pairings: {type: array, items: {$ref: '#/components/schemas/DisplayPairing'}}
+    PresentationCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        from_draft: {type: boolean, description: Only for activate. Atomically approve the reviewed saved draft and activate its selected cue without a transient blank screen.}
+        index: {type: integer, minimum: 0, maximum: 199, description: Required only for explicit activate of a published cue.}
+        seconds: {type: integer, minimum: 0, maximum: 86400, description: Required only for timer adjustment.}
+        override: {$ref: '#/components/schemas/PresentationCue'}
+        action: {type: string, enum: [save, publish, advance, back, activate, hold, resume, reset, timer, override, return_to_schedule]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        cues: {type: array, maxItems: 200, items: {$ref: '#/components/schemas/PresentationCue'}}
+    DisplayPairInput:
+      type: object
+      additionalProperties: false
+      required: [label, minutes, reason]
+      properties:
+        label: {type: string, minLength: 1, maxLength: 100}
+        minutes: {type: integer, minimum: 5, maximum: 1440}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+    PairedDisplay:
+      type: object
+      additionalProperties: false
+      required: [revision, pairing, token]
+      properties:
+        revision: {type: integer, format: int64}
+        pairing: {$ref: '#/components/schemas/DisplayPairing'}
+        token: {type: string}
+    DisplayCue:
+      type: object
+      additionalProperties: false
+      required: [id, title, text, url, content_title]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        text: {type: string}
+        url: {type: string}
+        content_title: {type: string}
+    DisplaySnapshot:
+      type: object
+      additionalProperties: false
+      required: [event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour, override_active]
+      properties:
+        override_active: {type: boolean}
+        event_id: {type: string, format: uuid}
+        event_name: {type: string}
+        timezone: {type: string}
+        sequence: {type: integer, format: int64}
+        server_now: {type: string, format: date-time}
+        current:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/DisplayCue'}]
+        next:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/DisplayCue'}]
+        mode: {type: string, enum: [held, running]}
+        remaining_seconds: {type: integer, minimum: 0}
+        timer_ends_at: {type: string, format: date-time, nullable: true}
+        primary_colour: {type: string}
+        background_colour: {type: string}
+        foreground_colour: {type: string}

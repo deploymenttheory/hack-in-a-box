@@ -28,7 +28,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 		identify,
 		metrics.observe(logger),
 		recoverPanics(logger),
-		timeout(cfg.RequestTimeout),
+		finiteOrDisplayTimeout(cfg.RequestTimeout),
 		limitBody(cfg.MaxBodyBytes),
 	)
 	if deps.Auth != nil {
@@ -38,8 +38,8 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 		router.Use(func(next http.Handler) http.Handler {
 			session := deps.Auth.Sessions.LoadAndSave(next)
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if strings.HasPrefix(r.URL.Path, "/api/") ||
-					strings.HasPrefix(r.URL.Path, "/auth/") {
+				if !displayRoute(r) && (strings.HasPrefix(r.URL.Path, "/api/") ||
+					strings.HasPrefix(r.URL.Path, "/auth/")) {
 					// TimeoutHandler buffers headers separately from identify's
 					// writer. Preserve no-store when SCS adds its cookie directive.
 					w.Header().Set("Cache-Control", "no-store")
@@ -66,7 +66,13 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 	}
 	validate := validator.OapiRequestValidatorWithOptions(spec, &validator.Options{
 		Options: openapi3filter.Options{
-			AuthenticationFunc: func(ctx context.Context, _ *openapi3filter.AuthenticationInput) error {
+			AuthenticationFunc: func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+				if input.SecuritySchemeName == "display" {
+					if displayToken(ctx) == "" {
+						return access.ErrUnauthenticated
+					}
+					return nil
+				}
 				if actor(ctx).ID.String() == "00000000-0000-0000-0000-000000000000" {
 					return access.ErrUnauthenticated
 				}
@@ -79,6 +85,18 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 	})
 	protect := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if displayRoute(r) {
+				token, err := displayAuthorization(r)
+				if err != nil {
+					respondError(w, r, err)
+					return
+				}
+				next.ServeHTTP(
+					w,
+					r.WithContext(context.WithValue(r.Context(), displayTokenKey{}, token)),
+				)
+				return
+			}
 			if strings.HasPrefix(r.URL.Path, "/api/") {
 				if deps.Auth == nil {
 					respondError(w, r, access.ErrUnauthenticated)
