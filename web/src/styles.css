@@ -285,3 +285,8 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .guidance-card, .guidance-contact { min-width: 0; overflow-wrap: anywhere; }
 .guidance-card li { margin-block: .5rem; }
 .guidance-contact { display: grid; gap: .5rem; margin-block: 1rem; }
+.inbox-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.inbox-open { display: flex; gap: .75rem; flex-wrap: wrap; text-align: left; cursor: pointer; width: 100%; background: transparent; border: 0; color: inherit; font: inherit; }
+.inbox .panel, .inbox-body { overflow-wrap: anywhere; min-width: 0; }
+.inbox-body { white-space: pre-wrap; margin-block: 1rem; }
+.inbox-detail .primary-link { display: block; margin-block: 1rem; }

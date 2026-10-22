@@ -227,6 +227,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInbox"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getInboxNotification"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setInboxRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events": {
         parameters: {
             query?: never;
@@ -2259,6 +2311,43 @@ export interface components {
             self_test_reason: string;
             setup_url: string;
         };
+        InboxItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            event_name: string;
+            label: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            read_at: string | null;
+        };
+        InboxDestination: {
+            /** @enum {string} */
+            kind: "content";
+            /** Format: uuid */
+            resource_id: string;
+        };
+        InboxDetail: {
+            item: components["schemas"]["InboxItem"];
+            subject: string;
+            body: string;
+            /** @enum {string} */
+            format: "text" | "markdown" | "html";
+            destination: {
+                /** @enum {string} */
+                kind: "content";
+                /** Format: uuid */
+                resource_id: string;
+            } | null;
+        };
+        InboxPage: {
+            items: components["schemas"]["InboxItem"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+            unread: number;
+        };
         CampaignTiming: {
             /** @enum {string} */
             kind: "fixed" | "relative";
@@ -3887,6 +3976,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RevisionResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getInbox: {
+        parameters: {
+            query?: {
+                event_id?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recipient-only current-authority filtered previews and unread count. Hidden resources never contribute to counts or cursors. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getInboxNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable delivered body after current source audience and resource authorization. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setInboxRead: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    read: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Recipient read state updated only after current source authorization. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxDetail"];
                 };
             };
             default: components["responses"]["Error"];

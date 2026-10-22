@@ -399,6 +399,23 @@ type HackTeamRequest struct {
 	CreatedAt time.Time
 }
 
+type InboxNotification struct {
+	ID            uuid.UUID
+	EventID       uuid.UUID
+	RecipientID   uuid.UUID
+	SourceKind    string
+	SourceID      uuid.UUID
+	OccurrenceID  uuid.UUID
+	ScopeBinding  string
+	SourceVersion int64
+	Provenance    []byte
+	Subject       string
+	Body          string
+	Format        string
+	CreatedAt     time.Time
+	ReadAt        pgtype.Timestamptz
+}
+
 type LoginAttempt struct {
 	StateHash   string
 	BrowserHash string
