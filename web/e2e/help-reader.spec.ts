@@ -9,7 +9,7 @@ async function setup(page: Page) {
   const writes: string[] = []
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
   const data: components['schemas']['HelpPage'] = {
-    event_name: 'North Star Hack', timezone: 'Europe/London',
+    event_name: 'North Star Hack', timezone: 'Europe/London', assignee_name: 'Current helper', transfer_targets: [],
     request: { id: requestID, event_id: firstID, team_id: '29bd53a6-91a9-4328-9eec-e17bfc14d29f', requester_id: person.id, revision: 2, category: 'competition_output', description: 'SYNTHETIC-PRIVATE-PROBLEM\n<script>window.untrustedHelp=true</script>\n' + 'unbroken-context-'.repeat(70), location: 'Synthetic help desk', meeting_url: 'https://meet.example.test/approved-room', status: 'claimed', assignee_id: helperID, waiting_cycle: 1, requested_at: '2027-06-20T09:00:00Z', waiting_since: '2027-06-20T09:00:00Z', first_claimed_at: '2027-06-20T09:02:00Z', claimed_at: '2027-06-20T09:02:00Z', resolved_at: null, updated_at: '2027-06-20T09:02:00Z' },
     history: [{ revision: 1, action: 'create', status: 'waiting', actor_id: person.id, assignee_id: null, at: '2027-06-20T09:00:00Z' }, { revision: 2, action: 'claim', status: 'claimed', actor_id: helperID, assignee_id: helperID, at: '2027-06-20T09:02:00Z' }], can_claim: false, can_release: false, can_transfer: false, can_resolve: false, can_cancel: true, can_reopen: false,
   }

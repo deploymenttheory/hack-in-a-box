@@ -303,3 +303,8 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .mentor-editor { border-block: 1px solid var(--border); padding-block: 1rem; margin-block: 1rem; }
 .mentor-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
 .mentor-note { border-block-start: 1px solid var(--border); margin-block-start: 1rem; padding-block: 1rem; }
+
+.help-workspace, .help-reader { overflow-wrap: anywhere; }
+.help-workspace fieldset { min-inline-size: 0; border: 0; padding: 0; }
+.help-queue { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.help-queue > li { border-block-start: 1px solid var(--border); padding-block: 1rem; }

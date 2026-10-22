@@ -4342,6 +4342,7 @@ export interface components {
             /** Format: int64 */
             completion_seconds: number | null;
             overdue: boolean;
+            assignee_name: string;
         };
         HelpPage: {
             event_name: string;
@@ -4354,6 +4355,8 @@ export interface components {
             can_resolve: boolean;
             can_reopen: boolean;
             can_cancel: boolean;
+            assignee_name: string;
+            transfer_targets: components["schemas"]["HelpHelperTarget"][];
         };
         HelpTransition: {
             /** Format: int64 */
@@ -4375,6 +4378,8 @@ export interface components {
             resolved: number;
             cancelled: number;
             can_manage: boolean;
+            can_request: boolean;
+            request_team: components["schemas"]["HelpTeamReference"] | null;
         };
         HelpConfiguration: {
             /** Format: int64 */
@@ -4395,6 +4400,16 @@ export interface components {
             /** Format: int64 */
             output_threshold_seconds: number;
             meeting_hosts: string[];
+        };
+        HelpHelperTarget: {
+            /** Format: uuid */
+            person_id: string;
+            name: string;
+        };
+        HelpTeamReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
     };
     responses: {

@@ -28,14 +28,17 @@ type Summary struct {
 	ResponseSeconds   *int64     `json:"response_seconds"`
 	CompletionSeconds *int64     `json:"completion_seconds"`
 	Overdue           bool       `json:"overdue"`
+	AssigneeName      string     `json:"assignee_name"`
 }
 type Queue struct {
-	Items     []Summary `json:"items"`
-	Waiting   int       `json:"waiting"`
-	Claimed   int       `json:"claimed"`
-	Resolved  int       `json:"resolved"`
-	Cancelled int       `json:"cancelled"`
-	CanManage bool      `json:"can_manage"`
+	Items       []Summary      `json:"items"`
+	Waiting     int            `json:"waiting"`
+	Claimed     int            `json:"claimed"`
+	Resolved    int            `json:"resolved"`
+	Cancelled   int            `json:"cancelled"`
+	CanManage   bool           `json:"can_manage"`
+	CanRequest  bool           `json:"can_request"`
+	RequestTeam *TeamReference `json:"request_team"`
 }
 
 func summary(r Request, settings Settings, now time.Time) Summary {
@@ -92,6 +95,35 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, err
 				result.CanManage = row.WritesAllowed
 			}
 		}
+		member, memberErr := q.TeamAssignment(
+			ctx,
+			dbgen.TeamAssignmentParams{EventID: eventID, PersonID: actor, Snapshot: "published"},
+		)
+		if memberErr != nil && !errors.Is(memberErr, pgx.ErrNoRows) {
+			return wrap("read own help team", memberErr)
+		}
+		if memberErr == nil {
+			a, authErr := s.authority(
+				ctx,
+				q,
+				actor,
+				Request{EventID: eventID, TeamID: member.TeamID, Category: "setup"},
+			)
+			if authErr != nil {
+				return authErr
+			}
+			if a.TeamMember {
+				team, teamErr := q.HackTeam(
+					ctx,
+					dbgen.HackTeamParams{EventID: eventID, ID: member.TeamID},
+				)
+				if teamErr != nil {
+					return wrap("read own help team name", teamErr)
+				}
+				result.RequestTeam = &TeamReference{ID: team.ID, Name: team.Name}
+				result.CanRequest = row.WritesAllowed
+			}
+		}
 		rows, err := helpRequests(ctx, q, eventID)
 		if err != nil {
 			return wrap("load help queue", err)
@@ -114,7 +146,12 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, err
 					return err
 				}
 			}
-			result.Items = append(result.Items, summary(r, config, s.now()))
+			item := summary(r, config, s.now())
+			item.AssigneeName, err = assigneeName(ctx, q, r)
+			if err != nil {
+				return err
+			}
+			result.Items = append(result.Items, item)
 			switch r.Status {
 			case "waiting":
 				result.Waiting++

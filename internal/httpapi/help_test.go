@@ -116,3 +116,79 @@ func TestHelpHTTPCurrentTeamContextAndLiveReviewGate(t *testing.T) {
 		t.Fatal("private help prose/location logged")
 	}
 }
+
+func TestHelpHTTPContextAndTransferProjectionStayCurrentActorScoped(t *testing.T) {
+	pool := testdb.New(t, true)
+	f := newEmbargoFixture(t, pool, time.Date(2027, 6, 20, 9, 0, 0, 0, time.UTC))
+	service := help.Service{Pool: pool, Clock: func() time.Time { return f.now }}
+	f.router = NewRouter(
+		f.cfg,
+		slog.New(slog.NewJSONHandler(&f.logs, nil)),
+		Dependencies{Pool: pool, Auth: f.auth, Help: service},
+	)
+	id := uuid.New()
+	path := f.base() + "/help/" + id.String()
+	f.expect(
+		f.request(
+			f.members[0][0],
+			"PUT",
+			path,
+			map[string]any{
+				"team_id":     f.teams[0],
+				"category":    "setup",
+				"description": "PRIVATE HTTP HELP",
+				"location":    "PRIVATE HTTP LOCATION",
+				"meeting_url": "",
+			},
+			0,
+		),
+		200,
+	)
+	claimed := f.request(
+		f.owner,
+		"POST",
+		path+"/actions",
+		map[string]any{"action": "claim", "assignee_id": nil},
+		1,
+	)
+	f.expect(claimed, 200)
+	var owner help.Page
+	if err := json.Unmarshal(claimed.Body.Bytes(), &owner); err != nil {
+		t.Fatal(err)
+	}
+	if !owner.CanTransfer || owner.AssigneeName != f.owner.DisplayName ||
+		owner.TransferTargets == nil {
+		t.Fatal("missing authorised owner projection")
+	}
+	current := f.request(f.members[0][0], "GET", path, nil, 0)
+	f.expect(current, 200)
+	var member help.Page
+	if err := json.Unmarshal(current.Body.Bytes(), &member); err != nil {
+		t.Fatal(err)
+	}
+	if member.CanTransfer || len(member.TransferTargets) != 0 ||
+		member.AssigneeName != f.owner.DisplayName {
+		t.Fatal("requester received a transfer directory")
+	}
+	queue := f.request(f.members[0][0], "GET", f.base()+"/help", nil, 0)
+	f.expect(queue, 200)
+	var own help.Queue
+	if err := json.Unmarshal(queue.Body.Bytes(), &own); err != nil {
+		t.Fatal(err)
+	}
+	if !own.CanRequest || own.RequestTeam == nil || own.RequestTeam.ID != f.teams[0] {
+		t.Fatal("incorrect own request-team projection")
+	}
+	organiserQueue := f.request(f.owner, "GET", f.base()+"/help", nil, 0)
+	f.expect(organiserQueue, 200)
+	var staff help.Queue
+	if err := json.Unmarshal(organiserQueue.Body.Bytes(), &staff); err != nil {
+		t.Fatal(err)
+	}
+	if staff.CanRequest || staff.RequestTeam != nil {
+		t.Fatal("organiser received a participant team directory")
+	}
+	if strings.Contains(f.logs.String(), "PRIVATE HTTP") {
+		t.Fatal("private request context logged")
+	}
+}
