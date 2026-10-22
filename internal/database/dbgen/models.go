@@ -71,6 +71,48 @@ type CompetitionExclusion struct {
 	OccurredAt time.Time
 }
 
+type ContentChange struct {
+	EventID     uuid.UUID
+	ContentID   uuid.UUID
+	Revision    int64
+	Version     int64
+	Action      string
+	ActorID     *uuid.UUID
+	Reason      string
+	ScheduledAt pgtype.Timestamptz
+	OccurredAt  time.Time
+}
+
+type ContentFile struct {
+	EventID   uuid.UUID
+	ContentID uuid.UUID
+	Version   int64
+	FileID    uuid.UUID
+}
+
+type ContentItem struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	Kind             string
+	Revision         int64
+	Version          int64
+	State            string
+	ReleasedVersion  pgtype.Int8
+	ScheduledAt      pgtype.Timestamptz
+	ApprovedBy       *uuid.UUID
+	ApprovedRevision pgtype.Int8
+	ReleasedAt       pgtype.Timestamptz
+}
+
+type ContentVersion struct {
+	EventID   uuid.UUID
+	ContentID uuid.UUID
+	Version   int64
+	Document  []byte
+	ActorID   uuid.UUID
+	CreatedAt time.Time
+}
+
 type DeliveryAttempt struct {
 	ID          uuid.UUID
 	OperationID uuid.UUID

@@ -390,6 +390,16 @@ func (s Service) Update(
 		if err != nil {
 			return conflict(err)
 		}
+		if err := invalidateChallengeApproval(
+			ctx,
+			q,
+			row,
+			actor,
+			input.Configuration,
+			s.now(),
+		); err != nil {
+			return err
+		}
 		if err := replan(ctx, q, id, input.Configuration); err != nil {
 			return err
 		}

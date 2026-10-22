@@ -246,3 +246,76 @@ does not claim a referenced branch head was captured at cutoff.
 Local verification passed: the full command/package PostgreSQL suite with `-race`
 (serial package execution after a Docker reaper startup failure in the parallel
 run), zero-issue Go lint, and the browser production build with regenerated types.
+
+## #69 — versioned content and guarded publication
+
+Migration 18 adds immutable native page versions, attachment references and
+workflow/release history. Each event has one canonical challenge item whose type
+cannot be changed. Current drafts, review and approval state are separate from the
+last released version. Editing text, attachments, audiences or schedules creates a
+new version and invalidates approval; readers retain the previous released version
+until a new one is published or the item is withdrawn. Approval binds the exact
+content revision and schedule. Event-date changes invalidate pending challenge
+approval in the event update transaction.
+
+The challenge uses seven calendar days before live start at the same event-local
+clock time, including DST changes. The user explicitly agreed a maximum **60-second
+scheduler dispatch allowance** on 22 October 2026. It cannot publish early. A
+release attempted later than that allowance is recorded as missed; blocked or
+missed initial publication requires postponement preserving the preparation week
+or cancellation. Reapproval after the due time and generic manual/team-audience
+controls cannot bypass the rule. Initial challenge publication rechecks current
+preparation stage, confirmed-attendance minimum, organiser-confirmed frozen teams,
+current approving-organiser authority and event writability under the event lock.
+Planned and actual publication instants are both retained.
+
+Approved content is its durable scheduled job. The worker checks due releases at
+startup and every five seconds; the database prioritises common challenges. A job
+carries the approved revision, so a stale job cannot publish a later draft. The
+released pointer, immutable release event and first challenge publication timestamp
+commit atomically. A unique constraint prevents repeated release events for a
+version. Cancel/edit/release races serialize on the event lock. A blocked job does
+not silently retry after its gate changes.
+
+Current confirmed attendees, event roles and published team membership determine
+released audiences. Explicit privileged previews are limited to current organisers
+and, for challenge/brief content, current early-brief-access grants. The existing
+staff-grant API remains the sole grant path: active/waitlisted competitors must
+withdraw first, and a grant causes lasting competition ineligibility even if never
+opened or later revoked. Platform administration confers no preview access. Briefs
+cannot be released through a generic page action before the common challenge.
+
+Both metadata and generic direct-download URLs enforce these audiences. Content
+attachments must be organiser-owned event uploads, never private team evidence or
+cross-event files. Each attachment is bound to one content item, preventing aliases
+through a different audience/release policy. Removing a grant or current membership
+revokes copied links on the next request. Withdrawal stops future content and file
+retrieval and explicitly states that downloaded copies cannot be recalled. The
+published common challenge cannot be withdrawn; approved exceptional postponement
+retains it and permits continued preparation.
+
+The revised-date notices already persisted by the event domain are now readable by
+all current confirmed attendees and staff through `/api/v1/events/{event_id}/notices`.
+This makes revised dates/deadlines available in the application; actual email/chat
+notification delivery remains the separate #82 implementation. The organiser and
+attendee screens are #70/#71, including safe Markdown rendering and version-bound
+required read acknowledgements. No arbitrary URLs are fetched by content APIs.
+
+`/api/v1/events/{event_id}/content` exposes audience-filtered listings, immutable
+version saves, explicit preview/history and review/approve/release/cancel/withdraw
+actions. Mutations require CSRF and the quoted content-state revision (`"0"` for a
+new item). Ordinary libraries expose only released versions and never private
+version metadata. Go and TypeScript contracts are regenerated from OpenAPI.
+
+Real PostgreSQL tests with race detection cover DST calendar arithmetic, early,
+exact, last-allowed and missed publication times; each readiness gate; concurrent
+workers and cancellation; stale jobs, edits and rescheduling; immutable history;
+private previews; current role/team authority; direct file retrieval; cross-event
+and attachment-alias denial; permanent early-access exclusion; and approved
+postponement with revised-date notices. Authenticated HTTP tests also validate
+OpenAPI responses, CSRF, optimistic concurrency and withdrawal of copied links.
+
+Local verification passed: the full command/package suite against real PostgreSQL
+with `-race` and serial package execution; the affected content suite after the
+final dispatch-order refinement; zero-issue Go lint; and the web production build
+with regenerated API types. The existing web bundle-size advisory remains.
