@@ -1,7 +1,7 @@
 name: hackbox
 x-app: &app
-  image: hack-in-a-box:local
-  build: .
+  image: ${HACKBOX_PUBLIC_IMAGE:-hack-in-a-box:local}
+  build: { context: ., target: public }
   init: true
   read_only: true
   tmpfs: [/tmp]
@@ -48,6 +48,24 @@ services:
   api:
     <<: *app
     ports: ['127.0.0.1:${HACKBOX_PORT:-8080}:8080']
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  admin:
+    <<: *app
+    image: ${HACKBOX_ADMIN_IMAGE:-hack-in-a-box:admin}
+    build: { context: ., target: admin }
+    environment:
+      <<: *environment
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: ${HACKBOX_ADMIN_ORIGIN:-http://127.0.0.1:8081}
+      HACKBOX_OIDC_CLIENT_ID: ${HACKBOX_ADMIN_OIDC_CLIENT_ID:-${HACKBOX_OIDC_CLIENT_ID:-}}
+      HACKBOX_OIDC_CLIENT_SECRET: ${HACKBOX_ADMIN_OIDC_CLIENT_SECRET:-${HACKBOX_OIDC_CLIENT_SECRET:-}}
+    ports: ['127.0.0.1:${HACKBOX_ADMIN_PORT:-8081}:8080']
     restart: unless-stopped
     healthcheck:
       test: [CMD, /app/healthcheck]

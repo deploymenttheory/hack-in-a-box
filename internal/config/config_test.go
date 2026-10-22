@@ -39,6 +39,7 @@ func TestLoad(t *testing.T) {
 func TestLoadRejectsInvalidConfigurationWithoutValues(t *testing.T) {
 	t.Parallel()
 	for _, tc := range []struct{ key, value string }{
+		{"HACKBOX_SURFACE", "secret-surface"},
 		{"HACKBOX_ENV", ""},
 		{"HACKBOX_ENV", "secret-environment"},
 		{"HACKBOX_HTTP_ADDR", "secret-address"},
@@ -80,5 +81,31 @@ func TestOIDCIssuerRetainsProviderTrailingSlash(t *testing.T) {
 	}
 	if cfg.OIDCIssuer != env["HACKBOX_OIDC_ISSUER"] {
 		t.Fatal("issuer was normalized instead of retained exactly")
+	}
+}
+
+func TestDeploymentSurfaces(t *testing.T) {
+	t.Parallel()
+	for _, surface := range []string{"", "public", "admin"} {
+		cfg, err := config.Load(func(key string) string {
+			switch key {
+			case "HACKBOX_ENV":
+				return "test"
+			case "HACKBOX_SURFACE":
+				return surface
+			default:
+				return ""
+			}
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := surface
+		if expected == "" {
+			expected = "public"
+		}
+		if cfg.Surface != expected {
+			t.Fatalf("surface = %q, want %q", cfg.Surface, expected)
+		}
 	}
 }
