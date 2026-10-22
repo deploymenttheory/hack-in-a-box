@@ -46,6 +46,8 @@ const (
 	PrivilegedAccessGranted  Action = "privileged_access.granted"
 	AttendanceException      Action = "attendance.exception"
 	MentorCoverageChanged    Action = "mentor.coverage_changed"
+	MentorObservationChanged Action = "mentor.observation_changed"
+	MentorStatusChanged      Action = "mentor.status_changed"
 	TeamFrozen               Action = "team.frozen"
 	TeamRebalanced           Action = "team.rebalanced"
 	ChallengeApproved        Action = "challenge.approved"
@@ -129,6 +131,8 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		CredentialChanged,
 		CredentialRevealed,
 		MentorCoverageChanged,
+		MentorObservationChanged,
+		MentorStatusChanged,
 		ContentAcknowledged,
 		ContentChanged,
 		ContentReleased,

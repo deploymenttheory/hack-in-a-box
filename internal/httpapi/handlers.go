@@ -30,6 +30,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
+	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
@@ -54,6 +55,7 @@ type Dependencies struct {
 	Communications communications.Service
 	Credentials    credentials.Service
 	Mentors        mentors.Service
+	Observations   observations.Service
 	Content        content.Service
 	Submissions    submissions.Service
 	Attendance     attendance.Service
