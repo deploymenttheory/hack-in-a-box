@@ -647,6 +647,46 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/LogisticsPage'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/exports/readiness.csv:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: audience
+        in: query
+        required: true
+        schema: {type: string, enum: [organiser, mentor, participant]}
+    get:
+      operationId: exportReadiness
+      description: Permission-filtered readiness CSV with spreadsheet formula defence. Current event and resource authority is resolved for every download; selecting an audience never grants it.
+      responses:
+        '200':
+          description: Download generated from the current permitted event view.
+          headers:
+            Content-Disposition:
+              schema: {type: string}
+          content:
+            text/csv:
+              schema: {type: string, format: binary}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/exports/run-sheet.html:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: audience
+        in: query
+        required: true
+        schema: {type: string, enum: [organiser, mentor, participant]}
+    get:
+      operationId: downloadRunSheet
+      description: Standalone offline printable run sheet. No external assets, private drafts or sensitive registration data. Current event and resource authority is resolved for every download; selecting an audience never grants it.
+      responses:
+        '200':
+          description: Download generated from the current permitted event view.
+          headers:
+            Content-Disposition:
+              schema: {type: string}
+          content:
+            text/html:
+              schema: {type: string, format: binary}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/preparation/tasks:
     parameters:
       - $ref: '#/components/parameters/EventID'
