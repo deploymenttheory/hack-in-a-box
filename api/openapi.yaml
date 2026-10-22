@@ -527,6 +527,68 @@ paths:
                 type: string
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/preparation/tasks:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: listPreparationTasks
+      description: Current event revision, template-seeded tasks and dynamically recomputed due times. Staff see only their assigned work and authorised evidence.
+      parameters:
+        - {name: status, in: query, schema: {type: string, enum: [not_started, in_progress, blocked, complete, waived]}}
+        - {name: owner_id, in: query, schema: {type: string, format: uuid}}
+        - {name: owner_role, in: query, schema: {type: string}}
+        - {name: overdue, in: query, schema: {type: boolean}}
+        - {name: blocked, in: query, schema: {type: boolean}}
+        - {name: unowned, in: query, schema: {type: boolean}}
+      responses:
+        '200':
+          description: Permission-filtered preparation work.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreparationPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/preparation/tasks/{task_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - {name: task_id, in: path, required: true, schema: {type: string, format: uuid}}
+    put:
+      operationId: savePreparationTask
+      description: Use the page's event revision in If-Match. Only organisers may change task definitions, ownership, dependencies or grant waivers/overrides. Assigned staff may update progress, checklist completion and visible evidence. Hidden evidence and dependencies are retained.
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/ProfileRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PreparationUpdate'}
+      responses:
+        '200':
+          description: Saved task and the new page revision.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreparationPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/preparation/tasks/{task_id}/history:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - {name: task_id, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: preparationTaskHistory
+      description: Organiser-only immutable change history, newest first; evidence permissions are evaluated at read time.
+      responses:
+        '200':
+          description: Up to 100 most recent changes.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/PreparationChange'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/registration/forms:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -2138,6 +2200,92 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Registration'
+    PreparationEvidence:
+      type: object
+      additionalProperties: false
+      required: [id, kind, label, url, file_id, visibility]
+      properties:
+        id: {type: string, format: uuid}
+        kind: {type: string, enum: [file, url, repository]}
+        label: {type: string, minLength: 1, maxLength: 300}
+        url: {type: string, maxLength: 2048}
+        file_id: {type: string, format: uuid, nullable: true}
+        visibility: {type: string, enum: [organisers, assignees]}
+    PreparationDefinition:
+      type: object
+      additionalProperties: false
+      required: [id, title, description, owner_id, owner_role, status, schedule_id, fixed_due_at, depends_on, checklist, evidence]
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 160}
+        description: {type: string, maxLength: 4000}
+        owner_id: {type: string, format: uuid, nullable: true}
+        owner_role: {type: string, enum: ['', organiser, mentor, judge, mc, logistics, photographer, attendee]}
+        status: {type: string, enum: [not_started, in_progress, blocked, complete, waived]}
+        schedule_id: {type: string, format: uuid, nullable: true}
+        fixed_due_at: {type: string, format: date-time, nullable: true}
+        depends_on:
+          type: array
+          maxItems: 200
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        checklist:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, title, complete]
+            properties:
+              id: {type: string, format: uuid}
+              title: {type: string, minLength: 1, maxLength: 300}
+              complete: {type: boolean}
+        evidence:
+          type: array
+          maxItems: 30
+          items: {$ref: '#/components/schemas/PreparationEvidence'}
+    PreparationUpdate:
+      type: object
+      required: [definition, reason, override_dependencies]
+      properties:
+        definition: {$ref: '#/components/schemas/PreparationDefinition'}
+        reason: {type: string, maxLength: 2000}
+        override_dependencies: {type: boolean}
+    PreparationTask:
+      allOf:
+        - $ref: '#/components/schemas/PreparationUpdate'
+        - type: object
+          required: [revision, due_at, scheduling_issue, blocked, overdue, unowned, can_edit, restricted_evidence_count, hidden_dependencies]
+          properties:
+            revision: {type: integer, format: int64}
+            due_at: {type: string, format: date-time, nullable: true}
+            scheduling_issue: {type: boolean}
+            blocked: {type: boolean}
+            overdue: {type: boolean}
+            unowned: {type: boolean}
+            can_edit: {type: boolean}
+            restricted_evidence_count: {type: integer}
+            hidden_dependencies: {type: integer}
+    PreparationChange:
+      allOf:
+        - $ref: '#/components/schemas/PreparationUpdate'
+        - type: object
+          required: [revision, actor_id, created_at]
+          properties:
+            revision: {type: integer, format: int64}
+            actor_id: {type: string, format: uuid}
+            created_at: {type: string, format: date-time}
+    PreparationPage:
+      type: object
+      additionalProperties: false
+      required: [revision, timezone, can_manage, items]
+      properties:
+        revision: {type: integer, format: int64}
+        timezone: {type: string}
+        can_manage: {type: boolean}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PreparationTask'}
     RegistrationForm:
       type: object
       additionalProperties: false

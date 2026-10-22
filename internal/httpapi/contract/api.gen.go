@@ -258,6 +258,108 @@ func (e OperationalProfilePhotoConsent) Valid() bool {
 	}
 }
 
+// Defines values for PreparationDefinitionOwnerRole.
+const (
+	PreparationDefinitionOwnerRoleAttendee     PreparationDefinitionOwnerRole = "attendee"
+	PreparationDefinitionOwnerRoleEmpty        PreparationDefinitionOwnerRole = ""
+	PreparationDefinitionOwnerRoleJudge        PreparationDefinitionOwnerRole = "judge"
+	PreparationDefinitionOwnerRoleLogistics    PreparationDefinitionOwnerRole = "logistics"
+	PreparationDefinitionOwnerRoleMc           PreparationDefinitionOwnerRole = "mc"
+	PreparationDefinitionOwnerRoleMentor       PreparationDefinitionOwnerRole = "mentor"
+	PreparationDefinitionOwnerRoleOrganiser    PreparationDefinitionOwnerRole = "organiser"
+	PreparationDefinitionOwnerRolePhotographer PreparationDefinitionOwnerRole = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the PreparationDefinitionOwnerRole enum.
+func (e PreparationDefinitionOwnerRole) Valid() bool {
+	switch e {
+	case PreparationDefinitionOwnerRoleAttendee:
+		return true
+	case PreparationDefinitionOwnerRoleEmpty:
+		return true
+	case PreparationDefinitionOwnerRoleJudge:
+		return true
+	case PreparationDefinitionOwnerRoleLogistics:
+		return true
+	case PreparationDefinitionOwnerRoleMc:
+		return true
+	case PreparationDefinitionOwnerRoleMentor:
+		return true
+	case PreparationDefinitionOwnerRoleOrganiser:
+		return true
+	case PreparationDefinitionOwnerRolePhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PreparationDefinitionStatus.
+const (
+	PreparationDefinitionStatusBlocked    PreparationDefinitionStatus = "blocked"
+	PreparationDefinitionStatusComplete   PreparationDefinitionStatus = "complete"
+	PreparationDefinitionStatusInProgress PreparationDefinitionStatus = "in_progress"
+	PreparationDefinitionStatusNotStarted PreparationDefinitionStatus = "not_started"
+	PreparationDefinitionStatusWaived     PreparationDefinitionStatus = "waived"
+)
+
+// Valid indicates whether the value is a known member of the PreparationDefinitionStatus enum.
+func (e PreparationDefinitionStatus) Valid() bool {
+	switch e {
+	case PreparationDefinitionStatusBlocked:
+		return true
+	case PreparationDefinitionStatusComplete:
+		return true
+	case PreparationDefinitionStatusInProgress:
+		return true
+	case PreparationDefinitionStatusNotStarted:
+		return true
+	case PreparationDefinitionStatusWaived:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PreparationEvidenceKind.
+const (
+	PreparationEvidenceKindFile       PreparationEvidenceKind = "file"
+	PreparationEvidenceKindRepository PreparationEvidenceKind = "repository"
+	PreparationEvidenceKindUrl        PreparationEvidenceKind = "url"
+)
+
+// Valid indicates whether the value is a known member of the PreparationEvidenceKind enum.
+func (e PreparationEvidenceKind) Valid() bool {
+	switch e {
+	case PreparationEvidenceKindFile:
+		return true
+	case PreparationEvidenceKindRepository:
+		return true
+	case PreparationEvidenceKindUrl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PreparationEvidenceVisibility.
+const (
+	Assignees  PreparationEvidenceVisibility = "assignees"
+	Organisers PreparationEvidenceVisibility = "organisers"
+)
+
+// Valid indicates whether the value is a known member of the PreparationEvidenceVisibility enum.
+func (e PreparationEvidenceVisibility) Valid() bool {
+	switch e {
+	case Assignees:
+		return true
+	case Organisers:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ProfileFieldsPhotoConsent.
 const (
 	ProfileFieldsPhotoConsentNo      ProfileFieldsPhotoConsent = "no"
@@ -723,6 +825,33 @@ func (e UploadFileJSONBodyMediaType) Valid() bool {
 	}
 }
 
+// Defines values for ListPreparationTasksParamsStatus.
+const (
+	ListPreparationTasksParamsStatusBlocked    ListPreparationTasksParamsStatus = "blocked"
+	ListPreparationTasksParamsStatusComplete   ListPreparationTasksParamsStatus = "complete"
+	ListPreparationTasksParamsStatusInProgress ListPreparationTasksParamsStatus = "in_progress"
+	ListPreparationTasksParamsStatusNotStarted ListPreparationTasksParamsStatus = "not_started"
+	ListPreparationTasksParamsStatusWaived     ListPreparationTasksParamsStatus = "waived"
+)
+
+// Valid indicates whether the value is a known member of the ListPreparationTasksParamsStatus enum.
+func (e ListPreparationTasksParamsStatus) Valid() bool {
+	switch e {
+	case ListPreparationTasksParamsStatusBlocked:
+		return true
+	case ListPreparationTasksParamsStatusComplete:
+		return true
+	case ListPreparationTasksParamsStatusInProgress:
+		return true
+	case ListPreparationTasksParamsStatusNotStarted:
+		return true
+	case ListPreparationTasksParamsStatusWaived:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TransitionEventJSONBodyStage.
 const (
 	TransitionEventJSONBodyStageArchived     TransitionEventJSONBodyStage = "archived"
@@ -1112,6 +1241,88 @@ type OperationalProfile struct {
 
 // OperationalProfilePhotoConsent defines model for OperationalProfile.PhotoConsent.
 type OperationalProfilePhotoConsent string
+
+// PreparationChange defines model for PreparationChange.
+type PreparationChange struct {
+	ActorId              openapi_types.UUID    `json:"actor_id"`
+	CreatedAt            time.Time             `json:"created_at"`
+	Definition           PreparationDefinition `json:"definition"`
+	OverrideDependencies bool                  `json:"override_dependencies"`
+	Reason               string                `json:"reason"`
+	Revision             int64                 `json:"revision"`
+}
+
+// PreparationDefinition defines model for PreparationDefinition.
+type PreparationDefinition struct {
+	Checklist []struct {
+		Complete bool               `json:"complete"`
+		Id       openapi_types.UUID `json:"id"`
+		Title    string             `json:"title"`
+	} `json:"checklist"`
+	DependsOn   []openapi_types.UUID           `json:"depends_on"`
+	Description string                         `json:"description"`
+	Evidence    []PreparationEvidence          `json:"evidence"`
+	FixedDueAt  *time.Time                     `json:"fixed_due_at"`
+	Id          openapi_types.UUID             `json:"id"`
+	OwnerId     *openapi_types.UUID            `json:"owner_id"`
+	OwnerRole   PreparationDefinitionOwnerRole `json:"owner_role"`
+	ScheduleId  *openapi_types.UUID            `json:"schedule_id"`
+	Status      PreparationDefinitionStatus    `json:"status"`
+	Title       string                         `json:"title"`
+}
+
+// PreparationDefinitionOwnerRole defines model for PreparationDefinition.OwnerRole.
+type PreparationDefinitionOwnerRole string
+
+// PreparationDefinitionStatus defines model for PreparationDefinition.Status.
+type PreparationDefinitionStatus string
+
+// PreparationEvidence defines model for PreparationEvidence.
+type PreparationEvidence struct {
+	FileId     *openapi_types.UUID           `json:"file_id"`
+	Id         openapi_types.UUID            `json:"id"`
+	Kind       PreparationEvidenceKind       `json:"kind"`
+	Label      string                        `json:"label"`
+	Url        string                        `json:"url"`
+	Visibility PreparationEvidenceVisibility `json:"visibility"`
+}
+
+// PreparationEvidenceKind defines model for PreparationEvidence.Kind.
+type PreparationEvidenceKind string
+
+// PreparationEvidenceVisibility defines model for PreparationEvidence.Visibility.
+type PreparationEvidenceVisibility string
+
+// PreparationPage defines model for PreparationPage.
+type PreparationPage struct {
+	CanManage bool              `json:"can_manage"`
+	Items     []PreparationTask `json:"items"`
+	Revision  int64             `json:"revision"`
+	Timezone  string            `json:"timezone"`
+}
+
+// PreparationTask defines model for PreparationTask.
+type PreparationTask struct {
+	Blocked                 bool                  `json:"blocked"`
+	CanEdit                 bool                  `json:"can_edit"`
+	Definition              PreparationDefinition `json:"definition"`
+	DueAt                   *time.Time            `json:"due_at"`
+	HiddenDependencies      int                   `json:"hidden_dependencies"`
+	Overdue                 bool                  `json:"overdue"`
+	OverrideDependencies    bool                  `json:"override_dependencies"`
+	Reason                  string                `json:"reason"`
+	RestrictedEvidenceCount int                   `json:"restricted_evidence_count"`
+	Revision                int64                 `json:"revision"`
+	SchedulingIssue         bool                  `json:"scheduling_issue"`
+	Unowned                 bool                  `json:"unowned"`
+}
+
+// PreparationUpdate defines model for PreparationUpdate.
+type PreparationUpdate struct {
+	Definition           PreparationDefinition `json:"definition"`
+	OverrideDependencies bool                  `json:"override_dependencies"`
+	Reason               string                `json:"reason"`
+}
 
 // PrivacySettings defines model for PrivacySettings.
 type PrivacySettings struct {
@@ -1633,6 +1844,27 @@ type TransferOwnerParams struct {
 	IfMatch Revision `json:"If-Match"`
 }
 
+// ListPreparationTasksParams defines parameters for ListPreparationTasks.
+type ListPreparationTasksParams struct {
+	Status    *ListPreparationTasksParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	OwnerId   *openapi_types.UUID               `form:"owner_id,omitempty" json:"owner_id,omitempty"`
+	OwnerRole *string                           `form:"owner_role,omitempty" json:"owner_role,omitempty"`
+	Overdue   *bool                             `form:"overdue,omitempty" json:"overdue,omitempty"`
+	Blocked   *bool                             `form:"blocked,omitempty" json:"blocked,omitempty"`
+	Unowned   *bool                             `form:"unowned,omitempty" json:"unowned,omitempty"`
+}
+
+// ListPreparationTasksParamsStatus defines parameters for ListPreparationTasks.
+type ListPreparationTasksParamsStatus string
+
+// SavePreparationTaskParams defines parameters for SavePreparationTask.
+type SavePreparationTaskParams struct {
+	XCSRFToken CSRF `json:"X-CSRF-Token"`
+
+	// IfMatch Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision.
+	IfMatch ProfileRevision `json:"If-Match"`
+}
+
 // SetPrivacySettingsParams defines parameters for SetPrivacySettings.
 type SetPrivacySettingsParams struct {
 	XCSRFToken CSRF `json:"X-CSRF-Token"`
@@ -1889,6 +2121,9 @@ type UploadFileJSONRequestBody UploadFileJSONBody
 // TransferOwnerJSONRequestBody defines body for TransferOwner for application/json ContentType.
 type TransferOwnerJSONRequestBody TransferOwnerJSONBody
 
+// SavePreparationTaskJSONRequestBody defines body for SavePreparationTask for application/json ContentType.
+type SavePreparationTaskJSONRequestBody = PreparationUpdate
+
 // SetPrivacySettingsJSONRequestBody defines body for SetPrivacySettings for application/json ContentType.
 type SetPrivacySettingsJSONRequestBody = PrivacySettings
 
@@ -2005,6 +2240,15 @@ type ServerInterface interface {
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams)
+
+	// (GET /api/v1/events/{event_id}/preparation/tasks)
+	ListPreparationTasks(w http.ResponseWriter, r *http.Request, eventId EventID, params ListPreparationTasksParams)
+
+	// (PUT /api/v1/events/{event_id}/preparation/tasks/{task_id})
+	SavePreparationTask(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID, params SavePreparationTaskParams)
+
+	// (GET /api/v1/events/{event_id}/preparation/tasks/{task_id}/history)
+	PreparationTaskHistory(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID)
 
 	// (GET /api/v1/events/{event_id}/privacy)
 	GetPrivacySettings(w http.ResponseWriter, r *http.Request, eventId EventID)
@@ -2229,6 +2473,21 @@ func (_ Unimplemented) DownloadFile(w http.ResponseWriter, r *http.Request, even
 
 // (PUT /api/v1/events/{event_id}/owner)
 func (_ Unimplemented) TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/preparation/tasks)
+func (_ Unimplemented) ListPreparationTasks(w http.ResponseWriter, r *http.Request, eventId EventID, params ListPreparationTasksParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/preparation/tasks/{task_id})
+func (_ Unimplemented) SavePreparationTask(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID, params SavePreparationTaskParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/preparation/tasks/{task_id}/history)
+func (_ Unimplemented) PreparationTaskHistory(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3439,6 +3698,234 @@ func (siw *ServerInterfaceWrapper) TransferOwner(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TransferOwner(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListPreparationTasks operation middleware
+func (siw *ServerInterfaceWrapper) ListPreparationTasks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListPreparationTasksParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", r.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "status"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "owner_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "owner_id", r.URL.Query(), &params.OwnerId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "owner_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "owner_id", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "owner_role" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "owner_role", r.URL.Query(), &params.OwnerRole, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "owner_role"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "owner_role", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "overdue" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "overdue", r.URL.Query(), &params.Overdue, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "overdue"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "overdue", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "blocked" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "blocked", r.URL.Query(), &params.Blocked, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "blocked"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "blocked", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "unowned" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "unowned", r.URL.Query(), &params.Unowned, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "unowned"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "unowned", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPreparationTasks(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SavePreparationTask operation middleware
+func (siw *ServerInterfaceWrapper) SavePreparationTask(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "task_id" -------------
+	var taskId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "task_id", chi.URLParam(r, "task_id"), &taskId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "task_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SavePreparationTaskParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch ProfileRevision
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SavePreparationTask(w, r, eventId, taskId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PreparationTaskHistory operation middleware
+func (siw *ServerInterfaceWrapper) PreparationTaskHistory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "task_id" -------------
+	var taskId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "task_id", chi.URLParam(r, "task_id"), &taskId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "task_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PreparationTaskHistory(w, r, eventId, taskId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5843,6 +6330,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/v1/events/{event_id}/profiles/export", wrapper.ExportOperationalProfiles)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/preparation/tasks", wrapper.ListPreparationTasks)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/preparation/tasks/{task_id}", wrapper.SavePreparationTask)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/preparation/tasks/{task_id}/history", wrapper.PreparationTaskHistory)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/events/{event_id}/registration/forms", wrapper.ListRegistrationForms)
 	})
 	r.Group(func(r chi.Router) {
@@ -6802,6 +7298,142 @@ type TransferOwnerdefaultJSONResponse struct {
 }
 
 func (response TransferOwnerdefaultJSONResponse) VisitTransferOwnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPreparationTasksRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ListPreparationTasksParams
+}
+
+type ListPreparationTasksResponseObject interface {
+	VisitListPreparationTasksResponse(w http.ResponseWriter) error
+}
+
+type ListPreparationTasks200JSONResponse PreparationPage
+
+func (response ListPreparationTasks200JSONResponse) VisitListPreparationTasksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPreparationTasksdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ListPreparationTasksdefaultJSONResponse) VisitListPreparationTasksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SavePreparationTaskRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TaskId  openapi_types.UUID `json:"task_id"`
+	Params  SavePreparationTaskParams
+	Body    *SavePreparationTaskJSONRequestBody
+}
+
+type SavePreparationTaskResponseObject interface {
+	VisitSavePreparationTaskResponse(w http.ResponseWriter) error
+}
+
+type SavePreparationTask200JSONResponse PreparationPage
+
+func (response SavePreparationTask200JSONResponse) VisitSavePreparationTaskResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SavePreparationTaskdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SavePreparationTaskdefaultJSONResponse) VisitSavePreparationTaskResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PreparationTaskHistoryRequestObject struct {
+	EventId EventID            `json:"event_id"`
+	TaskId  openapi_types.UUID `json:"task_id"`
+}
+
+type PreparationTaskHistoryResponseObject interface {
+	VisitPreparationTaskHistoryResponse(w http.ResponseWriter) error
+}
+
+type PreparationTaskHistory200JSONResponse struct {
+	Items []PreparationChange `json:"items"`
+}
+
+func (response PreparationTaskHistory200JSONResponse) VisitPreparationTaskHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PreparationTaskHistorydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response PreparationTaskHistorydefaultJSONResponse) VisitPreparationTaskHistoryResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -8739,6 +9371,15 @@ type StrictServerInterface interface {
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(ctx context.Context, request TransferOwnerRequestObject) (TransferOwnerResponseObject, error)
 
+	// (GET /api/v1/events/{event_id}/preparation/tasks)
+	ListPreparationTasks(ctx context.Context, request ListPreparationTasksRequestObject) (ListPreparationTasksResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/preparation/tasks/{task_id})
+	SavePreparationTask(ctx context.Context, request SavePreparationTaskRequestObject) (SavePreparationTaskResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/preparation/tasks/{task_id}/history)
+	PreparationTaskHistory(ctx context.Context, request PreparationTaskHistoryRequestObject) (PreparationTaskHistoryResponseObject, error)
+
 	// (GET /api/v1/events/{event_id}/privacy)
 	GetPrivacySettings(ctx context.Context, request GetPrivacySettingsRequestObject) (GetPrivacySettingsResponseObject, error)
 
@@ -9469,6 +10110,95 @@ func (sh *strictHandler) TransferOwner(w http.ResponseWriter, r *http.Request, e
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(TransferOwnerResponseObject); ok {
 		if err := validResponse.VisitTransferOwnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPreparationTasks operation middleware
+func (sh *strictHandler) ListPreparationTasks(w http.ResponseWriter, r *http.Request, eventId EventID, params ListPreparationTasksParams) {
+	var request ListPreparationTasksRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPreparationTasks(ctx, request.(ListPreparationTasksRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPreparationTasks")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPreparationTasksResponseObject); ok {
+		if err := validResponse.VisitListPreparationTasksResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SavePreparationTask operation middleware
+func (sh *strictHandler) SavePreparationTask(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID, params SavePreparationTaskParams) {
+	var request SavePreparationTaskRequestObject
+
+	request.EventId = eventId
+	request.TaskId = taskId
+	request.Params = params
+
+	var body SavePreparationTaskJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SavePreparationTask(ctx, request.(SavePreparationTaskRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SavePreparationTask")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SavePreparationTaskResponseObject); ok {
+		if err := validResponse.VisitSavePreparationTaskResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreparationTaskHistory operation middleware
+func (sh *strictHandler) PreparationTaskHistory(w http.ResponseWriter, r *http.Request, eventId EventID, taskId openapi_types.UUID) {
+	var request PreparationTaskHistoryRequestObject
+
+	request.EventId = eventId
+	request.TaskId = taskId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PreparationTaskHistory(ctx, request.(PreparationTaskHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreparationTaskHistory")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PreparationTaskHistoryResponseObject); ok {
+		if err := validResponse.VisitPreparationTaskHistoryResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -10732,125 +11462,139 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"ZEtWxCBQ29gPUJo/WM2Af/94//H+/wYA",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

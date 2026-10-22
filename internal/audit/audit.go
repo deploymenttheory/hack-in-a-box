@@ -44,6 +44,7 @@ const (
 	DefinitionsUpdated      Action = "definitions.updated"
 	EventCloned             Action = "event.cloned"
 	RegistrationChanged     Action = "registration.changed"
+	PreparationChanged      Action = "preparation.changed"
 	GitHubLinked            Action = "github.linked"
 	GitHubRelinked          Action = "github.relinked"
 	GitHubUnlinked          Action = "github.unlinked"
@@ -80,7 +81,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case AdminBootstrapped,
+	case PreparationChanged, AdminBootstrapped,
 		SignedIn,
 		FileUploaded,
 		OrganiserGranted,

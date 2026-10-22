@@ -373,6 +373,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/preparation/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current event revision, template-seeded tasks and dynamically recomputed due times. Staff see only their assigned work and authorised evidence. */
+        get: operations["listPreparationTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/preparation/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Use the page's event revision in If-Match. Only organisers may change task definitions, ownership, dependencies or grant waivers/overrides. Assigned staff may update progress, checklist completion and visible evidence. Hidden evidence and dependencies are retained. */
+        put: operations["savePreparationTask"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/preparation/tasks/{task_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Organiser-only immutable change history, newest first; evidence permissions are evaluated at read time. */
+        get: operations["preparationTaskHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/registration/forms": {
         parameters: {
             query?: never;
@@ -1275,6 +1334,75 @@ export interface components {
             event: components["schemas"]["RegistrationEvent"];
             forms: components["schemas"]["PublishedRegistrationForm"][];
             registrations: components["schemas"]["Registration"][];
+        };
+        PreparationEvidence: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "file" | "url" | "repository";
+            label: string;
+            url: string;
+            /** Format: uuid */
+            file_id: string | null;
+            /** @enum {string} */
+            visibility: "organisers" | "assignees";
+        };
+        PreparationDefinition: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            /** Format: uuid */
+            owner_id: string | null;
+            /** @enum {string} */
+            owner_role: "" | "organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer" | "attendee";
+            /** @enum {string} */
+            status: "not_started" | "in_progress" | "blocked" | "complete" | "waived";
+            /** Format: uuid */
+            schedule_id: string | null;
+            /** Format: date-time */
+            fixed_due_at: string | null;
+            depends_on: string[];
+            checklist: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                complete: boolean;
+            }[];
+            evidence: components["schemas"]["PreparationEvidence"][];
+        };
+        PreparationUpdate: {
+            definition: components["schemas"]["PreparationDefinition"];
+            reason: string;
+            override_dependencies: boolean;
+        };
+        PreparationTask: components["schemas"]["PreparationUpdate"] & {
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            due_at: string | null;
+            scheduling_issue: boolean;
+            blocked: boolean;
+            overdue: boolean;
+            unowned: boolean;
+            can_edit: boolean;
+            restricted_evidence_count: number;
+            hidden_dependencies: number;
+        };
+        PreparationChange: components["schemas"]["PreparationUpdate"] & {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PreparationPage: {
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
+            can_manage: boolean;
+            items: components["schemas"]["PreparationTask"][];
         };
         RegistrationForm: {
             definition: components["schemas"]["TemplateForm"];
@@ -2223,6 +2351,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfilePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPreparationTasks: {
+        parameters: {
+            query?: {
+                status?: "not_started" | "in_progress" | "blocked" | "complete" | "waived";
+                owner_id?: string;
+                owner_role?: string;
+                overdue?: boolean;
+                blocked?: boolean;
+                unowned?: boolean;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-filtered preparation work. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    savePreparationTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreparationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Saved task and the new page revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    preparationTaskHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 100 most recent changes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["PreparationChange"][];
+                    };
                 };
             };
             default: components["responses"]["Error"];
