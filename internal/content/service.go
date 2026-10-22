@@ -157,12 +157,12 @@ func projection(
 		result.State = "released"
 		result.Revision = allowed
 	}
-	if item.State == "withdrawn" {
+	if preview && item.State == "withdrawn" {
 		result.Message = "Future application access is removed. Previously downloaded copies cannot be recalled."
 	}
-	if item.State == "missed" || item.State == "blocked" {
+	if preview && (item.State == "missed" || item.State == "blocked") {
 		result.Message = "Publication was blocked. Review the history, save a corrected version and approve it again."
-		if item.Kind == "challenge" {
+		if item.Kind == "challenge" && !item.ReleasedVersion.Valid {
 			result.Message = "Publication did not occur. Postpone the hack to preserve the preparation week or cancel it."
 		}
 	}
