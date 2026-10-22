@@ -31,7 +31,8 @@ func (s Service) History(
 		if err != nil {
 			return err
 		}
-		if !v.authority.Member && !v.authority.Organiser && !v.authority.Mentor {
+		if !v.authority.Member && !v.authority.Organiser && !v.authority.Mentor &&
+			!v.authority.Reviewer {
 			return access.ErrForbidden
 		}
 		if !live(v, s.now()) {

@@ -16,7 +16,7 @@ import (
 
 // TeamAuthority is resolved afresh on every submission/file request. Role grants
 // alone never imply reviewer access to a team's work.
-type TeamAuthority struct{ Member, Organiser, Mentor, Judge, Active bool }
+type TeamAuthority struct{ Member, Organiser, Mentor, Reviewer, Judge, Active bool }
 
 func TeamPermissions(
 	ctx context.Context,
@@ -74,6 +74,15 @@ func TeamPermissions(
 			return a, fmt.Errorf("check assigned mentor: %w", err)
 		}
 	}
+	if slices.Contains(roles, "mentor") && a.Active {
+		a.Reviewer, err = q.ResourceAssigned(
+			ctx,
+			dbgen.ResourceAssignedParams{EventID: eventID, ResourceID: entry.ID, PersonID: actor},
+		)
+		if err != nil {
+			return a, fmt.Errorf("check assigned second reviewer: %w", err)
+		}
+	}
 	if slices.Contains(roles, "judge") && a.Active {
 		a.Judge, err = q.ResourceAssigned(
 			ctx,
@@ -85,7 +94,7 @@ func TeamPermissions(
 	}
 	// A competing reviewer cannot obtain privileged access to their own entry.
 	if a.Member {
-		a.Mentor, a.Judge = false, false
+		a.Mentor, a.Reviewer, a.Judge = false, false, false
 	}
 	return a, nil
 }
@@ -159,7 +168,8 @@ func (p EventPolicy) teamFileRead(
 		return fmt.Errorf("read submitted file references: %w", err)
 	}
 	for _, audience := range audiences {
-		if a.Organiser || (a.Mentor && slices.Contains(audience.Audience, "mentor")) {
+		if a.Organiser ||
+			((a.Mentor || a.Reviewer) && slices.Contains(audience.Audience, "mentor")) {
 			return nil
 		}
 		if a.Judge && !c.SubmissionCutoff.IsZero() && !p.now().Before(c.SubmissionCutoff) &&

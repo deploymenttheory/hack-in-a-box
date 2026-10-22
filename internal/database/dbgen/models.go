@@ -302,6 +302,42 @@ type LoginAttempt struct {
 	ReturnTo    string
 }
 
+type MentorAssignment struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+	Slot     string
+	Snapshot string
+	StartsAt time.Time
+	EndsAt   time.Time
+}
+
+type MentorConflict struct {
+	EventID      uuid.UUID
+	MentorID     uuid.UUID
+	CompetitorID uuid.UUID
+	Kind         string
+}
+
+type MentorProfile struct {
+	EventID      uuid.UUID
+	PersonID     uuid.UUID
+	Skills       []string
+	Availability []byte
+	MaximumTeams pgtype.Int4
+}
+
+type MentorSetting struct {
+	EventID         uuid.UUID
+	DefaultCapacity int32
+}
+
+type MentorTeamSkill struct {
+	EventID uuid.UUID
+	TeamID  uuid.UUID
+	Skills  []string
+}
+
 type Operation struct {
 	ID           uuid.UUID
 	EventID      uuid.UUID
