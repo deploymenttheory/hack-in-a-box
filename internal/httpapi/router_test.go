@@ -11,9 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 )
 
 func testRouter(t *testing.T) (*chi.Mux, *bytes.Buffer) {
@@ -146,5 +148,45 @@ func TestTimeoutReturnsBeforeUncooperativeHandler(t *testing.T) {
 	case <-cancelled:
 	case <-time.After(time.Second):
 		t.Fatal("handler context was not cancelled")
+	}
+}
+
+func TestSessionCookieChangesKeepPrivateResponsesUncacheable(t *testing.T) {
+	sessions := scs.New()
+	sessions.IdleTimeout = time.Minute
+	auth := &identity.Auth{Sessions: sessions}
+	cfg := config.Config{RequestTimeout: time.Second, MaxBodyBytes: 1024}
+	router := NewRouter(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)), Dependencies{Auth: auth})
+	// This probe exercises the actual router/session/timeout stack without a
+	// database. The PostgreSQL matrix separately verifies authenticated content.
+	router.Get("/api/cache-probe", func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Query().Get("change") {
+		case "create":
+			sessions.Put(r.Context(), "synthetic", true)
+		case "destroy":
+			if err := sessions.Destroy(r.Context()); err != nil {
+				t.Error(err)
+			}
+		}
+		writeJSON(w, 200, "synthetic private response")
+	})
+	var cookie *http.Cookie
+	for _, change := range []string{"create", "renew", "destroy"} {
+		r := httptest.NewRequest("GET", "/api/cache-probe?change="+change, nil)
+		if cookie != nil {
+			r.AddCookie(cookie)
+		}
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r)
+		response := w.Result()
+		_ = response.Body.Close()
+		if response.StatusCode != 200 || response.Header.Get("Cache-Control") != "no-store" {
+			t.Fatalf("%s cookie made private response cacheable: %d %v", change, response.StatusCode, response.Header.Values("Cache-Control"))
+		}
+		cookies := response.Cookies()
+		if len(cookies) != 1 || (change == "destroy" && cookies[0].MaxAge >= 0) {
+			t.Fatalf("%s did not update the session cookie", change)
+		}
+		cookie = cookies[0]
 	}
 }

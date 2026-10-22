@@ -103,6 +103,10 @@ Without `HACKBOX_INTEGRATION=1`, database integration tests explicitly skip. Wit
 
 CI runs these checks, dependency review and container verification with pinned actions and read-only repository permissions. Application Go commands target `cmd` and `internal` so installed browser tooling cannot become an accidental Go package. Operational endpoints, alert thresholds and failure handling are documented in [docs/operations.md](docs/operations.md).
 
+The [content embargo verification](docs/content-embargo-verification.md) maps
+release timing, audience access, exports, private files and browser cache checks
+to their PostgreSQL and browser tests.
+
 Verified GitHub linking is separate from organisation sign-in. See
 [GitHub identity setup and verification](docs/github-identity.md) for the optional
 OAuth configuration, encrypted token key and invitation-review behaviour.
