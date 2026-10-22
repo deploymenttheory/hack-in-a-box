@@ -69,7 +69,7 @@ func newFixture(t *testing.T) *fixture {
 		Jobs:     f.worker,
 		Channels: map[string]communications.ChannelProvider{},
 	}
-	f.service = Service{Pool: pool, Communications: comm, Now: func() time.Time { return f.now }}
+	f.service = Service{Pool: pool, Communications: &comm, Now: func() time.Time { return f.now }}
 	comm.Channels["in_app"] = f.service
 	handlers["communication_test_in_app"] = TestHandler{Service: f.service}
 	template := communications.Template{

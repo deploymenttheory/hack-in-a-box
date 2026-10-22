@@ -15,7 +15,7 @@ import (
 type Service struct {
 	Pool           *pgxpool.Pool
 	ScopePolicy    communications.ScopePolicy
-	Communications communications.Service
+	Communications *communications.Service
 	Owners         map[string]ResourceOwner
 	Now            func() time.Time
 }
