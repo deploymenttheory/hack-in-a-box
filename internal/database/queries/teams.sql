@@ -46,7 +46,7 @@ DELETE FROM hack_team_members WHERE event_id=$1 AND snapshot='published';
 INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) SELECT m.event_id,m.team_id,m.person_id,'published' FROM hack_team_members m WHERE m.event_id=$1 AND m.snapshot='draft';
 
 -- name: PublishHackTeams :exec
-UPDATE hack_teams SET state='published',published_captain_id=captain_id WHERE event_id=$1 AND state!='disbanded';
+UPDATE hack_teams SET state='published',published_captain_id=captain_id,allocation_locked=true WHERE event_id=$1 AND state!='disbanded';
 
 -- name: FreezeHackTeams :exec
 UPDATE hack_teams SET frozen=true WHERE event_id=$1 AND state='published';
@@ -77,3 +77,9 @@ WHERE c.event_id=$1 AND c.state='confirmed' AND p.active ORDER BY p.display_name
 
 -- name: CloseTeamRequests :exec
 UPDATE hack_team_requests SET state='declined' WHERE event_id=$1 AND state='pending';
+
+-- name: SetAllocationLock :exec
+UPDATE hack_teams SET allocation_locked=$3 WHERE event_id=$1 AND id=$2 AND state!='disbanded';
+
+-- name: SetTeamCapacity :exec
+UPDATE hack_teams SET capacity=$3 WHERE event_id=$1 AND id=$2 AND state!='disbanded';

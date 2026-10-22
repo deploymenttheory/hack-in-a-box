@@ -1116,6 +1116,30 @@ paths:
                 $ref: '#/components/schemas/TeamPage'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/allocation-suggestions:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: suggestTeamAllocation
+      description: Organiser-only, read-only proposal from a current confirmed roster. No memberships or notifications change. Use the event revision in If-Match. Explicit declarations contain only selected allocation features; never send raw registration answers or operational profiles.
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllocationRequest'
+      responses:
+        '200':
+          description: Deterministic proposal and hard/soft constraint explanations requiring organiser review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationSuggestion'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -2432,6 +2456,8 @@ components:
         published_captain: {type: string, format: uuid, nullable: true}
         invitation_code: {type: string, format: uuid, nullable: true}
         frozen: {type: boolean}
+        allocation_locked: {type: boolean}
+        capacity: {type: integer, nullable: true, minimum: 3, maximum: 10000}
         draft:
           type: array
           items:
@@ -2475,13 +2501,108 @@ components:
       additionalProperties: false
       required: [action]
       properties:
-        action: {type: string, enum: [create, join, approve, decline, move, captain, publish, freeze, disband]}
+        action: {type: string, enum: [create, join, approve, decline, move, captain, publish, freeze, disband, lock, unlock, capacity]}
         team_id: {type: string, format: uuid}
         person_id: {type: string, format: uuid}
         request_id: {type: string, format: uuid}
         invitation_code: {type: string, format: uuid}
         name: {type: string, maxLength: 160}
         reason: {type: string, maxLength: 2000}
+        capacity: {type: integer, nullable: true, minimum: 3, maximum: 10000}
+    AllocationCandidate:
+      type: object
+      additionalProperties: false
+      required: [id, skills, experience, prefer_with]
+      properties:
+        id: {type: string, format: uuid}
+        skills:
+          type: array
+          maxItems: 32
+          items: {type: string, minLength: 1, maxLength: 80}
+        experience:
+          type: integer
+          minimum: 0
+          maximum: 3
+          description: 0 unknown, 1 starting out, 2 some experience, 3 experienced. An explicit declaration, not an inference from private fields.
+        prefer_with:
+          type: array
+          maxItems: 10
+          items: {type: string, format: uuid}
+    AllocationLimits:
+      type: object
+      additionalProperties: false
+      required: [maximum_size, maximum_teams]
+      properties:
+        maximum_size: {type: integer, nullable: true, minimum: 3, maximum: 10000}
+        maximum_teams: {type: integer, nullable: true, minimum: 1, maximum: 10000}
+    AllocationRequest:
+      type: object
+      additionalProperties: false
+      required: [seed, limits, declarations]
+      properties:
+        seed: {type: string, maxLength: 200}
+        limits:
+          $ref: '#/components/schemas/AllocationLimits'
+        declarations:
+          type: array
+          maxItems: 10000
+          description: Explicit organiser-selected declarations for confirmed people. Missing declarations stay unknown; identities and group membership come from the server.
+          items:
+            $ref: '#/components/schemas/AllocationCandidate'
+    AllocationIssue:
+      type: object
+      required: [code, people, team_id, message]
+      properties:
+        code: {type: string}
+        people:
+          type: array
+          items: {type: string, format: uuid}
+        team_id: {type: string, format: uuid, nullable: true}
+        message: {type: string}
+    ProposedAllocationTeam:
+      type: object
+      required: [id, existing, locked, capacity, members, reasons]
+      properties:
+        id: {type: string, format: uuid}
+        existing: {type: boolean}
+        locked: {type: boolean}
+        capacity: {type: integer, nullable: true, minimum: 3, maximum: 10000}
+        members:
+          type: array
+          items: {type: string, format: uuid}
+        reasons:
+          type: array
+          items: {type: string}
+    AllocationSuggestion:
+      type: object
+      required: [revision, seed, preferences, limits, teams, unresolved, retired_teams, issues]
+      properties:
+        revision: {type: integer, format: int64}
+        seed: {type: string}
+        preferences:
+          type: object
+          required: [target, preferred_min, preferred_max, minimum]
+          properties:
+            target: {type: integer}
+            preferred_min: {type: integer}
+            preferred_max: {type: integer}
+            minimum: {type: integer}
+        limits:
+          $ref: '#/components/schemas/AllocationLimits'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposedAllocationTeam'
+        unresolved:
+          type: array
+          items: {type: string, format: uuid}
+        retired_teams:
+          type: array
+          items: {type: string, format: uuid}
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationIssue'
     Applicant:
       type: object
       required: [registration, display_name]

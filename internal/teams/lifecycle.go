@@ -20,6 +20,9 @@ func publish(
 	freeze bool,
 	now time.Time,
 ) error {
+	if err := verifyAllocationLocks(ctx, q, row.ID, uuid.Nil); err != nil {
+		return err
+	}
 	records, err := q.HackTeams(ctx, row.ID)
 	if err != nil {
 		return fmt.Errorf("read publication teams: %w", err)
@@ -50,7 +53,7 @@ func publish(
 				hasCaptain = true
 			}
 		}
-		if count < 3 || !hasCaptain {
+		if count < 3 || !hasCaptain || (t.Capacity.Valid && count > int(t.Capacity.Int32)) {
 			return ErrUnready
 		}
 	}

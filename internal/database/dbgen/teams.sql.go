@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const clearDepartingCaptain = `-- name: ClearDepartingCaptain :exec
@@ -91,7 +92,7 @@ func (q *Queries) CreateCompetitionEntry(ctx context.Context, arg CreateCompetit
 }
 
 const createHackTeam = `-- name: CreateHackTeam :one
-INSERT INTO hack_teams(id,event_id,name,captain_id) VALUES($1,$2,$3,$4) RETURNING id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen
+INSERT INTO hack_teams(id,event_id,name,captain_id) VALUES($1,$2,$3,$4) RETURNING id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen, allocation_locked, capacity
 `
 
 type CreateHackTeamParams struct {
@@ -118,6 +119,8 @@ func (q *Queries) CreateHackTeam(ctx context.Context, arg CreateHackTeamParams) 
 		&i.PublishedCaptainID,
 		&i.State,
 		&i.Frozen,
+		&i.AllocationLocked,
+		&i.Capacity,
 	)
 	return i, err
 }
@@ -169,7 +172,7 @@ func (q *Queries) FreezeHackTeams(ctx context.Context, eventID uuid.UUID) error 
 }
 
 const hackTeam = `-- name: HackTeam :one
-SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen FROM hack_teams WHERE event_id=$1 AND id=$2
+SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen, allocation_locked, capacity FROM hack_teams WHERE event_id=$1 AND id=$2
 `
 
 type HackTeamParams struct {
@@ -189,6 +192,8 @@ func (q *Queries) HackTeam(ctx context.Context, arg HackTeamParams) (HackTeam, e
 		&i.PublishedCaptainID,
 		&i.State,
 		&i.Frozen,
+		&i.AllocationLocked,
+		&i.Capacity,
 	)
 	return i, err
 }
@@ -232,7 +237,7 @@ func (q *Queries) HackTeamMembers(ctx context.Context, eventID uuid.UUID) ([]Hac
 }
 
 const hackTeams = `-- name: HackTeams :many
-SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen FROM hack_teams WHERE event_id=$1 ORDER BY name,id LIMIT 10000
+SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen, allocation_locked, capacity FROM hack_teams WHERE event_id=$1 ORDER BY name,id LIMIT 10000
 `
 
 func (q *Queries) HackTeams(ctx context.Context, eventID uuid.UUID) ([]HackTeam, error) {
@@ -253,6 +258,8 @@ func (q *Queries) HackTeams(ctx context.Context, eventID uuid.UUID) ([]HackTeam,
 			&i.PublishedCaptainID,
 			&i.State,
 			&i.Frozen,
+			&i.AllocationLocked,
+			&i.Capacity,
 		); err != nil {
 			return nil, err
 		}
@@ -349,7 +356,7 @@ func (q *Queries) PendingTeamRequests(ctx context.Context, eventID uuid.UUID) ([
 }
 
 const publishHackTeams = `-- name: PublishHackTeams :exec
-UPDATE hack_teams SET state='published',published_captain_id=captain_id WHERE event_id=$1 AND state!='disbanded'
+UPDATE hack_teams SET state='published',published_captain_id=captain_id,allocation_locked=true WHERE event_id=$1 AND state!='disbanded'
 `
 
 func (q *Queries) PublishHackTeams(ctx context.Context, eventID uuid.UUID) error {
@@ -400,6 +407,21 @@ func (q *Queries) RetireCompetitionEntry(ctx context.Context, arg RetireCompetit
 	return err
 }
 
+const setAllocationLock = `-- name: SetAllocationLock :exec
+UPDATE hack_teams SET allocation_locked=$3 WHERE event_id=$1 AND id=$2 AND state!='disbanded'
+`
+
+type SetAllocationLockParams struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	AllocationLocked bool
+}
+
+func (q *Queries) SetAllocationLock(ctx context.Context, arg SetAllocationLockParams) error {
+	_, err := q.db.Exec(ctx, setAllocationLock, arg.EventID, arg.ID, arg.AllocationLocked)
+	return err
+}
+
 const setDraftTeamMember = `-- name: SetDraftTeamMember :exec
 INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'draft')
 ON CONFLICT(event_id,person_id,snapshot) DO UPDATE SET team_id=EXCLUDED.team_id
@@ -413,6 +435,21 @@ type SetDraftTeamMemberParams struct {
 
 func (q *Queries) SetDraftTeamMember(ctx context.Context, arg SetDraftTeamMemberParams) error {
 	_, err := q.db.Exec(ctx, setDraftTeamMember, arg.EventID, arg.TeamID, arg.PersonID)
+	return err
+}
+
+const setTeamCapacity = `-- name: SetTeamCapacity :exec
+UPDATE hack_teams SET capacity=$3 WHERE event_id=$1 AND id=$2 AND state!='disbanded'
+`
+
+type SetTeamCapacityParams struct {
+	EventID  uuid.UUID
+	ID       uuid.UUID
+	Capacity pgtype.Int4
+}
+
+func (q *Queries) SetTeamCapacity(ctx context.Context, arg SetTeamCapacityParams) error {
+	_, err := q.db.Exec(ctx, setTeamCapacity, arg.EventID, arg.ID, arg.Capacity)
 	return err
 }
 
@@ -454,7 +491,7 @@ func (q *Queries) TeamAssignment(ctx context.Context, arg TeamAssignmentParams) 
 }
 
 const teamByInvitation = `-- name: TeamByInvitation :one
-SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen FROM hack_teams WHERE event_id=$1 AND invitation_code=$2 AND state!='disbanded'
+SELECT id, event_id, name, invitation_code, captain_id, published_captain_id, state, frozen, allocation_locked, capacity FROM hack_teams WHERE event_id=$1 AND invitation_code=$2 AND state!='disbanded'
 `
 
 type TeamByInvitationParams struct {
@@ -474,6 +511,8 @@ func (q *Queries) TeamByInvitation(ctx context.Context, arg TeamByInvitationPara
 		&i.PublishedCaptainID,
 		&i.State,
 		&i.Frozen,
+		&i.AllocationLocked,
+		&i.Capacity,
 	)
 	return i, err
 }
