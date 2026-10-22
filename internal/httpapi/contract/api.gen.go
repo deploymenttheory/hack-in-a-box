@@ -144,6 +144,144 @@ func (e CloneInputDstChoice) Valid() bool {
 	}
 }
 
+// Defines values for ContentActionAction.
+const (
+	ContentActionActionApprove  ContentActionAction = "approve"
+	ContentActionActionCancel   ContentActionAction = "cancel"
+	ContentActionActionRelease  ContentActionAction = "release"
+	ContentActionActionReview   ContentActionAction = "review"
+	ContentActionActionWithdraw ContentActionAction = "withdraw"
+)
+
+// Valid indicates whether the value is a known member of the ContentActionAction enum.
+func (e ContentActionAction) Valid() bool {
+	switch e {
+	case ContentActionActionApprove:
+		return true
+	case ContentActionActionCancel:
+		return true
+	case ContentActionActionRelease:
+		return true
+	case ContentActionActionReview:
+		return true
+	case ContentActionActionWithdraw:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentAudienceRoles.
+const (
+	ContentAudienceRolesEarlyBriefAccess ContentAudienceRoles = "early_brief_access"
+	ContentAudienceRolesJudge            ContentAudienceRoles = "judge"
+	ContentAudienceRolesLogistics        ContentAudienceRoles = "logistics"
+	ContentAudienceRolesMc               ContentAudienceRoles = "mc"
+	ContentAudienceRolesMentor           ContentAudienceRoles = "mentor"
+	ContentAudienceRolesOrganiser        ContentAudienceRoles = "organiser"
+	ContentAudienceRolesPhotographer     ContentAudienceRoles = "photographer"
+)
+
+// Valid indicates whether the value is a known member of the ContentAudienceRoles enum.
+func (e ContentAudienceRoles) Valid() bool {
+	switch e {
+	case ContentAudienceRolesEarlyBriefAccess:
+		return true
+	case ContentAudienceRolesJudge:
+		return true
+	case ContentAudienceRolesLogistics:
+		return true
+	case ContentAudienceRolesMc:
+		return true
+	case ContentAudienceRolesMentor:
+		return true
+	case ContentAudienceRolesOrganiser:
+		return true
+	case ContentAudienceRolesPhotographer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentInputKind.
+const (
+	ContentInputKindBrief     ContentInputKind = "brief"
+	ContentInputKindChallenge ContentInputKind = "challenge"
+	ContentInputKindPage      ContentInputKind = "page"
+)
+
+// Valid indicates whether the value is a known member of the ContentInputKind enum.
+func (e ContentInputKind) Valid() bool {
+	switch e {
+	case ContentInputKindBrief:
+		return true
+	case ContentInputKindChallenge:
+		return true
+	case ContentInputKindPage:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentPageKind.
+const (
+	ContentPageKindBrief     ContentPageKind = "brief"
+	ContentPageKindChallenge ContentPageKind = "challenge"
+	ContentPageKindPage      ContentPageKind = "page"
+)
+
+// Valid indicates whether the value is a known member of the ContentPageKind enum.
+func (e ContentPageKind) Valid() bool {
+	switch e {
+	case ContentPageKindBrief:
+		return true
+	case ContentPageKindChallenge:
+		return true
+	case ContentPageKindPage:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentPageState.
+const (
+	ContentPageStateApproved  ContentPageState = "approved"
+	ContentPageStateBlocked   ContentPageState = "blocked"
+	ContentPageStateCancelled ContentPageState = "cancelled"
+	ContentPageStateDraft     ContentPageState = "draft"
+	ContentPageStateMissed    ContentPageState = "missed"
+	ContentPageStateReleased  ContentPageState = "released"
+	ContentPageStateReview    ContentPageState = "review"
+	ContentPageStateWithdrawn ContentPageState = "withdrawn"
+)
+
+// Valid indicates whether the value is a known member of the ContentPageState enum.
+func (e ContentPageState) Valid() bool {
+	switch e {
+	case ContentPageStateApproved:
+		return true
+	case ContentPageStateBlocked:
+		return true
+	case ContentPageStateCancelled:
+		return true
+	case ContentPageStateDraft:
+		return true
+	case ContentPageStateMissed:
+		return true
+	case ContentPageStateReleased:
+		return true
+	case ContentPageStateReview:
+		return true
+	case ContentPageStateWithdrawn:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EventStage.
 const (
 	EventStageArchived     EventStage = "archived"
@@ -1365,6 +1503,102 @@ type ConfigurationBundle struct {
 	Event       EventConfiguration `json:"event"`
 }
 
+// ContentAction defines model for ContentAction.
+type ContentAction struct {
+	Action ContentActionAction `json:"action"`
+	Reason string              `json:"reason"`
+}
+
+// ContentActionAction defines model for ContentAction.Action.
+type ContentActionAction string
+
+// ContentAudience defines model for ContentAudience.
+type ContentAudience struct {
+	Confirmed bool                   `json:"confirmed"`
+	Roles     []ContentAudienceRoles `json:"roles"`
+	Teams     []openapi_types.UUID   `json:"teams"`
+}
+
+// ContentAudienceRoles defines model for ContentAudience.Roles.
+type ContentAudienceRoles string
+
+// ContentChange defines model for ContentChange.
+type ContentChange struct {
+	Action      string              `json:"action"`
+	ActorId     *openapi_types.UUID `json:"actor_id"`
+	At          time.Time           `json:"at"`
+	Reason      string              `json:"reason"`
+	Revision    int64               `json:"revision"`
+	ScheduledAt *time.Time          `json:"scheduled_at"`
+	Version     int64               `json:"version"`
+}
+
+// ContentDocument defines model for ContentDocument.
+type ContentDocument struct {
+	Attachments []openapi_types.UUID `json:"attachments"`
+	Audience    ContentAudience      `json:"audience"`
+	Markdown    string               `json:"markdown"`
+
+	// ScheduledAt Null for manual release. Initial challenge time is fixed by event-local T−7 days and filled by the server.
+	ScheduledAt *time.Time `json:"scheduled_at"`
+	Title       string     `json:"title"`
+}
+
+// ContentHistory defines model for ContentHistory.
+type ContentHistory struct {
+	Items      []ContentChange `json:"items"`
+	NextCursor *int64          `json:"next_cursor"`
+}
+
+// ContentInput defines model for ContentInput.
+type ContentInput struct {
+	Document ContentDocument  `json:"document"`
+	Kind     ContentInputKind `json:"kind"`
+}
+
+// ContentInputKind defines model for ContentInput.Kind.
+type ContentInputKind string
+
+// ContentList defines model for ContentList.
+type ContentList struct {
+	Items      []ContentPage       `json:"items"`
+	NextCursor *openapi_types.UUID `json:"next_cursor"`
+}
+
+// ContentNotice defines model for ContentNotice.
+type ContentNotice struct {
+	Id               openapi_types.UUID `json:"id"`
+	LiveEnd          time.Time          `json:"live_end"`
+	LiveStart        time.Time          `json:"live_start"`
+	Revision         int64              `json:"revision"`
+	SubmissionCutoff time.Time          `json:"submission_cutoff"`
+}
+
+// ContentNotices defines model for ContentNotices.
+type ContentNotices struct {
+	Items []ContentNotice `json:"items"`
+}
+
+// ContentPage defines model for ContentPage.
+type ContentPage struct {
+	CanManage       bool               `json:"can_manage"`
+	Document        ContentDocument    `json:"document"`
+	Id              openapi_types.UUID `json:"id"`
+	Kind            ContentPageKind    `json:"kind"`
+	Message         string             `json:"message"`
+	ReleasedAt      *time.Time         `json:"released_at"`
+	ReleasedVersion *int64             `json:"released_version"`
+	Revision        int64              `json:"revision"`
+	State           ContentPageState   `json:"state"`
+	Version         int64              `json:"version"`
+}
+
+// ContentPageKind defines model for ContentPage.Kind.
+type ContentPageKind string
+
+// ContentPageState defines model for ContentPage.State.
+type ContentPageState string
+
 // ErrorEnvelope defines model for ErrorEnvelope.
 type ErrorEnvelope struct {
 	Error struct {
@@ -2337,6 +2571,41 @@ type SaveEventDefinitionsParams struct {
 	IfMatch Revision `json:"If-Match"`
 }
 
+// ListContentParams defines parameters for ListContent.
+type ListContentParams struct {
+	// Preview Explicit privileged preview; never grants the selected audience access.
+	Preview *bool               `form:"preview,omitempty" json:"preview,omitempty"`
+	Cursor  *openapi_types.UUID `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit   *Limit              `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// GetContentParams defines parameters for GetContent.
+type GetContentParams struct {
+	// Preview Explicit privileged preview; never grants the selected audience access.
+	Preview *bool `form:"preview,omitempty" json:"preview,omitempty"`
+
+	// Version Historical version, available only to organisers in preview mode.
+	Version *int64 `form:"version,omitempty" json:"version,omitempty"`
+}
+
+// SaveContentParams defines parameters for SaveContent.
+type SaveContentParams struct {
+	XCSRFToken CSRF   `json:"X-CSRF-Token"`
+	IfMatch    string `json:"If-Match"`
+}
+
+// ContentActionParams defines parameters for ContentAction.
+type ContentActionParams struct {
+	XCSRFToken CSRF   `json:"X-CSRF-Token"`
+	IfMatch    string `json:"If-Match"`
+}
+
+// ContentHistoryParams defines parameters for ContentHistory.
+type ContentHistoryParams struct {
+	Before *int64 `form:"before,omitempty" json:"before,omitempty"`
+	Limit  *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // UploadFileJSONBody defines parameters for UploadFile.
 type UploadFileJSONBody struct {
 	Content   []byte                      `json:"content"`
@@ -2372,6 +2641,11 @@ type GetLogisticsParams struct {
 type ExportLogisticsParams struct {
 	After *openapi_types.UUID `form:"after,omitempty" json:"after,omitempty"`
 	Limit *int                `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// EventNoticesParams defines parameters for EventNotices.
+type EventNoticesParams struct {
+	After *int64 `form:"after,omitempty" json:"after,omitempty"`
 }
 
 // TransferOwnerJSONBody defines parameters for TransferOwner.
@@ -2703,6 +2977,12 @@ type CloneEventJSONRequestBody = CloneInput
 // SaveEventDefinitionsJSONRequestBody defines body for SaveEventDefinitions for application/json ContentType.
 type SaveEventDefinitionsJSONRequestBody = EventDefinitions
 
+// SaveContentJSONRequestBody defines body for SaveContent for application/json ContentType.
+type SaveContentJSONRequestBody = ContentInput
+
+// ContentActionJSONRequestBody defines body for ContentAction for application/json ContentType.
+type ContentActionJSONRequestBody = ContentAction
+
 // UploadFileJSONRequestBody defines body for UploadFile for application/json ContentType.
 type UploadFileJSONRequestBody UploadFileJSONBody
 
@@ -2841,6 +3121,21 @@ type ServerInterface interface {
 	// (PUT /api/v1/events/{event_id}/configuration-snapshot)
 	SaveEventDefinitions(w http.ResponseWriter, r *http.Request, eventId EventID, params SaveEventDefinitionsParams)
 
+	// (GET /api/v1/events/{event_id}/content)
+	ListContent(w http.ResponseWriter, r *http.Request, eventId EventID, params ListContentParams)
+
+	// (GET /api/v1/events/{event_id}/content/{content_id})
+	GetContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params GetContentParams)
+
+	// (PUT /api/v1/events/{event_id}/content/{content_id})
+	SaveContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params SaveContentParams)
+
+	// (POST /api/v1/events/{event_id}/content/{content_id}/actions)
+	ContentAction(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentActionParams)
+
+	// (GET /api/v1/events/{event_id}/content/{content_id}/history)
+	ContentHistory(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentHistoryParams)
+
 	// (GET /api/v1/events/{event_id}/decisions)
 	ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID)
 
@@ -2855,6 +3150,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/events/{event_id}/logistics/export)
 	ExportLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportLogisticsParams)
+
+	// (GET /api/v1/events/{event_id}/notices)
+	EventNotices(w http.ResponseWriter, r *http.Request, eventId EventID, params EventNoticesParams)
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(w http.ResponseWriter, r *http.Request, eventId EventID, params TransferOwnerParams)
@@ -3115,6 +3413,31 @@ func (_ Unimplemented) SaveEventDefinitions(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// (GET /api/v1/events/{event_id}/content)
+func (_ Unimplemented) ListContent(w http.ResponseWriter, r *http.Request, eventId EventID, params ListContentParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/content/{content_id})
+func (_ Unimplemented) GetContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params GetContentParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (PUT /api/v1/events/{event_id}/content/{content_id})
+func (_ Unimplemented) SaveContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params SaveContentParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/v1/events/{event_id}/content/{content_id}/actions)
+func (_ Unimplemented) ContentAction(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentActionParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/content/{content_id}/history)
+func (_ Unimplemented) ContentHistory(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentHistoryParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // (GET /api/v1/events/{event_id}/decisions)
 func (_ Unimplemented) ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -3137,6 +3460,11 @@ func (_ Unimplemented) GetLogistics(w http.ResponseWriter, r *http.Request, even
 
 // (GET /api/v1/events/{event_id}/logistics/export)
 func (_ Unimplemented) ExportLogistics(w http.ResponseWriter, r *http.Request, eventId EventID, params ExportLogisticsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/v1/events/{event_id}/notices)
+func (_ Unimplemented) EventNotices(w http.ResponseWriter, r *http.Request, eventId EventID, params EventNoticesParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4431,6 +4759,374 @@ func (siw *ServerInterfaceWrapper) SaveEventDefinitions(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// ListContent operation middleware
+func (siw *ServerInterfaceWrapper) ListContent(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListContentParams
+
+	// ------------- Optional query parameter "preview" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "preview", r.URL.Query(), &params.Preview, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "preview"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "preview", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListContent(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetContent operation middleware
+func (siw *ServerInterfaceWrapper) GetContent(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "content_id" -------------
+	var contentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "content_id", chi.URLParam(r, "content_id"), &contentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "content_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetContentParams
+
+	// ------------- Optional query parameter "preview" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "preview", r.URL.Query(), &params.Preview, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "preview"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "preview", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "version" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "version", r.URL.Query(), &params.Version, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "version"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "version", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetContent(w, r, eventId, contentId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SaveContent operation middleware
+func (siw *ServerInterfaceWrapper) SaveContent(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "content_id" -------------
+	var contentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "content_id", chi.URLParam(r, "content_id"), &contentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "content_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SaveContentParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SaveContent(w, r, eventId, contentId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ContentAction operation middleware
+func (siw *ServerInterfaceWrapper) ContentAction(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "content_id" -------------
+	var contentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "content_id", chi.URLParam(r, "content_id"), &contentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "content_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ContentActionParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CSRF
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ContentAction(w, r, eventId, contentId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ContentHistory operation middleware
+func (siw *ServerInterfaceWrapper) ContentHistory(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "content_id" -------------
+	var contentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "content_id", chi.URLParam(r, "content_id"), &contentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "content_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ContentHistoryParams
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ContentHistory(w, r, eventId, contentId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListEventDecisions operation middleware
 func (siw *ServerInterfaceWrapper) ListEventDecisions(w http.ResponseWriter, r *http.Request) {
 
@@ -4693,6 +5389,48 @@ func (siw *ServerInterfaceWrapper) ExportLogistics(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ExportLogistics(w, r, eventId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EventNotices operation middleware
+func (siw *ServerInterfaceWrapper) EventNotices(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "event_id" -------------
+	var eventId EventID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "event_id", chi.URLParam(r, "event_id"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event_id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params EventNoticesParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EventNotices(w, r, eventId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8029,6 +8767,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/v1/events/{event_id}/teams/{team_id}/submission/outcome", wrapper.SetSubmissionOutcome)
 	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/content", wrapper.ListContent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/content/{content_id}", wrapper.GetContent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/events/{event_id}/content/{content_id}", wrapper.SaveContent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/v1/events/{event_id}/content/{content_id}/actions", wrapper.ContentAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/content/{content_id}/history", wrapper.ContentHistory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/v1/events/{event_id}/notices", wrapper.EventNotices)
+	})
 
 	return r
 }
@@ -8893,6 +9649,232 @@ func (response SaveEventDefinitionsdefaultJSONResponse) VisitSaveEventDefinition
 	return err
 }
 
+type ListContentRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  ListContentParams
+}
+
+type ListContentResponseObject interface {
+	VisitListContentResponse(w http.ResponseWriter) error
+}
+
+type ListContent200JSONResponse ContentList
+
+func (response ListContent200JSONResponse) VisitListContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListContentdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ListContentdefaultJSONResponse) VisitListContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetContentRequestObject struct {
+	EventId   EventID            `json:"event_id"`
+	ContentId openapi_types.UUID `json:"content_id"`
+	Params    GetContentParams
+}
+
+type GetContentResponseObject interface {
+	VisitGetContentResponse(w http.ResponseWriter) error
+}
+
+type GetContent200JSONResponse ContentPage
+
+func (response GetContent200JSONResponse) VisitGetContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetContentdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response GetContentdefaultJSONResponse) VisitGetContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveContentRequestObject struct {
+	EventId   EventID            `json:"event_id"`
+	ContentId openapi_types.UUID `json:"content_id"`
+	Params    SaveContentParams
+	Body      *SaveContentJSONRequestBody
+}
+
+type SaveContentResponseObject interface {
+	VisitSaveContentResponse(w http.ResponseWriter) error
+}
+
+type SaveContent200JSONResponse ContentPage
+
+func (response SaveContent200JSONResponse) VisitSaveContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SaveContentdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response SaveContentdefaultJSONResponse) VisitSaveContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ContentActionRequestObject struct {
+	EventId   EventID            `json:"event_id"`
+	ContentId openapi_types.UUID `json:"content_id"`
+	Params    ContentActionParams
+	Body      *ContentActionJSONRequestBody
+}
+
+type ContentActionResponseObject interface {
+	VisitContentActionResponse(w http.ResponseWriter) error
+}
+
+type ContentAction200JSONResponse ContentPage
+
+func (response ContentAction200JSONResponse) VisitContentActionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ContentActiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ContentActiondefaultJSONResponse) VisitContentActionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ContentHistoryRequestObject struct {
+	EventId   EventID            `json:"event_id"`
+	ContentId openapi_types.UUID `json:"content_id"`
+	Params    ContentHistoryParams
+}
+
+type ContentHistoryResponseObject interface {
+	VisitContentHistoryResponse(w http.ResponseWriter) error
+}
+
+type ContentHistory200JSONResponse ContentHistory
+
+func (response ContentHistory200JSONResponse) VisitContentHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ContentHistorydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response ContentHistorydefaultJSONResponse) VisitContentHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListEventDecisionsRequestObject struct {
 	EventId EventID `json:"event_id"`
 }
@@ -9123,6 +10105,50 @@ type ExportLogisticsdefaultJSONResponse struct {
 }
 
 func (response ExportLogisticsdefaultJSONResponse) VisitExportLogisticsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.XRequestID != nil {
+		w.Header().Set("X-Request-ID", fmt.Sprint(*response.Headers.XRequestID))
+	}
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EventNoticesRequestObject struct {
+	EventId EventID `json:"event_id"`
+	Params  EventNoticesParams
+}
+
+type EventNoticesResponseObject interface {
+	VisitEventNoticesResponse(w http.ResponseWriter) error
+}
+
+type EventNotices200JSONResponse ContentNotices
+
+func (response EventNotices200JSONResponse) VisitEventNoticesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EventNoticesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	Headers    ErrorResponseHeaders
+	StatusCode int
+}
+
+func (response EventNoticesdefaultJSONResponse) VisitEventNoticesResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -11558,6 +12584,21 @@ type StrictServerInterface interface {
 	// (PUT /api/v1/events/{event_id}/configuration-snapshot)
 	SaveEventDefinitions(ctx context.Context, request SaveEventDefinitionsRequestObject) (SaveEventDefinitionsResponseObject, error)
 
+	// (GET /api/v1/events/{event_id}/content)
+	ListContent(ctx context.Context, request ListContentRequestObject) (ListContentResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/content/{content_id})
+	GetContent(ctx context.Context, request GetContentRequestObject) (GetContentResponseObject, error)
+
+	// (PUT /api/v1/events/{event_id}/content/{content_id})
+	SaveContent(ctx context.Context, request SaveContentRequestObject) (SaveContentResponseObject, error)
+
+	// (POST /api/v1/events/{event_id}/content/{content_id}/actions)
+	ContentAction(ctx context.Context, request ContentActionRequestObject) (ContentActionResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/content/{content_id}/history)
+	ContentHistory(ctx context.Context, request ContentHistoryRequestObject) (ContentHistoryResponseObject, error)
+
 	// (GET /api/v1/events/{event_id}/decisions)
 	ListEventDecisions(ctx context.Context, request ListEventDecisionsRequestObject) (ListEventDecisionsResponseObject, error)
 
@@ -11572,6 +12613,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/events/{event_id}/logistics/export)
 	ExportLogistics(ctx context.Context, request ExportLogisticsRequestObject) (ExportLogisticsResponseObject, error)
+
+	// (GET /api/v1/events/{event_id}/notices)
+	EventNotices(ctx context.Context, request EventNoticesRequestObject) (EventNoticesResponseObject, error)
 
 	// (PUT /api/v1/events/{event_id}/owner)
 	TransferOwner(ctx context.Context, request TransferOwnerRequestObject) (TransferOwnerResponseObject, error)
@@ -12347,6 +13391,159 @@ func (sh *strictHandler) SaveEventDefinitions(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// ListContent operation middleware
+func (sh *strictHandler) ListContent(w http.ResponseWriter, r *http.Request, eventId EventID, params ListContentParams) {
+	var request ListContentRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListContent(ctx, request.(ListContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListContent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListContentResponseObject); ok {
+		if err := validResponse.VisitListContentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetContent operation middleware
+func (sh *strictHandler) GetContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params GetContentParams) {
+	var request GetContentRequestObject
+
+	request.EventId = eventId
+	request.ContentId = contentId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetContent(ctx, request.(GetContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetContent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetContentResponseObject); ok {
+		if err := validResponse.VisitGetContentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SaveContent operation middleware
+func (sh *strictHandler) SaveContent(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params SaveContentParams) {
+	var request SaveContentRequestObject
+
+	request.EventId = eventId
+	request.ContentId = contentId
+	request.Params = params
+
+	var body SaveContentJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SaveContent(ctx, request.(SaveContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SaveContent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SaveContentResponseObject); ok {
+		if err := validResponse.VisitSaveContentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ContentAction operation middleware
+func (sh *strictHandler) ContentAction(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentActionParams) {
+	var request ContentActionRequestObject
+
+	request.EventId = eventId
+	request.ContentId = contentId
+	request.Params = params
+
+	var body ContentActionJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ContentAction(ctx, request.(ContentActionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ContentAction")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ContentActionResponseObject); ok {
+		if err := validResponse.VisitContentActionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ContentHistory operation middleware
+func (sh *strictHandler) ContentHistory(w http.ResponseWriter, r *http.Request, eventId EventID, contentId openapi_types.UUID, params ContentHistoryParams) {
+	var request ContentHistoryRequestObject
+
+	request.EventId = eventId
+	request.ContentId = contentId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ContentHistory(ctx, request.(ContentHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ContentHistory")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ContentHistoryResponseObject); ok {
+		if err := validResponse.VisitContentHistoryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListEventDecisions operation middleware
 func (sh *strictHandler) ListEventDecisions(w http.ResponseWriter, r *http.Request, eventId EventID) {
 	var request ListEventDecisionsRequestObject
@@ -12481,6 +13678,33 @@ func (sh *strictHandler) ExportLogistics(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ExportLogisticsResponseObject); ok {
 		if err := validResponse.VisitExportLogisticsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// EventNotices operation middleware
+func (sh *strictHandler) EventNotices(w http.ResponseWriter, r *http.Request, eventId EventID, params EventNoticesParams) {
+	var request EventNoticesRequestObject
+
+	request.EventId = eventId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.EventNotices(ctx, request.(EventNoticesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "EventNotices")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(EventNoticesResponseObject); ok {
+		if err := validResponse.VisitEventNoticesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -14089,179 +15313,194 @@ func (sh *strictHandler) GetReady(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"eS0Jp9v9AKX5w6eosq/9+v7z+8//bwA=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

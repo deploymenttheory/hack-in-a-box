@@ -15,6 +15,8 @@ import (
 type Action string
 
 const (
+	ContentChanged           Action = "content.changed"
+	ContentReleased          Action = "content.released"
 	AdminBootstrapped        Action = "admin.bootstrapped"
 	SignedIn                 Action = "identity.signed_in"
 	FileUploaded             Action = "file.uploaded"
@@ -85,7 +87,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case SubmissionReviewed,
+	case ContentChanged, ContentReleased, SubmissionReviewed,
 		SubmissionOutcomeChanged,
 		AttendanceChanged,
 		CateringConfigured,

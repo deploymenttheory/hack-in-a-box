@@ -221,10 +221,7 @@ func (p EventPolicy) file(
 	if file.TeamID != nil {
 		return p.teamFileRead(ctx, actor, row, file)
 	}
-	if organiser && file.EventID == event {
-		return nil
-	}
-	return ErrForbidden
+	return p.contentFile(ctx, actor, file, organiser)
 }
 
 func profilePolicy(action Action, roles []string, organiser, admin bool) error {

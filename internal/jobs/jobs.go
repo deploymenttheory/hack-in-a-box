@@ -63,7 +63,9 @@ type Service struct {
 	Client *river.Client[pgx.Tx]
 	// Maintenance performs local cleanup alongside durable schedule reconciliation.
 	Maintenance func(context.Context) error
-	handlers    map[string]Handler
+	// FastMaintenance dispatches local time-sensitive releases independently of provider reconciliation.
+	FastMaintenance func(context.Context) error
+	handlers        map[string]Handler
 }
 
 func New(pool *pgxpool.Pool, logger *slog.Logger, handlers map[string]Handler) (*Service, error) {
@@ -390,12 +392,19 @@ func (s *Service) recover(ctx context.Context, op dbgen.Operation) error {
 }
 
 func (s *Service) Run(ctx context.Context, shutdown time.Duration) error {
+	if s.FastMaintenance != nil {
+		if err := s.FastMaintenance(ctx); err != nil {
+			return err
+		}
+	}
 	if err := s.Reconcile(ctx); err != nil {
 		return err
 	}
 	if err := s.Client.Start(ctx); err != nil {
 		return fmt.Errorf("start workers: %w", err)
 	}
+	fastTicker := time.NewTicker(5 * time.Second)
+	defer fastTicker.Stop()
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	for {
@@ -410,6 +419,15 @@ func (s *Service) Run(ctx context.Context, shutdown time.Duration) error {
 				return fmt.Errorf("stop workers: %w", err)
 			}
 			return nil
+		case <-fastTicker.C:
+			if s.FastMaintenance != nil {
+				if err := s.FastMaintenance(ctx); err != nil {
+					stop, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdown)
+					defer cancel()
+					_ = s.Client.StopAndCancel(stop)
+					return err
+				}
+			}
 		case <-ticker.C:
 			if err := s.Reconcile(ctx); err != nil {
 				stop, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdown)

@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// ChallengeDispatchTolerance is the agreed worker scheduling allowance after T−7.
+// Later initial publication requires postponement or cancellation.
+const ChallengeDispatchTolerance = 60 * time.Second
+
 var (
 	ErrLocalTime = errors.New("local time does not exist in this timezone")
 	ErrAmbiguous = errors.New("local time occurs twice; choose earlier or later explicitly")

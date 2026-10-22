@@ -1600,6 +1600,136 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/SubmissionPage'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: listContent
+      parameters:
+        - name: preview
+          in: query
+          description: Explicit privileged preview; never grants the selected audience access.
+          schema: {type: boolean, default: false}
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Visible released pages, or privileged authoring previews. Hidden content never contributes metadata or cursors.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentList'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content/{content_id}:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: content_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getContent
+      parameters:
+        - name: preview
+          in: query
+          description: Explicit privileged preview; never grants the selected audience access.
+          schema: {type: boolean, default: false}
+        - name: version
+          in: query
+          description: Historical version, available only to organisers in preview mode.
+          schema: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: Current authorised content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        default: {$ref: '#/components/responses/Error'}
+    put:
+      operationId: saveContent
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentInput'}
+      responses:
+        '200':
+          description: Immutable new draft. Every edit invalidates approval; the last released version remains available.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content/{content_id}/actions:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: content_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: contentAction
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          schema: {type: string, pattern: '^"(0|[1-9][0-9]*)"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentAction'}
+      responses:
+        '200':
+          description: Version-bound workflow action. Initial challenge publication cannot be triggered manually.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content/{content_id}/history:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: content_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: contentHistory
+      parameters:
+        - name: before
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - {$ref: '#/components/parameters/Limit'}
+      responses:
+        '200':
+          description: Organiser-only immutable workflow and release history.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentHistory'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/notices:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: eventNotices
+      parameters:
+        - name: after
+          in: query
+          schema: {type: integer, format: int64, minimum: 0}
+      responses:
+        '200':
+          description: Revised live dates and deadlines, available to all current confirmed attendees and staff. External notification delivery is separate.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentNotices'}
+        default: {$ref: '#/components/responses/Error'}
 components:
   securitySchemes:
     session: { type: apiKey, in: cookie, name: hackbox_session }
@@ -3325,6 +3455,117 @@ components:
         evidence:
           type: array
           items: {$ref: '#/components/schemas/SubmissionEvidence'}
+    ContentAudience:
+      type: object
+      additionalProperties: false
+      required: [confirmed, roles, teams]
+      properties:
+        confirmed: {type: boolean}
+        roles:
+          type: array
+          maxItems: 7
+          uniqueItems: true
+          items: {type: string, enum: [organiser, mentor, judge, mc, logistics, photographer, early_brief_access]}
+        teams:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    ContentDocument:
+      type: object
+      additionalProperties: false
+      required: [title, markdown, audience, attachments, scheduled_at]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 200}
+        markdown: {type: string, maxLength: 100000}
+        audience: {$ref: '#/components/schemas/ContentAudience'}
+        attachments:
+          type: array
+          maxItems: 30
+          uniqueItems: true
+          items: {type: string, format: uuid}
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null for manual release. Initial challenge time is fixed by event-local T−7 days and filled by the server.
+    ContentInput:
+      type: object
+      additionalProperties: false
+      required: [kind, document]
+      properties:
+        kind: {type: string, enum: [page, brief, challenge]}
+        document: {$ref: '#/components/schemas/ContentDocument'}
+    ContentPage:
+      type: object
+      additionalProperties: false
+      required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message]
+      properties:
+        id: {type: string, format: uuid}
+        kind: {type: string, enum: [page, brief, challenge]}
+        revision: {type: integer, format: int64}
+        version: {type: integer, format: int64}
+        state: {type: string, enum: [draft, review, approved, released, cancelled, withdrawn, missed, blocked]}
+        document: {$ref: '#/components/schemas/ContentDocument'}
+        released_version: {type: integer, format: int64, nullable: true}
+        released_at: {type: string, format: date-time, nullable: true}
+        can_manage: {type: boolean}
+        message: {type: string}
+    ContentList:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ContentPage'}
+        next_cursor: {type: string, format: uuid, nullable: true}
+    ContentAction:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: {type: string, enum: [review, approve, release, cancel, withdraw]}
+        reason: {type: string, maxLength: 2000}
+    ContentChange:
+      type: object
+      additionalProperties: false
+      required: [revision, version, action, actor_id, reason, scheduled_at, at]
+      properties:
+        revision: {type: integer, format: int64}
+        version: {type: integer, format: int64}
+        action: {type: string}
+        actor_id: {type: string, format: uuid, nullable: true}
+        reason: {type: string}
+        scheduled_at: {type: string, format: date-time, nullable: true}
+        at: {type: string, format: date-time}
+    ContentHistory:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ContentChange'}
+        next_cursor: {type: integer, format: int64, nullable: true}
+    ContentNotice:
+      type: object
+      additionalProperties: false
+      required: [id, revision, live_start, live_end, submission_cutoff]
+      properties:
+        id: {type: string, format: uuid}
+        revision: {type: integer, format: int64}
+        live_start: {type: string, format: date-time}
+        live_end: {type: string, format: date-time}
+        submission_cutoff: {type: string, format: date-time}
+    ContentNotices:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ContentNotice'}
     SubmissionPage:
       type: object
       additionalProperties: false

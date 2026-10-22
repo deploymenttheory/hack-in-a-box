@@ -243,7 +243,7 @@ func (s Service) view(
 	blockers := gateBlockers(row, c, facts, count, next, s.now(), false, "")
 	if row.Stage == "preparation" && !row.PublishedAt.Valid {
 		publication, err := schedule.ChallengePublication(c.LiveStart, c.Timezone, c.DSTChoice)
-		if err == nil && !s.now().Before(publication) {
+		if err == nil && s.now().After(publication.Add(schedule.ChallengeDispatchTolerance)) {
 			blockers = append(
 				blockers,
 				Issue{
@@ -389,6 +389,16 @@ func (s Service) Update(
 		)
 		if err != nil {
 			return conflict(err)
+		}
+		if err := invalidateChallengeApproval(
+			ctx,
+			q,
+			row,
+			actor,
+			input.Configuration,
+			s.now(),
+		); err != nil {
+			return err
 		}
 		if err := replan(ctx, q, id, input.Configuration); err != nil {
 			return err

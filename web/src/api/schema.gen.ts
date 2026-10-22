@@ -1110,6 +1110,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/content/{content_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getContent"];
+        put: operations["saveContent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/content/{content_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["contentAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/content/{content_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["contentHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["eventNotices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1953,6 +2046,90 @@ export interface components {
             review_status: "pending" | "accepted" | "changes_requested";
             definitions: components["schemas"]["SubmissionDefinition"][];
             evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        ContentAudience: {
+            confirmed: boolean;
+            roles: ("organiser" | "mentor" | "judge" | "mc" | "logistics" | "photographer" | "early_brief_access")[];
+            teams: string[];
+        };
+        ContentDocument: {
+            title: string;
+            markdown: string;
+            audience: components["schemas"]["ContentAudience"];
+            attachments: string[];
+            /**
+             * Format: date-time
+             * @description Null for manual release. Initial challenge time is fixed by event-local T−7 days and filled by the server.
+             */
+            scheduled_at: string | null;
+        };
+        ContentInput: {
+            /** @enum {string} */
+            kind: "page" | "brief" | "challenge";
+            document: components["schemas"]["ContentDocument"];
+        };
+        ContentPage: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "page" | "brief" | "challenge";
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            state: "draft" | "review" | "approved" | "released" | "cancelled" | "withdrawn" | "missed" | "blocked";
+            document: components["schemas"]["ContentDocument"];
+            /** Format: int64 */
+            released_version: number | null;
+            /** Format: date-time */
+            released_at: string | null;
+            can_manage: boolean;
+            message: string;
+        };
+        ContentList: {
+            items: components["schemas"]["ContentPage"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ContentAction: {
+            /** @enum {string} */
+            action: "review" | "approve" | "release" | "cancel" | "withdraw";
+            reason: string;
+        };
+        ContentChange: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number;
+            action: string;
+            /** Format: uuid */
+            actor_id: string | null;
+            reason: string;
+            /** Format: date-time */
+            scheduled_at: string | null;
+            /** Format: date-time */
+            at: string;
+        };
+        ContentHistory: {
+            items: components["schemas"]["ContentChange"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        ContentNotice: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            live_start: string;
+            /** Format: date-time */
+            live_end: string;
+            /** Format: date-time */
+            submission_cutoff: string;
+        };
+        ContentNotices: {
+            items: components["schemas"]["ContentNotice"][];
         };
         SubmissionPage: {
             /** Format: int64 */
@@ -4170,6 +4347,177 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubmissionPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listContent: {
+        parameters: {
+            query?: {
+                /** @description Explicit privileged preview; never grants the selected audience access. */
+                preview?: boolean;
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Visible released pages, or privileged authoring previews. Hidden content never contributes metadata or cursors. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getContent: {
+        parameters: {
+            query?: {
+                /** @description Explicit privileged preview; never grants the selected audience access. */
+                preview?: boolean;
+                /** @description Historical version, available only to organisers in preview mode. */
+                version?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised content. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    saveContent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentInput"];
+            };
+        };
+        responses: {
+            /** @description Immutable new draft. Every edit invalidates approval; the last released version remains available. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    contentAction: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentAction"];
+            };
+        };
+        responses: {
+            /** @description Version-bound workflow action. Initial challenge publication cannot be triggered manually. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    contentHistory: {
+        parameters: {
+            query?: {
+                before?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only immutable workflow and release history. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    eventNotices: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revised live dates and deadlines, available to all current confirmed attendees and staff. External notification delivery is separate. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentNotices"];
                 };
             };
             default: components["responses"]["Error"];
