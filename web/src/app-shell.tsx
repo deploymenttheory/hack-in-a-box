@@ -23,6 +23,7 @@ function Account({ session }: { session: Session }) {
   const [failure, setFailure] = useState<unknown>()
   const [pending, setPending] = useState(false)
   async function logout() {
+    window.dispatchEvent(new Event('session-ending'))
     setPending(true)
     try {
       const { error, response } = await api.POST('/api/v1/logout', { params: { header: { 'X-CSRF-Token': session.csrf_token } } })
