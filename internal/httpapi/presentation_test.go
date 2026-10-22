@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -20,6 +22,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -194,6 +197,73 @@ func TestPresentationHTTPContractsAndCapabilityBoundary(t *testing.T) {
 	if err = json.Unmarshal(w.Body.Bytes(), &pairing); err != nil {
 		t.Fatal(err)
 	}
+	var raster bytes.Buffer
+	if err = png.Encode(&raster, image.NewRGBA(image.Rect(0, 0, 2, 2))); err != nil {
+		t.Fatal(err)
+	}
+	assetID := uuid.New()
+	defs := templates.EmptyDefinitions()
+	defs.Branding.Assets = []templates.Asset{
+		{ID: assetID, Kind: "logo", MediaType: "image/png", Content: raster.Bytes()},
+	}
+	rawDefinitions, _ := json.Marshal(defs)
+	if _, err = pool.Exec(
+		ctx,
+		"INSERT INTO event_definitions(event_id,definitions) VALUES($1,$2)",
+		id,
+		rawDefinitions,
+	); err != nil {
+		t.Fatal(err)
+	}
+	assetPath := base + "/display/assets/" + assetID.String()
+	if w = request(
+		dbgen.Person{},
+		"GET",
+		assetPath,
+		nil,
+		0,
+		false,
+		pairing.Token,
+	); w.Code != 200 || !bytes.Equal(w.Body.Bytes(), raster.Bytes()) || w.Header().Get("Content-Type") != "image/png" ||
+		!strings.Contains(w.Header().Get("Cache-Control"), "no-store") {
+		t.Fatalf("safe capability image: %d %s", w.Code, w.Body)
+	}
+	if w = request(owner, "GET", assetPath, nil, 0, false, ""); w.Code != 401 {
+		t.Fatalf("cookie became image capability: %d", w.Code)
+	}
+	if w = request(
+		dbgen.Person{},
+		"GET",
+		base+"/display/assets/"+uuid.NewString(),
+		nil,
+		0,
+		false,
+		pairing.Token,
+	); w.Code != 404 {
+		t.Fatalf("arbitrary file ID: %d %s", w.Code, w.Body)
+	}
+	if w = request(
+		dbgen.Person{},
+		"GET",
+		assetPath+"?token="+pairing.Token,
+		nil,
+		0,
+		false,
+		pairing.Token,
+	); w.Code != 400 {
+		t.Fatalf("image URL credentials: %d", w.Code)
+	}
+	if w = request(
+		dbgen.Person{},
+		"GET",
+		base+"/files/"+assetID.String(),
+		nil,
+		0,
+		false,
+		pairing.Token,
+	); w.Code != 401 {
+		t.Fatalf("display token became ordinary file permission: %d", w.Code)
+	}
 	display := base + "/display/snapshot"
 	w = request(dbgen.Person{}, "GET", display, nil, 0, false, pairing.Token)
 	if w.Code != 200 || !strings.Contains(w.Body.String(), cue.Title) ||
@@ -240,6 +310,9 @@ func TestPresentationHTTPContractsAndCapabilityBoundary(t *testing.T) {
 	)
 	if w.Code != 200 {
 		t.Fatalf("revoke: %d %s", w.Code, w.Body)
+	}
+	if w = request(dbgen.Person{}, "GET", assetPath, nil, 0, false, pairing.Token); w.Code != 401 {
+		t.Fatalf("revoked image capability: %d", w.Code)
 	}
 	if w = request(dbgen.Person{}, "GET", display, nil, 0, false, pairing.Token); w.Code != 401 {
 		t.Fatalf("revoked capability: %d", w.Code)

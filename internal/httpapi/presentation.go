@@ -18,16 +18,27 @@ import (
 
 type displayTokenKey struct{}
 
-// Only these two exact GET routes use display capabilities. Nothing else can
+// Only exact display GET routes use display capabilities. Nothing else can
 // escape the ordinary person-session/CSRF boundary or finite response timeout.
 func displayRoute(r *http.Request) bool {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if r.Method != http.MethodGet || len(parts) != 6 || parts[0] != "api" || parts[1] != "v1" ||
+	if r.Method != http.MethodGet || (len(parts) != 6 && len(parts) != 7) || parts[0] != "api" ||
+		parts[1] != "v1" ||
 		parts[2] != "events" ||
-		parts[4] != "display" ||
-		(parts[5] != "snapshot" && parts[5] != "stream") {
+		parts[4] != "display" {
 		return false
 	}
+	if len(parts) == 7 {
+		if parts[5] != "assets" {
+			return false
+		}
+		if _, err := uuid.Parse(parts[6]); err != nil {
+			return false
+		}
+	} else if parts[5] != "snapshot" && parts[5] != "stream" {
+		return false
+	}
+
 	_, err := uuid.Parse(parts[3])
 	return err == nil
 }
@@ -221,4 +232,31 @@ func (s displayStream) VisitStreamDisplayResponse(w http.ResponseWriter) error {
 			}
 		}
 	}
+}
+
+func (h handlers) GetDisplayAsset(
+	ctx context.Context,
+	r contract.GetDisplayAssetRequestObject,
+) (contract.GetDisplayAssetResponseObject, error) {
+	a, err := h.Presentation.Asset(ctx, r.EventId, displayToken(ctx), r.AssetId)
+	if err != nil {
+		return nil, fmt.Errorf("display asset: %w", err)
+	}
+	return displayAsset{mediaType: a.MediaType, content: a.Content}, nil
+}
+
+type displayAsset struct {
+	mediaType string
+	content   []byte
+}
+
+func (a displayAsset) VisitGetDisplayAssetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", a.mediaType)
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	_, err := w.Write(a.content)
+	if err != nil {
+		return fmt.Errorf("write display asset: %w", err)
+	}
+	return nil
 }

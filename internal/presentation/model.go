@@ -73,21 +73,28 @@ type DisplayCue struct {
 	URL          string    `json:"url"`
 	ContentTitle string    `json:"content_title"`
 }
+type DisplayAsset struct {
+	ID        uuid.UUID `json:"id"`
+	Kind      string    `json:"kind"`
+	MediaType string    `json:"media_type"`
+	Digest    string    `json:"digest"`
+}
 type Snapshot struct {
-	OverrideActive   bool        `json:"override_active"`
-	EventID          uuid.UUID   `json:"event_id"`
-	EventName        string      `json:"event_name"`
-	Timezone         string      `json:"timezone"`
-	Sequence         int64       `json:"sequence"`
-	ServerNow        time.Time   `json:"server_now"`
-	Current          *DisplayCue `json:"current"`
-	Next             *DisplayCue `json:"next"`
-	Mode             string      `json:"mode"`
-	RemainingSeconds int         `json:"remaining_seconds"`
-	TimerEndsAt      *time.Time  `json:"timer_ends_at"`
-	PrimaryColour    string      `json:"primary_colour"`
-	BackgroundColour string      `json:"background_colour"`
-	ForegroundColour string      `json:"foreground_colour"`
+	Assets           []DisplayAsset `json:"assets"`
+	OverrideActive   bool           `json:"override_active"`
+	EventID          uuid.UUID      `json:"event_id"`
+	EventName        string         `json:"event_name"`
+	Timezone         string         `json:"timezone"`
+	Sequence         int64          `json:"sequence"`
+	ServerNow        time.Time      `json:"server_now"`
+	Current          *DisplayCue    `json:"current"`
+	Next             *DisplayCue    `json:"next"`
+	Mode             string         `json:"mode"`
+	RemainingSeconds int            `json:"remaining_seconds"`
+	TimerEndsAt      *time.Time     `json:"timer_ends_at"`
+	PrimaryColour    string         `json:"primary_colour"`
+	BackgroundColour string         `json:"background_colour"`
+	ForegroundColour string         `json:"foreground_colour"`
 }
 
 func validate(c Command) error {

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -416,8 +415,6 @@ func (s Service) Revoke(
 	return result, nil
 }
 
-var colour = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
-
 func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) (Snapshot, error) {
 	if len(token) < 32 || len(token) > 200 {
 		return Snapshot{}, access.ErrUnauthenticated
@@ -529,25 +526,25 @@ func displayBranding(
 	eventID uuid.UUID,
 	result *Snapshot,
 ) error {
-	raw, readErr := q.EventDefinitions(ctx, eventID)
-	if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
-		return fmt.Errorf("read display branding: %w", readErr)
+	brand, err := templates.RenderBranding(ctx, q, eventID)
+	if err != nil {
+		return fmt.Errorf("read display branding: %w", err)
 	}
-	if readErr == nil {
-		defs := templates.EmptyDefinitions()
-		if err := json.Unmarshal(raw.Definitions, &defs); err != nil {
-			return fmt.Errorf("decode display branding: %w", err)
-		}
-		if colour.MatchString(defs.Branding.Primary) {
-			result.PrimaryColour = defs.Branding.Primary
-		}
-		if colour.MatchString(defs.Branding.Background) {
-			result.BackgroundColour = defs.Branding.Background
-		}
-		if colour.MatchString(defs.Branding.Foreground) {
-			result.ForegroundColour = defs.Branding.Foreground
-		}
+	result.PrimaryColour, result.BackgroundColour, result.ForegroundColour = brand.Primary, brand.Background, brand.Foreground
+	result.Assets = []DisplayAsset{}
+	for _, asset := range brand.Assets {
+		digest := sha256.Sum256(asset.Content)
+		result.Assets = append(
+			result.Assets,
+			DisplayAsset{
+				ID:        asset.ID,
+				Kind:      asset.Kind,
+				MediaType: asset.MediaType,
+				Digest:    fmt.Sprintf("%x", digest),
+			},
+		)
 	}
+
 	return nil
 }
 
@@ -674,4 +671,38 @@ func pairingMetadata(p dbgen.DisplayPairingsRow, now time.Time) Pairing {
 		v.Stale = now.Before(p.LastSeenAt.Time) || now.Sub(p.LastSeenAt.Time) > 10*time.Second
 	}
 	return v
+}
+
+// Asset reads only a current approved branding asset after rechecking the event's
+// display capability. An asset ID is never interpreted as an upload/file ID.
+func (s Service) Asset(
+	ctx context.Context,
+	eventID uuid.UUID,
+	token string,
+	assetID uuid.UUID,
+) (templates.Asset, error) {
+	if s.Pool == nil {
+		return templates.Asset{}, database.ErrDatabase
+	}
+	var result templates.Asset
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		if _, err := s.displayEvent(ctx, q, eventID, token); err != nil {
+			return err
+		}
+		brand, err := templates.RenderBranding(ctx, q, eventID)
+		if err != nil {
+			return fmt.Errorf("read display asset branding: %w", err)
+		}
+		for _, asset := range brand.Assets {
+			if asset.ID == assetID {
+				result = asset
+				return nil
+			}
+		}
+		return access.ErrNotFound
+	})
+	if err != nil {
+		return templates.Asset{}, fmt.Errorf("read display asset: %w", err)
+	}
+	return result, nil
 }
