@@ -90,12 +90,47 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 	expectedVersion int64,
 	scope communications.DeliveryScope,
 ) (int, error) {
+	report, err := s.QueueApprovedOccurrenceReportInTransaction(
+		ctx,
+		tx,
+		eventID,
+		campaignID,
+		expectedVersion,
+		scope,
+	)
+	return report.TotalIntents(), err
+}
+
+// QueueReport distinguishes queued intents from current unavailable recipients.
+// Queued counts newly retained intents, never network attempts or delivery.
+// Preexisting reports retained statuses; accepted means relay acceptance only.
+type QueueReport struct {
+	Queued      int
+	Unavailable int
+	Preexisting map[string]int
+}
+
+func (r QueueReport) TotalIntents() int {
+	count := r.Queued
+	for _, n := range r.Preexisting {
+		count += n
+	}
+	return count
+}
+
+func (s Service) QueueApprovedOccurrenceReportInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	expectedVersion int64,
+	scope communications.DeliveryScope,
+) (QueueReport, error) {
 	audience, err := s.scopeAudience(ctx, tx, eventID, campaignID, expectedVersion, scope)
 	if err != nil {
-		return 0, err
+		return QueueReport{}, err
 	}
 	if !s.configured() || s.Campaigns == nil || s.Campaigns.Jobs == nil {
-		return 0, mailcontact.ErrUnavailable
+		return QueueReport{}, mailcontact.ErrUnavailable
 	}
 	approved, err := s.Campaigns.ResolveApprovedPersonalCampaignInTransaction(
 		ctx,
@@ -105,32 +140,38 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 		uuid.Nil,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+		return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 	}
 	if approved.Version != expectedVersion ||
 		!slices.Contains(approved.Definition.Channels, "smtp") {
-		return 0, access.ErrConflict
+		return QueueReport{}, access.ErrConflict
 	}
 	q := dbgen.New(tx)
 	revision, err := s.revision(ctx, q, eventID)
 	if err != nil {
-		return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+		return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 	}
 	if approved.Approval.ChannelRevisions["smtp"] != revision {
-		return 0, access.ErrConflict
+		return QueueReport{}, access.ErrConflict
 	}
-	count := 0
+	report := QueueReport{Preexisting: map[string]int{}}
+	byPerson, err := existingOccurrenceIntents(
+		ctx,
+		q,
+		eventID,
+		campaignID,
+		expectedVersion,
+		approved.Approval.Binding,
+		scope,
+		audience.Binding,
+	)
+	if err != nil {
+		return QueueReport{}, err
+	}
 	for _, recipient := range approved.Preview.Recipients {
 		if scope.OccurrenceID != uuid.Nil &&
 			!slices.Contains(audience.RecipientIDs, recipient.PersonID) {
 			continue
-		}
-		mailbox, err := mailcontact.VerifiedMailboxInTransaction(ctx, q, recipient.PersonID)
-		if errors.Is(err, mailcontact.ErrUnavailable) || errors.Is(err, access.ErrUnauthenticated) {
-			continue
-		}
-		if err != nil {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
 		identity := fmt.Sprintf(
 			"smtp:%s:%s:%d:%s:%s:%s:%s",
@@ -145,6 +186,28 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 		digest := sha256.Sum256([]byte(identity))
 		key := "communication_campaign_smtp:" + hex.EncodeToString(digest[:])
 		target := uuid.NewSHA1(uuid.NameSpaceOID, []byte(key))
+		if prior, ok := byPerson[recipient.PersonID]; ok {
+			report.Preexisting[existingIntentStatus(prior)]++
+			continue
+		}
+		mailbox, eligible, err := queueMailbox(
+			ctx,
+			q,
+			eventID,
+			target,
+			approved,
+			scope,
+			audience,
+			recipient.PersonID,
+		)
+		if err != nil {
+			return QueueReport{}, err
+		}
+		if !eligible {
+			report.Unavailable++
+			continue
+		}
+
 		op, err := s.Campaigns.Jobs.Enqueue(
 			ctx,
 			tx,
@@ -158,13 +221,13 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 			},
 		)
 		if err != nil {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
-		if _, err = q.SMTPCampaignMessage(ctx, op.ID); err == nil {
-			count++
+		if prior, readErr := q.SMTPCampaignMessage(ctx, op.ID); readErr == nil {
+			report.Preexisting[prior.State]++
 			continue
-		} else if !errors.Is(err, pgx.ErrNoRows) {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+		} else if !errors.Is(readErr, pgx.ErrNoRows) {
+			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", readErr)
 		}
 		request := communications.TestMessage{
 			EventID:         eventID,
@@ -182,7 +245,7 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 			false,
 		)
 		if err != nil {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
 		encoded, err := json.Marshal(
 			campaignSnapshot{
@@ -192,7 +255,7 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 			},
 		)
 		if err != nil {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
 		if err = q.SaveSMTPCampaignMessage(
 			ctx,
@@ -211,11 +274,11 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 				Snapshot:          encoded,
 			},
 		); err != nil {
-			return 0, fmt.Errorf("queue SMTP campaign: %w", err)
+			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
-		count++
+		report.Queued++
 	}
-	return count, nil
+	return report, nil
 }
 
 func (h CampaignHandler) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
@@ -418,4 +481,166 @@ func mailOperationCurrent(
 		!operation.Cancelled &&
 		!operation.DueAt.After(now) &&
 		(operation.State == "pending" || operation.State == "running")
+}
+
+// queueMailbox preserves the reviewed disposition of an omitted person. A later
+// mailbox confirmation cannot silently create a retrospective send for the same
+// approved occurrence; an explicit fresh reviewed intent must have a new binding.
+func queueMailbox(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID, target uuid.UUID,
+	approved communications.ApprovedCampaign,
+	scope communications.DeliveryScope,
+	audience communications.ScopeAudience,
+	person uuid.UUID,
+) (string, bool, error) {
+	if _, err := q.SMTPCampaignOmission(
+		ctx,
+		dbgen.SMTPCampaignOmissionParams{EventID: eventID, IntentID: target},
+	); err == nil {
+		return "", false, nil
+	} else if !errors.Is(
+		err,
+		pgx.ErrNoRows,
+	) {
+		return "", false, fmt.Errorf("read reviewed SMTP omission: %w", err)
+	}
+	existing, existingErr := q.SMTPCampaignIntent(
+		ctx,
+		dbgen.SMTPCampaignIntentParams{EventID: eventID, IntentID: target},
+	)
+	if existingErr != nil && !errors.Is(existingErr, pgx.ErrNoRows) {
+		return "", false, fmt.Errorf("read reviewed SMTP intent: %w", existingErr)
+	}
+	mailbox, err := mailcontact.VerifiedMailboxInTransaction(ctx, q, person)
+	if errors.Is(err, access.ErrUnauthenticated) {
+		return "", false, nil
+	}
+	if errors.Is(err, mailcontact.ErrUnavailable) {
+		if errors.Is(existingErr, pgx.ErrNoRows) {
+			if err = q.RecordSMTPCampaignOmission(
+				ctx,
+				dbgen.RecordSMTPCampaignOmissionParams{
+					EventID:           eventID,
+					IntentID:          target,
+					CampaignID:        approved.Definition.ID,
+					CampaignVersion:   approved.Version,
+					ApprovalBinding:   approved.Approval.Binding,
+					OccurrenceID:      scope.OccurrenceID,
+					OccurrenceBinding: audience.Binding,
+					PersonID:          person,
+				},
+			); err != nil {
+				return "", false, fmt.Errorf("record reviewed SMTP omission: %w", err)
+			}
+		}
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("resolve reviewed SMTP mailbox: %w", err)
+	}
+	if existingErr == nil && existing.Mailbox != mailbox {
+		return "", false, nil
+	}
+	return mailbox, true, nil
+}
+
+func existingIntentStatus(prior dbgen.SMTPCampaignOccurrenceIntentsRow) string {
+	switch prior.State {
+	case "accepted", "ambiguous", "permanent":
+		return prior.State
+	}
+	if prior.OperationState == "permanent" || prior.OperationState == "cancelled" ||
+		prior.OperationState == "ambiguous" {
+		return prior.OperationState
+	}
+	return prior.State
+}
+
+// CheckOccurrenceReviewInTransaction must run before the automation owner changes
+// a review generation. Holding the event lock through its review commit prevents
+// pending original workers being stranded by a newly effective scope binding.
+func (s Service) CheckOccurrenceReviewInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	version int64,
+	scope communications.DeliveryScope,
+) error {
+	if scope.OccurrenceID == uuid.Nil {
+		return access.ErrInvalid
+	}
+	q := dbgen.New(tx)
+	if _, err := q.LockEvent(ctx, eventID); err != nil {
+		return fmt.Errorf("lock SMTP occurrence review: %w", err)
+	}
+	pending, err := q.SMTPOccurrenceReviewPending(
+		ctx,
+		dbgen.SMTPOccurrenceReviewPendingParams{
+			EventID:         eventID,
+			CampaignID:      campaignID,
+			CampaignVersion: version,
+			OccurrenceID:    scope.OccurrenceID,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("check SMTP occurrence review: %w", err)
+	}
+	if pending {
+		return access.ErrConflict
+	}
+	return nil
+}
+
+func existingOccurrenceIntents(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID, campaignID uuid.UUID,
+	expectedVersion int64,
+	approvalBinding string,
+	scope communications.DeliveryScope,
+	reviewBinding string,
+) (map[uuid.UUID]dbgen.SMTPCampaignOccurrenceIntentsRow, error) {
+	if scope.OccurrenceID != uuid.Nil {
+		changed, err := q.SMTPOccurrenceSourceChanged(
+			ctx,
+			dbgen.SMTPOccurrenceSourceChangedParams{
+				EventID:         eventID,
+				CampaignID:      campaignID,
+				OccurrenceID:    scope.OccurrenceID,
+				CampaignVersion: expectedVersion,
+				ApprovalBinding: approvalBinding,
+			},
+		)
+		if err != nil {
+			return nil, fmt.Errorf("check immutable SMTP occurrence source: %w", err)
+		}
+		if !changed.Valid || changed.Bool {
+			return nil, access.ErrConflict
+		}
+	}
+	existing, err := q.SMTPCampaignOccurrenceIntents(
+		ctx,
+		dbgen.SMTPCampaignOccurrenceIntentsParams{
+			EventID:         eventID,
+			CampaignID:      campaignID,
+			CampaignVersion: expectedVersion,
+			ApprovalBinding: approvalBinding,
+			OccurrenceID:    scope.OccurrenceID,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("read existing SMTP source intents: %w", err)
+	}
+	byPerson := map[uuid.UUID]dbgen.SMTPCampaignOccurrenceIntentsRow{}
+	for _, intent := range existing {
+		if intent.OccurrenceBinding != reviewBinding &&
+			(intent.OperationState == "pending" || intent.OperationState == "running" || intent.State == "prepared") {
+			return nil, access.ErrConflict
+		}
+		byPerson[intent.PersonID] = intent
+	}
+
+	return byPerson, nil
 }

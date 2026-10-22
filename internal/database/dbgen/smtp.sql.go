@@ -89,6 +89,36 @@ func (q *Queries) PrepareSMTPSubmissionAttempt(ctx context.Context, arg PrepareS
 	return i, err
 }
 
+const recordSMTPCampaignOmission = `-- name: RecordSMTPCampaignOmission :exec
+INSERT INTO smtp_campaign_omissions(event_id,intent_id,campaign_id,campaign_version,approval_binding,occurrence_id,occurrence_binding,person_id,reason)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,'address_unverified') ON CONFLICT DO NOTHING
+`
+
+type RecordSMTPCampaignOmissionParams struct {
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	PersonID          uuid.UUID
+}
+
+func (q *Queries) RecordSMTPCampaignOmission(ctx context.Context, arg RecordSMTPCampaignOmissionParams) error {
+	_, err := q.db.Exec(ctx, recordSMTPCampaignOmission,
+		arg.EventID,
+		arg.IntentID,
+		arg.CampaignID,
+		arg.CampaignVersion,
+		arg.ApprovalBinding,
+		arg.OccurrenceID,
+		arg.OccurrenceBinding,
+		arg.PersonID,
+	)
+	return err
+}
+
 const recordSMTPCampaignReceipt = `-- name: RecordSMTPCampaignReceipt :exec
 UPDATE smtp_campaign_messages SET state=$2,receipt_code=$3,updated_at=now() WHERE operation_id=$1
 `
@@ -134,6 +164,39 @@ func (q *Queries) RecordSMTPSubmissionReceipt(ctx context.Context, arg RecordSMT
 	return err
 }
 
+const sMTPCampaignIntent = `-- name: SMTPCampaignIntent :one
+SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at FROM smtp_campaign_messages WHERE event_id=$1 AND intent_id=$2
+`
+
+type SMTPCampaignIntentParams struct {
+	EventID  uuid.UUID
+	IntentID uuid.UUID
+}
+
+func (q *Queries) SMTPCampaignIntent(ctx context.Context, arg SMTPCampaignIntentParams) (SmtpCampaignMessage, error) {
+	row := q.db.QueryRow(ctx, sMTPCampaignIntent, arg.EventID, arg.IntentID)
+	var i SmtpCampaignMessage
+	err := row.Scan(
+		&i.OperationID,
+		&i.EventID,
+		&i.IntentID,
+		&i.CampaignID,
+		&i.CampaignVersion,
+		&i.ApprovalBinding,
+		&i.OccurrenceID,
+		&i.OccurrenceBinding,
+		&i.ProviderRevision,
+		&i.PersonID,
+		&i.Mailbox,
+		&i.Snapshot,
+		&i.State,
+		&i.ReceiptCode,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const sMTPCampaignMessage = `-- name: SMTPCampaignMessage :one
 SELECT operation_id, event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, provider_revision, person_id, mailbox, snapshot, state, receipt_code, created_at, updated_at FROM smtp_campaign_messages WHERE operation_id=$1
 `
@@ -162,6 +225,111 @@ func (q *Queries) SMTPCampaignMessage(ctx context.Context, operationID uuid.UUID
 	return i, err
 }
 
+const sMTPCampaignOccurrenceIntents = `-- name: SMTPCampaignOccurrenceIntents :many
+SELECT m.operation_id, m.event_id, m.intent_id, m.campaign_id, m.campaign_version, m.approval_binding, m.occurrence_id, m.occurrence_binding, m.provider_revision, m.person_id, m.mailbox, m.snapshot, m.state, m.receipt_code, m.created_at, m.updated_at,o.state AS operation_state FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.approval_binding=$4 AND m.occurrence_id=$5
+ORDER BY m.person_id
+`
+
+type SMTPCampaignOccurrenceIntentsParams struct {
+	EventID         uuid.UUID
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	ApprovalBinding string
+	OccurrenceID    uuid.UUID
+}
+
+type SMTPCampaignOccurrenceIntentsRow struct {
+	OperationID       uuid.UUID
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	ProviderRevision  string
+	PersonID          uuid.UUID
+	Mailbox           string
+	Snapshot          []byte
+	State             string
+	ReceiptCode       string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	OperationState    string
+}
+
+func (q *Queries) SMTPCampaignOccurrenceIntents(ctx context.Context, arg SMTPCampaignOccurrenceIntentsParams) ([]SMTPCampaignOccurrenceIntentsRow, error) {
+	rows, err := q.db.Query(ctx, sMTPCampaignOccurrenceIntents,
+		arg.EventID,
+		arg.CampaignID,
+		arg.CampaignVersion,
+		arg.ApprovalBinding,
+		arg.OccurrenceID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SMTPCampaignOccurrenceIntentsRow{}
+	for rows.Next() {
+		var i SMTPCampaignOccurrenceIntentsRow
+		if err := rows.Scan(
+			&i.OperationID,
+			&i.EventID,
+			&i.IntentID,
+			&i.CampaignID,
+			&i.CampaignVersion,
+			&i.ApprovalBinding,
+			&i.OccurrenceID,
+			&i.OccurrenceBinding,
+			&i.ProviderRevision,
+			&i.PersonID,
+			&i.Mailbox,
+			&i.Snapshot,
+			&i.State,
+			&i.ReceiptCode,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.OperationState,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sMTPCampaignOmission = `-- name: SMTPCampaignOmission :one
+SELECT event_id, intent_id, campaign_id, campaign_version, approval_binding, occurrence_id, occurrence_binding, person_id, reason, recorded_at FROM smtp_campaign_omissions WHERE event_id=$1 AND intent_id=$2
+`
+
+type SMTPCampaignOmissionParams struct {
+	EventID  uuid.UUID
+	IntentID uuid.UUID
+}
+
+func (q *Queries) SMTPCampaignOmission(ctx context.Context, arg SMTPCampaignOmissionParams) (SmtpCampaignOmission, error) {
+	row := q.db.QueryRow(ctx, sMTPCampaignOmission, arg.EventID, arg.IntentID)
+	var i SmtpCampaignOmission
+	err := row.Scan(
+		&i.EventID,
+		&i.IntentID,
+		&i.CampaignID,
+		&i.CampaignVersion,
+		&i.ApprovalBinding,
+		&i.OccurrenceID,
+		&i.OccurrenceBinding,
+		&i.PersonID,
+		&i.Reason,
+		&i.RecordedAt,
+	)
+	return i, err
+}
+
 const sMTPMessageSnapshot = `-- name: SMTPMessageSnapshot :one
 SELECT operation_id, event_id, person_id, test_request_id, mailbox, message_id, snapshot, state, receipt_code, created_at, updated_at FROM smtp_message_snapshots WHERE operation_id=$1
 `
@@ -183,6 +351,57 @@ func (q *Queries) SMTPMessageSnapshot(ctx context.Context, operationID uuid.UUID
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const sMTPOccurrenceReviewPending = `-- name: SMTPOccurrenceReviewPending :one
+SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.occurrence_id=$4
+AND (o.state IN ('pending','running') OR m.state='prepared'))
+`
+
+type SMTPOccurrenceReviewPendingParams struct {
+	EventID         uuid.UUID
+	CampaignID      uuid.UUID
+	CampaignVersion int64
+	OccurrenceID    uuid.UUID
+}
+
+func (q *Queries) SMTPOccurrenceReviewPending(ctx context.Context, arg SMTPOccurrenceReviewPendingParams) (bool, error) {
+	row := q.db.QueryRow(ctx, sMTPOccurrenceReviewPending,
+		arg.EventID,
+		arg.CampaignID,
+		arg.CampaignVersion,
+		arg.OccurrenceID,
+	)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const sMTPOccurrenceSourceChanged = `-- name: SMTPOccurrenceSourceChanged :one
+SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.occurrence_id=$3 AND (m.campaign_version<>$4 OR m.approval_binding<>$5))
+OR EXISTS(SELECT 1 FROM smtp_campaign_omissions o WHERE o.event_id=$1 AND o.campaign_id=$2 AND o.occurrence_id=$3 AND (o.campaign_version<>$4 OR o.approval_binding<>$5))
+`
+
+type SMTPOccurrenceSourceChangedParams struct {
+	EventID         uuid.UUID
+	CampaignID      uuid.UUID
+	OccurrenceID    uuid.UUID
+	CampaignVersion int64
+	ApprovalBinding string
+}
+
+func (q *Queries) SMTPOccurrenceSourceChanged(ctx context.Context, arg SMTPOccurrenceSourceChangedParams) (pgtype.Bool, error) {
+	row := q.db.QueryRow(ctx, sMTPOccurrenceSourceChanged,
+		arg.EventID,
+		arg.CampaignID,
+		arg.OccurrenceID,
+		arg.CampaignVersion,
+		arg.ApprovalBinding,
+	)
+	var column_1 pgtype.Bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const sMTPSubmissionHistory = `-- name: SMTPSubmissionHistory :many

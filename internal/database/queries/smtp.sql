@@ -49,3 +49,27 @@ INSERT INTO smtp_submission_receipts(attempt_id,outcome,receipt_code) VALUES($1,
 SELECT a.id,a.operation_id,a.source_kind,a.attempt_number,a.prepared_at,r.outcome,r.receipt_code,r.recorded_at
 FROM smtp_submission_attempts a LEFT JOIN smtp_submission_receipts r ON r.attempt_id=a.id
 WHERE a.operation_id=$1 ORDER BY a.attempt_number;
+
+-- name: SMTPCampaignOmission :one
+SELECT * FROM smtp_campaign_omissions WHERE event_id=$1 AND intent_id=$2;
+
+-- name: SMTPCampaignIntent :one
+SELECT * FROM smtp_campaign_messages WHERE event_id=$1 AND intent_id=$2;
+
+-- name: RecordSMTPCampaignOmission :exec
+INSERT INTO smtp_campaign_omissions(event_id,intent_id,campaign_id,campaign_version,approval_binding,occurrence_id,occurrence_binding,person_id,reason)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,'address_unverified') ON CONFLICT DO NOTHING;
+
+-- name: SMTPCampaignOccurrenceIntents :many
+SELECT m.*,o.state AS operation_state FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.approval_binding=$4 AND m.occurrence_id=$5
+ORDER BY m.person_id;
+
+-- name: SMTPOccurrenceReviewPending :one
+SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.occurrence_id=$4
+AND (o.state IN ('pending','running') OR m.state='prepared'));
+
+-- name: SMTPOccurrenceSourceChanged :one
+SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.occurrence_id=$3 AND (m.campaign_version<>$4 OR m.approval_binding<>$5))
+OR EXISTS(SELECT 1 FROM smtp_campaign_omissions o WHERE o.event_id=$1 AND o.campaign_id=$2 AND o.occurrence_id=$3 AND (o.campaign_version<>$4 OR o.approval_binding<>$5));

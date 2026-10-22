@@ -88,6 +88,7 @@ BEGIN
 END;
 $$;
 -- +goose StatementEnd
+CREATE UNIQUE INDEX smtp_campaign_person_source ON smtp_campaign_messages(event_id,campaign_id,campaign_version,approval_binding,occurrence_id,person_id);
 CREATE TRIGGER smtp_campaign_identity BEFORE UPDATE ON smtp_campaign_messages FOR EACH ROW EXECUTE FUNCTION protect_smtp_campaign_identity();
 
 -- Each network attempt has an immutable prepared barrier and at most one
@@ -116,7 +117,24 @@ $$;
 CREATE TRIGGER smtp_attempt_append_only BEFORE UPDATE OR DELETE ON smtp_submission_attempts FOR EACH ROW EXECUTE FUNCTION protect_smtp_submission_evidence();
 CREATE TRIGGER smtp_receipt_append_only BEFORE UPDATE OR DELETE ON smtp_submission_receipts FOR EACH ROW EXECUTE FUNCTION protect_smtp_submission_evidence();
 
+CREATE TABLE smtp_campaign_omissions (
+    event_id uuid NOT NULL REFERENCES events(id),
+    intent_id uuid NOT NULL,
+    campaign_id uuid NOT NULL,
+    campaign_version bigint NOT NULL,
+    approval_binding text NOT NULL,
+    occurrence_id uuid NOT NULL,
+    occurrence_binding text NOT NULL,
+    person_id uuid NOT NULL REFERENCES people(id),
+    reason text NOT NULL CHECK(reason='address_unverified'),
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY(event_id,intent_id),
+    FOREIGN KEY(event_id,campaign_id,campaign_version) REFERENCES communication_campaign_versions(event_id,id,version)
+);
+CREATE TRIGGER smtp_omission_append_only BEFORE UPDATE OR DELETE ON smtp_campaign_omissions FOR EACH ROW EXECUTE FUNCTION protect_smtp_submission_evidence();
+
 -- +goose Down
+DROP TABLE smtp_campaign_omissions;
 DROP TABLE smtp_submission_receipts;
 DROP TABLE smtp_submission_attempts;
 DROP FUNCTION protect_smtp_submission_evidence();

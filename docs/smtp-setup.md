@@ -72,3 +72,18 @@ message was unsent; keep workers paused while reconciling unresolved effects.
 
 Local automated checks use only synthetic addresses and loopback SMTP fixtures.
 See [the protocol contract](smtp-contract-notes.md) for transport/calendar details.
+
+An approved recipient without a verified mailbox produces an immutable
+`address_unverified` omission record, with no address, body, send or invented
+receipt. Repeating the same queue deduplicates that record. Confirming a mailbox
+later does not silently send the old intent: an explicit reviewed intent or
+occurrence review is required. Reports distinguish newly queued intents,
+unavailable people and retained preexisting statuses. All-unavailable reports
+must commit their omission evidence; they must not be called delivered.
+
+An explicit same-occurrence omission review must first run the SMTP review guard
+in the review transaction and wait for prior pending/running/prepared effects to
+settle. A new review generation may queue only people previously omitted; existing
+accepted, permanent or ambiguous intents retain their identity and status. A
+changed source approval/version requires a distinct occurrence. Accepted always
+means relay acceptance, and an ambiguous result remains unknown.

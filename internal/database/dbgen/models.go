@@ -658,6 +658,19 @@ type SmtpCampaignMessage struct {
 	UpdatedAt         time.Time
 }
 
+type SmtpCampaignOmission struct {
+	EventID           uuid.UUID
+	IntentID          uuid.UUID
+	CampaignID        uuid.UUID
+	CampaignVersion   int64
+	ApprovalBinding   string
+	OccurrenceID      uuid.UUID
+	OccurrenceBinding string
+	PersonID          uuid.UUID
+	Reason            string
+	RecordedAt        time.Time
+}
+
 type SmtpMessageSnapshot struct {
 	OperationID   uuid.UUID
 	EventID       uuid.UUID

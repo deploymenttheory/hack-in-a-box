@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -382,5 +383,319 @@ func TestApprovedSMTPCampaignMessagesAreIndividualAndUnverifiedContactsAreExclud
 	}
 	if !seen["organiser@example.test"] || !seen["second-organiser@example.test"] {
 		t.Fatal("individual SMTP recipients were redirected")
+	}
+}
+
+func TestSMTPCampaignOmissionIsImmutableAndLaterVerificationRequiresFreshReviewedIntent(
+	t *testing.T,
+) {
+	f := setup(t)
+	person := testdb.Person(t, f.pool)
+	f.exec(
+		"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'organiser')",
+		f.event,
+		person.ID,
+	)
+	f.approveProduction()
+	queue := func(want int) {
+		t.Helper()
+		err := database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+			count, err := f.service.QueueApprovedCampaignInTransaction(
+				t.Context(),
+				tx,
+				f.event,
+				f.campaign.Definition.ID,
+				f.campaign.Version,
+			)
+			if err == nil && count != want {
+				t.Fatalf("eligible intents=%d want%d", count, want)
+			}
+			return err
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	queue(1)
+	queue(1)
+	var id uuid.UUID
+	var count int
+	if err := f.pool.QueryRow(t.Context(), "SELECT count(*),min(intent_id::text)::uuid FROM smtp_campaign_omissions WHERE event_id=$1 AND person_id=$2 AND reason='address_unverified'", f.event, person.ID).
+		Scan(&count, &id); err != nil ||
+		count != 1 {
+		t.Fatal("unverified reviewed recipient omission not deduplicated")
+	}
+	for _, statement := range []string{"UPDATE smtp_campaign_omissions SET reason=reason WHERE intent_id=$1", "DELETE FROM smtp_campaign_omissions WHERE intent_id=$1"} {
+		if _, err := f.pool.Exec(t.Context(), statement, id); err == nil {
+			t.Fatal("reviewed recipient omission was mutable")
+		}
+	}
+	if err := dbgen.New(f.pool).
+		ConfirmPersonEmail(t.Context(), dbgen.ConfirmPersonEmailParams{PersonID: person.ID, Mailbox: "later-confirmed@example.test"}); err != nil {
+		t.Fatal(err)
+	}
+	queue(1)
+	if err := f.pool.QueryRow(t.Context(), "SELECT count(*) FROM smtp_campaign_messages WHERE person_id=$1", person.ID).
+		Scan(&count); err != nil ||
+		count != 0 ||
+		f.transport.count() != 0 {
+		t.Fatal("later verification silently created retrospective delivery")
+	}
+	// Saving and explicitly reviewing a fresh version establishes a new intent.
+	f.now = time.Now().UTC()
+	definition := f.campaign.Definition
+	definition.Name = "Explicitly reviewed follow-up"
+	result, err := f.comm.ChangeCampaign(
+		t.Context(),
+		f.owner.ID,
+		f.event,
+		definition.ID,
+		f.revision(),
+		communications.CampaignCommand{
+			Action:     "save",
+			Version:    f.campaign.Version,
+			Definition: &definition,
+			Reason:     "Explicitly review now-confirmed mailbox audience",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.campaign = result.Campaign.Campaign
+	f.approveProduction()
+	queue(2)
+	if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM smtp_campaign_messages WHERE person_id=$1", person.ID).
+		Scan(&count); err != nil ||
+		count != 1 {
+		t.Fatal("fresh reviewed eligible intent did not include newly verified recipient")
+	}
+}
+
+func TestSMTPQueueReportCommitsAllUnavailableEvidenceWithoutInventingIntents(t *testing.T) {
+	f := setup(t)
+	f.exec("DELETE FROM person_email_contacts WHERE person_id=$1", f.owner.ID)
+	f.approveProduction()
+	for range 2 {
+		err := database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+			report, err := f.service.QueueApprovedOccurrenceReportInTransaction(
+				t.Context(),
+				tx,
+				f.event,
+				f.campaign.Definition.ID,
+				f.campaign.Version,
+				communications.DeliveryScope{},
+			)
+			if err == nil && (report.Queued != 0 || report.Unavailable != 1) {
+				t.Fatal(
+					"all-unverified report implied queued/provider delivery or omitted unavailability",
+				)
+			}
+			return err
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	var omitted, messages, attempts int
+	if err := f.pool.QueryRow(t.Context(), "SELECT (SELECT count(*) FROM smtp_campaign_omissions),(SELECT count(*) FROM smtp_campaign_messages),(SELECT count(*) FROM smtp_submission_attempts)").
+		Scan(&omitted, &messages, &attempts); err != nil ||
+		omitted != 1 ||
+		messages != 0 ||
+		attempts != 0 ||
+		f.transport.count() != 0 {
+		t.Fatal("all-unavailable queue lost evidence or invented external effects")
+	}
+}
+
+func TestSMTPOmissionReviewQueuesOnlyPreviouslyOmittedPeopleAndRetainsPriorStatuses(t *testing.T) {
+	for _, outcome := range []maildelivery.State{maildelivery.Accepted, maildelivery.Permanent, maildelivery.Ambiguous} {
+		t.Run(string(outcome), func(t *testing.T) {
+			f := setup(t)
+			person := testdb.Person(t, f.pool)
+			f.exec(
+				"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'organiser')",
+				f.event,
+				person.ID,
+			)
+			f.approveProduction()
+			scope := communications.DeliveryScope{OccurrenceID: uuid.New()}
+			policy := &syntheticScopePolicy{
+				audience: communications.ScopeAudience{
+					Binding:      "explicit-review-1",
+					RecipientIDs: []uuid.UUID{f.owner.ID, person.ID},
+				},
+			}
+			f.service.ScopePolicy = policy
+			queue := func() (QueueReport, error) {
+				var report QueueReport
+				err := database.Within(
+					t.Context(),
+					f.pool,
+					func(tx pgx.Tx, _ *dbgen.Queries) error {
+						var err error
+						report, err = f.service.QueueApprovedOccurrenceReportInTransaction(
+							t.Context(),
+							tx,
+							f.event,
+							f.campaign.Definition.ID,
+							f.campaign.Version,
+							scope,
+						)
+						return err
+					},
+				)
+				return report, err
+			}
+			report, err := queue()
+			if err != nil || report.Queued != 1 || report.Unavailable != 1 ||
+				len(report.Preexisting) != 0 {
+				t.Fatal("initial scoped queue did not distinguish omission from new intent")
+			}
+			var d jobs.Delivery
+			if err = f.pool.QueryRow(t.Context(), "SELECT operation_id,event_id,intent_id FROM smtp_campaign_messages WHERE person_id=$1", f.owner.ID).
+				Scan(&d.ID, &d.EventID, &d.TargetID); err != nil {
+				t.Fatal(err)
+			}
+			f.transport.state = outcome
+			handler := CampaignHandler{Service: f.service}
+			if handler.Deliver(
+				t.Context(),
+				d,
+			) != jobs.Outcome(
+				map[maildelivery.State]string{maildelivery.Accepted: "delivered", maildelivery.Permanent: "permanent", maildelivery.Ambiguous: "ambiguous"}[outcome],
+			) {
+				t.Fatal("synthetic provider outcome not retained")
+			}
+			if err = dbgen.New(f.pool).
+				ConfirmPersonEmail(t.Context(), dbgen.ConfirmPersonEmailParams{PersonID: person.ID, Mailbox: "reviewed-later@example.test"}); err != nil {
+				t.Fatal(err)
+			}
+			report, err = queue()
+			if err != nil || report.Queued != 0 || report.Unavailable != 1 ||
+				report.Preexisting[string(outcome)] != 1 {
+				t.Fatal(
+					"mailbox verification silently changed reviewed omission or fabricated a new send",
+				)
+			}
+			checkReview := func() error {
+				return database.Within(
+					t.Context(),
+					f.pool,
+					func(tx pgx.Tx, _ *dbgen.Queries) error {
+						return f.service.CheckOccurrenceReviewInTransaction(
+							t.Context(),
+							tx,
+							f.event,
+							f.campaign.Definition.ID,
+							f.campaign.Version,
+							scope,
+						)
+					},
+				)
+			}
+			if err = checkReview(); !errors.Is(err, access.ErrConflict) {
+				t.Fatal(
+					"review preflight failed to retain original generation while worker effects pending",
+				)
+			}
+			policy.audience.Binding = "explicit-review-2"
+			if _, err = queue(); !errors.Is(err, access.ErrConflict) {
+				t.Fatal(
+					"review proceeded while original operation still had pending worker effects",
+				)
+			}
+			operationState := map[maildelivery.State]string{maildelivery.Accepted: "delivered", maildelivery.Permanent: "permanent", maildelivery.Ambiguous: "ambiguous"}[outcome]
+			f.exec("UPDATE operations SET state=$2 WHERE id=$1", d.ID, operationState)
+			if err = checkReview(); err != nil {
+				t.Fatal("settled original effects prevented explicit omission review")
+			}
+
+			report, err = queue()
+			if err != nil || report.Queued != 1 || report.Unavailable != 0 ||
+				report.Preexisting[string(outcome)] != 1 {
+				t.Fatal(
+					"explicit omission review did not isolate new intent from retained prior status",
+				)
+			}
+			if f.transport.count() != 1 {
+				t.Fatal("review resent a prior accepted/permanent/uncertain intent")
+			}
+			var existing int
+			if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM smtp_campaign_messages WHERE person_id=$1", f.owner.ID).
+				Scan(&existing); err != nil ||
+				existing != 1 {
+				t.Fatal("review generation duplicated original personal intent")
+			}
+			var other jobs.Delivery
+			if err = f.pool.QueryRow(t.Context(), "SELECT operation_id,event_id,intent_id FROM smtp_campaign_messages WHERE person_id=$1", person.ID).
+				Scan(&other.ID, &other.EventID, &other.TargetID); err != nil {
+				t.Fatal(err)
+			}
+			f.transport.state = maildelivery.Accepted
+			if handler.Deliver(t.Context(), other) != jobs.Delivered || f.transport.count() != 2 {
+				t.Fatal(
+					"reviewed newly eligible person did not receive their first personal intent",
+				)
+			}
+		})
+	}
+}
+
+func TestSMTPCampaignChangedSourceRequiresDistinctOccurrence(t *testing.T) {
+	f := setup(t)
+	f.approveProduction()
+	f.service.ScopePolicy = &syntheticScopePolicy{
+		audience: communications.ScopeAudience{
+			Binding:      "source-review",
+			RecipientIDs: []uuid.UUID{f.owner.ID},
+		},
+	}
+	scope := communications.DeliveryScope{OccurrenceID: uuid.New()}
+	queue := func() error {
+		return database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+			_, err := f.service.QueueApprovedOccurrenceReportInTransaction(
+				t.Context(),
+				tx,
+				f.event,
+				f.campaign.Definition.ID,
+				f.campaign.Version,
+				scope,
+			)
+			return err
+		})
+	}
+	if err := queue(); err != nil {
+		t.Fatal(err)
+	}
+	f.now = time.Now().UTC()
+	definition := f.campaign.Definition
+	definition.Name = "New reviewed source version"
+	result, err := f.comm.ChangeCampaign(
+		t.Context(),
+		f.owner.ID,
+		f.event,
+		definition.ID,
+		f.revision(),
+		communications.CampaignCommand{
+			Action:     "save",
+			Version:    f.campaign.Version,
+			Definition: &definition,
+			Reason:     "Explicit new source review",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.campaign = result.Campaign.Campaign
+	f.approveProduction()
+	if err = queue(); !errors.Is(err, access.ErrConflict) {
+		t.Fatal("changed source approval rebound the original immutable occurrence")
+	}
+	scope.OccurrenceID = uuid.New()
+	if err = queue(); err != nil {
+		t.Fatal("distinct reviewed source occurrence could not queue")
+	}
+	if f.transport.count() != 0 {
+		t.Fatal("source review queue performed network effects")
 	}
 }
