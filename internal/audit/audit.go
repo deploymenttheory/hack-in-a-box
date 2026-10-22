@@ -27,6 +27,11 @@ const (
 )
 
 const (
+	TeamsConnectionSaved     Action = "teams.connection_saved"
+	TeamsConnectionRevoked   Action = "teams.connection_revoked"
+	TeamsConnectionRotated   Action = "teams.connection_rotated"
+	TeamsTestQueued          Action = "teams.test_queued"
+	TeamsBroadcastQueued     Action = "teams.broadcast_queued"
 	PresentationChanged      Action = "presentation.changed"
 	DisplayPaired            Action = "display.paired"
 	DisplayRevoked           Action = "display.revoked"
@@ -105,7 +110,12 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case PresentationChanged,
+	case TeamsConnectionSaved,
+		TeamsConnectionRevoked,
+		TeamsConnectionRotated,
+		TeamsTestQueued,
+		TeamsBroadcastQueued,
+		PresentationChanged,
 		DisplayPaired,
 		DisplayRevoked,
 		CommunicationChanged,

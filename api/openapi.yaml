@@ -703,6 +703,88 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/LogisticsPage'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams-workflow:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getTeamsWorkflow
+      description: Current organiser only. Returns sanitized connection metadata and provider receipts, never the endpoint URL, key ID, ciphertext or provider error body.
+      responses:
+        '200':
+          description: Safe Teams setup and receipt status.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamsWorkflowPage'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: changeTeamsWorkflow
+      description: Current organiser only. Replaces, revokes or re-encrypts a write-only endpoint; every change advances the opaque provider revision and requires fresh campaign approval. DNS destination policy is checked without posting a message.
+      parameters:
+        - $ref: '#/components/parameters/PresentationRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/TeamsWorkflowCommand'}
+      responses:
+        '200':
+          description: Sanitized configuration after change.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamsWorkflowPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams-workflow/test:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: testTeamsWorkflow
+      description: Current organiser only. Explicitly queues one synthetic TEST broadcast to the configured shared channel. This is distinct from an organiser-only campaign self-test. A stable request ID deduplicates retries; no arbitrary message payload is accepted.
+      parameters:
+        - $ref: '#/components/parameters/PresentationRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [request_id]
+              properties:
+                request_id: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Connection test queued; no delivery claim.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamsWorkflowPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/teams-workflow/broadcasts/{campaign_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: campaign_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: queueTeamsBroadcast
+      description: Current organiser only. Queues only the exact reviewed, due, current public broadcast campaign version and connection revision. Message text and recipient addresses cannot be supplied here. The worker resolves current authority/source again immediately before sending.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [version]
+              properties:
+                version: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: Approved intent queued or its existing operation retained.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamsWorkflowPage'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/presentation:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -4728,6 +4810,56 @@ components:
           type: array
           items: {$ref: '#/components/schemas/SubmissionChange'}
         next_cursor: {type: integer, format: int64, nullable: true}
+    TeamsWorkflowCommand:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: {type: string, enum: [save, revoke, rotate]}
+        label: {type: string, maxLength: 160}
+        owner: {type: string, maxLength: 160}
+        co_owner: {type: string, maxLength: 160}
+        endpoint: {type: string, maxLength: 4096, writeOnly: true, description: Secret current Microsoft Workflows URL. Never returned or included in logs/audit/provider receipts. Required for save only.}
+    TeamsWorkflowConnection:
+      type: object
+      additionalProperties: false
+      required: [id, version, label, owner, co_owner, active, available, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        version: {type: integer, format: int64}
+        label: {type: string}
+        owner: {type: string}
+        co_owner: {type: string}
+        active: {type: boolean}
+        available: {type: boolean, description: Endpoint can be decrypted and passes structural policy; not proof that a card was delivered.}
+        updated_at: {type: string, format: date-time}
+    TeamsWorkflowReceipt:
+      type: object
+      additionalProperties: false
+      required: [id, kind, connection_version, campaign_id, created_at, status, reason, http_status, retry_at, recorded_at, attempts]
+      properties:
+        id: {type: string, format: uuid}
+        kind: {type: string, enum: [connection_test, broadcast]}
+        connection_version: {type: integer, format: int64}
+        campaign_id: {type: string, format: uuid, nullable: true}
+        created_at: {type: string, format: date-time}
+        status: {type: string, enum: [pending, running, sending, delivered, permanent, ambiguous, cancelled, retryable, provider_accepted, requires_reapproval]}
+        reason: {type: string, description: Fixed sanitized application code; never provider error text.}
+        http_status: {type: integer, nullable: true}
+        retry_at: {type: string, format: date-time, nullable: true}
+        recorded_at: {type: string, format: date-time, nullable: true}
+        attempts: {type: integer}
+    TeamsWorkflowPage:
+      type: object
+      additionalProperties: false
+      required: [revision, encryption_ready, connection, history]
+      properties:
+        revision: {type: integer, format: int64}
+        encryption_ready: {type: boolean}
+        connection:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/TeamsWorkflowConnection'}]
+        history: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/TeamsWorkflowReceipt'}}
     PresentationCue:
       type: object
       additionalProperties: false

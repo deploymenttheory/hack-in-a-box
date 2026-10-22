@@ -539,6 +539,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams-workflow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser only. Returns sanitized connection metadata and provider receipts, never the endpoint URL, key ID, ciphertext or provider error body. */
+        get: operations["getTeamsWorkflow"];
+        put?: never;
+        /** @description Current organiser only. Replaces, revokes or re-encrypts a write-only endpoint; every change advances the opaque provider revision and requires fresh campaign approval. DNS destination policy is checked without posting a message. */
+        post: operations["changeTeamsWorkflow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams-workflow/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Current organiser only. Explicitly queues one synthetic TEST broadcast to the configured shared channel. This is distinct from an organiser-only campaign self-test. A stable request ID deduplicates retries; no arbitrary message payload is accepted. */
+        post: operations["testTeamsWorkflow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams-workflow/broadcasts/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Current organiser only. Queues only the exact reviewed, due, current public broadcast campaign version and connection revision. Message text and recipient addresses cannot be supplied here. The worker resolves current authority/source again immediately before sending. */
+        post: operations["queueTeamsBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/presentation": {
         parameters: {
             query?: never;
@@ -3067,6 +3126,58 @@ export interface components {
             /** Format: int64 */
             next_cursor: number | null;
         };
+        TeamsWorkflowCommand: {
+            /** @enum {string} */
+            action: "save" | "revoke" | "rotate";
+            label?: string;
+            owner?: string;
+            co_owner?: string;
+            /** @description Secret current Microsoft Workflows URL. Never returned or included in logs/audit/provider receipts. Required for save only. */
+            endpoint?: string;
+        };
+        TeamsWorkflowConnection: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            label: string;
+            owner: string;
+            co_owner: string;
+            active: boolean;
+            /** @description Endpoint can be decrypted and passes structural policy; not proof that a card was delivered. */
+            available: boolean;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        TeamsWorkflowReceipt: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "connection_test" | "broadcast";
+            /** Format: int64 */
+            connection_version: number;
+            /** Format: uuid */
+            campaign_id: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** @enum {string} */
+            status: "pending" | "running" | "sending" | "delivered" | "permanent" | "ambiguous" | "cancelled" | "retryable" | "provider_accepted" | "requires_reapproval";
+            /** @description Fixed sanitized application code; never provider error text. */
+            reason: string;
+            http_status: number | null;
+            /** Format: date-time */
+            retry_at: string | null;
+            /** Format: date-time */
+            recorded_at: string | null;
+            attempts: number;
+        };
+        TeamsWorkflowPage: {
+            /** Format: int64 */
+            revision: number;
+            encryption_ready: boolean;
+            connection: components["schemas"]["TeamsWorkflowConnection"] | null;
+            history: components["schemas"]["TeamsWorkflowReceipt"][];
+        };
         PresentationCue: {
             /** Format: uuid */
             id: string;
@@ -4194,6 +4305,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogisticsPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeamsWorkflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe Teams setup and receipt status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamsWorkflowPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeTeamsWorkflow: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamsWorkflowCommand"];
+            };
+        };
+        responses: {
+            /** @description Sanitized configuration after change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamsWorkflowPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    testTeamsWorkflow: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    request_id: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Connection test queued; no delivery claim. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamsWorkflowPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    queueTeamsBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Approved intent queued or its existing operation retained. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamsWorkflowPage"];
                 };
             };
             default: components["responses"]["Error"];

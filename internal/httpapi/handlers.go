@@ -38,10 +38,12 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	TeamsWorkflow  *teamsworkflow.Service
 	SMTP           *smtpintegration.Service
 	MailContacts   mailcontact.Service
 	Presentation   presentation.Service
