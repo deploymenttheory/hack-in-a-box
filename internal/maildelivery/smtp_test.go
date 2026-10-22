@@ -28,10 +28,11 @@ type (
 		authenticated bool
 	}
 	localRelay struct {
-		settings Settings
-		roots    *x509.CertPool
-		done     chan relayEvidence
-		stop     context.CancelFunc
+		settings   Settings
+		roots      *x509.CertPool
+		done       chan relayEvidence
+		stop       context.CancelFunc
+		tlsStarted chan struct{}
 	}
 )
 
@@ -85,6 +86,7 @@ func startRelay(t *testing.T, mode, transport string) localRelay {
 	ctx, cancel := context.WithCancel(t.Context())
 	t.Cleanup(func() { cancel(); _ = listener.Close() })
 	done := make(chan relayEvidence, 1)
+	tlsStarted := make(chan struct{})
 	cfg := settings()
 	cfg.Host = "127.0.0.1"
 	cfg.Port = listener.Addr().(*net.TCPAddr).Port
@@ -150,6 +152,7 @@ func startRelay(t *testing.T, mode, transport string) localRelay {
 					return
 				}
 				if mode == "starttls_timeout" {
+					close(tlsStarted)
 					<-ctx.Done()
 					return
 				}
@@ -248,7 +251,7 @@ func startRelay(t *testing.T, mode, transport string) localRelay {
 			}
 		}
 	}()
-	return localRelay{settings: cfg, roots: roots, done: done, stop: cancel}
+	return localRelay{settings: cfg, roots: roots, done: done, stop: cancel, tlsStarted: tlsStarted}
 }
 
 func TestSMTPAcceptanceRejectionAndUncertainty(t *testing.T) {

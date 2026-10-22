@@ -81,9 +81,13 @@ func failure(err error, uncertain bool, messageID string) Receipt {
 	return Receipt{State: Retryable, Code: "relay_unavailable", MessageID: messageID}
 }
 
+// A canceled send closes raw TCP in context.AfterFunc. That close can win
+// the socket-deadline race and return net.ErrClosed rather than a timeout.
+// Neither outcome is a certificate failure, and no DATA has been attempted.
 func tlsFailure(err error, messageID string) Receipt {
 	var network net.Error
-	if errors.Is(err, io.EOF) || errors.Is(err, context.DeadlineExceeded) ||
+	if errors.Is(err, io.EOF) || errors.Is(err, net.ErrClosed) ||
+		errors.Is(err, context.DeadlineExceeded) ||
 		errors.Is(err, context.Canceled) ||
 		(errors.As(err, &network) && network.Timeout()) {
 		return failure(err, false, messageID)
