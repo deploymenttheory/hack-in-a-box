@@ -58,9 +58,11 @@ Exported metadata methods are:
   and derives current recipient UUIDs plus safe fact/resource identity/status.
 
 #82 supplies a thin adapter without importing automation into the help domain.
-#81 must register the help resource owner and explicit destination allowlist only
-after its core and this actual route are merged. No unavailable future handler is
-activated in this draft. The notification sink accepts source IDs/revision and
+This isolated implementation stacks the concrete #81 core contract and registers
+only the actual help resource owner and explicit help destination allowlist. The
+shared API/worker factory preserves SMTP/Teams and delegates current recipients to
+the native help policy. Unknown or stale native source references deny access;
+there is no fallback to a forged owner ID. Other future owners stay unavailable. The notification sink accepts source IDs/revision and
 authoritative recipients, never an arbitrary URL or private prose.
 
 The independent read-only `/events/{event}/help/{request}` page uses the real GET
@@ -87,13 +89,19 @@ was visually inspected for readable wrapping without automatic external loads.
 Both frontend bundles, web lint and Go lint pass at the checkpoint.
 
 Still required before the implementation PR: final migration/upgrade proof;
-production shared factory wiring preserving SMTP/Teams; real #81 help owner/sink
-and explicit browser destination activation; #82 maintenance/source adapter;
-focused real delivery/read-revocation evidence; final generated reproduction and
+#82 maintenance/source adapter; final generated reproduction and
 exact-head CI. No real contact message or provider broadcast has been sent.
 
 Checkpoint execution: final help PostgreSQL/race14.051s and HTTP4.185s pass;
 metadata keyset regression exceeds1,000 sources; six final reader browser
-cases pass2.8s. Runtime graph/native inbox/automation and final ordered migration
-proof are deliberately unfinished. The current bounded queue/maintenance batch
-queries also need final pagination review before the implementation PR.
+cases pass2.8s. Final ordered migration and automation composition remain unfinished.
+
+On the concrete provider/rubric/inbox stack, the real shared-factory regression
+creates pre-live logistics help, records a fixed safe inbox update, opens the
+actual help resource and denies both after withdrawal. Integrated help/HTTP/app/
+inbox race checks pass18.616/9.496/4.556/17.251s. Eight actual participant desktop/
+mobile cases pass2.4s including inbox-to-help navigation with no private question
+copied into the preview. Full Go lint reports0 issues; both bundles and web lint
+pass. Native queue/maintenance reads use bounded UUID keyset queries without a
+permanent1,000-request cap; the populated1,005-source queue regression passes.
+No schema number or ordered upgrade claim is assigned at this checkpoint.

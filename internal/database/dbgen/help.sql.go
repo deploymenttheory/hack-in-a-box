@@ -192,12 +192,17 @@ func (q *Queries) HelpRequest(ctx context.Context, arg HelpRequestParams) (HelpR
 	return i, err
 }
 
-const helpRequests = `-- name: HelpRequests :many
-SELECT h.event_id, h.id, h.team_id, h.requester_id, h.revision, h.category, h.description, h.location, h.meeting_url, h.status, h.assignee_id, h.waiting_cycle, h.requested_at, h.waiting_since, h.first_claimed_at, h.claimed_at, h.resolved_at, h.updated_at FROM help_requests h WHERE h.event_id=$1 AND EXISTS(SELECT 1 FROM policy_resources r WHERE r.event_id=h.event_id AND r.id=h.id AND r.kind='help') ORDER BY h.requested_at,h.id LIMIT 1001
+const helpRequestsPage = `-- name: HelpRequestsPage :many
+SELECT h.event_id, h.id, h.team_id, h.requester_id, h.revision, h.category, h.description, h.location, h.meeting_url, h.status, h.assignee_id, h.waiting_cycle, h.requested_at, h.waiting_since, h.first_claimed_at, h.claimed_at, h.resolved_at, h.updated_at FROM help_requests h WHERE h.event_id=$1 AND h.id > $2::uuid AND EXISTS(SELECT 1 FROM policy_resources r WHERE r.event_id=h.event_id AND r.id=h.id AND r.kind='help') ORDER BY h.id LIMIT 1000
 `
 
-func (q *Queries) HelpRequests(ctx context.Context, eventID uuid.UUID) ([]HelpRequest, error) {
-	rows, err := q.db.Query(ctx, helpRequests, eventID)
+type HelpRequestsPageParams struct {
+	EventID uuid.UUID
+	AfterID uuid.UUID
+}
+
+func (q *Queries) HelpRequestsPage(ctx context.Context, arg HelpRequestsPageParams) ([]HelpRequest, error) {
+	rows, err := q.db.Query(ctx, helpRequestsPage, arg.EventID, arg.AfterID)
 	if err != nil {
 		return nil, err
 	}

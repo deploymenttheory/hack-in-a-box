@@ -3744,7 +3744,7 @@ components:
       additionalProperties: false
       required: [kind, resource_id]
       properties:
-        kind: {type: string, enum: [content]}
+        kind: {type: string, enum: [content, help]}
         resource_id: {type: string, format: uuid}
     InboxDetail:
       type: object
@@ -3761,7 +3761,7 @@ components:
           additionalProperties: false
           required: [kind, resource_id]
           properties:
-            kind: {type: string, enum: [content]}
+            kind: {type: string, enum: [content, help]}
             resource_id: {type: string, format: uuid}
     InboxPage:
       type: object

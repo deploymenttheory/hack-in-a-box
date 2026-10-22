@@ -1,8 +1,10 @@
 package help
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -90,12 +92,9 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, err
 				result.CanManage = row.WritesAllowed
 			}
 		}
-		rows, err := q.HelpRequests(ctx, eventID)
+		rows, err := helpRequests(ctx, q, eventID)
 		if err != nil {
 			return wrap("load help queue", err)
-		}
-		if len(rows) > 1000 {
-			return access.ErrConflict
 		}
 		for _, record := range rows {
 			r := request(record)
@@ -237,12 +236,9 @@ func (s Service) MaintainInTransaction(ctx context.Context, tx pgx.Tx, eventID u
 	if err != nil {
 		return err
 	}
-	rows, err := q.HelpRequests(ctx, eventID)
+	rows, err := helpRequests(ctx, q, eventID)
 	if err != nil {
 		return wrap("load help follow-up sources", err)
-	}
-	if len(rows) > 1000 {
-		return access.ErrConflict
 	}
 	for _, record := range rows {
 		r := request(record)
@@ -294,4 +290,36 @@ func (s Service) MaintainInTransaction(ctx context.Context, tx pgx.Tx, eventID u
 		}
 	}
 	return nil
+}
+
+// Keyset queries preserve every request without a permanent event-history cap.
+// The queue is projected in original chronological order after bounded reads.
+func helpRequests(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+) ([]dbgen.HelpRequest, error) {
+	result := []dbgen.HelpRequest{}
+	after := uuid.Nil
+	for {
+		page, err := q.HelpRequestsPage(
+			ctx,
+			dbgen.HelpRequestsPageParams{EventID: eventID, AfterID: after},
+		)
+		if err != nil {
+			return nil, wrap("page native help requests", err)
+		}
+		result = append(result, page...)
+		if len(page) < 1000 {
+			break
+		}
+		after = page[len(page)-1].ID
+	}
+	slices.SortFunc(result, func(a, b dbgen.HelpRequest) int {
+		if c := a.RequestedAt.Compare(b.RequestedAt); c != 0 {
+			return c
+		}
+		return bytes.Compare(a.ID[:], b.ID[:])
+	})
+	return result, nil
 }

@@ -55,3 +55,18 @@ test('another event cannot reuse a help resource reference', async ({ page }) =>
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toHaveCount(0)
 })
+
+test('safe inbox update opens the actual help resource without copying private question text', async ({ page }) => {
+  await setup(page)
+  const id = '019c25e0-15bd-7000-8000-000000000002'
+  const item = { id, event_id: firstID, event_name: 'North Star Hack', label: 'Help-request update', created_at: '2027-06-20T09:02:00Z', read_at: null }
+  await page.route('**/api/v1/inbox**', route => route.fulfill({ json: new URL(route.request().url()).pathname.endsWith('/inbox') ? { items: [item], next_cursor: null, unread: 1 } : { item, subject: 'Help-request update', body: '', format: 'text', destination: { kind: 'help', resource_id: requestID } } }))
+  await page.goto('/inbox')
+  await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Help-request update Unread' }).click()
+  await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toHaveCount(0)
+  await page.getByRole('link', { name: 'Open help request', exact: true }).click()
+  await expect(page).toHaveURL(`/events/${firstID}/help/${requestID}`)
+  await expect(page.getByRole('heading', { name: 'Team help request', exact: true })).toBeVisible()
+  await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toBeVisible()
+})

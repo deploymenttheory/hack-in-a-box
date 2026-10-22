@@ -820,6 +820,10 @@ func TestHelpSourceKeysetFiltersRequestedIDBeforeBoundsAndHasNoHistoryCap(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
+	queue, err := f.s.List(t.Context(), f.owner.ID, f.eventID)
+	if err != nil || len(queue.Items) != 1005 || queue.Waiting != 1005 {
+		t.Fatalf("queue permanently capped requests: %d %v", len(queue.Items), err)
+	}
 }
 
 func TestHelpAuthorityFailureDoesNotBecomeARevokedGrant(t *testing.T) {

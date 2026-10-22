@@ -2439,7 +2439,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content";
+            kind: "content" | "help";
             /** Format: uuid */
             resource_id: string;
         };
@@ -2451,7 +2451,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content";
+                kind: "content" | "help";
                 /** Format: uuid */
                 resource_id: string;
             } | null;

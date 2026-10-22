@@ -10,8 +10,8 @@ VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(event_id) DO UPDATE SET revision=EXCLUDED.
 -- name: HelpRequest :one
 SELECT * FROM help_requests WHERE event_id=$1 AND id=$2;
 
--- name: HelpRequests :many
-SELECT h.* FROM help_requests h WHERE h.event_id=$1 AND EXISTS(SELECT 1 FROM policy_resources r WHERE r.event_id=h.event_id AND r.id=h.id AND r.kind='help') ORDER BY h.requested_at,h.id LIMIT 1001;
+-- name: HelpRequestsPage :many
+SELECT h.* FROM help_requests h WHERE h.event_id=$1 AND h.id > sqlc.arg(after_id)::uuid AND EXISTS(SELECT 1 FROM policy_resources r WHERE r.event_id=h.event_id AND r.id=h.id AND r.kind='help') ORDER BY h.id LIMIT 1000;
 
 -- name: InsertHelpRequest :exec
 INSERT INTO help_requests(event_id,id,team_id,requester_id,revision,category,description,location,meeting_url,status,waiting_cycle,requested_at,waiting_since,updated_at)
