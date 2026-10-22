@@ -129,7 +129,28 @@ func (s *Service) Enqueue(
 }
 
 func (s *Service) Work(ctx context.Context, job *river.Job[Args]) error {
-	return s.Execute(ctx, job.Args.OperationID)
+	if err := s.Execute(ctx, job.Args.OperationID); err != nil {
+		return err
+	}
+	op, err := dbgen.New(s.Pool).Operation(ctx, job.Args.OperationID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("check deferred operation: %w", err)
+	}
+	if op.State == "pending" && !op.Cancelled {
+		// A successful eligibility check can deliberately defer work. Returning
+		// nil would complete the River job, whose retained uniqueness key then
+		// prevents reconciliation from enqueueing this still-pending operation.
+		// Snooze without consuming retries; current authority is checked again.
+		delay := 30 * time.Second
+		if untilDue := time.Until(op.DueAt); untilDue > delay {
+			delay = untilDue
+		}
+		return fmt.Errorf("operation remains pending: %w", river.JobSnooze(delay))
+	}
+	return nil
 }
 
 func (s *Service) Execute(ctx context.Context, id uuid.UUID) error {
