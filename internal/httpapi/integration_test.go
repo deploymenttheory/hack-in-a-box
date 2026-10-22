@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -10,10 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/google/uuid"
 
@@ -241,13 +244,25 @@ func TestAuthenticatedContractFilesAuditAndOperations(t *testing.T) {
 	}
 }
 
-func validateResponse(t *testing.T, r *http.Request, w *httptest.ResponseRecorder) {
-	t.Helper()
+// The generated contract is immutable for this test binary. Reuse its read-only
+// route index, while still validating every response's method/path/status/body.
+// Return initialization errors to each caller rather than capturing a test's
+// Fatal/Goexit inside sync.OnceValues.
+var responseContractRouter = sync.OnceValues(func() (routers.Router, error) {
 	spec, err := contract.GetSpec()
 	if err != nil {
-		t.Fatal(err)
+		return nil, fmt.Errorf("load response contract: %w", err)
 	}
 	routes, err := gorillamux.NewRouter(spec)
+	if err != nil {
+		return nil, fmt.Errorf("index response contract: %w", err)
+	}
+	return routes, nil
+})
+
+func validateResponse(t *testing.T, r *http.Request, w *httptest.ResponseRecorder) {
+	t.Helper()
+	routes, err := responseContractRouter()
 	if err != nil {
 		t.Fatal(err)
 	}
