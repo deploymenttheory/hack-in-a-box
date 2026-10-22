@@ -1,0 +1,15 @@
+import { describe, expect, it } from 'vitest'
+import { entries, matchesReceipt, scores, validate, type Card, type Checkpoint, type Intent } from './scorecard-model'
+const cp: Checkpoint = { definition: { id: 'checkpoint', run_id: 'run', name: 'Live', opens_wall_time: '', closes_wall_time: '', dst_choice: '' }, version: 2, rubric: { id: 'rubric', version: 3, digest: 'digest' }, criteria: { name: 'Published rubric', mode: 'mentor_qualification', required_judge_count: 1, finalist_count: 1, reserve_count: 0, prizes: [], side_quests: [], categories: [{ id: 'category', label: 'Engineering', min_score: 0, max_score: 5, weight: 1, guidance: 'Observe output', anchors: [] }] }, purpose: 'checkpoint', timezone: 'Europe/London', opens_at: '', closes_at: '' }
+describe('independent scorecard input and receipts', () => {
+ it('leaves unobserved pending and preserves an explicit zero', () => { const value = entries(cp); expect(scores(value)[0]).toMatchObject({ pending: true, value: null }); value[0] = { ...value[0], pending: false, value: '0' }; expect(scores(value)[0]).toMatchObject({ pending: false, value: 0 }); expect(validate(cp, value, true)[0].message).toContain('evidence'); value[0].note = 'Observed none'; expect(validate(cp, value, true)).toEqual([]) })
+ it('does not invent missing numeric categories or erase notes when validation fails', () => { const value = entries(cp); value[0] = { ...value[0], pending: false, value: '', note: 'Keep evidence' }; expect(validate(cp, value, false)[0].message).toContain('whole score'); expect(value[0].note).toBe('Keep evidence'); value[0].value = '6'; expect(validate(cp, value, false)).toHaveLength(1); value[0].note = '😀'.repeat(2501); expect(validate(cp, value, false).some(i => i.message.includes('10,000-byte'))).toBe(true) })
+ it('permits pending on independent submission without converting it to poor performance', () => { expect(validate(cp, entries(cp), true)).toEqual([]); expect(scores(entries(cp))[0].value).toBeNull() })
+ it('accepts only the exact author, source, body, immutable version, event revision and state receipt', () => {
+ const command = { action: 'save' as const, checkpoint_id: 'checkpoint', checkpoint_version: 2, version: 0, scores: scores(entries(cp)) }
+ const intent: Intent = { revision: 9, command, authorID: 'author', teamID: 'team', checkpoint: cp, expectedVersion: 1, frozenRevision: null }
+ const card: Card = { revision: 10, reference: { id: 'card', version: 1 }, team_id: 'team', author_id: 'author', checkpoint_id: 'checkpoint', checkpoint_version: 2, run_id: 'run', rubric: cp.rubric, criteria: cp.criteria, purpose: 'checkpoint', submission_revision: null, state: 'draft', scores: command.scores, created_at: '', changed_at: '' }
+ expect(matchesReceipt(card, intent)).toBe(true)
+ for (const change of [{ revision: 11 }, { author_id: 'other' }, { team_id: 'other' }, { run_id: 'other' }, { state: 'submitted' as const }, { submission_revision: 7 }, { reference: { id: 'card', version: 2 } }, { scores: [{ ...command.scores[0], pending: false, value: 0 }] }]) expect(matchesReceipt({ ...card, ...change }, intent)).toBe(false)
+ })
+})
