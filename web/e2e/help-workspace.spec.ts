@@ -3,6 +3,7 @@ import { firstID, secondID } from './fixtures'
 import { helper, secondHelper, organiser, helpState, mockHelp, requestID, otherRequest } from './help-workspace-fixtures'
 const queue = `/events/${firstID}/help`, detail = queue + '/' + requestID
 async function describe(page: import('@playwright/test').Page, text: string) { await page.getByLabel('What do you need help with?').fill(text); await page.getByLabel('Location (or an approved meeting route required)', { exact: true }).fill('Synthetic team desk') }
+async function activate(page: import('@playwright/test').Page, name: string) { await page.getByRole('button', { name, exact: true }).focus(); await page.keyboard.press('Enter') }
 const saveState = (page: import('@playwright/test').Page) => page.getByRole('status', { name: 'Help request save state' })
 
 test('team keyboard/mobile request is private, unsent until confirmed, cancellable and reopenable', async ({ page }, info) => {
@@ -14,9 +15,9 @@ test('team keyboard/mobile request is private, unsent until confirmed, cancellab
   await page.getByRole('link', { name: 'Open saved help request' }).click()
   await expect(page.getByRole('heading', { name: 'Waiting', exact: true })).toBeVisible()
   await expect(page.getByLabel('Transfer to a currently eligible helper')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Cancel request', exact: true }).click()
+  await activate(page, 'Cancel request')
   await expect(page.getByRole('heading', { name: 'Cancelled', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Reopen request', exact: true }).click()
+  await activate(page, 'Reopen request')
   await expect(page.getByRole('heading', { name: 'Reopened · Waiting', exact: true })).toBeVisible()
   await expect(page.getByText('reopen → waiting', { exact: false })).toBeVisible()
   expect(state.commands.map(c => c.action)).toEqual(['create', 'cancel', 'reopen'])
@@ -27,31 +28,33 @@ test('team keyboard/mobile request is private, unsent until confirmed, cancellab
 
 test('helper mobile claim, release, transfer and resolution use only current native targets', async ({ page, context }, info) => {
   const state = helpState(); await mockHelp(page, state, helper); await page.goto(detail)
-  await page.getByRole('button', { name: 'Claim request', exact: true }).click()
+  await activate(page, 'Claim request')
   await expect(page.getByText('Current helper: Synthetic Helper', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Release to waiting' }).click(); await expect(page.getByRole('heading', { name: 'Waiting', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Claim request', exact: true }).click()
+  await activate(page, 'Release to waiting'); await expect(page.getByRole('heading', { name: 'Waiting', exact: true })).toBeVisible()
+  await activate(page, 'Claim request')
   await page.getByLabel('Transfer to a currently eligible helper').selectOption(secondHelper.id)
   await page.screenshot({ path: info.outputPath('mobile-helper-transfer.png'), fullPage: true })
   await page.getByRole('button', { name: 'Transfer request', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByText('Current helper: Second Helper', { exact: true })).toBeVisible()
   const peer = await context.newPage(); await mockHelp(peer, state, secondHelper); await peer.goto(detail)
-  await peer.getByRole('button', { name: 'Resolve request', exact: true }).click()
+  await activate(peer, 'Resolve request')
   await expect(peer.getByRole('heading', { name: 'Resolved', exact: true })).toBeVisible()
   expect(state.commands.map(c => c.action)).toEqual(['claim', 'release', 'claim', 'transfer', 'resolve'])
   expect(await page.evaluate(() => 'badHelp' in window)).toBe(false)
 })
 
-test('lost claim race refreshes authoritative ownership without clearing unrelated local work', async ({ page, context }) => {
-  const state = helpState(); await mockHelp(page, state, helper); const peer = await context.newPage(); await mockHelp(peer, state, secondHelper)
+test('lost claim race refreshes authoritative ownership without clearing unrelated local work', async ({ page, browser }) => {
+  const state = helpState(); await mockHelp(page, state, helper); const peerContext = await browser.newContext(); const peer = await peerContext.newPage(); await mockHelp(peer, state, secondHelper)
   await page.goto(detail); await peer.goto(detail)
+  await expect(page.getByRole('button', { name: 'Claim request', exact: true })).toBeVisible(); await expect(peer.getByRole('button', { name: 'Claim request', exact: true })).toBeVisible()
   await peer.evaluate(({ actor, event }) => { const target = { personID: actor, sessionScope: '88888888-8888-4888-8888-888888888888', eventID: event, teamID: '11111111-1111-4111-8111-111111111111', noteID: '99999999-9999-4999-8999-999999999999' }; const createdAt = Date.now(); sessionStorage.setItem('hackbox:mentor-text:v1:' + Object.values(target).join(':'), JSON.stringify({ version: 1, target, createdAt, expiresAt: createdAt + 30 * 60 * 1000, baseRevision: 1, noteVersion: 0, text: { category: 'technical', evidence: 'UNRELATED DRAFT', outcome: '' } })) }, { actor: secondHelper.id, event: firstID })
-  await page.getByRole('button', { name: 'Claim request', exact: true }).click()
-  await peer.getByRole('button', { name: 'Claim request', exact: true }).click()
+  await activate(page, 'Claim request')
+  await activate(peer, 'Claim request')
   await expect(peer.getByRole('status', { name: 'Help action state' })).toContainText('latest owner and state are shown')
   await expect(peer.getByText('Current helper: Synthetic Helper', { exact: true })).toBeVisible()
   await expect(peer.getByRole('button', { name: 'Claim request', exact: true })).toHaveCount(0)
   expect(await peer.evaluate(() => Object.keys(sessionStorage).filter(k => k.startsWith('hackbox:mentor-text:')).map(k => sessionStorage.getItem(k)).join(''))).toContain('UNRELATED DRAFT')
+  await peerContext.close()
 })
 
 test('organiser filters only authorised summaries and never copies private request text into queue', async ({ page }) => {
@@ -129,7 +132,7 @@ test('cached two-event same-request UUID navigation clears old uncertain action 
   await page.goto(other); await expect(page.getByText('SECOND EVENT PROBLEM', { exact: true })).toBeVisible()
   await page.evaluate(url => { history.pushState({}, '', url); window.dispatchEvent(new PopStateEvent('popstate')) }, detail)
   await expect(page.getByText('PRIVATE HELP', { exact: false })).toBeVisible()
-  await page.getByRole('button', { name: 'Claim request', exact: true }).click()
+  await activate(page, 'Claim request')
   await page.getByLabel('Transfer to a currently eligible helper').selectOption(secondHelper.id); state.lostAction = true
   await page.getByRole('button', { name: 'Transfer request', exact: true }).click()
   await expect(page.getByRole('status', { name: 'Help action state' })).toContainText('outcome is unconfirmed')
