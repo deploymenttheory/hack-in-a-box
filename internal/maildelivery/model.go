@@ -61,15 +61,18 @@ func (s Settings) Validate() error {
 		}
 		return nil
 	}
-	if strings.TrimSpace(s.Host) != s.Host || (net.ParseIP(s.Host) == nil && !domain.MatchString(s.Host)) ||
+	if strings.TrimSpace(s.Host) != s.Host ||
+		(net.ParseIP(s.Host) == nil && !domain.MatchString(s.Host)) ||
 		s.Port < 1 ||
 		s.Port > 65535 ||
-		(s.Mode != "tls" && s.Mode != "starttls") ||
-		s.Username == "" ||
-		s.Password == "" || strings.ContainsRune(s.Username, 0) ||
-		strings.ContainsRune(s.Password, 0) ||
-		!Mailbox(s.From) ||
-		!domain.MatchString(s.MessageDomain) ||
+		(s.Mode != "tls" && s.Mode != "starttls") {
+		return ErrConfiguration
+	}
+	if s.Username == "" || s.Password == "" || strings.ContainsRune(s.Username, 0) ||
+		strings.ContainsRune(s.Password, 0) {
+		return ErrConfiguration
+	}
+	if !Mailbox(s.From) || !domain.MatchString(s.MessageDomain) ||
 		strings.Contains(s.MessageDomain, "..") ||
 		s.Timeout <= 0 ||
 		s.Timeout > 20*time.Second {

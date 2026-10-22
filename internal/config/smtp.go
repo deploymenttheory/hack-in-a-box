@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -37,5 +38,8 @@ func loadSMTP(getenv func(string) string) (maildelivery.Settings, error) {
 		}
 		settings.Timeout = value
 	}
-	return settings, settings.Validate()
+	if err := settings.Validate(); err != nil {
+		return settings, fmt.Errorf("validate SMTP settings: %w", err)
+	}
+	return settings, nil
 }

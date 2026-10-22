@@ -27,6 +27,8 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
+	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
+	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
@@ -56,6 +58,10 @@ func Main(component string, run func(context.Context, config.Config, *slog.Logge
 }
 
 func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
+	smtp, err := maildelivery.NewSMTP(cfg.SMTP)
+	if err != nil {
+		return fmt.Errorf("configure SMTP: %w", err)
+	}
 	pool, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
@@ -105,6 +111,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	deps := httpapi.Dependencies{
 		Presentation:   presentation.Service{Pool: pool},
 		Communications: communications.Service{Pool: pool},
+		MailContacts:   mailcontact.Service{Pool: pool, Sender: smtp},
 		Credentials:    credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
 		Mentors:        mentors.Service{Pool: pool},
 		Content:        content.Service{Pool: pool, Storage: storage},
@@ -186,6 +193,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		}
 		if err := (registration.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain registration responses: %w", err)
+		}
+		if err := (mailcontact.Service{Pool: pool}).Maintain(ctx); err != nil {
+			return fmt.Errorf("retain email confirmations: %w", err)
 		}
 		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain private records: %w", err)
