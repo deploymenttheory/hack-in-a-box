@@ -1,86 +1,58 @@
-# Mentor observations: implementation checkpoint
+# Private mentor observations and operational history
 
-Issue #99 is in progress. The versioned HTTP contract, adapters and production
-composition compile and focused HTTP privacy verification passes. This
-checkpoint does not claim the issue is delivered.
+Issue #99 adds private observations independently of scoring. Current assigned
+primary/second mentors may create notes and revise their own notes; current
+organisers and assigned mentors may inspect history. Original authorship does
+not confer lasting access after assignment or role revocation. Participant,
+logistics, MC and platform-admin status alone confer no observation access.
 
-The domain stores immutable observation revisions with original authorship and
-observation time. A current assigned primary or second mentor can record their
-own observations; another mentor cannot rewrite the author's evidence. Current
-assigned mentors and current organisers may inspect the team's private history.
-Platform administration, judging, MC, logistics and participant access alone do
-not confer this access. Removing an assignment or introducing a current conflict
-also removes historical access; being an original author is not a lasting grant.
+Each immutable note revision retains team, author, original observation time,
+category, factual evidence, outcome and a bounded private feedback reference.
+The reference is inert text: it neither publishes feedback nor grants access.
+Operational on-track/at-risk/blocked status has its own versioned reason, next
+action, actor and timestamp. Neither command creates scores, ranking,
+notifications, participant content or presentation cues.
 
-Formal observations require actual common challenge publication and the
-scheduled live start. Operational on-track, at-risk and blocked status lives in
-a separate versioned table, with reason and next action, and may support
-preparation logistics before formal review opens. Neither write path touches
-scores, ranking, notifications, participant projections or presentation cues.
-Generic audit entries retain actor, event, team and revision references only.
+Formal review requires actual common challenge publication and the scheduled
+live-start instant. Operational support remains available before live review.
+Reads recheck the current schedule: postponing live start hides formal evidence
+and its history again without disabling operational support. Event and record
+revisions prevent stale edits; the shared event lock serialises writes with
+current role, conflict, team and assignment changes. Archived read-only events
+retain currently authorised history and deny both write paths.
 
-The event lock serialises these operations with role, team and mentor assignment
-changes. Both event revision and observation/status version must match. An
-observation edit preserves its author's original timestamp and all earlier
-versions; status history also retains each decision. Database triggers reject
-updates, deletions and truncation of the stored history. A populated-history rollback is
-blocked.
+Schema31 follows the concrete inbox schema30 source. Immutable history rejects
+UPDATE, DELETE and TRUNCATE; populated rollback is refused. The real PostgreSQL
+upgrade fixture preserves existing event, team, assignment, membership and audit
+snapshots, rejects a cross-event team reference, and verifies that a failed
+rollback retains the schema version and private evidence. The fixture exercises
+30-to31, rather than inventing a predecessor from a fresh schema.
 
-Evidence includes a private, bounded human feedback reference. This is inert
-text: storing a reference does not dereference a resource, publish feedback or
-grant access to feedback owned by another workflow.
+## Verification
 
-At this checkpoint, real PostgreSQL/race tests pass (5.337 seconds) for the exact
-live-start boundary, independent preparation status, primary/second mentor
-access, authorship and revision conflicts, simultaneous edits with one winner,
-current conflict/assignment/role revocation, two-event isolation, unrelated role
-and platform-admin denial, disbanded teams, append-only history and absence of
-private prose in generic audit records. Expanded domain tests pass with race
-detection (11.555 seconds), including a PostgreSQL-observed writer blocked behind
-a revocation transaction: after that transaction commits, the writer is denied
-and no observation is retained. Archived read-only events retain authorised
-history but deny both observation and operational-status writes.
+- On the concrete inbox/rubric stack, the complete observations package passes
+  with race detection (12.547 seconds), including simultaneous edits with one
+  winner and an observed PostgreSQL writer blocked behind a revocation
+  transaction. After revocation commits, the writer is denied and no note is
+  retained. Both absent and future common publication fail closed.
+- The complete HTTP package passes with race detection (65.849 seconds). The
+  observation journey checks generated response contracts, authentication,
+  wrong-CSRF rejection, the pre-live API gate, stale revision conflicts,
+  organiser reads, original-author history, unknown score-field rejection and
+  no-store responses. Reusing the same cookie after mentor revocation loses
+  current and historical access.
+- Populated participant-team, logistics page/export, MC presentation, paired
+  room snapshot and notification-preview responses exclude private evidence.
+  The MC-only session remains able to use its presentation console while the
+  private observation API denies it. Request logs and generic audit records
+  contain no private note or operational-status prose.
+- A further focused HTTP race run passes in 3.634 seconds for actual durable
+  inbox delivery: an organiser reviews and approves a real in-app reminder,
+  the clock reaches its approved future due instant, and the current mentor
+  reads its persisted list/detail through HTTP. Both payloads exclude the
+  already-stored private evidence. This exercises delivery beyond a preview.
 
-The focused real HTTP/PostgreSQL test passes with race detection (7.145 seconds).
-It validates the generated response contract, authentication, CSRF, stale event
-revisions, the pre-live API gate, current-author history, organiser read access,
-unknown score-field rejection and no-store responses. The same authenticated
-cookie loses both current and historical access after mentor-role revocation.
-Populated participant team, logistics page/export, approved room snapshot and
-rendered mentor reminder-preview responses exclude the stored private evidence.
-The room check uses a real paired capability and an activated synthetic cue;
-the notification preview resolves a real current mentor. Request logs contain
-neither private evidence nor outcome text. This does not claim integration with
-the separately pending inbox/automation implementation.
-
-Remaining before a PR: final schema ordering, upgrade
-and rollback verification; generated-code reproduction and full CI. Migration
-32 and the local schema constant are provisional until the preceding delivery
-batch lands; they are not a deployment-order commitment.
-
-After rebasing onto merged main `990f490`, focused domain/HTTP PostgreSQL race
-tests pass in 8.905/8.193 seconds, scoped lint reports zero issues, and both portal
-builds pass with the rebased lockfile dependencies. A provisional schema fixture
-passes in 2.842 seconds: it upgrades actual schema26, preserves event/team/mentor
-assignment/membership/audit snapshots, rejects a cross-event status reference,
-and refuses rollback after private history is populated, retaining the schema
-version and evidence. The predecessor and migration number still need updating
-and rerunning against the actual immediately preceding merged schema before
-publication; this is not an ordered31-to32 deployment proof.
-
-The branch is now rebased onto actual SMTP merge `6d7ae5f` (schema27), preserving
-the shared communications runtime and test validator. The entire HTTP package
-passes with race detection in 64.636 seconds, and the entire observations package
-passes in 13.750 seconds, including the provisional upgrade fixture now starting
-from actual schema27. The new publication test rejects absent/future common
-publication even on the live date and hides previously readable formal evidence
-when the current live-start schedule moves into the future. Operational support
-remains available. The final immediately preceding-schema upgrade remains a
-publication gate, pending the ready Teams/rubric/inbox changes; schema32 is still
-provisional.
-
-An additional focused HTTP race run passes in 4.561 seconds with an actual MC-only
-session: the private observation API denies that session, while the populated MC
-presentation response remains usable and excludes private evidence. The existing
-room capability, logistics/export, participant team and reminder-preview checks
-remain in the same passing journey.
+The PR is prepared on the reviewed inbox branch so it can be reviewed in
+parallel. Before merging it must be rebased onto the actual merged preceding
+schema, reproduce generated code, pass the ordered upgrade and required CI on
+that exact final commit. This document does not mark #99 delivered before merge.

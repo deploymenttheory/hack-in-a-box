@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -13,13 +14,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -69,10 +73,13 @@ func TestMentorObservationHTTPPrivacyAndCurrentSessionAuthority(t *testing.T) {
 	now := c.LiveStart.Add(-time.Nanosecond)
 	var logs bytes.Buffer
 	room := presentation.Service{Pool: pool}
-	composer := communications.Service{Pool: pool}
+	composer := communications.Service{Pool: pool, Now: func() time.Time { return now }}
+	mailbox := inbox.Service{Pool: pool, Communications: &composer, Now: func() time.Time { return now }}
+	composer.Channels = map[string]communications.ChannelProvider{"in_app": &mailbox}
 	router := NewRouter(cfg, slog.New(slog.NewTextHandler(&logs, nil)), Dependencies{
 		Pool: pool, Auth: auth, Observations: observations.Service{Pool: pool, Now: func() time.Time { return now }},
 		Teams: teams.Service{Pool: pool}, Attendance: attendance.Service{Pool: pool}, Presentation: room, Communications: composer,
+		Inbox: mailbox,
 	})
 	const csrf = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	tokens := map[uuid.UUID]string{}
@@ -200,6 +207,41 @@ func TestMentorObservationHTTPPrivacyAndCurrentSessionAuthority(t *testing.T) {
 		}
 	}
 	privateFree(request(owner, http.MethodPost, base+"/communications", map[string]any{"action": "preview", "template_id": template.ID, "audience_id": audience.ID, "reason": "Synthetic actual notification preview"}, revision(), true), mentor.ID.String())
+	definition := communications.CampaignDefinition{ID: uuid.New(), Name: "Synthetic privacy reminder", TemplateID: template.ID, AudienceID: audience.ID, Channels: []string{"in_app"}, Timing: communications.CampaignTiming{Kind: "relative", Anchor: "live_start", Minutes: 1}}
+	var campaign communications.Campaign
+	for _, action := range []string{"save", "preview", "approve"} {
+		command := communications.CampaignCommand{Action: action, Version: campaign.Version, Reason: "Synthetic notification privacy verification"}
+		if action == "save" {
+			command.Definition = &definition
+		}
+		result, changeErr := composer.ChangeCampaign(ctx, owner.ID, id, definition.ID, revision(), command)
+		if changeErr != nil {
+			var blocked *event.Blocked
+			if errors.As(changeErr, &blocked) {
+				t.Fatalf("%s campaign blockers: %#v", action, blocked.Issues)
+			}
+			t.Fatal(changeErr)
+		}
+		campaign = result.Campaign.Campaign
+	}
+	now = campaign.Approval.DueAt
+	if err = database.Within(ctx, pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		count, queueErr := mailbox.QueueApprovedInTransaction(ctx, tx, id, definition.ID, campaign.Version)
+		if queueErr == nil && count != 1 {
+			t.Fatalf("notification privacy fixture queued=%d want1", count)
+		}
+		return queueErr
+	}); err != nil {
+		t.Fatal(err)
+	}
+	w = request(mentor, http.MethodGet, "/api/v1/inbox", nil, revision(), true)
+	check(w, http.StatusOK)
+	var notifications inbox.Page
+	if err = json.Unmarshal(w.Body.Bytes(), &notifications); err != nil || len(notifications.Items) != 1 {
+		t.Fatalf("notification privacy fixture did not deliver exactly one message: %v", err)
+	}
+	privateFree(w, notifications.Items[0].ID.String())
+	privateFree(request(mentor, http.MethodGet, "/api/v1/inbox/"+notifications.Items[0].ID.String(), nil, revision(), true), "Hello ")
 	invalid := map[string]any{"action": "status", "version": 0, "state": "on_track", "reason": "Synthetic status", "score": 10}
 	check(request(mentor, http.MethodPost, path, invalid, revision(), true), http.StatusBadRequest)
 	// Reuse the same authenticated cookie after assignment/role revocation.
