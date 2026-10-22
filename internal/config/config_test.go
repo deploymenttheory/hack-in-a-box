@@ -109,3 +109,18 @@ func TestDeploymentSurfaces(t *testing.T) {
 		}
 	}
 }
+
+func TestCredentialKeyringConfigurationErrorsAreSafe(t *testing.T) {
+	_, err := config.Load(func(name string) string {
+		if name == "HACKBOX_ENV" {
+			return "test"
+		}
+		if name == "HACKBOX_CREDENTIAL_KEYRING" {
+			return `{"active":"synthetic","keys":{"synthetic":"DO-NOT-ECHO-SYNTHETIC"}}`
+		}
+		return ""
+	})
+	if err == nil || strings.Contains(err.Error(), "DO-NOT-ECHO-SYNTHETIC") {
+		t.Fatalf("unsafe key configuration error: %v", err)
+	}
+}

@@ -9,6 +9,8 @@ import (
 	"net/netip"
 	"strconv"
 	"time"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 
 // Config is shared by the API and worker processes. HTTP fields apply to the API.
 type Config struct {
+	CredentialKeys     *secretbox.Keyring
 	Surface            string
 	DatabaseURL        string
 	PublicOrigin       string
@@ -73,7 +76,12 @@ func Load(getenv func(string) string) (Config, error) {
 		RequestTimeout:     10 * time.Second,
 		ShutdownTimeout:    20 * time.Second,
 	}
+	keys, keyErr := secretbox.Parse(getenv("HACKBOX_CREDENTIAL_KEYRING"))
+	cfg.CredentialKeys = keys
 	var problems []error
+	if keyErr != nil {
+		problems = append(problems, keyErr)
+	}
 	if cfg.Surface != "public" && cfg.Surface != "admin" {
 		problems = append(problems, errSurface)
 	}

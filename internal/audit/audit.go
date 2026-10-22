@@ -15,6 +15,12 @@ import (
 type Action string
 
 const (
+	CredentialRotated  Action = "credential.rotated"  // #nosec G101 -- Audit action identifier, not a credential.
+	CredentialChanged  Action = "credential.changed"  // #nosec G101 -- Audit action identifier, not a credential.
+	CredentialRevealed Action = "credential.revealed" // #nosec G101 -- Audit action identifier, not a credential.
+)
+
+const (
 	ContentAcknowledged      Action = "content.acknowledged"
 	ContentChanged           Action = "content.changed"
 	ContentReleased          Action = "content.released"
@@ -73,6 +79,7 @@ const (
 // Metadata has no arbitrary strings/maps: credentials, brief text, accessibility
 // needs and assessment prose cannot accidentally enter generic audit payloads.
 type Metadata struct {
+	Result           *string    `json:"result,omitempty"`
 	ReferenceID      *uuid.UUID `json:"reference_id,omitempty"`
 	PreviousRevision *int64     `json:"previous_revision,omitempty"`
 	Revision         *int64     `json:"revision,omitempty"`
@@ -89,7 +96,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case MentorCoverageChanged,
+	case CredentialRotated, CredentialChanged, CredentialRevealed, MentorCoverageChanged,
 		ContentAcknowledged,
 		ContentChanged,
 		ContentReleased,
@@ -145,6 +152,13 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	}
 	if r.TargetID == uuid.Nil {
 		return access.ErrInvalid
+	}
+	if r.Metadata.Result != nil {
+		switch *r.Metadata.Result {
+		case "success", "denied", "unavailable", "not_found", "conflict":
+		default:
+			return access.ErrInvalid
+		}
 	}
 	if r.Metadata.Role != nil {
 		switch *r.Metadata.Role {

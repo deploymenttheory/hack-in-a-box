@@ -904,6 +904,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listTeamCredentials"];
+        put?: never;
+        /** @description Organiser create, replace, assign, revoke or rotate against the current event revision. Replace preserves assignments and active state. Assign replaces the entire audience. Rotate requires the old and active deployment keys. Revocation affects app access only. */
+        post: operations["changeTeamCredentials"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/credentials/{credential_id}/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                credential_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Explicit disclosure to a current confirmed member of an assigned published active team. Organiser status alone grants no reveal access. Result is durably audited before returning. Missing or wrong deployment keys fail closed. */
+        post: operations["revealTeamCredential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/mentor-coverage": {
         parameters: {
             query?: never;
@@ -1378,6 +1417,8 @@ export interface components {
             /** Format: date-time */
             occurred_at: string;
             metadata: {
+                /** @enum {string} */
+                result?: "success" | "denied" | "unavailable" | "not_found" | "conflict";
                 /** Format: uuid */
                 reference_id?: string;
                 /** Format: int64 */
@@ -1638,6 +1679,39 @@ export interface components {
             teams: components["schemas"]["HackTeam"][];
             people: components["schemas"]["TeamPerson"][];
             requests: components["schemas"]["TeamRequest"][];
+        };
+        CredentialMetadata: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** Format: int64 */
+            version: number;
+            active: boolean;
+            team_ids: string[];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CredentialPage: {
+            /** Format: int64 */
+            revision: number;
+            can_manage: boolean;
+            items: components["schemas"]["CredentialMetadata"][];
+        };
+        CredentialCommand: {
+            /** @enum {string} */
+            action: "create" | "replace" | "assign" | "revoke" | "rotate";
+            /** Format: uuid */
+            id?: string;
+            label?: string;
+            value?: string;
+            team_ids?: string[];
+        };
+        CredentialRevealed: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            value: string;
         };
         MentorWindow: {
             /** Format: date-time */
@@ -4127,6 +4201,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AllocationSuggestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTeamCredentials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe metadata only. Members see only their currently assigned active resources; organisers also see revoked resources. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CredentialPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeTeamCredentials: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CredentialCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed metadata; values and ciphertext are never returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CredentialPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    revealTeamCredential: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                credential_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicitly revealed value. Response uses Cache-Control no-store. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CredentialRevealed"];
                 };
             };
             default: components["responses"]["Error"];

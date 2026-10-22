@@ -17,6 +17,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
+	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
@@ -30,12 +31,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	Credentials  credentials.Service
 	Mentors      mentors.Service
 	Content      content.Service
 	Submissions  submissions.Service
@@ -319,7 +322,9 @@ func respondError(w http.ResponseWriter, r *http.Request, err error) {
 		status, code, message = 415, "unsupported_media", "The file type is unsupported or does not match its content."
 	case errors.Is(err, files.ErrMissing):
 		status, code, message = 503, "object_missing", "The stored file is unavailable. Ask an administrator to check the file volume."
-	case errors.Is(err, database.ErrDatabase), errors.Is(err, database.ErrSchema):
+	case errors.Is(err, secretbox.ErrUnavailable),
+		errors.Is(err, database.ErrDatabase),
+		errors.Is(err, database.ErrSchema):
 		status, code, message = 503, "unavailable", "A required service is temporarily unavailable."
 	case errors.Is(err, githubidentity.ErrLink):
 		status, code, message = 400, "github_link_failed", githubidentity.ErrLink.Error()
