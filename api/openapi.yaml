@@ -5,7 +5,7 @@ info:
   description: |
     Same-origin REST API. Person is the shared identity; registration does not
     imply confirmed attendance. Cookies authenticate person operations; scoped
-    Authorization Bearer capabilities authenticate display snapshots/streams.
+    Authorization Bearer capabilities authenticate display snapshots, streams and approved branding assets.
     Resource policies authorize.
     Mutations require CSRF protection. Action retries reuse an Idempotency-Key;
     reusing a key for different content returns 409. Mutable resource actions use
@@ -741,6 +741,26 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/DisplaySnapshot'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/display/assets/{asset_id}:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: asset_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getDisplayAsset
+      security: [{display: []}]
+      description: Display capability only. Reads a currently approved validated PNG/JPEG branding asset belonging to this event. No upload/file reader, person-cookie authority or URL credentials. Rechecks pairing and issuer authority on every request; removed assets are unavailable.
+      responses:
+        '200':
+          description: Current approved branding image, never cached.
+          content:
+            image/png:
+              schema: {type: string, format: binary}
+            image/jpeg:
+              schema: {type: string, format: binary}
         default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/display/stream:
     parameters:
@@ -4480,11 +4500,21 @@ components:
         text: {type: string}
         url: {type: string}
         content_title: {type: string}
+    DisplayAsset:
+      type: object
+      additionalProperties: false
+      required: [id, kind, media_type, digest]
+      properties:
+        id: {type: string, format: uuid}
+        kind: {type: string, enum: [logo, icon, hero]}
+        media_type: {type: string, enum: [image/png, image/jpeg]}
+        digest: {type: string, pattern: '^[a-f0-9]{64}$'}
     DisplaySnapshot:
       type: object
       additionalProperties: false
-      required: [event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour, override_active]
+      required: [assets, event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour, override_active]
       properties:
+        assets: {type: array, maxItems: 3, items: {$ref: '#/components/schemas/DisplayAsset'}}
         override_active: {type: boolean}
         event_id: {type: string, format: uuid}
         event_name: {type: string}

@@ -569,6 +569,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/display/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Display capability only. Reads a currently approved validated PNG/JPEG branding asset belonging to this event. No upload/file reader, person-cookie authority or URL credentials. Rechecks pairing and issuer authority on every request; removed assets are unavailable. */
+        get: operations["getDisplayAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/display/stream": {
         parameters: {
             query?: never;
@@ -2846,7 +2866,17 @@ export interface components {
             url: string;
             content_title: string;
         };
+        DisplayAsset: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "logo" | "icon" | "hero";
+            /** @enum {string} */
+            media_type: "image/png" | "image/jpeg";
+            digest: string;
+        };
         DisplaySnapshot: {
+            assets: components["schemas"]["DisplayAsset"][];
             override_active: boolean;
             /** Format: uuid */
             event_id: string;
@@ -3946,6 +3976,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DisplaySnapshot"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDisplayAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current approved branding image, never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                    "image/jpeg": string;
                 };
             };
             default: components["responses"]["Error"];

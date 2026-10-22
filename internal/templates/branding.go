@@ -56,7 +56,9 @@ func contrast(a, b string) float64 {
 	return (math.Max(x, y) + 0.05) / (math.Min(x, y) + 0.05)
 }
 
-func validateBranding(b Branding) error {
+func validateBranding(b Branding) error { return validateBrandingImages(b, true) }
+
+func validateBrandingImages(b Branding, fullDecode bool) error {
 	for _, value := range []string{b.Primary, b.Accent, b.Background, b.Foreground} {
 		if !colour.MatchString(value) {
 			return brandError("colours", "Use six-digit hexadecimal colours, for example #173a35.")
@@ -107,6 +109,9 @@ func validateBranding(b Branding) error {
 				"The image bytes must match the PNG or JPEG content type.",
 			)
 		}
+		if !fullDecode {
+			continue
+		}
 		if _, _, err := image.Decode(bytes.NewReader(asset.Content)); err != nil {
 			return brandError(
 				asset.Kind,
@@ -131,6 +136,22 @@ func readBrand(ctx context.Context, q *dbgen.Queries, id uuid.UUID) (Branding, e
 		return b, fmt.Errorf("decode event branding: %w", err)
 	}
 	return definitions.Branding, nil
+}
+
+// RenderBranding returns only validated branding inside the caller's transaction.
+// The caller owns audience authorization; no forms, messages or uploads escape.
+// Invalid legacy branding falls back to readable defaults without its assets.
+// Authoring fully decodes raster pixels; frequent render projections recheck
+// bounded headers and types without allocating each full-size image again.
+func RenderBranding(ctx context.Context, q *dbgen.Queries, id uuid.UUID) (Branding, error) {
+	b, err := readBrand(ctx, q, id)
+	if err != nil {
+		return Branding{}, err
+	}
+	if err = validateBrandingImages(b, false); err != nil {
+		return EmptyDefinitions().Branding, nil
+	}
+	return b, nil
 }
 
 // ReadBrand exposes branding without exposing forms, role briefs or message drafts.
