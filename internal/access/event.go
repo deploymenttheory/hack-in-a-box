@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,6 +14,7 @@ import (
 )
 
 const (
+	TeamFileWrite    Action = "team.file.write"
 	EventRead        Action = "event.read"
 	RosterRead       Action = "attendance.read"
 	AttendanceManage Action = "attendance.manage"
@@ -35,9 +37,12 @@ const (
 // EventPolicy always reads current authority. Platform administration permits
 // ownership management, never implicit access to event content or assessments.
 // Use WithQueries within a locked transaction for mutations.
-type EventPolicy struct{ Queries *dbgen.Queries }
+type EventPolicy struct {
+	Queries *dbgen.Queries
+	Clock   func() time.Time
+}
 
-func (p EventPolicy) WithQueries(q *dbgen.Queries) Policy { return EventPolicy{Queries: q} }
+func (p EventPolicy) WithQueries(q *dbgen.Queries) Policy { p.Queries = q; return p }
 
 func (p EventPolicy) Authorize(
 	ctx context.Context,
@@ -99,11 +104,35 @@ func (p EventPolicy) Authorize(
 		}
 		return ErrForbidden
 	}
+	return p.content(
+		ctx,
+		actor,
+		event,
+		target,
+		action,
+		roles,
+		record,
+		organiser,
+		person.PlatformAdmin,
+	)
+}
+
+func (p EventPolicy) content(
+	ctx context.Context,
+	actor, event, target uuid.UUID,
+	action Action,
+	roles []string,
+	record dbgen.Event,
+	organiser, admin bool,
+) error {
 	if action == ProfileManage || action == ProfileRead || action == ProfileExport {
-		return profilePolicy(action, roles, organiser, person.PlatformAdmin)
+		return profilePolicy(action, roles, organiser, admin)
+	}
+	if action == TeamFileWrite {
+		return p.teamFileWrite(ctx, actor, record, target)
 	}
 	if action == FileRead {
-		return p.file(ctx, event, target, organiser)
+		return p.file(ctx, actor, record, target, organiser)
 	}
 	return p.resource(ctx, actor, event, target, action, roles)
 }
@@ -174,13 +203,23 @@ func (p EventPolicy) resource(
 	return ErrForbidden
 }
 
-func (p EventPolicy) file(ctx context.Context, event, target uuid.UUID, organiser bool) error {
+func (p EventPolicy) file(
+	ctx context.Context,
+	actor uuid.UUID,
+	row dbgen.Event,
+	target uuid.UUID,
+	organiser bool,
+) error {
+	event := row.ID
 	file, err := p.Queries.File(ctx, dbgen.FileParams{EventID: event, ID: target})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
 	if err != nil {
 		return fmt.Errorf("check file scope: %w", err)
+	}
+	if file.TeamID != nil {
+		return p.teamFileRead(ctx, actor, row, file)
 	}
 	if organiser && file.EventID == event {
 		return nil
@@ -205,4 +244,11 @@ func profilePolicy(action Action, roles []string, organiser, admin bool) error {
 		return ErrForbidden
 	}
 	return ErrForbidden
+}
+
+func (p EventPolicy) now() time.Time {
+	if p.Clock != nil {
+		return p.Clock()
+	}
+	return time.Now()
 }

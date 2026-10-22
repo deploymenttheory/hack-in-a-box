@@ -28,11 +28,13 @@ type (
 		ScheduleID *uuid.UUID  `json:"schedule_id,omitempty"`
 	}
 	Deliverable struct {
-		ID          uuid.UUID  `json:"id"`
-		Title       string     `json:"title"`
-		Description string     `json:"description"`
-		Required    bool       `json:"required"`
-		ScheduleID  *uuid.UUID `json:"schedule_id,omitempty"`
+		EvidenceKinds []string   `json:"evidence_kinds,omitempty"`
+		Audience      []string   `json:"audience,omitempty"`
+		ID            uuid.UUID  `json:"id"`
+		Title         string     `json:"title"`
+		Description   string     `json:"description"`
+		Required      bool       `json:"required"`
+		ScheduleID    *uuid.UUID `json:"schedule_id,omitempty"`
 	}
 	RoleBrief struct {
 		ID   uuid.UUID `json:"id"`
@@ -178,7 +180,7 @@ func Validate(bundle Bundle) error {
 	}
 	for _, item := range d.Deliverables {
 		if item.Title == "" || len(item.Title) > 160 || len(item.Description) > 4000 ||
-			!linked(item.ScheduleID) {
+			!linked(item.ScheduleID) || !validDeliverableOptions(item) {
 			return access.ErrInvalid
 		}
 	}
@@ -425,4 +427,20 @@ func validateCounts(d Definitions) error {
 		return access.ErrInvalid
 	}
 	return nil
+}
+
+// Empty options preserve existing template behavior. Audiences restrict assigned
+// reviewers; a team and its organisers always see its formal evidence.
+func validDeliverableOptions(d Deliverable) bool {
+	for _, kind := range d.EvidenceKinds {
+		if !slices.Contains([]string{"file", "url", "repository"}, kind) {
+			return false
+		}
+	}
+	for _, role := range d.Audience {
+		if !slices.Contains([]string{"organiser", "mentor", "judge"}, role) {
+			return false
+		}
+	}
+	return len(d.EvidenceKinds) <= 3 && len(d.Audience) <= 3
 }

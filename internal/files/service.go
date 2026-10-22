@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -30,6 +31,8 @@ type Service struct {
 }
 type Upload struct {
 	Actor, Event, Key   uuid.UUID
+	TeamID              *uuid.UUID
+	Reason              string
 	Revision            int64
 	Filename, MediaType string
 	Content             []byte
@@ -39,12 +42,13 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 	if s.Policy == nil {
 		return dbgen.File{}, access.ErrForbidden
 	}
+	target, action := uploadScope(input)
 	if err := s.Policy.Authorize(
 		ctx,
 		input.Actor,
 		input.Event,
-		input.Event,
-		access.FileWrite,
+		target,
+		action,
 	); err != nil {
 		return dbgen.File{}, fmt.Errorf("authorize: %w", err)
 	}
@@ -100,8 +104,7 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 			},
 		)
 		if err == nil {
-			if existing.Checksum != blob.Checksum || existing.Filename != input.Filename ||
-				existing.MediaType != input.MediaType {
+			if !sameUpload(existing, blob.Checksum, input) {
 				return ErrIdempotency
 			}
 			result = existing
@@ -132,22 +135,13 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 				MediaType:      blob.MediaType,
 				Checksum:       blob.Checksum,
 				SizeBytes:      blob.Size,
+				TeamID:         input.TeamID,
 			},
 		)
 		if err != nil {
 			return fmt.Errorf("insert file: %w", err)
 		}
-		return audit.Append(
-			ctx,
-			q,
-			audit.Record{
-				ActorID:  &input.Actor,
-				EventID:  &input.Event,
-				TargetID: result.ID,
-				Action:   audit.FileUploaded,
-				Reason:   audit.UserRequest,
-			},
-		)
+		return recordUpload(ctx, q, input, event, result)
 	})
 	if err != nil {
 		return dbgen.File{}, fmt.Errorf("finalize upload: %w", err)
@@ -195,17 +189,95 @@ func (s Service) authorizeUpload(
 	}); ok {
 		policy = scoped.WithQueries(q)
 	}
+	target, action := uploadScope(input)
 	if err := policy.Authorize(
 		ctx,
 		input.Actor,
 		input.Event,
-		input.Event,
-		access.FileWrite,
+		target,
+		action,
 	); err != nil {
 		return fmt.Errorf("recheck upload authority: %w", err)
+	}
+	if input.TeamID != nil {
+		row, err := q.Event(ctx, input.Event)
+		if err != nil {
+			return fmt.Errorf("read upload cutoff: %w", err)
+		}
+		var dates struct {
+			Cutoff time.Time `json:"submission_cutoff"`
+		}
+		if err := json.Unmarshal(row.Configuration, &dates); err != nil {
+			return fmt.Errorf("decode upload cutoff: %w", err)
+		}
+		now := time.Now()
+		if timed, ok := policy.(access.EventPolicy); ok && timed.Clock != nil {
+			now = timed.Clock()
+		}
+		if len(input.Reason) > 2000 ||
+			(!now.Before(dates.Cutoff) && strings.TrimSpace(input.Reason) == "") {
+			return access.ErrInvalid
+		}
 	}
 	if !writable {
 		return access.ErrForbidden
 	}
 	return nil
+}
+
+func uploadScope(input Upload) (uuid.UUID, access.Action) {
+	if input.TeamID != nil {
+		return *input.TeamID, access.TeamFileWrite
+	}
+	return input.Event, access.FileWrite
+}
+
+func sameTeam(a, b *uuid.UUID) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	return *a == *b
+}
+
+func recordUpload(
+	ctx context.Context,
+	q *dbgen.Queries,
+	input Upload,
+	event dbgen.Event,
+	result dbgen.File,
+) error {
+	if input.TeamID != nil && strings.TrimSpace(input.Reason) != "" {
+		if _, err := q.RecordEventDecision(
+			ctx,
+			dbgen.RecordEventDecisionParams{
+				EventID:  input.Event,
+				ActorID:  input.Actor,
+				Kind:     "submission_file_exception",
+				Reason:   input.Reason,
+				Revision: event.Revision,
+			},
+		); err != nil {
+			return fmt.Errorf("record file exception: %w", err)
+		}
+	}
+	if err := audit.Append(
+		ctx,
+		q,
+		audit.Record{
+			ActorID:  &input.Actor,
+			EventID:  &input.Event,
+			TargetID: result.ID,
+			Action:   audit.FileUploaded,
+			Reason:   audit.UserRequest,
+		},
+	); err != nil {
+		return fmt.Errorf("audit uploaded file: %w", err)
+	}
+	return nil
+}
+
+func sameUpload(file dbgen.File, checksum string, input Upload) bool {
+	return file.Checksum == checksum && file.Filename == input.Filename &&
+		file.MediaType == input.MediaType &&
+		sameTeam(file.TeamID, input.TeamID)
 }

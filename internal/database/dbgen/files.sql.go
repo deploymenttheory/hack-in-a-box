@@ -23,7 +23,7 @@ func (q *Queries) EventFileUsage(ctx context.Context, eventID uuid.UUID) (int64,
 }
 
 const file = `-- name: File :one
-SELECT id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at FROM files WHERE event_id = $1 AND id = $2
+SELECT id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at, team_id FROM files WHERE event_id = $1 AND id = $2
 `
 
 type FileParams struct {
@@ -45,12 +45,13 @@ func (q *Queries) File(ctx context.Context, arg FileParams) (File, error) {
 		&i.Checksum,
 		&i.SizeBytes,
 		&i.CreatedAt,
+		&i.TeamID,
 	)
 	return i, err
 }
 
 const idempotentFile = `-- name: IdempotentFile :one
-SELECT id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at FROM files WHERE event_id = $1 AND owner_id = $2 AND idempotency_key = $3
+SELECT id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at, team_id FROM files WHERE event_id = $1 AND owner_id = $2 AND idempotency_key = $3
 `
 
 type IdempotentFileParams struct {
@@ -73,13 +74,14 @@ func (q *Queries) IdempotentFile(ctx context.Context, arg IdempotentFileParams) 
 		&i.Checksum,
 		&i.SizeBytes,
 		&i.CreatedAt,
+		&i.TeamID,
 	)
 	return i, err
 }
 
 const insertFile = `-- name: InsertFile :one
-INSERT INTO files(id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at
+INSERT INTO files(id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, team_id)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, event_id, owner_id, idempotency_key, object_key, filename, media_type, checksum, size_bytes, created_at, team_id
 `
 
 type InsertFileParams struct {
@@ -92,6 +94,7 @@ type InsertFileParams struct {
 	MediaType      string
 	Checksum       string
 	SizeBytes      int64
+	TeamID         *uuid.UUID
 }
 
 func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, error) {
@@ -105,6 +108,7 @@ func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, e
 		arg.MediaType,
 		arg.Checksum,
 		arg.SizeBytes,
+		arg.TeamID,
 	)
 	var i File
 	err := row.Scan(
@@ -118,6 +122,7 @@ func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, e
 		&i.Checksum,
 		&i.SizeBytes,
 		&i.CreatedAt,
+		&i.TeamID,
 	)
 	return i, err
 }

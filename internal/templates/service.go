@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
@@ -376,6 +377,18 @@ func (s Service) SaveDefinitions(
 		result, err = snapshot(ctx, q, actor, id)
 		if err != nil {
 			return err
+		}
+		if row.PublishedAt.Valid &&
+			!reflect.DeepEqual(result.Definitions.Deliverables, definitions.Deliverables) {
+			return &event.Blocked{
+				Issues: []event.Issue{
+					{
+						Field:   "deliverables",
+						Code:    "published_requirements",
+						Message: "Competition requirements are fixed once the challenge is published.",
+					},
+				},
+			}
 		}
 		result.Definitions = definitions
 		if err := Validate(result); err != nil {

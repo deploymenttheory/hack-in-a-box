@@ -175,3 +175,74 @@ Synthetic screenshots were inspected on desktop and mobile, including narrow-scr
 wrapping and absence of horizontal overflow. Evidence:
 [desktop readiness](media/attendance-readiness-desktop.png) and
 [mobile logistics checklist](media/attendance-checklist-mobile.png).
+
+## Versioned team submissions — #60
+
+Migration 17 extends the existing unique competition entry per event/team with
+separate private working drafts, immutable formal revisions, a current final
+pointer, immutable review/outcome history, and protected file references. Draft
+revisions have their own concurrency counter and never count as formal evidence.
+Personal preparation tasks remain in the preparation domain. Formal saves require
+the current submission-state revision; replacing a final resets its completion
+review to pending while preserving earlier evidence and review decisions.
+
+Event/template deliverables define required/optional items, supported evidence
+kinds and reviewer audiences. Existing templates default to all supported evidence
+kinds and reviewer roles. Deadlines follow a configured agenda item or the shared
+cutoff and must fall within the live submission window. Requirements become fixed
+at challenge publication. Changing a linked published deadline requires an
+organiser reason recorded in event decisions. Evidence labels and file names are
+not hard-coded. URL/repository references accept HTTP(S) without credentials and
+are never fetched or executed by the server.
+
+Current confirmed members of the published team may save private drafts after
+actual challenge publication. Organisers and reviewers cannot read those drafts.
+Formal submission and organiser completion verification open at scheduled live
+start; no exception permits premature acceptance or review. Assigned mentors may
+read permitted formal evidence during live work; assigned judges receive only a
+frozen current final after cutoff. Completion verification here is not mentor
+checkpoint scoring or final judging, which have separate backlog deliverables.
+
+The shared cutoff locks final evidence independently of lifecycle stage. Worker
+maintenance, authorised submission operations and the production lifecycle service
+settle outcomes under the event row lock. Each active team receives frozen evidence
+or an explicit not-submitted/withdrawn outcome; retired/disbanded entries are
+withdrawn and unscored. These counts feed the assessment gate in the same
+transaction as stage advancement. Repeated or concurrent settlement does not
+duplicate history. Application rescheduling settles the old cutoff first, so a
+delayed worker or a later event postponement cannot reopen an already frozen final.
+
+Changing evidence after an earlier deliverable deadline or shared cutoff requires
+an organiser reason. Amendments append a new revision, retain any existing freeze,
+record a late flag and reset review status. Old immutable evidence and review
+history remain available to current team members/organisers and permitted mentors;
+judges' file access follows the current frozen revision. Withdrawn entries cannot
+be revived by an ordinary team save.
+
+Uploads may specify a team scope. They reuse storage integrity checks, quotas,
+idempotency and event revision checks, with current membership rechecked inside
+the upload transaction. A retry cannot change its team scope. Private team files
+are unavailable to organisers/reviewers until referenced by formal evidence
+(organisers can also retrieve their own authorised on-behalf uploads). Generic
+download URLs apply the same team, audience and time checks. Revoked members or
+reviewer grants lose access on the next request. Late organiser uploads require
+a recorded reason.
+
+The versioned API exposes current submissions, private drafts, bounded change
+history, organiser completion reviews and explicit outcomes below
+`/api/v1/events/{event_id}/teams/{team_id}/submission`. Mutation requests require
+CSRF and the appropriate quoted state/draft revision, including `"0"` for a new
+record. The generated Go adapter and TypeScript client include these contracts.
+
+PostgreSQL tests exercise required evidence/kinds, private drafts, live-start and
+cutoff boundaries, early deadlines, immutable replacement/review history, concurrent
+saves and settlement, current team/role authority, restricted file audiences,
+late amendments, disbanding, rescheduling and the assessment gate. HTTP integration
+tests validate responses against OpenAPI, CSRF, revision conflicts and protected
+downloads. Repository URLs remain references to mutable external content: #96 owns
+immutable SHA receipts and unresolved provider evidence, and this implementation
+does not claim a referenced branch head was captured at cutoff.
+
+Local verification passed: the full command/package PostgreSQL suite with `-race`
+(serial package execution after a Docker reaper startup failure in the parallel
+run), zero-issue Go lint, and the browser production build with regenerated types.
