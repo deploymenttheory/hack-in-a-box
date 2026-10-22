@@ -491,6 +491,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/exports/readiness.csv": {
+        parameters: {
+            query: {
+                audience: "organiser" | "mentor" | "participant";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Permission-filtered readiness CSV with spreadsheet formula defence. Current event and resource authority is resolved for every download; selecting an audience never grants it. */
+        get: operations["exportReadiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/exports/run-sheet.html": {
+        parameters: {
+            query: {
+                audience: "organiser" | "mentor" | "participant";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Standalone offline printable run sheet. No external assets, private drafts or sensitive registration data. Current event and resource authority is resolved for every download; selecting an audience never grants it. */
+        get: operations["downloadRunSheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/preparation/tasks": {
         parameters: {
             query?: never;
@@ -3379,6 +3421,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogisticsPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportReadiness: {
+        parameters: {
+            query: {
+                audience: "organiser" | "mentor" | "participant";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Download generated from the current permitted event view. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    downloadRunSheet: {
+        parameters: {
+            query: {
+                audience: "organiser" | "mentor" | "participant";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Download generated from the current permitted event view. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
                 };
             };
             default: components["responses"]["Error"];
