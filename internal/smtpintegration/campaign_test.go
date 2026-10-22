@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
 func (f *fixture) approveProduction() {
@@ -308,5 +309,78 @@ func TestApprovedSMTPOccurrencesRetainIndependentIdentityAndCurrentScope(t *test
 	); outcome != jobs.Permanent ||
 		f.transport.count() != 0 {
 		t.Fatal("changed occurrence source binding caused an SMTP effect")
+	}
+}
+
+func TestApprovedSMTPCampaignMessagesAreIndividualAndUnverifiedContactsAreExcluded(t *testing.T) {
+	f := setup(t)
+	other, unverified := testdb.Person(t, f.pool), testdb.Person(t, f.pool)
+	for _, id := range []uuid.UUID{other.ID, unverified.ID} {
+		f.exec(
+			"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'organiser')",
+			f.event,
+			id,
+		)
+	}
+	if err := dbgen.New(f.pool).
+		ConfirmPersonEmail(t.Context(), dbgen.ConfirmPersonEmailParams{PersonID: other.ID, Mailbox: "second-organiser@example.test"}); err != nil {
+		t.Fatal(err)
+	}
+	f.approveProduction()
+	err := database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		count, err := f.service.QueueApprovedCampaignInTransaction(
+			t.Context(),
+			tx,
+			f.event,
+			f.campaign.Definition.ID,
+			f.campaign.Version,
+		)
+		if err == nil && count != 2 {
+			t.Fatalf("personal intents=%d want2", count)
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows, err := f.pool.Query(
+		t.Context(),
+		"SELECT operation_id,event_id,intent_id FROM smtp_campaign_messages WHERE event_id=$1 ORDER BY operation_id",
+		f.event,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var deliveries []jobs.Delivery
+	for rows.Next() {
+		var d jobs.Delivery
+		if err = rows.Scan(&d.ID, &d.EventID, &d.TargetID); err != nil {
+			t.Fatal(err)
+		}
+		deliveries = append(deliveries, d)
+	}
+	rows.Close()
+	if err = rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	handler := CampaignHandler{Service: f.service}
+	for _, d := range deliveries {
+		if handler.Deliver(t.Context(), d) != jobs.Delivered {
+			t.Fatal("individual approved message was not accepted")
+		}
+	}
+	if f.transport.count() != 2 {
+		t.Fatal("unverified address became a send or personal messages were bundled")
+	}
+	seen := map[string]bool{}
+	for _, message := range f.transport.messages {
+		seen[message.Recipient] = true
+		if strings.Contains(message.PlainText, "organiser@example.test") ||
+			strings.Contains(message.PlainText, "second-organiser@example.test") {
+			t.Fatal("personal body exposed audience mailbox addresses")
+		}
+	}
+	if !seen["organiser@example.test"] || !seen["second-organiser@example.test"] {
+		t.Fatal("individual SMTP recipients were redirected")
 	}
 }
