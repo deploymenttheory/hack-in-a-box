@@ -111,6 +111,10 @@ func TestPresentationHTTPContractsAndCapabilityBoundary(t *testing.T) {
 		Reason: "Room program draft",
 		Cues:   []presentation.Cue{cue},
 	}
+	second := cue
+	second.ID = uuid.New()
+	second.Title = "Second approved cue"
+	command.Cues = append(command.Cues, second)
 	if w = request(owner, "POST", path, command, page.Revision, false, ""); w.Code != 403 {
 		t.Fatalf("CSRF omitted: %d", w.Code)
 	}
@@ -133,12 +137,25 @@ func TestPresentationHTTPContractsAndCapabilityBoundary(t *testing.T) {
 		t.Fatal(err)
 	}
 	stale := page.Revision - 1
-	for _, action := range []string{"publish", "advance"} {
+	index, seconds := 0, int32(45)
+	urgent := presentation.Cue{ID: uuid.New(), Title: "Urgent room notice", DurationSeconds: 10}
+	for _, control := range []presentation.Command{
+		{Action: "activate", Index: &index, FromDraft: true},
+		{Action: "advance"},
+		{Action: "back"},
+		{Action: "timer", Seconds: &seconds},
+		{Action: "hold"},
+		{Action: "resume"},
+		{Action: "override", Override: &urgent},
+		{Action: "return_to_schedule"},
+	} {
+		control.Reason = "Explicit room control"
+		action := control.Action
 		w = request(
 			owner,
 			"POST",
 			path,
-			presentation.Command{Action: action, Reason: "Explicit room control"},
+			control,
 			page.Revision,
 			true,
 			"",

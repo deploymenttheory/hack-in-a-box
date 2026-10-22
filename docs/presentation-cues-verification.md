@@ -1,6 +1,6 @@
 # Presentation cues and display capabilities
 
-Issue #85 adds a backend for an organiser or current event MC to approve ordered room cues, activate/back/jump manually, adjust/hold/resume server timers and temporarily override them for an urgent announcement and pair/revoke independent display sessions. The frontend controller/display clients remain the separate UI backlog deliverables.
+Issue #85 adds a backend for an organiser or current event MC to approve ordered room cues, activate/back/jump manually, adjust/hold/resume server timers temporarily override them for an urgent announcement, and pair/revoke independent display sessions. The frontend controller/display clients remain the separate UI backlog deliverables.
 
 ## Controller contract
 
@@ -38,4 +38,4 @@ Only the exact display GET routes bypass person-session middleware, after requir
 - Real HTTP/SSE tests cover generated contracts, CSRF, stale/private input, capability/session separation, no-store, URL-token rejection, cross-event rejection, immediate fresh snapshots on stale reconnect, active-stream pairing/MC/organiser revocation, and payload/log privacy.
 - The SSE test uses a 40ms JSON timeout and an 80ms HTTP write timeout; later snapshots still flush, while a separate finite JSON handler still times out.
 
-Migration 24 is reserved after credential-resource migration 22 and messaging migration 23. Final verification and merge must rebase on both predecessors and verify normal Goose upgrade order; migration policy is not changed. The PR remains draft until final checks and this dependency order are satisfied.
+The ordered-upgrade regression starts on schema 23, creates a real encrypted supplied credential and versioned communication template using their domain services, migrates normally to 24, and checks their ciphertext/history and event configuration/revision remain unchanged. The upgraded MC can create an independent empty cue program and pair a display. Migration policy is unchanged.

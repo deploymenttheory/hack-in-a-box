@@ -501,24 +501,8 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 				result.Current = &cue
 			}
 		}
-		raw, readErr := q.EventDefinitions(ctx, eventID)
-		if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
-			return fmt.Errorf("read display branding: %w", readErr)
-		}
-		if readErr == nil {
-			defs := templates.EmptyDefinitions()
-			if err = json.Unmarshal(raw.Definitions, &defs); err != nil {
-				return fmt.Errorf("decode display branding: %w", err)
-			}
-			if colour.MatchString(defs.Branding.Primary) {
-				result.PrimaryColour = defs.Branding.Primary
-			}
-			if colour.MatchString(defs.Branding.Background) {
-				result.BackgroundColour = defs.Branding.Background
-			}
-			if colour.MatchString(defs.Branding.Foreground) {
-				result.ForegroundColour = defs.Branding.Foreground
-			}
+		if err = displayBranding(ctx, q, eventID, &result); err != nil {
+			return err
 		}
 		digest := sha256.Sum256([]byte(token))
 		if err = q.TouchDisplayPairing(
@@ -538,6 +522,34 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		return Snapshot{}, fmt.Errorf("display snapshot: %w", err)
 	}
 	return result, nil
+}
+
+func displayBranding(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	result *Snapshot,
+) error {
+	raw, readErr := q.EventDefinitions(ctx, eventID)
+	if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
+		return fmt.Errorf("read display branding: %w", readErr)
+	}
+	if readErr == nil {
+		defs := templates.EmptyDefinitions()
+		if err := json.Unmarshal(raw.Definitions, &defs); err != nil {
+			return fmt.Errorf("decode display branding: %w", err)
+		}
+		if colour.MatchString(defs.Branding.Primary) {
+			result.PrimaryColour = defs.Branding.Primary
+		}
+		if colour.MatchString(defs.Branding.Background) {
+			result.BackgroundColour = defs.Branding.Background
+		}
+		if colour.MatchString(defs.Branding.Foreground) {
+			result.ForegroundColour = defs.Branding.Foreground
+		}
+	}
+	return nil
 }
 
 func (s Service) project(
