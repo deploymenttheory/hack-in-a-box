@@ -120,3 +120,23 @@ transition now produces exactly two actual local inbox records on repeated
 reconciliation/execution, with no private judge guidance or external send
 (2.782s). Unknown future source fields remain blocked. Actual clarification and
 results integration remain outstanding; no full #82 closure is claimed.
+
+### Actual-main33 composition
+
+The owner-only stack is now based on merged scorecards main
+`3f355299aaa85193a3066f3ee64d9a596cfe0e57`. Recovery `draft_scope`, scorecard,
+observation, native help, SMTP, Teams and inbox routes/runtime registrations are
+preserved; generated contracts retain the combined API. The full automation
+PostgreSQL/race suite passes40.783s after its inherited Teams challenge fixture
+was updated to configure and approve the actual required native rubric. Full
+native help and rubric race suites pass20.271s and13.087s; focused runtime
+composition passes6.871s and actual scorecard HTTP/privacy passes5.042s. Final
+scoped Go lint reports zero issues and both frontend bundles build after
+restoring the exact current lockfile dependencies. The provisional schema is
+still unnumbered; these results do not claim final ordered migration or CI.
+
+PR205's native released-source seam will replace the temporary transaction-aware
+public rubric extraction after161 merges. Its real clarification publication
+adapter is still required. The preserved provisional rollback lives alongside
+the provisional Up SQL and must be combined/proved against the actual preceding
+schema only when a migration number is assigned.

@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -37,6 +38,13 @@ import (
 func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) {
 	ctx := t.Context()
 	pool := testdb.New(t, true)
+	provisionalSQL, readErr := os.ReadFile("../automation/schema.provisional.sql")
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if _, applyErr := pool.Exec(t.Context(), string(provisionalSQL)); applyErr != nil {
+		t.Fatal(applyErr)
+	}
 	owner, mentor, second, member := testdb.Person(
 		t,
 		pool,

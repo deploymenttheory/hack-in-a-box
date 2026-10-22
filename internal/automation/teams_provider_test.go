@@ -17,6 +17,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
@@ -195,6 +196,36 @@ func TestProductionTeamsExpectedChallengeWaitsForGuardedCommonPublication(t *tes
 		teamID,
 		f.person.ID,
 	)
+	rubrics := rubric.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
+	definition := rubric.Default(rubric.AllTeams, f.id)
+	saved, err := rubrics.Change(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		0,
+		rubric.Command{
+			Action:     "save",
+			Definition: &definition,
+			Reason:     "Configure real common criteria",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	approved, err := rubrics.Change(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		saved.Revision,
+		rubric.Command{
+			Action:  "approve",
+			Version: saved.Reference.Version,
+			Reason:  "Approve exact common criteria",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sourceService := content.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
 	source, err := sourceService.Save(
 		t.Context(),
@@ -207,6 +238,7 @@ func TestProductionTeamsExpectedChallengeWaitsForGuardedCommonPublication(t *tes
 			Document: content.Document{
 				Title:    "PRIVATE-SOURCE-TITLE-CANARY",
 				Markdown: "Synthetic approved common challenge",
+				Rubric:   &approved.Reference,
 				Audience: access.ContentAudience{
 					Confirmed: true,
 					Roles:     []string{},
