@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -229,7 +230,7 @@ func TestPresentationHTTPContractsAndCapabilityBoundary(t *testing.T) {
 }
 
 func TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation(t *testing.T) {
-	for _, mode := range []string{"pairing", "mc", "organiser"} {
+	for _, mode := range []string{"pairing", "mc", "organiser", "dependency"} {
 		t.Run(mode, func(t *testing.T) {
 			pool := testdb.New(t, true)
 			ctx := t.Context()
@@ -359,7 +360,22 @@ func TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation(t *testing.T
 				t.Fatalf("finite JSON timeout changed: %d", slow.StatusCode)
 			}
 			_ = slow.Body.Close()
-			if mode == "pairing" {
+			if mode == "dependency" {
+				if _, err = pool.Exec(
+					ctx,
+					"ALTER TABLE display_pairings RENAME TO unavailable_display_pairings",
+				); err != nil {
+					t.Fatal(err)
+				}
+				defer func() {
+					if _, restoreErr := pool.Exec(
+						context.WithoutCancel(ctx),
+						"ALTER TABLE unavailable_display_pairings RENAME TO display_pairings",
+					); restoreErr != nil {
+						t.Error(restoreErr)
+					}
+				}()
+			} else if mode == "pairing" {
 				page, err = service.Read(ctx, owner.ID, id)
 				if err != nil {
 					t.Fatal(err)
@@ -389,14 +405,18 @@ func TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation(t *testing.T
 					t.Fatal(err)
 				}
 			}
+			expectedEvent := "event: revoked"
+			if mode == "dependency" {
+				expectedEvent = "event: reconnect"
+			}
 			revoked := ""
 			for range 3 {
 				revoked = frame()
-				if strings.Contains(revoked, "event: revoked") {
+				if strings.Contains(revoked, expectedEvent) {
 					break
 				}
 			}
-			if !strings.Contains(revoked, "event: revoked") {
+			if !strings.Contains(revoked, expectedEvent) {
 				t.Fatalf("open stream did not close on %s revocation: %s", mode, revoked)
 			}
 			_, err = reader.ReadByte()

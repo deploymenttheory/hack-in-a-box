@@ -4,7 +4,9 @@ info:
   version: 0.2.0
   description: |
     Same-origin REST API. Person is the shared identity; registration does not
-    imply confirmed attendance. Cookies authenticate; resource policies authorize.
+    imply confirmed attendance. Cookies authenticate person operations; scoped
+    Authorization Bearer capabilities authenticate display snapshots/streams.
+    Resource policies authorize.
     Mutations require CSRF protection. Action retries reuse an Idempotency-Key;
     reusing a key for different content returns 409. Mutable resource actions use
     If-Match with the observed revision and return 409 on stale revisions.

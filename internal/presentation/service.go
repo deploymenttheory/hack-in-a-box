@@ -41,7 +41,13 @@ func (s Service) now() time.Time {
 
 func controller(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID) error {
 	p, err := q.Person(ctx, actor)
-	if err != nil || !p.Active {
+	if errors.Is(err, pgx.ErrNoRows) {
+		return access.ErrForbidden
+	}
+	if err != nil {
+		return fmt.Errorf("read presentation identity: %w", err)
+	}
+	if !p.Active {
 		return access.ErrForbidden
 	}
 	roles, err := q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
@@ -476,23 +482,14 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 	if len(token) < 32 || len(token) > 200 {
 		return Snapshot{}, access.ErrUnauthenticated
 	}
+	if s.Pool == nil {
+		return Snapshot{}, database.ErrDatabase
+	}
 	var result Snapshot
 	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
-		e, err := locked(ctx, q, eventID)
+		e, err := s.displayEvent(ctx, q, eventID, token)
 		if err != nil {
-			return access.ErrUnauthenticated
-		}
-		digest := sha256.Sum256([]byte(token))
-		pairing, err := q.DisplayPairingByHash(
-			ctx,
-			dbgen.DisplayPairingByHashParams{EventID: eventID, TokenHash: digest[:]},
-		)
-		if err != nil || pairing.RevokedAt.Valid || !s.now().Before(pairing.ExpiresAt) ||
-			!e.WritesAllowed {
-			return access.ErrUnauthenticated
-		}
-		if err = controller(ctx, q, pairing.IssuerID, eventID); err != nil {
-			return access.ErrUnauthenticated
+			return err
 		}
 		row, err := state(ctx, q, eventID)
 		if err != nil {
@@ -634,4 +631,41 @@ func decision(
 		return fmt.Errorf("record display decision: %w", err)
 	}
 	return nil
+}
+
+func (s Service) displayEvent(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	token string,
+) (dbgen.Event, error) {
+	e, err := locked(ctx, q, eventID)
+	if errors.Is(err, access.ErrNotFound) {
+		return dbgen.Event{}, access.ErrUnauthenticated
+	}
+	if err != nil {
+		return dbgen.Event{}, err
+	}
+	digest := sha256.Sum256([]byte(token))
+	pairing, err := q.DisplayPairingByHash(
+		ctx,
+		dbgen.DisplayPairingByHashParams{EventID: eventID, TokenHash: digest[:]},
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return dbgen.Event{}, access.ErrUnauthenticated
+	}
+	if err != nil {
+		return dbgen.Event{}, fmt.Errorf("read display capability: %w", err)
+	}
+	if pairing.RevokedAt.Valid || !s.now().Before(pairing.ExpiresAt) ||
+		!e.WritesAllowed {
+		return dbgen.Event{}, access.ErrUnauthenticated
+	}
+	if err = controller(ctx, q, pairing.IssuerID, eventID); err != nil {
+		if errors.Is(err, access.ErrForbidden) {
+			return dbgen.Event{}, access.ErrUnauthenticated
+		}
+		return dbgen.Event{}, err
+	}
+	return e, nil
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -431,5 +432,91 @@ func TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields(t *
 		access.ErrInvalid,
 	) {
 		t.Fatalf("invalid source identity accepted: %v", err)
+	}
+}
+
+func TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	paired := f.pair(f.mc.ID)
+	source := content.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
+	released := func(eventID uuid.UUID, audience access.ContentAudience) uuid.UUID {
+		t.Helper()
+		id := uuid.New()
+		p, err := source.Save(
+			ctx,
+			f.owner.ID,
+			eventID,
+			id,
+			0,
+			content.Input{
+				Kind: "page",
+				Document: content.Document{
+					Title:    "Restricted source title",
+					Markdown: "Not a room body",
+					Audience: audience,
+				},
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, action := range []string{"review", "approve", "release"} {
+			p, err = source.Action(
+				ctx,
+				f.owner.ID,
+				eventID,
+				id,
+				p.Revision,
+				action,
+				"Synthetic content approval",
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		return id
+	}
+	foreignEvent := testdb.Event(t, f.pool, f.owner.ID)
+	foreign := released(foreignEvent, access.ContentAudience{Confirmed: true})
+	team, err := dbgen.New(f.pool).
+		CreateHackTeam(ctx, dbgen.CreateHackTeamParams{EventID: f.id, ID: uuid.New(), Name: "Private team"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	private := released(f.id, access.ContentAudience{Teams: []uuid.UUID{team.ID}})
+	c := event.DefaultConfiguration()
+	c.LiveStart = f.now.AddDate(0, 0, 8)
+	c.LiveEnd = c.LiveStart.Add(8 * time.Hour)
+	c.TeamFreeze = f.now.Add(12 * time.Hour)
+	c.AdmissionCutoff = c.TeamFreeze.Add(-time.Hour)
+	c.SubmissionCutoff = c.LiveStart.Add(6 * time.Hour)
+	data, _ := json.Marshal(c)
+	f.exec("UPDATE events SET configuration=$2 WHERE id=$1", f.id, data)
+	challengeID := uuid.New()
+	if _, err = source.Save(
+		ctx,
+		f.owner.ID,
+		f.id,
+		challengeID,
+		0,
+		content.Input{
+			Kind: "challenge",
+			Document: content.Document{
+				Title:    "Early challenge secret",
+				Markdown: "Not published yet",
+				Audience: access.ContentAudience{Confirmed: true},
+			},
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []uuid.UUID{foreign, private, challengeID} {
+		f.program([]Cue{{ID: uuid.New(), Title: "Linked cue must remain withheld", ContentID: &id}})
+		f.change(f.mc.ID, Command{Action: "advance"})
+		p := f.snapshot(paired.Token)
+		if p.Current != nil || p.Next != nil {
+			t.Fatalf("restricted source %s reached a paired display: %+v", id, p)
+		}
 	}
 }
