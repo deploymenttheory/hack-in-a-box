@@ -229,3 +229,16 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
   .credential-inventory-table .actions { display: grid; }
   .credential-inventory-table .actions button { white-space: normal; height: auto; min-height: 2.25rem; text-align: left; }
 }
+
+.mc-console .mc-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.mc-console fieldset { margin: 20px 0; min-width: 0; }
+.cue-preview { padding: 18px; border: 1px solid var(--border); border-radius: 12px; min-width: 0; overflow-wrap: anywhere; }
+.cue-text { white-space: pre-wrap; }
+.cue-url { overflow-wrap: anywhere; font-size: .9rem; }
+.mc-countdown { font-size: clamp(2.5rem, 9vw, 4.5rem); font-variant-numeric: tabular-nums; margin: 18px 0; }
+.cue-list { padding-left: 24px; }
+.cue-list li { margin: 10px 0; overflow-wrap: anywhere; }
+.cue-list button { height: auto; min-height: 40px; white-space: normal; text-align: left; }
+.mc-console .actions { flex-wrap: wrap; }
+.mc-console input, .mc-console textarea { max-width: 100%; }
+@media (max-width: 650px) { .mc-console .mc-previews { grid-template-columns: 1fr; } }

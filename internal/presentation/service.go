@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -53,7 +52,7 @@ func controller(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID)
 	if err != nil {
 		return fmt.Errorf("read presentation authority: %w", err)
 	}
-	if !slices.Contains(roles, "organiser") && !slices.Contains(roles, "mc") {
+	if !access.HasPresentationAuthority(roles) {
 		return access.ErrForbidden
 	}
 	return nil

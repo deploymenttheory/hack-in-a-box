@@ -1,0 +1,18 @@
+# MC console verification
+
+Issue #86 adds the MC console to the independently built admin portal. The participant build does not import its controller, rehearsal or pairing components. Event metadata exposes `can_present` for the current active organiser/MC role; backend operations independently recheck the same role rule. Platform administration alone does not grant console authority. Read-only event state and failed polling disable controls without discarding a rehearsal.
+
+The console polls the current controller snapshot, previews the approved current/next cues and derives its countdown from the server's remaining time plus elapsed monotonic browser time. It never advances at zero. Back, approved-cue jump, hold, resume, countdown adjustment and finishing the program require an explicit command with the reviewed cue revision, CSRF token and reason.
+
+Rehearsal selection and editing remain local. Saving changes only the saved draft; activation explicitly approves and starts the selected saved rehearsal in one server operation. A competing console revision blocks further commands and preserves local rehearsal edits until the operator reviews the latest state and explicitly chooses to use its revision. There is no automatic mutation retry. The UI does not offer a resource directory or picker: it edits approved room fields and preserves existing linked references, whose release/privacy guards remain on the server. React renders titles/text as text; cue links must be HTTPS without embedded credentials.
+
+Urgent announcements use a separate cue/timer. The UI identifies the preserved planned return cue, blocks planned activation during the override and provides an explicit Return to schedule command. Last-seen/stale display metadata describes successful authorized contact, not confirmed connectivity or rendering. New pairing secrets appear once in component memory, never in URLs or browser storage; dismissal or leaving the console removes them. Revocation uses normal current-role, revision and CSRF checks.
+
+## Evidence
+
+- Real PostgreSQL/race HTTP test `TestCurrentMCUsesIndependentAdminSessionAndLosesConsoleOnRevocation` proves a current non-admin MC can enter the independent admin session, discover their event and open the console. A substituted public cookie fails401; a platform administrator without the role fails403. Removing MC while retaining unrelated event visibility changes `can_present` to false and denies console access through the existing session.
+- Real PostgreSQL/race presentation/access/event suites pass after sharing the current-role rule. Existing cue, override, capability-revocation, source-projection and revision-concurrency tests remain in force.
+- Desktop/mobile browser scenarios cover rehearsal and saved-draft isolation, explicit activation, hold/resume/countdown, approved back/jump/finish, urgent override and explicit return, two simultaneous consoles with a rejected preserved rehearsal, pairing secret handling/stale metadata/revocation, and disabling controls after authority loss.
+- Hostile markup and long synthetic text/links render as text without script/image execution or horizontal overflow. Desktop/mobile screenshots include activation, urgent return, a preserved conflict and display contact. Generated contracts, Go/frontend lint and both frontend builds are checked; the participant JavaScript bundle excludes MC-console strings.
+
+The browser scenarios use synthetic deterministic API fixtures to isolate UI behavior. Actual session isolation, current-role authorization and transactional concurrency use PostgreSQL domain/HTTP integration tests rather than browser route mocks.

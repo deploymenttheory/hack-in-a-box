@@ -283,6 +283,13 @@ func (s Service) view(
 			view.ChallengePublication = &at
 		}
 	}
+	view.CanPresent = policy.Authorize(
+		ctx,
+		actor,
+		row.ID,
+		row.ID,
+		access.PresentationControl,
+	) == nil
 	view.CanReadStaff = policy.Authorize(ctx, actor, row.ID, row.ID, access.StaffRead) == nil
 	view.CanReadAttendance = policy.Authorize(ctx, actor, row.ID, row.ID, access.RosterRead) == nil
 	view.CanReadLogistics = policy.Authorize(
