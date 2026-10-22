@@ -5,7 +5,7 @@ export const person = { id: '1ca7d59b-3160-48b7-99b7-aad2cb648d64', display_name
 export const firstID = '8b4917c1-f27a-40c8-838b-a7fd047c4313'
 export const secondID = 'b9eb455e-e9c8-488f-b16a-7da3f0f25b30'
 export function fixtureEvent(id = firstID, name = 'North Star Hack'): components['schemas']['Event'] {
-  return { id, name, slug: name.toLowerCase().replaceAll(' ', '-'), owner_id: person.id, revision: 1, stage: 'draft', confirmed_attendees: 0, can_edit: true, can_manage_owner: true, can_read_staff: true, can_transition: true, blockers: [], challenge_publication: '2027-06-13T09:00:00Z', published_at: null,
+  return { id, name, slug: name.toLowerCase().replaceAll(' ', '-'), owner_id: person.id, revision: 1, stage: 'draft', confirmed_attendees: 0, can_present: true, can_edit: true, can_manage_owner: true, can_read_staff: true, can_transition: true, blockers: [], challenge_publication: '2027-06-13T09:00:00Z', published_at: null,
     configuration: { description: 'A shared place to build.', timezone: 'Europe/London', venue: 'Synthetic venue', capacity: 200, minimum_attendance: 30, live_start: '2027-06-20T09:00:00Z', live_end: '2027-06-20T17:00:00Z', admission_cutoff: '2027-06-12T09:00:00Z', team_freeze: '2027-06-12T10:00:00Z', submission_cutoff: '2027-06-20T16:00:00Z', dst_choice: '', calendar: { working_days: [1, 2, 3, 4, 5], excluded_dates: [] }, schedule: [] } }
 }
 export async function mockWorkspace(page: Page) {

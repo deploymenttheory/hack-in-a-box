@@ -14,24 +14,25 @@ import (
 )
 
 const (
-	TeamFileWrite    Action = "team.file.write"
-	EventRead        Action = "event.read"
-	RosterRead       Action = "attendance.read"
-	AttendanceManage Action = "attendance.manage"
-	EventEdit        Action = "event.edit"
-	StaffManage      Action = "staff.manage"
-	StaffRead        Action = "staff.read"
-	OwnershipManage  Action = "ownership.manage"
-	TeamRead         Action = "team.read"
-	AssessmentRead   Action = "assessment.read"
-	CredentialRead   Action = "credential.read" // #nosec G101 -- Policy action name; contains no credential.
-	BriefRead        Action = "brief.read"
-	PresentationRead Action = "presentation.read"
-	LogisticsRead    Action = "logistics.read"
-	MediaRead        Action = "media.read"
-	ProfileRead      Action = "profile.read"
-	ProfileExport    Action = "profile.export"
-	ProfileManage    Action = "profile.manage"
+	TeamFileWrite       Action = "team.file.write"
+	EventRead           Action = "event.read"
+	RosterRead          Action = "attendance.read"
+	AttendanceManage    Action = "attendance.manage"
+	EventEdit           Action = "event.edit"
+	StaffManage         Action = "staff.manage"
+	StaffRead           Action = "staff.read"
+	OwnershipManage     Action = "ownership.manage"
+	TeamRead            Action = "team.read"
+	AssessmentRead      Action = "assessment.read"
+	CredentialRead      Action = "credential.read" // #nosec G101 -- Policy action name; contains no credential.
+	BriefRead           Action = "brief.read"
+	PresentationRead    Action = "presentation.read"
+	PresentationControl Action = "presentation.control"
+	LogisticsRead       Action = "logistics.read"
+	MediaRead           Action = "media.read"
+	ProfileRead         Action = "profile.read"
+	ProfileExport       Action = "profile.export"
+	ProfileManage       Action = "profile.manage"
 )
 
 // EventPolicy always reads current authority. Platform administration permits
@@ -68,6 +69,12 @@ func (p EventPolicy) Authorize(
 		return fmt.Errorf("load current grants: %w", err)
 	}
 	organiser := slices.Contains(roles, "organiser")
+	if action == PresentationControl {
+		if HasPresentationAuthority(roles) {
+			return nil
+		}
+		return ErrForbidden
+	}
 	if action == OwnershipManage {
 		if person.PlatformAdmin ||
 			(record.OwnerID != nil && *record.OwnerID == actor && organiser) {
@@ -248,4 +255,10 @@ func (p EventPolicy) now() time.Time {
 		return p.Clock()
 	}
 	return time.Now()
+}
+
+// HasPresentationAuthority is shared by console discovery and controller operations.
+// Callers must also verify a current active person and load current event roles.
+func HasPresentationAuthority(roles []string) bool {
+	return slices.Contains(roles, "organiser") || slices.Contains(roles, "mc")
 }

@@ -1659,6 +1659,8 @@ export interface components {
             /** Format: int64 */
             confirmed_attendees: number;
             blockers: components["schemas"]["Blocker"][];
+            /** @description Current organiser or MC may open the presentation console; operations still require current authority and a writable event. */
+            can_present: boolean;
             can_edit: boolean;
             can_manage_owner: boolean;
             can_read_staff: boolean;

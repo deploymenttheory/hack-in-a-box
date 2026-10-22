@@ -2443,6 +2443,7 @@ components:
         - published_at
         - confirmed_attendees
         - blockers
+        - can_present
         - can_edit
         - can_manage_owner
         - can_read_staff
@@ -2490,6 +2491,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Blocker'
+        can_present:
+          type: boolean
+          description: Current organiser or MC may open the presentation console; operations still require current authority and a writable event.
         can_edit:
           type: boolean
         can_manage_owner:

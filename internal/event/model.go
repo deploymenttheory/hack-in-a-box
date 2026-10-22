@@ -78,6 +78,7 @@ type View struct {
 	PublishedAt          *time.Time    `json:"published_at"`
 	ConfirmedAttendees   int64         `json:"confirmed_attendees"`
 	Blockers             []Issue       `json:"blockers"`
+	CanPresent           bool          `json:"can_present"`
 	CanEdit              bool          `json:"can_edit"`
 	CanManageOwner       bool          `json:"can_manage_owner"`
 	CanReadStaff         bool          `json:"can_read_staff"`
