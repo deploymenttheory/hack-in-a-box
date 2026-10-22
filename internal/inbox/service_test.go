@@ -479,6 +479,15 @@ func TestInboxScopedOccurrencesDeduplicateIndependentlyAndIntersectCurrentAudien
 	if err != nil || len(page.Items) != 3 {
 		t.Fatalf("independent occurrence dedup: %+v %v", page, err)
 	}
+	first, err := f.service.List(ctx, f.person.ID, nil, nil, 1)
+	if err != nil || len(first.Items) != 1 || first.NextCursor == nil || first.Unread != 3 {
+		t.Fatalf("first authorised page: %+v %v", first, err)
+	}
+	second, err := f.service.List(ctx, f.person.ID, nil, first.NextCursor, 1)
+	if err != nil || len(second.Items) != 1 || second.Items[0].ID == first.Items[0].ID ||
+		second.Unread != 3 {
+		t.Fatalf("next authorised page: %+v %v", second, err)
+	}
 	f.service.ScopePolicy = syntheticScope{recipient: f.person.ID, binding: "changed-intent"}
 	if _, err = deliver(); !errors.Is(err, access.ErrConflict) {
 		t.Fatalf("changed scope binding silently reused: %v", err)
@@ -490,5 +499,103 @@ func TestInboxScopedOccurrencesDeduplicateIndependentlyAndIntersectCurrentAudien
 	}
 	if count, err := deliver(); err != nil || count != 0 {
 		t.Fatalf("scope expanded approved audience: %d %v", count, err)
+	}
+}
+
+func TestInboxContentTeamReassignmentAndCrossEventSourceIsolation(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	team, otherTeam, resource := uuid.New(), uuid.New(), uuid.New()
+	for _, id := range []uuid.UUID{team, otherTeam} {
+		f.exec(
+			t,
+			"INSERT INTO hack_teams(event_id,id,name,state) VALUES($1,$2,'Synthetic team','published')",
+			f.eventID,
+			id,
+		)
+	}
+	f.exec(
+		t,
+		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",
+		f.eventID,
+		team,
+		f.person.ID,
+	)
+	f.exec(
+		t,
+		"INSERT INTO content_items(event_id,id,kind,revision,version,state) VALUES($1,$2,'page',1,1,'draft')",
+		f.eventID,
+		resource,
+	)
+	document, _ := json.Marshal(
+		map[string]any{
+			"title":    "PRIVATE-TEAM-TITLE",
+			"markdown": "Synthetic team resource",
+			"audience": map[string]any{
+				"confirmed": false,
+				"roles":     []string{},
+				"teams":     []uuid.UUID{team},
+			},
+		},
+	)
+	f.exec(
+		t,
+		"INSERT INTO content_versions(event_id,content_id,version,document,actor_id,created_at) VALUES($1,$2,1,$3,$4,now())",
+		f.eventID,
+		resource,
+		document,
+		f.owner.ID,
+	)
+	f.exec(
+		t,
+		"UPDATE content_items SET state='released',released_version=1,released_at=$3 WHERE event_id=$1 AND id=$2",
+		f.eventID,
+		resource,
+		f.now.Add(-time.Hour),
+	)
+	record := func(eventID uuid.UUID) error {
+		return database.Within(ctx, f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+			return f.service.RecordResourceInTransaction(
+				ctx,
+				tx,
+				eventID,
+				f.person.ID,
+				Source{Kind: "content", ID: resource, Version: 1},
+			)
+		})
+	}
+	if err := record(f.eventID); err != nil {
+		t.Fatal(err)
+	}
+	otherEvent := testdb.Event(t, f.pool, f.owner.ID)
+	if err := record(otherEvent); !errors.Is(err, access.ErrNotFound) {
+		t.Fatalf("cross-event source accepted: %v", err)
+	}
+	page, err := f.service.List(ctx, f.person.ID, &f.eventID, nil, 1)
+	if err != nil || len(page.Items) != 1 {
+		t.Fatalf("team inbox: %+v %v", page, err)
+	}
+	f.exec(
+		t,
+		"UPDATE hack_team_members SET team_id=$3 WHERE event_id=$1 AND person_id=$2 AND snapshot='published'",
+		f.eventID,
+		f.person.ID,
+		otherTeam,
+	)
+	read := true
+	if _, err = f.service.Open(
+		ctx,
+		f.person.ID,
+		page.Items[0].ID,
+		&read,
+	); !errors.Is(
+		err,
+		access.ErrNotFound,
+	) {
+		t.Fatalf("reassigned team retained source read: %v", err)
+	}
+	page, err = f.service.List(ctx, f.person.ID, nil, nil, 1)
+	if err != nil || len(page.Items) != 0 || page.Unread != 0 || page.NextCursor != nil {
+		t.Fatalf("reassigned team leaked preview/count: %+v %v", page, err)
 	}
 }
