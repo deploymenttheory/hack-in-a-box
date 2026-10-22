@@ -179,7 +179,8 @@ func (s Service) completeFinalCards(
 		}
 		if err = s.evidence(
 			ctx,
-			q,
+			tx,
+			card.AuthorID,
 			eventID,
 			teamID,
 			card.Scores,

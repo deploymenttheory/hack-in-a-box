@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
@@ -90,7 +91,8 @@ func (s Service) Change(
 		}
 		if err = s.evidence(
 			ctx,
-			q,
+			tx,
+			actor,
 			eventID,
 			teamID,
 			values,
@@ -182,12 +184,14 @@ func (s Service) Change(
 
 func (s Service) evidence(
 	ctx context.Context,
-	q *dbgen.Queries,
+	tx pgx.Tx,
+	actor uuid.UUID,
 	eventID, teamID uuid.UUID,
 	scores []CategoryScore,
 	submitted, complete bool,
 	frozen *int64,
 ) error {
+	q := dbgen.New(tx)
 	for _, score := range scores {
 		if complete && score.Pending {
 			return access.ErrConflict
@@ -198,22 +202,18 @@ func (s Service) evidence(
 		for _, reference := range score.Evidence {
 			switch reference.Kind {
 			case "observation":
-				rows, err := q.MentorObservationHistory(
+				if err := (observations.Service{Pool: s.Pool, Now: s.Now}).AuthorizeEvidenceInTransaction(
 					ctx,
-					dbgen.MentorObservationHistoryParams{
-						EventID:       eventID,
-						TeamID:        teamID,
-						ID:            *reference.ID,
-						BeforeVersion: pgtype.Int8{Int64: *reference.Version + 1, Valid: true},
-						PageSize:      1,
-					},
-				)
-				if err != nil {
-					return fmt.Errorf("check observation evidence reference: %w", err)
+					tx,
+					actor,
+					eventID,
+					teamID,
+					*reference.ID,
+					*reference.Version,
+				); err != nil {
+					return fmt.Errorf("authorize native private evidence reference: %w", err)
 				}
-				if len(rows) != 1 || rows[0].Version != *reference.Version {
-					return access.ErrNotFound
-				}
+
 			case "submission":
 				if frozen != nil && *reference.Version != *frozen {
 					return access.ErrConflict
