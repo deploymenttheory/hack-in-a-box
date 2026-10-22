@@ -58,6 +58,22 @@ rerun during this audit. This documentation PR still needs its own final-head CI
 
 ## Aggregate conclusion and limits
 
+The audit found and corrected one worker-boundary defect: when `Execute` deferred
+an unapproved or currently ineligible operation, `Work` returned success and
+River completed its job. Retained completed-job uniqueness then obstructed later
+reconciliation. The real-worker regression reproduced both paths as
+`deferred work became completed instead of remaining scheduled; deliveries=0`.
+`Work` now snoozes while the operation remains pending and uncancelled, preserving
+the same operation key and current-authority checks without consuming retries or
+changing River uniqueness. Approval/eligibility restoration resumes one delivery;
+cancellation completes the deferred job without an effect. The complete jobs
+race suite passed in 20.502s, with zero scoped lint findings. The Teams adapter's
+independent real-worker 429/cooldown reproduction also caught this same defect:
+it failed before the correction in 4.77s and passed with fix commit `14f1489` in
+35.768s. That local TLS fixture observed one rate-limited request followed by two
+accepted sends, including a second operation queued during the shared cooldown.
+The complete Teams integration acceptance remains with #80.
+
 The foundation has an explicit generated API boundary with current server-side
 resource policies, durable transaction/worker behavior, private persistent
 storage, safe audit/operations views and exercised failure/recovery paths. The
