@@ -176,6 +176,8 @@ type CommunicationFact struct {
 }
 
 type CommunicationOccurrence struct {
+	ReviewRevision int64
+	ChannelReports []byte
 	EventID        uuid.UUID
 	ID             uuid.UUID
 	BindingID      uuid.UUID

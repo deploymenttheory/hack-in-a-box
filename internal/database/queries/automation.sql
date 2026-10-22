@@ -45,3 +45,9 @@ SELECT * FROM communication_publication_approvals WHERE event_id=$1 AND id=$2;
 
 -- name: SavePublicationPlanApproval :exec
 INSERT INTO communication_publication_approvals(event_id,id,campaign_id,campaign_version,source_id,source_version,preview_id,actor_id,document,reason,approved,preview_plan_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12);
+
+-- name: ReviewAutomationOccurrence :exec
+UPDATE communication_occurrences SET state='pending',reason='explicit_review',review_until=$3,review_revision=review_revision+1,scope_binding=$4,operation_id=NULL,updated_at=now() WHERE event_id=$1 AND id=$2;
+
+-- name: RecordAutomationChannelReports :exec
+UPDATE communication_occurrences SET state=$3,reason=$4,channel_reports=$5,updated_at=now() WHERE event_id=$1 AND id=$2;

@@ -111,7 +111,15 @@ func TestExpectedPublicationPlanRequiresActualReleaseAndPreservesGenericDraft(t 
 	service, source := f.approvedBrief()
 	f.campaign("brief_release", "Read {{brief.title}}, {{person.name}}", false)
 	f.publicationBinding(source)
-	if page, readErr := service.Read(t.Context(), f.person.ID, f.id, source.ID, false, 0); readErr == nil || strings.Contains(page.Document.Title, "PRIVATE-SOURCE-TITLE-CANARY") {
+	if page, readErr := service.Read(
+		t.Context(),
+		f.person.ID,
+		f.id,
+		source.ID,
+		false,
+		0,
+	); readErr == nil ||
+		strings.Contains(page.Document.Title, "PRIVATE-SOURCE-TITLE-CANARY") {
 		t.Fatal("typed plan granted an attendee early source access")
 	}
 	detail, err := f.s.Composer.Campaign(t.Context(), f.owner.ID, f.id, f.campaignID)

@@ -28,8 +28,10 @@ func loadBinding(ctx context.Context, q *dbgen.Queries, eventID, id uuid.UUID) (
 	return binding, nil
 }
 
-func occurrence(row dbgen.CommunicationOccurrence) Occurrence {
+func occurrence(row dbgen.CommunicationOccurrence) (Occurrence, error) {
 	o := Occurrence{
+		ReviewRevision: row.ReviewRevision,
+		ChannelReports: map[string]ChannelReport{},
 		ID:             row.ID,
 		BindingID:      row.BindingID,
 		BindingVersion: row.BindingVersion,
@@ -41,10 +43,13 @@ func occurrence(row dbgen.CommunicationOccurrence) Occurrence {
 		State:          row.State,
 		Reason:         row.Reason,
 	}
+	if err := json.Unmarshal(row.ChannelReports, &o.ChannelReports); err != nil {
+		return Occurrence{}, fmt.Errorf("decode retained channel evidence: %w", err)
+	}
 	if row.ReviewUntil.Valid {
 		o.ReviewUntil = &row.ReviewUntil.Time
 	}
-	return o
+	return o, nil
 }
 
 func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, error) {
@@ -87,7 +92,11 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 		return result, fmt.Errorf("read automation occurrences: %w", err)
 	}
 	for _, row := range rows {
-		result.Occurrences = append(result.Occurrences, occurrence(row))
+		current, decodeErr := occurrence(row)
+		if decodeErr != nil {
+			return result, decodeErr
+		}
+		result.Occurrences = append(result.Occurrences, current)
 	}
 	return result, nil
 }

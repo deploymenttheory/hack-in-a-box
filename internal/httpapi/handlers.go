@@ -17,6 +17,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
@@ -50,6 +51,7 @@ import (
 
 type Dependencies struct {
 	Clarifications clarification.Service
+	Automation     *automation.Service
 	TeamsWorkflow  *teamsworkflow.Service
 	SMTP           *smtpintegration.Service
 	MailContacts   mailcontact.Service

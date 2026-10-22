@@ -41,6 +41,8 @@ CREATE TABLE communication_publication_approvals (
 );
 CREATE TRIGGER communication_publication_approvals_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON communication_publication_approvals FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TABLE communication_occurrences (
+ review_revision bigint NOT NULL DEFAULT 0 CHECK(review_revision>=0),
+ channel_reports jsonb NOT NULL DEFAULT '{}'::jsonb,
  event_id uuid NOT NULL REFERENCES events(id),
  id uuid NOT NULL,
  binding_id uuid NOT NULL,
@@ -52,7 +54,7 @@ CREATE TABLE communication_occurrences (
  due_at timestamptz NOT NULL,
  deadline timestamptz NOT NULL,
  scope_binding text NOT NULL,
- state text NOT NULL CHECK(state IN ('pending','paused','missed','blocked','queued','cancelled')),
+ state text NOT NULL CHECK(state IN ('pending','paused','missed','blocked','queued','partially_queued','cancelled')),
  reason text NOT NULL DEFAULT '',
  review_until timestamptz,
  operation_id uuid UNIQUE REFERENCES operations(id),
@@ -89,7 +91,7 @@ CREATE FUNCTION retained_communication_occurrence(e uuid,o uuid,at_time timestam
  JOIN event_memberships authority ON authority.event_id=av.event_id AND authority.person_id=av.actor_id AND authority.role='organiser' AND authority.active
  JOIN people approver ON approver.id=av.actor_id AND approver.active
  WHERE co.event_id=e AND co.id=o AND co.source_kind='outcome.follow_up'
- AND co.state IN ('pending','queued') AND COALESCE(co.review_until,co.deadline)>=at_time
+ AND co.state IN ('pending','queued','partially_queued') AND COALESCE(co.review_until,co.deadline)>=at_time
  AND av.version=(SELECT max(v.version) FROM communication_automation_versions v WHERE v.event_id=e AND v.id=av.id)
  AND COALESCE((av.document->>'cancelled')::boolean,false)=false AND av.document->>'approved_at' IS NOT NULL
  AND av.document->'definition'->>'trigger'='outcome.follow_up'

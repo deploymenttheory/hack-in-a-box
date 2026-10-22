@@ -98,7 +98,7 @@ func (q *Queries) AutomationEvents(ctx context.Context, eventID uuid.UUID) ([]uu
 }
 
 const automationOccurrence = `-- name: AutomationOccurrence :one
-SELECT event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 AND id=$2
+SELECT review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 AND id=$2
 `
 
 type AutomationOccurrenceParams struct {
@@ -110,6 +110,8 @@ func (q *Queries) AutomationOccurrence(ctx context.Context, arg AutomationOccurr
 	row := q.db.QueryRow(ctx, automationOccurrence, arg.EventID, arg.ID)
 	var i CommunicationOccurrence
 	err := row.Scan(
+		&i.ReviewRevision,
+		&i.ChannelReports,
 		&i.EventID,
 		&i.ID,
 		&i.BindingID,
@@ -132,7 +134,7 @@ func (q *Queries) AutomationOccurrence(ctx context.Context, arg AutomationOccurr
 }
 
 const automationOccurrences = `-- name: AutomationOccurrences :many
-SELECT event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 ORDER BY created_at DESC,id DESC LIMIT 200
+SELECT review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 ORDER BY created_at DESC,id DESC LIMIT 200
 `
 
 func (q *Queries) AutomationOccurrences(ctx context.Context, eventID uuid.UUID) ([]CommunicationOccurrence, error) {
@@ -145,6 +147,8 @@ func (q *Queries) AutomationOccurrences(ctx context.Context, eventID uuid.UUID) 
 	for rows.Next() {
 		var i CommunicationOccurrence
 		if err := rows.Scan(
+			&i.ReviewRevision,
+			&i.ChannelReports,
 			&i.EventID,
 			&i.ID,
 			&i.BindingID,
@@ -229,6 +233,29 @@ func (q *Queries) PublicationPlanApproval(ctx context.Context, arg PublicationPl
 	return i, err
 }
 
+const recordAutomationChannelReports = `-- name: RecordAutomationChannelReports :exec
+UPDATE communication_occurrences SET state=$3,reason=$4,channel_reports=$5,updated_at=now() WHERE event_id=$1 AND id=$2
+`
+
+type RecordAutomationChannelReportsParams struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	State          string
+	Reason         string
+	ChannelReports []byte
+}
+
+func (q *Queries) RecordAutomationChannelReports(ctx context.Context, arg RecordAutomationChannelReportsParams) error {
+	_, err := q.db.Exec(ctx, recordAutomationChannelReports,
+		arg.EventID,
+		arg.ID,
+		arg.State,
+		arg.Reason,
+		arg.ChannelReports,
+	)
+	return err
+}
+
 const recordAutomationHistory = `-- name: RecordAutomationHistory :exec
 INSERT INTO communication_automation_history(event_id,occurrence_id,binding_id,actor_id,action,reason) VALUES($1,$2,$3,$4,$5,$6)
 `
@@ -250,6 +277,27 @@ func (q *Queries) RecordAutomationHistory(ctx context.Context, arg RecordAutomat
 		arg.ActorID,
 		arg.Action,
 		arg.Reason,
+	)
+	return err
+}
+
+const reviewAutomationOccurrence = `-- name: ReviewAutomationOccurrence :exec
+UPDATE communication_occurrences SET state='pending',reason='explicit_review',review_until=$3,review_revision=review_revision+1,scope_binding=$4,operation_id=NULL,updated_at=now() WHERE event_id=$1 AND id=$2
+`
+
+type ReviewAutomationOccurrenceParams struct {
+	EventID      uuid.UUID
+	ID           uuid.UUID
+	ReviewUntil  pgtype.Timestamptz
+	ScopeBinding string
+}
+
+func (q *Queries) ReviewAutomationOccurrence(ctx context.Context, arg ReviewAutomationOccurrenceParams) error {
+	_, err := q.db.Exec(ctx, reviewAutomationOccurrence,
+		arg.EventID,
+		arg.ID,
+		arg.ReviewUntil,
+		arg.ScopeBinding,
 	)
 	return err
 }
@@ -286,7 +334,7 @@ func (q *Queries) SaveAutomationBinding(ctx context.Context, arg SaveAutomationB
 const saveAutomationOccurrence = `-- name: SaveAutomationOccurrence :one
 INSERT INTO communication_occurrences(event_id,id,binding_id,binding_version,source_kind,source_id,source_revision,source_key,due_at,deadline,scope_binding,state,reason)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-ON CONFLICT(event_id,binding_id,binding_version,source_key) DO UPDATE SET source_key=EXCLUDED.source_key RETURNING event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at
+ON CONFLICT(event_id,binding_id,binding_version,source_key) DO UPDATE SET source_key=EXCLUDED.source_key RETURNING review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at
 `
 
 type SaveAutomationOccurrenceParams struct {
@@ -323,6 +371,8 @@ func (q *Queries) SaveAutomationOccurrence(ctx context.Context, arg SaveAutomati
 	)
 	var i CommunicationOccurrence
 	err := row.Scan(
+		&i.ReviewRevision,
+		&i.ChannelReports,
 		&i.EventID,
 		&i.ID,
 		&i.BindingID,

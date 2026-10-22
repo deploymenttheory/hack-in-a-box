@@ -1,6 +1,6 @@
 # Communication automation verification (#82)
 
-This branch is in progress. It is not a claim that all #82 journeys are complete. Provider composition, HTTP contracts, occurrence-aware SMTP/in-app/Teams routing, truthful unavailable-recipient reports and lifecycle integration coverage remain to finish. Help requests (#159) and official clarification publication (#161) have no actual implemented source journey yet, so their aggregate acceptance remains unmet. Outcome-specific 30/60/90-day production remains owned by #117.
+This branch is in progress. It is not a claim that all #82 journeys are complete. Provider composition, production occurrence-aware SMTP/in-app/Teams routing and lifecycle integration coverage remain to finish. HTTP contracts and transactional queue-report orchestration have local verification below; production adapter composition is still required. Help requests (#159) and official clarification publication (#161) have no actual implemented source journey yet, so their aggregate acceptance remains unmet. Outcome-specific 30/60/90-day production remains owned by #117.
 
 ## Tested domain boundaries
 
@@ -23,3 +23,11 @@ This branch is in progress. It is not a claim that all #82 journeys are complete
 The archive test uses the actual event transition and jobs execution path: an ordinary operation is cancelled while a specifically authorised retained follow-up survives; a resolved source prevents effects. Approval beyond the event privacy deadline fails. Publication tests use the real content Save/review/approve/Dispatch workflow: planned clock time alone creates no notification, the recorded guarded release produces one scoped notification, the generic campaign remains draft, and unknown variables are rejected by the existing template boundary.
 
 These are local checkpoint results. Final ordered migration checks must include merged #78/schema26, #79/schema27, #80/schema28 and #81/schema29 before schema30. Temporary dependency commits and the separately merged worker snooze fix must be removed on the final main rebase. Exact-head CI and the remaining journeys are still required before merge/readiness claims.
+
+## HTTP and queue-report checkpoint
+
+The organiser-only HTTP API and generated browser client expose durable bindings, review generation, pause/review/cancellation, named unresolved publication values and per-channel local queue evidence. Real HTTP checks cover current organiser authority, anonymous/outsider/platform-admin denial, wrong CSRF, valid stale revision conflict, arbitrary recipient rejection, cross-event denial and later role revocation: race PASS 5.841s. Generated contracts pass the repository generation command.
+
+Queue reports distinguish new provider intents, local in-app persistence, retained provider statuses and unavailable-person counts. `accepted` means relay/provider acceptance only. An all-unavailable report commits its evidence and records `blocked`; a mixed report records `partially_queued`, and already-persisted valid intents remain eligible under current authority. Explicit review increments the durable scope generation and requires every selected provider's current outstanding-effect guard before changing the binding. Provider identities retain deduplication across those reviewed generations.
+
+Real PostgreSQL recording-adapter orchestration checks for all-unavailable evidence and partial current-scope eligibility pass under race detection in 4.500s. These tests exercise transaction ownership at the automation seam; they do not substitute for actual SMTP verified-mailbox, immutable omission and accepted/ambiguous receipt integration, which is still pending adapter composition. Current existing domain regressions pass 13.560s and scoped lint has 0 issues at this checkpoint. The shared jobs callback lock-order defect is tracked separately in PR #191; it is not hidden in this feature branch.

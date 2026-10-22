@@ -76,8 +76,13 @@ func newFixture(t *testing.T) *fixture {
 		Channels: map[string]communications.ChannelProvider{"smtp": readyProvider{}},
 	}
 	f.s = &Service{Pool: pool, Composer: composer, Now: func() time.Time { return f.now }}
+	f.s.ReviewGuards = map[string]ReviewGuard{
+		"smtp": func(context.Context, pgx.Tx, uuid.UUID, uuid.UUID, int64, communications.DeliveryScope) error {
+			return nil
+		},
+	}
 	f.s.Providers = map[string]ProviderQueue{
-		"smtp": func(ctx context.Context, tx pgx.Tx, eventID, campaignID uuid.UUID, version int64, scope communications.DeliveryScope) (int, error) {
+		"smtp": func(ctx context.Context, tx pgx.Tx, eventID, campaignID uuid.UUID, version int64, scope communications.DeliveryScope) (ChannelReport, error) {
 			approved, err := composer.ResolveApprovedScopedCampaignInTransaction(
 				ctx,
 				tx,
@@ -88,7 +93,7 @@ func newFixture(t *testing.T) *fixture {
 				f.s,
 			)
 			if err != nil {
-				return 0, err
+				return ChannelReport{}, err
 			}
 			for _, person := range approved.Preview.Recipients {
 				if _, err = tx.Exec(
@@ -98,10 +103,10 @@ func newFixture(t *testing.T) *fixture {
 					scope.OccurrenceID,
 					person.PersonID,
 				); err != nil {
-					return 0, err
+					return ChannelReport{}, err
 				}
 			}
-			return len(approved.Preview.Recipients), nil
+			return ChannelReport{LocalPersisted: len(approved.Preview.Recipients)}, nil
 		},
 	}
 	outbox, err := jobs.New(

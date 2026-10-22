@@ -144,84 +144,8 @@ func (s Service) Change(
 				return fmt.Errorf("change automation binding: %w", err)
 			}
 		case "review_occurrence", "cancel_occurrence":
-			occurrence, err := q.AutomationOccurrence(
-				ctx,
-				dbgen.AutomationOccurrenceParams{EventID: eventID, ID: input.OccurrenceID},
-			)
-			if err != nil {
-				return fmt.Errorf("read automation review: %w", err)
-			}
-			if occurrence.State == "cancelled" {
-				return access.ErrConflict
-			}
-			state, reason, until := "cancelled", "organiser_cancelled", pgtype.Timestamptz{}
-			if input.Action == "review_occurrence" {
-				binding, err := loadBinding(ctx, q, eventID, occurrence.BindingID)
-				if err != nil {
-					return fmt.Errorf("change automation binding: %w", err)
-				}
-				until = pgtype.Timestamptz{
-					Time: s.now().
-						Add(time.Duration(binding.Definition.MaximumLatenessSeconds) * time.Second),
-					Valid: true,
-				}
-				state = "pending"
-				reason = "explicit_late_review"
-			}
-			if err = q.SetAutomationOccurrenceState(
-				ctx,
-				dbgen.SetAutomationOccurrenceStateParams{
-					EventID:     eventID,
-					ID:          occurrence.ID,
-					State:       state,
-					Reason:      reason,
-					ReviewUntil: until,
-				},
-			); err != nil {
-				return fmt.Errorf("record occurrence review: %w", err)
-			}
-			if input.Action == "review_occurrence" {
-				binding, err := loadBinding(ctx, q, eventID, occurrence.BindingID)
-				if err != nil {
-					return fmt.Errorf("change automation binding: %w", err)
-				}
-				scope := communications.DeliveryScope{OccurrenceID: occurrence.ID}
-				if _, err = s.ResolveInTransaction(
-					ctx,
-					tx,
-					eventID,
-					binding.Definition.CampaignID,
-					binding.Definition.CampaignVersion,
-					scope,
-				); err != nil {
-					return fmt.Errorf("change automation binding: %w", err)
-				}
-				if _, err = s.Composer.ResolveApprovedScopedCampaignInTransaction(
-					ctx,
-					tx,
-					eventID,
-					binding.Definition.CampaignID,
-					binding.Definition.CampaignVersion,
-					scope,
-					s,
-				); err != nil {
-					return fmt.Errorf("change automation binding: %w", err)
-				}
-				if err = s.ensureOperation(ctx, tx, occurrence); err != nil {
-					return fmt.Errorf("change automation binding: %w", err)
-				}
-			}
-			if err = history(
-				ctx,
-				q,
-				eventID,
-				&occurrence.BindingID,
-				&occurrence.ID,
-				&actor,
-				input.Action,
-				input.Reason,
-			); err != nil {
-				return fmt.Errorf("change automation binding: %w", err)
+			if err = s.changeOccurrence(ctx, tx, q, actor, eventID, input); err != nil {
+				return err
 			}
 		case "save", "approve", "cancel", "preview_publication", "approve_publication":
 			if err = s.changeBinding(ctx, tx, q, actor, eventID, input, &preview); err != nil {
@@ -487,4 +411,122 @@ func (s Service) approveGenericBinding(
 	binding.DueAt = approved.DueAt
 	binding.PublicationApprovalID = nil
 	return binding, nil
+}
+
+func (s Service) changeOccurrence(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	actor, eventID uuid.UUID,
+	input Command,
+) error {
+	occurrence, err := q.AutomationOccurrence(
+		ctx,
+		dbgen.AutomationOccurrenceParams{EventID: eventID, ID: input.OccurrenceID},
+	)
+	if err != nil {
+		return fmt.Errorf("read automation review: %w", err)
+	}
+	if occurrence.State == "cancelled" {
+		return access.ErrConflict
+	}
+	if input.Action == "cancel_occurrence" {
+		if err = q.SetAutomationOccurrenceState(
+			ctx,
+			dbgen.SetAutomationOccurrenceStateParams{
+				EventID:     eventID,
+				ID:          occurrence.ID,
+				State:       "cancelled",
+				Reason:      "organiser_cancelled",
+				ReviewUntil: occurrence.ReviewUntil,
+			},
+		); err != nil {
+			return fmt.Errorf("cancel occurrence: %w", err)
+		}
+	} else {
+		binding, err := loadBinding(ctx, q, eventID, occurrence.BindingID)
+		if err != nil {
+			return err
+		}
+		campaign, err := currentCampaign(ctx, q, eventID, binding.Definition.CampaignID)
+		if err != nil {
+			return err
+		}
+		scope := communications.DeliveryScope{OccurrenceID: occurrence.ID}
+		for _, channel := range campaign.Definition.Channels {
+			guard := s.ReviewGuards[channel]
+			if guard == nil {
+				return communications.ErrUnresolved
+			}
+			if err = guard(
+				ctx,
+				tx,
+				eventID,
+				binding.Definition.CampaignID,
+				binding.Definition.CampaignVersion,
+				scope,
+			); err != nil {
+				return fmt.Errorf("review outstanding provider effects: %w", err)
+			}
+		}
+		until := pgtype.Timestamptz{
+			Time: s.now().
+				Add(time.Duration(binding.Definition.MaximumLatenessSeconds) * time.Second),
+			Valid: true,
+		}
+		source := Source{
+			Kind:     occurrence.SourceKind,
+			ID:       occurrence.SourceID,
+			Revision: occurrence.SourceRevision,
+		}
+		if err = q.ReviewAutomationOccurrence(
+			ctx,
+			dbgen.ReviewAutomationOccurrenceParams{
+				EventID:      eventID,
+				ID:           occurrence.ID,
+				ReviewUntil:  until,
+				ScopeBinding: scopeBinding(binding, source, occurrence.ReviewRevision+1),
+			},
+		); err != nil {
+			return fmt.Errorf("record explicit occurrence review: %w", err)
+		}
+		if _, err = s.Composer.ResolveApprovedScopedCampaignInTransaction(
+			ctx,
+			tx,
+			eventID,
+			binding.Definition.CampaignID,
+			binding.Definition.CampaignVersion,
+			scope,
+			s,
+		); err != nil {
+			return fmt.Errorf("recheck reviewed occurrence: %w", err)
+		}
+		current, err := q.AutomationOccurrence(
+			ctx,
+			dbgen.AutomationOccurrenceParams{EventID: eventID, ID: occurrence.ID},
+		)
+		if err != nil {
+			return fmt.Errorf("read reviewed occurrence: %w", err)
+		}
+		if err = s.ensureOperation(ctx, tx, current); err != nil {
+			return err
+		}
+	}
+	// The old local orchestration operation is never reused across an explicit
+	// review. Provider identities still deduplicate previously accepted effects.
+	if occurrence.OperationID != nil {
+		if _, err = q.CancelOperation(ctx, *occurrence.OperationID); err != nil {
+			return fmt.Errorf("retire obsolete dispatch operation: %w", err)
+		}
+	}
+	return history(
+		ctx,
+		q,
+		eventID,
+		&occurrence.BindingID,
+		&occurrence.ID,
+		&actor,
+		input.Action,
+		input.Reason,
+	)
 }

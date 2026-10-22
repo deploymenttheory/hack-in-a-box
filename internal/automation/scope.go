@@ -27,11 +27,12 @@ func sourceKey(source Source) string {
 	return fmt.Sprintf("%s:%s:%d", source.Kind, source.ID, source.Revision)
 }
 
-func scopeBinding(binding Binding, source Source) string {
+func scopeBinding(binding Binding, source Source, review int64) string {
 	return hash(struct {
 		Binding   Binding
 		SourceKey string
-	}{binding, sourceKey(source)})
+		Review    int64
+	}{binding, sourceKey(source), review})
 }
 
 func currentCampaign(
@@ -107,7 +108,7 @@ func (s Service) ResolveInTransaction(
 		OccurredAt: row.DueAt,
 	}
 	// Scope identity binds the immutable source key, never the changing audience.
-	if row.ScopeBinding != scopeBinding(binding, source) {
+	if row.ScopeBinding != scopeBinding(binding, source, row.ReviewRevision) {
 		return result, communications.ErrUnresolved
 	}
 	var audience SourceAudience
@@ -218,7 +219,7 @@ func (s Service) loadScope(
 	if err != nil {
 		return scopeBasis{}, fmt.Errorf("read current automation occurrence: %w", err)
 	}
-	if !slices.Contains([]string{"pending", "queued"}, row.State) {
+	if !slices.Contains([]string{"pending", "queued", "partially_queued"}, row.State) {
 		return scopeBasis{}, communications.ErrUnresolved
 	}
 	paused, err := q.AutomationPaused(ctx, eventID)

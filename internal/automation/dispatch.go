@@ -32,7 +32,7 @@ func (s Service) ensureOperation(
 	}
 	input := dbgen.InsertOperationParams{
 		EventID:      row.EventID,
-		OperationKey: "communication-dispatch:" + row.ID.String(),
+		OperationKey: fmt.Sprintf("communication-dispatch:%s:%d", row.ID, row.ReviewRevision),
 		Kind:         HandlerKind,
 		TargetID:     row.ID,
 		DueAt:        row.DueAt,
@@ -176,7 +176,7 @@ func (s Service) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
 		if row.OperationID == nil || *row.OperationID != d.ID {
 			return nil
 		}
-		if row.State == "queued" {
+		if slices.Contains([]string{"queued", "partially_queued"}, row.State) {
 			eligible = true
 			return nil
 		}
@@ -222,7 +222,7 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		if row.OperationID == nil || *row.OperationID != d.ID {
 			return access.ErrConflict
 		}
-		if row.State == "queued" {
+		if slices.Contains([]string{"queued", "partially_queued"}, row.State) {
 			return nil
 		}
 		binding, err := loadBinding(ctx, q, d.EventID, row.BindingID)
@@ -242,37 +242,33 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		if err != nil {
 			return fmt.Errorf("dispatch communication: %w", err)
 		}
-		for _, channel := range approved.Definition.Channels {
-			queue := s.Providers[channel]
-			if queue == nil {
-				return communications.ErrUnresolved
-			}
-			count, err := queue(
-				ctx,
-				tx,
-				d.EventID,
-				binding.Definition.CampaignID,
-				binding.Definition.CampaignVersion,
-				scope,
-			)
-			if err != nil {
-				return fmt.Errorf("queue selected communication channel: %w", err)
-			}
-			if count == 0 {
-				return communications.ErrUnresolved
-			}
-		}
-		if err = q.SetAutomationOccurrenceState(
+		reports, state, reason, err := s.queueChannels(
 			ctx,
-			dbgen.SetAutomationOccurrenceStateParams{
-				EventID:     d.EventID,
-				ID:          row.ID,
-				State:       "queued",
-				Reason:      "provider_intents_recorded",
-				ReviewUntil: row.ReviewUntil,
+			tx,
+			d.EventID,
+			binding.Definition.CampaignID,
+			binding.Definition.CampaignVersion,
+			scope,
+			approved.Definition.Channels,
+		)
+		if err != nil {
+			return err
+		}
+		raw, err := json.Marshal(reports)
+		if err != nil {
+			return fmt.Errorf("encode channel reports: %w", err)
+		}
+		if err = q.RecordAutomationChannelReports(
+			ctx,
+			dbgen.RecordAutomationChannelReportsParams{
+				EventID:        d.EventID,
+				ID:             row.ID,
+				State:          state,
+				Reason:         reason,
+				ChannelReports: raw,
 			},
 		); err != nil {
-			return fmt.Errorf("record communication dispatch: %w", err)
+			return fmt.Errorf("record communication dispatch reports: %w", err)
 		}
 		return history(
 			ctx,
@@ -281,8 +277,8 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 			&row.BindingID,
 			&row.ID,
 			nil,
-			"queued",
-			"provider_intents_recorded",
+			state,
+			reason,
 		)
 	})
 	if err == nil {
@@ -322,7 +318,7 @@ func (s Service) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 	if row.OperationID == nil || *row.OperationID != d.ID {
 		return jobs.Permanent
 	}
-	if row.State == "queued" {
+	if slices.Contains([]string{"queued", "partially_queued"}, row.State) {
 		return jobs.Delivered
 	}
 	if row.State == "cancelled" {
@@ -417,7 +413,7 @@ func (s Service) reconcileOccurrence(
 			SourceKey:      sourceKey(source),
 			DueAt:          due,
 			Deadline:       deadline,
-			ScopeBinding:   scopeBinding(binding, source),
+			ScopeBinding:   scopeBinding(binding, source, 0),
 			State:          state,
 			Reason:         reason,
 		},
@@ -438,7 +434,7 @@ func (s Service) reconcileOccurrence(
 		); err != nil {
 			return fmt.Errorf("dispatch communication: %w", err)
 		}
-	} else if !slices.Contains([]string{"cancelled", "queued"}, row.State) {
+	} else if !slices.Contains([]string{"cancelled", "queued", "partially_queued"}, row.State) {
 		until := row.Deadline
 		if row.ReviewUntil.Valid {
 			until = row.ReviewUntil.Time
