@@ -47,7 +47,11 @@ the same unique identity. It never reuses a competitor's personalised preview.
 
 The last three named journeys are unmet #81 acceptance until their actual owning
 resources and routes exist and the following integration is verified. This core
-implementation must not close #81 or assert those journeys pass.
+implementation can merge without closing #81 or asserting those journeys pass.
+#159 and #161 directly depend on the merged inbox contract, so requiring full
+#81 issue closure first would create an artificial cycle. Their owning domains
+can use this merged core while aggregate #81 acceptance remains open; a separate
+final #81 integration verification must exercise all named real journeys.
 
 An owning domain must record its official fact/source in its authorised source
 transaction, supply a typed resource adapter that rechecks current ownership,
