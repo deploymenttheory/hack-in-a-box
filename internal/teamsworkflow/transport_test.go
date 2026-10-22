@@ -53,10 +53,12 @@ func TestEndpointPolicy(t *testing.T) {
 }
 
 func TestPublicAddresses(t *testing.T) {
-	for _, value := range []string{"127.0.0.1", "0.0.0.0", "10.0.0.1", "172.16.0.1", "192.168.0.1", "169.254.169.254", "100.64.0.1", "192.0.2.1", "198.51.100.2", "203.0.113.3", "198.18.0.1", "224.0.0.1", "255.255.255.255", "::", "::1", "::ffff:8.8.8.8", "fe80::1%en0", "fc00::1", "2001:db8::1", "2002:0808:0808::1", "64:ff9b::0808:0808", "ff02::1"} {
-		if publicAddress(netip.MustParseAddr(value)) {
-			t.Fatalf("unsafe address allowed: %s", value)
-		}
+	for _, value := range []string{"127.0.0.1", "0.0.0.0", "10.0.0.1", "172.16.0.1", "192.168.0.1", "169.254.169.254", "100.64.0.1", "192.0.2.1", "198.51.100.2", "203.0.113.3", "198.18.0.1", "224.0.0.1", "255.255.255.255", "::", "::1", "::ffff:8.8.8.8", "fe80::1%en0", "fc00::1", "5f00::1", "fec0::1", "100:0:0:1::1", "2001:db8::1", "2002:0808:0808::1", "64:ff9b::0808:0808", "ff02::1"} {
+		t.Run(value, func(t *testing.T) {
+			if publicAddress(netip.MustParseAddr(value)) {
+				t.Fatal("unsafe address allowed")
+			}
+		})
 	}
 	for _, value := range []string{"8.8.8.8", "20.50.1.2", "2603:1030:405:3::1"} {
 		if !publicAddress(netip.MustParseAddr(value)) {

@@ -87,8 +87,8 @@ func validateEndpoint(raw string) (*url.URL, bool) {
 }
 
 var forbiddenNetworks = func() []netip.Prefix {
-	out := make([]netip.Prefix, 0, 26)
-	for _, value := range []string{"0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4", "240.0.0.0/4", "::/96", "64:ff9b::/96", "64:ff9b:1::/48", "100::/64", "2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20", "fc00::/7", "fe80::/10", "ff00::/8"} {
+	out := make([]netip.Prefix, 0, 29)
+	for _, value := range []string{"0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.0.0.0/24", "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4", "240.0.0.0/4", "::/96", "64:ff9b::/96", "64:ff9b:1::/48", "100::/64", "100:0:0:1::/64", "2001::/23", "2001:db8::/32", "2002::/16", "3fff::/20", "5f00::/16", "fc00::/7", "fec0::/10", "fe80::/10", "ff00::/8"} {
 		out = append(out, netip.MustParsePrefix(value))
 	}
 	return out
@@ -209,7 +209,13 @@ func (a *adapter) send(ctx context.Context, endpoint string, payload []byte) res
 		delay := 2 * time.Second
 		if value := response.Header.Get("Retry-After"); value != "" {
 			if seconds, parseErr := strconv.ParseInt(value, 10, 32); parseErr == nil {
-                if seconds < 0 || seconds > 900 { return result{Outcome: jobs.Permanent, Status: status, Reason: "rate_limit_requires_review"} }
+				if seconds < 0 || seconds > 900 {
+					return result{
+						Outcome: jobs.Permanent,
+						Status:  status,
+						Reason:  "rate_limit_requires_review",
+					}
+				}
 				delay = time.Duration(seconds) * time.Second
 			} else if instant, parseErr := http.ParseTime(value); parseErr == nil {
 				delay = time.Until(instant)

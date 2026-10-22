@@ -109,6 +109,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Communications: *communicationRuntime.Communications,
 		MailContacts:   communicationRuntime.MailContacts,
 		SMTP:           communicationRuntime.SMTP,
+		TeamsWorkflow:  communicationRuntime.Teams,
 		Credentials:    credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
 		Mentors:        mentors.Service{Pool: pool},
 		Content:        content.Service{Pool: pool, Storage: storage},

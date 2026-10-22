@@ -769,6 +769,57 @@ type TeamCredentialAssignment struct {
 	TeamID       uuid.UUID
 }
 
+type TeamsWorkflowAttempt struct {
+	EventID            uuid.UUID
+	ID                 uuid.UUID
+	DeliveryID         uuid.UUID
+	AttemptNumber      int32
+	ConnectionVersion  int64
+	PayloadFingerprint string
+	StartedAt          time.Time
+}
+
+type TeamsWorkflowConnection struct {
+	ID           uuid.UUID
+	EventID      uuid.UUID
+	Version      int64
+	Label        string
+	OwnerLabel   string
+	CoOwnerLabel string
+	KeyID        string
+	Ciphertext   []byte
+	Active       bool
+	RetryAfter   pgtype.Timestamptz
+	UpdatedAt    time.Time
+}
+
+type TeamsWorkflowDelivery struct {
+	EventID            uuid.UUID
+	ID                 uuid.UUID
+	OperationID        uuid.UUID
+	Kind               string
+	ConnectionID       uuid.UUID
+	ConnectionVersion  int64
+	ChannelRevision    string
+	ActorID            uuid.UUID
+	CampaignID         *uuid.UUID
+	CampaignVersion    pgtype.Int8
+	PreviewID          *uuid.UUID
+	PreviewFingerprint pgtype.Text
+	RequestID          uuid.UUID
+	CreatedAt          time.Time
+}
+
+type TeamsWorkflowReceipt struct {
+	EventID    uuid.UUID
+	AttemptID  uuid.UUID
+	Outcome    string
+	HttpStatus pgtype.Int4
+	Reason     string
+	RetryAt    pgtype.Timestamptz
+	RecordedAt time.Time
+}
+
 type Template struct {
 	ID               uuid.UUID
 	OwnerID          uuid.UUID

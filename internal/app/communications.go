@@ -12,11 +12,13 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
 	Communications *communications.Service
 	SMTP           *smtpintegration.Service
+	Teams          *teamsworkflow.Service
 	Jobs           *jobs.Service
 	MailContacts   mailcontact.Service
 }
@@ -33,26 +35,31 @@ func newCommunicationRuntime(
 		return communicationRuntime{}, fmt.Errorf("configure SMTP: %w", err)
 	}
 	provider := &smtpintegration.Service{Pool: pool, Transport: smtp, Origin: cfg.WorkspaceOrigin}
+	teams := &teamsworkflow.Service{Pool: pool, Keys: cfg.CredentialKeys}
 	composer := &communications.Service{
 		Pool:     pool,
-		Channels: map[string]communications.ChannelProvider{"smtp": provider},
+		Channels: map[string]communications.ChannelProvider{"smtp": provider, "teams": teams},
 	}
 	provider.Campaigns = composer
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
-			"communication_test_smtp":     provider,
+			"communication_test_smtp": provider,
 			"communication_campaign_smtp": smtpintegration.CampaignHandler{Service: provider},
+			teamsworkflow.HandlerKind(): teams,
 		},
 	)
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
 	composer.Jobs = outbox
+	teams.Jobs = outbox
+	teams.Composer = *composer
 	return communicationRuntime{
 		Communications: composer,
 		SMTP:           provider,
+		Teams:          teams,
 		Jobs:           outbox,
 		MailContacts:   mailcontact.Service{Pool: pool, Sender: smtp},
 	}, nil

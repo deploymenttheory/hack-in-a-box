@@ -14,6 +14,8 @@ The verified public-cloud shape is HTTPS on the environment Power Platform host 
 
 The adapter accepts only the verified environment host suffix and workflow path, with standard signature query fields. It rejects legacy connector domains, arbitrary Microsoft services, custom forwarding hosts, user information, fragments, unexpected ports/query fields and encoded alternate paths. Every attempt resolves the hostname, rejects any private/reserved/mapped answer and pins a validated public address while retaining normal TLS hostname/certificate validation. Environment proxies and redirects are disabled. Sovereign-cloud and other endpoint formats need separately verified policy support; they are not silently redirected or accepted as generic webhooks.
 
+The address policy also excludes non-global special-purpose IPv6 ranges, including the SRv6 SID block and dummy prefix, plus deprecated site-local addresses. Ordinary public Microsoft IPv6 addresses remain supported. [Current IANA IPv6 registry](https://www.iana.org/assignments/iana-ipv6-special-registry), [SRv6 allocation in RFC9602](https://datatracker.ietf.org/doc/html/rfc9602).
+
 ## Connection test and delivery evidence
 
 The organiser's explicit **TEST — channel connection check** posts a synthetic broadcast to the configured channel. It is distinct from the campaign composer's organiser-only self-test, which Teams cannot provide. Confirm the channel with its owner before testing. The public broadcast adapter never accepts attendee-specific feedback, credentials, restricted assessment data or arbitrary person-message payloads.
