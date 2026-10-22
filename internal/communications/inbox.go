@@ -129,7 +129,7 @@ func (s Service) AuthorizeInboxRecipientInTransaction(
 		audience.Teams = []uuid.UUID{}
 		audience.Outstanding = ""
 	}
-	preview, err := s.build(ctx, q, row, template, audience)
+	preview, err := s.buildProjection(ctx, q, row, template, audience, actor, false)
 	if err != nil {
 		return contextError("authorize inbox read", err)
 	}

@@ -108,6 +108,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	deps := httpapi.Dependencies{
 		Presentation:   presentation.Service{Pool: pool},
 		Communications: *communicationRuntime.Communications,
+		Inbox:          *communicationRuntime.Inbox,
 		MailContacts:   communicationRuntime.MailContacts,
 		SMTP:           communicationRuntime.SMTP,
 		TeamsWorkflow:  communicationRuntime.Teams,
