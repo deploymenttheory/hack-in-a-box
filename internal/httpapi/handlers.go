@@ -24,6 +24,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -31,6 +32,7 @@ import (
 )
 
 type Dependencies struct {
+	Preparation  preparation.Service
 	Teams        teams.Service
 	GitHub       *githubidentity.Service
 	Pool         *pgxpool.Pool

@@ -213,7 +213,8 @@ func validateForm(form Form) error {
 func validateTasks(tasks []Task) error {
 	graph := map[uuid.UUID][]uuid.UUID{}
 	for _, task := range tasks {
-		if task.Title == "" || len(task.Title) > 160 || !slices.Contains(roles, task.OwnerRole) {
+		if task.Title == "" || len(task.Title) > 160 ||
+			(task.OwnerRole != "" && !slices.Contains(roles, task.OwnerRole)) {
 			return access.ErrInvalid
 		}
 		graph[task.ID] = task.DependsOn

@@ -271,6 +271,22 @@ type PolicyResource struct {
 	Kind    string
 }
 
+type PreparationTask struct {
+	EventID  uuid.UUID
+	ID       uuid.UUID
+	Revision int64
+	Document []byte
+}
+
+type PreparationTaskChange struct {
+	EventID   uuid.UUID
+	TaskID    uuid.UUID
+	Revision  int64
+	ActorID   uuid.UUID
+	Document  []byte
+	CreatedAt time.Time
+}
+
 type PrivacyAggregate struct {
 	EventID         uuid.UUID
 	RemovedProfiles int64
