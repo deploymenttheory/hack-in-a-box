@@ -26,19 +26,22 @@ challenge embargo and provider revisions under the dispatch transaction. Broadca
 projection additionally rejects personal selectors/tokens and requires identical
 common content. Approval itself does not queue unattended delivery.
 
-Local evidence on checkpoint f250426:
+Local evidence after rebasing onto merged schema25 (`ef18946`):
 
 - Twelve desktop/mobile browser cases exercise approval invalidation, audience
   counts and personalised previews, unavailable channels, organiser-only test
   intent, cancellation, explicit stale-revision review, inert hostile previews and
-  revoked access while preserving edits. All passed in 9.2 seconds.
+  revoked access while preserving edits. All passed after the final rebase.
 - Real PostgreSQL race suites for campaigns and HTTP contracts passed, including
   both approver roles, provider revision changes, atomic test cancellation,
   current-recipient filtering and guarded official sources. Gap and ambiguous
   daylight-saving wall times return explicit blockers without changing revision.
+- Ordered schema25→26 and historical schema23→latest upgrades pass against real
+  PostgreSQL. Existing message history and event revisions/configuration survive;
+  no campaign, approval or delivery is invented. Campaign/HTTP/presentation race
+  suites passed in 26.756/11.922/4.254 seconds.
 - Both production UI builds, web lint and full Go lint pass. Desktop approved and
   mobile unavailable-channel captures were inspected for readable controls and
   bounded layout. Generated API and SQL outputs are committed.
 
-Final merged-base migration and exact-head CI results must be recorded in the PR
-before merge. No real SMTP message or Teams broadcast was sent for verification.
+Final exact-head CI results must be recorded in the PR before merge. No real SMTP message or Teams broadcast was sent for verification.
