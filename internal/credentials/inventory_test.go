@@ -121,7 +121,7 @@ func TestCredentialAvailabilityBoundariesAndMetadataPreserveEncryption(t *testin
 func TestCredentialInventoryUpgradeAndRollbackGate(t *testing.T) {
 	pool := testdb.New(t, false)
 	ctx := t.Context()
-	if err := database.Migrate(ctx, pool, 22); err != nil {
+	if err := database.Migrate(ctx, pool, 24); err != nil {
 		t.Fatal(err)
 	}
 	owner := testdb.Person(t, pool)
@@ -164,7 +164,7 @@ func TestCredentialInventoryUpgradeAndRollbackGate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = migrator.DownTo(ctx, 22); err == nil {
+	if _, err = migrator.DownTo(ctx, 24); err == nil {
 		t.Fatal("rollback silently removed the disclosure gate")
 	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
