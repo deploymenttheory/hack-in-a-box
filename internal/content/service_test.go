@@ -39,7 +39,7 @@ type fixture struct {
 
 func newFixture(t *testing.T, pool *pgxpool.Pool) *fixture {
 	t.Helper()
-	if err := database.Migrate(t.Context(), pool, 31); err != nil {
+	if err := database.Migrate(t.Context(), pool, 29); err != nil {
 		t.Fatal(err)
 	}
 	f := &fixture{

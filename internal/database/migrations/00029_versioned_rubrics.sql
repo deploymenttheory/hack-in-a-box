@@ -1,5 +1,5 @@
 -- +goose Up
--- Provisional development slot; verify the real preceding-schema upgrade on the final publication base.
+-- Normal ordered upgrade from schema28; retain existing content and private resources unchanged.
 CREATE TABLE event_rubrics (
  event_id uuid PRIMARY KEY REFERENCES events(id),
  id uuid NOT NULL,
@@ -117,6 +117,13 @@ CREATE TRIGGER rubric_notices_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON r
 CREATE TRIGGER rubric_changes_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON rubric_changes FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 
 -- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM event_rubrics) THEN
+  RAISE EXCEPTION 'Rubric version or assessment history exists; rollback requires an explicit preservation plan';
+ END IF;
+END $$;
+-- +goose StatementEnd
 DROP TABLE rubric_changes;
 DROP TABLE rubric_assessment_runs;
 DROP FUNCTION protect_rubric_run_identity();

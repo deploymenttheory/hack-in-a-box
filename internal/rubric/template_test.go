@@ -15,7 +15,7 @@ import (
 
 func TestClonedRubricDefaultsPreserveQualificationAndRemainUnapproved(t *testing.T) {
 	pool := testdb.New(t, false)
-	if err := database.Migrate(t.Context(), pool, 31); err != nil {
+	if err := database.Migrate(t.Context(), pool, 29); err != nil {
 		t.Fatal(err)
 	}
 	owner := testdb.Person(t, pool)

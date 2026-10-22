@@ -34,9 +34,8 @@ type publicationFixture struct {
 func publicationSetup(t *testing.T) *publicationFixture {
 	t.Helper()
 	pool := testdb.New(t, false)
-	// Development schema slot is provisional; the actual preceding-schema upgrade
-	// is verified separately on the final publication base.
-	if err := database.Migrate(t.Context(), pool, 31); err != nil {
+	// Use the actual rubric schema; ordered28→29 preservation is verified separately.
+	if err := database.Migrate(t.Context(), pool, 29); err != nil {
 		t.Fatal(err)
 	}
 	f := &publicationFixture{

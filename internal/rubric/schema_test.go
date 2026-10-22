@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
@@ -20,9 +23,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
-// These development values are finalized against the actual publication base;
-// provisional numbering is not a dependency on unrelated delivery features.
-const beforeRubricSchema, versionedRubricSchema = 26, 31
+const beforeRubricSchema, versionedRubricSchema = 28, 29
 
 func TestRubricUpgradePreservesPriorChallengeDefinitionsCiphertextAndAudit(t *testing.T) {
 	pool := testdb.New(t, false)
@@ -167,6 +168,23 @@ func TestRubricUpgradePreservesPriorChallengeDefinitionsCiphertextAndAudit(t *te
 	if err = database.Migrate(ctx, pool, versionedRubricSchema); err != nil {
 		t.Fatal(err)
 	}
+	db := stdlib.OpenDBFromPool(pool)
+	defer func() { _ = db.Close() }()
+	provider, err := goose.NewProvider(
+		goose.DialectPostgres,
+		db,
+		os.DirFS("../database/migrations"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = provider.DownTo(ctx, beforeRubricSchema); err != nil {
+		t.Fatal("empty rubric schema did not support normal rollback", err)
+	}
+	if err = database.Migrate(ctx, pool, versionedRubricSchema); err != nil {
+		t.Fatal(err)
+	}
+
 	for _, read := range []struct {
 		query  string
 		before []byte
@@ -210,5 +228,34 @@ func TestRubricUpgradePreservesPriorChallengeDefinitionsCiphertextAndAudit(t *te
 		eventID,
 	); err == nil {
 		t.Fatal("upgrade weakened retained content immutability")
+	}
+	saved, err := service.Change(
+		ctx,
+		owner.ID,
+		eventID,
+		0,
+		rubric.Command{
+			Action:     "save",
+			Definition: &configuration.Definition,
+			Reason:     "Synthetic explicit retained rubric",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = provider.DownTo(ctx, beforeRubricSchema); err == nil {
+		t.Fatal("rollback discarded retained rubric history")
+	}
+	retainedConfiguration, err := service.Configuration(
+		ctx,
+		owner.ID,
+		eventID,
+		saved.Reference.Version,
+	)
+	if err != nil || retainedConfiguration.Reference != saved.Reference {
+		t.Fatal("rejected rollback damaged retained rubric version")
+	}
+	if err = database.CheckSchema(ctx, pool); err != nil {
+		t.Fatal(err)
 	}
 }

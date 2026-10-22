@@ -60,6 +60,9 @@ func TestTeamsSchemaUpgradeAndGuardedRollback(t *testing.T) {
 		count != 1 {
 		t.Fatal("failed rollback did not preserve connection", err)
 	}
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}

@@ -107,7 +107,9 @@ prerequisite merge. Approval retains the reviewed versions and official facts;
 dispatch rechecks current authority, recipients, embargoes and opaque provider
 configuration revisions. These safety and receipt contracts precede unattended
 scheduling. An unavailable provider remains visible and cannot be silently dropped
-or reported as delivered. #78 is delivered in PR #189. #79 is in PR #194; its current exact-head CI remains a merge gate. #80 is prepared locally with its live shared-channel setup still outstanding; #81 and #82 retain their complete issue acceptance.
+or reported as delivered. #78 and #79 are delivered in PRs #189 and #194.
+#80 is in PR #196 with its live shared-channel setup still outstanding; #81 and
+#82 retain their complete issue acceptance.
 
 ## Batch 7 — fair assessment contracts and event-day support
 
@@ -123,5 +125,10 @@ Keep three independent implementation lanes active when their prerequisites are
 ready. These five tasks establish the assessment, rules and support contracts
 needed by later mentor/judge workspaces and event-day views. They do not declare
 future scoring, private assessment disclosure or provider integration complete.
-Each issue keeps its own PR and acceptance reconciliation. Migration numbers follow actual ready delivery order rather than inventing feature dependencies;
+#158 is delivered in PR #195. #107's versioned rubric contract is implemented
+in this change; #99's private-observation lane is prepared independently. #159
+and #161 keep their complete operational and privacy acceptance.
+
+Each issue keeps its own PR and acceptance reconciliation. Migration numbers
+follow actual ready delivery order rather than inventing feature dependencies;
 normal ordered upgrade verification and exact-head green CI remain merge gates.

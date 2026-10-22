@@ -59,7 +59,7 @@ type embargoFixture struct {
 
 func newEmbargoFixture(t *testing.T, pool *pgxpool.Pool, live time.Time) *embargoFixture {
 	t.Helper()
-	if err := database.Migrate(t.Context(), pool, 31); err != nil {
+	if err := database.Migrate(t.Context(), pool, 29); err != nil {
 		t.Fatal(err)
 	}
 	f := &embargoFixture{t: t, pool: pool, q: dbgen.New(pool), tokens: map[uuid.UUID]string{}}
