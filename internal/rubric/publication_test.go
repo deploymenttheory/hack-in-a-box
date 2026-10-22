@@ -34,8 +34,8 @@ type publicationFixture struct {
 func publicationSetup(t *testing.T) *publicationFixture {
 	t.Helper()
 	pool := testdb.New(t, false)
-	// Development schema slot is provisional; the final ordered30→31 proof is
-	// separate once the preceding migrations land on main.
+	// Development schema slot is provisional; the actual preceding-schema upgrade
+	// is verified separately on the final publication base.
 	if err := database.Migrate(t.Context(), pool, 31); err != nil {
 		t.Fatal(err)
 	}
@@ -320,4 +320,127 @@ func TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically
 		t.Fatal("withdrawal retained rubric audience access")
 	}
 	f.common(f.second)
+}
+
+func TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover(t *testing.T) {
+	f := publicationSetup(t)
+	author := testdb.Person(t, f.pool)
+	f.exec(
+		"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'organiser')",
+		f.eventID,
+		author.ID,
+	)
+	var page content.Page
+	saveReview := func(ref *rubric.Reference) {
+		t.Helper()
+		if page.ID == uuid.Nil {
+			page.ID = uuid.New()
+		}
+		var err error
+		page, err = f.content.Save(
+			t.Context(),
+			author.ID,
+			f.eventID,
+			page.ID,
+			page.Revision,
+			content.Input{
+				Kind: "challenge",
+				Document: content.Document{
+					Title:    "Exact approved criteria",
+					Markdown: "Common challenge",
+					Audience: access.ContentAudience{Confirmed: true},
+					Rubric:   ref,
+				},
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		page, err = f.content.Action(
+			t.Context(),
+			author.ID,
+			f.eventID,
+			page.ID,
+			page.Revision,
+			"review",
+			"Synthetic independent challenge review",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	approve := func() error {
+		next, err := f.content.Action(
+			t.Context(),
+			author.ID,
+			f.eventID,
+			page.ID,
+			page.Revision,
+			"approve",
+			"Synthetic independent challenge approval",
+		)
+		if err == nil {
+			page = next
+		}
+		return err
+	}
+	saveReview(nil)
+	if approve() == nil {
+		t.Fatal("challenge approval omitted its exact common rubric")
+	}
+	wrong := f.configuration.Reference
+	wrong.Digest = strings.Repeat("0", 64)
+	if _, err := f.content.Save(
+		t.Context(),
+		author.ID,
+		f.eventID,
+		page.ID,
+		page.Revision,
+		content.Input{
+			Kind: "challenge",
+			Document: content.Document{
+				Title:    "Wrong criteria",
+				Markdown: "Common task",
+				Audience: access.ContentAudience{Confirmed: true},
+				Rubric:   &wrong,
+			},
+		},
+	); err == nil {
+		t.Fatal("authored challenge substituted a rubric digest")
+	}
+	definition := f.configuration.Definition
+	definition.Categories[0].Weight = 2
+	f.change(rubric.Command{Action: "save", Definition: &definition})
+	candidate := f.configuration.Reference
+	saveReview(&candidate)
+	if approve() == nil {
+		t.Fatal("challenge approved an unapproved rubric snapshot")
+	}
+	f.change(rubric.Command{Action: "approve", Version: candidate.Version})
+	if err := approve(); err != nil {
+		t.Fatal(err)
+	}
+	// The challenge approver remains authorised. Only the independent rubric
+	// approver loses current authority before the common publication transaction.
+	f.exec(
+		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'",
+		f.eventID,
+		f.owner.ID,
+	)
+	f.now = f.due
+	if err := f.content.Dispatch(t.Context(), f.eventID, page.ID, page.Revision); err != nil {
+		t.Fatal(err)
+	}
+	var state string
+	if err := f.pool.QueryRow(t.Context(), "SELECT state FROM content_items WHERE event_id=$1 AND id=$2", f.eventID, page.ID).
+		Scan(&state); err != nil ||
+		state != "blocked" {
+		t.Fatal("revoked independent rubric approver did not block the scheduled challenge")
+	}
+	var published bool
+	if err := f.pool.QueryRow(t.Context(), "SELECT published_at IS NOT NULL FROM events WHERE id=$1", f.eventID).
+		Scan(&published); err != nil ||
+		published {
+		t.Fatal("failed rubric authority partially published the event")
+	}
 }

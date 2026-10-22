@@ -1,5 +1,5 @@
 -- +goose Up
--- Provisional development slot; final upgrade order is checked after schema 30.
+-- Provisional development slot; verify the real preceding-schema upgrade on the final publication base.
 CREATE TABLE event_rubrics (
  event_id uuid PRIMARY KEY REFERENCES events(id),
  id uuid NOT NULL,
