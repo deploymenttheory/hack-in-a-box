@@ -140,6 +140,11 @@ func TestInboxSchemaEmptyRollbackAndRetainedHistoryGate(t *testing.T) {
 	if err = pool.QueryRow(ctx, "SELECT count(*) FROM inbox_notifications WHERE event_id=$1", eventID).Scan(&count); err != nil || count != 1 {
 		t.Fatal("rollback changed delivered history", err)
 	}
+	// Later empty migrations may have rolled back before inbox30 rejected
+	// removal of its private recipient history. Restore latest before startup.
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}

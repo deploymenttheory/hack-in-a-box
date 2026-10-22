@@ -23,6 +23,10 @@ source edits, due-time passage and archive write freeze do not erase an otherwis
 authorised historical message. Losing its current source audience still hides it.
 Read state belongs only to the fixed recipient.
 
+Recipient candidate scans use an explicit10,000-row bound and fail closed above
+it, without returning partial counts or body data. Large-event pagination and
+performance verification remain owned by #123.
+
 `QueueApprovedInTransaction` atomically stores local in-app recipient messages;
 #82 owns scheduling and pause/missed-action policy. The additive occurrence method
 intersects the approved selector with the source policy's current recipients and
@@ -81,3 +85,12 @@ cases pass2.2s on isolated preview ports. Current render-shaped HTML fixtures us
 actual newlines after generated `<br>` tags; escaped hostile markup stays inert text.
 Both bundles, Go/web lint and generated contracts pass. Final exact-head CI remains
 a merge gate. Inbox30 permits empty rollback but refuses to discard recipient history.
+
+
+The first full CI run exposed a historical rubric rollback fixture assuming the
+current deployment schema was still29. Its actual28→29 and guarded rollback
+checks remain intact; it now restores the latest schema after a refused DownTo,
+which may already have removed later empty migrations. The same restoration is
+explicit in inbox30's rollback fixture for subsequent migrations. Local red
+reproduced the CI failure; focused rubric/inbox preservation checks then pass
+2.824/3.701s. No product migration or rollback guard was weakened.
