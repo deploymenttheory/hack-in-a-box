@@ -196,7 +196,7 @@ func TestClarificationUpgradePreservesPopulatedScorecardAndPrivateHelpHistory(t 
  'runs',(SELECT jsonb_agg(to_jsonb(r) ORDER BY id) FROM rubric_assessment_runs r WHERE event_id=$1),
  'checkpoints',(SELECT jsonb_agg(to_jsonb(c) ORDER BY id,version) FROM scorecard_checkpoint_versions c WHERE event_id=$1),
  'cards',(SELECT jsonb_agg(to_jsonb(c) ORDER BY id,version) FROM mentor_scorecard_versions c WHERE event_id=$1),
- 'inbox',(SELECT jsonb_agg(to_jsonb(n) ORDER BY id) FROM inbox_notifications n WHERE event_id=$1),
+ 'inbox',(SELECT jsonb_agg(to_jsonb(n)-'scope_approval' ORDER BY id) FROM inbox_notifications n WHERE event_id=$1),
  'audit',(SELECT jsonb_agg(to_jsonb(a) ORDER BY id) FROM audit_events a WHERE event_id=$1)
  )::text`
 	var before string

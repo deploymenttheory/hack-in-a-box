@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
@@ -213,6 +214,26 @@ func TestProductionPartialSMTPAndInboxCommitTogetherWithoutInventingReceipts(t *
 			Reason:       "Review settled effects and newly verified address",
 		},
 	)
+	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		proof, resolveErr := f.s.ResolveInTransaction(
+			t.Context(),
+			tx,
+			f.id,
+			f.campaignID,
+			f.campaignVersion,
+			communications.DeliveryScope{OccurrenceID: id},
+		)
+		if resolveErr != nil {
+			return resolveErr
+		}
+		if proof.Review == nil || proof.Review.OccurrenceID != id || proof.Review.Revision < 1 ||
+			proof.Review.Binding != proof.Binding {
+			t.Fatal("canonical persisted review proof missing")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
 	f.execute(id)
 	reviewed, err := f.s.Read(t.Context(), f.owner.ID, f.id)
 	if err != nil {

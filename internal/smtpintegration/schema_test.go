@@ -32,17 +32,23 @@ func TestSMTPUpgradeFromSchema26PreservesPeopleCampaignsAndOperations(t *testing
 		t.Fatal(err)
 	}
 	q := dbgen.New(pool)
-	operation, err := q.InsertOperation(
-		t.Context(),
-		dbgen.InsertOperationParams{
-			EventID:      eventID,
-			TargetID:     campaignID,
-			Kind:         "synthetic_existing_operation",
-			OperationKey: "synthetic_existing_operation",
-			DueAt:        time.Now().UTC().Truncate(time.Microsecond),
-			Approved:     true,
-		},
-	)
+	// Explicit prior26 columns avoid using a current query with new35 fields.
+	operation := dbgen.Operation{
+		ID:           uuid.New(),
+		EventID:      eventID,
+		TargetID:     campaignID,
+		Kind:         "synthetic_existing_operation",
+		OperationKey: "synthetic_existing_operation",
+		DueAt: time.Now().
+			UTC().
+			Truncate(time.Microsecond),
+		Approved: true,
+		State:    "pending",
+		Revision: 1,
+	}
+	err := pool.QueryRow(t.Context(), `INSERT INTO operations(id,event_id,target_id,kind,operation_key,due_at,approved) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING due_at,created_at,updated_at`,
+		operation.ID, operation.EventID, operation.TargetID, operation.Kind, operation.OperationKey, operation.DueAt, operation.Approved).
+		Scan(&operation.DueAt, &operation.CreatedAt, &operation.UpdatedAt)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -236,6 +236,7 @@ func (s Service) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
 }
 
 func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
+	var attempted *dbgen.CommunicationOccurrence
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if _, err := q.LockEvent(ctx, d.EventID); err != nil {
 			return fmt.Errorf("lock communication dispatch: %w", err)
@@ -253,6 +254,10 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		if slices.Contains([]string{"queued", "partially_queued"}, row.State) {
 			return nil
 		}
+		if row.State != "pending" {
+			return access.ErrConflict
+		}
+		attempted = &row
 		binding, err := loadBinding(ctx, q, d.EventID, row.BindingID)
 		if err != nil {
 			return fmt.Errorf("dispatch communication: %w", err)
@@ -320,6 +325,20 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 			_, lockErr := q.LockEvent(ctx, d.EventID)
 			if lockErr != nil {
 				return fmt.Errorf("lock blocked communication: %w", lockErr)
+			}
+			current, readErr := q.AutomationOccurrence(
+				ctx,
+				dbgen.AutomationOccurrenceParams{EventID: d.EventID, ID: d.TargetID},
+			)
+			if readErr != nil {
+				return fmt.Errorf("read blocked communication: %w", readErr)
+			}
+			// The first transaction rolled back. A review/cancellation/dispatch may
+			// have won meanwhile; a retired attempt cannot mutate its successor.
+			if attempted == nil || current.OperationID == nil || *current.OperationID != d.ID ||
+				current.State != "pending" || current.ReviewRevision != attempted.ReviewRevision ||
+				current.ScopeBinding != attempted.ScopeBinding || !current.UpdatedAt.Equal(attempted.UpdatedAt) {
+				return nil
 			}
 			return q.SetAutomationOccurrenceState(
 				ctx,

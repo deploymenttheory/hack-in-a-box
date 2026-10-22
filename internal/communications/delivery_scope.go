@@ -26,6 +26,7 @@ type ScopeAudience struct {
 	RequireComplete bool
 	AllowArchived   bool
 	Approval        *ScopeApproval
+	Review          *ScopeReview
 }
 
 // ScopePolicy must lock the event in tx and recheck the current occurrence,
@@ -61,4 +62,13 @@ func SameScopeApproval(left, right *ScopeApproval) bool {
 		return left == right
 	}
 	return *left == *right
+}
+
+// ScopeReview is internal proof of a current explicit review generation. The
+// canonical scope owner derives it from persisted state; no HTTP input supplies it.
+// It permits reuse of an identical historical inbox identity, never rewriting it.
+type ScopeReview struct {
+	OccurrenceID uuid.UUID
+	Revision     int64
+	Binding      string
 }

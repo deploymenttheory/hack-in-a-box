@@ -72,7 +72,7 @@ func insert(ctx context.Context, q *dbgen.Queries, d Delivery) (dbgen.InboxNotif
 	}
 	if err == nil &&
 		(row.Subject != d.Subject || row.Body != d.Body || row.Format != d.Format ||
-			(row.ScopeBinding != d.ScopeBinding && (d.Source.Kind != "campaign" || d.OccurrenceID == uuid.Nil))) {
+			(row.ScopeBinding != d.ScopeBinding && !reviewedReuse(d))) {
 		return row, access.ErrConflict
 	}
 	return row, wrap("persist recipient", err)
@@ -185,6 +185,7 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 				Provenance:   provenance,
 				OccurrenceID: scope.OccurrenceID,
 				ScopeBinding: scoped.Binding,
+				ScopeReview:  scoped.Review,
 			},
 		)
 		if err != nil {
@@ -320,4 +321,12 @@ func sameProvenance(left, right communications.InboxProvenance) bool {
 	left.ScopeApproval = nil
 	right.ScopeApproval = nil
 	return approvalEqual && left == right
+}
+
+// Only a canonical current review may reuse identical already-persisted content
+// across scope bindings. The retained row and its provenance are never changed.
+func reviewedReuse(d Delivery) bool {
+	return d.Source.Kind == "campaign" && d.OccurrenceID != uuid.Nil &&
+		d.ScopeReview != nil && d.ScopeReview.OccurrenceID == d.OccurrenceID &&
+		d.ScopeReview.Revision > 0 && d.ScopeReview.Binding == d.ScopeBinding
 }

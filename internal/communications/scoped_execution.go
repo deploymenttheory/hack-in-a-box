@@ -146,7 +146,8 @@ func (s Service) resolveApprovedScopedCampaign(
 			}
 		}
 	}
-	if len(approved.Preview.Recipients) == 0 {
+	if len(approved.Preview.Recipients) == 0 &&
+		(audience.RequireComplete || projection.personID != uuid.Nil) {
 		return ApprovedCampaign{}, ErrUnresolved
 	}
 	return approved, nil

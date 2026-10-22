@@ -176,6 +176,13 @@ func (s Service) resolveScope(
 		Broadcast:       audience.Broadcast,
 		RequireComplete: audience.RequireComplete,
 	}
+	if row.ReviewRevision > 0 {
+		result.Review = &communications.ScopeReview{
+			OccurrenceID: row.ID,
+			Revision:     row.ReviewRevision,
+			Binding:      row.ScopeBinding,
+		}
+	}
 	if binding.Definition.RetainAfterArchive {
 		allowed, err := q.RetainedCommunicationOccurrence(
 			ctx,

@@ -69,6 +69,7 @@ type Page struct {
 
 type Delivery struct {
 	OccurrenceID uuid.UUID
+	ScopeReview  *communications.ScopeReview
 	ScopeBinding string
 	Provenance   communications.InboxProvenance
 	ID           uuid.UUID
