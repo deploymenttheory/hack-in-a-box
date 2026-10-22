@@ -73,6 +73,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		ctx,
 		pool,
 		identity.Settings{
+			CookiePrefix:     "hackbox_" + cfg.Surface,
 			Issuer:           cfg.OIDCIssuer,
 			ClientID:         cfg.OIDCClientID,
 			ClientSecret:     cfg.OIDCClientSecret,

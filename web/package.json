@@ -8,12 +8,15 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --mode admin --outDir dist-admin",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "generate": "openapi-typescript ../api/openapi.yaml -o src/api/schema.gen.ts",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "dev:admin": "vite --mode admin --host 127.0.0.1 --port 5174",
+    "preview:admin": "vite preview --outDir dist-admin --host 127.0.0.1",
+    "test:e2e:public": "playwright test --config playwright.public.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

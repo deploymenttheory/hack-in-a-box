@@ -35,11 +35,14 @@ jobs:
       - run: npm --prefix web test
       - run: npx --prefix web playwright install --with-deps chromium
       - run: npm --prefix web run test:e2e
+      - run: npm --prefix web run test:e2e:public
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: failure()
         with:
           name: browser-failures
-          path: web/test-results
+          path: |
+            web/test-results
+            web/test-results-public
           retention-days: 7
   image:
     runs-on: ubuntu-24.04

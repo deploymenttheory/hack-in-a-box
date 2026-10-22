@@ -5,9 +5,11 @@
 node_modules
 web/node_modules
 web/dist
+web/dist-admin
 web/test-results
 web/playwright-report
 data
 coverage*
 *.log
 *.tsbuildinfo
+web/test-results-public

@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	errSurface     = errors.New("HACKBOX_SURFACE must be public or admin")
 	errEnvironment = errors.New("HACKBOX_ENV is required: use development, test or production")
 	errAddress     = errors.New(
 		"HACKBOX_HTTP_ADDR must be an IP address or localhost and a port between 1 and 65535",
@@ -25,6 +26,7 @@ var (
 
 // Config is shared by the API and worker processes. HTTP fields apply to the API.
 type Config struct {
+	Surface            string
 	DatabaseURL        string
 	PublicOrigin       string
 	GitHubClientID     string
@@ -50,6 +52,7 @@ type Config struct {
 // Load uses an injected environment lookup so configuration tests are isolated.
 func Load(getenv func(string) string) (Config, error) {
 	cfg := Config{
+		Surface:            valueOr(getenv("HACKBOX_SURFACE"), "public"),
 		DatabaseURL:        getenv("HACKBOX_DATABASE_URL"),
 		PublicOrigin:       valueOr(getenv("HACKBOX_PUBLIC_ORIGIN"), "http://127.0.0.1:8080"),
 		GitHubClientID:     getenv("HACKBOX_GITHUB_CLIENT_ID"),
@@ -71,6 +74,9 @@ func Load(getenv func(string) string) (Config, error) {
 		ShutdownTimeout:    20 * time.Second,
 	}
 	var problems []error
+	if cfg.Surface != "public" && cfg.Surface != "admin" {
+		problems = append(problems, errSurface)
+	}
 	problems = append(problems, loadFoundation(&cfg, getenv)...)
 	if err := validateGitHub(cfg); err != nil {
 		problems = append(problems, err)

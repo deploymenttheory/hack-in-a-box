@@ -24,6 +24,7 @@
 /vendor/
 node_modules/
 web/dist/
+web/dist-admin/
 web/test-results/
 web/playwright-report/
 *.tsbuildinfo
@@ -59,3 +60,4 @@ __pycache__/
 *.exe
 *.dylib
 *.so
+web/test-results-public/

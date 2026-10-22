@@ -13,14 +13,14 @@ sh scripts/init-env.sh
 docker compose build
 docker compose up -d --wait postgres
 docker compose run --rm migrate
-docker compose up -d --wait api worker
+docker compose up -d --wait api admin worker
 ```
 
-Open <http://127.0.0.1:8080>. The initial page and health checks work without a provider; signing in requires configuring OIDC in `.env`. There is no development authentication bypass.
+Open the participant app at <http://127.0.0.1:8080> and the independent admin portal at <http://127.0.0.1:8081>. See [admin portal deployment](docs/admin-portal.md) for origins, callbacks and failure boundaries. The initial page and health checks work without a provider; signing in requires configuring OIDC in `.env`. There is no development authentication bypass.
 
 `init-env.sh` creates a private `.env` with random database and metrics credentials. It preserves an existing file. Credentials are supplied at runtime and are excluded from image builds. Database and file volumes survive container replacement. API and worker run as UID/GID 10001 with a read-only root filesystem. PostgreSQL is available only on the Compose network. Bind a reverse proxy to the loopback API port for HTTPS deployments.
 
-For an upgrade, back up the database and file volume together, stop API/worker, build the new image, run the explicit `migrate` step, and restart. Migrations serialize across processes and apply the embedded Goose migrations and the pinned River schema. Both processes refuse incompatible application or River schema versions. Migration failure prevents startup; restore the matching backup/image if an upgrade cannot be completed. The application never runs migrations implicitly.
+For an upgrade, back up the database and file volume together, stop public API/admin API/worker, build the new image, run the explicit `migrate` step, and restart. Migrations serialize across processes and apply the embedded Goose migrations and the pinned River schema. All processes refuse incompatible application or River schema versions. Migration failure prevents startup; restore the matching backup/image if an upgrade cannot be completed. The application never runs migrations implicitly.
 
 ## Configure sign-in
 
@@ -94,12 +94,13 @@ npm --prefix web run build
 npm --prefix web test
 npx --prefix web playwright install chromium
 npm --prefix web run test:e2e
+npm --prefix web run test:e2e:public
 sh scripts/check-generated.sh
 sh scripts/smoke-compose.sh
 git diff --check
 ```
 
-Without `HACKBOX_INTEGRATION=1`, database integration tests explicitly skip. With it set, Testcontainers starts isolated, version-pinned PostgreSQL databases and missing Docker fails the run. OIDC fixtures are local; no organisation/provider credentials are required. Browser tests cover desktop and narrow screens. `smoke-compose.sh` creates and removes only its uniquely named synthetic installation, including its test volumes; it uses port 18080.
+Without `HACKBOX_INTEGRATION=1`, database integration tests explicitly skip. With it set, Testcontainers starts isolated, version-pinned PostgreSQL databases and missing Docker fails the run. OIDC fixtures are local; no organisation/provider credentials are required. Browser tests cover desktop and narrow screens. `smoke-compose.sh` creates and removes only its uniquely named synthetic installation, including its test volumes; it uses ports 18080 and 18081.
 
 CI runs these checks, dependency review and container verification with pinned actions and read-only repository permissions. Application Go commands target `cmd` and `internal` so installed browser tooling cannot become an accidental Go package. Operational endpoints, alert thresholds and failure handling are documented in [docs/operations.md](docs/operations.md).
 

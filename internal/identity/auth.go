@@ -31,6 +31,7 @@ var (
 
 type Settings struct {
 	Issuer, ClientID, ClientSecret, Origin, BootstrapSubject string
+	CookiePrefix                                             string
 	Secure                                                   bool
 }
 type Auth struct {
@@ -42,11 +43,14 @@ type Auth struct {
 }
 
 func New(ctx context.Context, pool *pgxpool.Pool, settings Settings) (*Auth, error) {
+	if settings.CookiePrefix == "" {
+		settings.CookiePrefix = "hackbox"
+	}
 	sessions := scs.New()
 	sessions.Store = Store{dbgen.New(pool)}
 	sessions.Lifetime = 12 * time.Hour
 	sessions.IdleTimeout = 30 * time.Minute
-	sessions.Cookie.Name = "hackbox_session"
+	sessions.Cookie.Name = settings.CookiePrefix + "_session"
 	sessions.Cookie.HttpOnly = true
 	sessions.Cookie.Secure = settings.Secure
 	sessions.Cookie.SameSite = http.SameSiteLaxMode
@@ -86,7 +90,7 @@ func (a *Auth) Login(w http.ResponseWriter, r *http.Request) error {
 	http.SetCookie(
 		w,
 		&http.Cookie{ // #nosec G124 -- Secure is required by production configuration; local HTTP fixtures use false.
-			Name:     "hackbox_login",
+			Name:     a.settings.CookiePrefix + "_login",
 			Value:    browser,
 			Path:     "/auth/callback",
 			HttpOnly: true,
@@ -108,14 +112,14 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) error {
 	if a.verifier == nil {
 		return ErrLogin
 	}
-	cookie, err := r.Cookie("hackbox_login")
+	cookie, err := r.Cookie(a.settings.CookiePrefix + "_login")
 	if err != nil || cookie.Value == "" || r.URL.Query().Get("state") == "" {
 		return ErrLogin
 	}
 	http.SetCookie(
 		w,
 		&http.Cookie{ // #nosec G124 -- Deletes the cookie with the validated deployment attributes.
-			Name:     "hackbox_login",
+			Name:     a.settings.CookiePrefix + "_login",
 			Path:     "/auth/callback",
 			HttpOnly: true,
 			Secure:   a.settings.Secure,

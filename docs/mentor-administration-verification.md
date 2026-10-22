@@ -1,8 +1,11 @@
 # Mentor administration
 
-Issue #67 adds a Mentors section to the event workspace. Current organisers get
-the team/mentor matrix; permitted competitors and mentors get only the published
-roster returned for them by #66's current-authority API. That API remains the
+Issue #67 adds a Mentors section to the independent admin portal and participant
+app. Current organisers get the team/mentor matrix in the admin portal. The
+participant build imports only the published roster, with no management controls
+or roster-editing queries, even for an organiser identity. Permitted competitors
+and mentors get only the published roster returned for them by #66's
+current-authority API. That API remains the
 authority for every read and command. The roster refetches on window focus and
 section remount, and permission failures replace the cached display.
 
