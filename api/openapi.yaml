@@ -2520,6 +2520,248 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ContentNotices'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/help:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        }
+      ],
+      "get": {
+        "operationId": "getHelpQueue",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpQueue"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/help/{request_id}:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "request_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getHelpRequest",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "createHelpRequest",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Quoted help request or settings revision. Create uses \"0\".",
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelpInput"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/help/{request_id}/actions:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "request_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "changeHelpRequest",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Quoted help request or settings revision. Create uses \"0\".",
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelpCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/help-settings:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        }
+      ],
+      "get": {
+        "operationId": "getHelpSettings",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpSettings"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "configureHelp",
+        "responses": {
+          "200": {
+            "description": "Current authorised help state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HelpSettings"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Quoted help request or settings revision. Create uses \"0\".",
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelpConfiguration"
+              }
+            }
+          }
+        }
+      }
+    }
 components:
   securitySchemes:
     display:
@@ -3502,7 +3744,7 @@ components:
       additionalProperties: false
       required: [kind, resource_id]
       properties:
-        kind: {type: string, enum: [content]}
+        kind: {type: string, enum: [content, help]}
         resource_id: {type: string, format: uuid}
     InboxDetail:
       type: object
@@ -3519,7 +3761,7 @@ components:
           additionalProperties: false
           required: [kind, resource_id]
           properties:
-            kind: {type: string, enum: [content]}
+            kind: {type: string, enum: [content, help]}
             resource_id: {type: string, format: uuid}
     InboxPage:
       type: object
@@ -5459,3 +5701,468 @@ components:
         primary_colour: {type: string}
         background_colour: {type: string}
         foreground_colour: {type: string}
+    HelpInput:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "team_id",
+          "category",
+          "description",
+          "location",
+          "meeting_url"
+        ],
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "logistics",
+              "competition_output"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "meeting_url": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        }
+      }
+    HelpCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "assignee_id"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "claim",
+              "release",
+              "transfer",
+              "resolve",
+              "reopen",
+              "cancel"
+            ]
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    HelpRequest:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "event_id",
+          "team_id",
+          "requester_id",
+          "revision",
+          "category",
+          "description",
+          "location",
+          "meeting_url",
+          "status",
+          "assignee_id",
+          "waiting_cycle",
+          "requested_at",
+          "waiting_since",
+          "first_claimed_at",
+          "claimed_at",
+          "resolved_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requester_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "logistics",
+              "competition_output"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 8000
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "meeting_url": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "claimed",
+              "resolved",
+              "cancelled"
+            ]
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "waiting_cycle": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "waiting_since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "first_claimed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "claimed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    HelpSummary:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "team_id",
+          "category",
+          "status",
+          "assignee_id",
+          "requested_at",
+          "updated_at",
+          "waiting_seconds",
+          "response_seconds",
+          "completion_seconds",
+          "overdue"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "logistics",
+              "competition_output"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "claimed",
+              "resolved",
+              "cancelled"
+            ]
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "waiting_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "response_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "completion_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "overdue": {
+            "type": "boolean"
+          }
+        }
+      }
+    HelpPage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_name",
+          "timezone",
+          "request",
+          "history",
+          "can_claim",
+          "can_release",
+          "can_transfer",
+          "can_resolve",
+          "can_reopen",
+          "can_cancel"
+        ],
+        "properties": {
+          "event_name": {"type":"string"},
+          "timezone": {"type":"string"},
+          "request": {
+            "$ref": "#/components/schemas/HelpRequest"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpTransition"
+            }
+          },
+          "can_claim": {
+            "type": "boolean"
+          },
+          "can_release": {
+            "type": "boolean"
+          },
+          "can_transfer": {
+            "type": "boolean"
+          },
+          "can_resolve": {
+            "type": "boolean"
+          },
+          "can_reopen": {
+            "type": "boolean"
+          },
+          "can_cancel": {
+            "type": "boolean"
+          }
+        }
+      }
+    HelpTransition:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "action",
+          "status",
+          "actor_id",
+          "assignee_id",
+          "at"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "claimed",
+              "resolved",
+              "cancelled"
+            ]
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    HelpQueue:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "waiting",
+          "claimed",
+          "resolved",
+          "cancelled",
+          "can_manage"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpSummary"
+            }
+          },
+          "waiting": {
+            "type": "integer"
+          },
+          "claimed": {
+            "type": "integer"
+          },
+          "resolved": {
+            "type": "integer"
+          },
+          "cancelled": {
+            "type": "integer"
+          },
+          "can_manage": {
+            "type": "boolean"
+          }
+        }
+      }
+    HelpConfiguration:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "setup_threshold_seconds",
+          "logistics_threshold_seconds",
+          "output_threshold_seconds",
+          "meeting_hosts"
+        ],
+        "properties": {
+          "setup_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "logistics_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "output_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "meeting_hosts": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "maxLength": 253
+            }
+          }
+        }
+      }
+    HelpSettings:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "setup_threshold_seconds",
+          "logistics_threshold_seconds",
+          "output_threshold_seconds",
+          "meeting_hosts"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "setup_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "logistics_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "output_threshold_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "meeting_hosts": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "maxLength": 253
+            }
+          }
+        }
+      }

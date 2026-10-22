@@ -1839,6 +1839,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/help": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getHelpQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/help/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getHelpRequest"];
+        put: operations["createHelpRequest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/help/{request_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changeHelpRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/help-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getHelpSettings"];
+        put: operations["configureHelp"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2365,7 +2439,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content";
+            kind: "content" | "help";
             /** Format: uuid */
             resource_id: string;
         };
@@ -2377,7 +2451,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content";
+                kind: "content" | "help";
                 /** Format: uuid */
                 resource_id: string;
             } | null;
@@ -3672,6 +3746,132 @@ export interface components {
             primary_colour: string;
             background_colour: string;
             foreground_colour: string;
+        };
+        HelpInput: {
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            category: "setup" | "logistics" | "competition_output";
+            description: string;
+            location: string;
+            meeting_url: string;
+        };
+        HelpCommand: {
+            /** @enum {string} */
+            action: "claim" | "release" | "transfer" | "resolve" | "reopen" | "cancel";
+            /** Format: uuid */
+            assignee_id: string | null;
+        };
+        HelpRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            requester_id: string;
+            /** Format: int64 */
+            revision: number;
+            /** @enum {string} */
+            category: "setup" | "logistics" | "competition_output";
+            description: string;
+            location: string;
+            meeting_url: string;
+            /** @enum {string} */
+            status: "waiting" | "claimed" | "resolved" | "cancelled";
+            /** Format: uuid */
+            assignee_id: string | null;
+            /** Format: int64 */
+            waiting_cycle: number;
+            /** Format: date-time */
+            requested_at: string;
+            /** Format: date-time */
+            waiting_since: string;
+            /** Format: date-time */
+            first_claimed_at: string | null;
+            /** Format: date-time */
+            claimed_at: string | null;
+            /** Format: date-time */
+            resolved_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        HelpSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            category: "setup" | "logistics" | "competition_output";
+            /** @enum {string} */
+            status: "waiting" | "claimed" | "resolved" | "cancelled";
+            /** Format: uuid */
+            assignee_id: string | null;
+            /** Format: date-time */
+            requested_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: int64 */
+            waiting_seconds: number;
+            /** Format: int64 */
+            response_seconds: number | null;
+            /** Format: int64 */
+            completion_seconds: number | null;
+            overdue: boolean;
+        };
+        HelpPage: {
+            event_name: string;
+            timezone: string;
+            request: components["schemas"]["HelpRequest"];
+            history: components["schemas"]["HelpTransition"][];
+            can_claim: boolean;
+            can_release: boolean;
+            can_transfer: boolean;
+            can_resolve: boolean;
+            can_reopen: boolean;
+            can_cancel: boolean;
+        };
+        HelpTransition: {
+            /** Format: int64 */
+            revision: number;
+            action: string;
+            /** @enum {string} */
+            status: "waiting" | "claimed" | "resolved" | "cancelled";
+            /** Format: uuid */
+            actor_id: string | null;
+            /** Format: uuid */
+            assignee_id: string | null;
+            /** Format: date-time */
+            at: string;
+        };
+        HelpQueue: {
+            items: components["schemas"]["HelpSummary"][];
+            waiting: number;
+            claimed: number;
+            resolved: number;
+            cancelled: number;
+            can_manage: boolean;
+        };
+        HelpConfiguration: {
+            /** Format: int64 */
+            setup_threshold_seconds: number;
+            /** Format: int64 */
+            logistics_threshold_seconds: number;
+            /** Format: int64 */
+            output_threshold_seconds: number;
+            meeting_hosts: string[];
+        };
+        HelpSettings: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            setup_threshold_seconds: number;
+            /** Format: int64 */
+            logistics_threshold_seconds: number;
+            /** Format: int64 */
+            output_threshold_seconds: number;
+            meeting_hosts: string[];
         };
     };
     responses: {
@@ -7158,6 +7358,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContentNotices"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getHelpQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpQueue"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getHelpRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createHelpRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Quoted help request or settings revision. Create uses "0". */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelpInput"];
+            };
+        };
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeHelpRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Quoted help request or settings revision. Create uses "0". */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelpCommand"];
+            };
+        };
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getHelpSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureHelp: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Quoted help request or settings revision. Create uses "0". */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelpConfiguration"];
+            };
+        };
+        responses: {
+            /** @description Current authorised help state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HelpSettings"];
                 };
             };
             default: components["responses"]["Error"];

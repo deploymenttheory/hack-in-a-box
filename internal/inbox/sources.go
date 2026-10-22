@@ -123,7 +123,10 @@ func (s Service) authorize(
 		}
 		// An owner cannot introduce arbitrary browser destinations or activate a
 		// journey before that route has been implemented and reviewed here.
-		_ = destination
+		if source.Kind == "help" && destination.Kind == "help" &&
+			destination.ResourceID == source.ID {
+			return &destination, nil
+		}
 		return nil, access.ErrNotFound
 	}
 }
