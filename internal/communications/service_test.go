@@ -240,6 +240,19 @@ func TestActualWithdrawalBetweenPreviewApprovalAndExecution(t *testing.T) {
 	)
 	preview := f.preview(t)
 	f.approve(t, preview)
+	f.exec(t, "UPDATE events SET stage='preparation' WHERE id=$1", f.eventID)
+	if current, stageErr := f.s.ResolveApproved(
+		ctx,
+		f.eventID,
+		preview.ID,
+	); stageErr != nil ||
+		len(current.Recipients) != 2 {
+		t.Fatalf(
+			"ordinary stage advancement invalidated approved content: %+v %v",
+			current,
+			stageErr,
+		)
+	}
 	if _, err = reg.Respond(
 		ctx,
 		person.ID,

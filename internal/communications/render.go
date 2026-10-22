@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
@@ -99,19 +100,8 @@ func outstanding(
 	case "offer":
 		return p.OfferPending, nil
 	case "preparation":
-		roles := append([]string{}, p.Roles...)
-		if p.CompetitionState == "confirmed" {
-			roles = append(roles, "attendee")
-		}
-		count, err := q.CommunicationOutstandingTasks(
-			ctx,
-			dbgen.CommunicationOutstandingTasksParams{
-				EventID:  eventID,
-				PersonID: p.ID.String(),
-				Roles:    roles,
-			},
-		)
-		return count > 0, contextError("outstanding", err)
+		pending, err := preparation.OutstandingAssigned(ctx, q, p.ID, eventID)
+		return pending, contextError("outstanding preparation", err)
 	default:
 		for _, f := range facts {
 			if f.Kind == a.Outstanding &&
@@ -313,11 +303,10 @@ func (s Service) build(
 	}
 	result.Fingerprint = digest(struct {
 		Name          string
-		Stage         string
 		Configuration event.Configuration
 		Facts         []dbgen.CommunicationFact
 		Content       []dbgen.ContentItem
-	}{row.Name, row.Stage, c, approvedFacts, items})
+	}{row.Name, c, approvedFacts, items})
 	for _, person := range people {
 		if !selected(person, a) {
 			continue
