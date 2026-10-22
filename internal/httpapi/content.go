@@ -123,3 +123,14 @@ func (h handlers) EventNotices(
 		Items []content.Notice `json:"items"`
 	}{items})
 }
+
+func (h handlers) ContentReadiness(
+	ctx context.Context,
+	r contract.ContentReadinessRequestObject,
+) (contract.ContentReadinessResponseObject, error) {
+	v, err := h.Content.PublicationStatus(ctx, actor(ctx).ID, r.EventId)
+	if err != nil {
+		return nil, fmt.Errorf("publication readiness: %w", err)
+	}
+	return convertDTO[contract.ContentReadiness200JSONResponse](v)
+}

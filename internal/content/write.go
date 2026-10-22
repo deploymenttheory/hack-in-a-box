@@ -300,6 +300,9 @@ func (s Service) change(
 				"Choose a future release time. A missed challenge requires postponement.",
 			)
 		}
+		if err = s.verifyAttachments(ctx, q, actor, row.ID, d); err != nil {
+			return err
+		}
 		item.State = "approved"
 		item.ApprovedBy = &actor
 		item.ApprovedRevision = pgtype.Int8{Int64: item.Revision + 1, Valid: true}

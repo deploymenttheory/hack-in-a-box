@@ -17,11 +17,13 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 )
 
 type Service struct {
-	Pool  *pgxpool.Pool
-	Clock func() time.Time
+	Storage files.Storage
+	Pool    *pgxpool.Pool
+	Clock   func() time.Time
 }
 
 func (s Service) now() time.Time {
@@ -129,6 +131,10 @@ func projection(
 		ReleasedVersion: numberPointer(item.ReleasedVersion),
 		ReleasedAt:      timePointer(item.ReleasedAt),
 		CanManage:       manage,
+	}
+	result.AttachmentDetails, err = attachmentDetails(ctx, q, actor, item.EventID, doc.Attachments)
+	if err != nil {
+		return result, err
 	}
 	if !preview {
 		result.State = "released"

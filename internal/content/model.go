@@ -25,16 +25,17 @@ type Input struct {
 	Document Document `json:"document"`
 }
 type Page struct {
-	ID              uuid.UUID  `json:"id"`
-	Kind            string     `json:"kind"`
-	Revision        int64      `json:"revision"`
-	Version         int64      `json:"version"`
-	State           string     `json:"state"`
-	Document        Document   `json:"document"`
-	ReleasedVersion *int64     `json:"released_version"`
-	ReleasedAt      *time.Time `json:"released_at"`
-	CanManage       bool       `json:"can_manage"`
-	Message         string     `json:"message"`
+	AttachmentDetails []Attachment `json:"attachment_details"`
+	ID                uuid.UUID    `json:"id"`
+	Kind              string       `json:"kind"`
+	Revision          int64        `json:"revision"`
+	Version           int64        `json:"version"`
+	State             string       `json:"state"`
+	Document          Document     `json:"document"`
+	ReleasedVersion   *int64       `json:"released_version"`
+	ReleasedAt        *time.Time   `json:"released_at"`
+	CanManage         bool         `json:"can_manage"`
+	Message           string       `json:"message"`
 }
 type List struct {
 	Items      []Page     `json:"items"`
