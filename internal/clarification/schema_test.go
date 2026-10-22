@@ -278,9 +278,16 @@ func TestClarificationPopulatedRollbackRetainsPrivateQuestion(t *testing.T) {
 	if _, err = provider.DownTo(t.Context(), 33); err == nil {
 		t.Fatal("rollback discarded private question history")
 	}
+	version, err := provider.GetDBVersion(t.Context())
+	if err != nil || version != 34 {
+		t.Fatal("failed rollback changed the protected clarification schema", version, err)
+	}
 	retained, err := f.service.Question(t.Context(), f.first, f.eventID, question.ID)
 	if err != nil || retained.Body != question.Body || retained.Source != question.Source {
 		t.Fatal("guarded rollback changed private question", err)
+	}
+	if err = database.Migrate(t.Context(), f.pool, 0); err != nil {
+		t.Fatal(err)
 	}
 	if err = database.CheckSchema(t.Context(), f.pool); err != nil {
 		t.Fatal(err)
