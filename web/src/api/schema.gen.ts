@@ -2629,6 +2629,7 @@ export interface components {
             live_start: string;
             /** Format: date-time */
             cutoff: string;
+            /** @description Competition definitions are withheld until actual common challenge publication for participants. Current organisers retain their authoring view. */
             definitions: components["schemas"]["SubmissionDefinition"][];
             final: components["schemas"]["SubmissionRevision"] | null;
         };

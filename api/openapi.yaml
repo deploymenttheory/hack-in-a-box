@@ -4235,6 +4235,7 @@ components:
         cutoff: {type: string, format: date-time}
         definitions:
           type: array
+          description: Competition definitions are withheld until actual common challenge publication for participants. Current organisers retain their authoring view.
           items: {$ref: '#/components/schemas/SubmissionDefinition'}
         final:
           nullable: true

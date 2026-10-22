@@ -243,6 +243,7 @@ func revision(ctx context.Context, q *dbgen.Queries, v scope, n int64) (*Revisio
 }
 
 func (s Service) page(ctx context.Context, q *dbgen.Queries, v scope) (Page, error) {
+	now := s.now()
 	result := Page{
 		EventRevision: v.row.Revision,
 		Revision:      v.state.Revision,
@@ -256,7 +257,7 @@ func (s Service) page(ctx context.Context, q *dbgen.Queries, v scope) (Page, err
 	if v.state.FrozenAt.Valid {
 		result.FrozenAt = &v.state.FrozenAt.Time
 	}
-	result.CanReadDraft = v.authority.Member && published(v.row, s.now())
+	result.CanReadDraft = v.authority.Member && published(v.row, now)
 	result.Organisers = []Organiser{}
 	contacts, err := q.SubmissionOrganisers(ctx, v.row.ID)
 	if err != nil {
@@ -266,12 +267,15 @@ func (s Service) page(ctx context.Context, q *dbgen.Queries, v scope) (Page, err
 		result.Organisers = append(result.Organisers, Organiser{ID: p.ID, Name: p.DisplayName})
 	}
 
-	defs, err := definitions(ctx, q, v.row, v.config)
-	if err != nil {
-		return result, err
+	// Competition prose may reveal the common challenge. A planned release time
+	// grants no access; organisers retain their private authoring view.
+	if v.authority.Organiser || published(v.row, now) {
+		defs, err := definitions(ctx, q, v.row, v.config)
+		if err != nil {
+			return result, err
+		}
+		result.Definitions = filtered(Document{Definitions: defs}, v.authority).Definitions
 	}
-	result.Definitions = filtered(Document{Definitions: defs}, v.authority).Definitions
-	now := s.now()
 	result.CanDraft = draftAllowed(v, now)
 	result.CanSubmit = v.row.WritesAllowed && v.authority.Active && live(v, now) &&
 		(v.authority.Organiser || (v.authority.Member && open(v, now) && v.state.Outcome == "open" && !v.state.FrozenAt.Valid))
