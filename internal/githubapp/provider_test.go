@@ -180,8 +180,8 @@ func TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens(t *testi
 						}
 						if len(input.Repositories) != 1 ||
 							input.Repositories[0] != "synthetic-template" ||
-							len(input.Permissions) != 2 ||
-							input.Permissions["contents"] != "read" ||
+							len(input.Permissions) != 1 ||
+
 							input.Permissions["metadata"] != "read" {
 							t.Errorf("unbounded token scope: %+v", input)
 						}
@@ -241,7 +241,7 @@ func TestOperationTokensNeverDefaultToInstallationWideAccess(t *testing.T) {
 	p := NewProvider()
 	key := syntheticKey(t)
 	c := Configuration{AppID: 42}
-	for _, op := range []string{"read", "create", "invite"} {
+	for _, op := range []string{"metadata", "read", "create", "invite"} {
 		if _, err := p.scopedClient(c, key, 7, nil, op); err == nil {
 			t.Fatalf("unbounded %s token allowed", op)
 		}

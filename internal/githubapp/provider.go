@@ -124,8 +124,8 @@ func permissionChecks(permissions map[string]string) []PermissionCheck {
 	return []PermissionCheck{
 		{
 			Operation: "read_template",
-			Required:  []string{"contents:read", "metadata:read"},
-			Allowed:   read,
+			Required:  []string{"metadata:read"},
+			Allowed:   true,
 		},
 		{
 			Operation: "create_repository",
@@ -199,7 +199,7 @@ func (p *RESTProvider) Inspect(
 	if !result.Checks[0].Allowed {
 		return result
 	}
-	scoped, err := p.scopedClient(c, key, id, []string{c.TemplateRepository}, "read")
+	scoped, err := p.scopedClient(c, key, id, []string{c.TemplateRepository}, "metadata")
 	if err != nil {
 		return diagnostic("credentials_invalid")
 	}
@@ -243,6 +243,7 @@ func (p *RESTProvider) scopedClient(
 	}
 	permissions := &authgithub.InstallationPermissions{Metadata: new("read")}
 	switch operation {
+	case "metadata": // Metadata read is implicit for every installation.
 	case "read":
 		permissions.Contents = new("read")
 	case "create":
