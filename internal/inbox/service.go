@@ -81,7 +81,16 @@ func (s Service) List(
 			if cursor != nil && bytes.Compare(row.ID[:], cursor[:]) >= 0 {
 				continue
 			}
-			item := itemFrom(dbgen.InboxNotificationRow(row))
+			item := itemFrom(
+				dbgen.InboxNotificationRow{
+					ID:         row.ID,
+					EventID:    row.EventID,
+					EventName:  row.EventName,
+					SourceKind: row.SourceKind,
+					CreatedAt:  row.CreatedAt,
+					ReadAt:     row.ReadAt,
+				},
+			)
 			if len(result.Items) < limit {
 				result.Items = append(result.Items, item)
 			} else if result.NextCursor == nil {

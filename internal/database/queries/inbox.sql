@@ -1,5 +1,5 @@
 -- name: InboxCandidates :many
-SELECT n.*,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
+SELECT n.id,n.event_id,n.source_kind,n.source_id,n.source_version,n.provenance,n.created_at,n.read_at,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
 WHERE n.recipient_id=$1 AND (sqlc.narg(event_filter)::uuid IS NULL OR n.event_id=sqlc.narg(event_filter)::uuid)
 ORDER BY n.id DESC LIMIT 10001;
 

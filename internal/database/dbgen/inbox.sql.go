@@ -14,7 +14,7 @@ import (
 )
 
 const inboxCandidates = `-- name: InboxCandidates :many
-SELECT n.id, n.event_id, n.recipient_id, n.source_kind, n.source_id, n.occurrence_id, n.scope_binding, n.source_version, n.provenance, n.subject, n.body, n.format, n.created_at, n.read_at,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
+SELECT n.id,n.event_id,n.source_kind,n.source_id,n.source_version,n.provenance,n.created_at,n.read_at,e.name AS event_name FROM inbox_notifications n JOIN events e ON e.id=n.event_id
 WHERE n.recipient_id=$1 AND ($2::uuid IS NULL OR n.event_id=$2::uuid)
 ORDER BY n.id DESC LIMIT 10001
 `
@@ -27,16 +27,10 @@ type InboxCandidatesParams struct {
 type InboxCandidatesRow struct {
 	ID            uuid.UUID
 	EventID       uuid.UUID
-	RecipientID   uuid.UUID
 	SourceKind    string
 	SourceID      uuid.UUID
-	OccurrenceID  uuid.UUID
-	ScopeBinding  string
 	SourceVersion int64
 	Provenance    []byte
-	Subject       string
-	Body          string
-	Format        string
 	CreatedAt     time.Time
 	ReadAt        pgtype.Timestamptz
 	EventName     string
@@ -54,16 +48,10 @@ func (q *Queries) InboxCandidates(ctx context.Context, arg InboxCandidatesParams
 		if err := rows.Scan(
 			&i.ID,
 			&i.EventID,
-			&i.RecipientID,
 			&i.SourceKind,
 			&i.SourceID,
-			&i.OccurrenceID,
-			&i.ScopeBinding,
 			&i.SourceVersion,
 			&i.Provenance,
-			&i.Subject,
-			&i.Body,
-			&i.Format,
 			&i.CreatedAt,
 			&i.ReadAt,
 			&i.EventName,
