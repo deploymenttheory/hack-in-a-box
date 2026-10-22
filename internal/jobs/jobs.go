@@ -184,39 +184,50 @@ func (s *Service) Execute(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
+	// Provider callbacks can use their own event-locking transactions. Never hold
+	// an operation row while waiting on one: event commands lock Event first.
+	candidate, err := dbgen.New(s.Pool).Operation(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read operation candidate: %w", err)
+	}
+	if !claimable(candidate) {
+		return nil
+	}
+	handler := s.handlers[candidate.Kind]
+	if handler == nil {
+		return nil
+	} // Undeployed integrations remain resumable.
+	eligible, err := handler.Eligible(ctx, delivery(candidate))
+	if err != nil {
+		return ErrEligibility
+	}
+	if !eligible {
+		return nil
+	}
 	var op dbgen.Operation
 	token := uuid.New()
 	claimed := false
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
-		var err error
-		op, err = q.LockOperation(ctx, id)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil
-		}
+	err = database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		event, err := q.LockEvent(ctx, candidate.EventID)
 		if err != nil {
-			return fmt.Errorf("lock operation: %w", err)
-		}
-		if op.State != "pending" || !op.Approved || op.Cancelled || op.DueAt.After(time.Now()) {
-			return nil
-		}
-		event, err := q.Event(ctx, op.EventID)
-		if err != nil {
-			return fmt.Errorf("recheck event operation eligibility: %w", err)
+			return fmt.Errorf("lock operation event: %w", err)
 		}
 		if !event.WritesAllowed {
 			return nil
 		}
-		handler := s.handlers[op.Kind]
-		if handler == nil {
-			return nil
-		} // New integration kinds remain pending until their handler is deployed.
-		eligible, err := handler.Eligible(ctx, delivery(op))
+		op, err = q.LockOperation(ctx, id)
 		if err != nil {
-			return ErrEligibility
+			return fmt.Errorf("lock operation: %w", err)
 		}
-		if !eligible {
+		// Approval, cancellation or identity changes during the callback require a
+		// fresh current-authority check; the normal worker snooze preserves work.
+		if !claimable(op) || !sameCandidate(candidate, op) {
 			return nil
 		}
+
 		op, err = q.ClaimOperation(
 			ctx,
 			dbgen.ClaimOperationParams{
@@ -251,6 +262,16 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 		return ErrRetry
 	}
 	return nil
+}
+
+func claimable(op dbgen.Operation) bool {
+	return op.State == "pending" && op.Approved && !op.Cancelled && !op.DueAt.After(time.Now())
+}
+
+func sameCandidate(before, after dbgen.Operation) bool {
+	return before.Revision == after.Revision && before.EventID == after.EventID &&
+		before.Kind == after.Kind && before.TargetID == after.TargetID &&
+		before.OperationKey == after.OperationKey && before.DueAt.Equal(after.DueAt)
 }
 
 func delivery(op dbgen.Operation) Delivery {
@@ -369,7 +390,7 @@ func (s *Service) recover(ctx context.Context, op dbgen.Operation) error {
 	if !locked {
 		return nil
 	}
-	current, err := dbgen.New(tx).LockOperation(ctx, op.ID)
+	current, err := dbgen.New(tx).Operation(ctx, op.ID)
 	if err != nil {
 		return fmt.Errorf("reload expired operation: %w", err)
 	}
@@ -383,11 +404,24 @@ func (s *Service) recover(ctx context.Context, op dbgen.Operation) error {
 		result = normalize(handler.Reconcile(checkCtx, delivery(current)))
 		cancel()
 	}
+	// Reconciliation can also recheck current provider authority. Keep only the
+	// advisory guard across its callback, then use the same Event→Operation order.
+	q := dbgen.New(tx)
+	if _, err := q.LockEvent(ctx, current.EventID); err != nil {
+		return fmt.Errorf("lock recovery event: %w", err)
+	}
+	latest, err := q.LockOperation(ctx, current.ID)
+	if err != nil {
+		return fmt.Errorf("revalidate recovery operation: %w", err)
+	}
+	if !sameCandidate(current, latest) || latest.State != "running" || latest.LeaseToken == nil ||
+		*latest.LeaseToken != *current.LeaseToken || latest.LeaseUntil.Time.After(time.Now()) {
+		return nil
+	}
 	state := string(result)
 	if result == Retryable {
 		state = "pending"
 	}
-	q := dbgen.New(tx)
 	if _, err := q.FinishOperation(
 		ctx,
 		dbgen.FinishOperationParams{ID: current.ID, LeaseToken: current.LeaseToken, State: state},
