@@ -30,6 +30,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
@@ -39,6 +40,7 @@ import (
 )
 
 type Dependencies struct {
+	Presentation   presentation.Service
 	Communications communications.Service
 	Credentials    credentials.Service
 	Mentors        mentors.Service

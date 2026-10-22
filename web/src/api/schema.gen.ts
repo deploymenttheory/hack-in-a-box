@@ -491,6 +491,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/presentation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser/MC-only cue drafts, published program, timers and pairing metadata. No pairing secrets are returned. */
+        get: operations["getPresentation"];
+        put?: never;
+        /** @description Explicitly save drafts, approve/publish room fields, advance, hold, resume or reset. All actions resolve current organiser/MC authority and serialize by revision. Publishing resets the display until explicit advance. */
+        post: operations["changePresentation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/presentation/pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create an event-scoped, expiring display capability. The opaque bearer secret is returned once, stored only as a hash and never placed in a URL or log. Revoking the issuer's event authority also revokes access. */
+        post: operations["pairDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/presentation/pairings/{pairing_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                pairing_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Revoke a display pairing. Current streams recheck authority on each snapshot, at most one second apart under normal database operation, and close when revoked. */
+        post: operations["revokeDisplay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/display/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Display capability only; person cookies grant no access. Supply Authorization Bearer using authenticated fetch. URL query parameters, including tokens, are rejected. Returns only approved public-to-room fields and currently released common content titles, never private account/application data. */
+        get: operations["getDisplaySnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/display/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Authenticated fetch streaming with Authorization Bearer; native EventSource cannot set this header and must not use a URL token. No person cookies or URL query parameters are accepted as credentials. Sends event snapshot with id equal to the current cue revision immediately and every second, containing server_now and server-derived timer values. Last-Event-ID is accepted but never replays historical cues: reconnect always starts from the latest complete snapshot. Clients replace their snapshot on every message, even when a timer update retains the same cue revision. Event revoked closes the stream after pairing/issuer authority is lost; event reconnect closes on temporary dependency failure. Streams are bounded to five minutes with per-query/write deadlines; reconnect using the same still-valid header token. */
+        get: operations["streamDisplay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/exports/readiness.csv": {
         parameters: {
             query: {
@@ -2653,6 +2750,88 @@ export interface components {
             /** Format: int64 */
             next_cursor: number | null;
         };
+        PresentationCue: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            text: string;
+            url: string;
+            duration_seconds: number;
+            /** Format: uuid */
+            content_id: string | null;
+        };
+        DisplayPairing: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            revoked_at: string | null;
+        };
+        PresentationPage: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            server_now: string;
+            timezone: string;
+            draft: components["schemas"]["PresentationCue"][];
+            published: components["schemas"]["PresentationCue"][];
+            current_index: number;
+            /** @enum {string} */
+            mode: "held" | "running";
+            remaining_seconds: number;
+            /** Format: date-time */
+            timer_ends_at: string | null;
+            pairings: components["schemas"]["DisplayPairing"][];
+        };
+        PresentationCommand: {
+            /** @enum {string} */
+            action: "save" | "publish" | "advance" | "hold" | "resume" | "reset";
+            reason: string;
+            cues?: components["schemas"]["PresentationCue"][];
+        };
+        DisplayPairInput: {
+            label: string;
+            minutes: number;
+            reason: string;
+        };
+        PairedDisplay: {
+            /** Format: int64 */
+            revision: number;
+            pairing: components["schemas"]["DisplayPairing"];
+            token: string;
+        };
+        DisplayCue: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            text: string;
+            url: string;
+            content_title: string;
+        };
+        DisplaySnapshot: {
+            /** Format: uuid */
+            event_id: string;
+            event_name: string;
+            timezone: string;
+            /** Format: int64 */
+            sequence: number;
+            /** Format: date-time */
+            server_now: string;
+            current: components["schemas"]["DisplayCue"] | null;
+            next: components["schemas"]["DisplayCue"] | null;
+            /** @enum {string} */
+            mode: "held" | "running";
+            remaining_seconds: number;
+            /** Format: date-time */
+            timer_ends_at: string | null;
+            primary_colour: string;
+            background_colour: string;
+            foreground_colour: string;
+        };
     };
     responses: {
         /**
@@ -2676,6 +2855,8 @@ export interface components {
         EventID: string;
         CSRF: string;
         IdempotencyKey: string;
+        /** @description Quoted presentation revision, starting at "0". */
+        PresentationRevision: string;
         /** @description Quoted event revision, for example "1". */
         Revision: string;
         Cursor: number;
@@ -3588,6 +3769,173 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogisticsPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPresentation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current controller state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresentationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changePresentation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresentationCommand"];
+            };
+        };
+        responses: {
+            /** @description Updated controller state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresentationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    pairDisplay: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisplayPairInput"];
+            };
+        };
+        responses: {
+            /** @description One-time display secret and pairing metadata. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairedDisplay"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    revokeDisplay: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                pairing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated controller state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresentationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDisplaySnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current allowlisted display snapshot. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisplaySnapshot"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    streamDisplay: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-sent current snapshots; no stale cue replay. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
                 };
             };
             default: components["responses"]["Error"];

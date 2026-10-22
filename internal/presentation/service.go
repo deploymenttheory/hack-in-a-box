@@ -1,0 +1,637 @@
+package presentation
+
+import (
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"math"
+	"regexp"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
+)
+
+type Service struct {
+	Pool  *pgxpool.Pool
+	Clock func() time.Time
+}
+
+func (s Service) now() time.Time {
+	if s.Clock != nil {
+		return s.Clock().UTC()
+	}
+	return time.Now().UTC()
+}
+
+func controller(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID) error {
+	p, err := q.Person(ctx, actor)
+	if err != nil || !p.Active {
+		return access.ErrForbidden
+	}
+	roles, err := q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
+	if err != nil {
+		return fmt.Errorf("read presentation authority: %w", err)
+	}
+	if !slices.Contains(roles, "organiser") && !slices.Contains(roles, "mc") {
+		return access.ErrForbidden
+	}
+	return nil
+}
+
+func locked(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID) (dbgen.Event, error) {
+	row, err := q.LockEvent(ctx, eventID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return row, access.ErrNotFound
+	}
+	if err != nil {
+		return row, fmt.Errorf("lock presentation event: %w", err)
+	}
+	return row, nil
+}
+
+func state(ctx context.Context, q *dbgen.Queries, id uuid.UUID) (dbgen.PresentationState, error) {
+	if err := q.EnsurePresentation(ctx, id); err != nil {
+		return dbgen.PresentationState{}, fmt.Errorf("initialise presentation: %w", err)
+	}
+	row, err := q.PresentationState(ctx, id)
+	if err != nil {
+		return row, fmt.Errorf("read presentation state: %w", err)
+	}
+	return row, nil
+}
+
+func decode(row dbgen.PresentationState) ([]Cue, []Cue, error) {
+	draft, published := []Cue{}, []Cue{}
+	if err := json.Unmarshal(row.Draft, &draft); err != nil {
+		return nil, nil, fmt.Errorf("decode cue draft: %w", err)
+	}
+	if err := json.Unmarshal(row.Published, &published); err != nil {
+		return nil, nil, fmt.Errorf("decode approved cues: %w", err)
+	}
+	return draft, published, nil
+}
+
+func remaining(row dbgen.PresentationState, now time.Time) int32 {
+	if row.Mode == "running" && row.TimerEndsAt.Valid {
+		seconds := int64(math.Ceil(row.TimerEndsAt.Time.Sub(now).Seconds()))
+		if seconds < 0 {
+			return 0
+		}
+		if seconds > 86400 {
+			return 86400
+		}
+		return int32(seconds)
+	}
+	return row.RemainingSeconds
+}
+
+func (s Service) page(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventRow dbgen.Event,
+	row dbgen.PresentationState,
+) (Page, error) {
+	draft, published, err := decode(row)
+	if err != nil {
+		return Page{}, err
+	}
+	c := event.DefaultConfiguration()
+	if err = json.Unmarshal(eventRow.Configuration, &c); err != nil {
+		return Page{}, fmt.Errorf("decode cue timezone: %w", err)
+	}
+	result := Page{
+		Revision:         row.Revision,
+		ServerNow:        s.now(),
+		Timezone:         c.Timezone,
+		Draft:            draft,
+		Published:        published,
+		CurrentIndex:     int(row.CurrentIndex),
+		Mode:             row.Mode,
+		RemainingSeconds: int(remaining(row, s.now())),
+		Pairings:         []Pairing{},
+	}
+	if row.TimerEndsAt.Valid {
+		result.TimerEndsAt = &row.TimerEndsAt.Time
+	}
+	pairings, err := q.DisplayPairings(ctx, eventRow.ID)
+	if err != nil {
+		return Page{}, fmt.Errorf("list display pairings: %w", err)
+	}
+	for _, p := range pairings {
+		v := Pairing{ID: p.ID, Label: p.Label, CreatedAt: p.CreatedAt, ExpiresAt: p.ExpiresAt}
+		if p.RevokedAt.Valid {
+			v.RevokedAt = &p.RevokedAt.Time
+		}
+		result.Pairings = append(result.Pairings, v)
+	}
+	return result, nil
+}
+
+func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, error) {
+	var result Page
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		e, err := locked(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if err = controller(ctx, q, actor, eventID); err != nil {
+			return err
+		}
+		row, err := state(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		result, err = s.page(ctx, q, e, row)
+		return err
+	})
+	if err != nil {
+		return Page{}, fmt.Errorf("read presentation: %w", err)
+	}
+	return result, nil
+}
+
+func save(ctx context.Context, q *dbgen.Queries, row dbgen.PresentationState) error {
+	err := q.SavePresentationState(
+		ctx,
+		dbgen.SavePresentationStateParams(row),
+	)
+	if err != nil {
+		return fmt.Errorf("save presentation: %w", err)
+	}
+	return nil
+}
+
+func record(
+	ctx context.Context,
+	q *dbgen.Queries,
+	actor, eventID, target uuid.UUID,
+	action audit.Action,
+	revision int64,
+) error {
+	if err := audit.Append(
+		ctx,
+		q,
+		audit.Record{
+			ActorID:  &actor,
+			EventID:  &eventID,
+			TargetID: target,
+			Action:   action,
+			Reason:   audit.OrganiserDecision,
+			Metadata: audit.Metadata{Revision: &revision},
+		},
+	); err != nil {
+		return fmt.Errorf("record presentation audit: %w", err)
+	}
+	return nil
+}
+
+func (s Service) Change(
+	ctx context.Context,
+	actor, eventID uuid.UUID,
+	revision int64,
+	c Command,
+) (Page, error) {
+	if err := validate(c); err != nil {
+		return Page{}, err
+	}
+	var result Page
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		e, err := locked(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if err = controller(ctx, q, actor, eventID); err != nil {
+			return err
+		}
+		if !e.WritesAllowed {
+			return access.ErrForbidden
+		}
+		row, err := state(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if row.Revision != revision {
+			return access.ErrConflict
+		}
+		if err = change(&row, c, s.now()); err != nil {
+			return err
+		}
+		row.Revision++
+		if err = save(ctx, q, row); err != nil {
+			return err
+		}
+		if err = record(
+			ctx,
+			q,
+			actor,
+			eventID,
+			eventID,
+			audit.PresentationChanged,
+			row.Revision,
+		); err != nil {
+			return err
+		}
+		if _, err = q.RecordEventDecision(
+			ctx,
+			dbgen.RecordEventDecisionParams{
+				EventID:  eventID,
+				ActorID:  actor,
+				Kind:     "presentation." + c.Action,
+				Reason:   c.Reason,
+				Revision: e.Revision,
+			},
+		); err != nil {
+			return fmt.Errorf("record cue decision: %w", err)
+		}
+		result, err = s.page(ctx, q, e, row)
+		return err
+	})
+	if err != nil {
+		return Page{}, fmt.Errorf("change presentation: %w", err)
+	}
+	return result, nil
+}
+
+func change(row *dbgen.PresentationState, c Command, now time.Time) error {
+	_, published, err := decode(*row)
+	if err != nil {
+		return err
+	}
+	switch c.Action {
+	case "save":
+		row.Draft, err = json.Marshal(append([]Cue{}, c.Cues...))
+		if err != nil {
+			return fmt.Errorf("encode cue draft: %w", err)
+		}
+	case "publish":
+		row.Published = append([]byte{}, row.Draft...)
+		row.CurrentIndex = -1
+		row.Mode = "held"
+		row.RemainingSeconds = 0
+		row.TimerEndsAt = pgtype.Timestamptz{}
+	case "advance":
+		if len(published) == 0 || int(row.CurrentIndex) >= len(published) {
+			return access.ErrInvalid
+		}
+		row.CurrentIndex++
+		row.RemainingSeconds = 0
+		row.TimerEndsAt = pgtype.Timestamptz{}
+		row.Mode = "held"
+		if int(row.CurrentIndex) < len(published) {
+			duration := published[row.CurrentIndex].DurationSeconds
+			row.RemainingSeconds = duration
+			row.Mode = "running"
+			if duration > 0 {
+				row.TimerEndsAt = pgtype.Timestamptz{
+					Time:  now.Add(time.Duration(duration) * time.Second),
+					Valid: true,
+				}
+			}
+		}
+	case "hold":
+		row.RemainingSeconds = remaining(*row, now)
+		row.Mode = "held"
+		row.TimerEndsAt = pgtype.Timestamptz{}
+	case "resume":
+		if row.Mode != "held" || row.CurrentIndex < 0 || int(row.CurrentIndex) >= len(published) {
+			return access.ErrInvalid
+		}
+		row.Mode = "running"
+		if row.RemainingSeconds > 0 {
+			row.TimerEndsAt = pgtype.Timestamptz{
+				Time:  now.Add(time.Duration(row.RemainingSeconds) * time.Second),
+				Valid: true,
+			}
+		}
+	case "reset":
+		row.CurrentIndex = -1
+		row.Mode = "held"
+		row.RemainingSeconds = 0
+		row.TimerEndsAt = pgtype.Timestamptz{}
+	}
+	return nil
+}
+
+func (s Service) Pair(
+	ctx context.Context,
+	actor, eventID uuid.UUID,
+	revision int64,
+	input PairInput,
+) (Paired, error) {
+	if strings.TrimSpace(input.Label) == "" || len(input.Label) > 100 || input.Minutes < 5 ||
+		input.Minutes > 1440 ||
+		strings.TrimSpace(input.Reason) == "" ||
+		len(input.Reason) > 2000 {
+		return Paired{}, access.ErrInvalid
+	}
+	var result Paired
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		e, err := locked(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if err = controller(ctx, q, actor, eventID); err != nil {
+			return err
+		}
+		if !e.WritesAllowed {
+			return access.ErrForbidden
+		}
+		row, err := state(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if row.Revision != revision {
+			return access.ErrConflict
+		}
+		secret := rand.Text() + rand.Text()
+		digest := sha256.Sum256([]byte(secret))
+		now := s.now()
+		id := uuid.New()
+		expires := now.Add(time.Duration(input.Minutes) * time.Minute)
+		if err = q.CreateDisplayPairing(
+			ctx,
+			dbgen.CreateDisplayPairingParams{
+				EventID:   eventID,
+				ID:        id,
+				Label:     input.Label,
+				TokenHash: digest[:],
+				IssuerID:  actor,
+				CreatedAt: now,
+				ExpiresAt: expires,
+			},
+		); err != nil {
+			return fmt.Errorf("create display pairing: %w", err)
+		}
+		row.Revision++
+		if err = save(ctx, q, row); err != nil {
+			return err
+		}
+		if err = record(ctx, q, actor, eventID, id, audit.DisplayPaired, row.Revision); err != nil {
+			return err
+		}
+		if err = decision(ctx, q, e, actor, "display.paired", input.Reason); err != nil {
+			return err
+		}
+		result = Paired{
+			Revision: row.Revision,
+			Pairing:  Pairing{ID: id, Label: input.Label, CreatedAt: now, ExpiresAt: expires},
+			Token:    secret,
+		}
+		return nil
+	})
+	if err != nil {
+		return Paired{}, fmt.Errorf("pair display: %w", err)
+	}
+	return result, nil
+}
+
+func (s Service) Revoke(
+	ctx context.Context,
+	actor, eventID, pairingID uuid.UUID,
+	revision int64,
+	reason string,
+) (Page, error) {
+	if strings.TrimSpace(reason) == "" || len(reason) > 2000 {
+		return Page{}, access.ErrInvalid
+	}
+	var result Page
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		e, err := locked(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if err = controller(ctx, q, actor, eventID); err != nil {
+			return err
+		}
+		if !e.WritesAllowed {
+			return access.ErrForbidden
+		}
+		row, err := state(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		if row.Revision != revision {
+			return access.ErrConflict
+		}
+		affected, err := q.RevokeDisplayPairing(
+			ctx,
+			dbgen.RevokeDisplayPairingParams{
+				EventID:   eventID,
+				ID:        pairingID,
+				RevokedAt: pgtype.Timestamptz{Time: s.now(), Valid: true},
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("revoke display pairing: %w", err)
+		}
+		if affected == 0 {
+			return access.ErrNotFound
+		}
+		row.Revision++
+		if err = save(ctx, q, row); err != nil {
+			return err
+		}
+		if err = record(
+			ctx,
+			q,
+			actor,
+			eventID,
+			pairingID,
+			audit.DisplayRevoked,
+			row.Revision,
+		); err != nil {
+			return err
+		}
+		if err = decision(ctx, q, e, actor, "display.revoked", reason); err != nil {
+			return err
+		}
+		result, err = s.page(ctx, q, e, row)
+		return err
+	})
+	if err != nil {
+		return Page{}, fmt.Errorf("revoke display: %w", err)
+	}
+	return result, nil
+}
+
+var colour = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+
+func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) (Snapshot, error) {
+	if len(token) < 32 || len(token) > 200 {
+		return Snapshot{}, access.ErrUnauthenticated
+	}
+	var result Snapshot
+	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		e, err := locked(ctx, q, eventID)
+		if err != nil {
+			return access.ErrUnauthenticated
+		}
+		digest := sha256.Sum256([]byte(token))
+		pairing, err := q.DisplayPairingByHash(
+			ctx,
+			dbgen.DisplayPairingByHashParams{EventID: eventID, TokenHash: digest[:]},
+		)
+		if err != nil || pairing.RevokedAt.Valid || !s.now().Before(pairing.ExpiresAt) ||
+			!e.WritesAllowed {
+			return access.ErrUnauthenticated
+		}
+		if err = controller(ctx, q, pairing.IssuerID, eventID); err != nil {
+			return access.ErrUnauthenticated
+		}
+		row, err := state(ctx, q, eventID)
+		if err != nil {
+			return err
+		}
+		_, published, err := decode(row)
+		if err != nil {
+			return err
+		}
+		c := event.DefaultConfiguration()
+		if err = json.Unmarshal(e.Configuration, &c); err != nil {
+			return fmt.Errorf("decode display timezone: %w", err)
+		}
+		result = Snapshot{
+			EventID:          eventID,
+			EventName:        e.Name,
+			Timezone:         c.Timezone,
+			Sequence:         row.Revision,
+			ServerNow:        s.now(),
+			Mode:             row.Mode,
+			RemainingSeconds: int(remaining(row, s.now())),
+			PrimaryColour:    "#173a35",
+			BackgroundColour: "#f8f9f5",
+			ForegroundColour: "#173a35",
+		}
+		if row.TimerEndsAt.Valid {
+			result.TimerEndsAt = &row.TimerEndsAt.Time
+		}
+		if row.CurrentIndex >= 0 && int(row.CurrentIndex) < len(published) {
+			cue, visible, projectErr := s.project(ctx, q, e, published[row.CurrentIndex])
+			if projectErr != nil {
+				return projectErr
+			}
+			if visible {
+				result.Current = &cue
+			}
+		}
+		if int(row.CurrentIndex)+1 < len(published) {
+			cue, visible, projectErr := s.project(ctx, q, e, published[row.CurrentIndex+1])
+			if projectErr != nil {
+				return projectErr
+			}
+			if visible {
+				result.Next = &cue
+			}
+		}
+		raw, readErr := q.EventDefinitions(ctx, eventID)
+		if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
+			return fmt.Errorf("read display branding: %w", readErr)
+		}
+		if readErr == nil {
+			defs := templates.EmptyDefinitions()
+			if err = json.Unmarshal(raw.Definitions, &defs); err != nil {
+				return fmt.Errorf("decode display branding: %w", err)
+			}
+			if colour.MatchString(defs.Branding.Primary) {
+				result.PrimaryColour = defs.Branding.Primary
+			}
+			if colour.MatchString(defs.Branding.Background) {
+				result.BackgroundColour = defs.Branding.Background
+			}
+			if colour.MatchString(defs.Branding.Foreground) {
+				result.ForegroundColour = defs.Branding.Foreground
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("display snapshot: %w", err)
+	}
+	return result, nil
+}
+
+func (s Service) project(
+	ctx context.Context,
+	q *dbgen.Queries,
+	e dbgen.Event,
+	c Cue,
+) (DisplayCue, bool, error) {
+	result := DisplayCue{ID: c.ID, Title: c.Title, Text: c.Text, URL: c.URL}
+	if c.ContentID == nil {
+		return result, true, nil
+	}
+	item, err := q.ContentItem(ctx, dbgen.ContentItemParams{EventID: e.ID, ID: *c.ContentID})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return DisplayCue{}, false, nil
+	}
+	if err != nil {
+		return DisplayCue{}, false, fmt.Errorf("read cue content: %w", err)
+	}
+	if !item.ReleasedVersion.Valid || !item.ReleasedAt.Valid ||
+		s.now().Before(item.ReleasedAt.Time) ||
+		item.State == "withdrawn" {
+		return DisplayCue{}, false, nil
+	}
+	if item.Kind == "challenge" && (!e.PublishedAt.Valid || s.now().Before(e.PublishedAt.Time)) {
+		return DisplayCue{}, false, nil
+	}
+	version, err := q.ContentVersion(
+		ctx,
+		dbgen.ContentVersionParams{
+			EventID:   e.ID,
+			ContentID: item.ID,
+			Version:   item.ReleasedVersion.Int64,
+		},
+	)
+	if err != nil {
+		return DisplayCue{}, false, fmt.Errorf("read released cue content: %w", err)
+	}
+	var document content.Document
+	if err = json.Unmarshal(version.Document, &document); err != nil {
+		return DisplayCue{}, false, fmt.Errorf("decode released cue content: %w", err)
+	}
+	if !document.Audience.Confirmed || len(document.Audience.Roles) > 0 ||
+		len(document.Audience.Teams) > 0 {
+		return DisplayCue{}, false, nil
+	}
+	result.ContentTitle = document.Title
+	return result, true, nil
+}
+
+func decision(
+	ctx context.Context,
+	q *dbgen.Queries,
+	e dbgen.Event,
+	actor uuid.UUID,
+	kind, reason string,
+) error {
+	if _, err := q.RecordEventDecision(
+		ctx,
+		dbgen.RecordEventDecisionParams{
+			EventID:  e.ID,
+			ActorID:  actor,
+			Kind:     kind,
+			Reason:   reason,
+			Revision: e.Revision,
+		},
+	); err != nil {
+		return fmt.Errorf("record display decision: %w", err)
+	}
+	return nil
+}

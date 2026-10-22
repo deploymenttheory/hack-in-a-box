@@ -22,6 +22,9 @@ const (
 )
 
 const (
+	PresentationChanged      Action = "presentation.changed"
+	DisplayPaired            Action = "display.paired"
+	DisplayRevoked           Action = "display.revoked"
 	ContentAcknowledged      Action = "content.acknowledged"
 	ContentChanged           Action = "content.changed"
 	ContentReleased          Action = "content.released"
@@ -97,7 +100,10 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case CommunicationChanged,
+	case PresentationChanged,
+		DisplayPaired,
+		DisplayRevoked,
+		CommunicationChanged,
 		CredentialRotated,
 		CredentialChanged,
 		CredentialRevealed,
