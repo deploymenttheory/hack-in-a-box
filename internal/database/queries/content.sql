@@ -53,3 +53,9 @@ WITH changed AS (
 )
 INSERT INTO content_changes(event_id,content_id,revision,version,action,actor_id,scheduled_at,occurred_at)
 SELECT event_id,id,revision,version,'schedule_invalidated',sqlc.arg(actor_id)::uuid,scheduled_at,sqlc.arg(changed_at)::timestamptz FROM changed;
+
+-- name: ContentAcknowledgement :one
+SELECT acknowledged_at FROM content_acknowledgements WHERE event_id=$1 AND content_id=$2 AND version=$3 AND person_id=$4;
+
+-- name: AcknowledgeContent :execrows
+INSERT INTO content_acknowledgements(event_id,content_id,version,person_id,acknowledged_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING;

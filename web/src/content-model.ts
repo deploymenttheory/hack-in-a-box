@@ -11,7 +11,7 @@ export const contentRoles: ContentRole[] = ['organiser', 'mentor', 'judge', 'mc'
 export const roleLabel = (role: string) => role === 'mc' ? 'MC' : role === 'early_brief_access' ? 'Early brief access' : role[0].toUpperCase() + role.slice(1)
 export const emptyAudience = () => ({ confirmed: true, roles: [] as ContentRole[], teams: [] as string[] })
 export function contentTemplates(briefs: components['schemas']['TemplateRoleBrief'][], pages: ContentPage[]): ContentTemplate[] {
-  const doc = (title: string, markdown: string): ContentDocument => ({ title, markdown, audience: emptyAudience(), attachments: [], scheduled_at: null })
+  const doc = (title: string, markdown: string): ContentDocument => ({ title, markdown, require_acknowledgement: false, audience: emptyAudience(), attachments: [], scheduled_at: null })
   const result: ContentTemplate[] = [
     { id: 'challenge', name: 'Challenge brief', input: { kind: 'challenge', document: doc('The challenge', '# The challenge\n\n{{Describe the problem and the people it affects}}\n\n## What to build\n\n{{Describe the outcome}}\n\n## Success criteria\n\n{{Explain what a good entry demonstrates}}') } },
     { id: 'role', name: 'Role brief', input: { kind: 'brief', document: { ...doc('Mentor brief', '# Your role\n\n{{Describe responsibilities}}\n\n## On the day\n\n{{Add key times and contacts}}'), audience: { confirmed: false, roles: ['mentor'], teams: [] } } } },
@@ -31,9 +31,9 @@ export function contentProblems(d: ContentDocument): string[] {
   return errors
 }
 export function draftPage(input: ContentInput): ContentPage {
-  return { id: crypto.randomUUID(), kind: input.kind, document: structuredClone(input.document), version: 0, revision: 0, state: 'draft', released_version: null, released_at: null, attachment_details: [], can_manage: true, message: '' }
+  return { id: crypto.randomUUID(), kind: input.kind, document: structuredClone(input.document), version: 0, revision: 0, state: 'draft', released_version: null, released_at: null, attachment_details: [], acknowledged_at: null, can_manage: true, message: '' }
 }
 export function changedContent(a: ContentDocument, b: ContentDocument) {
-  const labels: Record<keyof ContentDocument, string> = { title: 'Title', markdown: 'Page text', audience: 'Release audience', attachments: 'Attachments', scheduled_at: 'Release schedule' }
+  const labels: Record<keyof ContentDocument, string> = { require_acknowledgement: 'Required acknowledgement', title: 'Title', markdown: 'Page text', audience: 'Release audience', attachments: 'Attachments', scheduled_at: 'Release schedule' }
   return (Object.keys(labels) as (keyof ContentDocument)[]).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k])).map(k => labels[k])
 }

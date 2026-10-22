@@ -189,3 +189,12 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .content-conflict { padding-top: 20px; }
 @media (max-width: 900px) { .content-editor-grid, .content-compare { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .content-audiences { grid-template-columns: 1fr; } .content-workspace .item-list li { flex-direction: column; align-items: flex-start; } }
+
+.resource-search { margin: 1.5rem 0; }
+.resource-search input { flex: 1; min-width: 12rem; }
+.resource-directory { margin: 1.5rem 0; }
+.resource-reader > .panel { margin-top: 1.5rem; max-width: 55rem; }
+.resource-reader h2:focus { outline: 2px solid var(--primary); outline-offset: .35rem; }
+.resource-acknowledgement { border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1rem; }
+
+.resource-library > .preparation-heading { margin-bottom: 1.5rem; }

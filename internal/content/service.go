@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -136,6 +137,22 @@ func projection(
 	if err != nil {
 		return result, err
 	}
+	ack, ackErr := q.ContentAcknowledgement(
+		ctx,
+		dbgen.ContentAcknowledgementParams{
+			EventID:   item.EventID,
+			ContentID: item.ID,
+			Version:   allowed,
+			PersonID:  actor,
+		},
+	)
+	if ackErr != nil && !errors.Is(ackErr, pgx.ErrNoRows) {
+		return result, fmt.Errorf("read acknowledgement: %w", ackErr)
+	}
+	if ackErr == nil {
+		result.AcknowledgedAt = &ack
+	}
+
 	if !preview {
 		result.State = "released"
 		result.Revision = allowed
@@ -182,10 +199,23 @@ func (s Service) List(
 	limit int32,
 	preview bool,
 ) (List, error) {
+	return s.Search(ctx, actor, eventID, cursor, limit, preview, "")
+}
+
+// Search evaluates the current released audience before matching any text or
+// advancing a visible cursor. Private titles and drafts cannot affect results.
+func (s Service) Search(
+	ctx context.Context,
+	actor, eventID, cursor uuid.UUID,
+	limit int32,
+	preview bool,
+	search string,
+) (List, error) {
 	result := List{Items: []Page{}}
-	if limit < 1 || limit > 100 {
+	if limit < 1 || limit > 100 || len(search) > 200 {
 		return result, access.ErrInvalid
 	}
+	search = strings.ToLower(strings.TrimSpace(search))
 	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
 		if _, err := q.LockEvent(ctx, eventID); err != nil {
 			return fmt.Errorf("lock content listing: %w", err)
@@ -215,6 +245,13 @@ func (s Service) List(
 				}
 				if err != nil {
 					return err
+				}
+				if search != "" &&
+					!strings.Contains(
+						strings.ToLower(page.Document.Title+"\n"+page.Document.Markdown),
+						search,
+					) {
+					continue
 				}
 				if len(result.Items) == int(limit) {
 					id := result.Items[len(result.Items)-1].ID

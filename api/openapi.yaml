@@ -1606,6 +1606,10 @@ paths:
     get:
       operationId: listContent
       parameters:
+        - name: q
+          in: query
+          description: Search titles and text only after current version/audience authorization.
+          schema: {type: string, maxLength: 200}
         - name: preview
           in: query
           description: Explicit privileged preview; never grants the selected audience access.
@@ -1701,6 +1705,29 @@ paths:
       responses:
         '200':
           description: Version-bound workflow action. Initial challenge publication cannot be triggered manually.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/content/{content_id}/acknowledgements:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: content_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: acknowledgeContent
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted released version the reader explicitly acknowledges; never the authoring state revision.
+          schema: {type: string, pattern: '^"[1-9][0-9]*"$'}
+      responses:
+        '200':
+          description: Idempotent personal acknowledgement of the current required released version. Current audience access is rechecked even for retries.
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ContentPage'}
@@ -3507,6 +3534,10 @@ components:
       additionalProperties: false
       required: [title, markdown, audience, attachments, scheduled_at]
       properties:
+        require_acknowledgement:
+          type: boolean
+          default: false
+          description: Explicitly require each reader to acknowledge this immutable version. Material updates with this flag require a new acknowledgement after release.
         title: {type: string, minLength: 1, maxLength: 200}
         markdown: {type: string, maxLength: 100000}
         audience: {$ref: '#/components/schemas/ContentAudience'}
@@ -3530,8 +3561,9 @@ components:
     ContentPage:
       type: object
       additionalProperties: false
-      required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message, attachment_details]
+      required: [id, kind, revision, version, state, document, released_version, released_at, can_manage, message, attachment_details, acknowledged_at]
       properties:
+        acknowledged_at: {type: string, format: date-time, nullable: true, description: Current reader acknowledgement of the returned version only.}
         attachment_details:
           type: array
           items: {$ref: '#/components/schemas/ContentAttachment'}

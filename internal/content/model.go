@@ -14,17 +14,19 @@ import (
 )
 
 type Document struct {
-	Title       string                 `json:"title"`
-	Markdown    string                 `json:"markdown"`
-	Audience    access.ContentAudience `json:"audience"`
-	Attachments []uuid.UUID            `json:"attachments"`
-	ScheduledAt *time.Time             `json:"scheduled_at"`
+	RequireAcknowledgement bool                   `json:"require_acknowledgement"`
+	Title                  string                 `json:"title"`
+	Markdown               string                 `json:"markdown"`
+	Audience               access.ContentAudience `json:"audience"`
+	Attachments            []uuid.UUID            `json:"attachments"`
+	ScheduledAt            *time.Time             `json:"scheduled_at"`
 }
 type Input struct {
 	Kind     string   `json:"kind"`
 	Document Document `json:"document"`
 }
 type Page struct {
+	AcknowledgedAt    *time.Time   `json:"acknowledged_at"`
 	AttachmentDetails []Attachment `json:"attachment_details"`
 	ID                uuid.UUID    `json:"id"`
 	Kind              string       `json:"kind"`

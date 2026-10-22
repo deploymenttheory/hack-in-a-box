@@ -152,8 +152,9 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 	in := content.Input{
 		Kind: "page",
 		Document: content.Document{
-			Title:    "Embargoed title",
-			Markdown: "Draft excerpt",
+			RequireAcknowledgement: true,
+			Title:                  "Embargoed title",
+			Markdown:               "Draft excerpt",
 			Audience: access.ContentAudience{
 				Confirmed: true,
 				Roles:     []string{},
@@ -197,6 +198,19 @@ func TestContentHTTPContractAndProtectedAttachments(t *testing.T) {
 	p = action(action(p, "review"), "approve")
 	p = action(p, "release")
 	check(request(member, "GET", path, nil, 0, true), 200)
+	check(request(member, "POST", path+"/acknowledgements", nil, p.Version, false), 403)
+	check(request(member, "POST", path+"/acknowledgements", nil, p.Version+1, true), 409)
+	ack := decode(request(member, "POST", path+"/acknowledgements", nil, p.Version, true))
+	if ack.AcknowledgedAt == nil {
+		t.Fatal("required reading not acknowledged")
+	}
+	check(request(stranger, "POST", path+"/acknowledgements", nil, p.Version, true), 404)
+	search := request(member, "GET", base+"/content?q=Embargoed", nil, 0, true)
+	check(search, 200)
+	if !strings.Contains(search.Body.String(), "Embargoed title") {
+		t.Fatal("released search missing")
+	}
+
 	check(request(member, "GET", filePath, nil, 0, true), 200)
 	check(request(stranger, "GET", path, nil, 0, true), 404)
 	check(request(stranger, "GET", filePath, nil, 0, true), 403)

@@ -368,3 +368,38 @@ Local build, component tests, non-database Go race tests and both linters pass.
 The full local browser run hit host disk exhaustion; local database tests could
 not start because Docker stopped responding. The PR CI must pass the full browser,
 PostgreSQL race, generated-contract and runtime-image checks before merge.
+
+## #71 — participant resource library and version acknowledgements
+
+The Resources tab lists and searches only currently authorised released pages.
+Search runs on the server after audience/version checks, so hidden titles, draft
+text and unauthorised team/role pages cannot influence matches or pagination.
+The reader shows the released version and time, protected attachment links and the
+same safe Markdown renderer used for authoring. It never requests privileged
+preview. Current access is refreshed on focus, periodically and on demand; a
+revoked or conflicting acknowledgement hides the reader until current access and
+content have been reloaded. The released challenge explains that teams may build
+immediately while formal submissions and mentor/judge review start at live start.
+
+Organisers can explicitly require acknowledgement on an immutable content version.
+Existing documents default to optional reading. Migration 19 adds minimal immutable
+receipts keyed by event, item, version and person, with the acknowledgement time.
+A receipt exposes only the current reader's acknowledgement of the returned
+version. Personal acknowledgements do not alter the page or event revision.
+Editing a private draft preserves the released receipt; publishing a new required
+version requests a fresh acknowledgement. The POST requires CSRF and the quoted
+released version. It rechecks current identity/audience and writability under the
+event lock, serialising with release and withdrawal. Duplicate/concurrent retries
+produce one receipt and one narrow audit event. Previewing or reading a page alone
+never acknowledges it, and optional or unreleased pages reject the action.
+
+Real PostgreSQL regressions cover concurrent retries, material updates, release
+races, immutable receipts, cross-event attempts, revoked attendance, withdrawal,
+read-only events, the initial challenge embargo, role-specific search and cursor
+pagination. HTTP checks cover CSRF, stale versions, authorisation and generated
+response validation. Desktop/mobile browser tests cover safe reading, protected
+attachment links, explicit acknowledgements, updates, search, roles, team revocation
+and challenge publication; the authoring regression also sets the required flag.
+Both reader layouts were visually inspected. Local production build, focused
+browser tests, component tests, non-database Go race tests and linters pass; the
+full PostgreSQL and container checks run in CI because local Docker is unresponsive.

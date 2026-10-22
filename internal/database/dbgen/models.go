@@ -71,6 +71,14 @@ type CompetitionExclusion struct {
 	OccurredAt time.Time
 }
 
+type ContentAcknowledgement struct {
+	EventID        uuid.UUID
+	ContentID      uuid.UUID
+	Version        int64
+	PersonID       uuid.UUID
+	AcknowledgedAt time.Time
+}
+
 type ContentChange struct {
 	EventID     uuid.UUID
 	ContentID   uuid.UUID
