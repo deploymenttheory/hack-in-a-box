@@ -106,14 +106,16 @@ func (s Service) ResolveNotificationAudienceInTransaction(
 		// Reuse the public reader's full exact reference/digest/actual-release
 		// policy; metadata existence alone never authorizes a recipient.
 		released, readErr := ReleasedSourceForReaderInTransaction(ctx, tx, person, eventID, s.now())
- err=readErr
- if err != nil {
+		err = readErr
+		if err != nil {
 			if errors.Is(err, access.ErrNotFound) || errors.Is(err, access.ErrForbidden) {
 				continue
 			}
 			return nil, err
 		}
-		if released.ChallengeID != challengeID || released.ChallengeVersion != version { return nil, access.ErrConflict }
+		if released.ChallengeID != challengeID || released.ChallengeVersion != version {
+			return nil, access.ErrConflict
+		}
 		result = append(result, person)
 	}
 	return result, nil

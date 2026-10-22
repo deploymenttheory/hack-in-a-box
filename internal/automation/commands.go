@@ -46,7 +46,7 @@ func validateDefinition(d Definition) error {
 		) {
 		return access.ErrInvalid
 	}
-	if d.SourceID != nil && *d.SourceID == uuid.Nil {
+	if d.SourceVersion < 0 || (d.SourceVersion > 0 && d.SourceID == nil) || (d.SourceID != nil && *d.SourceID == uuid.Nil) {
 		return access.ErrInvalid
 	}
 	if d.RetainAfterArchive &&

@@ -145,6 +145,9 @@ func (s Service) resolveScope(
 		Revision:   row.SourceRevision,
 		OccurredAt: row.DueAt,
 	}
+	if err = s.verifyPinnedSource(ctx, q, eventID, binding.Definition, source); err != nil {
+		return result, err
+	}
 	// Scope identity binds the immutable source key, never the changing audience.
 	if row.ScopeBinding != scopeBinding(binding, source, row.ReviewRevision) {
 		return result, communications.ErrUnresolved
@@ -305,4 +308,27 @@ func (s Service) loadScope(
 		return scopeBasis{}, communications.ErrUnresolved
 	}
 	return scopeBasis{Event: event, Occurrence: row, Binding: binding}, nil
+}
+
+func (s Service) verifyPinnedSource(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, d Definition, source Source) error {
+	if d.SourceID != nil && source.ID != *d.SourceID {
+		return communications.ErrUnresolved
+	}
+	if d.SourceVersion == 0 {
+		return nil
+	}
+	if source.Kind == "challenge.released" || source.Kind == "brief.released" {
+		item, err := q.ContentItem(ctx, dbgen.ContentItemParams{EventID: eventID, ID: source.ID})
+		if err != nil {
+			return fmt.Errorf("read pinned content source: %w", err)
+		}
+		if !item.ReleasedVersion.Valid || item.ReleasedVersion.Int64 != d.SourceVersion {
+			return communications.ErrUnresolved
+		}
+		return nil
+	}
+	if source.Revision != d.SourceVersion {
+		return communications.ErrUnresolved
+	}
+	return nil
 }

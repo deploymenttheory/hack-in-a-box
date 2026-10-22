@@ -27,6 +27,9 @@ func (s RubricSource) DiscoverInTransaction(
 	}
 	result := []Source{}
 	for _, native := range current {
+		if d.SourceVersion > 0 && native.ChallengeVersion != d.SourceVersion {
+			continue
+		}
 		result = append(
 			result,
 			Source{

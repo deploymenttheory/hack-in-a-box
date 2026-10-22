@@ -55,6 +55,9 @@ func (s HelpSource) discover(
 			return nil, fmt.Errorf("discover native help transitions: %w", err)
 		}
 		for _, native := range page {
+			if d.SourceVersion > 0 && native.Revision != d.SourceVersion {
+				continue
+			}
 			if binding != nil {
 				var known bool
 				err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM communication_occurrences WHERE event_id=$1 AND binding_id=$2 AND binding_version=$3 AND source_kind='help.updated' AND source_id=$4 AND source_revision=$5)`, eventID, binding.Definition.ID, binding.Version, native.RequestID, native.Revision).

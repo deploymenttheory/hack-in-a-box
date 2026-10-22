@@ -72,7 +72,7 @@ func (b builtinSource) discoverPage(
 	case "teams.published", "mentors.published", "event.rescheduled":
 		sourceQuery = `SELECT id,revision,due_at FROM operations WHERE event_id=$1 AND kind=$2`
 	case "challenge.released", "brief.released":
-		sourceQuery = `SELECT c.content_id,c.revision,c.occurred_at FROM content_changes c JOIN content_items i ON i.event_id=c.event_id AND i.id=c.content_id WHERE c.event_id=$1 AND c.action='released' AND i.kind=split_part($2::text,'.',1) AND i.state='released' AND i.released_version=c.version AND i.revision=c.revision`
+		sourceQuery = `SELECT c.content_id,c.revision,c.occurred_at FROM content_changes c JOIN content_items i ON i.event_id=c.event_id AND i.id=c.content_id WHERE c.event_id=$1 AND c.action='released' AND i.kind=split_part($2::text,'.',1) AND i.state='released' AND i.released_version=c.version AND i.revision=c.revision AND ($9::bigint=0 OR i.released_version=$9)`
 	default:
 		return nil, communications.ErrUnresolved
 	}
@@ -84,7 +84,7 @@ func (b builtinSource) discoverPage(
 	}
 	query := `WITH source(id,revision,occurred_at) AS (` + sourceQuery + `)
  SELECT id,revision,min(occurred_at) AS occurred_at FROM source
- WHERE ($3::uuid IS NULL OR id=$3) AND (id,revision)>($4::uuid,$5::bigint)
+ WHERE ($3::uuid IS NULL OR id=$3) AND ($9::bigint=0 OR $2::text IN ('challenge.released','brief.released') OR revision=$9) AND (id,revision)>($4::uuid,$5::bigint)
  AND ($7::uuid IS NULL OR NOT EXISTS(SELECT 1 FROM communication_occurrences co WHERE co.event_id=$1 AND co.binding_id=$7 AND co.binding_version=$8 AND co.source_kind=$2::text AND co.source_id=source.id AND co.source_revision=source.revision))
  GROUP BY id,revision ORDER BY id,revision LIMIT $6`
 	rows, err := tx.Query(
@@ -98,6 +98,7 @@ func (b builtinSource) discoverPage(
 		200,
 		bindingID,
 		version,
+		d.SourceVersion,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("discover authoritative lifecycle source page: %w", err)

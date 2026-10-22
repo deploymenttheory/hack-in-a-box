@@ -18,8 +18,80 @@ import (
 func TestNativeRubricPublicationQueuesApprovedLocalMessageOnce(t *testing.T) {
 	f := newFixture(t)
 	_, relay := installProviders(t, f)
-	rubrics := rubric.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
+	rubrics, service, challenge, _ := prepareNativeCommonChallenge(t, f)
+	var err error
 	f.s.Sources = map[string]SourcePolicy{"rubric.published": RubricSource{Rubric: rubrics}}
+	f.campaign("challenge_release", "Safe reviewed common rubric update", false, "in_app")
+	page, _ := f.change(
+		Command{
+			Action: "save",
+			Definition: &Definition{
+				ID:                     uuid.New(),
+				CampaignID:             f.campaignID,
+				CampaignVersion:        f.campaignVersion,
+				Trigger:                "rubric.published",
+				SourceID:               &challenge.ID,
+				SourceVersion:          challenge.Version,
+				MaximumLatenessSeconds: 3600,
+			},
+			Reason: "Review native rubric journey",
+		},
+	)
+	binding := page.Bindings[0]
+	_, preview := f.change(
+		Command{
+			Action:    "preview_publication",
+			BindingID: binding.Definition.ID,
+			Version:   binding.Version,
+			Reason:    "Review exact challenge and rubric release transition",
+		},
+	)
+	if preview == nil || preview.GenericCampaignApproved {
+		t.Fatal("typed plan misrepresented generic approval")
+	}
+	f.change(
+		Command{
+			Action:        "approve_publication",
+			BindingID:     binding.Definition.ID,
+			Version:       binding.Version,
+			PreviewPlanID: preview.PlanID,
+			Reason:        "Approve exact native common publication",
+		},
+	)
+	if page = f.maintain(); len(page.Occurrences) != 0 {
+		t.Fatal("unreleased rubric invented occurrence")
+	}
+	f.now = f.now.Add(time.Minute)
+	if err = service.Dispatch(t.Context(), f.id, challenge.ID, challenge.Revision); err != nil {
+		t.Fatal(err)
+	}
+	page = f.maintain()
+	if len(page.Occurrences) != 1 || page.Occurrences[0].SourceRevision != challenge.Version {
+		t.Fatalf("native publication not retained: %+v", page)
+	}
+	f.execute(page.Occurrences[0].ID)
+	f.maintain()
+	f.execute(page.Occurrences[0].ID)
+	var count int
+	var body string
+	if err = f.pool.QueryRow(t.Context(), `SELECT count(*),coalesce(min(body),'') FROM inbox_notifications WHERE event_id=$1 AND source_kind='campaign'`, f.id).
+		Scan(&count, &body); err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 || strings.Contains(body, "PRIVATE") || relay.calls.Load() != 0 {
+		t.Fatalf(
+			"rubric delivery omitted/duplicated/leaked: count%d body%q calls%d state%+v",
+			count,
+			body,
+			relay.calls.Load(),
+			f.maintain().Occurrences,
+		)
+	}
+}
+
+func prepareNativeCommonChallenge(t *testing.T, f *fixture) (rubric.Service, content.Service, content.Page, uuid.UUID) {
+	t.Helper()
+	rubrics := rubric.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
 	cfg := event.DefaultConfiguration()
 	zone, _ := time.LoadLocation(cfg.Timezone)
 	cfg.LiveStart = f.now.In(zone).AddDate(0, 0, 7).Add(time.Minute)
@@ -45,6 +117,7 @@ func TestNativeRubricPublicationQueuesApprovedLocalMessageOnce(t *testing.T) {
 		f.id,
 		team,
 	)
+	f.exec(`INSERT INTO competition_entries(event_id,team_id)VALUES($1,$2)`, f.id, team)
 	second := testdb.Person(t, f.pool)
 	f.exec(
 		`INSERT INTO competition_claims(event_id,person_id,state)VALUES($1,$2,'confirmed')`,
@@ -123,70 +196,5 @@ func TestNativeRubricPublicationQueuesApprovedLocalMessageOnce(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	f.campaign("challenge_release", "Safe reviewed common rubric update", false, "in_app")
-	page, _ := f.change(
-		Command{
-			Action: "save",
-			Definition: &Definition{
-				ID:                     uuid.New(),
-				CampaignID:             f.campaignID,
-				CampaignVersion:        f.campaignVersion,
-				Trigger:                "rubric.published",
-				SourceID:               &challenge.ID,
-				SourceVersion:          challenge.Version,
-				MaximumLatenessSeconds: 3600,
-			},
-			Reason: "Review native rubric journey",
-		},
-	)
-	binding := page.Bindings[0]
-	_, preview := f.change(
-		Command{
-			Action:    "preview_publication",
-			BindingID: binding.Definition.ID,
-			Version:   binding.Version,
-			Reason:    "Review exact challenge and rubric release transition",
-		},
-	)
-	if preview == nil || preview.GenericCampaignApproved {
-		t.Fatal("typed plan misrepresented generic approval")
-	}
-	f.change(
-		Command{
-			Action:        "approve_publication",
-			BindingID:     binding.Definition.ID,
-			Version:       binding.Version,
-			PreviewPlanID: preview.PlanID,
-			Reason:        "Approve exact native common publication",
-		},
-	)
-	if page = f.maintain(); len(page.Occurrences) != 0 {
-		t.Fatal("unreleased rubric invented occurrence")
-	}
-	f.now = f.now.Add(time.Minute)
-	if err = service.Dispatch(t.Context(), f.id, challenge.ID, challenge.Revision); err != nil {
-		t.Fatal(err)
-	}
-	page = f.maintain()
-	if len(page.Occurrences) != 1 || page.Occurrences[0].SourceRevision != challenge.Version {
-		t.Fatalf("native publication not retained: %+v", page)
-	}
-	f.execute(page.Occurrences[0].ID)
-	f.maintain()
-	f.execute(page.Occurrences[0].ID)
-	var count int
-	var body string
-	if err = f.pool.QueryRow(t.Context(), `SELECT count(*),coalesce(min(body),'') FROM inbox_notifications WHERE event_id=$1 AND source_kind='campaign'`, f.id).
-		Scan(&count, &body); err != nil {
-		t.Fatal(err)
-	}
-	if count != 2 || strings.Contains(body, "PRIVATE") || relay.calls.Load() != 0 {
-		t.Fatalf(
-			"rubric delivery omitted/duplicated/leaked: count%d body%q calls%d state%+v",
-			count,
-			body,
-			relay.calls.Load(),
-			f.maintain().Occurrences,
-		)
-	}
+	return rubrics, service, challenge, team
 }

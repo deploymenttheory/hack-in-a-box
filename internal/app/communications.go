@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
@@ -68,8 +68,9 @@ func newCommunicationRuntime(
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
-		"help.updated":     automation.HelpSource{Help: helpProvider},
-		"rubric.published": automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
+		"help.updated":            automation.HelpSource{Help: helpProvider},
+		"clarification.published": automation.ClarificationSource{Answers: answers},
+		"rubric.published":        automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
 	}
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	outbox, err := jobs.New(
