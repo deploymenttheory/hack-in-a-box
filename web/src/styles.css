@@ -59,7 +59,7 @@ footer { padding: 24px 5vw; border-top: 1px solid var(--border); font-size: 13px
 .count { display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
 .count strong { font-size: 44px; line-height: 1; }
 .count small { color: #54685f; }
-.tabs { border-bottom: 1px solid var(--border); margin-bottom: 28px; justify-content: flex-start; }
+.tabs { border-bottom: 1px solid var(--border); margin-bottom: 28px; justify-content: flex-start; flex-wrap: wrap; }
 .tabs button { padding: 12px 4px; border-bottom: 3px solid transparent; cursor: pointer; }
 .tabs button.active { border-color: var(--primary); font-weight: 650; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 28px; align-items: start; }
@@ -113,3 +113,31 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .setup-form details { border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
 .setup-form summary { cursor: pointer; font-weight: 650; padding: 6px; }
 .change-list { padding-left: 20px; line-height: 1.8; overflow-wrap: anywhere; }
+
+.preparation-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.readiness summary { font-weight: 650; cursor: pointer; margin-bottom: 16px; }
+.preparation-milestones, .preparation-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px; }
+.preparation-milestones dt { font-size: 13px; font-weight: 650; }
+.preparation-milestones dd { margin-top: 6px; font-size: 14px; }
+.preparation-filters { margin: 24px 0; }
+.preparation-columns { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.preparation-columns > section { border-top: 3px solid var(--border); }
+.preparation-columns h3 { text-transform: capitalize; }
+.preparation-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; overflow-wrap: anywhere; }
+.preparation-card h4 { font-weight: 650; margin-bottom: 10px; }
+.preparation-card p { font-size: 13px; margin: 10px 0; }
+.preparation-card button { margin-top: 14px; }
+.preparation-workspace button { white-space: normal; height: auto; min-height: 36px; overflow-wrap: anywhere; }
+.task-flags { display: flex; gap: 5px; flex-wrap: wrap; }
+.task-flags .badge { font-size: 11px; }
+.preparation-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.run-sheet { list-style: none; padding: 0; }
+.run-sheet > li { display: grid; grid-template-columns: 180px 1fr; gap: 20px; border-top: 1px solid var(--border); padding: 20px 0; overflow-wrap: anywhere; }
+.run-sheet time { font-size: 14px; }
+.evidence-links { margin-top: 12px; font-size: 14px; overflow-wrap: anywhere; }
+.evidence-links a { text-decoration: underline; }
+.checklist-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+.evidence-row { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; }
+.preparation-workspace [aria-label="Latest saved task"] { overflow-wrap: anywhere; }
+@media (max-width: 1000px) { .preparation-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .preparation-columns, .run-sheet > li, .checklist-row { grid-template-columns: 1fr; } .preparation-heading { flex-wrap: wrap; } }

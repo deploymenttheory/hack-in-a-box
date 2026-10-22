@@ -42,3 +42,43 @@ checks, restricted evidence, staff edits retaining hidden fields, DST-aware date
 recomputation, read-only events and minimum-attendance gate independence. HTTP
 tests validate generated request/response schemas, CSRF, filters, stale revisions
 and immediate loss of access after role revocation.
+
+## Organiser preparation workspace — #48
+
+The event preparation tab provides a status board, list and chronological run
+sheet. Owner, role, status and attention filters operate on the permission-filtered
+task page. Overdue, blocked, unowned and scheduling problems have text labels.
+The run sheet combines tasks and the event agenda, displays event-local times and
+owners, and links accessible evidence. Confirmed competitors, the configured
+minimum, admission cutoff, team freeze, common publication, live start and
+submission cutoff remain distinct. Readiness links open the authoritative
+applicant, team, setup or stage workspace for the reported blocker.
+
+Organisers can edit task definitions, named and role owners, schedule-linked or
+fixed dates, dependencies, checklist progress and evidence. Uploads use protected
+file endpoints with stable retry keys; evidence defaults to organiser visibility.
+Reasons are required for blocking, completion, waiver and overrides. Server
+validation remains authoritative for owners, graphs, permissions and completion.
+The workspace is read-only when current task/event permissions prohibit changes.
+It is deliberately scoped to organisers; assignee portals are separate backlog
+deliverables and use the existing permission-filtered API.
+
+A stale event revision retains the complete in-memory draft. The organiser must
+load the latest saved task, compare its fields and explicitly acknowledge applying
+the draft before another write can use the newer revision. Other validation
+failures do not trigger this overwrite flow. Navigation prompts protect unsaved
+edits. Private drafts are not copied into browser storage. Existing fixed deadlines
+retain their saved instant; edited wall times are resolved by the server, including
+an explicit earlier/later choice for repeated DST times.
+
+Desktop and mobile browser scenarios cover assignment, filters, run-sheet links
+and timezone display, blocker navigation, checklist/evidence edits, reasoned
+blocking and waiver, dependency rejection and explicit completion override,
+concurrent edit review, permission loss, unsaved navigation, retrying a file upload,
+and ambiguous local deadlines. These use synthetic HTTP fixtures for UI behavior;
+the real PostgreSQL transaction and authorization coverage remains in #47's
+preparation and HTTP integration suites. Board and conflict screenshots are
+captured as Playwright artifacts and inspected at both viewport sizes.
+
+Synthetic visual evidence: [desktop board](media/preparation-board-desktop.png) and
+[mobile board](media/preparation-board-mobile.png).
