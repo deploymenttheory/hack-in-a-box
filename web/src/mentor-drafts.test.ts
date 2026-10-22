@@ -1,5 +1,5 @@
 import { beforeEach, expect, test, vi } from 'vitest'
-import { MentorDraftStore, invalidateMentorDrafts, mentorDraftLifetime, retainMentorDraftScope, type DraftTarget, type CurrentDraftTarget } from './mentor-drafts'
+import { MentorDraftStore, discardMentorTeamDrafts, invalidateMentorDrafts, mentorDraftLifetime, retainMentorDraftScope, type DraftTarget, type CurrentDraftTarget } from './mentor-drafts'
 
 const target: DraftTarget = { personID: '11111111-1111-4111-8111-111111111111', sessionScope: '22222222-2222-4222-8222-222222222222', eventID: '33333333-3333-4333-8333-333333333333', teamID: '44444444-4444-4444-8444-444444444444', noteID: '55555555-5555-4555-8555-555555555555' }
 const text = { category: 'technical', evidence: 'Synthetic unsent private evidence', outcome: 'Synthetic outcome' }
@@ -119,4 +119,16 @@ test('storage denial never reports a successful local recovery copy', () => {
   const denied: Storage = { length: 0, clear() {}, key() { return null }, getItem() { return null }, removeItem() {}, setItem() { throw new DOMException('Synthetic storage denial', 'QuotaExceededError') } }
   const store = new MentorDraftStore(denied)
   expect(store.save(target, 8, 0, text)).toEqual({ status: 'unavailable' })
+})
+
+test('native team denial removes only that resource copy and invalidates its in-flight review', async () => {
+  const store = new MentorDraftStore(), other = { ...target, teamID: '66666666-6666-4666-8666-666666666666' }
+  store.save(target, 8, 0, text); store.save(other, 8, 0, { ...text, evidence: 'Other team private text' })
+  let resolve!: (value: CurrentDraftTarget) => void
+  const pending = store.review(target, () => new Promise<CurrentDraftTarget>(r => { resolve = r }))
+  discardMentorTeamDrafts(target.personID, target.sessionScope, target.eventID, target.teamID)
+  resolve(current)
+  expect(await pending).toEqual({ status: 'invalidated' })
+  expect(await store.review(target, async () => current)).toEqual({ status: 'missing' })
+  expect(await store.review(other, async () => ({ ...current, teamID: other.teamID }))).toMatchObject({ status: 'ready', text: { evidence: 'Other team private text' } })
 })
