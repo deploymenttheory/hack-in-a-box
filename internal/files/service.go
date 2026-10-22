@@ -166,15 +166,31 @@ func (s Service) Download(
 	if err != nil {
 		return dbgen.File{}, nil, fmt.Errorf("find file metadata: %w", err)
 	}
-	data, err := s.Storage.Read(ctx, file.ObjectKey, file.SizeBytes)
+	data, err := readStored(ctx, s.Storage, file)
 	if err != nil {
-		return dbgen.File{}, nil, fmt.Errorf("read: %w", err)
+		return dbgen.File{}, nil, err
+	}
+	return file, data, nil
+}
+
+// VerifyStored checks immutable file metadata against storage without acquiring a
+// database connection. Callers must first authorise the file and load its metadata
+// using their current transaction, so verification cannot deadlock a saturated pool.
+func VerifyStored(ctx context.Context, storage Storage, file dbgen.File) error {
+	_, err := readStored(ctx, storage, file)
+	return err
+}
+
+func readStored(ctx context.Context, storage Storage, file dbgen.File) ([]byte, error) {
+	data, err := storage.Read(ctx, file.ObjectKey, file.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("read stored file: %w", err)
 	}
 	checksum := sha256.Sum256(data)
 	if int64(len(data)) != file.SizeBytes || hex.EncodeToString(checksum[:]) != file.Checksum {
-		return dbgen.File{}, nil, ErrMissing
+		return nil, ErrMissing
 	}
-	return file, data, nil
+	return data, nil
 }
 
 func (s Service) authorizeUpload(

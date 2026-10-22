@@ -343,7 +343,9 @@ revision conflicts retain local edits and require explicit review of the latest
 version. Event-local schedules use the shared server time resolver with an explicit
 DST choice. Placeholders, missing attachments and past/invalid schedules block
 approval. Storage integrity and current access are checked on both approval and
-actual release, including when a file disappears after approval.
+actual release, including when a file disappears after approval. Verification
+uses the current transaction connection; a one-connection-pool regression prevents
+lock/pool starvation during attachment approval and scheduled release.
 
 Initial challenge authoring displays its fixed seven-calendar-day publication
 instant, confirmed competitor minimum and current team-freeze gates. The read-only

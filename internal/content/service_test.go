@@ -1,6 +1,7 @@
 package content_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -820,6 +821,37 @@ func TestAuthoringReadinessMetadataAndAttachmentIntegrity(t *testing.T) {
 			t.Fatal("attendee obtained authoring gates")
 		}
 	})
+	t.Run("attachment approval and release use the locked transaction connection", func(t *testing.T) {
+		f := newFixture(t, pool)
+		id := f.upload()
+		cfg := pool.Config()
+		cfg.MaxConns = 1
+		limited, err := pgxpool.NewWithConfig(t.Context(), cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(limited.Close)
+		f.s.Pool = limited
+		in := input("page")
+		in.Document.Attachments = []uuid.UUID{id}
+		due := f.now.Add(time.Minute)
+		in.Document.ScheduledAt = &due
+		p := f.act(f.save(content.Page{}, in), "review")
+		ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
+		defer cancel()
+		p, err = f.s.Action(ctx, f.owner.ID, f.id, p.ID, p.Revision, "approve", "")
+		if err != nil {
+			t.Fatalf("approval required another connection: %v", err)
+		}
+		f.now = due
+		if err = f.s.Dispatch(ctx, f.id, p.ID, p.Revision); err != nil {
+			t.Fatalf("release required another connection: %v", err)
+		}
+		if f.preview(p).State != "released" {
+			t.Fatal("attachment did not release")
+		}
+	})
+
 	t.Run("missing attachment blocks approval", func(t *testing.T) {
 		f := newFixture(t, pool)
 		id := f.upload()

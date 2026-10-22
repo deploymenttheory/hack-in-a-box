@@ -75,16 +75,22 @@ func (s Service) verifyAttachments(
 			"Attachment storage is unavailable. Try again before approving or releasing this version.",
 		)
 	}
-	reader := files.Service{
-		Pool:    s.Pool,
-		Storage: s.Storage,
-		Policy:  access.EventPolicy{Queries: q},
-	}
+	policy := access.EventPolicy{Queries: q}
 	for _, id := range d.Attachments {
-		if _, _, err := reader.Download(ctx, actor, eventID, id); err != nil {
+		if err := policy.Authorize(ctx, actor, eventID, id, access.FileRead); err != nil {
 			return blocked(
 				"attachment_unavailable",
-				"An attachment is missing, corrupt or no longer accessible. Restore or replace it before approving or releasing this version.",
+				"An attachment is no longer accessible. Replace it before approving or releasing this version.",
+			)
+		}
+		file, err := q.File(ctx, dbgen.FileParams{EventID: eventID, ID: id})
+		if err != nil {
+			return fmt.Errorf("read attachment metadata: %w", err)
+		}
+		if err = files.VerifyStored(ctx, s.Storage, file); err != nil {
+			return blocked(
+				"attachment_unavailable",
+				"An attachment is missing or corrupt. Restore or replace it before approving or releasing this version.",
 			)
 		}
 	}
