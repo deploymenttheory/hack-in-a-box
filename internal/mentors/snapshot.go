@@ -98,6 +98,7 @@ func load(ctx context.Context, q *dbgen.Queries, row dbgen.Event) (Page, Snapsho
 		Conflicts:       page.Conflicts,
 	}
 	page.Gaps = Validate(snapshot, page.Draft)
+	page.PublishedGaps = Validate(snapshot, page.Published)
 	return page, snapshot, nil
 }
 

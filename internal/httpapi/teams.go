@@ -7,6 +7,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
+	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 )
 
@@ -57,8 +58,10 @@ func (h handlers) SuggestTeamAllocation(
 	return convertDTO[contract.SuggestTeamAllocation200JSONResponse](result)
 }
 
-func teamConflict(err error) (string, string) {
+func assignmentConflict(err error) (string, string) {
 	switch {
+	case errors.Is(err, mentors.ErrCoverage):
+		return "mentor_coverage_invalid", mentors.ErrCoverage.Error()
 	case errors.Is(err, teams.ErrFrozen):
 		return "teams_frozen", teams.ErrFrozen.Error()
 	case errors.Is(err, teams.ErrLocked):

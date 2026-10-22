@@ -52,11 +52,13 @@ type Snapshot struct {
 	Conflicts       []Conflict
 }
 type Proposal struct {
+	Revision    int64        `json:"revision"`
 	Assignments []Assignment `json:"assignments"`
 	Gaps        []Gap        `json:"gaps"`
 }
 
 type Page struct {
+	PublishedGaps   []Gap        `json:"published_gaps"`
 	Revision        int64        `json:"revision"`
 	CanManage       bool         `json:"can_manage"`
 	DefaultCapacity int          `json:"default_capacity"`

@@ -862,6 +862,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/mentor-coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getMentorCoverage"];
+        put?: never;
+        post: operations["changeMentorCoverage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/mentor-coverage/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Read-only deterministic proposal. Applying it to the draft requires an explicit apply_suggestion command against the same current revision; publication remains separate. */
+        post: operations["suggestMentorCoverage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/template-starters": {
         parameters: {
             query?: never;
@@ -1559,6 +1596,96 @@ export interface components {
             teams: components["schemas"]["HackTeam"][];
             people: components["schemas"]["TeamPerson"][];
             requests: components["schemas"]["TeamRequest"][];
+        };
+        MentorWindow: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+        };
+        MentorProfile: {
+            /** Format: uuid */
+            person_id: string;
+            name: string;
+            active: boolean;
+            skills: string[];
+            availability: components["schemas"]["MentorWindow"][];
+            maximum_teams: number | null;
+        };
+        MentorTeam: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            published: boolean;
+            skills: string[];
+        };
+        MentorConflict: {
+            /** Format: uuid */
+            mentor_id: string;
+            /** Format: uuid */
+            competitor_id: string;
+            /** @enum {string} */
+            kind: "reporting" | "own_team";
+        };
+        MentorAssignment: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            person_id: string;
+            /** @enum {string} */
+            slot: "primary" | "second";
+            window: components["schemas"]["MentorWindow"];
+        };
+        MentorGap: {
+            code: string;
+            /** Format: uuid */
+            team_id: string | null;
+            /** Format: uuid */
+            person_id: string | null;
+            hard: boolean;
+            message: string;
+        };
+        MentorProposal: {
+            /** Format: int64 */
+            revision: number;
+            assignments: components["schemas"]["MentorAssignment"][];
+            gaps: components["schemas"]["MentorGap"][];
+        };
+        MentorPage: {
+            /** Format: int64 */
+            revision: number;
+            can_manage: boolean;
+            default_capacity: number;
+            live: components["schemas"]["MentorWindow"];
+            profiles: components["schemas"]["MentorProfile"][];
+            teams: components["schemas"]["MentorTeam"][];
+            conflicts: components["schemas"]["MentorConflict"][];
+            draft: components["schemas"]["MentorAssignment"][];
+            published: components["schemas"]["MentorAssignment"][];
+            gaps: components["schemas"]["MentorGap"][];
+            published_gaps: components["schemas"]["MentorGap"][];
+        };
+        MentorCommand: {
+            /** @enum {string} */
+            action: "settings" | "profile" | "team_skills" | "conflict" | "assign" | "apply_suggestion" | "publish";
+            reason: string;
+            /** Format: uuid */
+            person_id?: string;
+            /** Format: uuid */
+            team_id?: string;
+            /** Format: uuid */
+            competitor_id?: string;
+            /** @enum {string} */
+            slot?: "primary" | "second";
+            window?: components["schemas"]["MentorWindow"];
+            skills?: string[];
+            availability?: components["schemas"]["MentorWindow"][];
+            maximum_teams?: number | null;
+            default_capacity?: number;
+            /** @enum {string} */
+            kind?: "reporting" | "own_team";
+            enabled?: boolean;
+            allow_gaps?: boolean;
         };
         TeamCommand: {
             /** @enum {string} */
@@ -3906,6 +4033,87 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AllocationSuggestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMentorCoverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser planning state or only the caller's permitted published mentor assignments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeMentorCoverage: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MentorCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed organiser mentor planning state. Drafts grant no access. Publication atomically replaces scoped mentor access without moving competitors. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    suggestMentorCoverage: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current revision, proposed slots and coverage gaps. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorProposal"];
                 };
             };
             default: components["responses"]["Error"];

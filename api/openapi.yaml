@@ -1140,6 +1140,58 @@ paths:
                 $ref: '#/components/schemas/AllocationSuggestion'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/mentor-coverage:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getMentorCoverage
+      responses:
+        '200':
+          description: Organiser planning state or only the caller's permitted published mentor assignments.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MentorPage'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: changeMentorCoverage
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MentorCommand'
+      responses:
+        '200':
+          description: Committed organiser mentor planning state. Drafts grant no access. Publication atomically replaces scoped mentor access without moving competitors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MentorPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/mentor-coverage/suggestions:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    post:
+      operationId: suggestMentorCoverage
+      description: Read-only deterministic proposal. Applying it to the draft requires an explicit apply_suggestion command against the same current revision; publication remains separate.
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+        - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: Current revision, proposed slots and coverage gaps.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MentorProposal'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/template-starters:
     get:
       operationId: listTemplateStarters
@@ -2496,6 +2548,147 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeamRequest'
+    MentorWindow:
+      type: object
+      additionalProperties: false
+      required: [start, end]
+      properties:
+        start: {type: string, format: date-time}
+        end: {type: string, format: date-time}
+    MentorProfile:
+      type: object
+      additionalProperties: false
+      required: [person_id, name, active, skills, availability, maximum_teams]
+      properties:
+        person_id: {type: string, format: uuid}
+        name: {type: string}
+        active: {type: boolean}
+        skills:
+          type: array
+          items: {type: string}
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorWindow'
+        maximum_teams: {type: integer, nullable: true, minimum: 1, maximum: 10000}
+    MentorTeam:
+      type: object
+      additionalProperties: false
+      required: [id, name, published, skills]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        published: {type: boolean}
+        skills:
+          type: array
+          items: {type: string}
+    MentorConflict:
+      type: object
+      additionalProperties: false
+      required: [mentor_id, competitor_id, kind]
+      properties:
+        mentor_id: {type: string, format: uuid}
+        competitor_id: {type: string, format: uuid}
+        kind: {type: string, enum: [reporting, own_team]}
+    MentorAssignment:
+      type: object
+      additionalProperties: false
+      required: [team_id, person_id, slot, window]
+      properties:
+        team_id: {type: string, format: uuid}
+        person_id: {type: string, format: uuid}
+        slot: {type: string, enum: [primary, second]}
+        window:
+          $ref: '#/components/schemas/MentorWindow'
+    MentorGap:
+      type: object
+      additionalProperties: false
+      required: [code, team_id, person_id, hard, message]
+      properties:
+        code: {type: string}
+        team_id: {type: string, format: uuid, nullable: true}
+        person_id: {type: string, format: uuid, nullable: true}
+        hard: {type: boolean}
+        message: {type: string}
+    MentorProposal:
+      type: object
+      additionalProperties: false
+      required: [revision, assignments, gaps]
+      properties:
+        revision: {type: integer, format: int64}
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorAssignment'
+        gaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorGap'
+    MentorPage:
+      type: object
+      additionalProperties: false
+      required: [revision, can_manage, default_capacity, live, profiles, teams, conflicts, draft, published, gaps, published_gaps]
+      properties:
+        revision: {type: integer, format: int64}
+        can_manage: {type: boolean}
+        default_capacity: {type: integer, minimum: 1, maximum: 10000}
+        live:
+          $ref: '#/components/schemas/MentorWindow'
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorProfile'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorTeam'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorConflict'
+        draft:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorAssignment'
+        published:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorAssignment'
+        gaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorGap'
+        published_gaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorGap'
+    MentorCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: {type: string, enum: [settings, profile, team_skills, conflict, assign, apply_suggestion, publish]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        person_id: {type: string, format: uuid}
+        team_id: {type: string, format: uuid}
+        competitor_id: {type: string, format: uuid}
+        slot: {type: string, enum: [primary, second]}
+        window:
+          $ref: '#/components/schemas/MentorWindow'
+        skills:
+          type: array
+          maxItems: 100
+          items: {type: string, maxLength: 200}
+        availability:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/MentorWindow'
+        maximum_teams: {type: integer, nullable: true, minimum: 1, maximum: 10000}
+        default_capacity: {type: integer, minimum: 1, maximum: 10000}
+        kind: {type: string, enum: [reporting, own_team]}
+        enabled: {type: boolean}
+        allow_gaps: {type: boolean}
     TeamCommand:
       type: object
       additionalProperties: false

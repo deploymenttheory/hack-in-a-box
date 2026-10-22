@@ -85,6 +85,7 @@ func restricted(page Page, actor, own uuid.UUID, mentor bool) Page {
 	page.Draft = []Assignment{}
 	page.Conflicts = []Conflict{}
 	page.Gaps = []Gap{}
+	page.PublishedGaps = []Gap{}
 	teams := map[uuid.UUID]bool{}
 	people := map[uuid.UUID]bool{}
 	visible := []Assignment{}
@@ -154,6 +155,7 @@ func (s Service) Propose(
 			return access.ErrInvalid
 		}
 		result = Suggest(snapshot)
+		result.Revision = row.Revision
 		return nil
 	})
 	if err != nil {
