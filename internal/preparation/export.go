@@ -265,7 +265,11 @@ func reportDates(
 			"Seven days before live start",
 		)
 	}
+	// Raw configuration agenda text has the same organiser-only boundary as Event.Read.
 	for _, a := range c.Schedule {
+		if audience != "organiser" {
+			continue
+		}
 		role := audience
 		if role == "participant" {
 			role = "attendee"

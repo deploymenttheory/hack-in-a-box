@@ -48,6 +48,14 @@ func TestReadinessAudiencePrivacyAndRevocation(t *testing.T) {
 	c.SubmissionCutoff = now.Add(7 * time.Hour)
 	c.TeamFreeze = now.Add(-8 * 24 * time.Hour)
 	c.AdmissionCutoff = c.TeamFreeze.Add(-time.Hour)
+	c.Schedule = []event.AgendaItem{
+		{
+			ID:       uuid.New(),
+			Title:    "Unreleased raw agenda secret",
+			Audience: []string{"attendee", "mentor", "organiser"},
+			Anchor:   "live_start",
+		},
+	}
 	data, _ := json.Marshal(c)
 	exec("UPDATE events SET configuration=$2 WHERE id=$1", id, data)
 	exec(
@@ -158,7 +166,8 @@ func TestReadinessAudiencePrivacyAndRevocation(t *testing.T) {
 			strings.Contains(text, "access-secret") {
 			t.Fatalf("audience leak %s: %s", v.aud, text)
 		}
-		if v.aud != "organiser" && strings.Contains(text, "Embargoed challenge deliverable") {
+		if v.aud != "organiser" &&
+			(strings.Contains(text, "Embargoed challenge deliverable") || strings.Contains(text, "Unreleased raw agenda secret")) {
 			t.Fatal("early challenge definition leak")
 		}
 	}
