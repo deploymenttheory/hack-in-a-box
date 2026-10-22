@@ -112,6 +112,8 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Help:           communicationRuntime.Help,
 		Clarifications: *communicationRuntime.Clarifications,
 		Presentation:   presentation.Service{Pool: pool},
+		Automation:     communicationRuntime.Automation,
+		Inbox:          *communicationRuntime.Inbox,
 		Communications: *communicationRuntime.Communications,
 		Inbox:          *communicationRuntime.Inbox,
 		MailContacts:   communicationRuntime.MailContacts,
@@ -189,7 +191,15 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	}
 	worker := communicationRuntime.Jobs
 	logger.Info("worker started", "jobs_enabled", true)
-	worker.FastMaintenance = (content.Service{Pool: pool, Storage: storage}).Maintain
+	worker.FastMaintenance = func(ctx context.Context) error {
+		if err := (content.Service{Pool: pool, Storage: storage}).Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain actual content release: %w", err)
+		}
+		if err := communicationRuntime.Automation.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain reviewed communication occurrences: %w", err)
+		}
+		return nil
+	}
 	worker.Maintenance = func(ctx context.Context) error {
 		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain submission outcomes: %w", err)

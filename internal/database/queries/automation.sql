@@ -51,3 +51,6 @@ UPDATE communication_occurrences SET state='pending',reason='explicit_review',re
 
 -- name: RecordAutomationChannelReports :exec
 UPDATE communication_occurrences SET state=$3,reason=$4,channel_reports=$5,updated_at=now() WHERE event_id=$1 AND id=$2;
+
+-- name: PendingAutomationOccurrences :many
+SELECT * FROM communication_occurrences WHERE event_id=$1 AND id>sqlc.arg(after_id)::uuid AND state IN ('pending','paused') ORDER BY id LIMIT 200;

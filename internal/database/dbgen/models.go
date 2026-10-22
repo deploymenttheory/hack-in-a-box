@@ -1176,6 +1176,7 @@ type TeamsWorkflowDelivery struct {
 	CreatedAt          time.Time
 	OccurrenceID       *uuid.UUID
 	ScopeBinding       string
+	ScopeApproval      []byte
 }
 
 type TeamsWorkflowReceipt struct {

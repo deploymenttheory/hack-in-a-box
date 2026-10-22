@@ -369,6 +369,17 @@ func TestReschedulingAndCancellationInvalidateQueuedAutomation(t *testing.T) {
 					t.Fatal(err)
 				}
 				f.now = f.now.Add(time.Minute)
+				invalidated := f.maintain()
+				expectedState := "blocked"
+				if cancel {
+					expectedState = "cancelled"
+				}
+				if invalidated.Occurrences[0].State != expectedState {
+					t.Fatalf(
+						"obsolete queued work lacks durable review state: %+v",
+						invalidated.Occurrences[0],
+					)
+				}
 				f.execute(id)
 				if f.count() != 0 {
 					t.Fatal("obsolete approved campaign sent")

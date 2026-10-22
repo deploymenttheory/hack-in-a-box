@@ -1,12 +1,16 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
@@ -21,6 +25,7 @@ import (
 type communicationRuntime struct {
 	Help           help.Service
 	Clarifications *clarification.Service
+	Automation     *automation.Service
 	Inbox          *inbox.Service
 	Communications *communications.Service
 	SMTP           *smtpintegration.Service
@@ -46,24 +51,28 @@ func newCommunicationRuntime(
 		Pool:     pool,
 		Channels: map[string]communications.ChannelProvider{"smtp": provider, "teams": teams},
 	}
+	auto := &automation.Service{Pool: pool, Composer: composer}
+	local := &inbox.Service{Pool: pool, Communications: composer, ScopePolicy: auto}
+	composer.Channels["in_app"] = local
+	provider.ScopePolicy = auto
+	teams.ScopePolicy = auto
 	provider.Campaigns = composer
-	inboxProvider := &inbox.Service{Pool: pool, Communications: composer}
 	answers := &clarification.Service{Pool: pool}
-	answers.Notifications = clarificationInboxSink{Inbox: inboxProvider}
-	composer.Channels["in_app"] = inboxProvider
+	answers.Notifications = clarificationInboxSink{Inbox: local}
 	helpProvider := help.Service{Pool: pool}
-	inboxProvider.Owners = map[string]inbox.ResourceOwner{
+	local.Owners = map[string]inbox.ResourceOwner{
 		"help":          helpInboxOwner{Help: helpProvider},
 		"clarification": clarificationInboxOwner{Answers: answers},
 	}
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
-	helpProvider.Notifications = helpInboxSink{Inbox: inboxProvider}
+	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
+			automation.HandlerKind:        auto,
+			"communication_test_in_app":   inbox.TestHandler{Service: *local},
 			"communication_test_smtp":     provider,
-			"communication_test_in_app":   inbox.TestHandler{Service: *inboxProvider},
 			"communication_campaign_smtp": smtpintegration.CampaignHandler{Service: provider},
 			teamsworkflow.HandlerKind():   teams,
 		},
@@ -72,12 +81,82 @@ func newCommunicationRuntime(
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
 	composer.Jobs = outbox
+	auto.Jobs = outbox
+	auto.Providers = map[string]automation.ProviderQueue{
+		"smtp": func(ctx context.Context, tx pgx.Tx, eventID, campaignID uuid.UUID, version int64, scope communications.DeliveryScope) (automation.ChannelReport, error) {
+			report, queueErr := provider.QueueApprovedOccurrenceReportInTransaction(
+				ctx,
+				tx,
+				eventID,
+				campaignID,
+				version,
+				scope,
+			)
+			if queueErr != nil {
+				return automation.ChannelReport{}, fmt.Errorf(
+					"record automation provider intent: %w",
+					queueErr,
+				)
+			}
+			return automation.ChannelReport{
+				Queued:      report.Queued,
+				Unavailable: report.Unavailable,
+				Preexisting: report.Preexisting,
+			}, nil
+		},
+		"in_app": func(ctx context.Context, tx pgx.Tx, eventID, campaignID uuid.UUID, version int64, scope communications.DeliveryScope) (automation.ChannelReport, error) {
+			count, queueErr := local.QueueApprovedOccurrenceInTransaction(
+				ctx,
+				tx,
+				eventID,
+				campaignID,
+				version,
+				scope,
+			)
+			if queueErr != nil {
+				return automation.ChannelReport{}, fmt.Errorf(
+					"record automation provider intent: %w",
+					queueErr,
+				)
+			}
+			return automation.ChannelReport{LocalPersisted: count}, nil
+		},
+		"teams": func(ctx context.Context, tx pgx.Tx, eventID, campaignID uuid.UUID, version int64, scope communications.DeliveryScope) (automation.ChannelReport, error) {
+			report, queueErr := teams.QueueApprovedOccurrenceReportInTransaction(
+				ctx,
+				tx,
+				eventID,
+				campaignID,
+				version,
+				scope,
+			)
+			if queueErr != nil {
+				return automation.ChannelReport{}, fmt.Errorf(
+					"record automation provider intent: %w",
+					queueErr,
+				)
+			}
+			return automation.ChannelReport{
+				Queued:      report.Queued,
+				Preexisting: report.Preexisting,
+			}, nil
+		},
+	}
+	auto.ReviewGuards = map[string]automation.ReviewGuard{
+		"smtp":  provider.CheckOccurrenceReviewInTransaction,
+		"teams": teams.CheckOccurrenceReviewInTransaction,
+		// Local inbox persistence completes inside the original outer transaction.
+		"in_app": func(context.Context, pgx.Tx, uuid.UUID, uuid.UUID, int64, communications.DeliveryScope) error {
+			return nil
+		},
+	}
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
 		Clarifications: answers,
+		Automation:     auto,
+		Inbox:          local,
 		Communications: composer,
-		Inbox:          inboxProvider,
 		Help:           helpProvider,
 		SMTP:           provider,
 		Teams:          teams,

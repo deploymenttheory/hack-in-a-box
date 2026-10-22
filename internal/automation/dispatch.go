@@ -133,7 +133,7 @@ func (s Service) reconcileEvent(ctx context.Context, eventID uuid.UUID) error {
 				}
 			}
 		}
-		return nil
+		return s.reconcilePending(ctx, tx, event, paused)
 	})
 	if err != nil {
 		return fmt.Errorf("reconcile communication event: %w", err)
@@ -288,7 +288,7 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		errors.Is(err, access.ErrConflict) {
 		// No provider effects occur here. Queue writes share the rolled-back outer
 		// transaction; preserve a review state instead of retrying a stale burst.
-		_ = database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+		blockedErr := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
 			_, lockErr := q.LockEvent(ctx, d.EventID)
 			if lockErr != nil {
 				return fmt.Errorf("lock blocked communication: %w", lockErr)
@@ -304,7 +304,12 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 				},
 			)
 		})
-		return jobs.Retryable
+		if blockedErr != nil {
+			return jobs.Retryable
+		}
+		// Explicit review creates a fresh orchestration generation; the obsolete
+		// attempt must not remain an automatically retrying pending operation.
+		return jobs.Permanent
 	}
 	return jobs.Retryable
 }

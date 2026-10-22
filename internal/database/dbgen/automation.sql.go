@@ -203,6 +203,55 @@ func (q *Queries) CancelAutomationBindingOccurrences(ctx context.Context, arg Ca
 	return err
 }
 
+const pendingAutomationOccurrences = `-- name: PendingAutomationOccurrences :many
+SELECT review_revision, channel_reports, event_id, id, binding_id, binding_version, source_kind, source_id, source_revision, source_key, due_at, deadline, scope_binding, state, reason, review_until, operation_id, created_at, updated_at FROM communication_occurrences WHERE event_id=$1 AND id>$2::uuid AND state IN ('pending','paused') ORDER BY id LIMIT 200
+`
+
+type PendingAutomationOccurrencesParams struct {
+	EventID uuid.UUID
+	AfterID uuid.UUID
+}
+
+func (q *Queries) PendingAutomationOccurrences(ctx context.Context, arg PendingAutomationOccurrencesParams) ([]CommunicationOccurrence, error) {
+	rows, err := q.db.Query(ctx, pendingAutomationOccurrences, arg.EventID, arg.AfterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CommunicationOccurrence{}
+	for rows.Next() {
+		var i CommunicationOccurrence
+		if err := rows.Scan(
+			&i.ReviewRevision,
+			&i.ChannelReports,
+			&i.EventID,
+			&i.ID,
+			&i.BindingID,
+			&i.BindingVersion,
+			&i.SourceKind,
+			&i.SourceID,
+			&i.SourceRevision,
+			&i.SourceKey,
+			&i.DueAt,
+			&i.Deadline,
+			&i.ScopeBinding,
+			&i.State,
+			&i.Reason,
+			&i.ReviewUntil,
+			&i.OperationID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const publicationPlanApproval = `-- name: PublicationPlanApproval :one
 SELECT approved, preview_plan_id, event_id, id, campaign_id, campaign_version, source_id, source_version, preview_id, actor_id, document, reason, created_at FROM communication_publication_approvals WHERE event_id=$1 AND id=$2
 `

@@ -110,6 +110,7 @@ ALTER TABLE inbox_notifications ADD COLUMN scope_approval jsonb GENERATED ALWAYS
 -- Scoped Teams intents coexist with the original one-shot campaign route.
 ALTER TABLE teams_workflow_deliveries ADD COLUMN occurrence_id uuid;
 ALTER TABLE teams_workflow_deliveries ADD COLUMN scope_binding text NOT NULL DEFAULT '';
+ALTER TABLE teams_workflow_deliveries ADD COLUMN scope_approval jsonb NOT NULL DEFAULT 'null'::jsonb;
 DROP INDEX teams_workflow_campaign_once;
 CREATE UNIQUE INDEX teams_workflow_campaign_once ON teams_workflow_deliveries(event_id,campaign_id,campaign_version) WHERE kind='broadcast' AND occurrence_id IS NULL;
 CREATE UNIQUE INDEX teams_workflow_occurrence_once ON teams_workflow_deliveries(event_id,occurrence_id) WHERE occurrence_id IS NOT NULL;
@@ -125,6 +126,7 @@ ALTER TABLE inbox_notifications DROP COLUMN scope_approval;
 ALTER TABLE smtp_campaign_messages DROP COLUMN scope_approval;
 DROP INDEX teams_workflow_occurrence_once;
 DROP INDEX teams_workflow_campaign_once;
+ALTER TABLE teams_workflow_deliveries DROP COLUMN scope_approval;
 ALTER TABLE teams_workflow_deliveries DROP COLUMN scope_binding;
 ALTER TABLE teams_workflow_deliveries DROP COLUMN occurrence_id;
 CREATE UNIQUE INDEX teams_workflow_campaign_once ON teams_workflow_deliveries(event_id,campaign_id,campaign_version) WHERE kind='broadcast';

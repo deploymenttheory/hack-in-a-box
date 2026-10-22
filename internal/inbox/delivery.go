@@ -71,7 +71,8 @@ func insert(ctx context.Context, q *dbgen.Queries, d Delivery) (dbgen.InboxNotif
 		return row, access.ErrConflict
 	}
 	if err == nil &&
-		(row.Subject != d.Subject || row.Body != d.Body || row.Format != d.Format || row.ScopeBinding != d.ScopeBinding) {
+		(row.Subject != d.Subject || row.Body != d.Body || row.Format != d.Format ||
+			(row.ScopeBinding != d.ScopeBinding && (d.Source.Kind != "campaign" || d.OccurrenceID == uuid.Nil))) {
 		return row, access.ErrConflict
 	}
 	return row, wrap("persist recipient", err)

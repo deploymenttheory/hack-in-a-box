@@ -31,6 +31,7 @@ func (*recordingRelay) MessageID(
 ) string {
 	return "<" + id.String() + "@example.test>"
 }
+
 func (r *recordingRelay) Send(context.Context, maildelivery.Message) maildelivery.Receipt {
 	r.calls.Add(1)
 	return maildelivery.Receipt{State: maildelivery.Accepted, Code: "relay_accepted"}
@@ -200,6 +201,35 @@ func TestProductionPartialSMTPAndInboxCommitTogetherWithoutInventingReceipts(t *
 		Scan(&state); err != nil ||
 		state != "accepted" {
 		t.Fatal("relay acceptance was not retained distinctly", err)
+	}
+	if err = dbgen.New(f.pool).
+		ConfirmPersonEmail(t.Context(), dbgen.ConfirmPersonEmailParams{PersonID: other.ID, Mailbox: "newly-proven@example.test"}); err != nil {
+		t.Fatal(err)
+	}
+	f.change(
+		Command{
+			Action:       "review_occurrence",
+			OccurrenceID: id,
+			Reason:       "Review settled effects and newly verified address",
+		},
+	)
+	f.execute(id)
+	reviewed, err := f.s.Read(t.Context(), f.owner.ID, f.id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	currentReport := reviewed.Occurrences[0].ChannelReports["smtp"]
+	if currentReport.Queued != 1 || currentReport.Preexisting["accepted"] != 1 ||
+		currentReport.Unavailable != 0 ||
+		relay.calls.Load() != 1 {
+		t.Fatalf("review replayed accepted effect or lost original status: %+v", currentReport)
+	}
+	if err = f.pool.QueryRow(t.Context(), "SELECT (SELECT count(*) FROM inbox_notifications),(SELECT count(*) FROM smtp_campaign_messages)").
+		Scan(&local, &intents); err != nil {
+		t.Fatal(err)
+	}
+	if local != 2 || intents != 2 {
+		t.Fatal("review duplicated local inbox or an accepted SMTP identity")
 	}
 }
 

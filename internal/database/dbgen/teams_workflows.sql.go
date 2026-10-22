@@ -41,8 +41,8 @@ func (q *Queries) InsertTeamsWorkflowAttempt(ctx context.Context, arg InsertTeam
 }
 
 const insertTeamsWorkflowDelivery = `-- name: InsertTeamsWorkflowDelivery :exec
-INSERT INTO teams_workflow_deliveries(event_id,id,operation_id,kind,connection_id,connection_version,channel_revision,actor_id,campaign_id,campaign_version,preview_id,preview_fingerprint,request_id,created_at)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+INSERT INTO teams_workflow_deliveries(event_id,id,operation_id,kind,connection_id,connection_version,channel_revision,actor_id,campaign_id,campaign_version,preview_id,preview_fingerprint,request_id,created_at,occurrence_id,scope_binding,scope_approval)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
 `
 
 type InsertTeamsWorkflowDeliveryParams struct {
@@ -60,6 +60,9 @@ type InsertTeamsWorkflowDeliveryParams struct {
 	PreviewFingerprint pgtype.Text
 	RequestID          uuid.UUID
 	CreatedAt          time.Time
+	OccurrenceID       *uuid.UUID
+	ScopeBinding       string
+	ScopeApproval      []byte
 }
 
 func (q *Queries) InsertTeamsWorkflowDelivery(ctx context.Context, arg InsertTeamsWorkflowDeliveryParams) error {
@@ -78,6 +81,9 @@ func (q *Queries) InsertTeamsWorkflowDelivery(ctx context.Context, arg InsertTea
 		arg.PreviewFingerprint,
 		arg.RequestID,
 		arg.CreatedAt,
+		arg.OccurrenceID,
+		arg.ScopeBinding,
+		arg.ScopeApproval,
 	)
 	return err
 }
@@ -183,7 +189,7 @@ func (q *Queries) SetTeamsWorkflowRateWindow(ctx context.Context, arg SetTeamsWo
 }
 
 const teamsWorkflowCampaignDelivery = `-- name: TeamsWorkflowCampaignDelivery :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding, scope_approval FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3 AND occurrence_id IS NULL
 `
 
 type TeamsWorkflowCampaignDeliveryParams struct {
@@ -212,6 +218,7 @@ func (q *Queries) TeamsWorkflowCampaignDelivery(ctx context.Context, arg TeamsWo
 		&i.CreatedAt,
 		&i.OccurrenceID,
 		&i.ScopeBinding,
+		&i.ScopeApproval,
 	)
 	return i, err
 }
@@ -240,7 +247,7 @@ func (q *Queries) TeamsWorkflowConnection(ctx context.Context, eventID uuid.UUID
 }
 
 const teamsWorkflowDelivery = `-- name: TeamsWorkflowDelivery :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND id=$2
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding, scope_approval FROM teams_workflow_deliveries WHERE event_id=$1 AND id=$2
 `
 
 type TeamsWorkflowDeliveryParams struct {
@@ -268,6 +275,7 @@ func (q *Queries) TeamsWorkflowDelivery(ctx context.Context, arg TeamsWorkflowDe
 		&i.CreatedAt,
 		&i.OccurrenceID,
 		&i.ScopeBinding,
+		&i.ScopeApproval,
 	)
 	return i, err
 }
@@ -380,8 +388,42 @@ func (q *Queries) TeamsWorkflowLatestAttempt(ctx context.Context, arg TeamsWorkf
 	return i, err
 }
 
+const teamsWorkflowOccurrenceDelivery = `-- name: TeamsWorkflowOccurrenceDelivery :one
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding, scope_approval FROM teams_workflow_deliveries WHERE event_id=$1 AND occurrence_id=$2
+`
+
+type TeamsWorkflowOccurrenceDeliveryParams struct {
+	EventID      uuid.UUID
+	OccurrenceID *uuid.UUID
+}
+
+func (q *Queries) TeamsWorkflowOccurrenceDelivery(ctx context.Context, arg TeamsWorkflowOccurrenceDeliveryParams) (TeamsWorkflowDelivery, error) {
+	row := q.db.QueryRow(ctx, teamsWorkflowOccurrenceDelivery, arg.EventID, arg.OccurrenceID)
+	var i TeamsWorkflowDelivery
+	err := row.Scan(
+		&i.EventID,
+		&i.ID,
+		&i.OperationID,
+		&i.Kind,
+		&i.ConnectionID,
+		&i.ConnectionVersion,
+		&i.ChannelRevision,
+		&i.ActorID,
+		&i.CampaignID,
+		&i.CampaignVersion,
+		&i.PreviewID,
+		&i.PreviewFingerprint,
+		&i.RequestID,
+		&i.CreatedAt,
+		&i.OccurrenceID,
+		&i.ScopeBinding,
+		&i.ScopeApproval,
+	)
+	return i, err
+}
+
 const teamsWorkflowRequest = `-- name: TeamsWorkflowRequest :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND request_id=$2
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding, scope_approval FROM teams_workflow_deliveries WHERE event_id=$1 AND request_id=$2
 `
 
 type TeamsWorkflowRequestParams struct {
@@ -409,6 +451,7 @@ func (q *Queries) TeamsWorkflowRequest(ctx context.Context, arg TeamsWorkflowReq
 		&i.CreatedAt,
 		&i.OccurrenceID,
 		&i.ScopeBinding,
+		&i.ScopeApproval,
 	)
 	return i, err
 }

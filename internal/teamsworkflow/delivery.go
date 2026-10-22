@@ -120,12 +120,7 @@ func (s Service) validateDelivery(
 		if intent.CampaignID == nil {
 			return intent, connection, nil, access.ErrForbidden
 		}
-		message, err := s.Composer.ResolveApprovedBroadcastInTransaction(
-			ctx,
-			tx,
-			d.EventID,
-			*intent.CampaignID,
-		)
+		message, err := s.resolveIntentBroadcast(ctx, tx, intent)
 		if err != nil {
 			return intent, connection, nil, fmt.Errorf("recheck approved Teams source: %w", err)
 		}

@@ -69,7 +69,7 @@ func (f *fixture) publicationBinding(source content.Page) Binding {
 		ID:                     id,
 		CampaignID:             f.campaignID,
 		CampaignVersion:        f.campaignVersion,
-		Trigger:                "brief.released",
+		Trigger:                source.Kind + ".released",
 		SourceID:               &source.ID,
 		SourceVersion:          source.Version,
 		MaximumLatenessSeconds: 60,
@@ -86,7 +86,7 @@ func (f *fixture) publicationBinding(source content.Page) Binding {
 		},
 	)
 	if preview == nil || len(preview.DeferredVariables) != 1 ||
-		preview.DeferredVariables[0] != "brief.title" ||
+		preview.DeferredVariables[0] != source.Kind+".title" ||
 		preview.GenericCampaignApproved {
 		f.t.Fatal("deferred preview misrepresented generic approval")
 	}
@@ -224,4 +224,45 @@ func TestChangedExpectedPublicationPlanAndUnknownVariablesBlock(t *testing.T) {
 			t.Fatal("changed source message bypassed plan approval")
 		}
 	})
+}
+
+func TestWithdrawnActualPublicationLeavesDurableBlockedOccurrence(t *testing.T) {
+	f := newFixture(t)
+	service, source := f.approvedBrief()
+	f.campaign("brief_release", "Read {{brief.title}}", false)
+	f.publicationBinding(source)
+	f.now = f.now.Add(time.Minute)
+	if err := service.Dispatch(t.Context(), f.id, source.ID, source.Revision); err != nil {
+		t.Fatal(err)
+	}
+	pending := f.maintain()
+	if len(pending.Occurrences) != 1 || pending.Occurrences[0].State != "pending" {
+		t.Fatal("actual publication did not leave one pending occurrence")
+	}
+	current, err := service.Read(t.Context(), f.owner.ID, f.id, source.ID, true, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = service.Action(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		source.ID,
+		current.Revision,
+		"withdraw",
+		"Withdraw synthetic source before dispatch",
+	); err != nil {
+		t.Fatal(err)
+	}
+	blocked := f.maintain()
+	if blocked.Occurrences[0].State != "blocked" {
+		t.Fatalf(
+			"withdrawn source disappeared from discovery but left stale pending work: %+v",
+			blocked.Occurrences[0],
+		)
+	}
+	f.execute(pending.Occurrences[0].ID)
+	if f.count() != 0 {
+		t.Fatal("withdrawn source produced an intent")
+	}
 }

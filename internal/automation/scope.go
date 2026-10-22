@@ -91,11 +91,24 @@ func (s Service) ResolveInTransaction(
 	version int64,
 	scope communications.DeliveryScope,
 ) (communications.ScopeAudience, error) {
+	return s.resolveScope(ctx, tx, eventID, campaignID, version, scope, true)
+}
+
+// Metadata reconciliation can validate a future pending source without granting
+// execution permission or rendering an early recipient message.
+func (s Service) resolveScope(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	version int64,
+	scope communications.DeliveryScope,
+	execution bool,
+) (communications.ScopeAudience, error) {
 	result := communications.ScopeAudience{}
 	if scope.OccurrenceID == uuid.Nil {
 		return result, access.ErrInvalid
 	}
-	basis, err := s.loadScope(ctx, tx, eventID, campaignID, version, scope)
+	basis, err := s.loadScope(ctx, tx, eventID, campaignID, version, scope, execution)
 	if err != nil {
 		return result, err
 	}
@@ -206,6 +219,7 @@ func (s Service) loadScope(
 	eventID, campaignID uuid.UUID,
 	version int64,
 	scope communications.DeliveryScope,
+	execution bool,
 ) (scopeBasis, error) {
 	q := dbgen.New(tx)
 	event, err := q.LockEvent(ctx, eventID)
@@ -262,7 +276,7 @@ func (s Service) loadScope(
 	if row.ReviewUntil.Valid {
 		deadline = row.ReviewUntil.Time
 	}
-	if s.now().Before(row.DueAt) || s.now().After(deadline) {
+	if execution && (s.now().Before(row.DueAt) || s.now().After(deadline)) {
 		return scopeBasis{}, communications.ErrUnresolved
 	}
 	return scopeBasis{Event: event, Occurrence: row, Binding: binding}, nil
