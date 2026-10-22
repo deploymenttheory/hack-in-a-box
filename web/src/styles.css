@@ -214,3 +214,18 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .table-scroll th, .table-scroll td { padding: .75rem; vertical-align: top; }
 
 .table-scroll caption { text-align: left; }
+
+.credential-editor fieldset { display: grid; gap: .7rem; }
+.credential-inventory-table td { vertical-align: top; }
+@media (max-width: 700px) {
+  .credential-inventory .table-scroll { overflow: visible; }
+  .credential-inventory-table { display: block; min-width: 0 !important; width: 100%; }
+  .credential-inventory-table caption { display: block; margin-bottom: 1rem; }
+  .credential-inventory-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .credential-inventory-table tbody { display: grid; gap: 1rem; }
+  .credential-inventory-table tr { display: block; padding: 1rem; border: 1px solid var(--border); border-radius: .6rem; }
+  .credential-inventory-table th[scope="row"], .credential-inventory-table td { display: block; padding: .45rem 0; border: 0; text-align: left; }
+  .credential-inventory-table td::before { content: attr(data-label); display: block; font-weight: 700; margin-bottom: .2rem; }
+  .credential-inventory-table .actions { display: grid; }
+  .credential-inventory-table .actions button { white-space: normal; height: auto; min-height: 2.25rem; text-align: left; }
+}

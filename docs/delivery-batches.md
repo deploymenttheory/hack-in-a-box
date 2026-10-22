@@ -59,8 +59,7 @@ followed in #176 / PR #178; epic #13 is closed after that evidence was reconcile
 | [#85](https://github.com/deploymenttheory/hack-in-a-box/issues/85) | Presentation cues and protected display streams | Establishes the scoped, revocable server projection needed by MC and room-screen interfaces. |
 | [#91](https://github.com/deploymenttheory/hack-in-a-box/issues/91) | GitHub App installation configuration | Supplies encrypted App identity and trusted installation/template verification before repository provisioning. |
 
-#62, #73 and #77 are delivered in PRs #175, #177 and #179. #85 remains in
-PR #182. #91 remains in draft PR #181: deterministic provider and PostgreSQL
+#62, #73, #77 and #85 are delivered in PRs #175, #177, #179 and #182. #91 remains in draft PR #181: deterministic provider and PostgreSQL
 checks do not replace its required live verification. The sandbox/App do not yet
 exist; the setup ticket/resource preview is awaiting approval. This sequencing
 condition does not mark #91 complete or skipped.

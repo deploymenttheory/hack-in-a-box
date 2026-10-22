@@ -97,9 +97,12 @@ test('navigation, pagehide and current-role revocation clear secret forms and ca
   page.once('dialog', dialog => dialog.accept()); await page.getByRole('button', { name: 'Overview', exact: true }).click(); await page.getByRole('button', { name: 'Inventory', exact: true }).click()
   await expect(page.getByLabel('Secret value', { exact: true })).toHaveCount(0)
   expect(await storedBrowserState(page)).not.toContain('SYNTHETIC-SECOND-NAV-SECRET')
+  await page.getByRole('button', { name: 'Add resource', exact: true }).click(); await page.getByLabel('Secret value', { exact: true }).fill('SYNTHETIC-REVOKED-FORM-SECRET')
   state.denied = true; await page.getByRole('button', { name: 'Refresh inventory', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Resource inventory', exact: true })).toHaveCount(0)
   await expect(page.getByText('You do not have access to this resource.')).toBeVisible()
+  await expect(page.getByLabel('Secret value', { exact: true })).toHaveCount(0)
+  expect(await storedBrowserState(page)).not.toContain('SYNTHETIC-REVOKED-FORM-SECRET')
 })
 
 
@@ -108,8 +111,8 @@ test('safe resource metadata records event-local availability and expiry without
   await page.getByRole('button', { name: 'Edit metadata for Cloud account', exact: true }).click()
   await expect(page.getByLabel('Secret value', { exact: true })).toHaveCount(0)
   await page.getByLabel('Resource label', { exact: true }).fill('Prepared cloud account')
-  await page.getByLabel('Available from (UTC, optional)', { exact: true }).fill('2027-06-19T08:00:00')
-  await page.getByLabel('Expiry (UTC, optional)', { exact: true }).fill('2027-06-20T18:00:00')
+  await page.getByLabel('Available from (UTC, optional)', { exact: true }).fill('2027-06-19T08:00')
+  await page.getByLabel('Expiry (UTC, optional)', { exact: true }).fill('2027-06-20T18:00')
   await page.getByRole('button', { name: 'Save resource metadata', exact: true }).click()
   await expect(page.getByText('Resource metadata updated. Availability and expiry are enforced by the server.')).toBeVisible()
   expect(state.commands[0]).toMatchObject({ action: 'metadata', label: 'Prepared cloud account', resource_type: 'account', available_at: '2027-06-19T08:00:00Z', expires_at: '2027-06-20T18:00:00Z' })
