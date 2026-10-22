@@ -29,6 +29,9 @@ func (h handlers) GetCommunicationAutomation(
 	}
 	limit := int32(50)
 	if r.Params.Limit != nil {
+		if *r.Params.Limit < 1 || *r.Params.Limit > 200 {
+			return nil, access.ErrInvalid
+		}
 		limit = int32(*r.Params.Limit)
 	}
 	page, err := h.Automation.ReadPage(
