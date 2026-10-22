@@ -117,19 +117,21 @@ type TestMessage struct {
 // ApprovedCampaign is the transaction-bound execution seam for #82. Resolving
 // it never enqueues or sends. The caller retains its actual recipient attempts.
 type ApprovedCampaign struct {
-	Approval   CampaignApproval
-	Purpose    string
-	Format     string
-	Definition CampaignDefinition
-	Version    int64
-	DueAt      time.Time
-	Preview    Preview
+	ScopeApproval *ScopeApproval
+	Approval      CampaignApproval
+	Purpose       string
+	Format        string
+	Definition    CampaignDefinition
+	Version       int64
+	DueAt         time.Time
+	Preview       Preview
 }
 
 // BroadcastMessage contains one common literal projection and no recipient list.
 // The adapter must compare its current connection version with the approval's
 // channel revision in the same transaction that records a delivery attempt.
 type BroadcastMessage struct {
+	ScopeApproval   *ScopeApproval
 	EventID         uuid.UUID
 	CampaignID      uuid.UUID
 	CampaignVersion int64

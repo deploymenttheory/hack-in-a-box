@@ -183,7 +183,7 @@ func (q *Queries) SetTeamsWorkflowRateWindow(ctx context.Context, arg SetTeamsWo
 }
 
 const teamsWorkflowCampaignDelivery = `-- name: TeamsWorkflowCampaignDelivery :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND campaign_id=$2 AND campaign_version=$3
 `
 
 type TeamsWorkflowCampaignDeliveryParams struct {
@@ -210,6 +210,8 @@ func (q *Queries) TeamsWorkflowCampaignDelivery(ctx context.Context, arg TeamsWo
 		&i.PreviewFingerprint,
 		&i.RequestID,
 		&i.CreatedAt,
+		&i.OccurrenceID,
+		&i.ScopeBinding,
 	)
 	return i, err
 }
@@ -238,7 +240,7 @@ func (q *Queries) TeamsWorkflowConnection(ctx context.Context, eventID uuid.UUID
 }
 
 const teamsWorkflowDelivery = `-- name: TeamsWorkflowDelivery :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at FROM teams_workflow_deliveries WHERE event_id=$1 AND id=$2
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND id=$2
 `
 
 type TeamsWorkflowDeliveryParams struct {
@@ -264,6 +266,8 @@ func (q *Queries) TeamsWorkflowDelivery(ctx context.Context, arg TeamsWorkflowDe
 		&i.PreviewFingerprint,
 		&i.RequestID,
 		&i.CreatedAt,
+		&i.OccurrenceID,
+		&i.ScopeBinding,
 	)
 	return i, err
 }
@@ -377,7 +381,7 @@ func (q *Queries) TeamsWorkflowLatestAttempt(ctx context.Context, arg TeamsWorkf
 }
 
 const teamsWorkflowRequest = `-- name: TeamsWorkflowRequest :one
-SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at FROM teams_workflow_deliveries WHERE event_id=$1 AND request_id=$2
+SELECT event_id, id, operation_id, kind, connection_id, connection_version, channel_revision, actor_id, campaign_id, campaign_version, preview_id, preview_fingerprint, request_id, created_at, occurrence_id, scope_binding FROM teams_workflow_deliveries WHERE event_id=$1 AND request_id=$2
 `
 
 type TeamsWorkflowRequestParams struct {
@@ -403,6 +407,8 @@ func (q *Queries) TeamsWorkflowRequest(ctx context.Context, arg TeamsWorkflowReq
 		&i.PreviewFingerprint,
 		&i.RequestID,
 		&i.CreatedAt,
+		&i.OccurrenceID,
+		&i.ScopeBinding,
 	)
 	return i, err
 }

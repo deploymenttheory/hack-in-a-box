@@ -451,7 +451,7 @@ func (q *Queries) SMTPSubmissionHistory(ctx context.Context, operationID uuid.UU
 }
 
 const sMTPTestOperation = `-- name: SMTPTestOperation :one
-SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at FROM operations WHERE event_id=$1 AND target_id=$2 AND kind='communication_test_smtp'
+SELECT id, event_id, operation_key, kind, target_id, due_at, approved, cancelled, state, attempts, lease_until, lease_token, revision, created_at, updated_at, retained_occurrence_id FROM operations WHERE event_id=$1 AND target_id=$2 AND kind='communication_test_smtp'
 `
 
 type SMTPTestOperationParams struct {
@@ -478,6 +478,7 @@ func (q *Queries) SMTPTestOperation(ctx context.Context, arg SMTPTestOperationPa
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RetainedOccurrenceID,
 	)
 	return i, err
 }

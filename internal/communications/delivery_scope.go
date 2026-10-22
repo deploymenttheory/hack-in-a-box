@@ -20,10 +20,12 @@ type DeliveryScope struct {
 // Binding identifies immutable occurrence/approval/source intent; it excludes
 // provider secrets and private content. Broadcast is false for private triggers.
 type ScopeAudience struct {
-	Binding       string
-	RecipientIDs  []uuid.UUID
-	Broadcast     bool
-	AllowArchived bool
+	Binding         string
+	RecipientIDs    []uuid.UUID
+	Broadcast       bool
+	RequireComplete bool
+	AllowArchived   bool
+	Approval        *ScopeApproval
 }
 
 // ScopePolicy must lock the event in tx and recheck the current occurrence,
@@ -41,4 +43,14 @@ type ScopePolicy interface {
 		int64,
 		DeliveryScope,
 	) (ScopeAudience, error)
+}
+
+// ScopeApproval names an immutable typed lifecycle approval. It never changes
+// the approval status of the generic campaign draft.
+type ScopeApproval struct {
+	Kind          string
+	ID            uuid.UUID
+	Binding       string
+	SourceID      uuid.UUID
+	SourceVersion int64
 }

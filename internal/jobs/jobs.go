@@ -41,6 +41,13 @@ type Delivery struct {
 	ID, EventID, TargetID uuid.UUID
 	Key                   string
 }
+
+// ReadOnlyHandler is a narrow explicit opt-in for retained post-event outcome
+// follow-up only. The operation must also carry a current validated occurrence.
+type ReadOnlyHandler interface {
+	ReadOnlyEligible(context.Context, Delivery) (bool, error)
+}
+
 type Handler interface {
 	Eligible(context.Context, Delivery) (bool, error)
 	Deliver(context.Context, Delivery) Outcome
@@ -95,6 +102,32 @@ func (s *Service) Enqueue(
 	tx pgx.Tx,
 	input dbgen.InsertOperationParams,
 ) (dbgen.Operation, error) {
+	return s.enqueue(ctx, tx, input, nil)
+}
+
+// EnqueueRetained is reserved for a validated retained outcome occurrence. Both
+// durable policy and a handler's current proof are required for read-only work.
+func (s *Service) EnqueueRetained(
+	ctx context.Context,
+	tx pgx.Tx,
+	input dbgen.InsertOperationParams,
+	occurrenceID uuid.UUID,
+) (dbgen.Operation, error) {
+	if occurrenceID == uuid.Nil {
+		return dbgen.Operation{}, access.ErrInvalid
+	}
+	if _, ok := s.handlers[input.Kind].(ReadOnlyHandler); !ok {
+		return dbgen.Operation{}, access.ErrForbidden
+	}
+	return s.enqueue(ctx, tx, input, &occurrenceID)
+}
+
+func (s *Service) enqueue(
+	ctx context.Context,
+	tx pgx.Tx,
+	input dbgen.InsertOperationParams,
+	retained *uuid.UUID,
+) (dbgen.Operation, error) {
 	if input.EventID == uuid.Nil || input.TargetID == uuid.Nil || input.Kind == "" ||
 		input.OperationKey == "" ||
 		input.DueAt.IsZero() {
@@ -105,7 +138,17 @@ func (s *Service) Enqueue(
 	if err != nil {
 		return dbgen.Operation{}, fmt.Errorf("check operation event: %w", err)
 	}
-	if !event.WritesAllowed {
+	if retained != nil {
+		allowed, checkErr := dbgen.New(tx).
+			RetainedCommunicationOccurrence(ctx, dbgen.RetainedCommunicationOccurrenceParams{EventID: input.EventID, OccurrenceID: *retained, AtTime: time.Now()})
+		if checkErr != nil {
+			return dbgen.Operation{}, fmt.Errorf("check retained enqueue: %w", checkErr)
+		}
+		if !allowed {
+			return dbgen.Operation{}, access.ErrForbidden
+		}
+	}
+	if !event.WritesAllowed && retained == nil {
 		return dbgen.Operation{}, access.ErrForbidden
 	}
 	op, err := dbgen.New(tx).InsertOperation(ctx, input)
@@ -114,6 +157,17 @@ func (s *Service) Enqueue(
 	}
 	if op.Kind != input.Kind || op.TargetID != input.TargetID || !op.DueAt.Equal(input.DueAt) {
 		return dbgen.Operation{}, ErrIdentity
+	}
+	if retained != nil {
+		changed, markErr := dbgen.New(tx).
+			SetRetainedOccurrence(ctx, dbgen.SetRetainedOccurrenceParams{ID: op.ID, RetainedOccurrenceID: retained})
+		if markErr != nil {
+			return dbgen.Operation{}, fmt.Errorf("bind retained operation: %w", markErr)
+		}
+		if changed != 1 {
+			return dbgen.Operation{}, ErrIdentity
+		}
+		op.RetainedOccurrenceID = retained
 	}
 	if op.State == "pending" && !op.Cancelled {
 		if _, err := s.Client.InsertTx(
@@ -200,6 +254,26 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 	if handler == nil {
 		return nil
 	} // Undeployed integrations remain resumable.
+	// Snapshot the event before callbacks; neither callback runs under row locks.
+	snapshot, err := dbgen.New(s.Pool).Event(ctx, candidate.EventID)
+	if err != nil {
+		return fmt.Errorf("read candidate event: %w", err)
+	}
+	retainedChecked := false
+	if !snapshot.WritesAllowed {
+		proof, ok := handler.(ReadOnlyHandler)
+		if !ok || candidate.RetainedOccurrenceID == nil || snapshot.Stage != "archived" {
+			return nil
+		}
+		allowed, checkErr := proof.ReadOnlyEligible(ctx, delivery(candidate))
+		if checkErr != nil {
+			return ErrEligibility
+		}
+		if !allowed {
+			return nil
+		}
+		retainedChecked = true
+	}
 	eligible, err := handler.Eligible(ctx, delivery(candidate))
 	if err != nil {
 		return ErrEligibility
@@ -215,9 +289,6 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 		if err != nil {
 			return fmt.Errorf("lock operation event: %w", err)
 		}
-		if !event.WritesAllowed {
-			return nil
-		}
 		op, err = q.LockOperation(ctx, id)
 		if err != nil {
 			return fmt.Errorf("lock operation: %w", err)
@@ -226,6 +297,28 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 		// fresh current-authority check; the normal worker snooze preserves work.
 		if !claimable(op) || !sameCandidate(candidate, op) {
 			return nil
+		}
+		if event.Revision != snapshot.Revision {
+			return nil
+		}
+		if !event.WritesAllowed {
+			if !retainedChecked || op.RetainedOccurrenceID == nil || event.Stage != "archived" {
+				return nil
+			}
+			allowed, checkErr := q.RetainedCommunicationOccurrence(
+				ctx,
+				dbgen.RetainedCommunicationOccurrenceParams{
+					EventID:      op.EventID,
+					OccurrenceID: *op.RetainedOccurrenceID,
+					AtTime:       time.Now(),
+				},
+			)
+			if checkErr != nil {
+				return fmt.Errorf("revalidate retained claim: %w", checkErr)
+			}
+			if !allowed {
+				return nil
+			}
 		}
 
 		op, err = q.ClaimOperation(
@@ -269,9 +362,19 @@ func claimable(op dbgen.Operation) bool {
 }
 
 func sameCandidate(before, after dbgen.Operation) bool {
-	return before.Revision == after.Revision && before.EventID == after.EventID &&
-		before.Kind == after.Kind && before.TargetID == after.TargetID &&
-		before.OperationKey == after.OperationKey && before.DueAt.Equal(after.DueAt)
+	sameRetention := sameRetainedOccurrence(before.RetainedOccurrenceID, after.RetainedOccurrenceID)
+	return sameRetention && before.Revision == after.Revision && before.EventID == after.EventID &&
+		before.Kind == after.Kind &&
+		before.TargetID == after.TargetID &&
+		before.OperationKey == after.OperationKey &&
+		before.DueAt.Equal(after.DueAt)
+}
+
+func sameRetainedOccurrence(before, after *uuid.UUID) bool {
+	if before == nil || after == nil {
+		return before == after
+	}
+	return *before == *after
 }
 
 func delivery(op dbgen.Operation) Delivery {

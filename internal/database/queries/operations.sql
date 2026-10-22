@@ -48,3 +48,9 @@ SELECT
  (SELECT count(*) FROM operations WHERE state = 'ambiguous')::bigint AS ambiguous,
  COALESCE((SELECT max(EXTRACT(epoch FROM now() - due_at)) FROM operations WHERE state = 'pending' AND approved AND NOT cancelled AND due_at < now()),0)::double precision AS due_lag_seconds,
  COALESCE((SELECT sum(recovered_leases) FROM reconciliation_runs),0)::bigint AS recovered_leases;
+
+-- name: RetainedCommunicationOccurrence :one
+SELECT retained_communication_occurrence(sqlc.arg(event_id)::uuid,sqlc.arg(occurrence_id)::uuid,sqlc.arg(at_time)::timestamptz)::boolean AS allowed;
+
+-- name: SetRetainedOccurrence :execrows
+UPDATE operations SET retained_occurrence_id=$2 WHERE id=$1 AND (retained_occurrence_id IS NULL OR retained_occurrence_id=$2);
