@@ -51,6 +51,7 @@ const (
 	ScorecardCheckpointChanged Action = "scorecard.checkpoint_changed"
 	ScorecardChanged           Action = "scorecard.changed"
 	ScorecardSignedOff         Action = "scorecard.signed_off"
+	ModerationChanged          Action = "moderation.changed"
 	MentorObservationChanged   Action = "mentor.observation_changed"
 	MentorStatusChanged        Action = "mentor.status_changed"
 	TeamFrozen                 Action = "team.frozen"
@@ -139,6 +140,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		ScorecardCheckpointChanged,
 		ScorecardChanged,
 		ScorecardSignedOff,
+		ModerationChanged,
 		MentorObservationChanged,
 		MentorStatusChanged,
 		ContentAcknowledged,
