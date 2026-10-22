@@ -208,3 +208,9 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .organiser-help { overflow-wrap: anywhere; }
 .submission-history { margin: 2rem 0; }
 .team-submission .evidence-links a { overflow-wrap: anywhere; }
+
+.table-scroll { max-width: 100%; overflow-x: auto; }
+.table-scroll table { width: 100%; min-width: 48rem; text-align: left; }
+.table-scroll th, .table-scroll td { padding: .75rem; vertical-align: top; }
+
+.table-scroll caption { text-align: left; }
