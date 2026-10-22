@@ -203,3 +203,17 @@ test('active live-window closure removes private copies while transient read fai
   await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveCount(0); expect(await copies(page)).toBe(0)
   expect(state.commands).toHaveLength(0)
 })
+
+for (const mode of ['expired', 'new-person'] as const) {
+  test(`actual typed mentor text is cleared after native session ${mode}`, async ({ page }) => {
+    const state = await fixture(page); let switched = false
+    await page.route('**/api/v1/session', route => switched && mode === 'expired' ? route.fulfill({ status: 401, json: { error: { code: 'unauthorized', message: 'Session expired', request_id: 'synthetic' } } }) : route.fulfill({ json: { person: switched ? { ...person, id: '77777777-7777-4777-8777-777777777777', display_name: 'Different mentor' } : person, draft_scope: switched ? '88888888-8888-4888-8888-888888888888' : '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
+    await openNew(page); await typeNote(page, 'PRIVATE OLD ACCOUNT TEXT'); expect(await copies(page)).toBe(1)
+    switched = true; await page.reload()
+    await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveCount(0)
+    if (mode === 'expired') await expect(page.getByRole('heading', { name: /session|Sign in|Welcome/i })).toBeVisible()
+    else await expect(page.getByRole('button', { name: 'Different mentor', exact: true })).toBeVisible()
+    expect(await copies(page)).toBe(0); await expect(page.getByText('PRIVATE OLD ACCOUNT TEXT', { exact: true })).toHaveCount(0)
+    expect(state.commands).toHaveLength(0)
+  })
+}
