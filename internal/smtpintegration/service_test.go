@@ -536,3 +536,42 @@ func TestSMTPTestExpiryBoundaryAndUncertainReceiptSurviveCancellation(t *testing
 		t.Fatal("cancellation obscured an uncertain external effect")
 	}
 }
+
+func TestSMTPCalendarSnapshotSequenceChangesOnlyForChangedEventDetails(t *testing.T) {
+	f := setup(t)
+	q := dbgen.New(f.pool)
+	request := communications.TestMessage{EventID: f.event}
+	first, err := f.service.calendar(t.Context(), q, request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	same, err := f.service.calendar(t.Context(), q, request)
+	if err != nil || same.Sequence != first.Sequence || same.EventID != first.EventID {
+		t.Fatal("unchanged calendar advanced its durable sequence")
+	}
+	row, err := q.Event(t.Context(), f.event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var configuration event.Configuration
+	if err = json.Unmarshal(row.Configuration, &configuration); err != nil {
+		t.Fatal(err)
+	}
+	configuration.LiveStart = configuration.LiveStart.Add(time.Hour)
+	configuration.LiveEnd = configuration.LiveEnd.Add(time.Hour)
+	encoded, err := json.Marshal(configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.exec("UPDATE events SET configuration=$2 WHERE id=$1", f.event, encoded)
+	updated, err := f.service.calendar(t.Context(), q, request)
+	if err != nil || updated.Sequence != first.Sequence+1 || updated.EventID != first.EventID ||
+		!updated.Start.Equal(configuration.LiveStart) || !updated.End.Equal(configuration.LiveEnd) ||
+		updated.Timezone != configuration.Timezone {
+		t.Fatal("changed calendar lost stable identity, sequence or current event instants")
+	}
+	var liveRows int
+	if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM email_calendar_sequences WHERE event_id=$1 AND NOT test", f.event).Scan(&liveRows); err != nil || liveRows != 0 {
+		t.Fatal("self-test calendar changed production calendar sequence")
+	}
+}
