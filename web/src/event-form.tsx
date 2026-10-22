@@ -1,3 +1,4 @@
+import { wallTime } from './event-time'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,12 +20,7 @@ const schema = z.object({
 })
 type Values = z.infer<typeof schema>
 const dateFields = [['admission_cutoff', 'Final admission'], ['team_freeze', 'Team freeze'], ['live_start', 'Live start'], ['submission_cutoff', 'Submission cutoff'], ['live_end', 'Live end']] as const
-function wallTime(value?: string, timezone = 'Europe/London') {
-  if (!value || value.startsWith('0001-')) return ''
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(value))
-  const get = (key: string) => parts.find(p => p.type === key)?.value
-  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`
-}
+
 function defaults(event?: EventRecord): Values {
   const c = event?.configuration
   return { name: event?.name ?? '', slug: event?.slug ?? '', description: c?.description ?? '', venue: c?.venue ?? '', timezone: c?.timezone ?? 'Europe/London', capacity: c?.capacity ?? 200, minimum_attendance: c?.minimum_attendance ?? 30,
