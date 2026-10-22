@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
@@ -67,7 +68,8 @@ func newCommunicationRuntime(
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
-		"help.updated": automation.HelpSource{Help: helpProvider},
+		"help.updated":     automation.HelpSource{Help: helpProvider},
+		"rubric.published": automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
 	}
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	outbox, err := jobs.New(

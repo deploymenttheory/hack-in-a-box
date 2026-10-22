@@ -87,3 +87,36 @@ checkpoint. Results #112 has no implemented native publisher: unknown results
 approval remains fail-closed, and full #82 must remain open until that real
 integration is verified. Delivered historical receipts/links retain exact
 provenance; corrections invalidate old pending dispatch and never replay it.
+
+### Native help maintenance and rubric publication
+
+Help now pages every event with writable waiting or claimed requests independently
+of campaign bindings, then reuses native transaction-aware maintenance. An event
+with zero automation bindings produces an actual due inbox followup; early,
+archived and repeated sweeps do not add one (app2.929s). Claimed requests whose
+helper departs return to the native waiting cycle (2.813s); the owner also
+traverses53 events beyond its first keyset page without duplicates (4.518s).
+Unknown help-source discovery passes1,005 records in bounded batches, skipping
+previously recorded pages without a lifetime cap (4.396s). A real native help
+transition traverses approved automation into actual once-only local inbox
+persistence without copying private prose or calling the relay (5.521s).
+
+The rubric adapter names the native actual challenge-publication tuple. Initial
+common release and reviewed material corrections are sources; an unchanged
+criteria challenge-only release is not a new rubric notice. Corrections use the
+native immutable notice-recipient intents intersected with current confirmed
+readers. The owner reuses its canonical public exact-reference/digest reader in
+the same transaction. Native actual publication/correction, stale-source denial,
+withdrawal, post-publication entrant exclusion and unchanged-criteria no-replay
+proof passes2.885s.
+
+The existing typed expected-publication approval also supports rubric.published
+using the full exact challenge document, including its rubric reference. Its
+source identity is the challenge ID/version, not a date or rubric draft. It
+retains the challenge_release template purpose and never marks a generic draft
+approved. A generic prepublication approval correctly blocked after actual
+content changed (red: zero inbox records); the explicitly reviewed guarded
+transition now produces exactly two actual local inbox records on repeated
+reconciliation/execution, with no private judge guidance or external send
+(2.782s). Unknown future source fields remain blocked. Actual clarification and
+results integration remain outstanding; no full #82 closure is claimed.

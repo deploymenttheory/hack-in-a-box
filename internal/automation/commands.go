@@ -278,9 +278,10 @@ func (s Service) previewPublicationBinding(
 	binding Binding,
 	input Command,
 ) (*communications.PublicationPlanPreview, error) {
-	if binding.Definition.SourceID == nil || binding.Definition.SourceVersion < 1 ||
+	if !s.sourceAvailable(binding.Definition.Trigger) || binding.Definition.SourceID == nil ||
+		binding.Definition.SourceVersion < 1 ||
 		!slices.Contains(
-			[]string{"challenge.released", "brief.released"},
+			[]string{"challenge.released", "brief.released", "rubric.published"},
 			binding.Definition.Trigger,
 		) {
 		return nil, access.ErrInvalid
