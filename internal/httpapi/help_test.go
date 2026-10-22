@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -20,13 +19,7 @@ import (
 
 func TestHelpHTTPCurrentTeamContextAndLiveReviewGate(t *testing.T) {
 	pool := testdb.New(t, true)
-	schema, err := os.ReadFile("../help/schema.provisional.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(t.Context(), string(schema)); err != nil {
-		t.Fatal(err)
-	}
+
 	f := newEmbargoFixture(t, pool, time.Date(2027, 6, 20, 9, 0, 0, 0, time.UTC))
 	service := help.Service{Pool: pool, Clock: func() time.Time { return f.now }}
 	f.router = NewRouter(
@@ -49,7 +42,7 @@ func TestHelpHTTPCurrentTeamContextAndLiveReviewGate(t *testing.T) {
 	created := f.request(member, "PUT", path, input, 0)
 	f.expect(created, 200)
 	var page help.Page
-	if err = json.Unmarshal(created.Body.Bytes(), &page); err != nil {
+	if err := json.Unmarshal(created.Body.Bytes(), &page); err != nil {
 		t.Fatal(err)
 	}
 	if page.Request.Category != "setup" || page.Request.Status != "waiting" ||
@@ -90,7 +83,7 @@ func TestHelpHTTPCurrentTeamContextAndLiveReviewGate(t *testing.T) {
 	otherQueue := f.request(other, "GET", f.base()+"/help", nil, 0)
 	f.expect(otherQueue, 200)
 	var queue help.Queue
-	if err = json.Unmarshal(
+	if err := json.Unmarshal(
 		otherQueue.Body.Bytes(),
 		&queue,
 	); err != nil || len(queue.Items) != 0 || queue.Waiting != 0 ||

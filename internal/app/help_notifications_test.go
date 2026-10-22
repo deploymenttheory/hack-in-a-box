@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -22,15 +21,7 @@ import (
 func TestNativeHelpRuntimeRecordsSafeInboxAndRevokesActualResource(t *testing.T) {
 	pool := testdb.New(t, true)
 	ctx := t.Context()
-	// Provisional source-only fixture: ordered migration proof belongs to the
-	// final numbered help PR, not this checkpoint.
-	schema, err := os.ReadFile("../help/schema.provisional.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(ctx, string(schema)); err != nil {
-		t.Fatal(err)
-	}
+
 	cfg, err := config.Load(func(key string) string {
 		if key == "HACKBOX_ENV" {
 			return "test"

@@ -2,7 +2,6 @@ package help
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -21,12 +20,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
-
-// The schema has no migration number yet. These fixtures exercise the isolated
-// domain draft; final ordered Goose-upgrade evidence is required before its PR.
-//
-//go:embed schema.provisional.sql
-var provisionalSchema string
 
 type delivery struct {
 	eventID, requestID uuid.UUID
@@ -64,9 +57,6 @@ type fixture struct {
 func newFixture(t *testing.T) *fixture {
 	t.Helper()
 	pool := testdb.New(t, true)
-	if _, err := pool.Exec(t.Context(), provisionalSchema); err != nil {
-		t.Fatal(err)
-	}
 	f := &fixture{
 		t:             t,
 		pool:          pool,

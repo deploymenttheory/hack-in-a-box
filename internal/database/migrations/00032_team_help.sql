@@ -1,7 +1,7 @@
+-- +goose Up
+-- Ordered after observations31. This operational model grants no assessment access.
 ALTER TABLE policy_resources DROP CONSTRAINT policy_resources_kind_check;
 ALTER TABLE policy_resources ADD CONSTRAINT policy_resources_kind_check CHECK(kind IN ('team','assessment','credential','brief','presentation','logistics','media','help'));
--- Provisional owning-domain schema. Move into the assigned Goose migration only
--- after SMTP/Teams/inbox/automation/rubric/observation ordering is confirmed.
 CREATE TABLE help_settings (
  event_id uuid PRIMARY KEY REFERENCES events(id),
  revision bigint NOT NULL CHECK(revision>0),
@@ -71,3 +71,19 @@ CREATE TABLE help_followups (
 CREATE TRIGGER help_transitions_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON help_transitions FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER help_commands_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON help_commands FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER help_followups_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON help_followups FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
+
+-- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM help_requests) OR EXISTS(SELECT 1 FROM help_settings) OR EXISTS(SELECT 1 FROM policy_resources WHERE kind='help') THEN
+  RAISE EXCEPTION 'Help request or settings history exists; rollback requires an explicit preservation plan';
+ END IF;
+END $$;
+-- +goose StatementEnd
+DROP TABLE help_followups;
+DROP TABLE help_commands;
+DROP TABLE help_transitions;
+DROP TABLE help_requests;
+DROP TABLE help_settings;
+ALTER TABLE policy_resources DROP CONSTRAINT policy_resources_kind_check;
+ALTER TABLE policy_resources ADD CONSTRAINT policy_resources_kind_check CHECK(kind IN ('team','assessment','credential','brief','presentation','logistics','media'));

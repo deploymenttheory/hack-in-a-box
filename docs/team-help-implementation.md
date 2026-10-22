@@ -1,11 +1,9 @@
 # Team help request boundary (#159)
 
-This isolated implementation is not yet ready to merge. Its schema is explicitly
-`internal/help/schema.provisional.sql`, included by sqlc for development fixtures.
-It has no Goose number and changes no production expected schema version. Before
-opening its PR, move that schema into the actual next migration after merged
-provider/inbox/automation/rubric dependencies and prove the populated ordered
-upgrade. Migration numbering follows readiness, not this draft's creation time.
+This isolated implementation uses Goose schema32 after the concrete observations31
+checkpoint, retaining SMTP, Teams, rubric and inbox contracts. It still needs final
+restacking onto merged main and fresh exact-head CI before merge. Numbered tests
+use the actual migration; there is no provisional-schema fixture injection.
 
 ## Owning domain
 
@@ -73,7 +71,7 @@ avoids making inbox destinations depend on those later controls or dashboards.
 
 ## Current evidence and remaining work
 
-Synthetic provisional-schema PostgreSQL/race coverage proves concurrent claims,
+Synthetic PostgreSQL/race coverage proves concurrent claims,
 idempotency, team/event isolation, current withdrawal/conflict/departure denial,
 pre-live logistics and competition-output gating, immutable history, scoped
 counts, exact threshold/dedup, approved meeting hosts and revocation across an
@@ -104,4 +102,13 @@ mobile cases pass2.4s including inbox-to-help navigation with no private questio
 copied into the preview. Full Go lint reports0 issues; both bundles and web lint
 pass. Native queue/maintenance reads use bounded UUID keyset queries without a
 permanent1,000-request cap; the populated1,005-source queue regression passes.
-No schema number or ordered upgrade claim is assigned at this checkpoint.
+Concrete31→32 migration tests retain earlier private resources and verify empty, settings-only and populated rollback behavior. Final main rebase and exact-head CI remain gates.
+
+
+Numbered schema32 proof: help15.777 s, HTTP6.647 s, shared runtime3.942 s and
+inbox12.854 s pass with PostgreSQL/race. Historical credential/rubric/SMTP/Teams/
+database migration suites pass3.670/3.614/3.327/3.561/3.402 s. The observation31
+historical fixture exposed the expected partial-Down/latest assertion edge under32;
+its owning200 PR is supplying explicit31 retention plus latest restoration.
+That parent correction and final main restacking remain required. No claim of
+full stacked CI green is made before those concrete changes are integrated.
