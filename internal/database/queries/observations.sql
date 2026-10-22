@@ -39,3 +39,6 @@ SELECT * FROM mentor_team_status_versions WHERE event_id=$1 AND team_id=$2 ORDER
 -- name: InsertMentorStatus :one
 INSERT INTO mentor_team_status_versions(event_id,team_id,version,actor_id,state,reason,next_action,changed_at)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *;
+
+-- name: MentorObservationVersionExists :one
+SELECT EXISTS(SELECT 1 FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3 AND version=$4);

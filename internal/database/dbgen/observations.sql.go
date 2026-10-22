@@ -260,6 +260,29 @@ func (q *Queries) MentorObservationHistory(ctx context.Context, arg MentorObserv
 	return items, nil
 }
 
+const mentorObservationVersionExists = `-- name: MentorObservationVersionExists :one
+SELECT EXISTS(SELECT 1 FROM mentor_observation_versions WHERE event_id=$1 AND team_id=$2 AND id=$3 AND version=$4)
+`
+
+type MentorObservationVersionExistsParams struct {
+	EventID uuid.UUID
+	TeamID  uuid.UUID
+	ID      uuid.UUID
+	Version int64
+}
+
+func (q *Queries) MentorObservationVersionExists(ctx context.Context, arg MentorObservationVersionExistsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, mentorObservationVersionExists,
+		arg.EventID,
+		arg.TeamID,
+		arg.ID,
+		arg.Version,
+	)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const mentorStatusHistory = `-- name: MentorStatusHistory :many
 SELECT event_id, team_id, version, actor_id, state, reason, next_action, changed_at FROM mentor_team_status_versions WHERE event_id=$1 AND team_id=$2
 AND ($3::bigint IS NULL OR version<$3::bigint)

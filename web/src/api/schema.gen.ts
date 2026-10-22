@@ -1913,10 +1913,216 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams/{team_id}/scorecard-checkpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getAssignedScorecardCheckpoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/scorecard-checkpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getScorecardCheckpoints"];
+        put?: never;
+        post: operations["configureScorecardCheckpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/scorecards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOwnScorecards"];
+        put?: never;
+        post: operations["changeOwnScorecard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/scorecards/{card_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOwnScorecardHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/scorecards/panel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getModerationScorecards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ScorecardCheckpointDefinition: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            run_id: string;
+            opens_wall_time: string;
+            closes_wall_time: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+        };
+        ScorecardCheckpoint: {
+            definition: components["schemas"]["ScorecardCheckpointDefinition"];
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            purpose: "checkpoint" | "mentor_final";
+            rubric: components["schemas"]["RubricReference"];
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            timezone: string;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+        };
+        ScorecardCheckpointCommand: {
+            definition: components["schemas"]["ScorecardCheckpointDefinition"];
+            /** Format: int64 */
+            version: number;
+            reason: string;
+        };
+        ScorecardEvidence: {
+            /** @enum {string} */
+            kind: "note" | "observation" | "submission";
+            /** Format: uuid */
+            id: string | null;
+            /** Format: int64 */
+            version: number | null;
+            note: string;
+        };
+        ScorecardCategory: {
+            /** Format: uuid */
+            category_id: string;
+            pending: boolean;
+            value: number | null;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+        };
+        ScorecardReference: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+        };
+        MentorScorecard: {
+            /** Format: int64 */
+            revision: number;
+            reference: components["schemas"]["ScorecardReference"];
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            checkpoint_id: string;
+            /** Format: int64 */
+            checkpoint_version: number;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            run_id: string;
+            rubric: components["schemas"]["RubricReference"];
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            /** @enum {string} */
+            purpose: "checkpoint" | "mentor_final";
+            /** Format: int64 */
+            submission_revision: number | null;
+            /** @enum {string} */
+            state: "draft" | "submitted";
+            scores: components["schemas"]["ScorecardCategory"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        ScorecardCommand: {
+            /** @enum {string} */
+            action: "save" | "submit";
+            /** Format: uuid */
+            checkpoint_id: string;
+            /** Format: int64 */
+            checkpoint_version: number;
+            /** Format: int64 */
+            version: number;
+            scores: components["schemas"]["ScorecardCategory"][];
+        };
+        ScorecardCheckpointPage: {
+            /** Format: int64 */
+            revision: number;
+            items: components["schemas"]["ScorecardCheckpoint"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ScorecardPage: {
+            /** Format: int64 */
+            revision: number;
+            items: components["schemas"]["MentorScorecard"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ScorecardHistory: {
+            items: components["schemas"]["MentorScorecard"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
         SMTPTestDeliveryStatus: {
             /** @enum {string} */
             state: "pending" | "accepted" | "retryable" | "permanent" | "ambiguous" | "cancelled";
@@ -7531,6 +7737,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HelpSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getAssignedScorecardCheckpoints: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardCheckpointPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getScorecardCheckpoints: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardCheckpointPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureScorecardCheckpoint: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScorecardCheckpointCommand"];
+            };
+        };
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardCheckpoint"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnScorecards: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeOwnScorecard: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScorecardCommand"];
+            };
+        };
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorScorecard"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnScorecardHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getModerationScorecards: {
+        parameters: {
+            query: {
+                context_id: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Currently authorised private scorecard projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MentorScorecard"][];
                 };
             };
             default: components["responses"]["Error"];

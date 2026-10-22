@@ -523,6 +523,41 @@ type MentorProfile struct {
 	MaximumTeams pgtype.Int4
 }
 
+type MentorScorecardSignoff struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	TeamID         uuid.UUID
+	RunID          uuid.UUID
+	ContextID      uuid.UUID
+	ContextVersion int64
+	ActorID        uuid.UUID
+	Proof          []byte
+	CreatedAt      time.Time
+}
+
+type MentorScorecardSignoffCard struct {
+	EventID     uuid.UUID
+	SignoffID   uuid.UUID
+	CardID      uuid.UUID
+	CardVersion int64
+}
+
+type MentorScorecardVersion struct {
+	EventID            uuid.UUID
+	TeamID             uuid.UUID
+	CheckpointID       uuid.UUID
+	CheckpointVersion  int64
+	ID                 uuid.UUID
+	Version            int64
+	AuthorID           uuid.UUID
+	RunID              uuid.UUID
+	RubricID           uuid.UUID
+	RubricVersion      int64
+	SubmissionRevision pgtype.Int8
+	Document           []byte
+	CreatedAt          time.Time
+}
+
 type MentorSetting struct {
 	EventID         uuid.UUID
 	DefaultCapacity int32
@@ -814,6 +849,17 @@ type ScheduleItem struct {
 	ExecutedAt  pgtype.Timestamptz
 	OperationID *uuid.UUID
 	Revision    int64
+}
+
+type ScorecardCheckpointVersion struct {
+	EventID   uuid.UUID
+	ID        uuid.UUID
+	Version   int64
+	RunID     uuid.UUID
+	Document  []byte
+	ActorID   uuid.UUID
+	Reason    string
+	CreatedAt time.Time
 }
 
 type Session struct {

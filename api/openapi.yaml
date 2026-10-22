@@ -2762,6 +2762,236 @@ paths:
         }
       }
     }
+  "/api/v1/events/{event_id}/teams/{team_id}/scorecard-checkpoints":
+    "parameters":
+      -
+        "$ref": "#/components/parameters/EventID"
+      -
+        "name": "team_id"
+        "in": "path"
+        "required": true
+        "schema":
+          "type": "string"
+          "format": "uuid"
+    "get":
+      "operationId": "getAssignedScorecardCheckpoints"
+      "parameters":
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ScorecardCheckpointPage"
+        "default":
+          "$ref": "#/components/responses/Error"
+  "/api/v1/events/{event_id}/scorecard-checkpoints":
+    "parameters":
+      -
+        "$ref": "#/components/parameters/EventID"
+    "get":
+      "operationId": "getScorecardCheckpoints"
+      "parameters":
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ScorecardCheckpointPage"
+        "default":
+          "$ref": "#/components/responses/Error"
+    "post":
+      "operationId": "configureScorecardCheckpoint"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/CSRF"
+        -
+          "$ref": "#/components/parameters/Revision"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/ScorecardCheckpointCommand"
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ScorecardCheckpoint"
+        "default":
+          "$ref": "#/components/responses/Error"
+  "/api/v1/events/{event_id}/teams/{team_id}/scorecards":
+    "parameters":
+      -
+        "$ref": "#/components/parameters/EventID"
+      -
+        "name": "team_id"
+        "in": "path"
+        "required": true
+        "schema":
+          "type": "string"
+          "format": "uuid"
+    "get":
+      "operationId": "getOwnScorecards"
+      "parameters":
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ScorecardPage"
+        "default":
+          "$ref": "#/components/responses/Error"
+    "post":
+      "operationId": "changeOwnScorecard"
+      "parameters":
+        -
+          "$ref": "#/components/parameters/CSRF"
+        -
+          "$ref": "#/components/parameters/Revision"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/ScorecardCommand"
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/MentorScorecard"
+        "default":
+          "$ref": "#/components/responses/Error"
+  "/api/v1/events/{event_id}/teams/{team_id}/scorecards/{card_id}/history":
+    "parameters":
+      -
+        "$ref": "#/components/parameters/EventID"
+      -
+        "name": "team_id"
+        "in": "path"
+        "required": true
+        "schema":
+          "type": "string"
+          "format": "uuid"
+      -
+        "name": "card_id"
+        "in": "path"
+        "required": true
+        "schema":
+          "type": "string"
+          "format": "uuid"
+    "get":
+      "operationId": "getOwnScorecardHistory"
+      "parameters":
+        -
+          "name": "cursor"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "format": "int64"
+            "minimum": 1
+        -
+          "name": "limit"
+          "in": "query"
+          "required": false
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ScorecardHistory"
+        "default":
+          "$ref": "#/components/responses/Error"
+  "/api/v1/events/{event_id}/teams/{team_id}/scorecards/panel":
+    "parameters":
+      -
+        "$ref": "#/components/parameters/EventID"
+      -
+        "name": "team_id"
+        "in": "path"
+        "required": true
+        "schema":
+          "type": "string"
+          "format": "uuid"
+    "get":
+      "operationId": "getModerationScorecards"
+      "parameters":
+        -
+          "name": "context_id"
+          "in": "query"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+      "responses":
+        "200":
+          "description": "Currently authorised private scorecard projection."
+          "content":
+            "application/json":
+              "schema":
+                "type": "array"
+                "maxItems": 100
+                "items":
+                  "$ref": "#/components/schemas/MentorScorecard"
+        "default":
+          "$ref": "#/components/responses/Error"
 components:
   securitySchemes:
     display:
@@ -2829,6 +3059,313 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    "ScorecardCheckpointDefinition":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "name"
+        - "run_id"
+        - "opens_wall_time"
+        - "closes_wall_time"
+        - "dst_choice"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "name":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 160
+        "run_id":
+          "type": "string"
+          "format": "uuid"
+        "opens_wall_time":
+          "type": "string"
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+        "closes_wall_time":
+          "type": "string"
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+        "dst_choice":
+          "type": "string"
+          "enum":
+            - ""
+            - "earlier"
+            - "later"
+    "ScorecardCheckpoint":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "definition"
+        - "version"
+        - "purpose"
+        - "rubric"
+        - "criteria"
+        - "timezone"
+        - "opens_at"
+        - "closes_at"
+      "properties":
+        "definition":
+          "$ref": "#/components/schemas/ScorecardCheckpointDefinition"
+        "version":
+          "type": "integer"
+          "format": "int64"
+        "purpose":
+          "type": "string"
+          "enum":
+            - "checkpoint"
+            - "mentor_final"
+        "rubric":
+          "$ref": "#/components/schemas/RubricReference"
+        "criteria":
+          "$ref": "#/components/schemas/PublicRubricDefinition"
+        "timezone":
+          "type": "string"
+        "opens_at":
+          "type": "string"
+          "format": "date-time"
+        "closes_at":
+          "type": "string"
+          "format": "date-time"
+    "ScorecardCheckpointCommand":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "definition"
+        - "version"
+        - "reason"
+      "properties":
+        "definition":
+          "$ref": "#/components/schemas/ScorecardCheckpointDefinition"
+        "version":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 0
+        "reason":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 2000
+    "ScorecardEvidence":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "kind"
+        - "id"
+        - "version"
+        - "note"
+      "properties":
+        "kind":
+          "type": "string"
+          "enum":
+            - "note"
+            - "observation"
+            - "submission"
+        "id":
+          "type": "string"
+          "format": "uuid"
+          "nullable": true
+        "version":
+          "type": "integer"
+          "format": "int64"
+          "nullable": true
+          "minimum": 1
+        "note":
+          "type": "string"
+          "maxLength": 10000
+    "ScorecardCategory":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "category_id"
+        - "pending"
+        - "value"
+        - "evidence"
+      "properties":
+        "category_id":
+          "type": "string"
+          "format": "uuid"
+        "pending":
+          "type": "boolean"
+        "value":
+          "type": "integer"
+          "nullable": true
+          "minimum": 0
+          "maximum": 1000
+        "evidence":
+          "type": "array"
+          "maxItems": 50
+          "items":
+            "$ref": "#/components/schemas/ScorecardEvidence"
+    "ScorecardReference":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "version"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "version":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 1
+    "MentorScorecard":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "revision"
+        - "reference"
+        - "team_id"
+        - "checkpoint_id"
+        - "checkpoint_version"
+        - "author_id"
+        - "run_id"
+        - "rubric"
+        - "criteria"
+        - "purpose"
+        - "submission_revision"
+        - "state"
+        - "scores"
+        - "created_at"
+        - "changed_at"
+      "properties":
+        "revision":
+          "type": "integer"
+          "format": "int64"
+        "reference":
+          "$ref": "#/components/schemas/ScorecardReference"
+        "team_id":
+          "type": "string"
+          "format": "uuid"
+        "checkpoint_id":
+          "type": "string"
+          "format": "uuid"
+        "checkpoint_version":
+          "type": "integer"
+          "format": "int64"
+        "author_id":
+          "type": "string"
+          "format": "uuid"
+        "run_id":
+          "type": "string"
+          "format": "uuid"
+        "rubric":
+          "$ref": "#/components/schemas/RubricReference"
+        "criteria":
+          "$ref": "#/components/schemas/PublicRubricDefinition"
+        "purpose":
+          "type": "string"
+          "enum":
+            - "checkpoint"
+            - "mentor_final"
+        "submission_revision":
+          "type": "integer"
+          "format": "int64"
+          "nullable": true
+        "state":
+          "type": "string"
+          "enum":
+            - "draft"
+            - "submitted"
+        "scores":
+          "type": "array"
+          "maxItems": 20
+          "items":
+            "$ref": "#/components/schemas/ScorecardCategory"
+        "created_at":
+          "type": "string"
+          "format": "date-time"
+        "changed_at":
+          "type": "string"
+          "format": "date-time"
+    "ScorecardCommand":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "action"
+        - "checkpoint_id"
+        - "checkpoint_version"
+        - "version"
+        - "scores"
+      "properties":
+        "action":
+          "type": "string"
+          "enum":
+            - "save"
+            - "submit"
+        "checkpoint_id":
+          "type": "string"
+          "format": "uuid"
+        "checkpoint_version":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 1
+        "version":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 0
+        "scores":
+          "type": "array"
+          "maxItems": 20
+          "items":
+            "$ref": "#/components/schemas/ScorecardCategory"
+    "ScorecardCheckpointPage":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "revision"
+        - "items"
+        - "next_cursor"
+      "properties":
+        "revision":
+          "type": "integer"
+          "format": "int64"
+        "items":
+          "type": "array"
+          "maxItems": 100
+          "items":
+            "$ref": "#/components/schemas/ScorecardCheckpoint"
+        "next_cursor":
+          "type": "string"
+          "format": "uuid"
+          "nullable": true
+    "ScorecardPage":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "revision"
+        - "items"
+        - "next_cursor"
+      "properties":
+        "revision":
+          "type": "integer"
+          "format": "int64"
+        "items":
+          "type": "array"
+          "maxItems": 100
+          "items":
+            "$ref": "#/components/schemas/MentorScorecard"
+        "next_cursor":
+          "type": "string"
+          "format": "uuid"
+          "nullable": true
+    "ScorecardHistory":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "items"
+        - "next_cursor"
+      "properties":
+        "items":
+          "type": "array"
+          "maxItems": 100
+          "items":
+            "$ref": "#/components/schemas/MentorScorecard"
+        "next_cursor":
+          "type": "integer"
+          "format": "int64"
+          "nullable": true
     SMTPTestDeliveryStatus:
       type: object
       additionalProperties: false
