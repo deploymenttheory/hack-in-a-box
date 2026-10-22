@@ -164,8 +164,10 @@ func (f *embargoFixture) request(actor dbgen.Person, method, path string, body a
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Origin", f.cfg.PublicOrigin)
 	r.Header.Set("X-CSRF-Token", csrf)
-	r.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision))
-	r.Header.Set("Idempotency-Key", uuid.NewString())
+	if method != "GET" && method != "HEAD" {
+		r.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision))
+		r.Header.Set("Idempotency-Key", uuid.NewString())
+	}
 	if method == "GET" && strings.Contains(path, "/files/") {
 		r.Header.Set("If-None-Match", "*")
 		r.Header.Set("If-Modified-Since", "Wed, 01 Jan 2031 00:00:00 GMT")
@@ -335,7 +337,7 @@ func TestContentEmbargoHTTPRoleTeamAndCacheMatrix(t *testing.T) {
 			f.denied(f.request(dbgen.Person{}, "GET", f.file(challenge.Document.Attachments[0]), nil, 0), 401)
 			f.denied(f.request(f.members[0][0], "GET", f.file(uuid.New()), nil, 0), 404)
 			f.publicSurfaces(challenge)
-			f.denied(f.request(f.owner, "POST", f.path(challenge.ID)+"/actions", map[string]string{"action": "release"}, challenge.Revision), 409)
+			f.denied(f.request(f.owner, "POST", f.path(challenge.ID)+"/actions", map[string]string{"action": "release", "reason": "Synthetic manual bypass attempt"}, challenge.Revision), 409)
 			if err := f.service.Dispatch(t.Context(), f.id, challenge.ID, challenge.Revision); err != nil {
 				t.Fatal(err)
 			}
@@ -480,7 +482,7 @@ func TestContentEmbargoHTTPGatesAndMissedPostponement(t *testing.T) {
 			if f.row().PublishedAt.Valid {
 				t.Fatal("blocked release caught up late")
 			}
-			f.denied(f.request(f.owner, "POST", f.path(current.ID)+"/actions", map[string]string{"action": "release"}, current.Revision), 409)
+			f.denied(f.request(f.owner, "POST", f.path(current.ID)+"/actions", map[string]string{"action": "release", "reason": "Synthetic manual bypass attempt"}, current.Revision), 409)
 			// Only a future common schedule obtained by postponing the live event can
 			// create a new approved publication, preserving a full preparation week.
 			c := f.c
