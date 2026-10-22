@@ -117,7 +117,7 @@ func TestGuidanceContactsRequireRealConfigurationAndCurrentAudience(t *testing.T
 	if _, err = f.s.Guidance(ctx, f.member.ID, f.id); !errors.Is(err, access.ErrForbidden) {
 		t.Fatalf("revoked access: %v", err)
 	}
-	for _, url := range []string{"javascript:alert(1)", "data:text/html,bad", "https://user:secret@example.test", "mailto:team@example.test?body=private", "mailto:a@example.test,b@example.test"} {
+	for _, url := range []string{"javascript:alert(1)", "data:text/html,bad", "https://user:secret@example.test", "mailto:team@example.test?body=private", "mailto:a@example.test,b@example.test", "mailto:team%0d%0aBcc:other@example.test", "mailto:team%0a@example.test"} {
 		in := input("page")
 		in.Document.Purpose = "conduct"
 		in.Document.Contacts = []content.Contact{{Label: "Unsafe", URL: url}}

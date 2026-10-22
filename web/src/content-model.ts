@@ -39,7 +39,7 @@ export function contentProblems(d: ContentDocument): string[] {
 }
 export function safeContactURL(raw: string): boolean {
   if (raw.trim() !== raw) return false
-  try { const u = new URL(raw); return !u.username && !u.password && ((['http:', 'https:'].includes(u.protocol) && !!u.hostname) || (u.protocol === 'mailto:' && !u.search && !u.hash && /^[^\s<>@,]+@[^\s<>@,]+$/.test(u.pathname))) } catch { return false }
+  try { const u = new URL(raw); return !u.username && !u.password && ((['http:', 'https:'].includes(u.protocol) && !!u.hostname) || (u.protocol === 'mailto:' && !u.search && !u.hash && /^[^\s<>@,]+@[^\s<>@,]+$/.test(decodeURIComponent(u.pathname)))) } catch { return false }
 }
 export function draftPage(input: ContentInput): ContentPage {
   return { id: crypto.randomUUID(), kind: input.kind, document: structuredClone(input.document), version: 0, revision: 0, state: 'draft', released_version: null, released_at: null, attachment_details: [], acknowledged_at: null, can_manage: true, message: '' }

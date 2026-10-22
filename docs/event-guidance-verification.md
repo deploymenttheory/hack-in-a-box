@@ -53,3 +53,10 @@ Synthetic mobile Today/contact and corrected-rule captures were visually
 inspected: text wraps within the viewport, routes/buttons remain readable and
 no report input is rendered. No actual contact message or external report was
 sent. This change needs no database migration.
+
+The final rebase onto merged campaign/reveal work (`8253826`) retains all
+campaign/MC and participant team-access navigation, every existing public test
+entry and private print masks. Rebase-focused guidance+campaign cases pass20/20
+in7.2s, and participant guidance+team-access+room-display cases pass34/34 in7.5s.
+The guidance contact policy also rejects percent-encoded mailto control
+characters after URI decoding, with PostgreSQL regression cases.

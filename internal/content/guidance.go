@@ -49,8 +49,12 @@ func contactURL(raw string) bool {
 		if parsed.RawQuery != "" || parsed.Fragment != "" {
 			return false
 		}
-		address, err := mail.ParseAddress(parsed.Opaque)
-		return err == nil && address.Address == parsed.Opaque
+		mailbox, decodeErr := url.PathUnescape(parsed.Opaque)
+		if decodeErr != nil {
+			return false
+		}
+		address, err := mail.ParseAddress(mailbox)
+		return err == nil && address.Address == mailbox
 	default:
 		return false
 	}
