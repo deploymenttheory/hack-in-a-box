@@ -5,8 +5,8 @@ SELECT * FROM team_credentials WHERE event_id=$1 ORDER BY id LIMIT 10000;
 SELECT * FROM team_credentials WHERE event_id=$1 AND id=$2;
 
 -- name: SaveTeamCredential :exec
-INSERT INTO team_credentials(id,event_id,label,version,key_id,ciphertext,active) VALUES($1,$2,$3,$4,$5,$6,$7)
-ON CONFLICT(id) DO UPDATE SET label=EXCLUDED.label,version=EXCLUDED.version,key_id=EXCLUDED.key_id,ciphertext=EXCLUDED.ciphertext,active=EXCLUDED.active,updated_at=now();
+INSERT INTO team_credentials(id,event_id,label,version,key_id,ciphertext,active,resource_type,available_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+ON CONFLICT(id) DO UPDATE SET label=EXCLUDED.label,version=EXCLUDED.version,key_id=EXCLUDED.key_id,ciphertext=EXCLUDED.ciphertext,active=EXCLUDED.active,resource_type=EXCLUDED.resource_type,available_at=EXCLUDED.available_at,expires_at=EXCLUDED.expires_at,updated_at=now();
 
 -- name: CredentialAssignments :many
 SELECT * FROM team_credential_assignments WHERE event_id=$1 ORDER BY credential_id,team_id;

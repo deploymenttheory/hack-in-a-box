@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const assignTeamCredential = `-- name: AssignTeamCredential :exec
@@ -87,18 +88,21 @@ func (q *Queries) CredentialTeamAuthority(ctx context.Context, arg CredentialTea
 }
 
 const saveTeamCredential = `-- name: SaveTeamCredential :exec
-INSERT INTO team_credentials(id,event_id,label,version,key_id,ciphertext,active) VALUES($1,$2,$3,$4,$5,$6,$7)
-ON CONFLICT(id) DO UPDATE SET label=EXCLUDED.label,version=EXCLUDED.version,key_id=EXCLUDED.key_id,ciphertext=EXCLUDED.ciphertext,active=EXCLUDED.active,updated_at=now()
+INSERT INTO team_credentials(id,event_id,label,version,key_id,ciphertext,active,resource_type,available_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+ON CONFLICT(id) DO UPDATE SET label=EXCLUDED.label,version=EXCLUDED.version,key_id=EXCLUDED.key_id,ciphertext=EXCLUDED.ciphertext,active=EXCLUDED.active,resource_type=EXCLUDED.resource_type,available_at=EXCLUDED.available_at,expires_at=EXCLUDED.expires_at,updated_at=now()
 `
 
 type SaveTeamCredentialParams struct {
-	ID         uuid.UUID
-	EventID    uuid.UUID
-	Label      string
-	Version    int64
-	KeyID      string
-	Ciphertext []byte
-	Active     bool
+	ID           uuid.UUID
+	EventID      uuid.UUID
+	Label        string
+	Version      int64
+	KeyID        string
+	Ciphertext   []byte
+	Active       bool
+	ResourceType string
+	AvailableAt  pgtype.Timestamptz
+	ExpiresAt    pgtype.Timestamptz
 }
 
 func (q *Queries) SaveTeamCredential(ctx context.Context, arg SaveTeamCredentialParams) error {
@@ -110,12 +114,15 @@ func (q *Queries) SaveTeamCredential(ctx context.Context, arg SaveTeamCredential
 		arg.KeyID,
 		arg.Ciphertext,
 		arg.Active,
+		arg.ResourceType,
+		arg.AvailableAt,
+		arg.ExpiresAt,
 	)
 	return err
 }
 
 const teamCredential = `-- name: TeamCredential :one
-SELECT id, event_id, label, version, key_id, ciphertext, active, updated_at FROM team_credentials WHERE event_id=$1 AND id=$2
+SELECT id, event_id, label, version, key_id, ciphertext, active, updated_at, resource_type, available_at, expires_at FROM team_credentials WHERE event_id=$1 AND id=$2
 `
 
 type TeamCredentialParams struct {
@@ -135,12 +142,15 @@ func (q *Queries) TeamCredential(ctx context.Context, arg TeamCredentialParams) 
 		&i.Ciphertext,
 		&i.Active,
 		&i.UpdatedAt,
+		&i.ResourceType,
+		&i.AvailableAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
 
 const teamCredentials = `-- name: TeamCredentials :many
-SELECT id, event_id, label, version, key_id, ciphertext, active, updated_at FROM team_credentials WHERE event_id=$1 ORDER BY id LIMIT 10000
+SELECT id, event_id, label, version, key_id, ciphertext, active, updated_at, resource_type, available_at, expires_at FROM team_credentials WHERE event_id=$1 ORDER BY id LIMIT 10000
 `
 
 func (q *Queries) TeamCredentials(ctx context.Context, eventID uuid.UUID) ([]TeamCredential, error) {
@@ -161,6 +171,9 @@ func (q *Queries) TeamCredentials(ctx context.Context, eventID uuid.UUID) ([]Tea
 			&i.Ciphertext,
 			&i.Active,
 			&i.UpdatedAt,
+			&i.ResourceType,
+			&i.AvailableAt,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}

@@ -1012,7 +1012,7 @@ export interface paths {
         };
         get: operations["listTeamCredentials"];
         put?: never;
-        /** @description Organiser create, replace, assign, revoke or rotate against the current event revision. Replace preserves assignments and active state. Assign replaces the entire audience. Rotate requires the old and active deployment keys. Revocation affects app access only. */
+        /** @description Organiser create, replace, metadata, assign, revoke or rotate against the current event revision. Create may include resource type and availability/expiry. Metadata replaces the public metadata only; null availability means immediate, null expiry means no recorded expiry. Replace preserves assignments, resource type, availability, expiry and active state. Assign replaces the entire audience. Rotate requires the old and active deployment keys. Revocation affects app access only. */
         post: operations["changeTeamCredentials"];
         delete?: never;
         options?: never;
@@ -1805,6 +1805,14 @@ export interface components {
             team_ids: string[];
             /** Format: date-time */
             updated_at: string;
+            /** @enum {string} */
+            resource_type: "credential" | "account" | "licence" | "access_code" | "other";
+            /** Format: date-time */
+            available_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** @enum {string} */
+            readiness: "ready" | "unassigned" | "scheduled" | "expired" | "revoked";
         };
         CredentialPage: {
             /** Format: int64 */
@@ -1814,11 +1822,17 @@ export interface components {
         };
         CredentialCommand: {
             /** @enum {string} */
-            action: "create" | "replace" | "assign" | "revoke" | "rotate";
+            action: "create" | "replace" | "metadata" | "assign" | "revoke" | "rotate";
             /** Format: uuid */
             id?: string;
             label?: string;
             value?: string;
+            /** @enum {string} */
+            resource_type?: "credential" | "account" | "licence" | "access_code" | "other";
+            /** Format: date-time */
+            available_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
             team_ids?: string[];
         };
         CredentialRevealed: {
