@@ -33,6 +33,9 @@ independent descending version cursors. Pages default to50 with a maximum of100.
 Every page rechecks the same current team/assignment/role and live-review policy.
 Cursors are navigation positions, never authority. Current-state and write paths
 load only the latest status/note version, independently of history length.
+An absent history cursor starts that collection. When continuing the other
+collection after one is exhausted, retain the exhausted collection's last
+returned version as its exclusive bound; clearing it to null restarts it.
 
 ## Verification
 
@@ -60,6 +63,9 @@ load only the latest status/note version, independently of history length.
   empty exhausted pages, and deny continued cursors after revocation (4.007s).
   The focused HTTP path also exercises current/history cursor parsing and
   response contracts, page bounds and invalid cursor rejection (3.602s).
+  Independent re-review additionally passes the adapted original1,001-note case
+  and unequal/empty observation/status histories (3/1,001,1,001/3,1,000/0),
+  including exhaustion and revoked assignments, in9.759 seconds.
 - A further focused HTTP race run passes in 3.634 seconds for actual durable
   inbox delivery: an organiser reviews and approves a real in-app reminder,
   the clock reaches its approved future due instant, and the current mentor
@@ -73,7 +79,6 @@ load only the latest status/note version, independently of history length.
   verifies retained evidence, then restores the deployment's latest schema;
   later empty migrations may legitimately roll down before the retained guard.
 
-The PR is prepared on the reviewed inbox branch so it can be reviewed in
-parallel. Before merging it must be rebased onto the actual merged preceding
-schema, reproduce generated code, pass the ordered upgrade and required CI on
-that exact final commit. This document does not mark #99 delivered before merge.
+The final PR is rebased onto actual inbox merge `2ec98b3` (schema30), following
+parallel review. Generated code, the ordered upgrade and required CI must pass
+on its exact final commit. This document does not mark #99 delivered before merge.
