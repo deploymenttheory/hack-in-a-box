@@ -128,7 +128,7 @@ func TestTeamRebalancingFreezeAndWithdrawalFacts(t *testing.T) {
 			teams.Command{Action: "move", PersonID: people[i].ID, TeamID: second},
 		)
 	}
-	teamAct(t, s, f.owner.ID, f.event.ID, teams.Command{Action: "disband", TeamID: first})
+	// The emptied published team retires atomically with publication/freeze.
 	frozen := teamAct(t, s, f.owner.ID, f.event.ID, teams.Command{Action: "freeze"})
 	if !frozen.Frozen {
 		t.Fatal("team freeze missing")

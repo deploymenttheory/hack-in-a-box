@@ -362,6 +362,15 @@ func (s Service) command(
 		}
 		return publish(ctx, tx, q, row, true, s.now())
 	case "disband":
+		members, err := q.HackTeamMembers(ctx, row.ID)
+		if err != nil {
+			return fmt.Errorf("read retirement publication: %w", err)
+		}
+		for _, member := range members {
+			if member.TeamID == input.TeamID && member.Snapshot == "published" {
+				return ErrUnready
+			}
+		}
 		return disband(ctx, q, row.ID, input.TeamID)
 	default:
 		return access.ErrInvalid
@@ -389,11 +398,12 @@ func create(
 		ctx,
 		dbgen.TeamAssignmentParams{EventID: eventID, PersonID: person, Snapshot: "draft"},
 	); err == nil {
-		return access.ErrConflict
-	} else if !errors.Is(
-		err,
-		pgx.ErrNoRows,
-	) {
+		// Organisers can create a reviewed replacement group from an existing
+		// unlocked draft. move below checks the source lock in this transaction.
+		if !manage {
+			return access.ErrConflict
+		}
+	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("check captain allocation: %w", err)
 	}
 	id := uuid.New()
