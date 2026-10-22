@@ -23,7 +23,7 @@ test('write-only endpoint clears before a pending save and never enters shared c
   fireEvent.change(input, { target: { value: secret } })
   fireEvent.click(screen.getByRole('button', { name: 'Save Teams connection' }))
   expect(input).toHaveValue('')
-  expect(post.mock.calls[0][1]?.body).toMatchObject({ action: 'save', endpoint: secret })
+  expect(post.mock.calls[0][1]).toMatchObject({ body: { action: 'save', endpoint: secret } })
   expect(JSON.stringify(client.getQueryCache().getAll().map(q => q.state.data))).not.toContain('SECRET-CANARY')
   expect(client.getMutationCache().getAll()).toHaveLength(0)
   expect(document.body).not.toHaveTextContent('SECRET-CANARY')
@@ -41,7 +41,7 @@ test('fixed shared-channel test requires explicit confirmation and carries no ca
   confirm.mockReturnValue(true); fireEvent.click(button)
   await waitFor(() => expect(post).toHaveBeenCalledOnce())
   expect(post.mock.calls[0][0]).toBe('/api/v1/events/{event_id}/teams-workflow/test')
-  expect(Object.keys(post.mock.calls[0][1]?.body ?? {})).toEqual(['request_id'])
+  expect(post.mock.calls[0][1]).toEqual(expect.objectContaining({ body: { request_id: expect.any(String) } }))
   expect(screen.queryByRole('button', { name: /test to myself/i })).not.toBeInTheDocument()
 })
 test('unavailable encryption disables endpoint writes and test dispatch', async () => {
