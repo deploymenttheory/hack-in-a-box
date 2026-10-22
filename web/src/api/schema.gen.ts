@@ -503,7 +503,7 @@ export interface paths {
         /** @description Current organiser/MC-only cue drafts, published program, timers and pairing metadata. No pairing secrets are returned. */
         get: operations["getPresentation"];
         put?: never;
-        /** @description Explicitly save drafts, approve/publish room fields, advance, hold, resume or reset. All actions resolve current organiser/MC authority and serialize by revision. Publishing resets the display until explicit advance. */
+        /** @description Explicitly save drafts, approve/publish room fields, advance/back/activate, hold/resume/adjust timers, urgent override or return to schedule. All actions resolve current organiser/MC authority and serialize by revision. Saving/rehearsal does not activate room content; publishing resets the display until explicit advance. Urgent override freezes the planned position/timer; return restores them. Planned activation is blocked during override. */
         post: operations["changePresentation"];
         delete?: never;
         options?: never;
@@ -2761,6 +2761,10 @@ export interface components {
             content_id: string | null;
         };
         DisplayPairing: {
+            /** Format: date-time */
+            last_seen_at: string | null;
+            /** @description True if no successful authorized snapshot was recorded in the past ten seconds. Last-seen is factual recent contact and does not claim that a stream is currently connected or a screen rendered. */
+            stale: boolean;
             /** Format: uuid */
             id: string;
             label: string;
@@ -2772,6 +2776,13 @@ export interface components {
             revoked_at: string | null;
         };
         PresentationPage: {
+            can_control: boolean;
+            override: components["schemas"]["PresentationCue"] | null;
+            /** @enum {string} */
+            override_mode: "held" | "running";
+            override_remaining_seconds: number;
+            /** Format: date-time */
+            override_timer_ends_at: string | null;
             /** Format: int64 */
             revision: number;
             /** Format: date-time */
@@ -2788,8 +2799,15 @@ export interface components {
             pairings: components["schemas"]["DisplayPairing"][];
         };
         PresentationCommand: {
+            /** @description Only for activate. Atomically approve the reviewed saved draft and activate its selected cue without a transient blank screen. */
+            from_draft?: boolean;
+            /** @description Required only for explicit activate of a published cue. */
+            index?: number;
+            /** @description Required only for timer adjustment. */
+            seconds?: number;
+            override?: components["schemas"]["PresentationCue"];
             /** @enum {string} */
-            action: "save" | "publish" | "advance" | "hold" | "resume" | "reset";
+            action: "save" | "publish" | "advance" | "back" | "activate" | "hold" | "resume" | "reset" | "timer" | "override" | "return_to_schedule";
             reason: string;
             cues?: components["schemas"]["PresentationCue"][];
         };
@@ -2813,6 +2831,7 @@ export interface components {
             content_title: string;
         };
         DisplaySnapshot: {
+            override_active: boolean;
             /** Format: uuid */
             event_id: string;
             event_name: string;

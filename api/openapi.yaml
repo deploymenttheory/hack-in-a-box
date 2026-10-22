@@ -664,7 +664,7 @@ paths:
         default: {$ref: '#/components/responses/Error'}
     post:
       operationId: changePresentation
-      description: Explicitly save drafts, approve/publish room fields, advance, hold, resume or reset. All actions resolve current organiser/MC authority and serialize by revision. Publishing resets the display until explicit advance.
+      description: Explicitly save drafts, approve/publish room fields, advance/back/activate, hold/resume/adjust timers, urgent override or return to schedule. All actions resolve current organiser/MC authority and serialize by revision. Saving/rehearsal does not activate room content; publishing resets the display until explicit advance. Urgent override freezes the planned position/timer; return restores them. Planned activation is blocked during override.
       parameters:
         - $ref: '#/components/parameters/PresentationRevision'
         - $ref: '#/components/parameters/CSRF'
@@ -4400,8 +4400,10 @@ components:
     DisplayPairing:
       type: object
       additionalProperties: false
-      required: [id, label, created_at, expires_at, revoked_at]
+      required: [id, label, created_at, expires_at, revoked_at, last_seen_at, stale]
       properties:
+        last_seen_at: {type: string, format: date-time, nullable: true}
+        stale: {type: boolean, description: True if no successful authorized snapshot was recorded in the past ten seconds. Last-seen is factual recent contact and does not claim that a stream is currently connected or a screen rendered.}
         id: {type: string, format: uuid}
         label: {type: string}
         created_at: {type: string, format: date-time}
@@ -4410,8 +4412,15 @@ components:
     PresentationPage:
       type: object
       additionalProperties: false
-      required: [revision, server_now, timezone, draft, published, current_index, mode, remaining_seconds, timer_ends_at, pairings]
+      required: [revision, server_now, timezone, draft, published, current_index, mode, remaining_seconds, timer_ends_at, pairings, can_control, override, override_mode, override_remaining_seconds, override_timer_ends_at]
       properties:
+        can_control: {type: boolean}
+        override:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/PresentationCue'}]
+        override_mode: {type: string, enum: [held, running]}
+        override_remaining_seconds: {type: integer, minimum: 0}
+        override_timer_ends_at: {type: string, format: date-time, nullable: true}
         revision: {type: integer, format: int64}
         server_now: {type: string, format: date-time}
         timezone: {type: string}
@@ -4427,7 +4436,11 @@ components:
       additionalProperties: false
       required: [action, reason]
       properties:
-        action: {type: string, enum: [save, publish, advance, hold, resume, reset]}
+        from_draft: {type: boolean, description: Only for activate. Atomically approve the reviewed saved draft and activate its selected cue without a transient blank screen.}
+        index: {type: integer, minimum: 0, maximum: 199, description: Required only for explicit activate of a published cue.}
+        seconds: {type: integer, minimum: 0, maximum: 86400, description: Required only for timer adjustment.}
+        override: {$ref: '#/components/schemas/PresentationCue'}
+        action: {type: string, enum: [save, publish, advance, back, activate, hold, resume, reset, timer, override, return_to_schedule]}
         reason: {type: string, minLength: 1, maxLength: 2000}
         cues: {type: array, maxItems: 200, items: {$ref: '#/components/schemas/PresentationCue'}}
     DisplayPairInput:
@@ -4459,8 +4472,9 @@ components:
     DisplaySnapshot:
       type: object
       additionalProperties: false
-      required: [event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour]
+      required: [event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour, override_active]
       properties:
+        override_active: {type: boolean}
         event_id: {type: string, format: uuid}
         event_name: {type: string}
         timezone: {type: string}

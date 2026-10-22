@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"regexp"
 	"slices"
 	"strings"
@@ -93,20 +92,6 @@ func decode(row dbgen.PresentationState) ([]Cue, []Cue, error) {
 	return draft, published, nil
 }
 
-func remaining(row dbgen.PresentationState, now time.Time) int32 {
-	if row.Mode == "running" && row.TimerEndsAt.Valid {
-		seconds := int64(math.Ceil(row.TimerEndsAt.Time.Sub(now).Seconds()))
-		if seconds < 0 {
-			return 0
-		}
-		if seconds > 86400 {
-			return 86400
-		}
-		return int32(seconds)
-	}
-	return row.RemainingSeconds
-}
-
 func (s Service) page(
 	ctx context.Context,
 	q *dbgen.Queries,
@@ -121,6 +106,10 @@ func (s Service) page(
 	if err = json.Unmarshal(eventRow.Configuration, &c); err != nil {
 		return Page{}, fmt.Errorf("decode cue timezone: %w", err)
 	}
+	override, overridden, err := decodeOverride(row)
+	if err != nil {
+		return Page{}, err
+	}
 	result := Page{
 		Revision:         row.Revision,
 		ServerNow:        s.now(),
@@ -132,6 +121,15 @@ func (s Service) page(
 		RemainingSeconds: int(remaining(row, s.now())),
 		Pairings:         []Pairing{},
 	}
+	result.CanControl = eventRow.WritesAllowed
+	result.OverrideMode = row.OverrideMode
+	result.OverrideRemainingSeconds = int(overrideRemaining(row, s.now()))
+	if overridden {
+		result.Override = &override
+	}
+	if row.OverrideTimerEndsAt.Valid {
+		result.OverrideTimerEndsAt = &row.OverrideTimerEndsAt.Time
+	}
 	if row.TimerEndsAt.Valid {
 		result.TimerEndsAt = &row.TimerEndsAt.Time
 	}
@@ -140,12 +138,9 @@ func (s Service) page(
 		return Page{}, fmt.Errorf("list display pairings: %w", err)
 	}
 	for _, p := range pairings {
-		v := Pairing{ID: p.ID, Label: p.Label, CreatedAt: p.CreatedAt, ExpiresAt: p.ExpiresAt}
-		if p.RevokedAt.Valid {
-			v.RevokedAt = &p.RevokedAt.Time
-		}
-		result.Pairings = append(result.Pairings, v)
+		result.Pairings = append(result.Pairings, pairingMetadata(p, s.now()))
 	}
+
 	return result, nil
 }
 
@@ -274,66 +269,6 @@ func (s Service) Change(
 	return result, nil
 }
 
-func change(row *dbgen.PresentationState, c Command, now time.Time) error {
-	_, published, err := decode(*row)
-	if err != nil {
-		return err
-	}
-	switch c.Action {
-	case "save":
-		row.Draft, err = json.Marshal(append([]Cue{}, c.Cues...))
-		if err != nil {
-			return fmt.Errorf("encode cue draft: %w", err)
-		}
-	case "publish":
-		row.Published = append([]byte{}, row.Draft...)
-		row.CurrentIndex = -1
-		row.Mode = "held"
-		row.RemainingSeconds = 0
-		row.TimerEndsAt = pgtype.Timestamptz{}
-	case "advance":
-		if len(published) == 0 || int(row.CurrentIndex) >= len(published) {
-			return access.ErrInvalid
-		}
-		row.CurrentIndex++
-		row.RemainingSeconds = 0
-		row.TimerEndsAt = pgtype.Timestamptz{}
-		row.Mode = "held"
-		if int(row.CurrentIndex) < len(published) {
-			duration := published[row.CurrentIndex].DurationSeconds
-			row.RemainingSeconds = duration
-			row.Mode = "running"
-			if duration > 0 {
-				row.TimerEndsAt = pgtype.Timestamptz{
-					Time:  now.Add(time.Duration(duration) * time.Second),
-					Valid: true,
-				}
-			}
-		}
-	case "hold":
-		row.RemainingSeconds = remaining(*row, now)
-		row.Mode = "held"
-		row.TimerEndsAt = pgtype.Timestamptz{}
-	case "resume":
-		if row.Mode != "held" || row.CurrentIndex < 0 || int(row.CurrentIndex) >= len(published) {
-			return access.ErrInvalid
-		}
-		row.Mode = "running"
-		if row.RemainingSeconds > 0 {
-			row.TimerEndsAt = pgtype.Timestamptz{
-				Time:  now.Add(time.Duration(row.RemainingSeconds) * time.Second),
-				Valid: true,
-			}
-		}
-	case "reset":
-		row.CurrentIndex = -1
-		row.Mode = "held"
-		row.RemainingSeconds = 0
-		row.TimerEndsAt = pgtype.Timestamptz{}
-	}
-	return nil
-}
-
 func (s Service) Pair(
 	ctx context.Context,
 	actor, eventID uuid.UUID,
@@ -396,8 +331,14 @@ func (s Service) Pair(
 		}
 		result = Paired{
 			Revision: row.Revision,
-			Pairing:  Pairing{ID: id, Label: input.Label, CreatedAt: now, ExpiresAt: expires},
-			Token:    secret,
+			Pairing: Pairing{
+				ID:        id,
+				Label:     input.Label,
+				CreatedAt: now,
+				ExpiresAt: expires,
+				Stale:     true,
+			},
+			Token: secret,
 		}
 		return nil
 	})
@@ -536,6 +477,30 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 				result.Next = &cue
 			}
 		}
+		override, overridden, overrideErr := decodeOverride(row)
+		if overrideErr != nil {
+			return overrideErr
+		}
+		if overridden {
+			result.OverrideActive = true
+			result.Mode = row.OverrideMode
+			result.RemainingSeconds = int(overrideRemaining(row, s.now()))
+			result.TimerEndsAt = nil
+			if row.OverrideTimerEndsAt.Valid {
+				result.TimerEndsAt = &row.OverrideTimerEndsAt.Time
+			}
+			if row.CurrentIndex >= 0 {
+				result.Next = result.Current
+			}
+			result.Current = nil
+			cue, visible, projectErr := s.project(ctx, q, e, override)
+			if projectErr != nil {
+				return projectErr
+			}
+			if visible {
+				result.Current = &cue
+			}
+		}
 		raw, readErr := q.EventDefinitions(ctx, eventID)
 		if readErr != nil && !errors.Is(readErr, pgx.ErrNoRows) {
 			return fmt.Errorf("read display branding: %w", readErr)
@@ -554,6 +519,18 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 			if colour.MatchString(defs.Branding.Foreground) {
 				result.ForegroundColour = defs.Branding.Foreground
 			}
+		}
+		digest := sha256.Sum256([]byte(token))
+		if err = q.TouchDisplayPairing(
+			ctx,
+			dbgen.TouchDisplayPairingParams{
+				EventID:        eventID,
+				TokenHash:      digest[:],
+				SeenAt:         s.now(),
+				ThrottleBefore: s.now().Add(-5 * time.Second),
+			},
+		); err != nil {
+			return fmt.Errorf("record display heartbeat: %w", err)
 		}
 		return nil
 	})
@@ -668,4 +645,22 @@ func (s Service) displayEvent(
 		return dbgen.Event{}, err
 	}
 	return e, nil
+}
+
+func pairingMetadata(p dbgen.DisplayPairingsRow, now time.Time) Pairing {
+	v := Pairing{
+		ID:        p.ID,
+		Label:     p.Label,
+		CreatedAt: p.CreatedAt,
+		ExpiresAt: p.ExpiresAt,
+		Stale:     true,
+	}
+	if p.RevokedAt.Valid {
+		v.RevokedAt = &p.RevokedAt.Time
+	}
+	if p.LastSeenAt.Valid {
+		v.LastSeenAt = &p.LastSeenAt.Time
+		v.Stale = now.Before(p.LastSeenAt.Time) || now.Sub(p.LastSeenAt.Time) > 10*time.Second
+	}
+	return v
 }

@@ -41,7 +41,7 @@ func (q *Queries) CreateDisplayPairing(ctx context.Context, arg CreateDisplayPai
 }
 
 const displayPairingByHash = `-- name: DisplayPairingByHash :one
-SELECT event_id, id, label, token_hash, issuer_id, created_at, expires_at, revoked_at FROM display_pairings WHERE event_id=$1 AND token_hash=$2
+SELECT event_id, id, label, token_hash, issuer_id, created_at, expires_at, revoked_at, last_seen_at FROM display_pairings WHERE event_id=$1 AND token_hash=$2
 `
 
 type DisplayPairingByHashParams struct {
@@ -61,21 +61,23 @@ func (q *Queries) DisplayPairingByHash(ctx context.Context, arg DisplayPairingBy
 		&i.CreatedAt,
 		&i.ExpiresAt,
 		&i.RevokedAt,
+		&i.LastSeenAt,
 	)
 	return i, err
 }
 
 const displayPairings = `-- name: DisplayPairings :many
-SELECT id,label,issuer_id,created_at,expires_at,revoked_at FROM display_pairings WHERE event_id=$1 ORDER BY created_at DESC,id LIMIT 200
+SELECT id,label,issuer_id,created_at,expires_at,revoked_at,last_seen_at FROM display_pairings WHERE event_id=$1 ORDER BY created_at DESC,id LIMIT 200
 `
 
 type DisplayPairingsRow struct {
-	ID        uuid.UUID
-	Label     string
-	IssuerID  uuid.UUID
-	CreatedAt time.Time
-	ExpiresAt time.Time
-	RevokedAt pgtype.Timestamptz
+	ID         uuid.UUID
+	Label      string
+	IssuerID   uuid.UUID
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	RevokedAt  pgtype.Timestamptz
+	LastSeenAt pgtype.Timestamptz
 }
 
 func (q *Queries) DisplayPairings(ctx context.Context, eventID uuid.UUID) ([]DisplayPairingsRow, error) {
@@ -94,6 +96,7 @@ func (q *Queries) DisplayPairings(ctx context.Context, eventID uuid.UUID) ([]Dis
 			&i.CreatedAt,
 			&i.ExpiresAt,
 			&i.RevokedAt,
+			&i.LastSeenAt,
 		); err != nil {
 			return nil, err
 		}
@@ -115,7 +118,7 @@ func (q *Queries) EnsurePresentation(ctx context.Context, eventID uuid.UUID) err
 }
 
 const presentationState = `-- name: PresentationState :one
-SELECT event_id, revision, draft, published, current_index, mode, remaining_seconds, timer_ends_at FROM presentation_states WHERE event_id=$1
+SELECT event_id, revision, draft, published, current_index, mode, remaining_seconds, timer_ends_at, override_cue, override_mode, override_remaining_seconds, override_timer_ends_at FROM presentation_states WHERE event_id=$1
 `
 
 func (q *Queries) PresentationState(ctx context.Context, eventID uuid.UUID) (PresentationState, error) {
@@ -130,6 +133,10 @@ func (q *Queries) PresentationState(ctx context.Context, eventID uuid.UUID) (Pre
 		&i.Mode,
 		&i.RemainingSeconds,
 		&i.TimerEndsAt,
+		&i.OverrideCue,
+		&i.OverrideMode,
+		&i.OverrideRemainingSeconds,
+		&i.OverrideTimerEndsAt,
 	)
 	return i, err
 }
@@ -153,18 +160,22 @@ func (q *Queries) RevokeDisplayPairing(ctx context.Context, arg RevokeDisplayPai
 }
 
 const savePresentationState = `-- name: SavePresentationState :exec
-UPDATE presentation_states SET revision=$2,draft=$3,published=$4,current_index=$5,mode=$6,remaining_seconds=$7,timer_ends_at=$8 WHERE event_id=$1
+UPDATE presentation_states SET revision=$2,draft=$3,published=$4,current_index=$5,mode=$6,remaining_seconds=$7,timer_ends_at=$8,override_cue=$9,override_mode=$10,override_remaining_seconds=$11,override_timer_ends_at=$12 WHERE event_id=$1
 `
 
 type SavePresentationStateParams struct {
-	EventID          uuid.UUID
-	Revision         int64
-	Draft            []byte
-	Published        []byte
-	CurrentIndex     int32
-	Mode             string
-	RemainingSeconds int32
-	TimerEndsAt      pgtype.Timestamptz
+	EventID                  uuid.UUID
+	Revision                 int64
+	Draft                    []byte
+	Published                []byte
+	CurrentIndex             int32
+	Mode                     string
+	RemainingSeconds         int32
+	TimerEndsAt              pgtype.Timestamptz
+	OverrideCue              []byte
+	OverrideMode             string
+	OverrideRemainingSeconds int32
+	OverrideTimerEndsAt      pgtype.Timestamptz
 }
 
 func (q *Queries) SavePresentationState(ctx context.Context, arg SavePresentationStateParams) error {
@@ -177,6 +188,33 @@ func (q *Queries) SavePresentationState(ctx context.Context, arg SavePresentatio
 		arg.Mode,
 		arg.RemainingSeconds,
 		arg.TimerEndsAt,
+		arg.OverrideCue,
+		arg.OverrideMode,
+		arg.OverrideRemainingSeconds,
+		arg.OverrideTimerEndsAt,
+	)
+	return err
+}
+
+const touchDisplayPairing = `-- name: TouchDisplayPairing :exec
+UPDATE display_pairings SET last_seen_at=$1::timestamptz
+WHERE event_id=$2::uuid AND token_hash=$3::bytea
+AND (last_seen_at IS NULL OR last_seen_at<$4::timestamptz)
+`
+
+type TouchDisplayPairingParams struct {
+	SeenAt         time.Time
+	EventID        uuid.UUID
+	TokenHash      []byte
+	ThrottleBefore time.Time
+}
+
+func (q *Queries) TouchDisplayPairing(ctx context.Context, arg TouchDisplayPairingParams) error {
+	_, err := q.db.Exec(ctx, touchDisplayPairing,
+		arg.SeenAt,
+		arg.EventID,
+		arg.TokenHash,
+		arg.ThrottleBefore,
 	)
 	return err
 }

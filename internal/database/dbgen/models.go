@@ -171,14 +171,15 @@ type DeliveryAttempt struct {
 }
 
 type DisplayPairing struct {
-	EventID   uuid.UUID
-	ID        uuid.UUID
-	Label     string
-	TokenHash []byte
-	IssuerID  uuid.UUID
-	CreatedAt time.Time
-	ExpiresAt time.Time
-	RevokedAt pgtype.Timestamptz
+	EventID    uuid.UUID
+	ID         uuid.UUID
+	Label      string
+	TokenHash  []byte
+	IssuerID   uuid.UUID
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	RevokedAt  pgtype.Timestamptz
+	LastSeenAt pgtype.Timestamptz
 }
 
 type Event struct {
@@ -458,14 +459,18 @@ type PreparationTaskChange struct {
 }
 
 type PresentationState struct {
-	EventID          uuid.UUID
-	Revision         int64
-	Draft            []byte
-	Published        []byte
-	CurrentIndex     int32
-	Mode             string
-	RemainingSeconds int32
-	TimerEndsAt      pgtype.Timestamptz
+	EventID                  uuid.UUID
+	Revision                 int64
+	Draft                    []byte
+	Published                []byte
+	CurrentIndex             int32
+	Mode                     string
+	RemainingSeconds         int32
+	TimerEndsAt              pgtype.Timestamptz
+	OverrideCue              []byte
+	OverrideMode             string
+	OverrideRemainingSeconds int32
+	OverrideTimerEndsAt      pgtype.Timestamptz
 }
 
 type PrivacyAggregate struct {
