@@ -569,6 +569,23 @@ type SubmissionState struct {
 	FrozenAt       pgtype.Timestamptz
 }
 
+type TeamCredential struct {
+	ID         uuid.UUID
+	EventID    uuid.UUID
+	Label      string
+	Version    int64
+	KeyID      string
+	Ciphertext []byte
+	Active     bool
+	UpdatedAt  time.Time
+}
+
+type TeamCredentialAssignment struct {
+	EventID      uuid.UUID
+	CredentialID uuid.UUID
+	TeamID       uuid.UUID
+}
+
 type Template struct {
 	ID               uuid.UUID
 	OwnerID          uuid.UUID
