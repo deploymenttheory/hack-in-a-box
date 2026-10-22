@@ -131,3 +131,29 @@ test('separate accounts and signing out cannot reuse another team value', async 
   await expect(page.getByText(first.secret(), { exact: true })).toHaveCount(0)
   await noStoredValue(page)
 })
+
+for (const copy of [false, true]) test(`a delayed ${copy ? 'copy' : 'reveal'} response crossing resource expiry never discloses its value`, async ({ page }) => {
+  await page.clock.install({ time: new Date('2027-06-14T09:00:00Z') })
+  const { state, secret, firstResource } = await accessFixture(page)
+  state.items[0].expires_at = '2027-06-14T09:00:02Z'
+  await page.getByRole('button', { name: 'Refresh team access', exact: true }).click()
+  await expect(page.getByText(/Available until/)).toBeVisible()
+  await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { (window as unknown as { clipboardWrites: number }).clipboardWrites++ } } }))
+  if (copy) {
+    await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+    await expect(page.getByText(secret(), { exact: true })).toBeVisible()
+  }
+  state.hold = true
+  await page.getByRole('button', { name: `${copy ? 'Copy' : 'Reveal'} Team account`, exact: true }).click()
+  await expect.poll(() => !!state.delayed).toBe(true)
+  await page.evaluate(value => {
+    const state = window as unknown as { clipboardWrites: number; expiredValueShown: boolean }
+    state.clipboardWrites = 0; state.expiredValueShown = false
+    new MutationObserver(() => { if (document.body.textContent?.includes(value)) state.expiredValueShown = true }).observe(document.body, { subtree: true, childList: true, characterData: true })
+  }, secret())
+  await page.clock.runFor(2_100)
+  await state.delayed!.fulfill({ json: { id: firstResource, version: 1, value: secret() } })
+  await expect(page.getByRole('button', { name: 'Reveal Team account', exact: true })).toBeEnabled()
+  await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
+  expect(await page.evaluate(() => ({ shown: (window as unknown as { expiredValueShown: boolean }).expiredValueShown, copied: (window as unknown as { clipboardWrites: number }).clipboardWrites }))).toEqual({ shown: false, copied: 0 })
+})

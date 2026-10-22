@@ -10,9 +10,9 @@ A value hides after at most 30 seconds, or at its recorded expiry if sooner. Res
 
 ## Evidence
 
-- `web/e2e/team-access.spec.ts`: eight scenarios run against the **public** application in desktop and mobile projects (16 passing cases). Ordinary non-admin sessions cover deliberate reveal/copy, storage absence, clipboard denial, 30-second expiry, version/assignment/membership changes, session expiry, a late reveal after navigation, print/hide cleanup, separate team accounts and logout.
+- `web/e2e/team-access.spec.ts`: ten scenarios run against the **public** application in desktop and mobile projects (20 passing cases). Ordinary non-admin sessions cover deliberate reveal/copy, storage absence, clipboard denial, 30-second expiry, version/assignment/membership changes, session expiry, a late reveal after navigation, print/hide cleanup, separate team accounts, logout, and delayed reveal/copy responses crossing resource expiry. The delayed cases observe DOM mutations to catch transient plaintext and assert no clipboard call occurs.
 - `web/src/team-access.test.tsx`: a real QueryClient is inspected after disclosure. Neither the revealed value nor an unexpected value field in metadata enters query data; the mutation cache stays empty. Unmount removes the displayed value.
 - The browser fixture uses separate ordinary identities and synthetic values. It does not claim to test real PostgreSQL authorization; the server integration suite belongs to the credential lifecycle implementation and #74.
-- Local verification: 16 public browser cases and all seven component tests passed; frontend lint and both production builds passed. CI verifies the final rebased PR head separately.
+- Local verification: 20 public browser cases and all seven component tests passed; frontend lint and both production builds passed. The four delayed-expiry cases failed against the original behavior and pass with the synchronous guard. CI verifies the final rebased PR head separately.
 
 The browser cannot erase a user's system clipboard after an intentional copy. The UI promises temporary onscreen visibility only, and never promises clipboard revocation or that a copied credential will continue to work.

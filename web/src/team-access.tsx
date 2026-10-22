@@ -12,6 +12,7 @@ type ResourcePage = components['schemas']['CredentialPage']
 type Team = components['schemas']['HackTeam']
 type Visible = { epoch: number; id: string; version: number; value: string; revision: number; expiresAt: string | null }
 const visibilityMilliseconds = 30_000
+function expiredBeforeDisclosure(expiresAt: string | null) { return expiresAt !== null && Date.now() >= new Date(expiresAt).getTime() }
 
 export function TeamAccess({ event }: { event: EventRecord }) {
   const identity = useIdentity()
@@ -76,6 +77,9 @@ function AccessControls({ event, team, page, items, onRefresh, onError }: { even
       const revealed = unwrap(await api.POST('/api/v1/events/{event_id}/credentials/{credential_id}/reveal', { signal: controller.signal, cache: 'no-store', params: { path: { event_id: event.id, credential_id: item.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${page!.revision}"` } } }))
       if (token !== epoch.current || controller.signal.aborted || document.visibilityState !== 'visible') return
       if (revealed.id !== item.id || revealed.version !== item.version) throw new APIError(409, 'revision_conflict')
+      // A response authorized before expiry may arrive after the resource closes.
+      // Reject it before React state or the clipboard can receive its value.
+      if (expiredBeforeDisclosure(item.expires_at)) throw new APIError(403, 'forbidden')
       setVisible({ epoch: token, id: revealed.id, version: revealed.version, value: revealed.value, revision: page!.revision, expiresAt: item.expires_at })
       if (copy) {
         try {
