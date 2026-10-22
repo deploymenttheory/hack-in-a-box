@@ -218,6 +218,34 @@ func TestCurrentMentorRosterVisibilityAndReadOnlyProposals(t *testing.T) {
 		t.Fatalf("proposal changed durable state: %d/%d/%d %v", current, operations, audits, err)
 	}
 	exec(
+		"INSERT INTO mentor_conflicts(event_id,mentor_id,competitor_id,kind) VALUES($1,$2,$3,'reporting')",
+		id,
+		primary.ID,
+		member.ID,
+	)
+	if err = policy.Authorize(
+		ctx,
+		primary.ID,
+		id,
+		team,
+		access.TeamRead,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatalf("newly declared reporting conflict retained team access: %v", err)
+	}
+	page, err = s.Read(ctx, primary.ID, id)
+	if err != nil || len(page.Teams) != 0 || len(page.Published) != 0 {
+		t.Fatalf("conflicted mentor retained roster details: %+v %v", page, err)
+	}
+	exec(
+		"DELETE FROM mentor_conflicts WHERE event_id=$1 AND mentor_id=$2 AND competitor_id=$3",
+		id,
+		primary.ID,
+		member.ID,
+	)
+	exec(
 		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='mentor'",
 		id,
 		primary.ID,
