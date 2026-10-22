@@ -128,7 +128,7 @@ ready. These five tasks establish the assessment, rules and support contracts
 needed by later mentor/judge workspaces and event-day views. They do not declare
 future scoring, private assessment disclosure or provider integration complete.
 #158 is delivered in PR #195. #107 merged in PR #197 and is closed; #99 merged
-in PR #200 and is closed. #159 merged in PR #201 after exact-head green CI. #161 is in progress. Outstanding provider and aggregate acceptance
+in PR #200 and is closed. #159 merged in PR #201 after exact-head green CI. #161 merged in PR #205; its complete workspace remains #162. Outstanding provider and aggregate acceptance
 is not implied complete by these implementation merges.
 
 Each issue keeps its own PR and acceptance reconciliation. Migration numbers
@@ -148,12 +148,13 @@ normal ordered upgrade verification and exact-head green CI remain merge gates.
 
 Keep three independent workstreams active with separate PRs and exact-head CI.
 Dependencies follow the actual owning contracts:89→100,99+107→101,159→160 and
-161→162. The recovery core merged in #202. The actual #100 workspace is now under implementation and verification; #89 remains open
-until the actual mentor form's interrupted-save, team-switch, conflict and
-recovered pre-live denial journeys pass. No arbitrary scratchpad, fake saved
-observation, offline judging or unimplemented deep link substitutes for those
-journeys. Full support surfaces use the real owning APIs independently of the
-aggregate Today dashboard. These are selected work, not delivered claims.
+161→162. The recovery core merged in #202 and the actual #100 workspace merged
+in #204 with interrupted-save, team-switch, conflict and recovered pre-live
+denial verification. #101 checkpoint assessments merged in #203 and #160 help
+controls merged in #206. #162 is under final workspace verification. Full support
+surfaces use the real owning APIs independently of the aggregate Today dashboard;
+no fake saved observation or unimplemented deep link substitutes for those
+journeys.
 
 
 ## Batch9 — complete the mentor review workflow
