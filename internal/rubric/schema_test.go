@@ -255,6 +255,11 @@ func TestRubricUpgradePreservesPriorChallengeDefinitionsCiphertextAndAudit(t *te
 	if err != nil || retainedConfiguration.Reference != saved.Reference {
 		t.Fatal("rejected rollback damaged retained rubric version")
 	}
+	// DownTo can already remove later empty schemas before the rubric history
+	// gate rejects its own rollback. Restore the deployment's latest schema.
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}

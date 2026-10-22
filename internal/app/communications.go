@@ -8,6 +8,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
@@ -16,6 +17,7 @@ import (
 )
 
 type communicationRuntime struct {
+	Inbox          *inbox.Service
 	Communications *communications.Service
 	SMTP           *smtpintegration.Service
 	Teams          *teamsworkflow.Service
@@ -41,11 +43,14 @@ func newCommunicationRuntime(
 		Channels: map[string]communications.ChannelProvider{"smtp": provider, "teams": teams},
 	}
 	provider.Campaigns = composer
+	inboxProvider := &inbox.Service{Pool: pool, Communications: composer}
+	composer.Channels["in_app"] = inboxProvider
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
 			"communication_test_smtp":     provider,
+			"communication_test_in_app":   inbox.TestHandler{Service: *inboxProvider},
 			"communication_campaign_smtp": smtpintegration.CampaignHandler{Service: provider},
 			teamsworkflow.HandlerKind():   teams,
 		},
@@ -58,6 +63,7 @@ func newCommunicationRuntime(
 	teams.Composer = *composer
 	return communicationRuntime{
 		Communications: composer,
+		Inbox:          inboxProvider,
 		SMTP:           provider,
 		Teams:          teams,
 		Jobs:           outbox,

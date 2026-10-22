@@ -245,6 +245,69 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/RevisionResult' }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/inbox:
+    get:
+      operationId: getInbox
+      parameters:
+        - name: event_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: cursor
+          in: query
+          schema: {type: string, format: uuid}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 30}
+      responses:
+        '200':
+          description: Recipient-only current-authority filtered previews and unread count. Hidden resources never contribute to counts or cursors.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InboxPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/inbox/{notification_id}:
+    parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getInboxNotification
+      responses:
+        '200':
+          description: Immutable delivered body after current source audience and resource authorization.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InboxDetail'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/inbox/{notification_id}/read:
+    parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      operationId: setInboxRead
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [read]
+              properties:
+                read: {type: boolean}
+      responses:
+        '200':
+          description: Recipient read state updated only after current source authorization.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InboxDetail'}
+        default: {$ref: '#/components/responses/Error'}
+
   /api/v1/events:
     get:
       operationId: listEvents
@@ -3345,6 +3408,52 @@ components:
         reason: {type: string}
         self_test_reason: {type: string}
         setup_url: {type: string}
+    InboxItem:
+      type: object
+      additionalProperties: false
+      required: [id, event_id, event_name, label, created_at, read_at]
+      properties:
+        id: {type: string, format: uuid}
+        event_id: {type: string, format: uuid}
+        event_name: {type: string}
+        label: {type: string}
+        created_at: {type: string, format: date-time}
+        read_at: {type: string, format: date-time, nullable: true}
+    InboxDestination:
+      type: object
+      additionalProperties: false
+      required: [kind, resource_id]
+      properties:
+        kind: {type: string, enum: [content]}
+        resource_id: {type: string, format: uuid}
+    InboxDetail:
+      type: object
+      additionalProperties: false
+      required: [item, subject, body, format, destination]
+      properties:
+        item: {$ref: '#/components/schemas/InboxItem'}
+        subject: {type: string}
+        body: {type: string}
+        format: {type: string, enum: [text, markdown, html]}
+        destination:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [kind, resource_id]
+          properties:
+            kind: {type: string, enum: [content]}
+            resource_id: {type: string, format: uuid}
+    InboxPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor, unread]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/InboxItem'}
+        next_cursor: {type: string, format: uuid, nullable: true}
+        unread: {type: integer, minimum: 0}
+
     CampaignTiming:
       type: object
       additionalProperties: false

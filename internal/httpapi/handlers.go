@@ -27,6 +27,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
@@ -48,6 +49,7 @@ type Dependencies struct {
 	SMTP           *smtpintegration.Service
 	MailContacts   mailcontact.Service
 	Rubrics        rubric.Service
+	Inbox          inbox.Service
 	Presentation   presentation.Service
 	Communications communications.Service
 	Credentials    credentials.Service
