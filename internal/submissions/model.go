@@ -43,7 +43,13 @@ type Draft struct {
 	Evidence  []Evidence `json:"evidence"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
+type Organiser struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
 type Page struct {
+	CanReadDraft  bool         `json:"can_read_draft"`
+	Organisers    []Organiser  `json:"organisers"`
 	EventRevision int64        `json:"event_revision"`
 	Revision      int64        `json:"revision"`
 	EntryID       uuid.UUID    `json:"entry_id"`

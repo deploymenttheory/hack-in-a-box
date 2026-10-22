@@ -3632,11 +3632,23 @@ components:
         items:
           type: array
           items: {$ref: '#/components/schemas/ContentNotice'}
+    SubmissionOrganiser:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
     SubmissionPage:
       type: object
       additionalProperties: false
-      required: [event_revision, revision, entry_id, team_id, outcome, frozen_at, can_draft, can_submit, can_review, live_start, cutoff, definitions, final]
+      required: [event_revision, revision, entry_id, team_id, outcome, frozen_at, can_draft, can_submit, can_review, live_start, cutoff, definitions, final, can_read_draft, organisers]
       properties:
+        can_read_draft: {type: boolean, description: Current confirmed team member may read the private draft. Organisers and reviewers cannot.}
+        organisers:
+          type: array
+          description: Current active organiser display names to contact about an exception. No private contact fields.
+          items: {$ref: '#/components/schemas/SubmissionOrganiser'}
         event_revision: {type: integer, format: int64}
         revision: {type: integer, format: int64}
         entry_id: {type: string, format: uuid}

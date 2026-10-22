@@ -237,6 +237,9 @@ func TestSubmissionHTTPContractsAndProtectedFiles(t *testing.T) {
 	if err = json.Unmarshal(submitted.Body.Bytes(), &current); err != nil {
 		t.Fatal(err)
 	}
+	if !current.CanReadDraft || len(current.Organisers) != 1 || current.Organisers[0].ID != owner.ID {
+		t.Fatalf("workspace projection missing: %+v", current)
+	}
 	if current.Final == nil || current.Final.Revision != 1 {
 		t.Fatalf("missing formal revision: %+v", current)
 	}
