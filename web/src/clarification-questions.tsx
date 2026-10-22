@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, unwrap } from './api/client'
@@ -10,13 +10,15 @@ import { denied, textBytes, uncertain, useAccessFailure, useClarifications, useC
 import { QuestionAttachmentUpload, type UploadedQuestionFile } from './clarification-question-files'
 import { OfficialAnswerEditor } from './clarification-answer-editor'
 
-export function AskQuestion({ teamID }: { teamID: string }) {
+export function AskQuestion({ teamID, onLeaveRisk }: { teamID: string; onLeaveRisk: (risk: boolean) => void }) {
   const identity = useIdentity(), { event, key, writable, deny, refresh } = useClarifications(), cache = useQueryClient(), active = useCurrentPage()
   const [body, setBody] = useState(''), [topic, setTopic] = useState<'challenge' | 'rubric'>('challenge'), [files, setFiles] = useState<UploadedQuestionFile[]>([])
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [savedID, setSavedID] = useState<string>()
   const [attempt, setAttempt] = useState<{ command_id: string; team_id: string; topic: 'challenge' | 'rubric'; body: string; attachments: string[] }>()
   const unknown = !!attempt
-  usePrivateLeaveWarning(!!body || !!files.length || unknown)
+  const leaveRisk = !!body || !!files.length || unknown || busy || uploading
+  usePrivateLeaveWarning(leaveRisk)
+  useEffect(() => { onLeaveRisk(leaveRisk); return () => onLeaveRisk(false) }, [leaveRisk, onLeaveRisk])
   async function send() {
     if (!writable || busy || uploading || !body.trim() || textBytes(body) > 8000 || body.includes('\0')) { setNotice('Enter a question up to 8,000 UTF-8 bytes before sending.'); return }
     setBusy(true); setFailure(undefined); setNotice(''); setSavedID(undefined)

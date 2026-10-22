@@ -2,6 +2,60 @@ import { expect, test } from '@playwright/test'
 import { firstID, secondID } from './fixtures'
 import { clarificationFixture, feedPath, officialTitle, privateBody, questionPath, teamID } from './clarification-workspace-fixtures'
 
+for (const unknown of [false, true]) {
+  test(`staying on the private tab retains ${unknown ? 'the exact uncertain command for explicit retry' : 'unsent question text'}`, async ({ page }) => {
+    const fixture = await clarificationFixture(page)
+    fixture.state.dropAsk = unknown
+    await page.goto(feedPath)
+    await page.getByRole('button', { name: "Your team's private questions", exact: true }).click()
+    await page.getByLabel('Your question', { exact: true }).fill('PRIVATE-TAB-STAY-CANARY')
+    if (unknown) {
+      await page.getByRole('button', { name: 'Send private question', exact: true }).click()
+      await expect(page.getByText('The outcome is unknown.', { exact: false })).toBeVisible()
+    }
+    const dialog = page.waitForEvent('dialog')
+    const switchTab = page.getByRole('button', { name: 'Official answers', exact: true }).click()
+    const warning = await dialog
+    expect(warning.message()).toContain('retained retry command')
+    await warning.dismiss()
+    await switchTab
+    await expect(page.getByRole('button', { name: "Your team's private questions", exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByLabel('Your question', { exact: true })).toHaveValue('PRIVATE-TAB-STAY-CANARY')
+    expect(fixture.state.asks).toHaveLength(unknown ? 1 : 0)
+    if (unknown) {
+      await page.getByRole('button', { name: 'Retry the same private question', exact: true }).click()
+      await expect(page.getByText('Saved as a private team question.', { exact: false })).toBeVisible()
+      expect(fixture.state.asks).toHaveLength(2)
+      expect(fixture.state.asks[0]).toEqual(fixture.state.asks[1])
+      expect(fixture.commands.size).toBe(1)
+    }
+  })
+
+  test(`explicitly leaving the private tab acknowledges clearing ${unknown ? 'an uncertain command' : 'unsent text'} without replay`, async ({ page }) => {
+    const fixture = await clarificationFixture(page)
+    fixture.state.dropAsk = unknown
+    await page.goto(feedPath)
+    await page.getByRole('button', { name: "Your team's private questions", exact: true }).click()
+    await page.getByLabel('Your question', { exact: true }).fill('PRIVATE-TAB-LEAVE-CANARY')
+    if (unknown) {
+      await page.getByRole('button', { name: 'Send private question', exact: true }).click()
+      await expect(page.getByText('The outcome is unknown.', { exact: false })).toBeVisible()
+    }
+    const dialog = page.waitForEvent('dialog')
+    const switchTab = page.getByRole('button', { name: 'Official answers', exact: true }).click()
+    const warning = await dialog
+    expect(warning.message()).toContain('will be cleared')
+    await warning.accept()
+    await switchTab
+    await expect(page.getByRole('heading', { name: 'Official common answers' })).toBeVisible()
+    await page.getByRole('button', { name: "Your team's private questions", exact: true }).click()
+    await expect(page.getByLabel('Your question', { exact: true })).toHaveValue('')
+    await expect(page.getByRole('button', { name: 'Retry the same private question', exact: true })).toHaveCount(0)
+    expect(fixture.state.asks).toHaveLength(unknown ? 1 : 0)
+    expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-TAB-LEAVE-CANARY')
+  })
+}
+
 test('resource link opens common search, public rubric and canonical answer without private question text', async ({ page }) => {
   const fixture = await clarificationFixture(page)
   await page.goto(`/events/${firstID}`)

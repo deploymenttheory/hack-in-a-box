@@ -19,6 +19,12 @@ function ClarificationWorkspace({ eventID, questionID }: { eventID: string; ques
   const identity = useIdentity(), cache = useQueryClient()
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'clarifications'), identity.draft_scope], [identity.person.id, identity.draft_scope, eventID])
   const [failure, setFailure] = useState<unknown>(), [tab, setTab] = useState('common')
+  const [privateLeaveRisk, setPrivateLeaveRisk] = useState(false)
+  function selectTab(next: string) {
+    if (next === tab) return
+    if (tab === 'private' && privateLeaveRisk && !window.confirm('Leave this private unsent text or uncertain operation? Text and the retained retry command are kept only in this page and will be cleared.')) return
+    setTab(next)
+  }
   const workspace = useQuery({ queryKey: [...key, 'access'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 10_000,
     queryFn: async ({ signal }) => unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })) })
   const event = useQuery({ queryKey: [...key, 'event'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 10_000,
@@ -40,8 +46,8 @@ function ClarificationWorkspace({ eventID, questionID }: { eventID: string; ques
     <p>{record.name} · Times in {record.configuration.timezone}</p>
     {(workspace.error || event.error) && <><Failure error={workspace.error || event.error} retry={() => void refresh()} /><p role="status">Current access could not be refreshed. Private unsent text remains only in this page; actions are paused.</p></>}
     {value.archived && <p className="notice">This event is read-only. Existing authorised questions and official answers remain available.</p>}
-    {questionID ? <PrivateQuestionReader id={questionID} /> : <><nav className="tabs" aria-label="Clarification sections"><Button variant="outline" aria-pressed={tab === 'common'} onClick={() => setTab('common')}>Official answers</Button>{(value.team_id || value.can_review) && <Button variant="outline" aria-pressed={tab === 'private'} onClick={() => setTab('private')}>{value.can_review ? 'Staff question queue' : "Your team's private questions"}</Button>}</nav>
-      {tab === 'common' || (!value.team_id && !value.can_review) ? <CommonAnswers /> : <section className="clarification-private"><p>Original questions and attachments stay private to the current team and explicit organisers. Only reviewed answers enter the common feed.</p>{value.team_id && (value.can_ask || value.archived) && <AskQuestion key={value.team_id} teamID={value.team_id} />}<PrivateQuestionList /></section>}
+    {questionID ? <PrivateQuestionReader id={questionID} /> : <><nav className="tabs" aria-label="Clarification sections"><Button variant="outline" aria-pressed={tab === 'common'} onClick={() => selectTab('common')}>Official answers</Button>{(value.team_id || value.can_review) && <Button variant="outline" aria-pressed={tab === 'private'} onClick={() => selectTab('private')}>{value.can_review ? 'Staff question queue' : "Your team's private questions"}</Button>}</nav>
+      {tab === 'common' || (!value.team_id && !value.can_review) ? <CommonAnswers /> : <section className="clarification-private"><p>Original questions and attachments stay private to the current team and explicit organisers. Only reviewed answers enter the common feed.</p>{value.team_id && (value.can_ask || value.archived) && <AskQuestion key={value.team_id} teamID={value.team_id} onLeaveRisk={setPrivateLeaveRisk} />}<PrivateQuestionList /></section>}
     </>}
   </section></ClarificationContext.Provider>
 }

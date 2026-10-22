@@ -32,12 +32,18 @@ impact review and notice; they cannot modify criteria through an answer.
 - Real PostgreSQL/race workspace and strict HTTP tests verify current released
   source, own-team authority, staff-only actual audience, nullable empty draft
   versus denied review, withdrawal, role revocation, archive and no-store/privacy.
-- Thirteen browser scenarios run on desktop and mobile in both independently
+- Seventeen browser scenarios run on desktop and mobile in both independently
   built web surfaces. They cover asker, other-team reader and staff, embargo,
   correction/history, keyboard controls, UTF-8 validation, actual attachment
   download, live attachment gating, print privacy, explicit same-command retry,
   unknown save/source changes, competing versions, archive, current review-role
   loss, account/event cleanup and confirmed-write/read-failure reconciliation.
+- Independent review reproduced silent loss when a local section tab unmounted
+  an unsent question or uncertain command. Explicit local tab transitions now
+  require acknowledgement before clearing that memory. Staying retains the exact
+  immutable retry command; native authority loss still clears immediately. Four
+  desktop/mobile stay/leave scenarios cover dirty and uncertain states, identical
+  command retry and absence of automatic replay.
 - Final composition includes existing help, mentor, recovery and canonical
   clarification readers after rebasing onto merged help workspace #206.
 - Both builds, web lint, CI-equivalent Go lint and regenerated Go/TypeScript
