@@ -38,7 +38,7 @@ export function unwrap<T>(result: { data?: T; error?: components['schemas']['Err
 }
 export const api = createClient<paths>({ credentials: 'same-origin' })
 const requestSessions = new WeakMap<Request, number>()
-api.use({ onRequest({ request }) { requestSessions.set(request, mentorSessionGeneration()) }, onError() { window.dispatchEvent(new Event('workspace-network-unavailable')) }, onResponse({ request, response }) {
+api.use({ onRequest({ request }) { requestSessions.set(request, mentorSessionGeneration()) }, onError({ error }) { if (!(error instanceof Error && error.name === 'AbortError')) window.dispatchEvent(new Event('workspace-network-unavailable')) }, onResponse({ request, response }) {
   window.dispatchEvent(new Event('workspace-response'))
   if (response.status === 401 && requestSessions.get(request) === mentorSessionGeneration()) { window.dispatchEvent(new Event('session-expired')); invalidateMentorDrafts() }
 } })

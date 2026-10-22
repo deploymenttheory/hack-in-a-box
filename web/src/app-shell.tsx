@@ -63,6 +63,11 @@ export function Shell() {
   }, [])
   useEffect(() => installDraftInvalidation(() => { setExpired(true); const cancelled = sessionCache.cancelQueries({ queryKey: ['session'] }); sessionCache.setQueryData(['session'], null); void cancelled.then(() => sessionCache.invalidateQueries({ queryKey: ['session'] })) }), [])
   useEffect(() => {
+    const clear = () => sessionCache.removeQueries({ queryKey: ['private'] })
+    window.addEventListener('mentor-draft-invalidated', clear)
+    return () => window.removeEventListener('mentor-draft-invalidated', clear)
+  }, [])
+  useEffect(() => {
     if (session.data?.person.id && !session.error) {
       clearPrivateDrafts(session.data.person.id)
       retainMentorDraftScope(session.data.person.id, session.data.draft_scope)

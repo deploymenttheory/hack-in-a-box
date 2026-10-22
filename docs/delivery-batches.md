@@ -128,8 +128,7 @@ ready. These five tasks establish the assessment, rules and support contracts
 needed by later mentor/judge workspaces and event-day views. They do not declare
 future scoring, private assessment disclosure or provider integration complete.
 #158 is delivered in PR #195. #107 merged in PR #197 and is closed; #99 merged
-in PR #200 and is closed. #159's PR #201 is on final merged main with exact-head
-CI running. #161 is in progress. Outstanding provider and aggregate acceptance
+in PR #200 and is closed. #159 merged in PR #201 after exact-head green CI. #161 is in progress. Outstanding provider and aggregate acceptance
 is not implied complete by these implementation merges.
 
 Each issue keeps its own PR and acceptance reconciliation. Migration numbers
