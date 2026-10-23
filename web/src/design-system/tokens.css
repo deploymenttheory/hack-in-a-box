@@ -70,6 +70,8 @@
     --icon-size: 1rem;
     --icon-stroke: 1.75;
     --control-radius: .25rem;
+    --collection-search-width: 16rem;
+    --collection-inspector-width: 24rem;
     --radius-control: var(--control-radius);
     --radius-card: 0;
     --space-panel: var(--space-6);
