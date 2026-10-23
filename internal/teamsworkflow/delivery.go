@@ -117,6 +117,13 @@ func (s Service) validateDelivery(
 	}
 	subject, body := "TEST — Hack-in-a-Box Teams connection check", "This synthetic connection test is a broadcast to the configured event channel. Confirm the destination and workflow run with its owner. It is not a personal campaign self-test."
 	if intent.Kind == "broadcast" {
+		paused, pauseErr := q.AutomationPaused(ctx, d.EventID)
+		if pauseErr != nil {
+			return intent, connection, nil, fmt.Errorf("read Teams campaign pause: %w", pauseErr)
+		}
+		if paused {
+			return intent, connection, nil, jobs.ErrRetry
+		}
 		if intent.CampaignID == nil {
 			return intent, connection, nil, access.ErrForbidden
 		}
@@ -142,6 +149,9 @@ func (s Service) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
 	eligible := false
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		_, connection, _, err := s.validateDelivery(ctx, tx, d)
+		if errors.Is(err, jobs.ErrRetry) {
+			return nil
+		}
 		if expectedBlock(err) {
 			return nil
 		}
@@ -165,8 +175,18 @@ func (s Service) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
 		if err != nil {
 			return fmt.Errorf("read Teams attempt eligibility: %w", err)
 		}
-		eligible = last.AttemptNumber < 5 && last.Outcome.Valid &&
-			last.Outcome.String == "retryable" &&
+		permitted := last.Outcome.Valid && last.Outcome.String == "retryable"
+		if !permitted {
+			grantID, grantErr := jobs.ResendGrantInTransaction(ctx, tx, d.ID, last.ID)
+			if errors.Is(grantErr, jobs.ErrRetry) {
+				return nil
+			}
+			if grantErr != nil {
+				return fmt.Errorf("check current Teams resend eligibility: %w", grantErr)
+			}
+			permitted = grantID != uuid.Nil
+		}
+		eligible = last.AttemptNumber < 5 && permitted &&
 			(!last.RetryAt.Valid || !s.now().Before(last.RetryAt.Time))
 		return nil
 	})
@@ -179,6 +199,7 @@ func (s Service) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {
 func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 	attemptID := uuid.New()
 	var fingerprint string
+	grantID := uuid.Nil
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		_, connection, payload, err := s.validateDelivery(ctx, tx, d)
 		if err != nil {
@@ -193,9 +214,17 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		)
 		number := int32(1)
 		if err == nil {
-			if !last.Outcome.Valid || last.Outcome.String != "retryable" ||
-				last.AttemptNumber >= 5 {
+			if last.AttemptNumber >= 5 {
 				return access.ErrForbidden
+			}
+			if !last.Outcome.Valid || last.Outcome.String != "retryable" {
+				grantID, err = jobs.ResendGrantInTransaction(ctx, tx, d.ID, last.ID)
+				if err != nil {
+					return fmt.Errorf("check Teams resend preparation grant: %w", err)
+				}
+				if grantID == uuid.Nil {
+					return access.ErrForbidden
+				}
 			}
 			if last.RetryAt.Valid && s.now().Before(last.RetryAt.Time) {
 				return jobs.ErrRetry
@@ -219,6 +248,14 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 			},
 		); err != nil {
 			return fmt.Errorf("retain Teams attempt before send: %w", err)
+		}
+		if grantID != uuid.Nil {
+			if err = q.ConsumeDeliveryResend(
+				ctx,
+				dbgen.ConsumeDeliveryResendParams{ReviewID: grantID, AttemptID: attemptID},
+			); err != nil {
+				return fmt.Errorf("consume reviewed Teams resend: %w", err)
+			}
 		}
 		return q.SetTeamsWorkflowRateWindow(
 			ctx,
@@ -244,7 +281,8 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 	err = database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		_, connection, payload, err := s.validateDelivery(ctx, tx, d)
 		r := result{Outcome: jobs.Permanent, Reason: "authority_or_source_changed"}
-		if err == nil {
+		switch {
+		case err == nil:
 			digest := sha256.Sum256(payload)
 			if fmt.Sprintf("%x", digest) != fingerprint {
 				r.Reason = "source_changed_before_send"
@@ -256,7 +294,9 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 					r = s.sender().send(ctx, endpoint, payload)
 				}
 			}
-		} else if !expectedBlock(err) {
+		case errors.Is(err, jobs.ErrRetry):
+			r = result{Outcome: jobs.Retryable, Reason: "automation_paused"}
+		case !expectedBlock(err):
 			return err
 		}
 		if r.Outcome == jobs.Retryable {

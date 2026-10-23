@@ -1253,6 +1253,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser-only bounded recipient/attempt metadata. Addresses, message bodies, endpoints and raw provider errors are never returned. Selection time is the persisted actual recipient intent time, not proof of delivery. */
+        get: operations["getCommunicationDeliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/communications/deliveries/{delivery_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getCommunicationDelivery"];
+        put?: never;
+        /** @description Deliberate reasoned recovery of this typed delivery under current native policy. Use the operation revision in If-Match and retain the same request_id/payload for an explicit uncertain-command retry. Resend acknowledges possible duplication and consumes one durable authorisation. Cancellation never recalls an accepted or uncertain effect; cancel_resend stops only a still-unspent queued resend. No-resend resolution retains the original uncertain provider evidence. */
+        post: operations["reviewCommunicationDelivery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/communications/tests/{test_id}/delivery": {
         parameters: {
             query?: never;
@@ -5174,6 +5213,95 @@ export interface components {
             /** Format: int64 */
             next_cursor: number | null;
         };
+        DeliveryHistoryItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            campaign_id: string | null;
+            /** Format: int64 */
+            campaign_version: number;
+            /** Format: uuid */
+            recipient_id: string | null;
+            recipient_name: string;
+            /** @enum {string} */
+            channel: "smtp" | "teams" | "in_app";
+            /** @enum {string} */
+            purpose: "campaign" | "self_test" | "omission" | "broadcast" | "connection_test";
+            /** Format: date-time */
+            selected_at: string;
+            /** @enum {string} */
+            state: "never_attempted" | "provider_accepted" | "retryable" | "permanent" | "ambiguous" | "in_progress" | "local_persisted" | "unavailable";
+            reason: string;
+            attempted: boolean;
+            /** Format: int32 */
+            attempts: number;
+            /** Format: int64 */
+            revision: number;
+            /** @enum {string} */
+            operation_state: "" | "pending" | "running" | "delivered" | "permanent" | "ambiguous" | "cancelled";
+            cancelled: boolean;
+        };
+        DeliveryHistoryCursor: {
+            /** Format: date-time */
+            at: string;
+            /** Format: uuid */
+            id: string;
+        };
+        DeliveryHistoryPage: {
+            items: components["schemas"]["DeliveryHistoryItem"][];
+            next_cursor: components["schemas"]["DeliveryHistoryCursor"] | null;
+            archived: boolean;
+            paused: boolean;
+        };
+        DeliveryHistoryAttempt: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            /** Format: date-time */
+            started_at: string;
+            /** @enum {string} */
+            state: "provider_accepted" | "retryable" | "permanent" | "ambiguous";
+            reason: string;
+            /** Format: date-time */
+            recorded_at: string | null;
+            /** Format: int32 */
+            http_status: number | null;
+            /** Format: date-time */
+            retry_at: string | null;
+        };
+        DeliveryHistoryReview: {
+            /** Format: int64 */
+            expected_revision: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** @enum {string} */
+            action: "retry" | "cancel" | "cancel_resend" | "resolve_no_resend" | "resend_acknowledged";
+            reason: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        DeliveryHistoryDetail: {
+            actions: ("retry" | "cancel" | "cancel_resend" | "resolve_no_resend" | "resend_acknowledged")[];
+            item: components["schemas"]["DeliveryHistoryItem"];
+            attempts: components["schemas"]["DeliveryHistoryAttempt"][];
+            /** Format: int32 */
+            next_attempt_number: number | null;
+            reviews: components["schemas"]["DeliveryHistoryReview"][];
+            /** Format: uuid */
+            next_review_id: string | null;
+            archived: boolean;
+            paused: boolean;
+        };
+        DeliveryReviewCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "retry" | "cancel" | "cancel_resend" | "resolve_no_resend" | "resend_acknowledged";
+            reason: string;
+        };
     };
     responses: {
         /**
@@ -7481,6 +7609,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommunicationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunicationDeliveries: {
+        parameters: {
+            query?: {
+                campaign_id?: string;
+                channel?: "smtp" | "teams" | "in_app";
+                before_at?: string;
+                before_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe retained selection and provider evidence. External acceptance is not confirmed delivery. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryHistoryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommunicationDelivery: {
+        parameters: {
+            query?: {
+                before_attempt?: number;
+                before_review?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable provider attempts and operator decisions, with current event/pause metadata. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryHistoryDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    reviewCommunicationDelivery: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted delivery operation revision from the current history item. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryReviewCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed decision/current history, never a fabricated external delivery receipt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryHistoryDetail"];
                 };
             };
             default: components["responses"]["Error"];

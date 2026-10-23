@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
@@ -31,6 +32,7 @@ type communicationRuntime struct {
 	Moderation     *moderation.Service
 	Scorecards     *scorecards.Service
 	Feedback       *feedback.Service
+	Deliveries     *deliveryhistory.Service
 	Help           help.Service
 	Clarifications *clarification.Service
 	Automation     *automation.Service
@@ -183,7 +185,15 @@ func newCommunicationRuntime(
 	teams.Composer = *composer
 	return communicationRuntime{
 		Moderation: huddles, Scorecards: cards,
-		Feedback:       shared,
+		Feedback: shared,
+		Deliveries: &deliveryhistory.Service{
+			Pool: pool,
+			Jobs: outbox,
+			Providers: map[string]deliveryhistory.RecoveryProvider{
+				"smtp":  provider,
+				"teams": teams,
+			},
+		},
 		Clarifications: answers,
 		Automation:     auto,
 		Inbox:          local,

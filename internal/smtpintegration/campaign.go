@@ -304,6 +304,13 @@ func (h CampaignHandler) Eligible(ctx context.Context, d jobs.Delivery) (bool, e
 	if row.EventID != d.EventID || row.IntentID != d.TargetID {
 		return false, nil
 	}
+	paused, pauseErr := dbgen.New(s.Pool).AutomationPaused(ctx, d.EventID)
+	if pauseErr != nil {
+		return false, fmt.Errorf("read SMTP campaign eligibility pause: %w", pauseErr)
+	}
+	if paused {
+		return false, nil
+	}
 	_, err = mailcontact.VerifiedMailboxInTransaction(ctx, q, row.PersonID)
 	if errors.Is(err, mailcontact.ErrUnavailable) || errors.Is(err, access.ErrUnauthenticated) {
 		return false, nil
@@ -326,99 +333,66 @@ func (h CampaignHandler) prepare(
 		if _, err := q.LockEvent(ctx, d.EventID); err != nil {
 			return fmt.Errorf("prepare SMTP campaign: %w", err)
 		}
-		row, err := q.SMTPCampaignMessage(ctx, d.ID)
-		if err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if row.EventID != d.EventID || row.IntentID != d.TargetID {
-			return access.ErrForbidden
-		}
-		audience, err := s.scopeAudience(
+		return s.withCurrentCampaign(
 			ctx,
 			tx,
-			d.EventID,
-			row.CampaignID,
-			row.CampaignVersion,
-			communications.DeliveryScope{OccurrenceID: row.OccurrenceID},
-		)
-		if err != nil {
-			return err
-		}
-		if row.OccurrenceID != uuid.Nil &&
-			(audience.Binding != row.OccurrenceBinding || !slices.Contains(audience.RecipientIDs, row.PersonID)) {
-			return access.ErrForbidden
-		}
-		approved, err := s.resolveCampaign(
-			ctx,
-			tx,
-			d.EventID,
-			row.CampaignID,
-			row.CampaignVersion,
-			communications.DeliveryScope{OccurrenceID: row.OccurrenceID},
-			row.PersonID,
-		)
-		if err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if approved.Version != row.CampaignVersion ||
-			approved.Approval.Binding != row.ApprovalBinding ||
-			!slices.Contains(approved.Definition.Channels, "smtp") ||
-			len(approved.Preview.Recipients) != 1 {
-			return access.ErrConflict
-		}
-		revision, err := s.revision(ctx, q, d.EventID)
-		if err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if revision != row.ProviderRevision ||
-			approved.Approval.ChannelRevisions["smtp"] != revision {
-			return access.ErrConflict
-		}
-		mailbox, err := mailcontact.VerifiedMailboxInTransaction(ctx, q, row.PersonID)
-		if err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if mailbox != row.Mailbox {
-			return access.ErrConflict
-		}
-		operation, err := q.Operation(ctx, d.ID)
-		if err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if !mailOperationCurrent(operation, d, s.now(), "communication_campaign_smtp") {
-			return access.ErrForbidden
-		}
-		var snapshot campaignSnapshot
-		if err = json.Unmarshal(row.Snapshot, &snapshot); err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		recipient := approved.Preview.Recipients[0]
-		if !campaignProjectionMatches(snapshot, approved.ScopeApproval, recipient, row.PersonID) {
-			return access.ErrConflict
-		}
-		prior = outcome(row.State)
-		if row.State != "queued" && row.State != "retryable" {
-			return nil
-		}
-		if err = q.RecordSMTPCampaignReceipt(
-			ctx,
-			dbgen.RecordSMTPCampaignReceiptParams{
-				OperationID: d.ID,
-				State:       "prepared",
-				ReceiptCode: "",
+			d,
+			func(row dbgen.SmtpCampaignMessage, snapshot campaignSnapshot) error {
+				operation, err := q.Operation(ctx, d.ID)
+				if err != nil {
+					return fmt.Errorf("prepare SMTP campaign: %w", err)
+				}
+				if !mailOperationCurrent(operation, d, s.now(), "communication_campaign_smtp") {
+					return access.ErrForbidden
+				}
+				prior = outcome(row.State)
+				grantID := uuid.Nil
+				if row.State != "queued" && row.State != "retryable" {
+					if row.State != "accepted" && row.State != "ambiguous" &&
+						row.State != "prepared" {
+						return nil
+					}
+					grantID, err = pendingResend(ctx, tx, d.ID)
+					if err != nil {
+						return err
+					}
+					if grantID == uuid.Nil {
+						return nil
+					}
+				}
+				if err = q.RecordSMTPCampaignReceipt(
+					ctx,
+					dbgen.RecordSMTPCampaignReceiptParams{
+						OperationID: d.ID,
+						State:       "prepared",
+						ReceiptCode: "",
+					},
+				); err != nil {
+					return fmt.Errorf("prepare SMTP campaign: %w", err)
+				}
+				attempt, err := q.PrepareSMTPSubmissionAttempt(
+					ctx,
+					dbgen.PrepareSMTPSubmissionAttemptParams{
+						OperationID: d.ID,
+						SourceKind:  "campaign",
+					},
+				)
+				if err != nil {
+					return fmt.Errorf("retain prepared SMTP campaign attempt: %w", err)
+				}
+				if grantID != uuid.Nil {
+					if err = q.ConsumeDeliveryResend(
+						ctx,
+						dbgen.ConsumeDeliveryResendParams{ReviewID: grantID, AttemptID: attempt.ID},
+					); err != nil {
+						return fmt.Errorf("consume SMTP resend grant: %w", err)
+					}
+				}
+				message = snapshot.Message
+				ready = true
+				return nil
 			},
-		); err != nil {
-			return fmt.Errorf("prepare SMTP campaign: %w", err)
-		}
-		if _, err = q.PrepareSMTPSubmissionAttempt(
-			ctx,
-			dbgen.PrepareSMTPSubmissionAttemptParams{OperationID: d.ID, SourceKind: "campaign"},
-		); err != nil {
-			return fmt.Errorf("retain prepared SMTP campaign attempt: %w", err)
-		}
-		message = snapshot.Message
-		ready = true
-		return nil
+		)
 	})
 	if err != nil {
 		return message, ready, prior, fmt.Errorf("prepare SMTP campaign: %w", err)
@@ -435,7 +409,16 @@ func (h CampaignHandler) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outc
 	if err == nil && row.EventID == d.EventID && row.IntentID == d.TargetID &&
 		row.State != "queued" &&
 		row.State != "retryable" {
-		return outcome(row.State)
+		reviewed, reviewErr := s.reviewedResend(ctx, d)
+		if reviewErr != nil {
+			if errors.Is(reviewErr, jobs.ErrRetry) {
+				return jobs.Retryable
+			}
+			return jobs.Permanent
+		}
+		if !reviewed {
+			return outcome(row.State)
+		}
 	}
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return jobs.Retryable
@@ -483,12 +466,21 @@ func mailOperationCurrent(
 	now time.Time,
 	kind string,
 ) bool {
+	return mailOperationIdentityCurrent(operation, d, now, kind) &&
+		(operation.State == "pending" || operation.State == "running")
+}
+
+func mailOperationIdentityCurrent(
+	operation dbgen.Operation,
+	d jobs.Delivery,
+	now time.Time,
+	kind string,
+) bool {
 	return operation.EventID == d.EventID && operation.TargetID == d.TargetID &&
 		operation.Kind == kind &&
 		operation.Approved &&
 		!operation.Cancelled &&
-		!operation.DueAt.After(now) &&
-		(operation.State == "pending" || operation.State == "running")
+		!operation.DueAt.After(now)
 }
 
 // queueMailbox preserves the reviewed disposition of an omitted person. A later

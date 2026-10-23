@@ -68,7 +68,11 @@ type fixture struct {
 
 func setup(t *testing.T) *fixture {
 	t.Helper()
-	pool := testdb.New(t, true)
+	return setupPool(t, testdb.New(t, true))
+}
+
+func setupPool(t *testing.T, pool *pgxpool.Pool) *fixture {
+	t.Helper()
 	owner := testdb.Person(t, pool)
 	id := testdb.Event(t, pool, owner.ID)
 	f := &fixture{
