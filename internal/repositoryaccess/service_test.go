@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
@@ -21,6 +22,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -327,6 +329,27 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 			}
 			f.exec("UPDATE hack_teams SET frozen=true WHERE id=$1", f.team)
 			f.exec("UPDATE events SET team_frozen_at=now() WHERE id=$1", f.event)
+			nativeEvent, nativeErr := dbgen.New(pool).Event(t.Context(), f.event)
+			if nativeErr != nil {
+				t.Fatal(nativeErr)
+			}
+			if _, nativeErr = (teams.Service{Pool: pool}).Act(
+				t.Context(),
+				f.owner,
+				f.event,
+				nativeEvent.Revision,
+				teams.Command{
+					Action:   "move",
+					TeamID:   uuid.New(),
+					PersonID: f.member,
+					Reason:   "Attempt frozen reassignment",
+				},
+			); !errors.Is(
+				nativeErr,
+				teams.ErrFrozen,
+			) {
+				t.Fatal("native frozen reassignment was permitted", nativeErr)
+			}
 			if err := f.service.Maintain(t.Context()); err != nil {
 				t.Fatal(err)
 			}
@@ -473,7 +496,8 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 		workers.Wait()
 		close(errs)
 		for err := range errs {
-			if err != nil {
+			var snooze *river.JobSnoozeError
+			if err != nil && !errors.As(err, &snooze) {
 				t.Fatal(err)
 			}
 		}

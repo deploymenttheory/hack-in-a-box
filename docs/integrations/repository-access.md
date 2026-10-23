@@ -8,7 +8,8 @@ provisioning the private repository does not publish the challenge.
 
 An organiser reviews a versioned plan and explicitly approves that exact version.
 The plan includes native identity revisions, mentor coverage windows, proposed
-changes and provider flags. Native changes create an unapproved replacement plan.
+changes and provider flags. Approval retains its reason and immutable plan audit
+reference separately from the original review. Native changes create an unapproved replacement plan.
 The worker checks the latest approval, current approver authority, native roster,
 identity revision, immutable repository mapping and publication again before a
 write. Withdrawal, account-link recovery, loss of mentor coverage and disbanding
@@ -72,6 +73,9 @@ Provider contracts: [collaborators](https://docs.github.com/en/rest/collaborator
 - `internal/repositoryaccess/service_test.go`: real PostgreSQL, real provisioning
   owner and jobs worker, review/approval/publication, provider faults and durable
   history. All provider effects are deterministic in-process fixtures.
+- `internal/githubwebhooks/membership_test.go`: actual signed ingestion and current
+  source checks enqueue only native provider polls; duplicate, stale installation
+  and reordered member actions cannot manufacture invitation state.
 
 No real GitHub repository, invitation, collaborator or organisation policy is
 changed during these tests.

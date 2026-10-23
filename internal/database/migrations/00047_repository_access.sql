@@ -1,5 +1,4 @@
--- Development DDL. Move into the next actual ordered Goose migration only after
--- the repository barrier and webhook migrations have merged. Never apply alone.
+-- +goose Up
 CREATE TABLE repository_access_plans (
  id uuid PRIMARY KEY,
  event_id uuid NOT NULL,
@@ -97,3 +96,21 @@ CREATE TRIGGER repository_access_grants_identity BEFORE UPDATE ON repository_acc
 CREATE TRIGGER repository_access_plans_retained BEFORE DELETE OR TRUNCATE ON repository_access_plans FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER repository_access_effects_retained BEFORE DELETE OR TRUNCATE ON repository_access_effects FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TRIGGER repository_access_grants_retained BEFORE DELETE OR TRUNCATE ON repository_access_grants FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
+
+-- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM repository_access_plans)
+ OR EXISTS(SELECT 1 FROM repository_access_effects)
+ OR EXISTS(SELECT 1 FROM repository_access_grants)
+ OR EXISTS(SELECT 1 FROM repository_access_observations)
+ OR EXISTS(SELECT 1 FROM operations WHERE kind IN ('repository.access','repository.access.poll')) THEN
+  RAISE EXCEPTION 'Repository access history exists; preserve it before rollback';
+ END IF;
+END $$;
+-- +goose StatementEnd
+DROP TABLE repository_access_observations;
+DROP TABLE repository_access_grants;
+DROP TABLE repository_access_effects;
+DROP TABLE repository_access_plans;
+DROP FUNCTION protect_repository_access_history();

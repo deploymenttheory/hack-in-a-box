@@ -1213,6 +1213,62 @@ type RegistrationSetting struct {
 	Revision    int64
 }
 
+type RepositoryAccessEffect struct {
+	ID         uuid.UUID
+	PlanID     uuid.UUID
+	EventID    uuid.UUID
+	TeamID     uuid.UUID
+	Definition []byte
+	Attempted  bool
+	DispatchID *uuid.UUID
+	State      string
+	Diagnostic string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type RepositoryAccessGrant struct {
+	ID            uuid.UUID
+	EventID       uuid.UUID
+	TeamID        uuid.UUID
+	PersonID      uuid.UUID
+	GithubID      int64
+	LinkRevision  int64
+	CoverageStart pgtype.Timestamptz
+	CoverageEnd   pgtype.Timestamptz
+	Role          string
+	Permission    string
+	AppManaged    bool
+	State         string
+	InvitationID  pgtype.Int8
+	Diagnostic    string
+	ObservedAt    pgtype.Timestamptz
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type RepositoryAccessObservation struct {
+	EventID    uuid.UUID
+	TeamID     uuid.UUID
+	Snapshot   []byte
+	ObservedAt pgtype.Timestamptz
+	Diagnostic string
+}
+
+type RepositoryAccessPlan struct {
+	ID             uuid.UUID
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	Version        int64
+	Fingerprint    string
+	Definition     []byte
+	CreatedBy      uuid.UUID
+	CreatedAt      time.Time
+	ApprovedBy     *uuid.UUID
+	ApprovedAt     pgtype.Timestamptz
+	ApprovalReason string
+}
+
 type ResourceAssignment struct {
 	EventID    uuid.UUID
 	ResourceID uuid.UUID

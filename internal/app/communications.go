@@ -38,7 +38,7 @@ import (
 )
 
 type communicationRuntime struct {
-	GitHubWebhooks *githubwebhooks.Service
+	GitHubWebhooks   *githubwebhooks.Service
 	RepositoryAccess *repositoryaccess.Service
 	Repositories     *repositories.Service
 	Outcomes         *outcomes.Service
@@ -57,7 +57,6 @@ type communicationRuntime struct {
 	Teams            *teamsworkflow.Service
 	Jobs             *jobs.Service
 	MailContacts     mailcontact.Service
-
 }
 
 // newCommunicationRuntime supplies the same provider/readiness/handler graph to
@@ -148,6 +147,7 @@ func newCommunicationRuntime(
 			Provider: githubapp.NewProvider(),
 		},
 	}
+	webhooks.Membership = accessOwner
 	outbox, err := jobs.New(
 		pool,
 		logger,
@@ -240,12 +240,11 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		GitHubWebhooks: webhooks,
+		GitHubWebhooks:   webhooks,
 		Repositories:     repos,
 		RepositoryAccess: accessOwner,
 		Outcomes:         followThrough,
 		Surveys:          questionnaires,
-
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,

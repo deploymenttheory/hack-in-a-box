@@ -62,7 +62,7 @@ import (
 )
 
 type Dependencies struct {
-	GitHubWebhooks *githubwebhooks.Service
+	GitHubWebhooks   *githubwebhooks.Service
 	RepositoryAccess repositoryaccess.Service
 	Repositories     repositories.Service
 	Media            media.Service
@@ -103,7 +103,6 @@ type Dependencies struct {
 	Privacy          privacy.Service
 	Templates        templates.Service
 	Registration     registration.Service
-
 }
 type handlers struct{ Dependencies }
 
