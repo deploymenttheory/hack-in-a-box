@@ -15,6 +15,9 @@ import (
 type Action string
 
 const (
+	SurveyChanged             Action = "survey.changed"
+	SurveyResponded           Action = "survey.responded"
+	SurveyReportChanged       Action = "survey.report_changed"
 	FeedbackChanged           Action = "feedback.changed"
 	ClarificationChanged      Action = "clarification.changed"
 	RubricChanged             Action = "rubric.changed"
@@ -119,7 +122,13 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case FeedbackChanged, ClarificationChanged, RubricChanged, TeamsConnectionSaved,
+	case SurveyChanged,
+		SurveyResponded,
+		SurveyReportChanged,
+		FeedbackChanged,
+		ClarificationChanged,
+		RubricChanged,
+		TeamsConnectionSaved,
 		TeamsConnectionRevoked,
 		TeamsConnectionRotated,
 		TeamsTestQueued,
