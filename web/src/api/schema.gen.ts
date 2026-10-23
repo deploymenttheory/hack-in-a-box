@@ -2558,6 +2558,10 @@ export interface components {
             status: "open" | "in_progress" | "done" | "cancelled";
             /** Format: int64 */
             cycle: number;
+            /** @enum {string} */
+            changed_as: "organiser" | "helper" | "team_owner";
+            /** @enum {string} */
+            change: "details" | "status";
             /** Format: uuid */
             changed_by: string;
             /** Format: date-time */

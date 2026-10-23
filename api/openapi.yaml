@@ -4300,6 +4300,8 @@ components:
           "status",
           "cycle",
           "changed_by",
+        "changed_as",
+        "change",
           "changed_at"
         ],
         "properties": {
@@ -4342,7 +4344,9 @@ components:
             "type": "integer",
             "format": "int64"
           },
-          "changed_by": {
+          "changed_as": {"type":"string","enum":["organiser","helper","team_owner"]},
+        "change": {"type":"string","enum":["details","status"]},
+        "changed_by": {
             "type": "string",
             "format": "uuid"
           },

@@ -7,7 +7,7 @@ async function fixture(page: Page) {
  await mockWorkspace(page)
  const document: Document = { id: feedbackID, team_id: teamID, version: 3, category: 'setup', title: 'Reviewed replacement kit guidance', body: 'Shared advice <script>window.feedbackLeak=true</script>\nCheck the reviewed checklist.', state: 'published', sources: [], help_request_id: null, author_id: person.id, reviewer_id: person.id, reviewed_digest: '', published_at: '2027-06-20T09:00:00Z', changed_at: '2027-06-20T09:00:00Z' }
  const state = { denied: false, writes: 0, followupReads: 0, feedbackReads: 0 }
- await page.route(`**/events/${firstID}/feedback**`, async route => {
+ await page.route(`**/api/v1/events/${firstID}/feedback**`, async route => {
   const request = route.request(), url = new URL(request.url()), error = () => route.fulfill({ status: 404, json: { error: { code: 'not_found', request_id: 'synthetic' } } })
   if (request.method() !== 'GET') { state.writes++; throw new Error('Read-only destination attempted a mutation') }
   if (state.denied) return error()
@@ -26,8 +26,15 @@ test('actual shared-feedback destination reads only released prose/actions with 
  expect(state.writes).toBe(0); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.screenshot({ path: info.outputPath('reviewed-team-feedback.png'), fullPage: true })
 })
 test('feedback and fixed-recipient followup with equal UUIDs use distinct native resource requests', async ({ page }) => {
- const state = await fixture(page); await page.goto(`/events/${firstID}/feedback/${feedbackID}`); await expect(page.getByRole('heading', { name: 'Reviewed team feedback', exact: true })).toBeVisible()
- await page.goto(`/events/${firstID}/feedback-followups/${feedbackID}`); await expect(page.getByRole('heading', { name: 'Support-action follow-up', exact: true })).toBeVisible(); expect(state.followupReads).toBeGreaterThan(0); expect(state.feedbackReads).toBeGreaterThan(0); expect(state.writes).toBe(0)
+ const state = await fixture(page), first = '019c25e0-15bd-7000-8000-000000000001', second = '019c25e0-15bd-7000-8000-000000000002'
+ const item = (id: string) => ({ id, event_id: firstID, event_name: 'Synthetic feedback event', label: id === first ? 'Reviewed team feedback' : 'Support-action follow-up', created_at: '2027-06-20T09:00:00Z', read_at: null })
+ await page.route('**/api/v1/inbox**', route => {
+  const id = new URL(route.request().url()).pathname.split('/')[4]
+  if (!id) return route.fulfill({ json: { items: [item(first), item(second)], next_cursor: null, unread: 2 } })
+  return route.fulfill({ json: { item: item(id), subject: 'Safe native notice', body: '', format: 'text', destination: { kind: id === first ? 'feedback' : 'feedback_followup', resource_id: feedbackID } } })
+ })
+ await page.goto('/inbox'); await page.getByRole('button', { name: 'Reviewed team feedback Unread' }).click(); await page.getByRole('link', { name: 'Open reviewed team feedback', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Reviewed team feedback', exact: true })).toBeVisible()
+ await page.getByRole('link', { name: /^Inbox/ }).first().click(); await page.getByRole('button', { name: 'Support-action follow-up Unread' }).click(); await page.getByRole('link', { name: 'Open support-action follow-up', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Support-action follow-up', exact: true })).toBeVisible(); await expect.poll(() => state.followupReads).toBeGreaterThan(0); expect(state.feedbackReads).toBeGreaterThan(0); expect(state.writes).toBe(0)
 })
 test('currently revoked resource hides released text and support actions without tab focus', async ({ page }) => {
  const state = await fixture(page); await page.goto(`/events/${firstID}/feedback/${feedbackID}`); await expect(page.getByRole('heading', { name: 'Reviewed team feedback', exact: true })).toBeVisible(); state.denied = true

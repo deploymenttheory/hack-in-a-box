@@ -403,7 +403,7 @@ func TestReviewedSupportActionsOwnTeamStatusOwnersVersionRaceAndSeparateHistory(
 	}
 	history, err := f.s.ActionHistory(t.Context(), f.member.ID, f.event, id, taskID, 0, 50)
 	if err != nil || len(history.Items) != 2 || history.Items[0].Status != "done" ||
-		history.Items[1].Version != task.Action.Version {
+		history.Items[1].Version != task.Action.Version || history.Items[0].ChangedAs != "team_owner" || history.Items[0].Change != "status" || history.Items[1].ChangedAs != "helper" {
 		t.Fatal("support state history", err)
 	}
 	if f.count("SELECT count(*) FROM mentor_scorecard_versions WHERE event_id=$1", f.event) != 0 ||
@@ -765,5 +765,84 @@ func TestFeedbackAndActionCommandsReplayExactResultsOnlyUnderCurrentAuthority(t 
 	denied(t, err)
 	if f.count("SELECT count(*) FROM feedback_versions WHERE event_id=$1", f.event) != 3 {
 		t.Fatal("replay appended another version")
+	}
+}
+
+func TestFeedbackWriterWaitingBehindNativeRoleRemovalRechecksCurrentAuthority(t *testing.T) {
+	f := setup(t)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	tx, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(context.Background()) }()
+	q := dbgen.New(tx)
+	if _, err = q.LockEvent(ctx, f.event); err != nil {
+		t.Fatal(err)
+	}
+	var holder int32
+	if err = tx.QueryRow(ctx, "SELECT pg_backend_pid()").Scan(&holder); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = tx.Exec(
+		ctx,
+		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='mentor'",
+		f.event,
+		f.mentor.ID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		_, err := f.s.Change(
+			ctx,
+			f.mentor.ID,
+			f.event,
+			uuid.New(),
+			0,
+			uuid.New(),
+			Command{
+				Action: "save",
+				Input: &Input{
+					TeamID:   f.team,
+					Category: "competition_output",
+					Title:    "Cannot publish after removal",
+					Body:     "Blocked current output advice",
+				},
+			},
+		)
+		done <- err
+	}()
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		var waiting bool
+		if err = f.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE $1=ANY(pg_blocking_pids(pid)))", holder).
+			Scan(&waiting); err != nil {
+			t.Fatal(err)
+		}
+		if waiting {
+			break
+		}
+		select {
+		case err := <-done:
+			t.Fatal("writer bypassed native event lock", err)
+		case <-ctx.Done():
+			t.Fatal("writer never reached native lock")
+		case <-ticker.C:
+		}
+	}
+	if err = tx.Commit(ctx); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err = <-done:
+		denied(t, err)
+	case <-ctx.Done():
+		t.Fatal("blocked writer failed to finish")
+	}
+	if f.count("SELECT count(*) FROM feedback_versions WHERE event_id=$1", f.event) != 0 {
+		t.Fatal("removed mentor wrote support feedback")
 	}
 }

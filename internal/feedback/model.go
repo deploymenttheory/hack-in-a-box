@@ -73,6 +73,8 @@ type (
 		Status     string    `json:"status"`
 		Cycle      int64     `json:"cycle"`
 		ChangedBy  uuid.UUID `json:"changed_by"`
+		ChangedAs  string    `json:"changed_as"`
+		Change     string    `json:"change"`
 		ChangedAt  time.Time `json:"changed_at"`
 	}
 )
@@ -91,6 +93,7 @@ type (
 		Status string       `json:"status"`
 	}
 	ActionView struct {
+		writeAs         string
 		CommandVersion  *int64 `json:"command_version"`
 		Action          Action `json:"action"`
 		CanEdit         bool   `json:"can_edit"`

@@ -60,6 +60,13 @@ func (s Service) actionView(
 	if !h.PublishedVersion.Valid {
 		return out, access.ErrNotFound
 	}
+	if authority.Organiser {
+		out.writeAs = "organiser"
+	} else if authority.Helper {
+		out.writeAs = "helper"
+	} else if authority.TeamMember && actor == a.OwnerID {
+		out.writeAs = "team_owner"
+	}
 	manager := authority.Organiser || authority.Helper
 	out.CanEdit = manager && row.WritesAllowed
 	out.CanUpdateStatus = row.WritesAllowed &&
@@ -268,6 +275,8 @@ func (s Service) changeActionInTransaction(
 	}
 	a.Version++
 	a.ChangedBy = actor
+	a.ChangedAs = view.writeAs
+	a.Change = in.Action
 	a.ChangedAt = s.now()
 	if err = retainAction(ctx, q, eventID, feedbackID, a, fresh); err != nil {
 		return out, err
