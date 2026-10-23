@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import { fixtureRegistration } from './registration-fixtures'
@@ -19,7 +20,7 @@ test('organiser reviews facilitator conflicts and records a backup decision', as
     if (path.includes(r.id)) return route.fulfill({ json: { applicant: { registration: r, display_name: 'Synthetic Mentor' }, response: { definition: { id: r.form_id, name: 'Mentors', audience: 'mentor', fields: [] }, answers: {}, revision: r.revision }, history, fallback_available: false } })
     return route.fulfill({ json: { items: [{ registration: r, display_name: 'Synthetic Mentor' }], next_cursor: null } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Applicants', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Applicants')
   await expect(page.getByLabel('Approve automatic FIFO offers')).not.toBeChecked()
   await page.getByRole('button', { name: 'Review Synthetic Mentor' }).click()
   await expect(page.getByRole('button', { name: 'Select facilitator' })).toBeDisabled()

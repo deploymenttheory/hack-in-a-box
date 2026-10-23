@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -38,7 +39,7 @@ async function prepare(page: Page) {
     return route.fulfill({ json: data })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Preparation', exact: true }).click()
+  await openEventSection(page, 'Preparation')
   await expect(page.getByRole('heading', { name: 'Preparation', exact: true })).toBeVisible()
   return { data, requests, history, revoke: () => { rejectPermission = true } }
 }
@@ -46,7 +47,7 @@ const editor = (page: Page) => page.getByRole('form', { name: 'Task editor' })
 
 test('assigns a task, edits checklist and links, filters attention and shows a local run sheet', async ({ page }, info) => {
   const { requests } = await prepare(page)
-  await expect(page.getByText('28 confirmed competitors · Minimum 30')).toBeVisible()
+  await expect(page.locator('.readiness').getByText('28 confirmed competitors · Minimum 30')).toBeVisible()
   for (const title of ['Final admission cutoff', 'Team freeze', 'Common challenge publication', 'Live start', 'Submission cutoff']) await expect(page.locator('dt', { hasText: title })).toBeVisible()
   await page.getByLabel('Needs attention').selectOption('blocked')
   await expect(page.getByRole('button', { name: 'Edit Check AV' })).toBeVisible()
@@ -55,9 +56,11 @@ test('assigns a task, edits checklist and links, filters attention and shows a l
   await page.getByRole('button', { name: 'Edit Book venue' }).click()
   await page.getByLabel('Named owner').selectOption(mentor); await page.getByLabel('Assigned role').selectOption('mentor')
   await page.getByLabel('Task status').selectOption('in_progress')
+  await page.getByRole('button',{name:'Checklist',exact:true}).click()
   await page.getByRole('button', { name: 'Add checklist item' }).click()
   await page.getByLabel('Checklist item 1', { exact: true }).fill('Contract signed')
   await editor(page).getByLabel('Done', { exact: true }).check()
+  await page.getByRole('button',{name:'Evidence',exact:true}).click()
   await page.getByRole('button', { name: 'Add evidence link' }).click()
   await page.getByLabel('Evidence label 1').fill('Venue confirmation')
   await page.getByLabel('Evidence URL 1').fill('https://example.org/confirmation')
@@ -67,12 +70,13 @@ test('assigns a task, edits checklist and links, filters attention and shows a l
   await page.getByLabel('Needs attention').selectOption(''); await page.getByLabel('Filter by owner').selectOption(mentor)
   await page.getByRole('button', { name: 'List', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Edit Check AV' })).toHaveCount(0)
+  await page.getByRole('link',{name:'Back to preparation tasks',exact:true}).click();await expect(page.getByRole('button',{name:'Edit Book venue',exact:true})).toBeFocused()
   await page.getByRole('button', { name: 'Run sheet', exact: true }).click()
   const run = page.getByRole('region', { name: 'Run sheet', exact: true })
   await expect(run).toContainText('19 Jun 2027, 09:00'); await expect(run).toContainText('Morgan Mentor')
   await expect(run.getByRole('link', { name: 'Venue confirmation' })).toHaveAttribute('href', 'https://example.org/confirmation')
   await page.getByRole('button', { name: 'Board', exact: true }).click(); await page.getByLabel('Filter by owner').selectOption('')
-  await page.getByRole('button', { name: 'Close task', exact: true }).click()
+  await expect(page.getByRole('button',{name:'Close task',exact:true})).toHaveCount(0)
   await page.screenshot({ path: info.outputPath('preparation-board.png'), fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await page.getByRole('button', { name: 'Review minimum attendance' }).click()
@@ -86,7 +90,7 @@ test('requires reasons, retains rejected completion, and records an explicit wai
   await expect(page.getByRole('alert')).toContainText('Record a reason'); expect(requests).toHaveLength(0)
   await page.getByLabel('Reason for this change').fill('Waiting for venue'); await page.getByRole('button', { name: 'Save task' }).click()
   await expect(page.getByText('Task saved.', { exact: true })).toBeVisible()
-  await page.getByLabel('Task status').selectOption('complete'); await page.getByLabel('Reason for this change').fill('AV checked')
+  await page.getByRole('button',{name:'Task and ownership',exact:true}).click();await page.getByLabel('Task status').selectOption('complete'); await page.getByRole('button',{name:'Decision record',exact:true}).click();await page.getByLabel('Reason for this change').fill('AV checked')
   await page.getByRole('button', { name: 'Save task' }).click()
   await expect(page.getByRole('alert')).toContainText('Complete the venue dependency first.')
   await expect(page.getByLabel('Reason for this change')).toHaveValue('AV checked')
@@ -94,7 +98,7 @@ test('requires reasons, retains rejected completion, and records an explicit wai
   await page.getByLabel('Override unfinished dependencies').check(); await page.getByRole('button', { name: 'Save task' }).click()
   await expect(page.getByText('Task saved.', { exact: true })).toBeVisible()
   expect(requests.at(-1)?.body.override_dependencies).toBe(true)
-  await page.getByLabel('Task status').selectOption('waived'); await page.getByLabel('Reason for this change').fill('Venue provides AV')
+  await page.getByRole('button',{name:'Task and ownership',exact:true}).click();await page.getByLabel('Task status').selectOption('waived'); await page.getByRole('button',{name:'Decision record',exact:true}).click();await page.getByLabel('Reason for this change').fill('Venue provides AV')
   await page.getByRole('button', { name: 'Save task' }).click(); await expect(page.getByText('Task saved.', { exact: true })).toBeVisible()
   expect(requests.at(-1)?.body).toMatchObject({ definition: { status: 'waived' }, reason: 'Venue provides AV', override_dependencies: false })
   await page.getByText('Task history', { exact: true }).click(); await expect(page.locator('.history')).toContainText('Venue provides AV')
@@ -120,7 +124,7 @@ test('preserves conflicting edits and requires review before saving against the 
 test('retains a draft when permissions change and prevents leaving without consent', async ({ page }) => {
   const { revoke } = await prepare(page)
   await page.getByRole('button', { name: 'Edit Book venue' }).click(); await page.getByLabel('Description').fill('Keep this draft')
-  page.once('dialog', d => d.dismiss()); await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  page.once('dialog', d => d.dismiss()); await openEventSection(page, 'Overview')
   await expect(page.getByLabel('Description')).toHaveValue('Keep this draft')
   revoke(); await page.getByRole('button', { name: 'Save task' }).click()
   await expect(page.getByRole('alert')).toContainText('do not have access')
@@ -137,6 +141,7 @@ test('creates a task and safely retries a protected evidence upload', async ({ p
     return route.fulfill({ status: 201, json: { id: '454d6575-9a8a-44db-96ed-387bb60516fc', filename: 'receipt.txt' } })
   })
   await page.getByRole('button', { name: 'New task', exact: true }).click(); await page.getByLabel('Task title').fill('Book catering')
+  await page.getByRole('button',{name:'Evidence',exact:true}).click()
   await page.getByLabel('Upload evidence file').setInputFiles({ name: 'receipt.txt', mimeType: 'text/plain', buffer: Buffer.from('Synthetic receipt') })
   await page.getByRole('button', { name: 'Upload selected file' }).click(); await expect(page.getByRole('alert')).toContainText('could not complete')
   await page.getByRole('button', { name: 'Upload selected file' }).click(); await expect(page.getByText('File uploaded. Save the task to attach it.')).toBeVisible()
@@ -154,7 +159,7 @@ test('resolves edited local deadlines and retains the draft when a DST choice is
     expect(input.dst_choice).toBe('earlier')
     return route.fulfill({ json: { instant: '2027-10-31T00:30:00Z' } })
   })
-  await page.getByRole('button', { name: 'Edit Book venue' }).click(); await page.getByLabel('Fixed due date').fill('2027-10-31T01:30')
+  await page.getByRole('button', { name: 'Edit Book venue' }).click(); await page.getByRole('button',{name:'Due time',exact:true}).click(); await page.getByLabel('Fixed due date').fill('2027-10-31T01:30')
   await page.getByRole('button', { name: 'Save task' }).click(); await expect(page.getByRole('alert')).toContainText('This local time occurs twice.')
   await expect(page.getByLabel('Fixed due date')).toHaveValue('2027-10-31T01:30')
   expect(requests).toHaveLength(0)

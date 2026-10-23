@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, type Page, type Route } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -34,7 +35,7 @@ export async function accessFixture(page: Page, account: 'north' | 'south' = 'no
     return route.fulfill({ headers: { 'Cache-Control': 'no-store' }, json: { id, version: state.items.find(item => item.id === id)!.version, value: secret(id) } })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Team access', exact: true }).click()
+  await openEventSection(page, 'Team access')
   await expect(page.getByRole('heading', { name: `${name()} team`, exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Reveal Team account', exact: true })).toBeVisible()
   return { state, secret, firstResource, secondResource, event }

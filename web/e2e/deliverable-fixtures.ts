@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -54,7 +55,7 @@ export async function setup(page: Page, { live = true, organiser = false, frozen
     else { value.final = { revision: value.revision, actor_id: person.id, submitted_at: event.configuration.live_start, late: !!value.frozen_at, reason: body.reason, review_status: 'pending', definitions: value.definitions, evidence: body.evidence }; value.can_review = organiser; history.unshift({ revision: value.revision, actor_id: person.id, action: 'submitted', active_revision: value.revision, review_status: 'pending', reason: body.reason, at: event.configuration.live_start, submission: value.final }) }
     return route.fulfill({ json: value })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Deliverables', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Deliverables')
   await expect(page.getByRole('heading', { name: 'Deliverables', exact: true })).toBeVisible()
   return { value, draft, prep, team, event, writes, reads, files, failUpload: () => { failUpload = true }, deny: () => { denied = true }, cutoff: () => { cutoff = true } }
 }

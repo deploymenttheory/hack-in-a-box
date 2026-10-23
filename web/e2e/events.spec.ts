@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { firstID, mockWorkspace } from './fixtures'
 test.beforeEach(async ({ page }) => { await mockWorkspace(page) })
@@ -20,6 +21,7 @@ test('setup validates fields, previews the week and saves a deliberate draft', a
   await expect(page.getByText('Enter an event name.')).toBeVisible()
   await page.getByLabel('Event name').fill('New Horizons Hack')
   await page.getByLabel('Event slug').fill('new-horizons-hack')
+  await page.getByRole('button',{name:'Attendance and dates',exact:true}).click()
   await page.getByLabel('Live start', { exact: true }).fill('2027-06-20T10:00')
   await page.getByLabel('Live end', { exact: true }).fill('2027-06-20T18:00')
   await page.getByLabel('Final admission', { exact: true }).fill('2027-06-12T09:00')
@@ -27,8 +29,10 @@ test('setup validates fields, previews the week and saves a deliberate draft', a
   await page.getByLabel('Submission cutoff', { exact: true }).fill('2027-06-20T17:00')
   await page.getByRole('button', { name: 'Preview dates and blockers' }).click()
   await expect(page.getByRole('region', { name: 'Event preview' })).toContainText('13 June 2027')
+  await page.getByRole('button',{name:'Organiser responsibility',exact:true}).click()
   await page.getByLabel(/I understand that becoming/).check()
   await page.getByRole('button', { name: 'Save draft event' }).click()
+  await page.getByRole('button',{name:'Confirm save draft event',exact:true}).click()
   await expect(page.getByRole('heading', { name: 'New Horizons Hack' })).toBeVisible()
 })
 
@@ -40,9 +44,11 @@ test('transition blockers explain why the event cannot proceed', async ({ page }
 
 test('staff grants explain lasting ineligibility and protect the event owner', async ({ page }) => {
   await page.goto('/events/' + firstID)
-  await page.getByRole('button', { name: 'Staff', exact: true }).click()
+  await openEventSection(page, 'Staff')
+  await page.getByRole('button',{name:'Assignments',exact:true}).click()
   await page.getByRole('button', { name: /Revoke organiser from Synthetic/ }).click()
   await expect(page.getByRole('alert')).toContainText('Assign another organiser and transfer ownership')
+  await page.getByRole('button',{name:'Assign staff',exact:true}).click()
   await page.getByLabel('Person account ID').fill('9c9cdbb8-7313-43e9-b699-ef60d435c639')
   await page.getByLabel('Role', { exact: true }).selectOption('early_brief_access')
   await expect(page.getByText(/even without opening it/)).toBeVisible()
@@ -50,14 +56,15 @@ test('staff grants explain lasting ineligibility and protect the event owner', a
   await page.getByLabel(/Acknowledge the lasting competition restriction/).check()
   await page.getByRole('button', { name: 'Assign role' }).click()
   await expect(page.getByRole('status')).toHaveText('Role assigned.')
+  await page.getByRole('button',{name:'Assignments',exact:true}).click()
   await expect(page.getByText('New Staff Member', { exact: true })).toBeVisible()
 })
 
 test('unsaved setup changes are protected when changing sections', async ({ page }) => {
   await page.goto('/events/' + firstID)
-  await page.getByRole('button', { name: 'Setup', exact: true }).click()
+  await openEventSection(page, 'Setup')
   await page.getByLabel('Event name').fill('Unsaved event name')
   page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  await openEventSection(page, 'Overview')
   await expect(page.getByLabel('Event name')).toHaveValue('Unsaved event name')
 })

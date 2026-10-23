@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, test } from '@playwright/test'
 import { firstID, secondID } from './fixtures'
 import { clarificationFixture, feedPath, officialTitle, privateBody, questionPath, teamID } from './clarification-workspace-fixtures'
@@ -59,7 +60,7 @@ for (const unknown of [false, true]) {
 test('resource link opens common search, public rubric and canonical answer without private question text', async ({ page }) => {
   const fixture = await clarificationFixture(page)
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await openEventSection(page, 'Resources')
   await page.getByRole('link', { name: 'Questions and official clarifications', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Official common answers' })).toBeVisible()
   await expect(page.getByText(privateBody)).toHaveCount(0)
@@ -238,7 +239,7 @@ test('current denial clears dirty ask and private caches; UTF-8 validation and e
   await page.getByRole('link', { name: 'Back to event', exact: false }).click()
   await page.getByRole('link', { name: 'Switch event', exact: false }).click()
   await page.getByRole('link', { name: 'Second synthetic event', exact: false }).click()
-  await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await openEventSection(page, 'Resources')
   await page.getByRole('link', { name: 'Questions and official clarifications', exact: true }).click()
   await expect(page).toHaveURL(`/events/${secondID}/clarifications`)
   await page.getByRole('button', { name: "Your team's private questions", exact: true }).click()

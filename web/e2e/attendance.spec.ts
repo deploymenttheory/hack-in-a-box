@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { firstID, mockWorkspace, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -80,12 +81,12 @@ async function prepare(page: Page, logisticsOnly = false) {
     return route.fulfill({ json: preparation })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Attendance', exact: true }).click()
+  await openEventSection(page, 'Attendance')
   await expect(page.getByRole('heading', { name: 'Arrivals and headcounts' })).toBeVisible()
   return { state, event, preparation, arrivalRequests, bufferRequests, taskRequests }
 }
-const row = (page: Page, name: string) => page.locator('.arrival-list li').filter({ has: page.getByText(name, { exact: true }) })
-const metric = (page: Page, name: string) => page.locator('.attendance-counts > div').filter({ has: page.locator('dt').filter({ hasText: name }) })
+const row = (page: Page, name: string) => page.locator('.fleet-record-list > li, .fleet-collection-table tbody > tr').filter({ has: page.getByText(name, { exact: true }) })
+const metric = (page: Page, name: string) => page.locator('.fleet-planning-metrics > div').filter({ has: page.locator('dt').filter({ hasText: name }) })
 
 test('uses keyboard check-in on each day and keeps admission, staff and catering distinct', async ({ page }, info) => {
   const { state } = await prepare(page)
@@ -96,7 +97,7 @@ test('uses keyboard check-in on each day and keeps admission, staff and catering
   const search = page.getByLabel('Search confirmed competitors')
   await search.focus(); await page.keyboard.type('Alex')
   await expect(row(page, 'Blair Builder')).toHaveCount(0)
-  await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Check in Alex Arrival' })).toBeFocused()
+  await expect(row(page,'Alex Arrival').getByRole('link')).toHaveCount(0);await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Check in Alex Arrival' })).toBeFocused()
   await page.keyboard.press('Enter'); await expect(row(page, 'Alex Arrival')).toContainText('Checked in')
   await expect(metric(page, 'Checked in on this day').locator('dd')).toHaveText('1')
   await page.getByLabel('Hack day').selectOption(days[1]); await expect(metric(page, 'Checked in on this day').locator('dd')).toHaveText('0')
@@ -140,7 +141,7 @@ test('requires reasoned corrections and explicit review of concurrent arrivals',
   await expect(editor.locator('.history')).toContainText('Scanned the wrong person')
   expect(arrivalRequests.at(-1)).toMatchObject({ revision: '"2"', present: false, reason: 'Scanned the wrong person' })
   await editor.getByLabel('Correction reason').fill('Discard me')
-  page.once('dialog', d => d.dismiss()); await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  page.once('dialog', d => d.dismiss()); await openEventSection(page, 'Overview')
   await expect(editor.getByLabel('Correction reason')).toHaveValue('Discard me')
   page.once('dialog', d => d.accept()); await editor.getByRole('button', { name: 'Close correction' }).click()
   await page.getByRole('button', { name: 'Correct Alex Arrival', exact: true }).click()
@@ -180,9 +181,9 @@ test('keeps restricted logistics separate, paginates exports and rechecks revoke
   expect(state.staffRequests).toBe(0); expect(state.logisticsRequests).toBe(0)
   await page.getByRole('button', { name: 'Open restricted logistics' }).click()
   await expect(page.getByText('alex@example.test')).toBeVisible()
-  await expect(page.getByText('Unknown — not confirmed')).toBeVisible()
-  await page.getByLabel('Search this logistics page').fill('Blair'); await expect(page.locator('.logistics-grid article')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Next page', exact: true }).click()
+  await page.getByRole('button',{name:'Review Alex Arrival',exact:true}).click();await expect(page.getByText('Unknown — not confirmed')).toBeVisible()
+  await page.getByLabel('Search this logistics page').fill('Blair'); await expect(page.locator('.fleet-record-list > li, .fleet-collection-table tbody > tr')).toHaveCount(0)
+  await page.getByRole('button', { name: 'More records', exact: true }).click()
   await expect(page.getByText('blair@example.test')).toBeVisible()
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download page 2' }).click()
@@ -247,29 +248,29 @@ test('retains progress across conflicts, preserves new checklist items and respe
 
 test('requires named owners and deadlines and shows blocked operational tasks in organiser readiness', async ({ page }, info) => {
   const { taskRequests } = await prepare(page)
-  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  await openEventSection(page, 'Overview')
   const readiness = page.getByRole('region', { name: 'Operational readiness' })
   await expect(readiness).toContainText('Owner: Synthetic Person · logistics')
   await expect(readiness).toContainText('Due: 20 Jun 2027, 10:00')
   await expect(readiness).toContainText('Access code still needed')
   await page.screenshot({ path: info.outputPath('organiser-readiness.png'), fullPage: true })
-  await page.getByRole('button', { name: 'Preparation', exact: true }).click()
+  await openEventSection(page, 'Preparation')
   for (const kind of ['venue', 'av', 'catering']) await expect(page.getByRole('button', { name: `New ${kind} checklist` })).toBeVisible()
   await page.getByRole('button', { name: 'New catering checklist' }).click()
   await page.getByRole('button', { name: 'Save task', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('Assign a named owner and a deadline'); expect(taskRequests).toHaveLength(0)
   await page.getByLabel('Named owner', { exact: true }).selectOption(person.id)
-  await page.getByLabel('Fixed due date').fill('')
+  await page.getByRole('button',{name:'Due time',exact:true}).click();await page.getByLabel('Fixed due date').fill('')
   await page.getByRole('button', { name: 'Save task', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('Assign a named owner and a deadline'); expect(taskRequests).toHaveLength(0)
-  await page.getByLabel('Fixed due date').fill('2027-06-20T10:00')
-  await page.getByLabel('Task status').selectOption('blocked')
-  await page.getByLabel('Reason for this change').fill('Caterer delivery needs confirmation')
+  await page.getByRole('button',{name:'Due time',exact:true}).click();await page.getByLabel('Fixed due date').fill('2027-06-20T10:00')
+  await page.getByRole('button',{name:'Task and ownership',exact:true}).click();await page.getByLabel('Task status').selectOption('blocked')
+  await page.getByRole('button',{name:'Decision record',exact:true}).click();await page.getByLabel('Reason for this change').fill('Caterer delivery needs confirmation')
   await page.getByRole('button', { name: 'Save task', exact: true }).click()
   await expect(page.getByText('Task saved.', { exact: true })).toBeVisible()
   expect(taskRequests[0].body.definition).toMatchObject({ title: 'Catering readiness', owner_role: 'logistics', owner_id: person.id, status: 'blocked' })
   expect(taskRequests[0].body.definition.checklist).toHaveLength(3)
-  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  await openEventSection(page, 'Overview')
   await expect(readiness).toContainText('Caterer delivery needs confirmation')
 })
 

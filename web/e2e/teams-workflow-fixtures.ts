@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 
@@ -20,7 +21,7 @@ export async function setupTeams(page: Page, available = true) {
     return route.fulfill({ json: state })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Campaigns', exact: true }).click()
+  await openEventSection(page, 'Campaigns')
   await expect(page.getByRole('heading', { name: 'Teams workflow connection' })).toBeVisible()
   return { requests }
 }

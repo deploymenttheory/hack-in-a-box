@@ -1,3 +1,4 @@
+import { openEventSection, expectEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { firstID, mockWorkspace, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -45,7 +46,7 @@ async function prepare(page: Page, data = fixture(), pausePolling = false) {
     return route.fulfill({ json: data.page })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'MC console', exact: true }).click()
+  await openEventSection(page, 'MC console')
   await expect(page.getByRole('heading', { name: 'MC console', exact: true })).toBeVisible()
   await page.getByLabel('Reason for room changes').fill('Synthetic reviewed room operation')
   return data
@@ -54,7 +55,7 @@ const live = (page: Page) => page.getByRole('region', { name: 'Live room control
 
 test('rehearses and saves without changing live cues, then explicitly activates the saved program', async ({ page }, info) => {
   const data = await prepare(page)
-  await expect(page.getByRole('button', { name: 'Setup', exact: true })).toHaveCount(0)
+  await expectEventSection(page,'Setup',false)
   await page.getByRole('button', { name: 'Rehearse 2: Planned building', exact: true }).click()
   await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
   const hostile = '<img src=x onerror="window.__injected=true"> Synthetic rehearsal'
@@ -75,7 +76,7 @@ test('rehearses and saves without changing live cues, then explicitly activates 
   expect(data.requests.at(-1)?.body).toMatchObject({ action: 'activate', from_draft: true, index: 1 })
   expect(await page.evaluate(() => (window as unknown as { __injected?: boolean }).__injected)).toBeUndefined()
   await expect(page.locator('.mc-console img')).toHaveCount(0)
-  await expect(page.getByRole('combobox')).toHaveCount(0)
+  await expect(page.locator('.mc-console').getByRole('combobox')).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await page.screenshot({ path: info.outputPath('mc-rehearsal-activated.png'), fullPage: true })
 })

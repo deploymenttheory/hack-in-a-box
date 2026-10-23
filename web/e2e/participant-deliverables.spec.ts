@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { setup } from './deliverable-fixtures'
 
@@ -15,7 +16,7 @@ test('participant requirements stay private until actual common publication, the
   state.value.can_read_draft = true
   state.value.can_draft = true
   await page.reload()
-  await page.getByRole('button', { name: 'Deliverables', exact: true }).click()
+  await openEventSection(page, 'Deliverables')
   await expect(page.getByText('SYNTHETIC-EVIDENCE-INSTRUCTIONS-CANARY', { exact: true })).toBeVisible()
   await expect(page.getByRole('form', { name: 'Team evidence editor' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Submit formal version' })).toBeDisabled()

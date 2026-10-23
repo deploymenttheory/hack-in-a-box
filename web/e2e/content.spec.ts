@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import { defaultBranding } from '../src/branding'
@@ -52,7 +53,7 @@ async function setup(page: Page) {
     if (body.action === 'withdraw') { current.state = 'withdrawn'; current.released_version = null; current.message = 'Future access removed. Previously downloaded copies cannot be recalled.' }
     return route.fulfill({ json: current })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Content', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Content')
   await expect(page.getByRole('heading', { name: 'Content', exact: true })).toBeVisible()
   return { items, writes, versions, workspace, blockers, deny: () => { denied = true }, missingFile: () => { missingFile = true } }
 }
@@ -165,7 +166,7 @@ test('uses reusable event briefs, protects unsaved work, and disables revoked mu
   await page.getByLabel('Starting template').selectOption({ label: 'Mentor brief from event template' })
   await page.getByRole('button', { name: 'Start from template' }).click()
   await expect(page.getByLabel('Markdown', { exact: true })).toHaveValue('# Mentor\n\nHelp teams ask better questions.')
-  page.once('dialog', dialog => dialog.dismiss()); await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  page.once('dialog', dialog => dialog.dismiss()); await openEventSection(page, 'Overview')
   await expect(page.getByRole('form', { name: 'Content editor' })).toBeVisible()
   state.deny(); await page.getByRole('button', { name: 'Save new draft' }).click()
   await expect(page.getByRole('alert')).toContainText('do not have access')
@@ -196,7 +197,7 @@ test('resolves event-local schedules and requires a reason to withdraw released 
 test('invalid and past schedules cannot approve and keep the organiser draft', async ({ page }) => {
   const { items, writes } = await setup(page)
   items[0].state = 'review'; items[0].document.scheduled_at = '2020-01-01T10:00:00Z'
-  await page.reload(); await page.getByRole('button', { name: 'Content', exact: true }).click()
+  await page.reload(); await openEventSection(page, 'Content')
   await page.getByRole('button', { name: 'Edit Team handbook' }).click()
   await expect(page.getByRole('button', { name: 'Approve version 1' })).toBeDisabled()
   await expect(page.getByRole('alert')).toContainText('The release schedule is in the past.')

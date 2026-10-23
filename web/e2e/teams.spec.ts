@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import { registrationEvent, fixtureRegistration } from './registration-fixtures'
@@ -34,7 +35,7 @@ test('organiser freeze displays server blockers and then locks membership', asyn
     }
     return route.fulfill({ json: teams })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await expect(page.getByRole('button', { name: 'Review publication and freeze' })).toBeDisabled()
   await page.getByLabel('Allocation decision reason').fill('All competitors reviewed')
   await page.getByRole('button', { name: 'Review publication and freeze' }).click()
@@ -59,7 +60,7 @@ test('organiser reviews explanations and cancels publication without writing', a
     expect(route.request().postDataJSON().declarations).toEqual([])
     return route.fulfill({ json: { revision: 2, seed: 'review-1', preferences: { target: 5, preferred_min: 4, preferred_max: 6, minimum: 3 }, limits: { maximum_size: null, maximum_teams: null }, teams: [], unresolved: [joinerID], retired_teams: [], issues: [{ code: 'minimum_size', people: [joinerID], team_id: null, message: 'Too few people for another viable group.' }] } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await page.getByLabel('Allocation decision reason').fill('Review synthetic roster')
   await page.getByRole('button', { name: 'Generate allocation proposal' }).click()
   await expect(page.getByRole('alert')).toContainText('Unresolved competitors: Solo competitor')
@@ -91,7 +92,7 @@ test('locked teams explain invalid moves and keyboard controls save only a draft
     }
     return route.fulfill({ json: teams })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await page.getByLabel('Allocation decision reason').fill('Reviewed explicit unlock and reassignment')
   await page.locator('#move-person').selectOption(person.id); await page.locator('#move-team').selectOption(secondTeamID)
   await expect(page.getByRole('button', { name: 'Assign draft member' })).toBeDisabled()
@@ -114,7 +115,7 @@ test('stale publication discards the preview and requires renewed review', async
     }
     return route.fulfill({ json: teams })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await page.getByLabel('Allocation decision reason').fill('Reviewed revision two')
   await page.getByRole('button', { name: 'Review publication', exact: true }).click()
   await page.getByRole('button', { name: 'Publish assignments', exact: true }).click()
@@ -133,7 +134,7 @@ test('event cancellation during allocation review rejects publication without re
     }
     return route.fulfill({ json: teamPage(true) })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await page.getByLabel('Allocation decision reason').fill('Reviewed before cancellation')
   await page.getByRole('button', { name: 'Review publication', exact: true }).click()
   await page.getByRole('button', { name: 'Publish assignments', exact: true }).click()

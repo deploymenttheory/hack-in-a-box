@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { fixtureEvent, firstID } from './fixtures'
 import { mockObjectives, objectiveID, plannedDefinition } from './objective-fixtures'
@@ -54,7 +55,7 @@ test('create, edit, compare, publish and clone an independent event from a start
   await page.getByRole('checkbox').last().check()
   await page.getByRole('button', { name: 'Create independent event draft' }).click()
   await expect(page.getByRole('heading', { name: 'Independent draft' })).toBeVisible()
-  await page.getByRole('button', { name: 'Objectives', exact: true }).click()
+  await openEventSection(page, 'Objectives')
   await page.getByRole('button', { name: 'Open objective', exact: true }).click()
   await expect(page.getByLabel('Unit', { exact: true })).toHaveValue('reviewed example')
   await expect(page.getByLabel('Objective owner (optional)')).toHaveValue('')

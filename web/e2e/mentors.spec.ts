@@ -1,8 +1,9 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { firstID } from './fixtures'
 import { mockMentors, mentorIDs, teamIDs } from './mentor-fixtures'
 
-async function open(page: import('@playwright/test').Page) { await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Mentors', exact: true }).click() }
+async function open(page: import('@playwright/test').Page) { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Mentors') }
 
 test('mentor change previews workload, keeps the old roster until publication and preserves frozen competitors', async ({ page }, testInfo) => {
   const { state } = await mockMentors(page)
@@ -85,7 +86,7 @@ test('permitted published roster is read only and disappears when access is revo
   await expect(page.getByLabel('Mentor decision reason')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Change mentor slot', exact: true })).toHaveCount(0)
   state.denied = true
-  await page.getByRole('button', { name: 'Overview', exact: true }).click(); await page.getByRole('button', { name: 'Mentors', exact: true }).click()
+  await openEventSection(page, 'Overview'); await openEventSection(page, 'Mentors')
   await expect(page.getByRole('alert')).toContainText('You do not have access')
   await expect(page.getByText('Morgan Design')).toHaveCount(0)
   expect(state.commands).toHaveLength(0)
