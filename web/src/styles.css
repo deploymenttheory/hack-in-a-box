@@ -328,3 +328,13 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .delivery-history textarea { width: 100%; min-height: 7rem; }
 .delivery-reason { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media print { .delivery-private, .delivery-reason { display: none !important; } }
+
+.objective-workspace, .objective-editor, .objective-fields, .released-objective { min-width: 0; overflow-wrap: anywhere; }
+.objective-workspace fieldset, .objective-fields fieldset { min-width: 0; margin-block: 1rem; padding: 1rem; border: 1px solid var(--border, #ccd5d0); border-radius: .6rem; }
+.objective-fields input:not([type=checkbox]), .objective-fields textarea, .objective-fields select { width: 100%; min-width: 0; }
+.objective-fields textarea, .objective-editor textarea { min-height: 6rem; }
+.objective-directory, .objective-comparison { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); margin-block: 1rem; }
+.objective-comparison > section { min-width: 0; border: 1px solid var(--border, #ccd5d0); padding: 1rem; border-radius: .6rem; }
+.released-objective { margin-block: 1.5rem; padding-block: 1rem; border-top: 1px solid var(--border, #ccd5d0); }
+.released-objective dl div { margin-block: .8rem; }
+.released-objective dd { margin-inline-start: 0; white-space: pre-wrap; }

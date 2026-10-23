@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react'
 import type { components } from './api/schema.gen'
 import { Button } from './components/ui/button'
 import { BrandFields } from './branding'
+import { ObjectiveTemplateFields } from './objective-fields'
 
 type Definitions = components['schemas']['EventDefinitions']
 type Configuration = components['schemas']['EventConfiguration']
@@ -30,6 +31,7 @@ export function DefinitionEditor({ value: d, change, configuration: c, changeCon
   const scheduleOptions = [{ id: '', name: 'No schedule link' }, ...c.schedule.map(s => ({ id: s.id, name: s.title }))]
   const schedule = (id: string | undefined, update: (id: string | undefined) => void) => <Choice label="Due at agenda item" value={id ?? ''} options={scheduleOptions} change={value => update(value || undefined)} />
   return <>
+    <ObjectiveTemplateFields value={d.objectives ?? []} change={objectives => change({ ...d, objectives })} />
     <details><summary>Event defaults and agenda</summary><div className="form-grid"><TextField label="Event description" value={c.description} change={description => changeConfiguration({ ...c, description })} multiline /><TextField label="Venue" value={c.venue} change={venue => changeConfiguration({ ...c, venue })} /><NumberField label="Capacity" value={c.capacity} change={capacity => changeConfiguration({ ...c, capacity })} /><NumberField label="Minimum confirmed competitors" value={c.minimum_attendance} change={minimum_attendance => changeConfiguration({ ...c, minimum_attendance })} /></div>
       <p>Example dates use {c.timezone}. Creating an event recalculates dates from its chosen live start; review the resulting dates in event setup. Challenge publication always remains seven calendar days before live start.</p>
       <Items<Configuration['schedule'][number]> label="Agenda items" items={c.schedule} change={schedule => changeConfiguration({ ...c, schedule })} create={() => ({ id: crypto.randomUUID(), title: 'New agenda item', audience: ['organiser'], anchor: 'live_start', days: 0, minutes: 0, business_days: false })}>{(s, update) => <><TextField label="Agenda title" value={s.title} change={title => update({ ...s, title })} /><Choice label="Relative to" value={s.anchor} options={[{ id: 'live_start', name: 'Live start' }, { id: 'submission_cutoff', name: 'Submission cutoff' }]} change={anchor => update({ ...s, anchor: anchor as typeof s.anchor })} /><div className="form-grid"><NumberField label="Days before (negative) or after" value={s.days} change={days => update({ ...s, days })} /><NumberField label="Minute offset" value={s.minutes} change={minutes => update({ ...s, minutes })} /></div><label className="check"><input type="checkbox" checked={s.business_days} onChange={e => update({ ...s, business_days: e.target.checked })} />Use working days for this agenda item</label><MultiChoice label="Agenda audience" value={s.audience} options={[{ id: 'all', name: 'Everyone' }, ...roleOptions]} change={audience => update({ ...s, audience: audience as typeof s.audience })} /></>}</Items>
