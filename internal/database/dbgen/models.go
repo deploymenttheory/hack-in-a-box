@@ -461,6 +461,7 @@ type EventPrivacy struct {
 	EventID       uuid.UUID
 	RetentionDays int32
 	DraftDays     int32
+	Revision      int64
 }
 
 type EventRubric struct {
@@ -952,6 +953,78 @@ type OperationalProfile struct {
 	TravelDetails        string
 	SocialAttendance     string
 	PhotoConsentRevision int64
+}
+
+type OutcomeEvidence struct {
+	OutcomeID      uuid.UUID
+	ID             uuid.UUID
+	OutcomeVersion int64
+	ActorID        uuid.UUID
+	Document       []byte
+	CreatedAt      time.Time
+}
+
+type OutcomeHead struct {
+	ID             uuid.UUID
+	AuthorID       uuid.UUID
+	EventID        *uuid.UUID
+	TeamID         *uuid.UUID
+	OwnerID        *uuid.UUID
+	Status         string
+	CurrentVersion int64
+	CreatedAt      time.Time
+}
+
+type OutcomeProjectHead struct {
+	OutcomeID        uuid.UUID
+	CurrentVersion   int64
+	PublishedVersion pgtype.Int8
+}
+
+type OutcomeProjectVersion struct {
+	OutcomeID       uuid.UUID
+	Version         int64
+	SourceVersion   int64
+	CommandID       uuid.UUID
+	ActorID         uuid.UUID
+	ExpectedVersion int64
+	Command         []byte
+	Document        []byte
+	State           string
+	PublishedFields []byte
+	CreatedAt       time.Time
+}
+
+type OutcomeReviewHead struct {
+	ID             uuid.UUID
+	EventID        uuid.UUID
+	OutcomeID      uuid.UUID
+	Days           int32
+	CurrentVersion int64
+	State          string
+}
+
+type OutcomeReviewVersion struct {
+	ReviewID        uuid.UUID
+	Version         int64
+	CommandID       uuid.UUID
+	ActorID         uuid.UUID
+	ExpectedVersion int64
+	Command         []byte
+	Document        []byte
+	Proof           []byte
+	CreatedAt       time.Time
+}
+
+type OutcomeVersion struct {
+	OutcomeID       uuid.UUID
+	Version         int64
+	CommandID       uuid.UUID
+	ActorID         uuid.UUID
+	ExpectedVersion int64
+	Command         []byte
+	Document        []byte
+	CreatedAt       time.Time
 }
 
 type Person struct {

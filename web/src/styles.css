@@ -355,3 +355,15 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .media-photo img { display: block; max-width: 100%; height: auto; margin-block: 1rem; }
 .media-workspace fieldset { min-width: 0; }
 @media print { .media-private, .media-photo, .media-consent { display: none !important; } }
+
+/* Outcome inputs and positive publications share readable mobile/print widths. */
+.outcome-workspace fieldset { min-width: 0; border: 0; padding: 0; margin: 1rem 0; }
+.outcome-workspace fieldset fieldset { border: 1px solid var(--border); border-radius: .6rem; padding: 1rem; }
+.outcome-workspace legend { font-weight: 650; }
+.outcome-workspace textarea, .outcome-workspace input, .outcome-workspace select { max-width: 100%; }
+.outcome-workspace textarea { min-height: 6rem; }
+.outcome-workspace .panel { margin-top: 1rem; min-width: 0; }
+.outcome-workspace .identifier, .outcome-workspace .outcome-prose, .outcome-workspace dd, .outcome-workspace h1, .outcome-workspace h2, .outcome-workspace li, .outcome-workspace a { overflow-wrap: anywhere; }
+.outcome-prose { white-space: pre-wrap; }
+.outcome-link { border-top: 1px solid var(--border); padding: 1rem 0; }
+@media (max-width: 40rem) { .outcome-workspace .actions { align-items: stretch; flex-direction: column; } .outcome-workspace .actions button { width: 100%; } }

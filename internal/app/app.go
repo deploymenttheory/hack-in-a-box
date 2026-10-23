@@ -126,6 +126,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Keys:     cfg.CredentialKeys,
 			Provider: githubapp.NewProvider(),
 		},
+		Outcomes:        communicationRuntime.Outcomes,
 		Surveys:         communicationRuntime.Surveys,
 		Deliveries:      communicationRuntime.Deliveries,
 		Help:            communicationRuntime.Help,

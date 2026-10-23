@@ -168,7 +168,8 @@ func (s Service) checkPendingSource(
 		}
 		return nil
 	}
-	if binding.PublicationApprovalID == nil && !binding.Definition.RetainAfterArchive {
+	if binding.PublicationApprovalID == nil && binding.NativeOutcomeApproval == nil &&
+		!binding.Definition.RetainAfterArchive {
 		_, err := s.Composer.ReviewCampaignApprovalInTransaction(
 			ctx,
 			tx,

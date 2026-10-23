@@ -73,3 +73,11 @@ AND (o.state IN ('pending','running') OR m.state='prepared'));
 -- name: SMTPOccurrenceSourceChanged :one
 SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.occurrence_id=$3 AND (m.campaign_version<>$4 OR m.approval_binding<>$5))
 OR EXISTS(SELECT 1 FROM smtp_campaign_omissions o WHERE o.event_id=$1 AND o.campaign_id=$2 AND o.occurrence_id=$3 AND (o.campaign_version<>$4 OR o.approval_binding<>$5));
+
+-- name: SMTPNativeOutcomeReviewUnresolved :one
+SELECT EXISTS(
+ SELECT 1 FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+ WHERE m.event_id=$1 AND m.campaign_id=$2
+ AND m.snapshot->'scope_approval'->>'kind'='native_outcome_review'
+ AND (o.state IN ('pending','running') OR NOT o.cancelled AND (m.state='prepared' OR o.state='ambiguous'))
+);

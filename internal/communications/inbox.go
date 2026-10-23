@@ -66,6 +66,15 @@ func (s Service) AuthorizeInboxRecipientInTransaction(
 	eventID, actor uuid.UUID,
 	provenance InboxProvenance,
 ) error {
+	if provenance.ScopeApproval != nil && provenance.ScopeApproval.Kind == "native_outcome_review" {
+		if s.OutcomePlans == nil || provenance.SelfOnly {
+			return access.ErrNotFound
+		}
+		return contextError(
+			"authorize retained native outcome reader",
+			s.OutcomePlans.AuthorizeOutcomeInboxInTransaction(ctx, tx, eventID, actor, provenance),
+		)
+	}
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
 	if err != nil {

@@ -353,6 +353,11 @@ func TestMedia42Populated41UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 42 {
 		t.Fatal("guard did not preserve schema42", version, e)
 	}
+	// Preserve the explicit concrete42 rollback assertion above, then restore
+	// all current migrations before later native services and compatibility checks.
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	// The concrete115 native privacy callback must still erase invitations,
 	// private authored revisions and command receipts, preserving the frozen report.
 	privacyService := privacy.Service{Pool: pool, Clock: func() time.Time { return now }}
@@ -417,5 +422,8 @@ func TestMedia42EmptyRollbackAndPhotoConsentOnlyHistoryGuard(t *testing.T) {
 	}
 	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 42 {
 		t.Fatal("photo-only guard lost schema42", version, e)
+	}
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
 	}
 }

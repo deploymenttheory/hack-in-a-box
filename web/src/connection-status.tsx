@@ -7,7 +7,9 @@ export function ConnectionStatus() {
   const [state, setState] = useState<State>(() => navigator.onLine ? 'checking' : 'offline')
   useEffect(() => {
     const online = () => setState('recovering'), offline = () => setState('offline')
-    const failed = () => setState(navigator.onLine ? 'unavailable' : 'offline'), response = () => setState('online')
+    const failed = () => setState(navigator.onLine ? 'unavailable' : 'offline')
+    // A request started online can finish after the browser reports network loss.
+    const response = () => setState(navigator.onLine ? 'online' : 'offline')
     window.addEventListener('online', online); window.addEventListener('offline', offline)
     window.addEventListener('workspace-network-unavailable', failed); window.addEventListener('workspace-response', response)
     return () => { window.removeEventListener('online', online); window.removeEventListener('offline', offline); window.removeEventListener('workspace-network-unavailable', failed); window.removeEventListener('workspace-response', response) }

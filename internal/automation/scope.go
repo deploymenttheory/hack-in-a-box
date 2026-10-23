@@ -171,7 +171,7 @@ func (s Service) resolveScope(
 		return result, communications.ErrUnresolved
 	}
 	if ref := audience.Resource; ref != nil &&
-		(source.Kind != "survey.open" || ref.Kind != "survey" || ref.ID != source.ID || ref.Version != source.Revision) {
+		(!nativeResourceMatches(source, ref)) {
 		return result, communications.ErrUnresolved
 	}
 	result = communications.ScopeAudience{
@@ -187,6 +187,9 @@ func (s Service) resolveScope(
 			Revision:     row.ReviewRevision,
 			Binding:      row.ScopeBinding,
 		}
+	}
+	if binding.NativeOutcomeApproval != nil {
+		result.Approval = binding.NativeOutcomeApproval
 	}
 	if binding.Definition.RetainAfterArchive {
 		allowed, err := q.RetainedCommunicationOccurrence(
@@ -204,12 +207,14 @@ func (s Service) resolveScope(
 			return result, access.ErrForbidden
 		}
 		result.AllowArchived = true
-		result.Approval = &communications.ScopeApproval{
-			Kind:          "retained_followup",
-			ID:            binding.Definition.ID,
-			Binding:       binding.CampaignApproval,
-			SourceID:      row.SourceID,
-			SourceVersion: row.SourceRevision,
+		if binding.NativeOutcomeApproval == nil {
+			result.Approval = &communications.ScopeApproval{
+				Kind:          "retained_followup",
+				ID:            binding.Definition.ID,
+				Binding:       binding.CampaignApproval,
+				SourceID:      row.SourceID,
+				SourceVersion: row.SourceRevision,
+			}
 		}
 	}
 	if !event.WritesAllowed && (!result.AllowArchived || event.Stage != "archived") {
@@ -308,7 +313,10 @@ func (s Service) loadScope(
 	if campaign.Cancelled || campaign.Version != version {
 		return scopeBasis{}, communications.ErrUnresolved
 	}
-	if binding.PublicationApprovalID == nil &&
+	if err = s.verifyNativeOutcome(ctx, tx, eventID, campaignID, version, binding); err != nil {
+		return scopeBasis{}, err
+	}
+	if binding.PublicationApprovalID == nil && binding.NativeOutcomeApproval == nil &&
 		(campaign.Approval == nil || campaign.Approval.Binding != binding.CampaignApproval) {
 		return scopeBasis{}, communications.ErrUnresolved
 	}
@@ -347,6 +355,53 @@ func (s Service) verifyPinnedSource(
 	}
 	if source.Revision != d.SourceVersion {
 		return communications.ErrUnresolved
+	}
+	return nil
+}
+
+func nativeResourceMatches(source Source, ref *communications.ResourceReference) bool {
+	if ref.ID != source.ID || ref.Version != source.Revision {
+		return false
+	}
+	switch source.Kind {
+	case "survey.open":
+		return ref.Kind == "survey"
+	case "outcome.follow_up":
+		return ref.Kind == "outcome_review"
+	default:
+		return false
+	}
+}
+
+func (s Service) verifyNativeOutcome(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, campaignID uuid.UUID,
+	version int64,
+	binding Binding,
+) error {
+	if binding.NativeOutcomeApproval != nil {
+		p := binding.NativeOutcomeApproval
+		if s.Composer == nil || s.Composer.OutcomePlans == nil ||
+			p.Kind != "native_outcome_review" ||
+			p.ID != campaignID ||
+			p.SourceID != campaignID ||
+			p.SourceVersion != version {
+			return communications.ErrUnresolved
+		}
+		if _, err := s.Composer.OutcomePlans.ResolveOutcomePlanInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			version,
+			p.Binding,
+			uuid.Nil,
+			false,
+			false,
+		); err != nil {
+			return fmt.Errorf("recheck native outcome approval: %w", err)
+		}
 	}
 	return nil
 }

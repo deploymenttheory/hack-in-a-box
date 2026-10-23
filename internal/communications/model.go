@@ -19,11 +19,12 @@ import (
 )
 
 type Service struct {
-	FactOwners map[string]FactOwner
-	Channels   map[string]ChannelProvider
-	Jobs       *jobs.Service
-	Pool       *pgxpool.Pool
-	Now        func() time.Time
+	OutcomePlans OutcomePlans
+	FactOwners   map[string]FactOwner
+	Channels     map[string]ChannelProvider
+	Jobs         *jobs.Service
+	Pool         *pgxpool.Pool
+	Now          func() time.Time
 }
 
 func (s Service) now() time.Time {

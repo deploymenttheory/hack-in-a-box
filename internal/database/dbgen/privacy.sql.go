@@ -411,8 +411,9 @@ func (q *Queries) SetOwnPhotoConsent(ctx context.Context, arg SetOwnPhotoConsent
 }
 
 const setPrivacyPolicy = `-- name: SetPrivacyPolicy :exec
-INSERT INTO event_privacy(event_id,retention_days,draft_days) VALUES($1,$2,$3)
-ON CONFLICT(event_id) DO UPDATE SET retention_days=EXCLUDED.retention_days,draft_days=EXCLUDED.draft_days
+INSERT INTO event_privacy(event_id,retention_days,draft_days,revision) VALUES($1,$2,$3,CASE WHEN $2=90 AND $3=7 THEN 0 ELSE 1 END)
+ON CONFLICT(event_id) DO UPDATE SET retention_days=EXCLUDED.retention_days,draft_days=EXCLUDED.draft_days,
+revision=CASE WHEN event_privacy.retention_days IS DISTINCT FROM EXCLUDED.retention_days OR event_privacy.draft_days IS DISTINCT FROM EXCLUDED.draft_days THEN event_privacy.revision+1 ELSE event_privacy.revision END
 `
 
 type SetPrivacyPolicyParams struct {

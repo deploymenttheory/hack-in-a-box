@@ -253,6 +253,20 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 		if err != nil {
 			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
+		// A registered native outcome approval can target an owner without event
+		// read authority. Its reviewed message must not inherit an undisclosed event
+		// name, custom brand or calendar from the generic campaign envelope.
+		if approved.ScopeApproval != nil && approved.ScopeApproval.Kind == "native_outcome_review" {
+			if request.IncludeCalendar || message.Calendar != nil {
+				return QueueReport{}, access.ErrInvalid
+			}
+			message.Brand = maildelivery.Brand{
+				Name:       "Outcome follow-through",
+				Primary:    "#173a35",
+				Background: "#f8f9f5",
+				Foreground: "#173a35",
+			}
+		}
 		encoded, err := json.Marshal(
 			campaignSnapshot{
 				Subject:       recipient.Subject,
@@ -643,4 +657,25 @@ func existingOccurrenceIntents(
 	}
 
 	return byPerson, nil
+}
+
+// CheckOutcomeReviewApprovalInTransaction preserves the existing provider-owned
+// unknown/in-flight barrier when the native owner approves a replacement date or
+// channel. Caller holds the same event lock as queue/prepare and plan approval.
+// Old attempt/receipt history remains immutable; only an existing deliberate
+// recovery disposition can remove uncertainty, never a new plan generation.
+func (s Service) CheckOutcomeReviewApprovalInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, planID uuid.UUID,
+) error {
+	pending, err := dbgen.New(tx).
+		SMTPNativeOutcomeReviewUnresolved(ctx, dbgen.SMTPNativeOutcomeReviewUnresolvedParams{EventID: eventID, CampaignID: planID})
+	if err != nil {
+		return fmt.Errorf("check native outcome SMTP effect: %w", err)
+	}
+	if pending {
+		return access.ErrConflict
+	}
+	return nil
 }

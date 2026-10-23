@@ -59,14 +59,15 @@ type Definition struct {
 	RetainUntil            *time.Time `json:"retain_until"`
 }
 type Binding struct {
-	PublicationApprovalID *uuid.UUID `json:"publication_approval_id"`
-	DueAt                 time.Time  `json:"due_at,omitzero"`
-	Definition            Definition `json:"definition"`
-	Version               int64      `json:"version"`
-	CampaignApproval      string     `json:"campaign_approval"`
-	ActorID               uuid.UUID  `json:"actor_id"`
-	ApprovedAt            *time.Time `json:"approved_at"`
-	Cancelled             bool       `json:"cancelled"`
+	NativeOutcomeApproval *communications.ScopeApproval `json:"native_outcome_approval,omitempty"`
+	PublicationApprovalID *uuid.UUID                    `json:"publication_approval_id"`
+	DueAt                 time.Time                     `json:"due_at,omitzero"`
+	Definition            Definition                    `json:"definition"`
+	Version               int64                         `json:"version"`
+	CampaignApproval      string                        `json:"campaign_approval"`
+	ActorID               uuid.UUID                     `json:"actor_id"`
+	ApprovedAt            *time.Time                    `json:"approved_at"`
+	Cancelled             bool                          `json:"cancelled"`
 }
 type Source struct {
 	Kind       string

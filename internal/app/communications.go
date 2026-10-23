@@ -20,8 +20,11 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -31,6 +34,7 @@ import (
 )
 
 type communicationRuntime struct {
+	Outcomes        *outcomes.Service
 	Surveys         *surveys.Service
 	ReviewDashboard *reviewdashboard.Service
 	Moderation      *moderation.Service
@@ -88,16 +92,31 @@ func newCommunicationRuntime(
 	}
 	cards.Moderation = huddles
 	questionnaires := &surveys.Service{Pool: pool}
+	followThrough := &outcomes.Service{
+		Media: outcomeMediaReferences{
+			Media: media.Service{Pool: pool, Privacy: privacy.Service{Pool: pool}},
+		},
+		Pool:            pool,
+		Composer:        composer,
+		Automation:      auto,
+		WorkspaceOrigin: cfg.WorkspaceOrigin,
+	}
+	composer.OutcomePlans = followThrough
 	local.Owners = map[string]inbox.ResourceOwner{
+		"outcome_review":    outcomeInboxOwner{Service: followThrough},
 		"survey":            surveyInboxOwner{Surveys: questionnaires},
 		"feedback":          feedbackInboxOwner{Service: shared},
 		"feedback_followup": feedbackInboxOwner{Service: shared, Followup: true},
 		"help":              helpInboxOwner{Help: helpProvider},
 		"clarification":     clarificationInboxOwner{Answers: answers},
 	}
-	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
+	composer.FactOwners = map[string]communications.FactOwner{
+		"help":           helpProvider,
+		"outcome_review": followThrough,
+	}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
+		"outcome.follow_up":       outcomes.ReviewSources{Service: followThrough},
 		"survey.open":             automation.SurveySource{Surveys: questionnaires},
 		"help.updated":            automation.HelpSource{Help: helpProvider},
 		"clarification.published": automation.ClarificationSource{Answers: answers},
@@ -191,7 +210,8 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		Surveys: questionnaires,
+		Outcomes: followThrough,
+		Surveys:  questionnaires,
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,
