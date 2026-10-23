@@ -1,6 +1,7 @@
 package outcomes
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -125,5 +126,16 @@ func TestPublicationRequiresExplicitSafeLinksAndExactOwnedMediaReferences(t *tes
 	fields.Links[0].URL = "javascript:alert(1)"
 	if fields.Validate() == nil {
 		t.Fatal("unsafe public reference accepted")
+	}
+}
+
+func TestReviewMessageRejectsSMTPHeaderInjectionAndOverlongSubject(t *testing.T) {
+	for _, subject := range []string{"Subject\r\nBcc: hidden@example.test", "Subject\nAnother header", strings.Repeat("x", 257)} {
+		if (ReviewMessage{Subject: subject, Body: "Reviewed body"}).valid() {
+			t.Fatal("invalid personal-message header approved", subject)
+		}
+	}
+	if !(ReviewMessage{Subject: "Reviewed owner reminder", Body: "Hello {{recipient.name}}; {{outcome.url}} at {{review.date}}"}).valid() {
+		t.Fatal("valid owner-only message denied")
 	}
 }

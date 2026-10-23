@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 
@@ -54,7 +56,8 @@ func proofDigest(value any) string {
 }
 
 func (m ReviewMessage) valid() bool {
-	if !required(m.Subject, 500) || !required(m.Body, 20000) {
+	if !required(m.Subject, 256) || strings.IndexFunc(m.Subject, unicode.IsControl) >= 0 ||
+		!required(m.Body, 20000) {
 		return false
 	}
 	values := map[string]string{

@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
 
@@ -264,7 +265,7 @@ func (s Service) approvalProof(
 		}
 		anchor = cfg.LiveEnd
 	}
-	proof.RetainUntil = anchor.UTC().AddDate(0, 0, int(policy.RetentionDays))
+	proof.RetainUntil = privacy.RetentionDeadline(anchor, policy.RetentionDays)
 	if !s.now().Before(proof.RetainUntil) || v.DueAt.After(proof.RetainUntil) {
 		return proof, access.ErrInvalid
 	}
@@ -277,7 +278,7 @@ func (s Service) approvalProof(
 		if provider == nil {
 			return proof, access.ErrConflict
 		}
-		ready, e := provider.Readiness(ctx, v.ActorID, eventRow.ID)
+		ready, e := provider.Readiness(ctx, eventRow.ID, v.ActorID)
 		if e != nil {
 			return proof, wrap("read review provider", e)
 		}

@@ -17,7 +17,8 @@ async function mock(page: Page, initial = false) {
     if (path === '/api/v1/events') { state.eventReads++; return route.fulfill({ json: { items: [], next_cursor: null } }) }
     if (path.startsWith('/api/v1/events/')) { state.eventReads++; return fail(403) }
     if (path === '/api/v1/outcomes') return route.fulfill({ json: { items: [...state.records.values()].map(rows => rows.at(-1)), next_cursor: null } })
-    if (path.startsWith('/api/v1/projects')) return route.fulfill({ json: { items: [], next_cursor: null } })
+    if (path === '/api/v1/projects') return route.fulfill({ json: { items: [], next_cursor: null } })
+    if (path.startsWith('/api/v1/projects/')) return fail(404)
     const match = path.match(/^\/api\/v1\/outcomes\/([^/]+)(?:\/(.*))?$/)
     if (!match) return fail(404)
     const [, id, suffix] = match, rows = state.records.get(id) ?? [], current = rows.at(-1)
@@ -98,4 +99,36 @@ test('accepted closure with lost response remains explicitly reconcilable after 
   const { state } = await mock(page, true); await page.goto(`/ideas/${outcomeID}`)
   const form = page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Owner progress', exact: true }) }); await form.getByLabel('Follow-through status').selectOption('closed'); await form.getByLabel('Reason for this change').fill('Completed follow-through'); state.mode = 'after'; await form.getByRole('button', { name: 'Save owner progress', exact: true }).click(); await expect(form.getByRole('status', { name: 'Outcome save state' })).toContainText('Save outcome is unknown')
   await page.getByRole('button', { name: 'Refresh current outcome' }).click(); await expect(page.getByText('Reasoned status: closed · Version 2')).toBeVisible(); await form.getByRole('button', { name: 'Check exact save receipt' }).click(); await expect(form.getByRole('status', { name: 'Outcome save state' })).toContainText('exact command was saved'); expect(state.requests).toHaveLength(1)
+})
+test('published projects search and paginate only positive reviewed fields and honour current revocation',async({page})=>{
+ const {state}=await mock(page,true)
+ const next='72222222-2222-4222-8222-222222222222',queries:string[]=[]
+ const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Reviewed adoption project',solution:'Reviewed solution <script>window.projectLeak=true</script>',links:[{label:'Approved documentation',url:'https://example.test/docs',media:false}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ let deny=false
+ await page.route('**/api/v1/projects**',async route=>{
+  const url=new URL(route.request().url());queries.push(url.search)
+  if(deny)return route.fulfill({status:403,json:{error:{code:'forbidden',message:'Current publication revoked',request_id:'synthetic'}}})
+  if(url.pathname===`/api/v1/projects/${outcomeID}`)return route.fulfill({json:project})
+  if(url.searchParams.get('search')==='private original')return route.fulfill({json:{items:[],next_cursor:null}})
+  return route.fulfill({json:{items:[url.searchParams.has('cursor')?{...project,id:next,problem:'Another reviewed project'}:project],next_cursor:url.searchParams.has('cursor')?null:outcomeID}})
+ })
+ await page.goto('/projects');await expect(page.getByRole('link',{name:'Reviewed adoption project'})).toBeVisible()
+ await page.getByRole('button',{name:'More reviewed projects'}).click();await expect(page.getByRole('link',{name:'Another reviewed project'})).toBeVisible()
+ expect(queries.some(q=>q.includes('cursor='+outcomeID))).toBe(true)
+ await page.getByLabel('Search reviewed problem and solution').fill('private original');await page.getByRole('button',{name:'Search projects',exact:true}).click()
+ await expect(page.getByText('No permitted reviewed projects match this search.')).toBeVisible()
+ await page.goto(`/projects/${outcomeID}`);await expect(page.getByRole('heading',{name:'Reviewed adoption project'})).toBeVisible()
+ await expect(page.getByRole('link',{name:'Approved documentation'})).toHaveAttribute('rel','noopener noreferrer')
+ expect(await page.evaluate(()=>'projectLeak'in window)).toBe(false);expect(state.eventReads).toBe(0)
+ deny=true
+ await expect(page.getByRole('heading',{name:'Reviewed adoption project'})).toHaveCount(0,{timeout:20_000})
+ await expect(page.getByText('You do not have access to this resource.')).toBeVisible()
+})
+test('ordinary no-event-role owner opens a native inbox review destination without triggering a write or event lookup',async({page})=>{
+ const {state}=await mock(page,true),reviewID='73333333-3333-4333-8333-333333333333'
+ await page.route(`**/api/v1/outcome-reviews/${reviewID}`,route=>route.fulfill({json:{id:reviewID,outcome_id:outcomeID,version:2,current_version:2,command_id:crypto.randomUUID(),source_version:1,owner_id:person.id,schedule:{days:30,wall_time:'2026-12-01T12:00:00',timezone:'Europe/London',dst_choice:'',channels:['in_app']},message:{subject:'',body:''},due_at:'2026-12-01T12:00:00Z',state:'approved',effective_state:'approved',reason:'',actor_id:'00000000-0000-0000-0000-000000000000',at:'2026-10-01T12:00:00Z',blockers:[]}}))
+ await page.goto(`/ideas/reviews/${reviewID}`);await expect(page.getByRole('heading',{name:'30-day checkpoint'})).toBeVisible()
+ await expect(page.getByText('No action or completion is submitted automatically by opening this reminder.')).toBeVisible()
+ await page.getByRole('link',{name:'Open your current follow-through'}).click();await expect(page.getByRole('heading',{name:'Idea and follow-through',exact:true})).toBeVisible()
+ expect(state.requests).toHaveLength(0);expect(state.eventReads).toBe(0)
 })

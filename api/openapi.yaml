@@ -13534,7 +13534,7 @@ components:
         "properties": {
           "subject": {
             "type": "string",
-            "maxLength": 500
+            "maxLength": 256
           },
           "body": {
             "type": "string",

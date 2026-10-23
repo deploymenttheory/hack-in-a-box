@@ -20,9 +20,11 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -91,6 +93,9 @@ func newCommunicationRuntime(
 	cards.Moderation = huddles
 	questionnaires := &surveys.Service{Pool: pool}
 	followThrough := &outcomes.Service{
+		Media: outcomeMediaReferences{
+			Media: media.Service{Pool: pool, Privacy: privacy.Service{Pool: pool}},
+		},
 		Pool:            pool,
 		Composer:        composer,
 		Automation:      auto,

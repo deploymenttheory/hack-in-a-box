@@ -97,6 +97,32 @@ func TestReviewedProjectPositiveProjectionSearchWithdrawalAndExactReplay(t *test
 	if err != nil || len(privateSearch.Items) != 0 {
 		t.Fatal("private prose searchable", privateSearch, err)
 	}
+	// Published positive fields remain subject to the current event retention
+	// deadline, independently of the caller having organisation application access.
+	cutoff := time.Now().UTC().Truncate(time.Second)
+	s.Now = func() time.Time { return cutoff }
+	if _, err = pool.Exec(
+		t.Context(),
+		`UPDATE events SET completed_at=$2 WHERE id=$1`,
+		eventID,
+		cutoff.AddDate(0, 0, -90),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Public(t.Context(), reader.ID, id); !errors.Is(err, access.ErrNotFound) {
+		t.Fatal("expired project readable", err)
+	}
+	expired, err := s.Projects(t.Context(), reader.ID, uuid.Nil, "", 25)
+	if err != nil || len(expired.Items) != 0 || expired.NextCursor != nil {
+		t.Fatal("expired project leaked through list/filter totals", expired, err)
+	}
+	if _, err = pool.Exec(
+		t.Context(),
+		`UPDATE events SET completed_at=NULL WHERE id=$1`,
+		eventID,
+	); err != nil {
+		t.Fatal(err)
+	}
 	if _, err = s.ChangePublication(
 		t.Context(),
 		org.ID,

@@ -467,6 +467,11 @@ func (s Service) applyPublication(
 			c.Fields.ShareTeamName && head.TeamID == nil {
 			return Project{}, access.ErrInvalid
 		}
+		for _, ref := range c.Fields.Media {
+			if head.EventID == nil || ref.EventID != *head.EventID {
+				return Project{}, access.ErrInvalid
+			}
+		}
 		v.Fields = *c.Fields
 		if v.Fields.Links == nil {
 			v.Fields.Links = []ProjectLink{}

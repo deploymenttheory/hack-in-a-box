@@ -105,8 +105,10 @@ CREATE FUNCTION outcome_project_readable(target uuid,actor uuid,at_time timestam
  JOIN outcome_heads h ON h.id=ph.outcome_id
  JOIN outcome_versions current_source ON current_source.outcome_id=h.id AND current_source.version=h.current_version
  JOIN events e ON e.id=h.event_id
+ LEFT JOIN event_privacy ep ON ep.event_id=e.id
  JOIN people p ON p.id=actor AND p.active
  WHERE ph.outcome_id=target
+ AND (e.completed_at IS NULL OR at_time<e.completed_at+make_interval(days=>COALESCE(ep.retention_days,90)))
  AND (NOT COALESCE((current_source.document->'definition'->>'theme_sensitive')::boolean,false) OR e.published_at IS NOT NULL AND at_time>=e.published_at)
  AND (current_source.document->'definition'->>'kind' IS DISTINCT FROM 'team_outcome' OR e.published_at IS NOT NULL AND at_time>=e.published_at AND at_time>=(e.configuration->>'live_start')::timestamptz)
  AND (

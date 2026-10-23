@@ -253,6 +253,20 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 		if err != nil {
 			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
 		}
+		// A registered native outcome approval can target an owner without event
+		// read authority. Its reviewed message must not inherit an undisclosed event
+		// name, custom brand or calendar from the generic campaign envelope.
+		if approved.ScopeApproval != nil && approved.ScopeApproval.Kind == "native_outcome_review" {
+			if request.IncludeCalendar || message.Calendar != nil {
+				return QueueReport{}, access.ErrInvalid
+			}
+			message.Brand = maildelivery.Brand{
+				Name:       "Outcome follow-through",
+				Primary:    "#173a35",
+				Background: "#f8f9f5",
+				Foreground: "#173a35",
+			}
+		}
 		encoded, err := json.Marshal(
 			campaignSnapshot{
 				Subject:       recipient.Subject,

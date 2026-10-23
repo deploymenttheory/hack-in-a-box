@@ -76,7 +76,7 @@ Real PostgreSQL concurrency, exact command/revision replay, immutable history,
 team/event isolation, independent published/private DTOs, current owner/person/
 team/role revocation, actual provider/inbox delivery and archive retention.
 Populated ordered migration follows the concrete merged #115 predecessor; the
-current planned numbers40/41 are provisional until actual readiness ordering.
+concrete media41 predecessor is composed and outcomes uses normal42; final actual-main ancestry and CI remain required.
 
 Actual ordinary no-event-role creator/owner HTTP and browser flows must cover
 submission, own history, deliberate adoption, reviewed projects and approved
@@ -95,15 +95,24 @@ approval cancellation, while current resource ownership/retention still applies.
 Owner-facing review projections contain schedule/status metadata, not organiser
 message drafts or review reasons. Generic campaign approval remains separate.
 
-The usable participant entry and owner forms have 18 desktop/mobile interaction
+The usable participant entry and owner forms have desktop/mobile interaction
 checks, including no-event-role submission, private storage exclusion, exact
 response-lost receipts, explicit same-command retry, native rejection, active
 revocation, transient read preservation and in-flight departure. Both app bundles
 build. These checks are partial evidence, not completion of issue 117.
 
-Remaining before readiness: actual current media-owner composition and ordered
-predecessor migration preservation; organiser publication/reminder browser paths;
-production-factory and SMTP ambiguous/fault proofs; final affected checks and
-independent acceptance review. Media takes schema 41 first; outcomes will be
-renumbered to 42 on the concrete media base. No results/awards capability is
-claimed and no real external messages have been sent.
+Concrete media41 composition now uses the native current publication/consent
+resolver and UTC privacy retention helper. Actual factory tests cover ordinary
+owner inbox delivery and an ambiguous synthetic SMTP attempt, cancellation and
+no automatic resend. The SMTP regression exposed and fixed provider-readiness
+argument order and unintended private event branding in the native envelope.
+Generic campaign branding and event/audience policies are unchanged.
+
+Populated41→42 preservation, empty rollback and history-protected rollback pass.
+Published project reads and search retain the current event retention deadline.
+Four organiser desktop/mobile cases cover deliberate positive publication,
+withdrawal, optional timezone-aware approval and cancellation with unavailable
+SMTP reported honestly. Participant22/22 and organiser4/4 desktop/mobile cases pass; affected native
+race suites pass. Remaining before readiness: final actual-main ancestry/CI and
+independent acceptance review. See docs/verification/outcomes/README.md. No results/awards capability is claimed and no
+real external messages have been sent.
