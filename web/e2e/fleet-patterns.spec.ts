@@ -189,9 +189,9 @@ test('keyboard and responsive records retain focus, scoped portals, readable pal
 
 test('synthetic before and production-pattern after evidence remains comparable to the accepted Fleet reference',async({page},info)=>{
  const portal=info.project.name.startsWith('participant')?'participant':'admin'
- await page.goto('/?portal='+portal+'&baseline=1');await page.evaluate(()=>document.fonts.ready);await page.locator('.legacy-example').screenshot({path:info.outputPath('before.png')})
- await start(page,info);await page.evaluate(()=>document.fonts.ready);await page.locator('.fleet-detail-workspace').screenshot({path:info.outputPath('after.png')})
- await prepare(page);await page.locator('.fleet-detail-workspace').screenshot({path:info.outputPath('review.png')})
+ await page.goto('/?portal='+portal+'&baseline=1');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:info.outputPath('before.png'),fullPage:true})
+ await start(page,info);await page.evaluate(()=>document.fonts.ready);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:info.outputPath('after.png'),fullPage:true})
+ await prepare(page);await page.screenshot({path:info.outputPath('review.png'),fullPage:true})
 })
 
 test('page selection creates individual reviews with separate exact receipts rather than a cosmetic bulk command',async({page},info)=>{

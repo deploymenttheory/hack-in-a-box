@@ -69,6 +69,7 @@ synthetic legacy-card baseline. `npm run test:e2e:patterns` verifies admin and
 participant scenarios at desktop/mobile sizes on its dedicated local preview.
 The static guide can use the same examples without a guide-to-test dependency.
 
-Draft status: full browser matrix, final visual artifacts and final dependency
-rebase/review remain in progress. Completed checks and failures are reported in
-the draft PR; this document is not a release certification.
+The [fresh verification record](../verification/fleet-patterns/README.md) retains
+local results, corrected failures and representative synthetic visual artifacts.
+Exact-head repository CI and independent review remain required. Domain screen
+migrations and the final parity audit remain separate backlog work.
