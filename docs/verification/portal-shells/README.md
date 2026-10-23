@@ -90,3 +90,18 @@ was lost. Fresh lint, all107 units and both portal builds pass. The focused shel
 and guide-link journeys pass in both portals (18admin +18participant), including
 mentor capability/revocation, actual44px Inbox anchors and footer availability after
 session expiry. Full exact-head repository CI remains the merge gate.
+
+## Full-CI selector correction
+
+The first integrated exact-head web CI run passed614 admin cases and failed six
+objective departure cases: their event-directory selector expected a heading
+inside a former card link. A5-second reproduction failed at that same selector,
+while its session-departure counterpart passed. The captured DOM contained the
+correct semantic row link and destination; the directory itself had loaded.
+
+The test now selects the exact native event link and verifies its real event href.
+All original preflight/accepted/outcome request-count, departed-input, late-response
+and private-storage assertions remain unchanged. All32 objective browser cases
+pass after this correction (31.3s), and lint is clean. No production behavior or
+authority/timing assertion was changed. The full participant suite is being checked
+locally and the new final-head CI remains the merge gate.

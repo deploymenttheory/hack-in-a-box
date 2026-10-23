@@ -98,7 +98,9 @@ for (const phase of ['preflight', 'accepted', 'outcome'] as const) {
       page.on('dialog', dialog => dialog.accept())
       if (leave === 'event') {
         await page.getByRole('link', { name: '← Switch event' }).click()
-        await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Southern Lights Hack' }) }).click()
+        const destination = page.getByRole('link', { name: 'Southern Lights Hack', exact: true })
+        await expect(destination).toHaveAttribute('href', `/events/${state.workspace.events[1].id}`)
+        await destination.click()
         await expect(page.getByRole('heading', { name: 'Southern Lights Hack' })).toBeVisible()
       } else {
         await page.evaluate(() => window.dispatchEvent(new Event('session-expired')))
