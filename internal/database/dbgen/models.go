@@ -1516,6 +1516,25 @@ type TeamCredentialAssignment struct {
 	TeamID       uuid.UUID
 }
 
+type TeamRepository struct {
+	EventID              uuid.UUID
+	TeamID               uuid.UUID
+	OrganizationID       int64
+	Organization         string
+	Name                 string
+	AppID                int64
+	InstallationID       int64
+	TemplateRepository   string
+	Provenance           uuid.UUID
+	GithubRepositoryID   pgtype.Int8
+	TemplateRepositoryID pgtype.Int8
+	Attempted            bool
+	State                string
+	Diagnostic           string
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+}
+
 type TeamsWorkflowAttempt struct {
 	EventID            uuid.UUID
 	ID                 uuid.UUID
