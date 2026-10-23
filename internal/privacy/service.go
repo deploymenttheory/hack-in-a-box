@@ -471,7 +471,7 @@ func (s Service) Retain(ctx context.Context) error {
 			}
 			if !slices.Contains([]string{"completed", "cancelled", "archived"}, row.Stage) ||
 				!row.CompletedAt.Valid ||
-				row.CompletedAt.Time.AddDate(0, 0, int(settings.RetentionDays)).After(now) {
+				RetentionDeadline(row.CompletedAt.Time, settings.RetentionDays).After(now) {
 				continue
 			}
 			removed, err := q.DeleteOperationalProfile(

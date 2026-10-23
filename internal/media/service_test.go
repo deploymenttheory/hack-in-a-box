@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
@@ -808,5 +809,211 @@ func TestAutomaticConsentWithdrawalRecordsSystemPolicyNotPhotographerAction(t *t
 		Scan(&count); err != nil ||
 		count != 1 {
 		t.Fatal("automatic withdrawal journal duplicated", count, err)
+	}
+}
+
+func TestRetriedCommandAcknowledgesAcceptedVersionButOnlyProjectsCurrentSafeState(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	f.consent("yes")
+	id := uuid.New()
+	revision := f.revision()
+	a := media.Command{
+		Action:    "save",
+		Version:   0,
+		CommandID: uuid.New(),
+		Reason:    "First private recording intent",
+		Metadata: &media.Metadata{
+			Kind:         "recording",
+			Title:        "Original A",
+			RecordingURL: "https://recordings.example.test/old-A",
+			People:       []uuid.UUID{f.subject},
+		},
+	}
+	first, err := f.s.Change(ctx, f.owner, f.event, id, revision, a)
+	if err != nil || first.AcknowledgedVersion == nil || *first.AcknowledgedVersion != 1 {
+		t.Fatal(first, err)
+	}
+	b, err := f.s.Change(
+		ctx,
+		f.owner,
+		f.event,
+		id,
+		f.revision(),
+		media.Command{
+			Action:    "save",
+			Version:   first.Version,
+			CommandID: uuid.New(),
+			Reason:    "Replacement recording B",
+			Metadata: &media.Metadata{
+				Kind:         "recording",
+				Title:        "Current B",
+				RecordingURL: "https://recordings.example.test/current-B",
+				People:       []uuid.UUID{f.subject},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retry, err := f.s.Change(ctx, f.owner, f.event, id, revision, a)
+	if err != nil || retry.Version != b.Version || retry.AcknowledgedVersion == nil ||
+		*retry.AcknowledgedVersion != first.Version ||
+		retry.Title != "Current B" ||
+		retry.RecordingURL != "https://recordings.example.test/current-B" {
+		t.Fatal("retry confused accepted intent with current projection", retry, err)
+	}
+	released := f.release(b)
+	withdrawn, err := f.change(released, "withdraw", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retry, err = f.s.Change(ctx, f.owner, f.event, id, revision, a)
+	if err != nil || retry.Version != withdrawn.Version || retry.State != "withdrawn" ||
+		retry.RecordingURL != "" ||
+		retry.CanReadOriginal ||
+		retry.AcknowledgedVersion == nil ||
+		*retry.AcknowledgedVersion != 1 {
+		t.Fatal("retry exposed old recording/release after withdrawal", retry, err)
+	}
+	var stored int64
+	if err = f.pool.QueryRow(ctx, `SELECT version FROM media_commands WHERE event_id=$1 AND actor_id=$2 AND command_id=$3`, f.event, f.owner, a.CommandID).
+		Scan(&stored); err != nil ||
+		stored != 1 {
+		t.Fatal("retry rewrote original accepted version", stored, err)
+	}
+}
+
+func TestRetriedPhotoAcknowledgesOriginalUploadAndRechecksCurrentConsent(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	f.consent("yes")
+	upload := media.Upload{
+		ID: uuid.New(),
+		Metadata: media.Metadata{
+			Kind:   "photo",
+			Title:  "Original upload A",
+			People: []uuid.UUID{f.subject},
+		},
+		Reason: "Original photo intent",
+		File: files.Upload{
+			Actor:     f.photographer,
+			Event:     f.event,
+			Key:       uuid.New(),
+			Revision:  f.revision(),
+			Filename:  "native.png",
+			MediaType: "image/png",
+			Content:   photo(),
+		},
+	}
+	first, err := f.s.CollectPhoto(ctx, upload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := f.s.Change(
+		ctx,
+		f.photographer,
+		f.event,
+		first.ID,
+		f.revision(),
+		media.Command{
+			Action:    "save",
+			Version:   first.Version,
+			CommandID: uuid.New(),
+			Reason:    "Updated photo metadata B",
+			Metadata: &media.Metadata{
+				Kind:   "photo",
+				Title:  "Current photo B",
+				People: []uuid.UUID{f.subject},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retry, err := f.s.CollectPhoto(ctx, upload)
+	if err != nil || retry.Version != b.Version || retry.Title != "Current photo B" ||
+		retry.AcknowledgedVersion == nil ||
+		*retry.AcknowledgedVersion != 1 {
+		t.Fatal("photo retry misreported accepted/current versions", retry, err)
+	}
+	f.consent("no")
+	retry, err = f.s.CollectPhoto(ctx, upload)
+	if err != nil || retry.AcknowledgedVersion == nil || *retry.AcknowledgedVersion != 1 ||
+		retry.Version != b.Version ||
+		retry.CanReadOriginal ||
+		retry.RecordingURL != "" {
+		t.Fatal("photo retry revived obsolete access", retry, err)
+	}
+}
+
+func TestHostLocalDSTConsentExpiryMatchesActualNativeUTCPrivacyBoundary(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	location, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := f.pool.Config()
+	cfg.MaxConns = 1
+	cfg.MinConns = 0
+	cfg.AfterConnect = func(_ context.Context, conn *pgx.Conn) error {
+		conn.TypeMap().
+			RegisterType(&pgtype.Type{Name: "timestamptz", OID: pgtype.TimestamptzOID, Codec: &pgtype.TimestamptzCodec{ScanLocation: location}})
+		return nil
+	}
+	localPool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(localPool.Close)
+	f.s.Pool = localPool
+	f.privacy.Pool = localPool
+	f.s.Privacy = f.privacy
+	f.consent("yes")
+	item := f.release(f.upload([]uuid.UUID{f.subject}))
+	completed := time.Date(2027, 10, 30, 12, 0, 0, 0, time.UTC)
+	deadline := completed.Add(24 * time.Hour)
+	f.exec(
+		`UPDATE events SET stage='archived',writes_allowed=false,completed_at=$2 WHERE id=$1`,
+		f.event,
+		completed,
+	)
+	f.exec(`INSERT INTO event_privacy(event_id,retention_days,draft_days)VALUES($1,1,1)`, f.event)
+	decoded, err := dbgen.New(localPool).Event(ctx, f.event)
+	if err != nil || decoded.CompletedAt.Time.Location() != location ||
+		decoded.CompletedAt.Time.Hour() != 13 {
+		t.Fatal("fixture did not decode actual host-local DST timestamp", decoded.CompletedAt, err)
+	}
+	if got := privacy.RetentionDeadline(decoded.CompletedAt.Time, 1); !got.Equal(deadline) {
+		t.Fatal("canonical native privacy deadline drifted", got, deadline)
+	}
+	f.now = deadline.Add(-time.Nanosecond)
+	if _, _, err = f.s.Original(ctx, f.other, f.event, item.ID); err != nil {
+		t.Fatal("media expired before canonical privacy boundary", err)
+	}
+	var due bool
+	if err = f.pool.QueryRow(ctx, `SELECT completed_at+make_interval(days=>retention_days)<=$2 FROM events JOIN event_privacy ON event_id=id WHERE id=$1`, f.event, f.now).
+		Scan(&due); err != nil ||
+		due {
+		t.Fatal("SQL boundary fixture prematurely due", due, err)
+	}
+	f.now = deadline
+	if err = f.pool.QueryRow(ctx, `SELECT completed_at+make_interval(days=>retention_days)<=$2 FROM events JOIN event_privacy ON event_id=id WHERE id=$1`, f.event, f.now).
+		Scan(&due); err != nil ||
+		!due {
+		t.Fatal("SQL boundary fixture not exactly due", due, err)
+	}
+	if _, _, err = f.s.Original(ctx, f.other, f.event, item.ID); err == nil {
+		t.Fatal("host-local DST scan extended photo consent beyond actual SQL privacy deadline")
+	}
+	if err = f.privacy.Retain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var count int
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM operational_profiles WHERE event_id=$1 AND person_id=$2`, f.event, f.subject).
+		Scan(&count); err != nil ||
+		count != 0 {
+		t.Fatal("native retention recheck extended profile beyond canonical deadline", count, err)
 	}
 }

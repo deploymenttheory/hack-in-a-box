@@ -6457,6 +6457,11 @@ export interface components {
             can_withdraw: boolean;
             people: components["schemas"]["MediaPersonIndicator"][];
             challenge_related: boolean;
+            /**
+             * Format: int64
+             * @description Accepted version of this write intent. Other fields describe only the current safe media version, which may have advanced. Absent on ordinary reads.
+             */
+            acknowledged_version?: number;
         };
         MediaPage: {
             /** Format: int64 */

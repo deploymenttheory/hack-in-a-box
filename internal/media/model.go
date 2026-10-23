@@ -79,22 +79,25 @@ type PersonIndicator struct {
 	Eligible bool      `json:"eligible"`
 }
 type Item struct {
-	ChallengeRelated bool              `json:"challenge_related"`
-	ID               uuid.UUID         `json:"id"`
-	Version          int64             `json:"version"`
-	Kind             string            `json:"kind"`
-	Title            string            `json:"title"`
-	Caption          string            `json:"caption"`
-	CapturedAt       *time.Time        `json:"captured_at"`
-	State            string            `json:"state"`
-	ConsentState     string            `json:"consent_state"`
-	RecordingURL     string            `json:"recording_url"`
-	CanReadOriginal  bool              `json:"can_read_original"`
-	CanEdit          bool              `json:"can_edit"`
-	CanReview        bool              `json:"can_review"`
-	CanPublish       bool              `json:"can_publish"`
-	CanWithdraw      bool              `json:"can_withdraw"`
-	People           []PersonIndicator `json:"people"`
+	// AcknowledgedVersion identifies an accepted write intent. All other fields
+	// remain the current safe projection, even when an old intent is retried.
+	AcknowledgedVersion *int64            `json:"acknowledged_version,omitempty"`
+	ChallengeRelated    bool              `json:"challenge_related"`
+	ID                  uuid.UUID         `json:"id"`
+	Version             int64             `json:"version"`
+	Kind                string            `json:"kind"`
+	Title               string            `json:"title"`
+	Caption             string            `json:"caption"`
+	CapturedAt          *time.Time        `json:"captured_at"`
+	State               string            `json:"state"`
+	ConsentState        string            `json:"consent_state"`
+	RecordingURL        string            `json:"recording_url"`
+	CanReadOriginal     bool              `json:"can_read_original"`
+	CanEdit             bool              `json:"can_edit"`
+	CanReview           bool              `json:"can_review"`
+	CanPublish          bool              `json:"can_publish"`
+	CanWithdraw         bool              `json:"can_withdraw"`
+	People              []PersonIndicator `json:"people"`
 }
 type Page struct {
 	Revision   int64      `json:"revision"`

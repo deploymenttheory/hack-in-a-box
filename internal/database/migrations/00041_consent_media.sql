@@ -1,6 +1,6 @@
 -- +goose Up
--- Provisional #118 number while real #115/#117 migrations are developed.
--- Final predecessor/ordered-upgrade proof is required before readiness.
+-- Media41 follows the concrete reviewed survey40 predecessor.
+-- Final actual-main composition is required before readiness.
 ALTER TABLE operational_profiles ADD COLUMN photo_consent_revision bigint NOT NULL DEFAULT 1 CHECK(photo_consent_revision>0);
 CREATE TABLE event_media (
  event_id uuid NOT NULL REFERENCES events(id),

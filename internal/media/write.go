@@ -31,7 +31,8 @@ func validCommand(c Command) bool {
 }
 
 // Change records an explicit versioned intent. Retrying the identical command
-// returns its original receipt only after current actor authority is checked.
+// acknowledges its retained accepted version only after current authority is
+// checked. Metadata and access flags always describe the CURRENT safe version.
 func (s Service) Change(
 	ctx context.Context,
 	actor, eventID, id uuid.UUID,
@@ -64,6 +65,9 @@ func (s Service) Change(
 				return access.ErrConflict
 			}
 			out, err = s.project(ctx, tx, actor, sc, d)
+			if err == nil {
+				out.AcknowledgedVersion = &receipt.Version
+			}
 			return err
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -110,6 +114,9 @@ func (s Service) Change(
 			return fmt.Errorf("retain media command receipt: %w", err)
 		}
 		out, err = s.project(ctx, tx, actor, sc, d)
+		if err == nil {
+			out.AcknowledgedVersion = &d.Version
+		}
 		return err
 	})
 	if err != nil {

@@ -5,7 +5,7 @@ type Item = components['schemas']['MediaItem']
 const mediaID = '22222222-2222-4222-8222-222222222222'
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1sAAAAASUVORK5CYII=', 'base64')
 const source = (): Item => ({ id: mediaID, version: 1, kind: 'photo', title: 'Reviewed team photograph', caption: 'A team building together', captured_at: null, state: 'released', consent_state: 'reviewed', recording_url: '', can_read_original: true, can_edit: false, can_review: false, can_publish: false, can_withdraw: false, people: [], challenge_related: false })
-function state() { return { role: 'attendee' as 'attendee' | 'photographer' | 'organiser', items: [source()], revision: 1, denied: false, consent: 'yes' as 'yes' | 'no' | 'unknown', choiceRevision: 1, archived: false, lostUpload: false, uploads: [] as { key: string; input: unknown }[], writes: [] as string[], receipts: new Map<string, Item>(), sessions: 0, deferSession: undefined as undefined | (() => Promise<void>) } }
+function state() { return { role: 'attendee' as 'attendee' | 'photographer' | 'organiser', items: [source()], revision: 1, denied: false, consent: 'yes' as 'yes' | 'no' | 'unknown', choiceRevision: 1, archived: false, lostUpload: false, uploads: [] as { key: string; input: unknown }[], writes: [] as string[], receipts: new Map<string, Item>(), sessions: 0, deferSession: undefined as undefined | (() => Promise<void>), deferPreflight: undefined as undefined | (() => Promise<void>), preflights: 0, transient: false, transientAfterLostUpload: false } }
 async function mockMedia(page: Page, s: ReturnType<typeof state>) {
   await mockWorkspace(page)
   const error = { error: { code: 'forbidden', message: 'Current media authority lost', request_id: 'synthetic' } }
@@ -16,7 +16,10 @@ async function mockMedia(page: Page, s: ReturnType<typeof state>) {
     return route.fulfill({ json: { choice: s.consent, revision: s.choiceRevision, can_opt_in: !s.archived, can_revoke: true } })
   })
   await page.route('**/api/v1/events/*/media**', async route => {
-    const request = route.request(), path = new URL(request.url()).pathname, staff = s.role !== 'attendee'
+    const request = route.request(), path = new URL(request.url()).pathname
+    if (request.method() === 'GET' && new URL(request.url()).searchParams.get('limit') === '1') { s.preflights++; await s.deferPreflight?.() }
+    const staff = s.role !== 'attendee'
+    if (s.transient && request.method() === 'GET') return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Temporary read failure', request_id: 'synthetic' } } })
     if (s.denied || !path.includes(firstID)) return route.fulfill({ status: 403, json: error })
     if (path.endsWith('/consent-guidance')) return staff ? route.fulfill({ json: { items: [{ person_id: person.id, display_name: 'Synthetic participant', choice: s.consent, eligible: true }], next_cursor: null } }) : route.fulfill({ status: 403, json: error })
     if (path.endsWith('/original') || path.endsWith('/thumbnail')) return s.consent === 'yes' ? route.fulfill({ contentType: 'application/octet-stream', body: png }) : route.fulfill({ status: 403, json: error })
@@ -24,7 +27,7 @@ async function mockMedia(page: Page, s: ReturnType<typeof state>) {
       const key = request.headers()['idempotency-key'], input = request.postDataJSON(); s.uploads.push({ key, input }); expect(request.headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
       const existing = s.receipts.get(key); if (existing) return route.fulfill({ json: existing })
       const item = { ...source(), id: input.id, title: input.metadata.title, caption: input.metadata.caption, state: 'draft' as const, can_edit: true, can_read_original: s.consent === 'yes', people: input.metadata.people.map((id: string) => ({ id, name: 'Synthetic participant', consent: s.consent, eligible: true })) }; s.items.push(item); s.receipts.set(key, item); s.revision++
-      if (s.lostUpload) return route.abort('failed')
+      if (s.lostUpload) { if (s.transientAfterLostUpload) s.transient = true; return route.abort('failed') }
       return route.fulfill({ json: item })
     }
     if (request.method() === 'PUT') {
@@ -76,9 +79,9 @@ test('organiser explicitly reviews untagged content before separate release and 
   await page.emulateMedia({ media: 'print' }); await expect(page.locator('.media-card')).toBeHidden(); await page.emulateMedia({ media: 'screen' })
   await expect(page.getByRole('button', { name: 'Record organiser review' })).toBeDisabled()
   await page.getByLabel('I checked the media and identified every recognisable person.').check(); await page.getByLabel('No identifiable people are present.').check(); await page.getByLabel('I reviewed the content, caption, recording destination and challenge classification.').check()
-  await page.getByRole('button', { name: 'Record organiser review' }).click(); await page.getByRole('button', { name: 'Open private media review' }).click()
+  await page.getByRole('button', { name: 'Record organiser review' }).click(); await page.getByRole('button', { name: 'Load current media metadata' }).click()
   await page.getByLabel('Reason for this action').fill('Explicit gallery release'); await page.getByRole('button', { name: 'Release reviewed media to gallery' }).click(); await expect.poll(() => s.writes).toEqual(['review', 'publish'])
-  await page.getByRole('button', { name: 'Open private media review' }).click(); await page.emulateMedia({ media: 'print' }); await expect(page.locator('.media-private').last()).toBeHidden(); await expect(page.locator('.media-consent')).toBeHidden()
+  await page.getByRole('button', { name: 'Load current media metadata' }).click(); await page.emulateMedia({ media: 'print' }); await expect(page.locator('.media-private').last()).toBeHidden(); await expect(page.locator('.media-consent')).toBeHidden()
 })
 test('an unsent deferred preflight cannot submit after definite authority denial', async ({ page }) => {
   const s = state(); s.role = 'photographer'; s.items = []
@@ -120,4 +123,24 @@ test('own consent remains reachable after gallery denial without granting galler
   await page.getByRole('button', { name: 'Do not allow identifiable media' }).click()
   await expect(page.getByText('Current choice:', { exact: false })).toContainText('no')
   await expect(page.getByRole('button', { name: 'View protected photo' })).toHaveCount(0); expect(s.denied).toBe(true)
+})
+
+test('fresh200 preflight with lost collection capability stops an unsent upload', async ({ page }) => {
+  const s = state(); s.role = 'photographer'; s.items = []; let resume!: () => void; const hold = new Promise<void>(resolve => { resume = resolve }); await mockMedia(page, s); await page.goto(gallery)
+  await page.getByLabel('Media title', { exact: true }).fill('Unsent after role loss'); await page.getByLabel('Submission reason').fill('Must not send stale authority'); await page.getByLabel('Photograph (PNG or JPEG, up to 8 MiB)').setInputFiles({ name: 'venue.png', mimeType: 'image/png', buffer: png })
+  s.deferPreflight = () => hold; await page.getByRole('button', { name: 'Submit private media draft' }).click(); await expect.poll(() => s.preflights).toBe(1)
+  s.role = 'attendee'; resume(); await expect(page.getByRole('heading', { name: 'Reviewed gallery' })).toBeVisible()
+  expect(s.uploads).toHaveLength(0); await expect(page.getByRole('heading', { name: 'Submit media for organiser review' })).toHaveCount(0)
+})
+
+test('lost upload survives transient refresh failure and reconnect with its identical memory-only intent', async ({ page }) => {
+  const s = state(); s.role = 'photographer'; s.items = []; s.lostUpload = true; s.transientAfterLostUpload = true; await mockMedia(page, s); await page.goto(gallery)
+  await page.getByLabel('Media title', { exact: true }).fill('Retained uncertain upload'); await page.getByLabel('Submission reason').fill('Exact command must survive failed reads'); await page.getByLabel('Photograph (PNG or JPEG, up to 8 MiB)').setInputFiles({ name: 'venue.png', mimeType: 'image/png', buffer: png })
+  await page.getByRole('button', { name: 'Submit private media draft' }).click(); await expect(page.getByText(/Private drafts and uncertain intents remain only in this page/)).toBeVisible()
+  expect(s.uploads).toHaveLength(1); await expect(page.getByRole('button', { name: 'Retry identical media intent' })).toBeHidden()
+  s.transient = false; s.lostUpload = false; await page.getByRole('button', { name: 'Try again' }).click()
+  await expect(page.getByRole('button', { name: 'Retry identical media intent' })).toBeVisible(); await expect(page.getByLabel('Media title', { exact: true })).toHaveValue('Retained uncertain upload')
+  await page.getByRole('button', { name: 'Retry identical media intent' }).click(); await expect(page.getByText('Saved. Current media has been refreshed.')).toBeVisible()
+  expect(s.uploads).toHaveLength(2); expect(s.uploads[1]).toEqual(s.uploads[0]); expect(s.items).toHaveLength(1)
+  const stored = await page.evaluate(() => JSON.stringify([Object.entries(localStorage), Object.entries(sessionStorage)])); expect(stored).not.toContain('Retained uncertain upload'); expect(stored).not.toContain('Exact command must survive failed reads')
 })

@@ -121,6 +121,9 @@ func (s Service) CollectPhoto(ctx context.Context, input Upload) (Item, error) {
 					return access.ErrConflict
 				}
 				out, e = s.project(ctx, tx, input.File.Actor, sc, d)
+				if e == nil {
+					out.AcknowledgedVersion = &receipt.Version
+				}
 				return e
 			}
 			if e = q.CreateMediaHead(
@@ -172,6 +175,9 @@ func (s Service) CollectPhoto(ctx context.Context, input Upload) (Item, error) {
 				return fmt.Errorf("retain photo upload receipt: %w", e)
 			}
 			out, e = s.project(ctx, tx, input.File.Actor, sc, d)
+			if e == nil {
+				out.AcknowledgedVersion = &d.Version
+			}
 			return e
 		},
 	)

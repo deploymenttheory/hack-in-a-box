@@ -56,7 +56,7 @@ func photoRetention(
 	}
 	expired := event.CompletedAt.Valid &&
 		slices.Contains([]string{"completed", "cancelled", "archived"}, event.Stage) &&
-		!now.Before(event.CompletedAt.Time.AddDate(0, 0, int(policy.RetentionDays)))
+		!now.Before(RetentionDeadline(event.CompletedAt.Time, policy.RetentionDays))
 	return expired, nil
 }
 
