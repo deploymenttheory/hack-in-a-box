@@ -2,7 +2,6 @@ package moderation
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 	"time"
 
@@ -34,16 +33,12 @@ type fixture struct {
 
 func setup(t *testing.T) *fixture {
 	t.Helper()
-	pool := testdb.New(t, true)
-	// Development-only unnumbered owner schema, replaced by the normal migration
-	// after actual103 lands. This is not an ordered-upgrade verification claim.
-	rawSchema, err := os.ReadFile("schema.provisional.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(t.Context(), string(rawSchema)); err != nil {
-		t.Fatal(err)
-	}
+	return setupPool(t, testdb.New(t, true))
+}
+
+func setupPool(t *testing.T, pool *pgxpool.Pool) *fixture {
+	t.Helper()
+
 	f := &fixture{
 		t:       t,
 		pool:    pool,

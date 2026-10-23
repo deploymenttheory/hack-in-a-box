@@ -3,9 +3,9 @@
 The backend records independent review, intended-panel huddles, formal evidence
 gaps, proposed changes and explicit canonical final decisions. It does not
 calculate totals, select finalists, make awards or average checkpoint scores.
-The current local implementation integrates actual #103 feedback records;
-normal migration and final actual-main verification remain required before PR
-readiness. Its unnumbered development schema is currently applied by fixtures.
+The implementation integrates actual #103 feedback records on merged schema36.
+Normal migration37 installs the private immutable records. Domain and HTTP
+fixtures use Goose directly; no provisional schema application remains.
 
 A huddle names an actual configured native checkpoint, published primary and
 second reviewer, distinct second-review assignment/due time and current named
@@ -68,14 +68,36 @@ huddle owner. The shared runtime supplies the same actual scorecards↔moderatio
 policy graph and native feedback owner to the API and worker. No external
 messages or #110 tally/award effects occur.
 
-## Verification checkpoint
+## Verification
 
-Actual PostgreSQL/race focused native feedback/canonical-final tests pass
-(9.507s), covering reopened action re-review, separate competing huddles,
-idempotent retry, explicit native restart/history and forced transaction rollback.
-Actual source/owner-loss tests pass (5.038s); strict authenticated HTTP/current
-session proof passes (6.655s), and shared runtime/provider composition passes
-(2.805s). Prior native lifecycle and 1,006-record pagination/privacy regressions
-remain in the complete affected suite. The final ordered migration, generated
-contract checks, full affected verification and exact-head CI are still required;
-these checkpoint results do not assert PR readiness or actual merged schema.
+Actual populated36→37 PostgreSQL/race verification passes (4.766s), comparing
+canonical snapshots of every preexisting public data table except Goose state.
+Fixtures contain native common challenge/rubric, independent cards, reviewed
+feedback/actions, private Q&A, help, inbox, automation pause and audit records.
+Both an otherwise-empty rollback and latest-schema restoration pass. Retained
+planned huddles, canonical final decisions, native #101 proofs and exact #103
+foreign-key evidence prevent destructive rollback at schema37; all private
+moderation tables reject mutation/deletion.
+
+Real PostgreSQL/race tests prove native lifecycle, intended-panel/draft/history
+privacy, current conflicts, pre-live denial, distinct second reviewer, explicit
+gap/proposal decisions, frozen final evidence and immutable original values.
+Different huddles cannot create competing final decisions; identical uncertain
+retries do not create new history, and explicit native restart/fresh independent
+cards preserve old decisions. A forced history failure rolls back native proof.
+Pending independent categories remain incomplete despite accepted proposals.
+
+Historical panel disclosure was reproduced red (1.969s), then corrected with
+per-snapshot current native-source checks and bounded permission-filtered
+keysets. Real native observation→independent second card→full #66 replacement→
+explicit planned huddle reconfiguration→author-role revocation proves that the
+latest context stays readable while its retired source-bearing history is
+filtered, without blocking earlier accessible records (3.097s). Native feedback
+history allows old action versions while current withdrawal still denies access
+(3.006s). Normal action reopening/re-resolution retains legitimate original
+history. Lists and history also traverse 1,006 records without a lifetime cap.
+
+Strict authenticated HTTP/current-session and actual shared-runtime checks
+preserve Q&A, released-rubric, feedback, provider and Session.draft_scope contracts.
+Full local checks and exact-head CI evidence are recorded in the implementation
+PR; no frontend moderation UI, totals or awards are claimed by this backend work.

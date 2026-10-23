@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -37,11 +36,8 @@ type moderationHTTPHarness struct {
 
 func verifyHuddleHTTP(t *testing.T, f moderationHTTPHarness) []string {
 	t.Helper()
-	raw, err := os.ReadFile("../moderation/schema.provisional.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	f.Exec(string(raw))
+	var err error
+
 	availability, _ := json.Marshal(
 		[]map[string]time.Time{{"start": f.Dates.LiveStart, "end": f.Dates.LiveEnd}},
 	)

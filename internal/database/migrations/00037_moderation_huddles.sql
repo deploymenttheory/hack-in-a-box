@@ -1,4 +1,5 @@
--- Unnumbered development schema. Final normal migration follows actual merged103.
+-- +goose Up
+-- Ordered upgrade from actual shared-feedback schema36.
 CREATE TABLE moderation_huddle_versions (
  event_id uuid NOT NULL,
  team_id uuid NOT NULL,
@@ -58,3 +59,13 @@ CREATE TABLE moderation_final_decisions (
 );
 CREATE TRIGGER moderation_final_decision_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON moderation_final_decisions FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE INDEX moderation_huddles_team ON moderation_huddle_versions(event_id,team_id,id,version DESC);
+
+-- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM moderation_huddle_versions) OR EXISTS(SELECT 1 FROM moderation_huddle_cards) OR EXISTS(SELECT 1 FROM moderation_gap_actions) OR EXISTS(SELECT 1 FROM moderation_final_decisions) THEN
+  RAISE EXCEPTION 'Private moderation or canonical final history exists; rollback requires an explicit preservation plan';
+ END IF;
+END $$;
+-- +goose StatementEnd
+DROP TABLE moderation_final_decisions, moderation_gap_actions, moderation_huddle_cards, moderation_huddle_versions;
