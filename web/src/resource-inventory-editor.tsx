@@ -1,3 +1,4 @@
+import { usePrivateRequestScope } from './private-request-scope'
 import { Input, Select, Label } from './components/ui/fields'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, APIError, unwrap, type EventRecord } from './api/client'
@@ -31,23 +32,36 @@ async function resolveTime(value: LocalTime, timezone: string, csrf: string) {
   if (!value.wall) return null
   return unwrap(await api.POST('/api/v1/time/resolve', { params: { header: { 'X-CSRF-Token': csrf } }, body: { timezone, wall_time: value.wall.length === 16 ? value.wall + ':00' : value.wall, dst_choice: value.dst } })).instant
 }
-export function ResourceEditor({ event, resource, mode, disabled, stale, save, cancel }: { event: EventRecord; resource?: Resource; mode: 'create' | 'metadata' | 'replace'; disabled: boolean; stale: boolean; save: Save; cancel: () => void }) {
+export function ResourceEditor({ event, resource, mode, disabled, stale, save, cancel, onPending }: { event: EventRecord; resource?: Resource; mode: 'create' | 'metadata' | 'replace'; disabled: boolean; stale: boolean; save: Save; cancel: () => void; onPending: (pending: boolean) => void }) {
   const identity = useIdentity()
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:resource:${resource?.id ?? 'new'}:${mode}`)
+  useEffect(() => () => onPending(false), [onPending])
   const { input: secretInput, clear: clearSecret, hasValue: hasSecret, changed: secretChanged } = useSecretInput()
   const [label, setLabel] = useState(resource?.label ?? ''), [kind, setKind] = useState<Resource['resource_type']>(resource?.resource_type ?? 'credential')
   const [available, setAvailable] = useState<LocalTime>({ wall: wallTime(resource?.available_at ?? undefined, event.configuration.timezone), dst: '' }), [expires, setExpires] = useState<LocalTime>({ wall: wallTime(resource?.expires_at ?? undefined, event.configuration.timezone), dst: '' })
   const [acknowledged, setAcknowledged] = useState(false), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [cleared, setCleared] = useState(false)
   const needsSecret = mode !== 'metadata'
   async function submit() {
-    setPending(true); setFailure(undefined); setCleared(false)
+    if (pending || disabled || stale) return
+    const ticket = scope.capture(); if (!ticket.current()) return
+    setPending(true); onPending(true); setFailure(undefined); setCleared(false)
     try {
-      const metadata = mode === 'replace' ? {} : { resource_type: kind, available_at: await resolveTime(available, event.configuration.timezone, identity.csrf_token), expires_at: await resolveTime(expires, event.configuration.timezone, identity.csrf_token) }
+      let metadata: { resource_type?: Resource['resource_type']; available_at?: string | null; expires_at?: string | null } = {}
+      if (mode !== 'replace') {
+        const available_at = await resolveTime(available, event.configuration.timezone, identity.csrf_token)
+        ticket.assert()
+        const expires_at = await resolveTime(expires, event.configuration.timezone, identity.csrf_token)
+        ticket.assert()
+        metadata = { resource_type: kind, available_at, expires_at }
+      }
       if (metadata.available_at && metadata.expires_at && new Date(metadata.expires_at) <= new Date(metadata.available_at)) throw new Error('Expiry must be after availability.')
       const value = needsSecret ? secretInput.current?.value ?? '' : ''
       clearSecret()
       if (needsSecret && !value) throw new Error('The secret field was cleared. Re-enter the new value before saving.')
-      if (!await save({ action: mode, ...(resource ? { id: resource.id } : {}), label: mode === 'replace' ? resource!.label : label.trim(), ...metadata, ...(needsSecret ? { value } : {}) })) setCleared(needsSecret)
-    } catch (error) { clearSecret(); setFailure(error); setCleared(needsSecret) } finally { setPending(false) }
+      ticket.assert()
+      const succeeded = await save({ action: mode, ...(resource ? { id: resource.id } : {}), label: mode === 'replace' ? resource!.label : label.trim(), ...metadata, ...(needsSecret ? { value } : {}) })
+      if (ticket.current() && !succeeded) setCleared(needsSecret)
+    } catch (error) { if (ticket.current()) { clearSecret(); setFailure(error); setCleared(needsSecret) } } finally { if (ticket.current()) { setPending(false); onPending(false) } }
   }
   return <form className="fleet-planning-section credential-editor" aria-label={`${mode === 'create' ? 'New' : mode === 'replace' ? 'Replacement' : 'Edit'} resource`} autoComplete="off" onSubmit={e => { e.preventDefault(); void submit() }}>
     <h3>{mode === 'create' ? 'Add a supplied resource' : mode === 'replace' ? `Replace ${resource!.label}` : `Edit ${resource!.label}`}</h3>

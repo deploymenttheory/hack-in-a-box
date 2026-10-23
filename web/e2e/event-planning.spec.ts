@@ -168,7 +168,7 @@ for(const leave of ['event','account'] as const)test(`late rules save response a
  await page.route(`**/events/${firstID}/content/${rulesID}`,async route=>{if(route.request().method()!=='PUT')return route.fallback();started();await pending;return route.fallback()})
  await page.goto('/events/'+firstID);await openEventSection(page,'Rules');await page.getByRole('button',{name:'More records',exact:true}).click();await page.getByRole('button',{name:'Plan Competition rules',exact:true}).click()
  await page.getByLabel('Markdown',{exact:true}).fill('Private late response marker');await page.getByRole('button',{name:'Save new draft',exact:true}).click();await sending
- if(leave==='event'){page.once('dialog',dialog=>dialog.accept());await page.getByRole('link',{name:'← Switch event',exact:true}).click();await page.getByRole('link',{name:'Southern Lights Hack',exact:true}).click();await expect(page.getByRole('heading',{name:'Southern Lights Hack',exact:true})).toBeVisible()}
+ if(leave==='event'){await page.getByRole('link',{name:'← Switch event',exact:true}).click();await expect(page).toHaveURL(new RegExp('/events/'+firstID+'$'));await page.evaluate(()=>window.dispatchEvent(new Event('session-expired')));await expect(page.getByRole('button',{name:'Save new draft',exact:true})).toHaveCount(0)}
  else {await page.evaluate(()=>window.dispatchEvent(new Event('session-expired')));await expect(page.getByRole('button',{name:'Save new draft',exact:true})).toHaveCount(0)}
  const response=page.waitForResponse(response=>response.request().method()==='PUT'&&new URL(response.url()).pathname.endsWith('/content/'+rulesID));release();await response
  await expect(page.getByLabel('Markdown',{exact:true})).toHaveCount(0);await expect(page.getByText('Private late response marker',{exact:true})).toHaveCount(0)
@@ -242,4 +242,67 @@ test('native setup preview pauses editor input and a subsequent edit invalidates
  await page.getByLabel('Event name',{exact:true}).fill('New unsent name')
  await expect(page.getByRole('region',{name:'Review event configuration',exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Event preview',exact:true})).toHaveCount(0)
  await expect(page.getByLabel('Event name',{exact:true})).toHaveValue('New unsent name');expect(writes).toBe(0)
+})
+
+for (const source of ['preview','failure'] as const) test(`native ${source} blocker reveals and focuses its actual hidden setup field by keyboard`,async({page})=>{
+ await mockWorkspace(page)
+ const blocker={field:'configuration.calendar.excluded_dates',code:'invalid_date',message:'Review the excluded date reported by the server.'}
+ await page.route('**/api/v1/event-preview',route=>route.fulfill(source==='preview'?{json:{challenge_publication:null,blockers:[blocker]}}:{status:422,json:{error:{code:'event_blocked',message:'Native date check',blockers:[blocker]}}}))
+ await page.goto('/events/'+firstID);await openEventSection(page,'Setup')
+ await page.getByRole('button',{name:'Preview dates and blockers',exact:true}).click()
+ const link=page.getByRole('link',{name:blocker.message,exact:true});await expect(link).toBeVisible();await link.focus();await page.keyboard.press('Enter')
+ const field=page.getByLabel('Excluded dates, one YYYY-MM-DD date per line');await expect(field).toBeVisible();await expect(field).toBeFocused()
+ await field.fill('2027-06-18');await expect(field).toHaveValue('2027-06-18')
+})
+
+test('unknown setup capsule survives deliberate new reviewed command and section replacement',async({page})=>{
+ const {events}=await mockWorkspace(page),revisions:string[]=[]
+ await page.route(`**/events/${firstID}`,route=>{
+  if(route.request().method()!=='PUT')return route.fallback()
+  revisions.push(route.request().headers()['if-match']);const body=route.request().postDataJSON();Object.assign(events[0],{name:body.name,configuration:body.configuration,revision:revisions.length===1?4:5})
+  return route.fulfill(revisions.length===1?{status:503,json:{error:{code:'unavailable'}}}:{json:events[0]})
+ })
+ await page.goto('/events/'+firstID);await openEventSection(page,'Setup');await page.getByLabel('Event name',{exact:true}).fill('Original uncertain command')
+ await page.getByRole('button',{name:'Save event',exact:true}).click();await page.getByRole('button',{name:'Confirm save event',exact:true}).click()
+ const history=page.getByRole('complementary',{name:'Unconfirmed command history'});await expect(history).toContainText('Expected revision 1')
+ await page.getByRole('button',{name:'Read current event for review',exact:true}).click();await expect(page.getByText(/Current native revision 4/)).toBeVisible()
+ await page.getByRole('button',{name:'Use current event revision and keep my edits',exact:true}).click()
+ await page.getByLabel('Event name',{exact:true}).fill('New deliberate command')
+ await page.getByRole('button',{name:'Save event',exact:true}).click();expect(revisions).toEqual(['"1"'])
+ await page.getByRole('button',{name:'Confirm save event',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'Event saved. Revision 5.'})).toBeVisible()
+ expect(revisions).toEqual(['"1"','"4"']);await expect(history).toContainText('Original outcome remains unconfirmed');await page.screenshot({path:test.info().outputPath('uncertain-command-history.png'),fullPage:true})
+ await openEventSection(page,'Overview');await openEventSection(page,'Setup');await expect(history).toContainText('Expected revision 1')
+ await expect(page.getByRole('button',{name:'Save event',exact:true})).toBeEnabled()
+ events[0].can_edit=false;await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));await expect(history).toHaveCount(0)
+})
+
+test('unknown branding capsule survives fresh base selection and later successful command',async({page})=>{
+ await mockWorkspace(page);let revision=1,primary='#007e67';const writes:string[]=[]
+ await page.route(`**/events/${firstID}/branding`,route=>{
+  if(route.request().method()==='PUT'){writes.push(route.request().headers()['if-match']);primary=route.request().postDataJSON().primary;revision=writes.length===1?4:5;return route.fulfill(writes.length===1?{status:503,json:{error:{code:'unavailable'}}}:{json:{revision,branding:{primary,background:'#ffffff',foreground:'#192147',accent:'#007e67',assets:[]}}})}
+  return route.fulfill({json:{revision,branding:{primary,background:'#ffffff',foreground:'#192147',accent:'#007e67',assets:[]}}})
+ })
+ await page.goto('/events/'+firstID);await openEventSection(page,'Branding');await page.getByLabel('Primary colour',{exact:true}).fill('#233c78');await page.getByRole('button',{name:'Save branding',exact:true}).click()
+ const history=page.getByRole('complementary',{name:'Unconfirmed command history'});await expect(history).toContainText('Branding save')
+ await page.getByRole('button',{name:'Read current branding for review',exact:true}).click();await expect(page.getByText(/Current native revision 4/)).toBeVisible();await page.getByRole('button',{name:'Use reviewed branding revision and keep my edits',exact:true}).click()
+ await page.getByLabel('Primary colour',{exact:true}).fill('#273e74');expect(writes).toEqual(['"1"'])
+ await page.getByRole('button',{name:'Save branding',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'Branding saved.'})).toBeVisible();expect(writes).toEqual(['"1"','"4"'])
+ await openEventSection(page,'Overview');await expect(history).toContainText('Expected revision 1');await expect(history).toContainText('Original outcome remains unconfirmed')
+})
+
+for (const action of ['approve','release'] as const) test(`clean rules ${action} pending and unknown guard local section route and close departure`,async({page})=>{
+ const {state,rules}=await rulesFixture(page);rules.state=action==='approve'?'review':'approved'
+ let release!:()=>void,started!:()=>void;const held=new Promise<void>(resolve=>release=resolve),sent=new Promise<void>(resolve=>started=resolve)
+ await page.route(`**/events/${firstID}/content/${rulesID}/actions`,async route=>{started();await held;return route.fallback()})
+ await page.goto('/events/'+firstID);await openEventSection(page,'Rules');await page.getByRole('button',{name:'More records',exact:true}).click();await page.getByRole('button',{name:'Plan Competition rules',exact:true}).click()
+ state.unknown=true;await page.getByRole('button',{name:action==='approve'?'Approve version 1':'Release approved version',exact:true}).click();await sent
+ await expect(page.getByRole('button',{name:'Close editor',exact:true})).toBeDisabled();await openEventSection(page,'Overview');await expect(page.getByRole('heading',{name:'Edit Competition rules',exact:true})).toBeVisible()
+ await page.getByRole('link',{name:'← Switch event',exact:true}).click();await expect(page).toHaveURL(new RegExp('/events/'+firstID+'$'))
+ release();await expect(page.getByRole('status').filter({hasText:'Release action outcome is unconfirmed'})).toBeVisible()
+ await expect(page.getByRole('button',{name:'Close editor',exact:true})).toBeDisabled();await openEventSection(page,'Overview');await expect(page.getByRole('heading',{name:'Edit Competition rules',exact:true})).toBeVisible()
+ state.unknown=false;await page.getByRole('button',{name:'Review latest saved version',exact:true}).click();await expect(page.getByRole('region',{name:'Latest saved content'})).toBeVisible()
+ await expect(page.getByRole('button',{name:'Close editor',exact:true})).toBeDisabled();expect(state.writes).toHaveLength(1)
+ await page.getByRole('button',{name:'Discard my edits and load latest',exact:true}).click();await page.getByRole('button',{name:'Close editor',exact:true}).click()
+ await page.getByRole('button',{name:'Plan Competition rules',exact:true}).click();await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Content '+action)
+ expect(state.writes).toHaveLength(1)
 })

@@ -42,11 +42,17 @@ independent actual Go style-guide host passes 28 cases with private-store/API
 guards and the coordinated distinct local-example reset key. See
 [verification and representative images](../verification/event-planning/README.md).
 
-Two review concerns remain explicit: native backend blocker anchors currently
-target fields which may be in inactive setup sections; and deliberate adoption
-of current state after an unconfirmed setup/branding write needs independent
-confirmation against the native API contract, without treating current state as
-the original command receipt. The draft must not become ready until review
-resolves these. #236 ApplicantReview dirty reporting and #237 TeamWorkspace
-canEdit/dirty reporting will retain their actual typed parent wires whichever
-merge order lands first; no placeholder prop is introduced here.
+The follow-up corrects native blocker reveal/focus, inventory child time-resolution
+and POST lifetime fencing, clean content-action pending/unknown departure, and
+independent uncertain-command history when selecting a new configuration base.
+Fresh correction checks: 114 units, lint/TypeScript/both builds, 190 affected
+admin cases, then 66 final core cases after the authority-reset safeguard and
+10 final participant cases. Earlier complete suites above remain historical.
+Native event/branding services lock and check exact revisions before a new
+command; a current read never resolves the earlier attempt. See the linked
+verification record for the full contract evidence and retained limitations.
+
+The draft remains pending independent re-review and exact-head CI. #236
+ApplicantReview dirty reporting and #237 TeamWorkspace canEdit/dirty reporting
+retain their actual typed parent wires whichever merge order lands; no
+placeholder prop is introduced here.

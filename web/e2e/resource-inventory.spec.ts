@@ -119,3 +119,28 @@ test('safe resource metadata records event-local availability and expiry without
   expect(state.commands[0]).toMatchObject({ action: 'metadata', label: 'Prepared cloud account', resource_type: 'account', available_at: '2027-06-19T08:00:00Z', expires_at: '2027-06-20T18:00:00Z' })
   expect(state.values).toEqual([])
 })
+
+for (const phase of ['resolve','post'] as const) test(`resource ${phase} pending prevents Back new editor and section or route departure`,async({page})=>{
+ const {state}=await mockInventory(page);let release!:()=>void,started!:()=>void
+ const held=new Promise<void>(resolve=>release=resolve),sent=new Promise<void>(resolve=>started=resolve)
+ await page.route(phase==='resolve'?'**/api/v1/time/resolve':`**/events/${firstID}/credentials`,async route=>{if(route.request().method()!=='POST')return route.fallback();started();await held;return route.fallback()})
+ await open(page);await page.getByRole('button',{name:'Add resource',exact:true}).click();await page.getByLabel('Resource label',{exact:true}).fill('Held private resource');await page.getByLabel('Available from (UTC, optional)',{exact:true}).fill('2027-06-18T09:00');await page.getByLabel('Secret value',{exact:true}).fill('SYNTHETIC-HELD-SECRET')
+ await page.getByRole('button',{name:'Save new resource',exact:true}).click();await sent
+ await page.getByRole('link',{name:'Back to resource inventory',exact:true}).click();await expect(page.getByLabel('Resource label',{exact:true})).toHaveValue('Held private resource')
+ await expect(page.getByRole('button',{name:'Add resource',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Cancel resource edit',exact:true})).toBeDisabled()
+ await openEventSection(page,'Overview');await expect(page.getByLabel('Resource label',{exact:true})).toHaveValue('Held private resource')
+ await page.getByRole('link',{name:'← Switch event',exact:true}).click();await expect(page).toHaveURL(new RegExp('/events/'+firstID+'$'))
+ release();await expect(page.getByText('Resource stored without displaying its value. Review its team assignment next.')).toBeVisible();expect(state.commands).toHaveLength(1)
+ await page.getByRole('button',{name:'Add resource',exact:true}).click();await page.getByLabel('Resource label',{exact:true}).fill('Fresh draft after completed command');await expect(page.getByLabel('Resource label',{exact:true})).toHaveValue('Fresh draft after completed command')
+})
+
+for (const phase of ['resolve','post'] as const) test(`account departure during resource ${phase} fences continuations and clears the secret`,async({page})=>{
+ const {state}=await mockInventory(page);let release!:()=>void,started!:()=>void
+ const held=new Promise<void>(resolve=>release=resolve),sent=new Promise<void>(resolve=>started=resolve)
+ await page.route(phase==='resolve'?'**/api/v1/time/resolve':`**/events/${firstID}/credentials`,async route=>{if(route.request().method()!=='POST')return route.fallback();started();await held;return route.fallback()})
+ await open(page);await page.getByRole('button',{name:'Add resource',exact:true}).click();await page.getByLabel('Resource label',{exact:true}).fill('Departing private resource');await page.getByLabel('Available from (UTC, optional)',{exact:true}).fill('2027-06-18T09:00');await page.getByLabel('Secret value',{exact:true}).fill('SYNTHETIC-DEPARTING-SECRET')
+ await page.getByRole('button',{name:'Save new resource',exact:true}).click();await sent
+ await page.evaluate(()=>window.dispatchEvent(new Event('session-expired')));await expect(page.getByLabel('Secret value',{exact:true})).toHaveCount(0)
+ const response=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith(phase==='resolve'?'/time/resolve':'/credentials')&&response.request().method()==='POST');release();await response
+ await expect(page.getByLabel('Resource label',{exact:true})).toHaveCount(0);expect(state.commands).toHaveLength(phase==='resolve'?0:1);expect(await storedBrowserState(page)).not.toContain('SYNTHETIC-DEPARTING-SECRET')
+})

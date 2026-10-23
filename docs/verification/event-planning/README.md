@@ -1,11 +1,10 @@
 # Event planning — frozen review candidate
 
 This evidence covers #235 against actual merged main `1c94473`. The PR remains
-draft for independent review. Passing these checks does not resolve the two
-review concerns recorded below. Backend services, generated API and schema remain
+draft for independent re-review of the corrections recorded below. Backend services, generated API and schema remain
 unchanged; no provider operation or PostgreSQL transactional change was made.
 
-## Fresh final checks
+## Completed checks before review corrections
 
 | Check | Result |
 |---|---|
@@ -67,19 +66,64 @@ assessment, surveys and other migrations retain their own owners.
 - Before images were recaptured from an untouched archive of frozen `6a49648`;
   the initial intermediate capture affected by CSS layer ordering was replaced.
 
-## Open independent review concerns
+## Review corrections and fresh verification
 
-1. Native backend blocker anchors may target fields in inactive setup sections.
-   Local RHF validation reveal is tested; anchor-driven section reveal still
-   needs review/correction.
-2. After an unconfirmed setup/branding save, choosing the current native revision
-   deliberately permits a new reviewed command. Review must establish that this
-   recovery is supported by the owning API contract and does not infer the
-   original command receipt from latest state.
+The reviewed `69f7170` candidate exposed four real gaps. These are corrected in
+this follow-up; the draft still requires independent re-review and exact-head CI.
 
-The candidate stays draft until these are resolved. The future actual #236
-ApplicantReview dirty callback and #237 TeamWorkspace canEdit/dirty callbacks
-must remain wired into the new EventContent in whichever merge order lands.
+- Native preview and API failure blocker links now map `configuration.*` and
+  calendar paths to the actual mounted field, reveal its section and focus it.
+  Desktop/mobile keyboard journeys cover both actual response shapes.
+- Resource time resolution reports pending state to the parent before awaiting.
+  Back, new selection and section/route departure cannot dispose the active
+  command. Private tickets fence every continuation after time resolution and
+  the credential POST; account departure cannot send a delayed old POST or
+  refill the next editor. Both held-resolution and held-POST cases are covered.
+- Clean content approve/release operations now count as pending/unknown changes
+  for local Close, parent section changes, route blocking and unload warnings.
+  An unknown response cannot be escaped by closing and reopening a clean editor.
+- Event setup, branding and content retain immutable uncertain command capsules
+  in event-session memory, independently of the editable current base. Explicit
+  current-base selection permits a new deliberate command; it never labels the
+  original attempt resolved. The old capsule survives a later successful command
+  and section replacement. Current authority loss clears it; leaving the event
+  session warns that its memory-only history will be discarded. No command
+  payload is placed in browser storage or a query/mutation cache.
+
+Native contract inspection supports a deliberately new configuration command:
+[`event.Service.Update`](../../../internal/event/service.go) locks the event row,
+checks current edit authority and compares the supplied revision before applying
+configuration (`317–341`). [`templates.Service.SaveBrand`](../../../internal/templates/branding.go)
+does the same (`177–200`), saves validated branding and bumps the event revision.
+This protects the new command against another intervening writer. A fresh GET
+is still only current-state evidence, never the original write's receipt. No
+backend policy or transaction was changed.
+
+Fresh verification of the corrections:
+
+| Check | Result |
+|---|---|
+| Full units / lint / TypeScript / both production builds | 114 PASS / PASS / PASS / PASS |
+| Expanded affected admin desktop/mobile matrix | 190 PASS, 1.1m |
+| Final core review regressions after authority-reset safeguard | 66 PASS, 18.3s |
+| Final participant desktop/mobile matrix | 10 PASS, 7.5s |
+
+The 190-case matrix preceded the final provider reset on loss of edit authority;
+the final 66-case matrix exercises that reset and every reported defect against
+the final production assets. The earlier 654/430 complete suites are retained
+above as historical evidence, not claimed as rerun on this correction. First
+corrected core run passed 64/64; two additional held-POST departure cases brought
+the final core matrix to 66. A sandboxed preview initially failed to bind its
+port; the authorised isolated run succeeded without product/timeout changes.
+
+The event-session command summary was visually inspected in both actual portal
+viewports: [desktop](admin-desktop-unconfirmed-history.png),
+[mobile](admin-mobile-unconfirmed-history.png). Its original outcome stays
+explicitly unconfirmed alongside the separately successful later command.
+
+The actual #236 ApplicantReview dirty callback and #237 TeamWorkspace
+canEdit/dirty callbacks must remain wired into EventContent in whichever merge
+order lands; these corrections do not fabricate future owner props.
 
 ## Representative synthetic visual comparison
 

@@ -26,7 +26,7 @@ export function PlanningEditorSections({ children, label = 'Configuration sectio
 // RHF validation is not a native invalid event. Reveal its existing field before
 // focusing it; this changes presentation only, never data or validation rules.
 export function revealPlanningField(form: HTMLFormElement | null, name: string) {
-  const field = form?.querySelector<HTMLElement>(`[name="${CSS.escape(name)}"]`)
+  const field = form?.querySelector<HTMLElement>(`[name="${CSS.escape(name)}"], [id="${CSS.escape(name)}"]`)
   const panel = field?.closest<HTMLElement>('[data-planning-panel]')
   if (panel) { const root = panel.closest('.fleet-editor-sections'); const control = root?.querySelector<HTMLButtonElement>(`[aria-controls="${CSS.escape(panel.id)}"]`); control?.click() }
   requestAnimationFrame(() => field?.focus())
