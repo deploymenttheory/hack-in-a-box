@@ -882,6 +882,41 @@ func (q *Queries) SurveyResponse(ctx context.Context, arg SurveyResponseParams) 
 	return i, err
 }
 
+const surveyResponseAuthorNames = `-- name: SurveyResponseAuthorNames :many
+SELECT p.id,p.display_name FROM survey_response_heads h JOIN people p ON p.id=h.person_id
+WHERE h.event_id=$1 AND h.survey_id=$2 ORDER BY p.id LIMIT 10001
+`
+
+type SurveyResponseAuthorNamesParams struct {
+	EventID  uuid.UUID
+	SurveyID uuid.UUID
+}
+
+type SurveyResponseAuthorNamesRow struct {
+	ID          uuid.UUID
+	DisplayName string
+}
+
+func (q *Queries) SurveyResponseAuthorNames(ctx context.Context, arg SurveyResponseAuthorNamesParams) ([]SurveyResponseAuthorNamesRow, error) {
+	rows, err := q.db.Query(ctx, surveyResponseAuthorNames, arg.EventID, arg.SurveyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SurveyResponseAuthorNamesRow{}
+	for rows.Next() {
+		var i SurveyResponseAuthorNamesRow
+		if err := rows.Scan(&i.ID, &i.DisplayName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const surveyResponseHeadsPage = `-- name: SurveyResponseHeadsPage :many
 SELECT event_id, survey_id, person_id, revision FROM survey_response_heads WHERE event_id=$1 AND survey_id=$2 AND person_id>$3 ORDER BY person_id LIMIT $4
 `

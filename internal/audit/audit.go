@@ -15,6 +15,7 @@ import (
 type Action string
 
 const (
+	SurveyResponsesExported Action = "survey.responses_exported"
 	MediaChanged           Action = "media.changed"
 	MediaRevoked           Action = "media.revoked"
 	PhotoConsentGranted    Action = "photo_consent.granted"
@@ -138,7 +139,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case MediaChanged,
+	case SurveyResponsesExported, MediaChanged,
 		MediaRevoked,
 		PhotoConsentGranted,
 		PhotoConsentRevoked,
