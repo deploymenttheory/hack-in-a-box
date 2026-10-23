@@ -1,3 +1,4 @@
+import { Icon } from './components/ui/icon'
 import { useEffect, useState } from 'react'
 
 type State = 'checking' | 'online' | 'offline' | 'unavailable' | 'recovering'
@@ -15,5 +16,5 @@ export function ConnectionStatus() {
     return () => { window.removeEventListener('online', online); window.removeEventListener('offline', offline); window.removeEventListener('workspace-network-unavailable', failed); window.removeEventListener('workspace-response', response) }
   }, [])
   const text: Record<State, string> = { checking: 'Checking connection', online: 'Connected to server', offline: 'Offline · server changes unavailable', unavailable: 'Server unavailable · information may be stale', recovering: 'Reconnecting · checking current information' }
-  return <p className={`connection-status connection-${state}`} aria-label="Connection status" role={state === 'online' || state === 'checking' ? undefined : 'status'}>{text[state]}{state !== 'online' && <span> Local drafts are not saved server notes. Assessment and judging require a connection.</span>}</p>
+  return <p className={`connection-status connection-${state}`} aria-label="Connection status" role={state === 'online' || state === 'checking' ? undefined : 'status'}><Icon name={state === 'online' ? 'success' : state === 'checking' || state === 'recovering' ? 'pending' : 'warning'} />{text[state]}{state !== 'online' && <span> Local drafts are not saved server notes. Assessment and judging require a connection.</span>}</p>
 }

@@ -1,4 +1,4 @@
-import { Badge } from './components/ui/surfaces'
+import { EventDirectoryView } from './event-directory-view'
 import { MCWorkspace } from './mc-console'
 import { ObjectivesWorkspace } from './objective-workspace'
 import { CampaignWorkspace } from './campaign-composer'
@@ -35,13 +35,9 @@ export function EventDirectory() {
   const identity = useIdentity()
   const query = useInfiniteQuery({ queryKey: privateKey(identity.person.id, 'directory', 'events'), initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/events', { params: { query: { after: pageParam, limit: 50 } } })), getNextPageParam: page => page.next_cursor ?? undefined })
-  return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Prepare the next hack, or return to an event already in motion.</p></div>{identity.can_create_events && <div><Link className="primary-link" to="/events/new">Create event</Link><p><Link to="/templates">Event templates</Link></p></div>}</div>
-    {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <>
-      <div className="event-grid">{query.data.pages.flatMap(page => page.items).map(event => <Link className="event-card" key={event.id} to="/events/$eventId" params={{ eventId: event.id }}><Badge className="badge">{event.stage}</Badge><h2>{event.name}</h2><p>{localDate(event.configuration.live_start, event.configuration.timezone)}</p><p className="muted">{event.configuration.timezone} · {event.confirmed_attendees} confirmed competitors</p></Link>)}</div>
-      {query.data.pages[0].items.length === 0 && <div className="empty-state"><h2>No events yet</h2><p>{identity.can_create_events ? 'Create your first event to set its dates and appoint the organising team.' : 'Events will appear here when your organiser grants you access.'}</p></div>}
-      {query.hasNextPage && <Button onClick={() => void query.fetchNextPage()} disabled={query.isFetchingNextPage}>Show more events</Button>}
-    </>}
-  </section>
+  const items = query.data?.pages.flatMap(page => page.items) ?? []
+  const state = query.isPending ? { kind: 'loading' as const } : query.error ? { kind: 'failed' as const, message: 'Your events could not be loaded.', read: { label: 'Try again', onSelect: () => void query.refetch() } } : !items.length ? { kind: 'empty' as const, message: identity.can_create_events ? 'Create your first event to set its dates and appoint the organising team.' : 'Events will appear here when your organiser grants you access.' } : { kind: 'ready' as const }
+  return <EventDirectoryView scopeKey={identity.person.id} events={items} state={state} participant={false} canCreate={identity.can_create_events} more={query.hasNextPage ? () => void query.fetchNextPage() : undefined} busy={query.isFetchingNextPage} />
 }
 
 export function NewEvent() {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, privateKey, unwrap } from './api/client'
 import { useIdentity } from './session'
+import { Icon } from './components/ui/icon'
 import { Button } from './components/ui/button'
 import { Failure, Loading } from './components/states'
 
@@ -41,12 +42,12 @@ export function EmailAccount() {
     } catch (error) { setFailure(error instanceof Error ? error : new Error('Email confirmation did not complete.')); await query.refetch() }
     finally { setPending(false) }
   }
-  return <section className="panel"><h2>Personal email</h2><p>Confirm an address for individual event messages. You continue signing in with your organisation account.</p>
+  return <section className="fleet-account-section"><h2><Icon name="send" />Personal email</h2><p>Confirm an address for individual event messages. You continue signing in with your organisation account.</p>
     {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <>
       {status?.verified ? <p><strong>{status.masked_mailbox}</strong> · {status.provenance === 'code_confirmed' ? 'Confirmed by you' : 'Verified by your sign-in provider'}</p> : <p>No confirmed email address.</p>}
       {!status?.configured && <p>Personal email is not configured for this installation.</p>}
-      {status?.configured && <form autoComplete="off" onSubmit={event => { event.preventDefault(); void act(false) }}><label htmlFor="personal-email-address">{status.verified ? 'New email address' : 'Email address'}</label><input ref={attachAddress} id="personal-email-address" type="email" autoComplete="off" maxLength={254} required onChange={addressChanged} /><Button type="submit" disabled={pending || !hasAddress || cooldown > 0}>Send confirmation code</Button>{cooldown > 0 && <p role="status">You can request another code in {cooldown} seconds.</p>}</form>}
-      {status?.pending && <><p role="status">{status.request_state === 'accepted' ? 'The email relay accepted your confirmation request. Check your inbox for the code.' : status.request_state === 'ambiguous' ? 'Confirmation delivery is uncertain. If a code arrives, you can still use it.' : status.request_state === 'prepared' ? 'Your request was recorded. Delivery has not been confirmed.' : 'The email relay did not accept your confirmation request.'}</p><p>A code expires after 10 minutes. Requesting a new code replaces the previous one.</p><form autoComplete="off" onSubmit={event => { event.preventDefault(); void act(true) }}><label htmlFor="personal-email-code">Eight-digit confirmation code</label><input ref={attachCode} id="personal-email-code" type="password" inputMode="numeric" pattern={'[0-9]{8}'} minLength={8} maxLength={8} autoComplete="off" required onChange={codeChanged} /><Button type="submit" disabled={pending || !hasCode}>Confirm email address</Button></form></>}
+      {status?.configured && <form autoComplete="off" onSubmit={event => { event.preventDefault(); void act(false) }}><label htmlFor="personal-email-address">{status.verified ? 'New email address' : 'Email address'}</label><input ref={attachAddress} id="personal-email-address" type="email" autoComplete="off" maxLength={254} required onChange={addressChanged} /><Button type="submit" icon="send" pending={pending} disabled={!hasAddress || cooldown > 0}>Send confirmation code</Button>{cooldown > 0 && <p role="status">You can request another code in {cooldown} seconds.</p>}</form>}
+      {status?.pending && <><p role="status">{status.request_state === 'accepted' ? 'The email relay accepted your confirmation request. Check your inbox for the code.' : status.request_state === 'ambiguous' ? 'Confirmation delivery is uncertain. If a code arrives, you can still use it.' : status.request_state === 'prepared' ? 'Your request was recorded. Delivery has not been confirmed.' : 'The email relay did not accept your confirmation request.'}</p><p>A code expires after 10 minutes. Requesting a new code replaces the previous one.</p><form autoComplete="off" onSubmit={event => { event.preventDefault(); void act(true) }}><label htmlFor="personal-email-code">Eight-digit confirmation code</label><input ref={attachCode} id="personal-email-code" type="password" inputMode="numeric" pattern={'[0-9]{8}'} minLength={8} maxLength={8} autoComplete="off" required onChange={codeChanged} /><Button type="submit" icon="check" pending={pending} disabled={!hasCode}>Confirm email address</Button></form></>}
       {failure && <Failure error={failure} />}
     </>}
   </section>
