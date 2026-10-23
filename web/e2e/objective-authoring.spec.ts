@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, test, type Page } from '@playwright/test'
 import { firstID, fixtureEvent } from './fixtures'
 import { mockObjectives, objectiveID, measureID, plannedDefinition, resourceID } from './objective-fixtures'
@@ -67,7 +68,7 @@ async function contentFixture(page: Page, retained = false) {
     }
     return route.fulfill({ json: current })
   })
-  return { ...objectives, current, writes, open: async () => { await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Content', exact: true }).click(); await page.getByRole('button', { name: 'Edit Objective guidance', exact: true }).click() } }
+  return { ...objectives, current, writes, open: async () => { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Content'); await page.getByRole('button', { name: 'Edit Objective guidance', exact: true }).click() } }
 }
 
 test('content author deliberately selects immutable objective/measure references without copying private planning inputs', async ({ page }, info) => {

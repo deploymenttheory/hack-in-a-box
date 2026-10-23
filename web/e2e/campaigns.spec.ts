@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -67,7 +68,7 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
     revision++; return route.fulfill({ json: view(detail!) })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Campaigns', exact: true }).click()
+  await openEventSection(page, 'Campaigns')
   await expect(page.getByRole('heading', { name: 'Campaign composer' })).toBeVisible()
   await page.getByLabel('Reason for campaign changes').fill('Synthetic explicit review')
   await page.getByLabel('Campaign name', { exact: true }).fill('Synthetic event reminder')

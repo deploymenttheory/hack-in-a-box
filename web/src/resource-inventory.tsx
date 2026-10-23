@@ -28,7 +28,7 @@ function InventoryControls({ event, inventory, onDirty, refresh }: { event: Even
   const teamName = (id: string) => teamList.find(t => t.id === id)?.name ?? `Unknown team ${id.slice(0, 8)}`
   const missing = activeTeams.filter(t => !inventory.items.some(r => r.active && r.team_ids.includes(t.id) && (!r.expires_at || new Date(r.expires_at).getTime() > now)))
   const disabled = pending || !event.can_edit, stale = !!edit && edit.revision !== inventory.revision
-  function begin(mode: Exclude<Edit['mode'], 'create'>, resource: Resource) { setFailure(undefined); setNotice(''); setEdit({ mode, resource, revision: inventory.revision }) }
+  function begin(mode: Exclude<Edit['mode'], 'create'>, resource: Resource) { if(edit||pending)return;setFailure(undefined); setNotice(''); setEdit({ mode, resource, revision: inventory.revision }) }
   async function save(command: ResourceCommand) {
     if (!edit || stale) return false
     setPending(true); setFailure(undefined); setNotice('')

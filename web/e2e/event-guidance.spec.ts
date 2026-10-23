@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -28,7 +29,7 @@ async function setup(page: Page) {
 
 test('Today opens corrected rules and records only the current personal version', async ({ page }, info) => {
   const { writes } = await setup(page)
-  await page.getByRole('button', { name: 'Today', exact: true }).click()
+  await openEventSection(page, 'Today')
   await expect(page.getByText('You acknowledged version 1. Read and acknowledge the updated version 2.')).toBeVisible()
   await page.getByRole('button', { name: 'Read Current event rules' }).focus()
   await page.keyboard.press('Enter')
@@ -42,7 +43,7 @@ test('Today opens corrected rules and records only the current personal version'
 
 test('published support and conduct routes remain safe and no report is collected', async ({ page }, info) => {
   const { writes } = await setup(page)
-  await page.getByRole('button', { name: 'Today', exact: true }).click()
+  await openEventSection(page, 'Today')
   await expect(page.getByRole('link', { name: 'Support team' })).toHaveAttribute('href', 'mailto:support@example.test')
   await expect(page.getByRole('link', { name: 'Published conduct route' })).toHaveAttribute('rel', 'noopener noreferrer')
   await expect(page.getByRole('link', { name: 'Injected active route' })).toHaveCount(0)
@@ -56,7 +57,7 @@ test('published support and conduct routes remain safe and no report is collecte
 
 test('resources recheck withdrawal and hide previously opened rules', async ({ page }) => {
   const state = await setup(page)
-  await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await openEventSection(page, 'Resources')
   await page.getByRole('button', { name: 'Read Current event rules' }).click()
   await expect(page.getByText('Read the updated competition rules.')).toBeVisible()
   state.hide()
@@ -68,7 +69,7 @@ test('resources recheck withdrawal and hide previously opened rules', async ({ p
 
 test('organiser readiness warns without a lifecycle gate and starter contacts remain unresolved drafts', async ({ page }) => {
   await setup(page)
-  await page.getByRole('button', { name: 'Content', exact: true }).click()
+  await openEventSection(page, 'Content')
   await expect(page.getByRole('region', { name: 'Guidance readiness' })).toContainText('These do not block the event lifecycle.')
   await expect(page.getByRole('region', { name: 'Guidance readiness' })).toContainText('Publish a configured conduct contact')
   await page.getByLabel('Starting template').selectOption('conduct')

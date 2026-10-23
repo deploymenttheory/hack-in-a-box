@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { firstID } from './fixtures'
 import { mockMentors, mentorIDs, teamIDs } from './mentor-fixtures'
@@ -21,7 +22,7 @@ test('withdrawal invalidates mentor publication while frozen competitors stay in
     return route.fulfill({ json: { ...roster, revision: state.value.revision } })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Mentors', exact: true }).click()
+  await openEventSection(page, 'Mentors')
   await page.getByLabel('Mentor decision reason').fill('Replace mentor after competitor freeze')
   await page.getByRole('button', { name: 'Change mentor slot', exact: true }).click()
   await page.getByLabel('Team receiving coverage').selectOption(teamIDs[0])
@@ -47,7 +48,7 @@ test('withdrawal invalidates mentor publication while frozen competitors stay in
   await expect(page.getByRole('region', { name: 'Published mentor roster' })).toContainText('Rae Review')
   await expect(page.getByRole('region', { name: 'Published mentor roster' })).not.toContainText('Morgan Design')
 
-  await page.getByRole('button', { name: 'Teams', exact: true }).click()
+  await openEventSection(page, 'Teams')
   await expect(page.getByText('This depleted team may continue. Reassignment is unavailable.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Assign draft member', exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Review publication and freeze', exact: true })).toHaveCount(0)

@@ -1,8 +1,9 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { firstID } from './fixtures'
 import { mockInventory, inventoryTeamIDs } from './resource-inventory-fixtures'
 
-async function open(page: Page) { await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Inventory', exact: true }).click() }
+async function open(page: Page) { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Inventory') }
 async function storedBrowserState(page: Page) {
   return page.evaluate(async () => {
     const databases = await indexedDB.databases(), indexed: unknown[] = []
@@ -94,7 +95,7 @@ test('navigation, pagehide and current-role revocation clear secret forms and ca
   await page.getByRole('button', { name: 'Add resource', exact: true }).click(); await page.getByLabel('Secret value', { exact: true }).fill('SYNTHETIC-NAVIGATION-SECRET')
   await page.evaluate(() => window.dispatchEvent(new Event('pagehide'))); await expect(page.getByLabel('Secret value', { exact: true })).toHaveValue('')
   await page.getByLabel('Secret value', { exact: true }).fill('SYNTHETIC-SECOND-NAV-SECRET')
-  page.once('dialog', dialog => dialog.accept()); await page.getByRole('button', { name: 'Overview', exact: true }).click(); await page.getByRole('button', { name: 'Inventory', exact: true }).click()
+  page.once('dialog', dialog => dialog.accept()); await openEventSection(page, 'Overview'); await openEventSection(page, 'Inventory')
   await expect(page.getByLabel('Secret value', { exact: true })).toHaveCount(0)
   expect(await storedBrowserState(page)).not.toContain('SYNTHETIC-SECOND-NAV-SECRET')
   await page.getByRole('button', { name: 'Add resource', exact: true }).click(); await page.getByLabel('Secret value', { exact: true }).fill('SYNTHETIC-REVOKED-FORM-SECRET')

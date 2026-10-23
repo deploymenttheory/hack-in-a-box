@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -26,7 +27,7 @@ async function setup(page: Page) {
     try { return await route.fulfill({ headers, json: snapshot }) } catch (error) { if (!page.isClosed() && !/closed|handled|canceled|cancelled/i.test(String(error))) throw error }
   })
   await page.route(`**/events/${firstID}/files/${fileID}`, route => route.fulfill(!authorised || !released || withdrawn ? { status: 403, headers, json: { error: { code: 'forbidden', message: 'Synthetic denial', request_id: 'synthetic' } } } : { headers: { ...headers, 'Content-Disposition': 'attachment; filename=private-brief.txt' }, contentType: 'text/plain', body: actor.id === actorA.id ? canaryA : canaryB }))
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Resources')
   return { requests, revoke: () => { authorised = false }, withdraw: () => { withdrawn = true }, embargo: () => { released = false }, release: () => { released = true }, switchAccount: () => { actor = actorB }, holdRead: () => { hold = true; oldRead = new Promise<void>(resolve => { finish = resolve }); return readerArrived }, finishRead: () => finish?.() }
 }
 async function copiedDownload(page: Page) { return page.evaluate(async url => { const r = await fetch(url); return { status: r.status, body: await r.text() } }, `/api/v1/events/${firstID}/files/${fileID}`) }
@@ -43,7 +44,7 @@ for (const change of ['withdrawal', 'revocation'] as const) {
     await expect(page.getByRole('link', { name: 'private-brief.txt' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Back to resources' }).click()
     await expect(page.getByRole('button', { name: 'Read Team A brief' })).toHaveCount(0)
-    await page.getByRole('button', { name: 'Overview', exact: true }).click(); await page.getByRole('button', { name: 'Resources', exact: true }).click()
+    await openEventSection(page, 'Overview'); await openEventSection(page, 'Resources')
     await expect(page.getByRole('button', { name: 'Read Team A brief' })).toHaveCount(0)
     const denied = await copiedDownload(page); expect(denied.status).toBe(403); expect(denied.body).not.toContain(canaryA)
     const persisted = await page.evaluate(async () => ({ local: JSON.stringify(Object.entries(localStorage)), session: JSON.stringify(Object.entries(sessionStorage)), caches: await caches.keys() }))
@@ -60,7 +61,7 @@ test('an old response arriving after an account switch cannot populate the new a
   state.switchAccount(); await page.clock.fastForward(61_000)
   await expect(page.getByRole('button', { name: actorB.display_name, exact: true })).toBeVisible()
   state.finishRead()
-  await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await openEventSection(page, 'Resources')
   await page.getByRole('button', { name: 'Read Team B brief' }).click()
   await expect(page.getByText(canaryB, { exact: true })).toBeVisible()
   await expect(page.getByText(canaryA, { exact: true })).toHaveCount(0)

@@ -1,8 +1,9 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, test } from '@playwright/test'
 import { firstID, person } from './fixtures'
 import { mockObjectives, objectiveID, plannedDefinition } from './objective-fixtures'
 const eventPath = `/events/${firstID}`
-async function enter(page: import('@playwright/test').Page) { await page.goto(eventPath); await page.getByRole('button', { name: 'Objectives', exact: true }).click() }
+async function enter(page: import('@playwright/test').Page) { await page.goto(eventPath); await openEventSection(page, 'Objectives') }
 async function create(page: import('@playwright/test').Page, description = 'PRIVATE OBJECTIVE UNSENT') { await page.getByRole('button', { name: 'Add objective', exact: true }).click(); await page.getByLabel('Objective description', { exact: true }).fill(description); await page.getByLabel('Reason for this definition version').fill('Explicit planning decision') }
 
 test('keyboard/mobile optional planning saves explicit zero separately from unknown and shows retained history', async ({ page }, info) => {
@@ -68,7 +69,7 @@ test('archive is read-only planning and missing owners/baselines remain advisory
 
 test('navigation warnings keep safe unsent planning on explicit cancel', async ({ page }) => {
   const { state } = await mockObjectives(page); await enter(page); await create(page)
-  page.on('dialog', dialog => dialog.dismiss()); await page.getByRole('button', { name: 'Overview', exact: true }).click(); await expect(page.getByLabel('Objective description', { exact: true })).toHaveValue('PRIVATE OBJECTIVE UNSENT'); expect(state.requests).toHaveLength(0)
+  page.on('dialog', dialog => dialog.dismiss()); await openEventSection(page, 'Overview'); await expect(page.getByLabel('Objective description', { exact: true })).toHaveValue('PRIVATE OBJECTIVE UNSENT'); expect(state.requests).toHaveLength(0)
 })
 
 test('owner remains an optional current-organiser selection rather than a directory or lifecycle gate', async ({ page }) => {

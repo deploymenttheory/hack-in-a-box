@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { expect, test } from '@playwright/test'
 import { setupTeams } from './teams-workflow-fixtures'
 import { firstID, mockWorkspace } from './fixtures'
@@ -101,7 +102,7 @@ test('iconless pending preview has a visible indicator with stable geometry and 
   }
   return route.fulfill({ json: { items: [saved] } })
  })
- await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click()
+ await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms')
  await page.getByRole('button', { name: `${definition.name} · Draft` }).click()
  const answer = page.getByLabel('What would you like to learn? (required)'), action = page.getByRole('button', { name: 'Validate preview answers' })
  await answer.fill('Recoverable preview answer')

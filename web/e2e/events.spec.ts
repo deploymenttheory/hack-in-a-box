@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { firstID, mockWorkspace } from './fixtures'
 test.beforeEach(async ({ page }) => { await mockWorkspace(page) })
@@ -43,7 +44,7 @@ test('transition blockers explain why the event cannot proceed', async ({ page }
 
 test('staff grants explain lasting ineligibility and protect the event owner', async ({ page }) => {
   await page.goto('/events/' + firstID)
-  await page.getByRole('button', { name: 'Staff', exact: true }).click()
+  await openEventSection(page, 'Staff')
   await page.getByRole('button',{name:'Assignments',exact:true}).click()
   await page.getByRole('button', { name: /Revoke organiser from Synthetic/ }).click()
   await expect(page.getByRole('alert')).toContainText('Assign another organiser and transfer ownership')
@@ -61,9 +62,9 @@ test('staff grants explain lasting ineligibility and protect the event owner', a
 
 test('unsaved setup changes are protected when changing sections', async ({ page }) => {
   await page.goto('/events/' + firstID)
-  await page.getByRole('button', { name: 'Setup', exact: true }).click()
+  await openEventSection(page, 'Setup')
   await page.getByLabel('Event name').fill('Unsaved event name')
   page.once('dialog', dialog => dialog.dismiss())
-  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  await openEventSection(page, 'Overview')
   await expect(page.getByLabel('Event name')).toHaveValue('Unsaved event name')
 })

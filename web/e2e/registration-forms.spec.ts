@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -17,7 +18,7 @@ test('form editing validates branches, previews answers and separates save from 
     return route.fulfill({ json: { items: [form] } })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Forms', exact: true }).click()
+  await openEventSection(page, 'Forms')
   await page.getByRole('button', { name: 'Attendee form · Draft' }).click()
   await page.getByLabel('Matching answer').fill('impossible')
   await expect(page.getByRole('alert')).toContainText('possible answer')

@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -38,7 +39,7 @@ async function prepare(page: Page) {
     return route.fulfill({ json: data })
   })
   await page.goto(`/events/${firstID}`)
-  await page.getByRole('button', { name: 'Preparation', exact: true }).click()
+  await openEventSection(page, 'Preparation')
   await expect(page.getByRole('heading', { name: 'Preparation', exact: true })).toBeVisible()
   return { data, requests, history, revoke: () => { rejectPermission = true } }
 }
@@ -46,7 +47,7 @@ const editor = (page: Page) => page.getByRole('form', { name: 'Task editor' })
 
 test('assigns a task, edits checklist and links, filters attention and shows a local run sheet', async ({ page }, info) => {
   const { requests } = await prepare(page)
-  await expect(page.getByText('28 confirmed competitors · Minimum 30')).toBeVisible()
+  await expect(page.locator('.readiness').getByText('28 confirmed competitors · Minimum 30')).toBeVisible()
   for (const title of ['Final admission cutoff', 'Team freeze', 'Common challenge publication', 'Live start', 'Submission cutoff']) await expect(page.locator('dt', { hasText: title })).toBeVisible()
   await page.getByLabel('Needs attention').selectOption('blocked')
   await expect(page.getByRole('button', { name: 'Edit Check AV' })).toBeVisible()
@@ -69,7 +70,7 @@ test('assigns a task, edits checklist and links, filters attention and shows a l
   await page.getByLabel('Needs attention').selectOption(''); await page.getByLabel('Filter by owner').selectOption(mentor)
   await page.getByRole('button', { name: 'List', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Edit Check AV' })).toHaveCount(0)
-  await page.getByRole('button',{name:'Back to preparation tasks',exact:true}).click()
+  await page.getByRole('link',{name:'Back to preparation tasks',exact:true}).click()
   await page.getByRole('button', { name: 'Run sheet', exact: true }).click()
   const run = page.getByRole('region', { name: 'Run sheet', exact: true })
   await expect(run).toContainText('19 Jun 2027, 09:00'); await expect(run).toContainText('Morgan Mentor')
@@ -123,7 +124,7 @@ test('preserves conflicting edits and requires review before saving against the 
 test('retains a draft when permissions change and prevents leaving without consent', async ({ page }) => {
   const { revoke } = await prepare(page)
   await page.getByRole('button', { name: 'Edit Book venue' }).click(); await page.getByLabel('Description').fill('Keep this draft')
-  page.once('dialog', d => d.dismiss()); await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  page.once('dialog', d => d.dismiss()); await openEventSection(page, 'Overview')
   await expect(page.getByLabel('Description')).toHaveValue('Keep this draft')
   revoke(); await page.getByRole('button', { name: 'Save task' }).click()
   await expect(page.getByRole('alert')).toContainText('do not have access')

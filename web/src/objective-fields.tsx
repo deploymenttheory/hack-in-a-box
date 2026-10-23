@@ -1,5 +1,5 @@
 import { Input, Textarea, Select, Label } from './components/ui/fields'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { components } from './api/schema.gen'
 import { Button } from './components/ui/button'
 
@@ -29,16 +29,18 @@ function Text({ label, value, change, multiline = false, maxLength, decimalInput
 }
 
 export function ObjectiveFields({ value: d, change, owners }: { value: ObjectiveDefinition; change: (value: ObjectiveDefinition) => void; owners?: ObjectiveOwner[] }) {
-  const ownerID = useId()
+  const ownerID = useId(), [chosenMeasure,setChosenMeasure] = useState<string>()
+  const activeMeasure=d.measures.some(measure=>measure.id===chosenMeasure)?chosenMeasure:d.measures[0]?.id
   return <div className="objective-fields">
     <Text label="Objective description" value={d.description} change={description => change({ ...d, description })} multiline maxLength={10000} />
     {owners ? <div><Label htmlFor={ownerID}>Objective owner (optional)</Label><Select id={ownerID} value={d.owner_id ?? ''} onChange={e => change({ ...d, owner_id: e.target.value || null })}><option value="">No owner selected</option>{d.owner_id && !owners.some(o => o.id === d.owner_id) && <option value={d.owner_id}>Previously selected owner · currently unavailable</option>}{owners.map(o => <option key={o.id} value={o.id}>{objectiveOwnerLabel(o.id, owners)}</option>)}</Select></div> : <p>Choose a current organiser owner in each event. Person owners are cleared when configuration is cloned.</p>}
     <Label className="check"><Input type="checkbox" checked={d.theme_sensitive} onChange={e => change({ ...d, theme_sensitive: e.target.checked })} />This objective reveals the hackathon theme</Label>
     <p>Planning text stays organiser-only. Disclosure requires selecting exact objective and measure versions in approved native content. Theme-sensitive objectives cannot be disclosed before the common challenge release.</p>
     <section aria-label="Success measures"><h3>Success measures</h3><p>A target is a planning goal. Baselines are labelled estimates or self-reports, and an unknown value stays unknown. These fields do not record demonstrated achieved results.</p>
+      {d.measures.length>1 && <nav className="fleet-pattern-actions" aria-label="Success measure editors">{d.measures.map((measure,index)=><Button key={measure.id} type="button" variant="ghost" aria-current={measure.id===activeMeasure?'step':undefined} onClick={()=>setChosenMeasure(measure.id)}>Measure {index+1}</Button>)}</nav>}
       {d.measures.map((m, index) => {
         const update = (next: typeof m) => change({ ...d, measures: d.measures.map(old => old.id === m.id ? next : old) })
-        return <fieldset key={m.id}><legend>Measure {index + 1}</legend>
+        return <fieldset key={m.id} hidden={m.id!==activeMeasure}><legend>Measure {index + 1}</legend>
           <Text label="Measure description" value={m.description} change={description => update({ ...m, description })} multiline maxLength={4000} />
           <div className="form-grid"><Text label="Target (optional; blank means unknown)" value={m.target ?? ''} change={target => update({ ...m, target: target === '' ? null : target })} decimalInput /><Text label="Unit" value={m.unit} change={unit => update({ ...m, unit })} maxLength={160} /></div>
           <Label className="check"><Input type="checkbox" checked={m.baseline !== null} onChange={e => update({ ...m, baseline: e.target.checked ? { value: '', basis: 'estimate' } : null })} />Record a planning baseline</Label>
@@ -50,11 +52,13 @@ export function ObjectiveFields({ value: d, change, owners }: { value: Objective
           <Button type="button" variant="outline" onClick={() => change({ ...d, measures: d.measures.filter(old => old.id !== m.id) })}>Remove measure {index + 1}</Button>
         </fieldset>
       })}
-      <Button type="button" variant="outline" disabled={d.measures.length >= 50} onClick={() => change({ ...d, measures: [...d.measures, emptyMeasure()] })}>Add success measure</Button>
+      <Button type="button" variant="outline" disabled={d.measures.length >= 50} onClick={() => {const next=emptyMeasure();setChosenMeasure(next.id);change({ ...d, measures: [...d.measures,next] })}}>Add success measure</Button>
     </section>
   </div>
 }
 
 export function ObjectiveTemplateFields({ value, change }: { value: ObjectiveConfiguration[]; change: (next: ObjectiveConfiguration[]) => void }) {
-  return <section aria-label="Template objective definitions"><p>Optional planning configuration is copied by value. Achieved results, approvals, disclosures and follow-up history are never copied.</p>{value.map((item, index) => <fieldset key={item.id}><legend>Objective {index + 1}</legend><ObjectiveFields value={item.definition} change={definition => change(value.map(old => old.id === item.id ? { ...old, definition: { ...definition, owner_id: null } } : old))} /><Button type="button" variant="outline" onClick={() => change(value.filter(old => old.id !== item.id))}>Remove objective {index + 1}</Button>{objectiveProblems(item.definition).map(message => <p key={message} className="notice">{message}</p>)}</fieldset>)}<Button type="button" variant="outline" disabled={value.length >= 100} onClick={() => change([...value, { id: crypto.randomUUID(), definition: emptyObjective() }])}>Add objective</Button></section>
+  const [selected,setSelected]=useState<string>()
+  const active=value.some(item=>item.id===selected)?selected:value[0]?.id
+  return <section aria-label="Template objective definitions"><p>Optional planning configuration is copied by value. Achieved results, approvals, disclosures and follow-up history are never copied.</p>{value.length>1&&<nav className="fleet-pattern-actions" aria-label="Template objective editors">{value.map((item,index)=><Button key={item.id} type="button" variant="ghost" aria-current={item.id===active?'step':undefined} onClick={()=>setSelected(item.id)}>Objective {index+1}</Button>)}</nav>}{value.map((item, index) => <fieldset key={item.id} hidden={item.id!==active}><legend>Objective {index + 1}</legend><ObjectiveFields value={item.definition} change={definition => change(value.map(old => old.id === item.id ? { ...old, definition: { ...definition, owner_id: null } } : old))} /><Button type="button" variant="outline" onClick={() => change(value.filter(old => old.id !== item.id))}>Remove objective {index + 1}</Button>{objectiveProblems(item.definition).map(message => <p key={message} className="notice">{message}</p>)}</fieldset>)}<Button type="button" variant="outline" disabled={value.length >= 100} onClick={() => {const id=crypto.randomUUID();setSelected(id);change([...value, {id,definition:emptyObjective()}])}}>Add objective</Button></section>
 }

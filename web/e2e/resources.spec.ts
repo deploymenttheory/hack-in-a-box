@@ -1,3 +1,4 @@
+import { openEventSection, expectEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -37,7 +38,7 @@ async function setup(page: Page, judge = false) {
     }
     return route.fulfill({ json: selected })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Resources', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Resources')
   return { guide, challenge, event, gets, acknowledgements, release: () => { released = true; event.published_at = '2027-06-13T09:00:00Z' }, revoke: () => { revoked = true }, removeTeam: () => { member = false }, paginate: () => { paginate = true } }
 }
 
@@ -89,7 +90,7 @@ test('role-specific libraries contain only returned authorised resources', async
   const state = await setup(page, true)
   await expect(page.getByRole('button', { name: 'Read Judge brief' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Read Getting started' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Content', exact: true })).toHaveCount(0)
+  await expectEventSection(page,'Content',false)
   await page.getByRole('button', { name: 'Read Judge brief' }).click()
   await expect(page.getByRole('heading', { name: 'Judge brief' })).toBeVisible()
   expect(state.gets.every(url => !url.includes('preview=true'))).toBe(true)

@@ -1,3 +1,4 @@
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { accessFixture } from './team-access-fixtures'
 
@@ -86,10 +87,10 @@ test('navigation aborts an outstanding reveal and ignores its late response', as
   state.hold = true
   await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
   await expect.poll(() => !!state.delayed).toBe(true)
-  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  await openEventSection(page, 'Overview')
   await state.delayed!.fulfill({ json: { id: firstResource, version: 1, value: secret() } }).catch(() => undefined)
   await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Team access', exact: true }).click()
+  await openEventSection(page, 'Team access')
   await expect(page.getByLabel('Value hidden')).toHaveCount(2)
   await noStoredValue(page)
 })

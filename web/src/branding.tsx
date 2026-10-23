@@ -1,3 +1,4 @@
+import { usePrivateRequestScope } from './private-request-scope'
 import { PlanningEditorSections, PlanningStep } from './planning-layout'
 import { Input, Label } from './components/ui/fields'
 import { useEffect, useState, type ReactNode } from 'react'
@@ -55,23 +56,29 @@ export function BrandFields({ value, onChange }: { value: Branding; onChange: (v
 export function BrandingEditor({ event, onDirty }: { event: EventRecord; onDirty: (dirty: boolean) => void }) {
   const query = useBrand(event.id)
   if (query.isPending) return <Loading />
-  if (query.error) return <Failure error={query.error} />
-  return <BrandingForm key={event.id} event={event} initial={query.data} onDirty={onDirty} />
+  if (!query.data || (query.error instanceof APIError && [401,403,404].includes(query.error.status))) return <Failure error={query.error} />
+  return <BrandingForm available={!query.error} key={event.id} event={event} initial={query.data} onDirty={onDirty} />
 }
-function BrandingForm({ event, initial, onDirty }: { event: EventRecord; initial: components['schemas']['EventBranding']; onDirty: (dirty: boolean) => void }) {
+function BrandingForm({ event, initial, onDirty, available }: { available: boolean; event: EventRecord; initial: components['schemas']['EventBranding']; onDirty: (dirty: boolean) => void }) {
   const identity = useIdentity(), cache = useQueryClient()
+  const scope=usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:branding`)
+  const [current,setCurrent]=useState<components['schemas']['EventBranding']>(),[reading,setReading]=useState(false),[unconfirmed,setUnconfirmed]=useState(false),[denied,setDenied]=useState(false)
   const [saved, setSaved] = useState(initial), [value, setValue] = useState(initial.branding)
   const [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState('')
   const dirty = JSON.stringify(value) !== JSON.stringify(saved.branding)
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
   useBlocker({ shouldBlockFn: () => dirty && !window.confirm('Leave with unsaved branding changes?'), enableBeforeUnload: dirty })
   async function save() {
+    if(!available||pending||unconfirmed||denied)return
+    const ticket=scope.capture();if(!ticket.current())return
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const result = unwrap(await api.PUT('/api/v1/events/{event_id}/branding', { params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${saved.revision}"` } }, body: value }))
-      setSaved(result); setValue(result.branding); setNotice('Branding saved.'); cache.setQueryData(privateKey(identity.person.id, event.id, 'branding'), result)
+      ticket.assert();setSaved(result); setValue(result.branding); setNotice('Branding saved.'); cache.setQueryData(privateKey(identity.person.id, event.id, 'branding'), result)
       await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event') })
-    } catch (error) { setFailure(error) } finally { setPending(false) }
+    } catch (error) { if(ticket.current()){setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();setDenied(true)}else if(!(error instanceof APIError)||error.status>=500){setUnconfirmed(true);setNotice('Branding save outcome is unconfirmed. No write is replayed; read current native state for review.')}} } finally { if(ticket.current())setPending(false) }
   }
-  return <form className="fleet-planning-form" onSubmit={e => { e.preventDefault(); void save() }}><h2>Event branding</h2><BrandFields value={value} onChange={setValue} /><div className="actions"><Button type="submit" disabled={pending || !dirty || !!brandingErrors(value).length}>Save branding</Button><Button type="button" variant="outline" onClick={() => { setValue(initial.branding); setSaved(initial); setFailure(undefined) }}>Reset to saved branding</Button></div>{notice && <p role="status">{notice}</p>}{!!failure && <Failure error={failure} />}{failure instanceof APIError && failure.blockers.map(b => <p role="alert" key={b.field}>{b.message}</p>)}</form>
+  async function readCurrent(){const ticket=scope.capture();if(!ticket.current())return;setReading(true);try{const result=unwrap(await api.GET('/api/v1/events/{event_id}/branding',{signal:ticket.signal,params:{path:{event_id:event.id}}}));ticket.assert();setCurrent(result)}catch(error){if(ticket.current())setFailure(error)}finally{if(ticket.current())setReading(false)}}
+  if(denied)return <Failure error={failure}/>
+  return <form className="fleet-planning-form" onSubmit={e => { e.preventDefault(); void save() }}><h2>Event branding</h2><BrandFields value={value} onChange={setValue} /><div className="actions"><Button type="submit" disabled={!available||pending||unconfirmed||!dirty||!!brandingErrors(value).length}>Save branding</Button><Button type="button" variant="outline" onClick={() => { setValue(initial.branding); setSaved(initial); setFailure(undefined) }}>Reset to saved branding</Button></div>{(unconfirmed||failure instanceof APIError&&failure.status===409)&&<section className="fleet-planning-section" aria-label="Current branding review"><h3>Review current branding</h3><p>Latest native state is not an exact receipt for the attempted save. Your unsent palette and images remain separate.</p><Button type="button" icon="refresh" variant="outline" pending={reading} disabled={!available} onClick={()=>void readCurrent()}>Read current branding for review</Button>{current&&<><p>Current native revision {current.revision} · Primary {current.branding.primary} · Background {current.branding.background}</p><Button type="button" disabled={!available} onClick={()=>{setSaved(current);setCurrent(undefined);setUnconfirmed(false);setFailure(undefined);setNotice('Current branding revision explicitly selected. Unsent palette retained; review before a new deliberate save.')}}>Use reviewed branding revision and keep my edits</Button></>}</section>}{notice && <p role="status">{notice}</p>}{!!failure && <Failure error={failure} />}{failure instanceof APIError && failure.blockers.map(b => <p role="alert" key={b.field}>{b.message}</p>)}</form>
 }
