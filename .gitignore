@@ -70,3 +70,6 @@ web/test-results-patterns/
 web/dist-styleguide/
 web/styleguide-test-results/
 web/test-results-shell-*/
+
+web/test-results-planning/
+web/node_modules

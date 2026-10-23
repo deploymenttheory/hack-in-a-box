@@ -1,0 +1,49 @@
+@layer components {
+  .fleet-planning-authority { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .fleet-planning { min-width: 0; }
+  .fleet-planning-heading { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-4) var(--space-6); border-bottom: 1px solid var(--border); }
+  .fleet-planning-heading h1 { font-size: var(--text-page); margin: 0 0 var(--space-2); }
+  .fleet-planning-heading p { max-width: 70ch; }
+  .fleet-planning-layout { display: grid; grid-template-columns: 13rem minmax(0,1fr); gap: var(--space-6); padding-top: var(--space-4); }
+  .fleet-planning-nav { min-width: 0; }
+  .fleet-planning-nav h2 { font-size: var(--text-caption); color: var(--muted-foreground); font-weight: var(--weight-emphasis); margin: var(--space-4) var(--space-2) var(--space-2); }
+  .fleet-planning-nav ul { list-style: none; padding: 0; margin: 0; }
+  .fleet-planning-nav button { width: 100%; display: flex; align-items: center; gap: var(--space-2); border: 0; background: transparent; text-align: start; padding: var(--space-2); min-height: var(--control-height); border-radius: var(--radius-control); color: var(--foreground); }
+  .fleet-planning-nav button[aria-current] { background: var(--accent-surface); font-weight: var(--weight-emphasis); box-shadow: inset 2px 0 var(--primary); }
+  .fleet-planning-canvas { min-width: 0; }
+  .fleet-planning-section { padding-block: var(--space-4); border-bottom: 1px solid var(--border); min-width: 0; }
+  .fleet-planning-section h2 { font-size: var(--text-section); margin-top: 0; }
+  .fleet-planning-summary, .fleet-planning-metrics { display: flex; flex-wrap: wrap; gap: var(--space-6); padding-block: var(--space-4); margin: 0; }
+  .fleet-planning-metrics > div { flex: 1 1 10rem; }
+  .fleet-planning-metrics dd { font-size: var(--text-page); font-weight: var(--weight-emphasis); margin: var(--space-2) 0; }
+  .fleet-planning-summary { align-items: center; border-bottom: 1px solid var(--border); }
+  .fleet-planning-summary p { margin: 0; }
+  .fleet-editor-sections { display: grid; grid-template-columns: 12rem minmax(0,1fr); gap: var(--space-6); padding-block: var(--space-4); }
+  .fleet-editor-sections > nav { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); }
+  .fleet-editor-sections > nav button { justify-content: start; text-align: start; }
+  .fleet-editor-sections > nav [aria-current] { background: var(--accent-surface); font-weight: var(--weight-emphasis); box-shadow: inset 2px 0 var(--primary); }
+  .fleet-editor-sections > div, .fleet-editor-sections section { min-width: 0; }
+  .fleet-editor-sections fieldset, .fleet-planning-form > fieldset { border: 0; padding: 0; margin: 0 0 var(--space-4); min-width: 0; }
+  .fleet-editor-sections legend { font-size: var(--text-section); font-weight: var(--weight-emphasis); padding: 0 0 var(--space-3); }
+  .fleet-planning-form { max-width: 75rem; min-width: 0; }
+  .fleet-planning-form > .actions { padding-block: var(--space-4); border-block: 1px solid var(--border); }
+  .fleet-planning-records { list-style: none; padding: 0; margin: 0; }
+  .fleet-planning-records > li, .fleet-planning-record { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--space-4); padding-block: var(--row-padding); border-bottom: 1px solid var(--border); min-width: 0; }
+  .fleet-planning-record > div, .fleet-planning-records > li > div { min-width: 0; overflow-wrap: anywhere; }
+  .fleet-planning-record h3, .fleet-planning-record h4 { margin-top: 0; font-size: var(--text-section); }
+  .fleet-planning-detail { display: grid; grid-template-columns: minmax(0,1fr) minmax(18rem, 0.8fr); gap: var(--space-6); }
+  .fleet-planning-private { border-inline-start: 2px solid var(--warning); padding-inline-start: var(--space-4); }
+  .fleet-planning .fleet-planning-form details { border-bottom: 1px solid var(--border); padding-block: var(--space-3); }
+  .fleet-planning .fleet-planning-form summary { cursor: pointer; font-weight: var(--weight-emphasis); padding-block: var(--space-2); }
+  .fleet-task-board { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap: var(--space-4); }
+  .fleet-task-board > section { border-top: 2px solid var(--border); min-width: 0; }
+  .fleet-definition-section { padding-block: var(--space-4); border-bottom: 1px solid var(--border); }
+  .fleet-definition-section > fieldset { padding-block: var(--space-4); }
+  .fleet-template-configuration { border: 0; padding: 0; min-width: 0; }
+  .fleet-event-brand-assets { display: flex; flex-wrap: wrap; align-items: start; gap: var(--space-4); padding-block: var(--space-3); }
+  .fleet-event-brand-assets > img { max-width: 10rem; max-height: 3rem; object-fit: contain; }
+  .fleet-event-brand-assets details img { max-width: 100%; max-height: 15rem; object-fit: contain; }
+  .fleet-brand-preview { padding: var(--space-4); border: 1px solid var(--input); background: var(--background); color: var(--foreground); }
+  @media (max-width: 64rem) { .fleet-editor-sections { grid-template-columns: 1fr; } .fleet-editor-sections > nav { flex-direction: row; flex-wrap: wrap; } }
+  @media (max-width: 48rem) { .fleet-planning-layout, .fleet-planning-detail { grid-template-columns: minmax(0,1fr); } .fleet-planning-nav { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); } .fleet-planning-nav section { flex: 1 1 9rem; } .fleet-planning-heading { padding-block: var(--space-3); } }
+}
