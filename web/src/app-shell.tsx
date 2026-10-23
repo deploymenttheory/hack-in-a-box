@@ -1,6 +1,8 @@
-import { Card } from './components/ui/surfaces'
+import { CollectionHeading } from './components/patterns'
+import { Input, Label } from './components/ui/fields'
+import { Icon } from './components/ui/icon'
+import { PortalFrame, PortalNavigation } from './portal-navigation'
 import { EmailAccount } from './email-account'
-import { InboxLink } from './inbox'
 import { ConnectionStatus } from './connection-status'
 import { installDraftInvalidation } from './private-draft-lifecycle'
 import { retainMentorDraftScope } from './mentor-drafts'
@@ -11,7 +13,6 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu'
 import { api, APIError, getSession, type Session } from './api/client'
 import { Button } from './components/ui/button'
-import { styleguideURL } from './styleguide-url'
 import { Theme } from './components/theme'
 import { Failure, Loading } from './components/states'
 import { clearPrivateDrafts, loginURL } from './auth'
@@ -42,7 +43,7 @@ function Account({ session }: { session: Session }) {
   }
   return <div>
     <Menu>
-      <MenuTrigger render={<Button variant="outline" icon="user" />} disabled={pending}>{session.person.display_name || 'Your account'}</MenuTrigger>
+      <MenuTrigger render={<Button variant="outline" icon="user" pending={pending} />} disabled={pending}><span className="fleet-account-name">{session.person.display_name || 'Your account'}</span><Icon name="down" /></MenuTrigger>
       <MenuContent><MenuItem icon="user" render={<Link to="/account" />}>Account settings</MenuItem><MenuItem icon="logout" onClick={() => void logout()}>Sign out</MenuItem></MenuContent>
     </Menu>
     {!!failure && <Failure error={failure} />}
@@ -71,28 +72,18 @@ export function Shell() {
     }
   }, [session.data?.person.id, session.data?.draft_scope, session.error])
   const signedOut = session.data === null || (session.error instanceof APIError && session.error.status === 401)
-  return <Theme>
-    <a className="skip-link" href="#main">Skip to content</a>
-    <header className="header">
-      <Link className="brand" to="/" aria-label="Hack in a Box home"><span className="brand-mark" aria-hidden="true">H</span>Hack in a Box{import.meta.env.MODE === 'admin' ? ' · Admin' : ''}</Link>
-      <nav aria-label="Main navigation"><Link to="/">Workspace</Link>{session.data && !session.error && <Link to="/ideas">Ideas & projects</Link>}{session.data && !session.error && <IdentityContext.Provider value={session.data}><InboxLink /></IdentityContext.Provider>}{import.meta.env.MODE !== 'admin' && <Link to="/register">Find events</Link>}<span className="event-context">{pathname.startsWith('/events/') ? 'Event workspace' : 'No event selected'}</span></nav>
-      {session.data && !session.error ? <Account session={session.data} /> : <a className="sign-in" href={loginURL()}>Sign in</a>}
-    </header>
-    <ConnectionStatus />
-    <main id="main" tabIndex={-1}>
-      {!(import.meta.env.MODE === 'admin' ? /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/(new|[a-f0-9-]+)(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname) : /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/[a-f0-9-]+(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
-        signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={`${session.data.person.id}:${session.data.draft_scope}`}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
-    </main>
-    <footer>Make something worth sharing. <a href={styleguideURL} target="_blank" rel="noopener noreferrer">About this interface · Style guide</a></footer>
-  </Theme>
+  const content = !(import.meta.env.MODE === 'admin' ? /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/(new|[a-f0-9-]+)(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname) : /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/[a-f0-9-]+(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
+        signedOut ? <Welcome expired={expired} /> : session.data ? <Outlet /> : <Welcome />
+  const account = session.data && !session.error ? <Account session={session.data} /> : <a className="fleet-button fleet-button-outline" href={loginURL()}><Icon name="user" />Sign in</a>
+  return <Theme>{session.data && !session.error ? <IdentityContext.Provider value={session.data}><PrivateCache key={`${session.data.person.id}:${session.data.draft_scope}`}><PortalFrame account={account} navigation={<PortalNavigation session={session.data} pathname={pathname} account={account} />}><ConnectionStatus /><main id="main" tabIndex={-1}>{content}</main></PortalFrame></PrivateCache></IdentityContext.Provider> : <PortalFrame account={account}><ConnectionStatus /><main id="main" tabIndex={-1}>{content}</main></PortalFrame>}</Theme>
 }
 
 function Welcome({ expired = false }: { expired?: boolean }) {
-  return <section className="welcome"><p className="eyebrow">{import.meta.env.MODE === 'admin' ? 'Administration' : 'Build together'}</p><h1>{expired ? 'Sign in to continue.' : <>Big ideas.<br />A place to begin.</>}</h1><p>{expired ? 'Your session has expired. Sign in again to return to this page. Safe event setup drafts remain available to the same account. Private unsent mentor drafts are cleared when your session ends.' : 'Bring your curiosity, meet your team, and turn a shared challenge into something real.'}</p><a className="primary-link" href={loginURL()}>Sign in with your organisation <span aria-hidden="true">↗</span></a><p className="muted">Sign in to access your events and team workspace.</p></section>
+  return <section className="fleet-entry-state"><p className="eyebrow">{import.meta.env.MODE === 'admin' ? 'Administration' : 'Build together'}</p><h1>{expired ? 'Sign in to continue.' : 'Your hack workspace'}</h1><p>{expired ? 'Your session has expired. Sign in again to return to this page. Safe event setup drafts remain available to the same account. Private unsent mentor drafts are cleared when your session ends.' : 'Bring your curiosity, meet your team, and turn a shared challenge into something real.'}</p><a className="fleet-button fleet-button-primary" href={loginURL()}><Icon name="user" />Sign in with your organisation</a><p className="muted">Sign in to access your events and team workspace.</p></section>
 }
 
 export function AccountPage() {
   const identity = useIdentity()
-  return <section className="workspace"><Link to="/">← Your events</Link><div className="page-heading"><div><p className="eyebrow">Your identity</p><h1>Your account</h1><p>{identity.person.display_name}</p></div></div><Card><h2>Organisation account</h2><label htmlFor="account-id">Your account ID</label><input id="account-id" readOnly value={identity.person.id} /><p>Share this ID with an organiser who needs to assign you an event role.</p></Card><EmailAccount /><GitHubAccount /></section>
+  return <section className="fleet-account-workspace"><Link className="fleet-back-link" to="/"><Icon name="back" />Your events</Link><CollectionHeading title="Your account" scope={{ entity: 'Identity and connected accounts' }} description="Manage verified contact details and repository identity. Your organisation account continues to own sign-in." /><section className="fleet-account-section"><h2>Organisation account</h2><p>{identity.person.display_name}</p><Label htmlFor="account-id">Your account ID</Label><Input id="account-id" readOnly value={identity.person.id} /><p>Share this ID with an organiser who needs to assign you an event role.</p></section><EmailAccount /><GitHubAccount /></section>
 }
-export function NotFound() { return <section className="state"><h1>Page not found</h1><p>This link does not lead to a workspace.</p><Link to="/">Return home</Link></section> }
+export function NotFound() { return <section className="fleet-entry-state"><p className="eyebrow">Unavailable destination</p><h1>Page not found</h1><p>This link does not lead to a workspace.</p><Link className="fleet-button fleet-button-outline" to="/"><Icon name="back" />Return home</Link></section> }

@@ -8,7 +8,7 @@ test('participant build omits organiser navigation even for an organiser identit
   await expect(page.getByRole('heading', { name: 'Your events' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Create event' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Event templates' })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Find events' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Find events', exact: true })).toBeVisible()
   await page.getByRole('link', { name: /North Star Hack/ }).click()
   await expect(page.getByRole('heading', { name: 'North Star Hack' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resources', exact: true })).toBeVisible()

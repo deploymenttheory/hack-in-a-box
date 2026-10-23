@@ -7029,6 +7029,9 @@ components:
           type: boolean
         can_read_staff:
           type: boolean
+        can_read_review_coverage:
+          type: boolean
+          description: Current authority to open review coverage (event read plus active organiser or mentor role). Permission only; not a service-availability or private-record grant. Absent means false.
         can_read_attendance:
           type: boolean
         can_read_logistics:

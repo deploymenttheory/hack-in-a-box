@@ -46,7 +46,7 @@ for (const palette of palettes) test(`${palette.name} palette keeps registration
   await page.route(`**/api/v1/events/${firstID}/registrations`, route => route.fulfill({ status: 422, json: { error: { code: 'invalid', message: 'Review the answer', request_id: 'synthetic', blockers: [{ field: questionID, code: 'invalid', message: 'Explain the learning goal.' }] } } }))
   await submit.click(); await expect(field).toHaveAttribute('aria-invalid', 'true')
   expect(await contrastOf(page.locator('[id$="-error"].fleet-field-error').first())).toBeGreaterThanOrEqual(4.5)
-  expect(await contrastOf(page.locator('.state[role=alert] p').first())).toBeGreaterThanOrEqual(4.5)
+  expect(await contrastOf(page.locator('.fleet-request-state[role=alert] p').first())).toBeGreaterThanOrEqual(4.5)
 })
 
 test('native errors, disabled actions and private drafts keep their existing semantics', async ({ page }) => {

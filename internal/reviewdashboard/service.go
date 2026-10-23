@@ -39,22 +39,9 @@ func (s Service) guard(
 	if err != nil {
 		return out, fmt.Errorf("lock review coverage event: %w", err)
 	}
-	if err = (access.EventPolicy{Queries: q}).Authorize(
-		ctx,
-		actor,
-		eventID,
-		eventID,
-		access.EventRead,
-	); err != nil {
-		return out, fmt.Errorf("authorize review coverage event: %w", err)
-	}
-	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
+	out.organiser, err = access.ReviewCoverageAuthority(ctx, q, actor, eventID)
 	if err != nil {
-		return out, fmt.Errorf("read current review coverage role: %w", err)
-	}
-	out.organiser = slices.Contains(roles, "organiser")
-	if !out.organiser && !slices.Contains(roles, "mentor") {
-		return out, access.ErrForbidden
+		return out, fmt.Errorf("authorize review coverage scope: %w", err)
 	}
 	if err = json.Unmarshal(row.Configuration, &out.dates); err != nil {
 		return out, fmt.Errorf("read review coverage dates: %w", err)

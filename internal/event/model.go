@@ -67,24 +67,25 @@ type Input struct {
 	AcknowledgeCompetitionRestriction bool          `json:"acknowledge_competition_restriction"`
 }
 type View struct {
-	ID                   uuid.UUID     `json:"id"`
-	Name                 string        `json:"name"`
-	Slug                 string        `json:"slug"`
-	OwnerID              *uuid.UUID    `json:"owner_id"`
-	Revision             int64         `json:"revision"`
-	Stage                string        `json:"stage"`
-	Configuration        Configuration `json:"configuration"`
-	ChallengePublication *time.Time    `json:"challenge_publication"`
-	PublishedAt          *time.Time    `json:"published_at"`
-	ConfirmedAttendees   int64         `json:"confirmed_attendees"`
-	Blockers             []Issue       `json:"blockers"`
-	CanPresent           bool          `json:"can_present"`
-	CanEdit              bool          `json:"can_edit"`
-	CanManageOwner       bool          `json:"can_manage_owner"`
-	CanReadStaff         bool          `json:"can_read_staff"`
-	CanReadAttendance    bool          `json:"can_read_attendance"`
-	CanReadLogistics     bool          `json:"can_read_logistics"`
-	CanTransition        bool          `json:"can_transition"`
+	ID                    uuid.UUID     `json:"id"`
+	Name                  string        `json:"name"`
+	Slug                  string        `json:"slug"`
+	OwnerID               *uuid.UUID    `json:"owner_id"`
+	Revision              int64         `json:"revision"`
+	Stage                 string        `json:"stage"`
+	Configuration         Configuration `json:"configuration"`
+	ChallengePublication  *time.Time    `json:"challenge_publication"`
+	PublishedAt           *time.Time    `json:"published_at"`
+	ConfirmedAttendees    int64         `json:"confirmed_attendees"`
+	Blockers              []Issue       `json:"blockers"`
+	CanPresent            bool          `json:"can_present"`
+	CanEdit               bool          `json:"can_edit"`
+	CanManageOwner        bool          `json:"can_manage_owner"`
+	CanReadStaff          bool          `json:"can_read_staff"`
+	CanReadReviewCoverage bool          `json:"can_read_review_coverage"`
+	CanReadAttendance     bool          `json:"can_read_attendance"`
+	CanReadLogistics      bool          `json:"can_read_logistics"`
+	CanTransition         bool          `json:"can_transition"`
 }
 
 func DefaultConfiguration() Configuration {

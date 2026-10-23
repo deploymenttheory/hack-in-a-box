@@ -5,9 +5,9 @@ import { Icon } from './ui/icon'
 import { LiveMessage } from './ui/feedback'
 import { APIError } from '../api/client'
 
-export function Loading() { return <LiveMessage className="state">Loading your workspace…</LiveMessage> }
+export function Loading() { return <LiveMessage className="fleet-request-state">Loading your workspace…</LiveMessage> }
 export function Failure({ error, retry }: { error: unknown; retry?: () => void }) {
-  return <Alert role="alert" tone="destructive" className="state">
+  return <Alert role="alert" tone="destructive" className="fleet-request-state">
     <h2><Icon name="warning" /> Something needs attention</h2>
     <p>{error instanceof APIError ? error.message : 'We could not load this page. Please try again.'}</p>
     {error instanceof APIError && error.blockers.length > 0 && <ul>{error.blockers.map((item, index) => <li key={`${item.field}-${index}`}><a href={`#${item.field}`}>{item.message}</a></li>)}</ul>}
