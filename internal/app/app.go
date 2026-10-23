@@ -110,6 +110,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
 		Help:           communicationRuntime.Help,
+		Feedback:       communicationRuntime.Feedback,
 		Clarifications: *communicationRuntime.Clarifications,
 		Presentation:   presentation.Service{Pool: pool},
 		Automation:     communicationRuntime.Automation,

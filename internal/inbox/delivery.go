@@ -206,7 +206,14 @@ func (s Service) RecordResourceInTransaction(
 	source Source,
 ) error {
 	if !slices.Contains(
-		[]string{"content", "help", "clarification", "outcome_review"},
+		[]string{
+			"content",
+			"help",
+			"clarification",
+			"outcome_review",
+			"feedback",
+			"feedback_followup",
+		},
 		source.Kind,
 	) {
 		return access.ErrInvalid
