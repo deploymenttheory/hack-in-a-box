@@ -1,4 +1,4 @@
-import { openEventSection } from './event-navigation-fixture'
+import { openEventSection, expectEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { mockMentors } from './mentor-fixtures'
 import { firstID, mockWorkspace } from './fixtures'
@@ -12,10 +12,10 @@ test('participant build omits organiser navigation even for an organiser identit
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Find events', exact: true })).toBeVisible()
   await page.getByRole('link', { name: /North Star Hack/ }).click()
   await expect(page.getByRole('heading', { name: 'North Star Hack' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Resources', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Deliverables', exact: true })).toBeVisible()
+  await expectEventSection(page,'Resources')
+  await expectEventSection(page,'Deliverables')
   for (const name of ['Setup', 'Staff', 'Applicants', 'Teams', 'Content', 'Advance to registration']) {
-    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0)
+    await expectEventSection(page,name,false)
   }
   for (const path of ['/events/new', '/templates']) {
     await page.goto(path)

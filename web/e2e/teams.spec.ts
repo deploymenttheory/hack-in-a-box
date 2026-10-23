@@ -179,6 +179,12 @@ test('an interrupted publication stays unknown after a current read and is never
   await page.getByRole('button', { name: 'Review allocation', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Review publication', exact: true })).toBeDisabled()
   await expect(page.getByText(/Server response received/)).toHaveCount(0)
+  page.on('dialog', dialog => void dialog.accept())
+  await openEventSection(page, 'Overview')
+  await openEventSection(page, 'Teams')
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Review allocation', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Review publication', exact: true })).toBeDisabled()
   expect(writes).toBe(1)
 })
 

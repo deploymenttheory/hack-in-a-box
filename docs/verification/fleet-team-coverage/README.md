@@ -2,8 +2,9 @@
 
 Issue [#237](https://github.com/deploymenttheory/hack-in-a-box/issues/237), PR
 [#253](https://github.com/deploymenttheory/hack-in-a-box/pull/253). Implementation
-started from main `1c94473edb6e91adc42409bfe50317380e96194f`; the shared optional
-local-record action seam is included separately until the parallel lanes merge.
+started from main `1c94473edb6e91adc42409bfe50317380e96194f`; the branch was then rebased onto merged planning main
+`ad634ded92f1b4984ed96b8dd00aec889e89810e`, dropping its duplicate shared
+local-record seam and preserving the actual merged parent composition.
 
 ## Scope and boundaries
 
@@ -24,7 +25,8 @@ No backend, schema, real provider or authentication policy changed.
 
 The bounded `coverage-command.tsx` adapter fences ended sessions and late results,
 blocks duplicate starts synchronously, treats interrupted/408/5xx responses as
-unknown, and retains a hard write barrier. An authoritative GET can update current
+unknown, and retains a hard write barrier. The merged planning event-session capsule retains uncertain commands across tab
+replacement; pending work prevents departure. An authoritative GET can update current
 state but cannot prove the original command succeeded. Unknown intent permits
 read-only navigation and refresh, never automatic resend or a fabricated receipt.
 `TeamCommand.request_id` still identifies a pending join request, not idempotency.
@@ -33,7 +35,8 @@ read-only navigation and refresh, never automatic resend or a fabricated receipt
 
 All screenshots use synthetic people and deterministic route fixtures. Baselines
 were captured before domain composition changed with the same portal shells and
-viewport projects. This is local evidence, not a claim of release certification.
+viewport projects. The final after evidence includes the independently merged #235
+event chrome; domain composition ownership remains #237. This is local evidence, not a claim of release certification.
 
 | Surface | Desktop before / after | Mobile before / after |
 |---|---|---|
@@ -59,7 +62,7 @@ No API-less export, bulk apply, total or global search was invented.
 
 - Baseline: 4 desktop/mobile team/mentor publication journeys passed.
 - `npm run lint`: passed.
-- `npm test -- --maxWorkers 2`: 112 tests across 15 files passed.
+- `npm test -- --maxWorkers 2`: 118 tests across 17 files passed.
 - `npm run build`: TypeScript and independent participant/admin builds passed.
 - `npm run build:styleguide`: independent static guide build passed.
 - Focused admin Playwright: teams, mentors and allocation-lifecycle at desktop/mobile;
@@ -81,7 +84,7 @@ No API-less export, bulk apply, total or global search was invented.
   publication timing, freeze races, withdrawals, current visibility and mentor access.
 
 Local browser commands used untracked equivalent configs on isolated admin/public
-preview ports 4197/4297 with one worker to avoid parallel-lane port/process conflicts.
+preview ports 4197/4297 and independent guide port 4187 with one worker to avoid parallel-lane port/process conflicts.
 The committed standard configs and exact-head repository CI remain the merge gate.
 Independent frozen-head standards/spec review and CI are still required before ready
 or merge; these results do not claim either gate has completed.
