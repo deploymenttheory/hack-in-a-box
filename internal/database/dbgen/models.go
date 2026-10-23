@@ -572,6 +572,30 @@ type GithubAccount struct {
 	VerifiedAt     time.Time
 }
 
+type GithubAppInstallAttempt struct {
+	StateHash       []byte
+	EventID         uuid.UUID
+	ActorID         uuid.UUID
+	SessionHash     string
+	SessionRevision int64
+	EventRevision   int64
+	ExpiresAt       time.Time
+}
+
+type GithubAppIntegration struct {
+	EventID             uuid.UUID
+	AppID               int64
+	AppSlug             string
+	OrganizationID      int64
+	Organization        string
+	TemplateRepository  string
+	CredentialVersion   int64
+	KeyID               string
+	PrivateKeyEncrypted []byte
+	InstallationID      int64
+	UpdatedAt           time.Time
+}
+
 type GithubInvitationBinding struct {
 	ID           uuid.UUID
 	EventID      uuid.UUID

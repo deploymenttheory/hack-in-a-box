@@ -43,6 +43,9 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 					// TimeoutHandler buffers headers separately from identify's
 					// writer. Preserve no-store when SCS adds its cookie directive.
 					w.Header().Set("Cache-Control", "no-store")
+					if strings.HasPrefix(r.URL.Path, "/auth/") {
+						w.Header().Set("Referrer-Policy", "no-referrer")
+					}
 					session.ServeHTTP(w, r)
 				} else {
 					next.ServeHTTP(w, r)

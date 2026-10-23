@@ -1196,6 +1196,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/github-app": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser-only configuration and live installation/template permission diagnostics. No private keys, JWTs or tokens are returned. */
+        get: operations["getGitHubAppIntegration"];
+        put?: never;
+        post: operations["configureGitHubAppIntegration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/github-app/installation-authorizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates an expiring single-use event/organiser/browser-session-bound installation state. No GitHub credentials enter this URL. */
+        post: operations["authorizeGitHubAppInstallation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/github-app/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GitHub App setup redirect. Handler requires the current app session and consumes its bound state once; the app-authenticated installation/account check never trusts the installation_id query alone. This is separate from participant GitHub OAuth linking. */
+        get: operations["completeGitHubAppInstallation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/credentials": {
         parameters: {
             query?: never;
@@ -3496,6 +3551,49 @@ export interface components {
             teams: components["schemas"]["HackTeam"][];
             people: components["schemas"]["TeamPerson"][];
             requests: components["schemas"]["TeamRequest"][];
+        };
+        GitHubAppConfiguration: {
+            /** Format: int64 */
+            app_id: number;
+            app_slug: string;
+            /** Format: int64 */
+            organization_id: number;
+            organization: string;
+            template_repository: string;
+        };
+        GitHubAppCommand: {
+            /** @enum {string} */
+            action: "configure" | "rotate" | "disconnect";
+            /** Format: int64 */
+            app_id?: number;
+            app_slug?: string;
+            /** Format: int64 */
+            organization_id?: number;
+            organization?: string;
+            template_repository?: string;
+            private_key?: string;
+        };
+        GitHubAppPermissionCheck: {
+            /** @enum {string} */
+            operation: "read_template" | "create_repository" | "manage_repository_invitations" | "read_repository_activity";
+            required: string[];
+            allowed: boolean;
+        };
+        GitHubAppDiagnostics: {
+            /** @enum {string} */
+            code: "not_configured" | "installation_required" | "healthy" | "permissions_missing" | "installation_removed" | "installation_suspended" | "organization_mismatch" | "app_mismatch" | "template_inaccessible" | "template_invalid" | "credentials_unavailable" | "credentials_invalid" | "provider_unavailable" | "permission_denied" | "rate_limited";
+            checks: components["schemas"]["GitHubAppPermissionCheck"][];
+            /** Format: date-time */
+            checked_at: string;
+        };
+        GitHubAppStatus: {
+            /** Format: int64 */
+            revision: number;
+            configured: boolean;
+            /** Format: int64 */
+            installation_id: number;
+            configuration?: components["schemas"]["GitHubAppConfiguration"];
+            diagnostics: components["schemas"]["GitHubAppDiagnostics"];
         };
         CredentialMetadata: {
             /** Format: uuid */
@@ -8354,6 +8452,114 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AllocationSuggestion"];
                 };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getGitHubAppIntegration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe integration metadata and actionable provider status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubAppStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureGitHubAppIntegration: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GitHubAppCommand"];
+            };
+        };
+        responses: {
+            /** @description Safe committed integration metadata; configure resets the installation and pending attempts. Rotation preserves the installation. Disconnect removes app configuration only. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubAppStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    authorizeGitHubAppInstallation: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fixed GitHub App installation URL with an opaque state nonce. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uri */
+                        url: string;
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    completeGitHubAppInstallation: {
+        parameters: {
+            query: {
+                state: string;
+                installation_id: number;
+                setup_action?: "install" | "update";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fixed local event destination after successful installation validation. */
+            303: {
+                headers: {
+                    Location: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Error"];
         };
