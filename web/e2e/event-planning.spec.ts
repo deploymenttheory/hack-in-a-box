@@ -306,3 +306,22 @@ for (const action of ['approve','release'] as const) test(`clean rules ${action}
  await page.getByRole('button',{name:'Plan Competition rules',exact:true}).click();await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Content '+action)
  expect(state.writes).toHaveLength(1)
 })
+
+for (const field of ['calendar','configuration.calendar'] as const) test(`native calendar group ${field} blocker reveals excluded dates from an inactive section`,async({page})=>{
+ await mockWorkspace(page)
+ const blocker={field,code:'invalid',message:'invalid business calendar or relative offset'}
+ await page.route('**/api/v1/event-preview',route=>{
+  const body=route.request().postDataJSON() as components['schemas']['EventInput']
+  expect(body.configuration.calendar.excluded_dates).toEqual(['2027-02-30'])
+  return route.fulfill({json:{challenge_publication:null,schedule:[],blockers:[blocker]}})
+ })
+ await page.goto('/events/'+firstID);await openEventSection(page,'Setup')
+ const sections=page.getByRole('navigation',{name:'Event setup sections'})
+ await sections.getByRole('button',{name:'Business calendar',exact:true}).click()
+ const dates=page.getByLabel('Excluded dates, one YYYY-MM-DD date per line');await dates.fill('2027-02-30')
+ await sections.getByRole('button',{name:'Event details',exact:true}).click();await expect(dates).toBeHidden()
+ await page.getByRole('button',{name:'Preview dates and blockers',exact:true}).click()
+ const link=page.getByRole('link',{name:blocker.message,exact:true});await expect(link).toHaveAttribute('href','#'+field);await link.focus();await page.keyboard.press('Enter')
+ await expect(dates).toBeVisible();await expect(dates).toBeFocused();await expect(dates).toHaveValue('2027-02-30')
+ await dates.fill('2027-02-28');await expect(dates).toHaveValue('2027-02-28')
+})

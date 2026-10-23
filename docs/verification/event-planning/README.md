@@ -125,6 +125,27 @@ The actual #236 ApplicantReview dirty callback and #237 TeamWorkspace
 canEdit/dirty callbacks must remain wired into EventContent in whichever merge
 order lands; these corrections do not fabricate future owner props.
 
+## Native calendar group follow-up
+
+Independent re-review found that `event.Validate` (`internal/event/model.go`,
+142–143) emits the group field `calendar`, with code `invalid` and message
+`invalid business calendar or relative offset`, when `Calendar.Validate` rejects
+an excluded date. The first correction covered nested calendar field paths but
+missed this actual native group shape. A fresh mobile regression reproduced the
+still-hidden field on `424e5a2` before the fix.
+
+The group now targets Excluded dates in Business calendar; prefixed
+`configuration.calendar` and existing specific nested mappings remain supported.
+The regression submits `2027-02-30` in the actual calendar payload, returns the
+native preview blocker, activates its link by keyboard from Event details and
+checks that the retained excluded date becomes visible, focused and correctable.
+Both group spellings run on desktop and mobile. Fresh final checks: **70 core
+browser cases PASS (17.1s)**, **114 units**, lint, TypeScript and both production
+builds PASS. No other production change, rebase or backend change is included.
+Logs: `/private/tmp/hackbox-planning-calendar-{red,browser,lint,unit,build}.log`;
+the red log retains the expected failed reproduction. Independent spec re-review
+and complete exact-head CI are still required before ready.
+
 ## Representative synthetic visual comparison
 
 The before images use the same named synthetic event/values in the untouched

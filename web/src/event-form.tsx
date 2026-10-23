@@ -55,7 +55,7 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
   usePlanningDepartureBarrier(pending || unconfirmed)
   function revealServerField(field: string) {
     const path = field.replace(/^configuration\./, '')
-    const name = path.startsWith('calendar.working_days') ? 'working_days' : path.startsWith('calendar.excluded_dates') ? 'excluded_dates' : path === 'reason' ? 'postpone-reason' : path
+    const name = path.startsWith('calendar.working_days') ? 'working_days' : path === 'calendar' || path.startsWith('calendar.excluded_dates') ? 'excluded_dates' : path === 'reason' ? 'postpone-reason' : path
     revealPlanningField(root.current, name)
   }
   useBlocker({ shouldBlockFn: () => pending || unconfirmed || dirty && !window.confirm('Leave this page with unsaved changes? Safe setup fields remain in your draft.'), enableBeforeUnload: dirty || pending || unconfirmed })
