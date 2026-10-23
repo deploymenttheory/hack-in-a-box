@@ -63,3 +63,9 @@ cases in 17.8 s. Planning, authoring and attendee mobile captures were inspected
 Their viewport assertions now compare document width with Playwright's configured
 viewport; comparing a mobile browser's expanding innerWidth can mask overflow.
 All three current screens satisfy the stronger assertion without layout changes.
+
+After rebasing onto actual main `642de7f` (merged #214, schema 39), the shared
+participant test selection retains both objective disclosure and automation
+recovery. The combined disclosure/delivery/recovery browser check passes 32
+cases in 19.5 s. Production frontend source and dependencies are unchanged by
+that rebase; the only conflict was the additive test-selection list.
