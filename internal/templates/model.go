@@ -157,10 +157,8 @@ func Validate(bundle Bundle) error {
 		return &event.Blocked{Issues: issues}
 	}
 	d := bundle.Definitions
-	for _, objective := range d.Objectives {
-		if err := objective.Definition.Validate(); err != nil {
-			return fmt.Errorf("validate template objective: %w", err)
-		}
+	if err := validateObjectives(d.Objectives); err != nil {
+		return err
 	}
 	if err := validateCounts(d); err != nil {
 		return err
@@ -329,13 +327,6 @@ func validateMessage(m Message) error {
 }
 
 func visitIDs(b *Bundle, visit func(*uuid.UUID)) {
-	for i := range b.Definitions.Objectives {
-		objective := &b.Definitions.Objectives[i]
-		visit(&objective.ID)
-		for j := range objective.Definition.Measures {
-			visit(&objective.Definition.Measures[j].ID)
-		}
-	}
 	for i := range b.Event.Schedule {
 		visit(&b.Event.Schedule[i].ID)
 	}
@@ -429,7 +420,13 @@ func Remap(source Bundle, input CloneInput) (Bundle, error) {
 		link(&result.Definitions.Messages[i].ScheduleID)
 	}
 	for i := range result.Definitions.Objectives {
-		result.Definitions.Objectives[i].Definition.OwnerID = nil
+		objective := &result.Definitions.Objectives[i]
+		objective.ID = uuid.NewSHA1(input.ID, []byte("objective:"+objective.ID.String()))
+		for j := range objective.Definition.Measures {
+			m := &objective.Definition.Measures[j]
+			m.ID = uuid.NewSHA1(objective.ID, m.ID[:])
+		}
+		objective.Definition.OwnerID = nil
 	}
 	if err := rebase(&result.Event, input); err != nil {
 		return Bundle{}, err
@@ -513,4 +510,19 @@ func validDeliverableOptions(d Deliverable) bool {
 		}
 	}
 	return len(d.EvidenceKinds) <= 3 && len(d.Audience) <= 3
+}
+
+func validateObjectives(configs []objectives.Configuration) error {
+	objectiveIDs := map[uuid.UUID]bool{}
+	for _, objective := range configs {
+		if objective.ID == uuid.Nil || objectiveIDs[objective.ID] {
+			return access.ErrInvalid
+		}
+		objectiveIDs[objective.ID] = true
+		if err := objective.Definition.Validate(); err != nil {
+			return fmt.Errorf("validate template objective: %w", err)
+		}
+	}
+
+	return nil
 }

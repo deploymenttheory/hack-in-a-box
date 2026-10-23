@@ -45,15 +45,11 @@ func (s Service) List(
 			if err != nil {
 				return err
 			}
-			out.Items = append(
-				out.Items,
-				View{
-					Version:        v,
-					CurrentVersion: row.CurrentVersion,
-					CanManage:      event.WritesAllowed,
-					PlanningGaps:   v.Definition.PlanningGaps(),
-				},
-			)
+			item, err := project(ctx, tx, event, v, row.CurrentVersion)
+			if err != nil {
+				return err
+			}
+			out.Items = append(out.Items, item)
 		}
 		if more {
 			id := rows[len(rows)-1].ID

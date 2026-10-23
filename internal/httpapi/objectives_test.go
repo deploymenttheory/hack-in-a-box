@@ -10,6 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
@@ -97,6 +99,91 @@ func TestObjectivesHTTPPrivateConfigurationVersionsAndRejectedResultClaims(t *te
 	f.expect(f.request(f.owner, "PUT", path, invalid, 1), 400)
 	c.Definition.Measures[0].Baseline = &objectives.Baseline{Value: "1", Basis: "demonstrated"}
 	f.expect(f.request(f.owner, "PUT", path, c, 1), 400)
+
+	publicID, pageID := uuid.New(), uuid.New()
+	publicDefinition := objectives.Definition{
+		Description: "Reviewed operational objective",
+		OwnerID:     &f.owner.ID,
+		Measures: []objectives.Measure{
+			{
+				ID:          measure,
+				Description: "Configured review count",
+				Target:      &target,
+				Baseline:    &objectives.Baseline{Value: "2", Basis: "self_report"},
+			},
+		},
+	}
+	publicVersion, err := native.Change(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		publicID,
+		0,
+		objectives.Command{
+			Action:     "save",
+			Definition: &publicDefinition,
+			Reason:     "Define disclosed operation",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cs := content.Service{Pool: pool, Clock: func() time.Time { return f.now }}
+	page, err := cs.Save(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		pageID,
+		0,
+		content.Input{
+			Kind: "page",
+			Document: content.Document{
+				Title:    "Reviewed public objective",
+				Markdown: "Explicit reviewed disclosure",
+				Audience: access.ContentAudience{Confirmed: true},
+				Objectives: []objectives.Disclosure{
+					{Objective: publicVersion.Reference, MeasureIDs: []uuid.UUID{measure}},
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, action := range []string{"review", "approve", "release"} {
+		page, err = cs.Action(
+			t.Context(),
+			f.owner.ID,
+			f.id,
+			pageID,
+			page.Revision,
+			action,
+			"Explicit disclosure",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	disclosedPath := f.base() + "/content/" + pageID.String() + "/objectives/" + publicID.String() + "?version=1"
+	publicResponse := f.request(member, "GET", disclosedPath, nil, 0)
+	f.expect(publicResponse, 200)
+	if strings.Contains(publicResponse.Body.String(), f.owner.ID.String()) ||
+		strings.Contains(publicResponse.Body.String(), "baseline") {
+		t.Fatal("public objective leaked private planning fields", publicResponse.Body.String())
+	}
+	f.expect(f.request(member, "GET", disclosedPath[:len(disclosedPath)-1]+"2", nil, 0), 404)
+	if _, err = cs.Action(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		pageID,
+		page.Revision,
+		"withdraw",
+		"Stop future disclosure",
+	); err != nil {
+		t.Fatal(err)
+	}
+	f.expect(f.request(member, "GET", disclosedPath, nil, 0), 404)
 	if strings.Contains(f.logs.String(), "PRIVATE EARLY THEME") {
 		t.Fatal("private objective leaked to logs")
 	}

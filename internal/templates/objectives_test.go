@@ -59,3 +59,48 @@ func TestObjectiveTemplateCopyRemapsConfigurationAndClearsPersonOwnership(t *tes
 		t.Fatal("idempotent clone remap changed")
 	}
 }
+
+func TestObjectiveTemplateRemapsEventAndObjectiveScopedIdentityWithoutArtificialGlobalConstraint(
+	t *testing.T,
+) {
+	source := fixture()
+	sharedMeasure := uuid.New()
+	// Native objective IDs are event-scoped, and measure IDs are objective-scoped.
+	// Valid source configurations can therefore reuse another resource's UUID.
+	source.Definitions.Objectives = []objectives.Configuration{
+		{
+			ID: source.Event.Schedule[0].ID,
+			Definition: objectives.Definition{
+				Description: "First",
+				Measures: []objectives.Measure{
+					{ID: sharedMeasure, Description: "Scoped first measure"},
+				},
+			},
+		},
+		{
+			ID: uuid.New(),
+			Definition: objectives.Definition{
+				Description: "Second",
+				Measures: []objectives.Measure{
+					{ID: sharedMeasure, Description: "Scoped second measure"},
+				},
+			},
+		},
+	}
+	clone, err := Remap(
+		source,
+		CloneInput{
+			ID:        uuid.New(),
+			LiveStart: source.Event.LiveStart,
+			Timezone:  source.Event.Timezone,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, b := clone.Definitions.Objectives[0], clone.Definitions.Objectives[1]
+	if a.ID == clone.Event.Schedule[0].ID ||
+		a.Definition.Measures[0].ID == b.Definition.Measures[0].ID {
+		t.Fatal("scoped identities collided after clone")
+	}
+}

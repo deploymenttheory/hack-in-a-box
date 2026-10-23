@@ -142,13 +142,8 @@ func (s Service) Read(
 		if err != nil {
 			return err
 		}
-		out = View{
-			Version:        v,
-			CurrentVersion: head.CurrentVersion,
-			CanManage:      row.WritesAllowed,
-			PlanningGaps:   v.Definition.PlanningGaps(),
-		}
-		return nil
+		out, err = project(ctx, tx, row, v, head.CurrentVersion)
+		return err
 	})
 	if err != nil {
 		return out, fmt.Errorf("read objectives configuration: %w", err)
@@ -290,4 +285,34 @@ func validateCommand(id uuid.UUID, expected int64, c Command) error {
 	}
 
 	return nil
+}
+
+func project(
+	ctx context.Context,
+	tx pgx.Tx,
+	row dbgen.Event,
+	v Version,
+	current int64,
+) (View, error) {
+	out := View{
+		Version:        v,
+		CurrentVersion: current,
+		CanManage:      row.WritesAllowed,
+		PlanningGaps:   v.Definition.PlanningGaps(),
+	}
+	if v.Definition.OwnerID != nil {
+		err := (access.EventPolicy{Queries: dbgen.New(tx)}).Authorize(
+			ctx,
+			*v.Definition.OwnerID,
+			row.ID,
+			row.ID,
+			access.StaffRead,
+		)
+		if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) {
+			out.PlanningGaps = append(out.PlanningGaps, "owner_unavailable")
+		} else if err != nil {
+			return out, fmt.Errorf("check current objective owner: %w", err)
+		}
+	}
+	return out, nil
 }

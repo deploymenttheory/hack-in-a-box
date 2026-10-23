@@ -3,6 +3,7 @@ package objectives
 import (
 	"errors"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -185,6 +186,23 @@ func TestObjectivesNativeVersionsIsolationCurrentAuthorityAndConcurrentRevision(
 		access.ErrForbidden,
 	) {
 		t.Fatal("revoked organiser edit", err)
+	}
+	if _, err = pool.Exec(
+		t.Context(),
+		"INSERT INTO event_memberships(event_id,person_id,role,active) VALUES($1,$2,'organiser',true)",
+		eventID,
+		stranger.ID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	otherReader, err := s.Read(t.Context(), stranger.ID, eventID, id, 0)
+	if err != nil || !slices.Contains(otherReader.PlanningGaps, "owner_unavailable") {
+		t.Fatal("unavailable owner hidden as complete planning", otherReader, err)
+	}
+	listing, err := s.List(t.Context(), stranger.ID, eventID, uuid.Nil, 50)
+	if err != nil || len(listing.Items) != 1 ||
+		!slices.Contains(listing.Items[0].PlanningGaps, "owner_unavailable") {
+		t.Fatal("owner planning gap inconsistent in list", listing, err)
 	}
 	var count int
 	if err = pool.QueryRow(t.Context(), "SELECT count(*) FROM objective_versions WHERE event_id=$1", eventID).
