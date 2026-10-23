@@ -2712,6 +2712,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/surveys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listOwnSurveys"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/configurations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listSurveyConfigurations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSurveyConfiguration"];
+        put: operations["changeSurveyConfiguration"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOwnSurvey"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["respondToSurvey"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["listSurveyResponses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/responses/{person_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSurveyResponseHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPublishedSurveyReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/report/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSurveyReportReview"];
+        put: operations["changeSurveyReport"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3527,7 +3697,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup";
+            kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey";
             /** Format: uuid */
             resource_id: string;
         };
@@ -3539,7 +3709,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup";
+                kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey";
                 /** Format: uuid */
                 resource_id: string;
             } | null;
@@ -5227,7 +5397,7 @@ export interface components {
             /** Format: int64 */
             campaign_version: number;
             /** @enum {string} */
-            trigger: "scheduled" | "preparation.reminder" | "follow_up" | "facilitator.selected" | "registration.offer" | "registration.place_changed" | "teams.published" | "mentors.published" | "challenge.released" | "brief.released" | "event.rescheduled" | "help.updated" | "clarification.published" | "rubric.published" | "results.published" | "outcome.follow_up";
+            trigger: "scheduled" | "preparation.reminder" | "follow_up" | "facilitator.selected" | "registration.offer" | "registration.place_changed" | "teams.published" | "mentors.published" | "challenge.released" | "brief.released" | "event.rescheduled" | "help.updated" | "clarification.published" | "rubric.published" | "results.published" | "outcome.follow_up" | "survey.open";
             /** Format: uuid */
             source_id?: string | null;
             /** Format: int64 */
@@ -5833,6 +6003,185 @@ export interface components {
             can_manage: boolean;
             can_record: boolean;
             can_reconfigure: boolean;
+        };
+        SurveyQuestionMeasure: {
+            /** Format: uuid */
+            question_id: string;
+            measure: {
+                objective: components["schemas"]["ObjectiveReference"];
+                /** Format: uuid */
+                measure_id: string;
+            };
+            /** @enum {string} */
+            construct: "self_reported_learning" | "self_reported_adoption";
+        };
+        SurveyDefinition: {
+            form: components["schemas"]["TemplateForm"];
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            minimum_cohort: number;
+            measures: components["schemas"]["SurveyQuestionMeasure"][];
+        };
+        SurveyConfiguration: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            definition: components["schemas"]["SurveyDefinition"];
+            /** Format: uuid */
+            author_id: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            approved_at: string | null;
+            /** Format: date-time */
+            published_at: string | null;
+            cancelled: boolean;
+        };
+        SurveyConfigurationSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            name: string;
+            audience: string;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            approved: boolean;
+            published: boolean;
+            cancelled: boolean;
+        };
+        SurveyConfigurationPage: {
+            items: components["schemas"]["SurveyConfigurationSummary"][];
+            /** Format: uuid */
+            next_id: string | null;
+            can_manage: boolean;
+        };
+        SurveyDirectoryItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            name: string;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            can_respond: boolean;
+            has_responded: boolean;
+        };
+        SurveyDirectory: {
+            items: components["schemas"]["SurveyDirectoryItem"][];
+            /** Format: uuid */
+            next_id: string | null;
+            response_visibility: string;
+        };
+        SurveyResponse: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            form_version: number;
+            answers: components["schemas"]["FormAnswers"];
+            /** Format: date-time */
+            submitted_at: string;
+        };
+        SurveyParticipant: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            form: components["schemas"]["TemplateForm"];
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            response_visibility: string;
+            measures: components["schemas"]["SurveyQuestionMeasure"][];
+            can_respond: boolean;
+            response: components["schemas"]["SurveyResponse"] | null;
+            timezone: string;
+        };
+        SurveyResponseCommand: {
+            /** Format: uuid */
+            command_id: string;
+            /** Format: int64 */
+            form_version: number;
+            answers: components["schemas"]["FormAnswers"];
+        };
+        SurveyCommand: {
+            /** @enum {string} */
+            action: "save" | "approve" | "publish" | "cancel";
+            definition?: components["schemas"]["SurveyDefinition"] | null;
+        };
+        SurveyAuthoredResponse: {
+            /** Format: uuid */
+            person_id: string;
+            person_name: string;
+            response: components["schemas"]["SurveyResponse"];
+        };
+        SurveyResponsePage: {
+            items: components["schemas"]["SurveyAuthoredResponse"][];
+            /** Format: uuid */
+            next_person: string | null;
+            response_visibility: string;
+        };
+        SurveyAggregateCell: {
+            value: string;
+            count: number | null;
+        };
+        SurveyQuestionAggregate: {
+            /** Format: uuid */
+            question_id: string;
+            /** Format: int64 */
+            question_version: number;
+            label: string;
+            suppressed: boolean;
+            answered: number | null;
+            unknown: number | null;
+            cells: components["schemas"]["SurveyAggregateCell"][];
+            measure: components["schemas"]["SurveyQuestionMeasure"] | null;
+        };
+        SurveyReport: {
+            /** Format: uuid */
+            survey_id: string;
+            /** Format: int64 */
+            survey_version: number;
+            response_visibility: string;
+            suppressed: boolean;
+            respondents: number | null;
+            questions: components["schemas"]["SurveyQuestionAggregate"][];
+            reviewed_summary: string;
+            /** Format: int64 */
+            reviewed_text_version: number;
+            /** Format: date-time */
+            published_at: string | null;
+        };
+        SurveyReviewedReport: {
+            /** Format: uuid */
+            review_id: string;
+            /** Format: int64 */
+            version: number;
+            report: components["schemas"]["SurveyReport"];
+            /** Format: uuid */
+            reviewer_id: string;
+            /** Format: date-time */
+            reviewed_at: string;
+            /** Format: date-time */
+            approved_at: string | null;
+            /** Format: date-time */
+            published_at: string | null;
+        };
+        SurveyReportCommand: {
+            /** @enum {string} */
+            action: "review_text" | "approve" | "publish";
+            /** Format: uuid */
+            review_id: string;
+            summary: string;
+            reviewed_text: boolean;
         };
     };
     responses: {
@@ -10915,6 +11264,305 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReviewFactualPreview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOwnSurveys: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyDirectory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listSurveyConfigurations: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyConfigurationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSurveyConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSurveyConfiguration: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyConfiguration"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnSurvey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyParticipant"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    respondToSurvey: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyResponseCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listSurveyResponses: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyResponsePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSurveyResponseHistory: {
+        parameters: {
+            query?: {
+                before_revision?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyResponse"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPublishedSurveyReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyReport"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSurveyReportReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyReviewedReport"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSurveyReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SurveyReportCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyReviewedReport"];
                 };
             };
             default: components["responses"]["Error"];

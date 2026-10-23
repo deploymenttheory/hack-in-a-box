@@ -166,11 +166,26 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 		return 0, wrap("resolve campaign delivery", err)
 	}
 	provenance.ScopeApproval = approved.ScopeApproval
+	if scoped.Resource != nil {
+		ref := *scoped.Resource
+		provenance.Resource = &ref
+	}
 	count := 0
 	for _, recipient := range approved.Preview.Recipients {
 		if scope.OccurrenceID != uuid.Nil &&
 			!slices.Contains(scoped.RecipientIDs, recipient.PersonID) {
 			continue
+		}
+		if provenance.Resource != nil {
+			if _, err = s.nativeResourceDestination(
+				ctx,
+				tx,
+				recipient.PersonID,
+				eventID,
+				*provenance.Resource,
+			); err != nil {
+				return 0, wrap("authorize retained campaign destination", err)
+			}
 		}
 		_, err = insert(
 			ctx,
@@ -325,9 +340,12 @@ func (h TestHandler) Reconcile(ctx context.Context, d jobs.Delivery) jobs.Outcom
 
 func sameProvenance(left, right communications.InboxProvenance) bool {
 	approvalEqual := communications.SameScopeApproval(left.ScopeApproval, right.ScopeApproval)
+	resourceEqual := communications.SameResourceReference(left.Resource, right.Resource)
 	left.ScopeApproval = nil
 	right.ScopeApproval = nil
-	return approvalEqual && left == right
+	left.Resource = nil
+	right.Resource = nil
+	return approvalEqual && resourceEqual && left == right
 }
 
 // Only a canonical current review may reuse identical already-persisted content

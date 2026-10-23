@@ -26,10 +26,12 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
+	Surveys         *surveys.Service
 	ReviewDashboard *reviewdashboard.Service
 	Moderation      *moderation.Service
 	Scorecards      *scorecards.Service
@@ -85,7 +87,9 @@ func newCommunicationRuntime(
 		Actions: moderation.FeedbackActions{Service: shared},
 	}
 	cards.Moderation = huddles
+	questionnaires := &surveys.Service{Pool: pool}
 	local.Owners = map[string]inbox.ResourceOwner{
+		"survey":            surveyInboxOwner{Surveys: questionnaires},
 		"feedback":          feedbackInboxOwner{Service: shared},
 		"feedback_followup": feedbackInboxOwner{Service: shared, Followup: true},
 		"help":              helpInboxOwner{Help: helpProvider},
@@ -94,6 +98,7 @@ func newCommunicationRuntime(
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
+		"survey.open":             automation.SurveySource{Surveys: questionnaires},
 		"help.updated":            automation.HelpSource{Help: helpProvider},
 		"clarification.published": automation.ClarificationSource{Answers: answers},
 		"rubric.published":        automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
@@ -186,6 +191,7 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
+		Surveys: questionnaires,
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,

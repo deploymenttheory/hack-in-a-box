@@ -19,6 +19,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 )
 
 type Fields struct {
@@ -296,7 +297,7 @@ func (s Service) Export(
 }
 
 func (s Service) Delete(ctx context.Context, actor, event, person uuid.UUID) error {
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if _, err := q.LockEvent(ctx, event); err != nil {
 			return fmt.Errorf("lock profile removal: %w", err)
 		}
@@ -320,6 +321,16 @@ func (s Service) Delete(ctx context.Context, actor, event, person uuid.UUID) err
 		)
 		if err != nil {
 			return fmt.Errorf("remove profile: %w", err)
+		}
+		if err = surveys.ErasePersonInTransaction(
+			ctx,
+			tx,
+			&actor,
+			event,
+			person,
+			audit.UserRequest,
+		); err != nil {
+			return fmt.Errorf("remove identifiable survey records: %w", err)
 		}
 		if err := q.RemovePersonDrafts(
 			ctx,

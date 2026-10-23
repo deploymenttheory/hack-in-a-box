@@ -1260,6 +1260,109 @@ type SubmissionState struct {
 	FrozenAt       pgtype.Timestamptz
 }
 
+type SurveyApproval struct {
+	EventID    uuid.UUID
+	SurveyID   uuid.UUID
+	Version    int64
+	ActorID    uuid.UUID
+	ApprovedAt time.Time
+}
+
+type SurveyCommand struct {
+	EventID        uuid.UUID
+	SurveyID       uuid.UUID
+	PersonID       uuid.UUID
+	CommandID      uuid.UUID
+	PayloadDigest  string
+	ResultRevision int64
+}
+
+type SurveyHead struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	CurrentVersion   int64
+	PublishedVersion pgtype.Int8
+	Cancelled        bool
+}
+
+type SurveyInvitation struct {
+	EventID   uuid.UUID
+	SurveyID  uuid.UUID
+	PersonID  uuid.UUID
+	Version   int64
+	InvitedAt time.Time
+}
+
+type SurveyPublication struct {
+	EventID     uuid.UUID
+	SurveyID    uuid.UUID
+	Version     int64
+	ActorID     uuid.UUID
+	PublishedAt time.Time
+}
+
+type SurveyReportApproval struct {
+	EventID    uuid.UUID
+	SurveyID   uuid.UUID
+	ReviewID   uuid.UUID
+	ActorID    uuid.UUID
+	ApprovedAt time.Time
+}
+
+type SurveyReportPublication struct {
+	EventID     uuid.UUID
+	SurveyID    uuid.UUID
+	Version     int64
+	ReviewID    uuid.UUID
+	ActorID     uuid.UUID
+	PublishedAt time.Time
+}
+
+type SurveyReportReview struct {
+	EventID    uuid.UUID
+	SurveyID   uuid.UUID
+	ID         uuid.UUID
+	Version    int64
+	Summary    string
+	ActorID    uuid.UUID
+	ReviewedAt time.Time
+}
+
+type SurveyReportSnapshot struct {
+	EventID         uuid.UUID
+	SurveyID        uuid.UUID
+	SurveyVersion   int64
+	AggregateDigest string
+	Document        []byte
+	CreatedAt       time.Time
+}
+
+type SurveyResponse struct {
+	EventID     uuid.UUID
+	SurveyID    uuid.UUID
+	PersonID    uuid.UUID
+	Revision    int64
+	FormVersion int64
+	Answers     []byte
+	SubmittedAt time.Time
+}
+
+type SurveyResponseHead struct {
+	EventID  uuid.UUID
+	SurveyID uuid.UUID
+	PersonID uuid.UUID
+	Revision int64
+}
+
+type SurveyVersion struct {
+	EventID   uuid.UUID
+	SurveyID  uuid.UUID
+	Version   int64
+	Document  []byte
+	ActorID   uuid.UUID
+	CreatedAt time.Time
+}
+
 type TeamCredential struct {
 	ID           uuid.UUID
 	EventID      uuid.UUID

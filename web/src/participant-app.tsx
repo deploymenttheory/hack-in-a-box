@@ -1,4 +1,5 @@
 import { ReviewDashboard, TeamReviewPage, JudgeSummaryPreview } from './review-dashboard'
+import { SurveyReader } from './survey-reader'
 import { FeedbackReader } from './feedback-reader'
 import { DeliveryHistoryPage } from './delivery-history'
 import { ScorecardWorkspace } from './scorecard-workspace'
@@ -22,6 +23,7 @@ const deliveryHistory = createRoute({ getParentRoute: () => root, path: '/events
 const deliveryReview = createRoute({ getParentRoute: () => root, path: '/events/$eventId/communications/deliveries/$deliveryId', component: DeliveryHistoryPage })
 const clarificationWorkspace = createRoute({ getParentRoute: () => root, path: '/events/$eventId/clarifications', component: ClarificationWorkspacePage })
 const privateQuestion = createRoute({ getParentRoute: () => root, path: '/events/$eventId/questions/$questionId', component: ClarificationWorkspacePage })
+const survey = createRoute({ getParentRoute: () => root, path: '/events/$eventId/surveys/$surveyId', component: SurveyReader })
 const clarification = createRoute({ getParentRoute: () => root, path: '/events/$eventId/clarifications/$answerId', component: ClarificationReader })
 const home = createRoute({ getParentRoute: () => root, path: '/', component: EventDirectory })
 const event = createRoute({ getParentRoute: () => root, path: '/events/$eventId', component: EventWorkspace })
@@ -38,5 +40,5 @@ const help = createRoute({ getParentRoute: () => root, path: '/events/$eventId/h
 const registration = createRoute({ getParentRoute: () => root, path: '/register/$eventId', component: RegistrationPage })
 const registrations = createRoute({ getParentRoute: () => root, path: '/register', component: RegistrationDirectory })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

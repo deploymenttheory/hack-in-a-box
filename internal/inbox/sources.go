@@ -62,7 +62,7 @@ func (s Service) authorize(
 		}
 		var retained communications.InboxProvenance
 		if json.Unmarshal(provenance, &retained) != nil ||
-			retained.SelfOnly != (source.Kind == "test_self") {
+			retained.SelfOnly != (source.Kind == "test_self") || (retained.SelfOnly && retained.Resource != nil) {
 			return nil, access.ErrNotFound
 		}
 		if err = s.Communications.AuthorizeInboxRecipientInTransaction(
@@ -73,6 +73,9 @@ func (s Service) authorize(
 			retained,
 		); err != nil {
 			return nil, wrap("authorize source", err)
+		}
+		if retained.Resource != nil {
+			return s.nativeResourceDestination(ctx, tx, actor, eventID, *retained.Resource)
 		}
 		return &Destination{}, nil
 	case "content":
@@ -136,11 +139,32 @@ func nativeDestination(source Source, destination Destination) (*Destination, er
 		return nil, access.ErrNotFound
 	}
 	switch source.Kind {
-	case "help", "clarification", "feedback", "feedback_followup":
+	case "help", "clarification", "feedback", "feedback_followup", "survey":
 		return &destination, nil
 	default:
 		return nil, access.ErrNotFound
 	}
+}
+
+func (s Service) nativeResourceDestination(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	ref communications.ResourceReference,
+) (*Destination, error) {
+	if ref.Kind != "survey" || ref.ID == uuid.Nil || ref.Version < 1 {
+		return nil, access.ErrNotFound
+	}
+	owner := s.Owners[ref.Kind]
+	if owner == nil {
+		return nil, access.ErrNotFound
+	}
+	source := Source{Kind: ref.Kind, ID: ref.ID, Version: ref.Version}
+	destination, err := owner.AuthorizeNotification(ctx, tx, actor, eventID, source)
+	if err != nil {
+		return nil, wrap("authorize native campaign reader", err)
+	}
+	return nativeDestination(source, destination)
 }
 
 func hidden(err error) bool {

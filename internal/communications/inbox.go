@@ -16,12 +16,13 @@ import (
 // It authorizes historical reads independently of later approval/cancellation,
 // due-time or event write state. Dispatch still uses its stricter resolver.
 type InboxProvenance struct {
-	ScopeApproval   *ScopeApproval `json:"scope_approval,omitempty"`
-	TemplateID      uuid.UUID      `json:"template_id"`
-	TemplateVersion int64          `json:"template_version"`
-	AudienceID      uuid.UUID      `json:"audience_id"`
-	AudienceVersion int64          `json:"audience_version"`
-	SelfOnly        bool           `json:"self_only"`
+	Resource        *ResourceReference `json:"resource,omitempty"`
+	ScopeApproval   *ScopeApproval     `json:"scope_approval,omitempty"`
+	TemplateID      uuid.UUID          `json:"template_id"`
+	TemplateVersion int64              `json:"template_version"`
+	AudienceID      uuid.UUID          `json:"audience_id"`
+	AudienceVersion int64              `json:"audience_version"`
+	SelfOnly        bool               `json:"self_only"`
 }
 
 func (s Service) RetainInboxProvenanceInTransaction(

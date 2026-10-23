@@ -39,6 +39,7 @@ func validateDefinition(d Definition) error {
 				"help.updated",
 				"clarification.published",
 				"rubric.published",
+				"survey.open",
 				"results.published",
 				"outcome.follow_up",
 			},

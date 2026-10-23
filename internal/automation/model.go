@@ -83,6 +83,7 @@ type SourcePolicy interface {
 	ResolveInTransaction(context.Context, pgx.Tx, uuid.UUID, Source) (SourceAudience, error)
 }
 type SourceAudience struct {
+	Resource        *communications.ResourceReference
 	RequireComplete bool
 	RecipientIDs    []uuid.UUID
 	Broadcast       bool

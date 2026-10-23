@@ -170,7 +170,12 @@ func (s Service) resolveScope(
 	if len(audience.RecipientIDs) == 0 {
 		return result, communications.ErrUnresolved
 	}
+	if ref := audience.Resource; ref != nil &&
+		(source.Kind != "survey.open" || ref.Kind != "survey" || ref.ID != source.ID || ref.Version != source.Revision) {
+		return result, communications.ErrUnresolved
+	}
 	result = communications.ScopeAudience{
+		Resource:        audience.Resource,
 		Binding:         row.ScopeBinding,
 		RecipientIDs:    audience.RecipientIDs,
 		Broadcast:       audience.Broadcast,
