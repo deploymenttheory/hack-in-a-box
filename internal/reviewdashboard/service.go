@@ -69,9 +69,10 @@ func (s Service) guard(
 func (s Service) Read(
 	ctx context.Context,
 	actor, eventID, after uuid.UUID,
+	requested *uuid.UUID,
 	limit int32,
 ) (Page, error) {
-	out := Page{Teams: []Team{}}
+	out := Page{Teams: []Team{}, Moderators: []PersonReference{}}
 	if limit < 1 || limit > 50 {
 		return out, access.ErrInvalid
 	}
@@ -83,7 +84,7 @@ func (s Service) Read(
 		if err != nil {
 			return err
 		}
-		candidates, err := teamPage(ctx, tx, eventID, after, scope, limit)
+		candidates, err := teamPage(ctx, tx, eventID, after, requested, scope, limit)
 		if err != nil {
 			return err
 		}
@@ -97,12 +98,25 @@ func (s Service) Read(
 		out.Timezone = scope.dates.Timezone
 		out.Now = s.now()
 		out.Organiser = scope.organiser
+		if requested != nil && len(candidates) == 0 {
+			return access.ErrNotFound
+		}
+		if scope.organiser {
+			moderators, readErr := q.SubmissionOrganisers(ctx, eventID)
+			if readErr != nil {
+				return fmt.Errorf("read current moderation choices: %w", readErr)
+			}
+			for _, person := range moderators {
+				out.Moderators = append(out.Moderators, PersonReference{ID: person.ID, Name: person.DisplayName})
+			}
+		}
 		helpQueue, err := s.Help.ListInTransaction(ctx, tx, actor, eventID)
 		if err != nil {
 			return fmt.Errorf("read authorised operational help metadata: %w", err)
 		}
 		source := submissions.Service{Pool: s.Pool, Clock: s.Clock}
 		ids := []uuid.UUID{}
+		hasEntry := map[uuid.UUID]bool{}
 		for _, team := range candidates {
 			if _, entryErr := q.CompetitionEntry(
 				ctx,
@@ -115,6 +129,7 @@ func (s Service) Read(
 			} else if entryErr != nil {
 				return fmt.Errorf("read current team entry identity: %w", entryErr)
 			}
+			hasEntry[team.ID] = true
 			if scope.organiser ||
 				(!scope.dates.LiveStart.IsZero() && !s.now().Before(scope.dates.LiveStart) && scope.row.PublishedAt.Valid && !s.now().Before(scope.row.PublishedAt.Time)) {
 				ids = append(ids, team.ID)
@@ -147,7 +162,7 @@ func (s Service) Read(
 					row.Assessment.OutputState = copy.Outcome
 				}
 			}
-			if row.Output == nil && scope.organiser {
+			if !hasEntry[row.ID] {
 				row.Assessment.OutputState = "not_entered"
 				row.Assessment.Availability = "not_applicable"
 			}
@@ -189,7 +204,7 @@ func (s Service) Read(
 				row.Support.Risk = supportRisk(row.Support)
 				unused := row.Output != nil &&
 					(row.Output.Outcome == "withdrawn" || row.Output.Outcome == "not_submitted")
-				if unused {
+				if unused || !hasEntry[row.ID] {
 					row.Assessment.Availability = "not_applicable"
 				} else if err = s.assessment(ctx, tx, actor, eventID, &row); err != nil {
 					return err
@@ -219,6 +234,7 @@ func teamPage(
 	ctx context.Context,
 	tx pgx.Tx,
 	eventID, after uuid.UUID,
+	requested *uuid.UUID,
 	scope readScope,
 	limit int32,
 ) ([]dbgen.HackTeam, error) {
@@ -228,11 +244,12 @@ func teamPage(
 	}
 	rows, err := tx.Query(
 		ctx,
-		`SELECT id,name,state FROM hack_teams WHERE event_id=$1 AND id>$2 AND ($3 OR id=ANY($4::uuid[])) ORDER BY id LIMIT $5`,
+		`SELECT id,name,state FROM hack_teams WHERE event_id=$1 AND id>$2 AND ($3 OR id=ANY($4::uuid[])) AND ($5::uuid IS NULL OR id=$5) ORDER BY id LIMIT $6`,
 		eventID,
 		after,
 		scope.organiser,
 		allowed,
+		requested,
 		limit+1,
 	)
 	if err != nil {

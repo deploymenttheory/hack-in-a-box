@@ -44,19 +44,31 @@ func (s Service) assessment(
 		row.Assessment.Live.Complete = false
 		row.Assessment.Final.Complete = false
 	}
-	agenda, err := s.Moderation.AgendaInTransaction(ctx, tx, actor, eventID, row.ID, uuid.Nil, 10)
-	if err != nil {
-		if expectedDenial(err) {
-			return nil
+	agendaCursor := uuid.Nil
+	total := 0
+	for {
+		agenda, err := s.Moderation.AgendaInTransaction(ctx, tx, actor, eventID, row.ID, agendaCursor, 100)
+		if err != nil {
+			if expectedDenial(err) {
+				return nil
+			}
+			return fmt.Errorf("read permitted huddle agenda metadata: %w", err)
 		}
-		return fmt.Errorf("read permitted huddle agenda metadata: %w", err)
-	}
-	row.Agenda = agenda.Items
-	row.MoreAgenda = agenda.NextCursor != nil
-	for _, item := range agenda.Items {
-		if item.Purpose == "mentor_final" && item.CanonicalSigned {
-			row.Assessment.CanonicalFinal = true
+		for _, item := range agenda.Items {
+			total++
+			if len(row.Agenda) < 10 {
+				row.Agenda = append(row.Agenda, item)
+			}
+			if item.Purpose == "mentor_final" && item.CanonicalSigned {
+				row.Assessment.CanonicalFinal = true
+			}
 		}
+		if agenda.NextCursor == nil {
+			break
+		}
+		agendaCursor = *agenda.NextCursor
 	}
+	row.MoreAgenda = total > 10
+
 	return nil
 }

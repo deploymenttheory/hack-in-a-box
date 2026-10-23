@@ -44,6 +44,7 @@ type (
 		CanonicalSigned   bool      `json:"canonical_signed"`
 		CanOpen           bool      `json:"can_open"`
 		CanManage         bool      `json:"can_manage"`
+		CanReconfigure    bool      `json:"can_reconfigure"`
 	}
 )
 
@@ -152,6 +153,16 @@ func (s Service) agendaItem(
 		if proposal.State == "proposed" {
 			out.PendingProposals++
 		}
+	}
+	// A planned context may be repaired after #66 changes coverage. This
+	// capability authorizes only the named current organiser's configure entry;
+	// Change still validates the exact version and NEW published coverage.
+	if actor == h.Definition.ModeratorID && h.State == "planned" {
+		_, organiser, guardErr := s.guard(ctx, tx, actor, eventID, h.TeamID, true)
+		if guardErr != nil && !isAgendaDenial(guardErr) {
+			return out, guardErr
+		}
+		out.CanReconfigure = guardErr == nil && organiser
 	}
 	run, err := dbgen.New(tx).
 		RubricRun(ctx, dbgen.RubricRunParams{EventID: eventID, ID: h.Checkpoint.Definition.RunID})

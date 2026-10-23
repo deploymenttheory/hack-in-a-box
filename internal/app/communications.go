@@ -22,6 +22,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
@@ -29,19 +30,20 @@ import (
 )
 
 type communicationRuntime struct {
-	Moderation     *moderation.Service
-	Scorecards     *scorecards.Service
-	Feedback       *feedback.Service
-	Deliveries     *deliveryhistory.Service
-	Help           help.Service
-	Clarifications *clarification.Service
-	Automation     *automation.Service
-	Inbox          *inbox.Service
-	Communications *communications.Service
-	SMTP           *smtpintegration.Service
-	Teams          *teamsworkflow.Service
-	Jobs           *jobs.Service
-	MailContacts   mailcontact.Service
+	ReviewDashboard *reviewdashboard.Service
+	Moderation      *moderation.Service
+	Scorecards      *scorecards.Service
+	Feedback        *feedback.Service
+	Deliveries      *deliveryhistory.Service
+	Help            help.Service
+	Clarifications  *clarification.Service
+	Automation      *automation.Service
+	Inbox           *inbox.Service
+	Communications  *communications.Service
+	SMTP            *smtpintegration.Service
+	Teams           *teamsworkflow.Service
+	Jobs            *jobs.Service
+	MailContacts    mailcontact.Service
 }
 
 // newCommunicationRuntime supplies the same provider/readiness/handler graph to
@@ -184,7 +186,8 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		Moderation: huddles, Scorecards: cards,
+		ReviewDashboard: &reviewdashboard.Service{Pool: pool, Help: helpProvider, Feedback: shared, Cards: cards, Moderation: huddles},
+		Moderation:      huddles, Scorecards: cards,
 		Feedback: shared,
 		Deliveries: &deliveryhistory.Service{
 			Pool: pool,

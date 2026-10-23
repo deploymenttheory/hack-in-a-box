@@ -90,10 +90,22 @@ func (s Service) CoverageInTransaction(
 		ctx,
 		dbgen.CompetitionEntryParams{EventID: eventID, TeamID: teamID},
 	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		out.Availability = "not_applicable"
+		return out, nil
+	}
 	if err != nil {
 		return out, fmt.Errorf("read current assessment entry: %w", err)
 	}
 	if team.State != "published" || !entry.Active {
+		out.Availability = "not_applicable"
+		return out, nil
+	}
+	state, stateErr := q.SubmissionState(ctx, dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID})
+	if stateErr != nil && !errors.Is(stateErr, pgx.ErrNoRows) {
+		return out, fmt.Errorf("read native final assessment outcome: %w", stateErr)
+	}
+	if stateErr == nil && (state.Outcome == "withdrawn" || state.Outcome == "not_submitted") {
 		out.Availability = "not_applicable"
 		return out, nil
 	}
@@ -106,6 +118,10 @@ func (s Service) CoverageInTransaction(
 		return out, nil
 	}
 	common, err := q.EventRubric(ctx, eventID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		out.Availability = "not_configured"
+		return out, nil
+	}
 	if err != nil {
 		return out, fmt.Errorf("read current published assessment source: %w", err)
 	}

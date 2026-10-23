@@ -33,14 +33,15 @@ func (s Service) now() time.Time {
 }
 
 type Page struct {
-	EventID    uuid.UUID  `json:"event_id"`
-	EventName  string     `json:"event_name"`
-	Timezone   string     `json:"timezone"`
-	Revision   int64      `json:"revision"`
-	Now        time.Time  `json:"now"`
-	Organiser  bool       `json:"organiser"`
-	Teams      []Team     `json:"teams"`
-	NextCursor *uuid.UUID `json:"next_cursor"`
+	EventID    uuid.UUID         `json:"event_id"`
+	EventName  string            `json:"event_name"`
+	Timezone   string            `json:"timezone"`
+	Revision   int64             `json:"revision"`
+	Now        time.Time         `json:"now"`
+	Organiser  bool              `json:"organiser"`
+	Moderators []PersonReference `json:"moderators"`
+	Teams      []Team            `json:"teams"`
+	NextCursor *uuid.UUID        `json:"next_cursor"`
 }
 type Team struct {
 	ID             uuid.UUID                  `json:"id"`
@@ -114,4 +115,22 @@ type FactualPreview struct {
 	TeamState   string                    `json:"team_state"`
 	GeneratedAt time.Time                 `json:"generated_at"`
 	Output      submissions.OutputSummary `json:"output"`
+}
+
+type PersonReference struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+type CheckpointPage struct {
+	Revision int64               `json:"revision"`
+	Timezone string              `json:"timezone"`
+	Now      time.Time           `json:"now"`
+	Coverage scorecards.Coverage `json:"coverage"`
+}
+type AgendaPage struct {
+	Revision     int64             `json:"revision"`
+	Timezone     string            `json:"timezone"`
+	Now          time.Time         `json:"now"`
+	Availability string            `json:"availability"`
+	Agenda       moderation.Agenda `json:"agenda"`
 }
