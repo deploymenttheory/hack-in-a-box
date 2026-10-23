@@ -2250,10 +2250,374 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams/{team_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSharedFeedback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSharedFeedbackRecord"];
+        put: operations["changeSharedFeedback"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSharedFeedbackHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/acknowledgements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acknowledgeSharedFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSupportActionOwners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSupportActions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/actions/{action_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["changeSupportAction"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback/{feedback_id}/actions/{action_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSupportActionHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getFeedbackSettings"];
+        put: operations["configureFeedbackSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/feedback-followups/{followup_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                followup_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getFeedbackFollowup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        FeedbackSource: {
+            /** @enum {string} */
+            kind: "observation" | "question" | "help";
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+        };
+        FeedbackInput: {
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            category: "setup" | "logistics" | "competition_output";
+            title: string;
+            body: string;
+            sources: components["schemas"]["FeedbackSource"][];
+            /** Format: uuid */
+            help_request_id: string | null;
+        };
+        SharedFeedbackDocument: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            category: "setup" | "logistics" | "competition_output";
+            title: string;
+            body: string;
+            sources: components["schemas"]["FeedbackSource"][];
+            /** Format: uuid */
+            help_request_id: string | null;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            state: "draft" | "reviewed" | "published" | "withdrawn";
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            reviewer_id: string | null;
+            reviewed_digest: string;
+            /** Format: date-time */
+            published_at: string | null;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        FeedbackCommand: {
+            /** @enum {string} */
+            action: "save" | "review" | "publish" | "withdraw";
+            input: components["schemas"]["FeedbackInput"] | null;
+        };
+        FeedbackAcknowledgement: {
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            person_id: string;
+            /** Format: date-time */
+            at: string;
+        };
+        FeedbackEscalation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            action_id: string;
+            /** Format: int64 */
+            cycle: number;
+            /** Format: int64 */
+            settings_version: number;
+            /** Format: uuid */
+            recipient_id: string;
+            /** Format: int64 */
+            threshold_seconds: number;
+            /** Format: date-time */
+            at: string;
+        };
+        FeedbackPage: {
+            /** Format: int64 */
+            command_version: number | null;
+            /** Format: int64 */
+            current_version: number;
+            published: components["schemas"]["SharedFeedbackDocument"] | null;
+            draft: components["schemas"]["SharedFeedbackDocument"] | null;
+            can_manage: boolean;
+            can_acknowledge: boolean;
+            acknowledgements: components["schemas"]["FeedbackAcknowledgement"][];
+            escalations: components["schemas"]["FeedbackEscalation"][];
+        };
+        FeedbackList: {
+            items: components["schemas"]["FeedbackPage"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        FeedbackHistory: {
+            items: components["schemas"]["SharedFeedbackDocument"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        SupportAction: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            feedback_id: string;
+            /** Format: int64 */
+            version: number;
+            title: string;
+            body: string;
+            /** Format: uuid */
+            owner_id: string;
+            /** Format: date-time */
+            due_at: string;
+            /** @enum {string} */
+            status: "open" | "in_progress" | "done" | "cancelled";
+            /** Format: int64 */
+            cycle: number;
+            /** @enum {string} */
+            changed_as: "organiser" | "helper" | "team_owner";
+            /** @enum {string} */
+            change: "details" | "status";
+            /** Format: uuid */
+            changed_by: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        SupportActionInput: {
+            reviewed: boolean;
+            title: string;
+            body: string;
+            /** Format: uuid */
+            owner_id: string;
+            /** Format: date-time */
+            due_at: string;
+        };
+        SupportActionCommand: {
+            /** @enum {string} */
+            action: "details" | "status";
+            input: components["schemas"]["SupportActionInput"] | null;
+            /** @enum {string} */
+            status: "" | "open" | "in_progress" | "done" | "cancelled";
+        };
+        SupportActionView: {
+            /** Format: int64 */
+            command_version: number | null;
+            action: components["schemas"]["SupportAction"];
+            can_edit: boolean;
+            can_update_status: boolean;
+            owner_available: boolean;
+            overdue: boolean;
+        };
+        SupportActions: {
+            items: components["schemas"]["SupportActionView"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        SupportActionHistory: {
+            items: components["schemas"]["SupportAction"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        SupportActionOwner: {
+            /** Format: uuid */
+            person_id: string;
+            name: string;
+            team_member: boolean;
+        };
+        FeedbackSettings: {
+            /** Format: int64 */
+            version: number;
+            /** Format: int64 */
+            setup_seconds: number;
+            /** Format: int64 */
+            logistics_seconds: number;
+            /** Format: int64 */
+            output_seconds: number;
+        };
         ScorecardCheckpointDefinition: {
             /** Format: uuid */
             id: string;
@@ -2892,7 +3256,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content" | "help" | "clarification";
+            kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup";
             /** Format: uuid */
             resource_id: string;
         };
@@ -2904,7 +3268,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content" | "help" | "clarification";
+                kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup";
                 /** Format: uuid */
                 resource_id: string;
             } | null;
@@ -8884,6 +9248,337 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MentorScorecard"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSharedFeedback: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSharedFeedbackRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSharedFeedback: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackCommand"];
+            };
+        };
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSharedFeedbackHistory: {
+        parameters: {
+            query?: {
+                before?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    acknowledgeSharedFeedback: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSupportActionOwners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportActionOwner"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSupportActions: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportActions"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSupportAction: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupportActionCommand"];
+            };
+        };
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportActionView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSupportActionHistory: {
+        parameters: {
+            query?: {
+                before?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                feedback_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportActionHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getFeedbackSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureFeedbackSettings: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted presentation revision, starting at "0". */
+                "If-Match": components["parameters"]["PresentationRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackSettings"];
+            };
+        };
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getFeedbackFollowup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                followup_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised shared support result. No score, private source text or assessment grant is returned. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackPage"];
                 };
             };
             default: components["responses"]["Error"];

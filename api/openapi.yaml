@@ -3304,6 +3304,557 @@ paths:
                   "$ref": "#/components/schemas/MentorScorecard"
         "default":
           "$ref": "#/components/responses/Error"
+  /api/v1/events/{event_id}/teams/{team_id}/feedback:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSharedFeedback",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackList"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ]
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSharedFeedbackRecord",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "changeSharedFeedback",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/PresentationRevision"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/history:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSharedFeedbackHistory",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackHistory"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "before",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ]
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/acknowledgements:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "acknowledgeSharedFeedback",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/PresentationRevision"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ]
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/owners:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSupportActionOwners",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupportActionOwner"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/actions:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSupportActions",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportActions"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ]
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/actions/{action_id}:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "action_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "changeSupportAction",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportActionView"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/PresentationRevision"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportActionCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/feedback/{feedback_id}/actions/{action_id}/history:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "feedback_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "action_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSupportActionHistory",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportActionHistory"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "before",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ]
+      }
+    }
+  /api/v1/events/{event_id}/feedback-settings:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        }
+      ],
+      "get": {
+        "operationId": "getFeedbackSettings",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackSettings"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "configureFeedbackSettings",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackSettings"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "$ref": "#/components/parameters/PresentationRevision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackSettings"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/feedback-followups/{followup_id}:
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "followup_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getFeedbackFollowup",
+        "responses": {
+          "200": {
+            "description": "Current authorised shared support result. No score, private source text or assessment grant is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
 components:
   securitySchemes:
     display:
@@ -3371,6 +3922,644 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    FeedbackSource:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "id",
+          "version"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "question",
+              "help"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      }
+    FeedbackInput:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "team_id",
+          "category",
+          "title",
+          "body",
+          "sources",
+          "help_request_id"
+        ],
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "logistics",
+              "competition_output"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 12000
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackSource"
+            },
+            "maxItems": 10
+          },
+          "help_request_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    SharedFeedbackDocument:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "team_id",
+          "category",
+          "title",
+          "body",
+          "sources",
+          "help_request_id",
+          "version",
+          "state",
+          "author_id",
+          "reviewer_id",
+          "reviewed_digest",
+          "published_at",
+          "changed_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "logistics",
+              "competition_output"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 12000
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackSource"
+            },
+            "maxItems": 10
+          },
+          "help_request_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "reviewed",
+              "published",
+              "withdrawn"
+            ]
+          },
+          "author_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reviewer_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reviewed_digest": {
+            "type": "string"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    FeedbackCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "input"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "save",
+              "review",
+              "publish",
+              "withdraw"
+            ]
+          },
+          "input": {
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/FeedbackInput"}
+            ]
+          }
+        }
+      }
+    FeedbackAcknowledgement:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "person_id",
+          "at"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "person_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    FeedbackEscalation:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action_id",
+          "cycle",
+          "settings_version",
+          "recipient_id",
+          "threshold_seconds",
+          "at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cycle": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "settings_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recipient_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "threshold_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    FeedbackPage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command_version",
+          "current_version",
+          "published",
+          "draft",
+          "can_manage",
+          "can_acknowledge",
+          "acknowledgements",
+          "escalations"
+        ],
+        "properties": {
+          "command_version": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "current_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "published": {
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SharedFeedbackDocument"}
+            ]
+          },
+          "draft": {
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SharedFeedbackDocument"}
+            ]
+          },
+          "can_manage": {
+            "type": "boolean"
+          },
+          "can_acknowledge": {
+            "type": "boolean"
+          },
+          "acknowledgements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackAcknowledgement"
+            }
+          },
+          "escalations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackEscalation"
+            }
+          }
+        }
+      }
+    FeedbackList:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackPage"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    FeedbackHistory:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedFeedbackDocument"
+            }
+          },
+          "next_cursor": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
+      }
+    SupportAction:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "feedback_id",
+          "version",
+          "title",
+          "body",
+          "owner_id",
+          "due_at",
+          "status",
+          "cycle",
+          "changed_by",
+        "changed_as",
+        "change",
+          "changed_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "feedback_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "in_progress",
+              "done",
+              "cancelled"
+            ]
+          },
+          "cycle": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changed_as": {"type":"string","enum":["organiser","helper","team_owner"]},
+        "change": {"type":"string","enum":["details","status"]},
+        "changed_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    SupportActionInput:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reviewed",
+          "title",
+          "body",
+          "owner_id",
+          "due_at"
+        ],
+        "properties": {
+          "reviewed": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    SupportActionCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "input",
+          "status"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "details",
+              "status"
+            ]
+          },
+          "input": {
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SupportActionInput"}
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "",
+              "open",
+              "in_progress",
+              "done",
+              "cancelled"
+            ]
+          }
+        }
+      }
+    SupportActionView:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command_version",
+          "action",
+          "can_edit",
+          "can_update_status",
+          "owner_available",
+          "overdue"
+        ],
+        "properties": {
+          "command_version": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "action": {
+            "$ref": "#/components/schemas/SupportAction"
+          },
+          "can_edit": {
+            "type": "boolean"
+          },
+          "can_update_status": {
+            "type": "boolean"
+          },
+          "owner_available": {
+            "type": "boolean"
+          },
+          "overdue": {
+            "type": "boolean"
+          }
+        }
+      }
+    SupportActions:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportActionView"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    SupportActionHistory:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportAction"
+            }
+          },
+          "next_cursor": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
+      }
+    SupportActionOwner:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "person_id",
+          "name",
+          "team_member"
+        ],
+        "properties": {
+          "person_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "team_member": {
+            "type": "boolean"
+          }
+        }
+      }
+    FeedbackSettings:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "setup_seconds",
+          "logistics_seconds",
+          "output_seconds"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "setup_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "logistics_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "output_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 60,
+            "maximum": 86400
+          }
+        }
+      }
     "ScorecardCheckpointDefinition":
       "type": "object"
       "additionalProperties": false
@@ -4597,7 +5786,7 @@ components:
       additionalProperties: false
       required: [kind, resource_id]
       properties:
-        kind: {type: string, enum: [content, help, clarification]}
+        kind: {type: string, enum: [content, help, clarification, feedback, feedback_followup]}
         resource_id: {type: string, format: uuid}
     InboxDetail:
       type: object
@@ -4614,7 +5803,7 @@ components:
           additionalProperties: false
           required: [kind, resource_id]
           properties:
-            kind: {type: string, enum: [content, help, clarification]}
+            kind: {type: string, enum: [content, help, clarification, feedback, feedback_followup]}
             resource_id: {type: string, format: uuid}
     InboxPage:
       type: object

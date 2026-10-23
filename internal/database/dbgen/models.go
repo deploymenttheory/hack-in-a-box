@@ -439,6 +439,75 @@ type EventRubric struct {
 	PublishedVersion pgtype.Int8
 }
 
+type FeedbackAcknowledgement struct {
+	EventID          uuid.UUID
+	FeedbackID       uuid.UUID
+	PublishedVersion int64
+	PersonID         uuid.UUID
+	AcknowledgedAt   time.Time
+}
+
+type FeedbackActionHead struct {
+	EventID        uuid.UUID
+	FeedbackID     uuid.UUID
+	ID             uuid.UUID
+	CurrentVersion int64
+}
+
+type FeedbackActionVersion struct {
+	EventID  uuid.UUID
+	ID       uuid.UUID
+	Version  int64
+	Document []byte
+}
+
+type FeedbackCommand struct {
+	EventID       uuid.UUID
+	ActorID       uuid.UUID
+	CommandID     uuid.UUID
+	TargetID      uuid.UUID
+	Kind          string
+	PayloadDigest string
+	ResultVersion int64
+}
+
+type FeedbackEscalation struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	ActionID         uuid.UUID
+	Cycle            int64
+	SettingsVersion  int64
+	RecipientID      uuid.UUID
+	ThresholdSeconds int64
+	OccurredAt       time.Time
+}
+
+type FeedbackHead struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	TeamID           uuid.UUID
+	Category         string
+	CurrentVersion   int64
+	PublishedVersion pgtype.Int8
+}
+
+type FeedbackSettingsVersion struct {
+	EventID          uuid.UUID
+	Version          int64
+	SetupSeconds     int64
+	LogisticsSeconds int64
+	OutputSeconds    int64
+	ActorID          uuid.UUID
+	ChangedAt        time.Time
+}
+
+type FeedbackVersion struct {
+	EventID  uuid.UUID
+	ID       uuid.UUID
+	Version  int64
+	Document []byte
+}
+
 type File struct {
 	ID             uuid.UUID
 	EventID        uuid.UUID

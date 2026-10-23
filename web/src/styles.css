@@ -321,3 +321,5 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .clarification-workspace .panel, .clarification-workspace a, .clarification-workspace p { overflow-wrap: anywhere; }
 .clarification-workspace fieldset { min-width: 0; }
 @media print { .clarification-private { display: none !important; } }
+
+.feedback-reader, .feedback-reader article { min-width: 0; overflow-wrap: anywhere; }

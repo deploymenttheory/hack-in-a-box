@@ -24,6 +24,10 @@ func label(kind string) string {
 		return "Event announcement"
 	case "content":
 		return "Released event resource"
+	case "feedback":
+		return "Reviewed team feedback"
+	case "feedback_followup":
+		return "Support-action follow-up"
 	case "help":
 		return "Help-request update"
 	case "clarification":
@@ -132,7 +136,7 @@ func nativeDestination(source Source, destination Destination) (*Destination, er
 		return nil, access.ErrNotFound
 	}
 	switch source.Kind {
-	case "help", "clarification":
+	case "help", "clarification", "feedback", "feedback_followup":
 		return &destination, nil
 	default:
 		return nil, access.ErrNotFound

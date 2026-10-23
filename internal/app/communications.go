@@ -13,17 +13,20 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
+	Feedback       *feedback.Service
 	Help           help.Service
 	Clarifications *clarification.Service
 	Automation     *automation.Service
@@ -61,9 +64,17 @@ func newCommunicationRuntime(
 	answers := &clarification.Service{Pool: pool}
 	answers.Notifications = clarificationInboxSink{Inbox: local}
 	helpProvider := help.Service{Pool: pool}
+	shared := &feedback.Service{Pool: pool, Sources: map[string]feedback.SourcePolicy{
+		"observation": observationFeedbackSource{Service: observations.Service{Pool: pool}},
+		"question":    questionFeedbackSource{Service: answers},
+		"help":        helpFeedbackSource{Service: helpProvider},
+	}}
+	shared.Notifications = feedbackInboxSink{Inbox: local}
 	local.Owners = map[string]inbox.ResourceOwner{
-		"help":          helpInboxOwner{Help: helpProvider},
-		"clarification": clarificationInboxOwner{Answers: answers},
+		"feedback":          feedbackInboxOwner{Service: shared},
+		"feedback_followup": feedbackInboxOwner{Service: shared, Followup: true},
+		"help":              helpInboxOwner{Help: helpProvider},
+		"clarification":     clarificationInboxOwner{Answers: answers},
 	}
 	composer.FactOwners = map[string]communications.FactOwner{"help": helpProvider}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
@@ -160,6 +171,7 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
+		Feedback:       shared,
 		Clarifications: answers,
 		Automation:     auto,
 		Inbox:          local,
