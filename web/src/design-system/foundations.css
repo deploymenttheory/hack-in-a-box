@@ -4,14 +4,14 @@
   html { font-family: var(--font-sans); scroll-padding-block: 1rem; }
   body { margin: 0; }
   *, *::before, *::after { box-sizing: border-box; }
-  :where(button, input, textarea, select) { font: inherit; }
-  :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+  .theme :where(button, input, textarea, select) { font: inherit; }
+  .theme :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
     outline: 3px solid var(--ring, currentColor);
     outline-offset: 3px;
   }
-  :where(button, input, select, textarea, a, summary) { -webkit-tap-highlight-color: transparent; }
-  :where(button, input, select, textarea) { transition: border-color var(--motion-duration), background-color var(--motion-duration), box-shadow var(--motion-duration); }
-  :where(input:not([type=checkbox], [type=radio], [type=range], [type=hidden]), select, textarea) {
+  .theme :where(button, input, select, textarea, a, summary) { -webkit-tap-highlight-color: transparent; }
+  .theme :where(button, input, select, textarea) { transition: border-color var(--motion-duration), background-color var(--motion-duration), box-shadow var(--motion-duration); }
+  .theme :where(input:not([type=checkbox], [type=radio], [type=range], [type=hidden]), select, textarea) {
     display: block;
     width: 100%;
     min-width: 0;
@@ -25,13 +25,13 @@
     line-height: 1.5;
     accent-color: var(--primary);
   }
-  :where(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
-  :where(input, select, textarea)[readonly] { background: var(--muted); }
-  :where(input, select, textarea)[aria-invalid=true] { border: 2px solid var(--destructive); }
-  :where(input, select, textarea)[aria-invalid=true]:focus-visible { outline-color: var(--destructive); }
-  :where(input, select, textarea, button):disabled { cursor: not-allowed; }
-  :where(input, select, textarea):disabled { background: var(--muted); color: var(--muted-foreground); border-style: dashed; }
-  :where(input[type=checkbox], input[type=radio]) {
+  .theme :where(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
+  .theme :where(input, select, textarea)[readonly] { background: var(--muted); }
+  .theme :where(input, select, textarea)[aria-invalid=true] { border: 2px solid var(--destructive); }
+  .theme :where(input, select, textarea)[aria-invalid=true]:focus-visible { outline-color: var(--destructive); }
+  .theme :where(input, select, textarea, button):disabled { cursor: not-allowed; }
+  .theme :where(input, select, textarea):disabled { background: var(--muted); color: var(--muted-foreground); border-style: dashed; }
+  .theme :where(input[type=checkbox], input[type=radio]) {
     appearance: auto;
     accent-color: var(--primary);
     inline-size: 1.125rem;
@@ -39,11 +39,11 @@
     flex: 0 0 1.125rem;
     vertical-align: middle;
   }
-  :where(input[type=file]) { overflow: hidden; }
-  ::file-selector-button { margin-inline-end: .75rem; border: 0; border-radius: .25rem; padding: .25rem .5rem; background: var(--secondary); color: var(--foreground); font: inherit; }
-  :where(textarea) { resize: vertical; min-height: 6rem; }
-  :where(select, option) { color-scheme: inherit; }
-  :where(button:not([data-slot=button])) {
+  .theme :where(input[type=file]) { overflow: hidden; }
+  .theme ::file-selector-button { margin-inline-end: .75rem; border: 0; border-radius: .25rem; padding: .25rem .5rem; background: var(--secondary); color: var(--foreground); font: inherit; }
+  .theme :where(textarea) { resize: vertical; min-height: 6rem; }
+  .theme :where(select, option) { color-scheme: inherit; }
+  .theme :where(button:not([data-slot=button])) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -62,24 +62,24 @@
     overflow-wrap: anywhere;
     cursor: pointer;
   }
-  :where(button:not([data-slot=button])):hover:not(:disabled) { background: var(--accent-surface); }
-  :where(button:not([data-slot=button])):disabled { opacity: .6; }
-  :where(table) { width: 100%; border-collapse: collapse; color: var(--foreground); font-size: .875rem; line-height: 1.6; }
-  :where(caption) { text-align: start; font-weight: 650; margin-block-end: .75rem; }
-  :where(th, td) { padding: .85rem .75rem; border-block-end: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; }
-  :where(thead th) { background: var(--muted); font-weight: 650; }
-  :where(tbody tr):focus-within { background: var(--accent-surface); }
-  :where(summary) { cursor: pointer; min-height: 2.75rem; align-content: center; }
-  :where(summary)::marker { color: var(--primary); }
-  :where(code, pre) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-  :where(a) { text-underline-offset: .2em; }
-  :where(p, li, dt, dd, h1, h2, h3, h4, h5, h6) { overflow-wrap: anywhere; }
+  .theme :where(button:not([data-slot=button])):hover:not(:disabled) { background: var(--accent-surface); }
+  .theme :where(button:not([data-slot=button])):disabled { opacity: .6; }
+  .theme :where(table) { width: 100%; border-collapse: collapse; color: var(--foreground); font-size: .875rem; line-height: 1.6; }
+  .theme :where(caption) { text-align: start; font-weight: 650; margin-block-end: .75rem; }
+  .theme :where(th, td) { padding: .85rem .75rem; border-block-end: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; }
+  .theme :where(thead th) { background: var(--muted); font-weight: 650; }
+  .theme :where(tbody tr):focus-within { background: var(--accent-surface); }
+  .theme :where(summary) { cursor: pointer; min-height: 2.75rem; align-content: center; }
+  .theme :where(summary)::marker { color: var(--primary); }
+  .theme :where(code, pre) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  .theme :where(a) { text-underline-offset: .2em; }
+  .theme :where(p, li, dt, dd, h1, h2, h3, h4, h5, h6) { overflow-wrap: anywhere; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
   @media (forced-colors: active) {
-    :where(button, input, select, textarea, a):focus-visible { outline-color: Highlight; }
-    :where(button, input, select, textarea) { border-color: ButtonText; }
+    .theme :where(button, input, select, textarea, a):focus-visible { outline-color: Highlight; }
+    .theme :where(button, input, select, textarea) { border-color: ButtonText; }
   }
 }
 @layer components {

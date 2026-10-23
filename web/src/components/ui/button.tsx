@@ -6,11 +6,11 @@ const buttonVariants = cva(
   'group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent text-sm font-semibold leading-normal whitespace-normal text-center transition-colors select-none max-w-full break-words focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-60 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
   { variants: {
     variant: {
-      default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      default: 'bg-primary text-primary-foreground hover:bg-primary hover:underline',
       outline: 'border-input bg-background text-foreground hover:bg-accent aria-expanded:bg-accent',
       secondary: 'bg-secondary text-secondary-foreground hover:bg-accent aria-expanded:bg-accent',
       ghost: 'text-foreground hover:bg-accent aria-expanded:bg-accent',
-      destructive: 'border-destructive bg-background text-destructive hover:bg-destructive/10 focus-visible:outline-destructive',
+      destructive: 'border-destructive bg-background text-destructive hover:bg-background hover:underline focus-visible:outline-destructive',
       link: 'text-primary underline underline-offset-4 hover:decoration-2',
     },
     size: {

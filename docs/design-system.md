@@ -32,7 +32,9 @@ names. Utilities remain the final intentional override layer.
 The system preference supplies dark mode for the platform theme. An event's
 validated saved palette remains authoritative in its own scope, including native
 control color-scheme. Muted text and status foregrounds retain contrast for custom
-palettes; decorative accent is never used as a focus or text contrast guarantee.
+palettes, including near-threshold grey on white. A derived surface is used only
+when it retains at least 4.5:1 text contrast; otherwise it keeps the validated
+native background. Primary hover retains its validated fill. Decorative accent is never used as a focus or text contrast guarantee.
 Menus use the existing Theme portal container. No theme state is written to
 browser storage. The explicit `.dark` variant is also supported for embedding and
 verification.

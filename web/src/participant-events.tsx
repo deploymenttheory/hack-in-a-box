@@ -1,3 +1,4 @@
+import { Badge } from './components/ui/surfaces'
 import { ExportDownloads } from './export-downloads'
 import { MentorRoster } from './mentor-roster'
 import { useState } from 'react'
@@ -20,7 +21,7 @@ export function EventDirectory() {
     queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/events', { params: { query: { after: pageParam, limit: 50 } } })), getNextPageParam: page => page.next_cursor ?? undefined })
   return <section className="workspace"><div className="page-heading"><div><p className="eyebrow">Your workspace</p><h1>Your events</h1><p>Meet your team and take part in the next hack.</p></div></div>
     {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <>
-      <div className="event-grid">{query.data.pages.flatMap(page => page.items).map(event => <Link className="event-card" key={event.id} to="/events/$eventId" params={{ eventId: event.id }}><span className="badge">{event.stage}</span><h2>{event.name}</h2><p>{localDate(event.configuration.live_start, event.configuration.timezone)}</p></Link>)}</div>
+      <div className="event-grid">{query.data.pages.flatMap(page => page.items).map(event => <Link className="event-card" key={event.id} to="/events/$eventId" params={{ eventId: event.id }}><Badge className="badge">{event.stage}</Badge><h2>{event.name}</h2><p>{localDate(event.configuration.live_start, event.configuration.timezone)}</p></Link>)}</div>
       {!query.data.pages[0].items.length && <div className="empty-state"><h2>No events yet</h2><p>Find an event to register for, or wait for your organiser to grant access.</p></div>}
       {query.hasNextPage && <Button onClick={() => void query.fetchNextPage()} disabled={query.isFetchingNextPage}>Show more events</Button>}
     </>}
