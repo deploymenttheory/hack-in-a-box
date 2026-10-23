@@ -16,15 +16,15 @@ type Action string
 
 const (
 	SurveyResponsesExported Action = "survey.responses_exported"
-	MediaChanged           Action = "media.changed"
-	MediaRevoked           Action = "media.revoked"
-	PhotoConsentGranted    Action = "photo_consent.granted"
-	PhotoConsentRevoked    Action = "photo_consent.revoked"
-	PhotoConsentUnknown    Action = "photo_consent.unknown"
-	OutcomeChanged         Action = "outcome.changed"
-	OutcomeArchivedUpdated Action = "outcome.archived_updated"
-	OutcomeProjectChanged  Action = "outcome.project_changed"
-	OutcomeReviewChanged   Action = "outcome.review_changed"
+	MediaChanged            Action = "media.changed"
+	MediaRevoked            Action = "media.revoked"
+	PhotoConsentGranted     Action = "photo_consent.granted"
+	PhotoConsentRevoked     Action = "photo_consent.revoked"
+	PhotoConsentUnknown     Action = "photo_consent.unknown"
+	OutcomeChanged          Action = "outcome.changed"
+	OutcomeArchivedUpdated  Action = "outcome.archived_updated"
+	OutcomeProjectChanged   Action = "outcome.project_changed"
+	OutcomeReviewChanged    Action = "outcome.review_changed"
 )
 
 const (

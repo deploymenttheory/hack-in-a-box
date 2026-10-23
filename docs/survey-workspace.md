@@ -73,3 +73,22 @@ small cohorts, equivalent/changed editions and actual outcome DTO pagination.
 They capture the published report and native observation layouts for inspection.
 The question-equivalence unit cases include changed conditional parents and
 coincidentally identical IDs with different retained measure definitions.
+
+## Acceptance evidence for #116
+
+| Acceptance criterion | Native/browser evidence |
+| --- | --- |
+| Required/optional questions and response visibility | `survey-workspace.spec.ts`: keyboard/mobile completion and conditional-answer pruning; `survey-reader.spec.ts`: invited private reader. |
+| Accessible counts without restricted respondents | Reviewed report chart/table journey and small-cohort suppression journey; native survey privacy/disclosure fixtures. Raw authored responses and audited CSV have separate current-organiser checks. |
+| Equivalent versus changed editions | Browser comparison cases and `survey-question-equivalence.test.ts` cover separate retained versions, changed definitions, conditional context and exact measure provenance. |
+| Configured objectives, participation, completion and follow-through with provenance | Current objectives and native observation pagination browser cases; `TestSurveyMeasurementDashboardConsumesNativeRetainedOutcomeEvidence` creates actual outcome evidence and changes the later planning unit without changing the retained observation. Dashboard HTTP/service fixtures prove native invitation/response denominators. |
+| Unknown baselines/pending reviews and unsupported ROI | Observation fixtures preserve nullable value, denominator, observation date and baseline; browser cases distinguish a recorded zero from unknown/pending and keep estimates, self-reports and demonstrated records separate. No monetary ROI calculation exists. |
+
+Fresh validation on the current outcomes/schema-43 main baseline includes the
+canonical SQLC/OpenAPI generator, full Go build/vet, Go lint (zero issues), web
+lint, both portal builds, 60 web unit cases and 60 desktop/mobile survey browser
+cases against the admin build. Real PostgreSQL survey service and HTTP journeys
+ran with `HACKBOX_INTEGRATION=1 go test -race -timeout 10m
+./internal/surveys ./internal/httpapi -run Survey -count=1` and passed.
+Synthetic browser screenshots show the reviewed report, configured objectives and
+retained native observations at desktop/mobile widths.
