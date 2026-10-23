@@ -185,7 +185,7 @@ func newCommunicationRuntime(
 	teams.Composer = *composer
 	return communicationRuntime{
 		Moderation: huddles, Scorecards: cards,
-		Feedback:       shared,
+		Feedback: shared,
 		Deliveries: &deliveryhistory.Service{
 			Pool: pool,
 			Jobs: outbox,

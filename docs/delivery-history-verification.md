@@ -69,6 +69,13 @@ finish a newer reviewed operation. No recovery command performs provider I/O.
 - Local TLS Teams fixtures exercise accepted and uncertain responses through
   native review/workers, retaining two immutable receipts and consuming one grant
   without repeated effects.
+- Normal37→38 upgrade tests preserve all populated predecessor rows, including
+  real native huddles, submitted cards, reviewed feedback/actions and private
+  questions. A separate native SMTP campaign is approved, selected and accepted
+  by a recording provider on37 before migration; its snapshots and original
+  receipts survive unchanged, then one reviewed resend uses the new schema.
+  Populated rollback refuses to discard the decision/use and both receipts;
+  empty rollback and return to normal latest succeed.
 - Eleven browser scenarios pass on desktop and mobile in each built portal
   (22 cases per portal). They cover
   keyboard controls, provider readiness labels, immutable evidence, explicit
@@ -78,8 +85,8 @@ finish a newer reviewed operation. No recovery command performs provider I/O.
 
 ## Remaining merge gates
 
-Migration numbering is provisional until the actual preceding feature migrations
-merge. Final normal populated upgrade, protected rollback, composition checks,
-generated parity, exact-head CI and independent review remain required. Tests use
+Schema38 is tested on the reviewed schema37 predecessor branch; its temporary
+dependency ancestry must be dropped onto actual merged main before final parity
+and CI. Exact-head composition, generated parity and CI remain required. Tests use
 only synthetic identities and local recording/TLS providers; no external emails
 or shared-channel messages are sent.

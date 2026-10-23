@@ -127,6 +127,10 @@ func TestModeration37PreservesAllPopulated36TablesAndGuardsCanonicalHistory(t *t
 	if err = database.Migrate(ctx, pool, 37); err != nil {
 		t.Fatal(err)
 	}
+	// Retain the real36→37 step while permitting later ordered migrations.
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
