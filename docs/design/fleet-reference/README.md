@@ -27,7 +27,7 @@ and links primary evidence. Observed Fleet facts and our design adaptations are
 separate columns. We do not copy Fleet branding, component code or screenshots
 into the product. The PNGs here depict our own synthetic proposals. Inter is a
 separately sourced self-hosted font with its OFL license and provenance under
-`web/public/fonts/inter`; it was not taken from Fleet assets.
+`web/src/design-system/fonts` and `web/public/assets/licenses`; it was not taken from Fleet assets.
 
 The archived prototype verifier result describes its original local checks, not
 the current product's browser/accessibility or release certification. New production

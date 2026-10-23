@@ -13,7 +13,7 @@ palettes. The event's configured primary/background/foreground are still respect
 invalid palettes fall back to the new Fleet defaults. Each branded scope supplies a
 complete palette, including focus, links and status colours, so a system-dark parent
 cannot contaminate a custom-light event. Portals render inside their owning Theme.
-No branding is written to `body` or to a different event.
+No branding is written to `body` or to a different event. Inter is imported by a CSS-relative URL so Vite fingerprints it under `/assets`, the production static-handler boundary. The license is distributed under `/assets/licenses`; neither font requests nor guide examples depend on a third-party CDN.
 
 | Purpose | Foundation |
 |---|---|

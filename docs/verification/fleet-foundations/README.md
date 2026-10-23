@@ -41,6 +41,25 @@ focused Playwright against each freshly built portal on separate temporary ports
 with the desktop/iPhone Chromium projects. Full current-head CI is the merge gate.
 The cross-browser/manual accessibility audit remains #122.
 
+## Production asset correction before merge
+
+A temporary probe passed each actual built portal CSS font URL through the real Go
+router/static handler. It reproduced a production-only failure despite Vite preview
+success: `/fonts/inter/InterVariable.woff2` returned 404. The merge guard was stopped.
+The font now uses a CSS-relative source import, so Vite emits a fingerprinted
+`/assets/InterVariable-<hash>.woff2`, and the license is distributed under
+`/assets/licenses`. The same real-built-assets probe then passed for both outputs,
+checking status 200, intact WOFF2 bytes, font MIME and immutable cache headers.
+
+The temporary probe was removed after verification. Permanent coverage extends
+`TestAssetsDeepLinksAndAPIBoundary` for font bytes/MIME/cache and the real browser
+suite now requires a fingerprinted `/assets` font URL, not merely a successful
+Vite-only URL. The static-handler allowlist is unchanged; no new `/fonts` exception
+or broad public-file routing was introduced. Both focused portal suites were rerun
+on the corrected build. The predecessor `docs/design-system.md` now points to the
+accepted Fleet contract instead of preserving contradictory forest/cream guidance.
+
+
 ## Visual inspection
 
 ![Default Fleet foundation on actual admin registration components](admin-default-desktop.png)

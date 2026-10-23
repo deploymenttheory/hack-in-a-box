@@ -318,6 +318,15 @@ func TestAssetsDeepLinksAndAPIBoundary(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+	fontPath := "/assets/InterVariable-synthetic.woff2"
+	font := []byte("wOF2synthetic-font")
+	if err := os.WriteFile(
+		filepath.Join(directory, "assets", "InterVariable-synthetic.woff2"),
+		font,
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
 	cfg := config.Config{WebDir: directory, MaxBodyBytes: 1024, RequestTimeout: time.Second}
 	router := NewRouter(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	for _, tc := range []struct {
@@ -329,5 +338,16 @@ func TestAssetsDeepLinksAndAPIBoundary(t *testing.T) {
 		if response.Code != tc.status {
 			t.Errorf("%s = %d", tc.path, response.Code)
 		}
+	}
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest("GET", fontPath, nil))
+	if response.Code != http.StatusOK || !bytes.Equal(response.Body.Bytes(), font) ||
+		response.Header().Get("Content-Type") != "font/woff2" ||
+		!strings.Contains(response.Header().Get("Cache-Control"), "immutable") {
+		t.Fatalf(
+			"bundled font was not served intact with its static MIME/cache contract: %d %v",
+			response.Code,
+			response.Header(),
+		)
 	}
 }

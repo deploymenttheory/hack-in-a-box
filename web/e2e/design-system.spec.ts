@@ -92,7 +92,7 @@ test('Fleet foundation loads a local font and explicit modes override system pre
   await expect(scope).toHaveCSS('background-color', 'rgb(26, 28, 33)')
   await page.evaluate(() => document.fonts.ready)
   expect(await page.evaluate(() => document.fonts.check('14px Inter'))).toBe(true)
-  expect(fonts.some(url => new URL(url).pathname === '/fonts/inter/InterVariable.woff2')).toBe(true)
+  expect(fonts.some(url => /^\/assets\/InterVariable-[\w-]+\.woff2$/.test(new URL(url).pathname))).toBe(true)
   expect(fonts.filter(url => new URL(url).origin !== new URL(page.url()).origin)).toEqual([])
   await expect(page.getByRole('heading', { level: 1 }).first()).toHaveCSS('font-size', '24px')
   await scope.evaluate(element => element.setAttribute('data-theme', 'light'))
