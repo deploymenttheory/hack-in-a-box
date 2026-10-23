@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { consumeFrames, parseSnapshot, safeDestination, type Snapshot } from './room-stream'
-import { contrast } from './branding'
+import { brandStyle, contrast, defaultBranding } from './branding'
+import { Theme } from './components/theme'
 import { Button } from './components/ui/button'
 
 type Connection = 'connecting' | 'connected' | 'reconnecting'
@@ -10,7 +11,7 @@ function now() { return Date.now() }
 export function App() {
   const eventID = window.location.pathname.split('/')[2] ?? ''
   const [token, setToken] = useState(''), [session, setSession] = useState(''), [notice, setNotice] = useState('')
-  return session ? <ConnectedRoom key={`${eventID}:${session}`} eventID={eventID} token={session} onEnd={() => { setSession(''); setNotice('This display pairing has ended. Ask the MC for a new pairing.')}} /> : <main className="display-pairing"><h1>Connect a room display</h1><p>Ask the MC for this event's temporary display key. Keep the key private.</p><form onSubmit={e => { e.preventDefault(); if (/^[0-9a-f-]{36}$/i.test(eventID) && token.trim()) { setSession(token.trim()); setToken(''); setNotice('') } else setNotice('Open the event display address supplied by the MC and enter its key.') }}><label htmlFor="display-key">Display key</label><input id="display-key" type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} maxLength={200} /><Button type="submit">Connect display</Button></form>{notice && <p role="status">{notice}</p>}</main>
+  return <Theme>{session ? <ConnectedRoom key={`${eventID}:${session}`} eventID={eventID} token={session} onEnd={() => { setSession(''); setNotice('This display pairing has ended. Ask the MC for a new pairing.')}} /> : <main className="display-pairing"><h1>Connect a room display</h1><p>Ask the MC for this event's temporary display key. Keep the key private.</p><form onSubmit={e => { e.preventDefault(); if (/^[0-9a-f-]{36}$/i.test(eventID) && token.trim()) { setSession(token.trim()); setToken(''); setNotice('') } else setNotice('Open the event display address supplied by the MC and enter its key.') }}><label htmlFor="display-key">Display key</label><input id="display-key" type="password" autoComplete="off" value={token} onChange={e => setToken(e.target.value)} maxLength={200} /><Button type="submit">Connect display</Button></form>{notice && <p role="status">{notice}</p>}</main>}</Theme>
 }
 function ConnectedRoom({ eventID, token, onEnd }: { eventID: string; token: string; onEnd: () => void }) {
   const [received,setReceived] = useState<Received>(), [connection,setConnection] = useState<Connection>('connecting'), [clock,setClock] = useState(now)
@@ -47,7 +48,8 @@ function ConnectedRoom({ eventID, token, onEnd }: { eventID: string; token: stri
   if (!snapshot) return <main className="display-pairing"><h1>Waiting for the room feed</h1><p role="status">{connection === 'reconnecting' ? 'Connection lost. Reconnecting…' : 'Connecting…'}</p><Button onClick={onEnd}>Disconnect display</Button></main>
   const safeColour = (value: string) => /^#[0-9a-f]{6}$/i.test(value)
   const readable = [snapshot.background_colour,snapshot.foreground_colour,snapshot.primary_colour].every(safeColour) && contrast(snapshot.foreground_colour,snapshot.background_colour)>=4.5 && contrast(snapshot.primary_colour,snapshot.background_colour)>=4.5
-  const style = { '--room-background': readable ? snapshot.background_colour : '#f8f9f5', '--room-foreground': readable ? snapshot.foreground_colour : '#173a35', '--room-primary': readable ? snapshot.primary_colour : '#173a35' } as CSSProperties
+  const palette = readable ? { ...defaultBranding, primary: snapshot.primary_colour, background: snapshot.background_colour, foreground: snapshot.foreground_colour } : defaultBranding
+  const style = { ...brandStyle(palette), '--room-background': palette.background, '--room-foreground': palette.foreground, '--room-primary': palette.primary } as CSSProperties
   const remaining = snapshot.mode === 'running' && snapshot.timer_ends_at ? Math.max(0,Math.ceil((Date.parse(snapshot.timer_ends_at)-(Math.max(clock,received.receivedAt)+received.offset))/1000)) : snapshot.remaining_seconds
   const time = `${Math.floor(remaining/60).toString().padStart(2,'0')}:${(remaining%60).toString().padStart(2,'0')}`
   const destination = safeDestination(snapshot.current?.url ?? '')

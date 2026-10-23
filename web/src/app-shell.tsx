@@ -1,3 +1,4 @@
+import { Card } from './components/ui/surfaces'
 import { EmailAccount } from './email-account'
 import { InboxLink } from './inbox'
 import { ConnectionStatus } from './connection-status'
@@ -96,6 +97,6 @@ function Welcome({ expired = false }: { expired?: boolean }) {
 
 export function AccountPage() {
   const identity = useIdentity()
-  return <section className="workspace"><Link to="/">← Your events</Link><div className="page-heading"><div><p className="eyebrow">Your identity</p><h1>Your account</h1><p>{identity.person.display_name}</p></div></div><section className="panel"><h2>Organisation account</h2><label htmlFor="account-id">Your account ID</label><input id="account-id" readOnly value={identity.person.id} /><p>Share this ID with an organiser who needs to assign you an event role.</p></section><EmailAccount /><GitHubAccount /></section>
+  return <section className="workspace"><Link to="/">← Your events</Link><div className="page-heading"><div><p className="eyebrow">Your identity</p><h1>Your account</h1><p>{identity.person.display_name}</p></div></div><Card><h2>Organisation account</h2><label htmlFor="account-id">Your account ID</label><input id="account-id" readOnly value={identity.person.id} /><p>Share this ID with an organiser who needs to assign you an event role.</p></Card><EmailAccount /><GitHubAccount /></section>
 }
 export function NotFound() { return <section className="state"><h1>Page not found</h1><p>This link does not lead to a workspace.</p><Link to="/">Return home</Link></section> }

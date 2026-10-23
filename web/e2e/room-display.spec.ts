@@ -1,3 +1,5 @@
+import { contrastOf } from './design-system-contrast'
+import { contrast } from '../src/branding'
 import { test, expect, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
@@ -7,8 +9,8 @@ const eventID = '00000000-0000-4000-8000-000000000001', assetID='00000000-0000-4
 const token = 'SYNTHETIC-DISPLAY-CAPABILITY-NEVER-IN-URL'
 const raster = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64')
 function initial(): components['schemas']['DisplaySnapshot'] { return { event_id:eventID,event_name:'Synthetic summer hack',timezone:'Europe/London',sequence:7,server_now:'2030-06-14T09:00:00Z',current:{id:eventID,title:'Build something useful',text:'Work with your team.\nAsk a mentor when you need help.',url:'https://example.com/challenge?edition=summer',content_title:'Released challenge'},next:{id:assetID,title:'Share your progress',text:'',url:'',content_title:''},mode:'running',remaining_seconds:120,timer_ends_at:'2030-06-14T09:02:00Z',primary_colour:'#173a35',background_colour:'#f8f9f5',foreground_colour:'#173a35',override_active:false,assets:[] } }
-async function room(page: Page) {
- const state = { snapshot:initial(),offline:false,revoked:false,assetMissing:false, streams:0, frameOverride:'', unexpected:[] as string[] }
+async function room(page: Page, palette: Partial<components['schemas']['DisplaySnapshot']> = {}) {
+ const state = { snapshot:{...initial(),...palette},offline:false,revoked:false,assetMissing:false, streams:0, frameOverride:'', unexpected:[] as string[] }
  await page.clock.install({time:new Date('2027-06-14T09:00:00Z')})
  await page.route('**/api/**',route => {state.unexpected.push(route.request().url());return route.fulfill({status:500})})
  await page.route('**/display/stream',route => {
@@ -107,4 +109,21 @@ test('renders a maximum legal Go-escaped current and next snapshot without recon
  await expect(page.locator('.room-instructions')).toHaveText('<'.repeat(4000))
  await expect(page.locator('.room-display footer strong')).toHaveText('<'.repeat(200))
  await expect(page.locator('.room-countdown')).toHaveText('02:00')
+})
+
+for (const palette of [
+ { name: 'native light room under system dark', background_colour: '#f8f9f5', foreground_colour: '#173a35', primary_colour: '#173a35' },
+ { name: 'threshold grey room under system dark', background_colour: '#ffffff', foreground_colour: '#767676', primary_colour: '#767676' },
+]) test(`${palette.name} derives readable room action roles and native controls`, async ({ page }, info) => {
+ await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
+ await room(page, palette)
+ const display = page.locator('.room-display'), control = page.getByRole('button', { name: 'Fullscreen', exact: true })
+ const roles = await display.evaluate(el => { const s = getComputedStyle(el); return { primary: s.getPropertyValue('--primary').trim(), foreground: s.getPropertyValue('--primary-foreground').trim(), scheme: s.colorScheme } })
+ expect(contrast(roles.primary, roles.foreground)).toBeGreaterThanOrEqual(4.5)
+ expect(roles.scheme).toBe('light')
+ expect(await contrastOf(control)).toBeGreaterThanOrEqual(4.5)
+ expect(await contrastOf(control, 'border-top-color')).toBeGreaterThanOrEqual(3)
+ await control.hover(); expect(await contrastOf(control)).toBeGreaterThanOrEqual(4.5)
+ await control.focus(); await expect(control).toHaveCSS('outline-width', '3px')
+ await page.screenshot({ path: info.outputPath('room-control-theme.png'), fullPage: true })
 })
