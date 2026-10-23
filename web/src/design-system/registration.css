@@ -15,6 +15,7 @@
  .fleet-admission-fields legend { font-size: var(--text-section); font-weight: var(--weight-emphasis); padding: 0 0 var(--space-3); }
  .fleet-admission-fields > div, .fleet-admission-fields > label { margin-block: var(--space-3); }
  .fleet-admission-fields fieldset { border: 0; border-radius: 0; padding: var(--space-3) 0; background: transparent; }
+ .fleet-admission-fields label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; line-height: var(--line-body); }
  .fleet-admission-check { display: flex; align-items: start; gap: var(--space-3); }
  .fleet-admission-check input { flex: 0 0 auto; }
  .fleet-admission-review { border-block: 1px solid var(--border); padding-block: var(--space-4); }

@@ -37,6 +37,7 @@ async function participantRegistration(page: Page, preference: 'join' | 'solo', 
   await page.getByLabel('What would you like to learn? (required)').fill('Synthetic collaboration goal')
   await page.getByLabel('Team preference', { exact: true }).selectOption(preference)
   if (preference === 'join') await page.getByLabel('Team invitation reference (optional)').fill(invitation)
+  await page.getByRole('button', { name: 'Review application', exact: true }).click()
   await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(page.getByRole('heading', { name: 'Your team', exact: true })).toBeVisible()
   expect(commands).toEqual([])

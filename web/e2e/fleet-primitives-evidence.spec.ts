@@ -16,7 +16,7 @@ test('synthetic registration error evidence is readable at the current viewport'
  await page.route(`**/events/${firstID}/registrations`, route => route.fulfill({ status: 422, json: { error: { code: 'invalid', message: 'Review the answer', request_id: 'synthetic', blockers: [{ field: form.definition.fields[0].id, code: 'invalid', message: 'Explain the learning goal.' }] } } }))
  await page.goto(`/register/${firstID}`)
  await page.getByLabel('What would you like to learn? (required)').fill('Synthetic learning goal')
- await page.getByRole('button', { name: 'Submit application' }).click()
+ await page.getByRole('button', { name: 'Review application', exact: true }).click(); await page.getByRole('button', { name: 'Submit application' }).click()
  await expect(page.getByLabel('What would you like to learn? (required)')).toHaveAttribute('aria-invalid', 'true')
  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
  if (process.env.FLEET_CAPTURE_EVIDENCE) {
