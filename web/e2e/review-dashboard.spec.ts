@@ -64,6 +64,7 @@ test('current intended panel sees pending separate from numeric original and pri
  await fixture(page);await page.goto(teamPath);await page.getByRole('button',{name:'Open intended-panel context'}).click()
  await expect(page.getByText('PRIVATE-ORIGINAL-EVIDENCE',{exact:true})).toBeVisible();await expect(page.getByText('Pending/unobserved — no numeric score')).toBeVisible();await expect(page.getByText('Original score 2')).toBeVisible()
  await page.getByRole('button',{name:'Show authorised huddle decision history'}).click()
+ expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
  await page.screenshot({path:info.outputPath('private-panel-evidence.png'),fullPage:true})
  await page.emulateMedia({media:'print'});await expect(page.locator('.private-review').first()).toBeHidden()
 })

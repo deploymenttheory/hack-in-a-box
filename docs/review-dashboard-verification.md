@@ -37,3 +37,13 @@ Focused results before draft publication: dashboard/native-help PG/race **5.990s
 ## Remaining boundaries
 
 This is #105 coordination/UI. Actual judge assignment and final results/awards remain with #108–#112; organiser preview does not stand in for them. Live external provider acceptance and unrelated automation results integration remain with their owning tickets. Existing native help, feedback, Q&A, objectives, independent scorecards and delivery history routes are preserved.
+
+Independent review on the composed schema-39 base passed dashboard PostgreSQL/race
+in 7.623 s, moderation/current-action repair in 8.328 s and authenticated HTTP in
+7.262 s. Sixteen admin browser cases passed in 6.1 s. A mobile viewport regression
+then reproduced a 427-pixel private panel in the configured 390-pixel viewport;
+wrapping long huddle buttons fixes the overflow. Both surfaces rebuild, all
+sixteen participant browser cases pass in 4.5 s, and the desktop/mobile admin
+panel checks pass in 1.6 s with the viewport assertion. The assertion compares
+against Playwright's configured viewport, since a mobile layout viewport can
+expand along with overflowing content.
