@@ -197,3 +197,21 @@ test('guide example can inherit the actual caller theme and portal without neste
  expect(container.querySelector('.theme')).toHaveAttribute('data-theme','dark')
  expect(screen.queryByLabelText('Example appearance')).not.toBeInTheDocument()
 })
+
+
+test('narrow sorting exposes only declared columns and reports owner direction without sorting rows internally', async () => {
+ narrow = true
+ const user = userEvent.setup(), changed = vi.fn()
+ const { rerender } = render(themed(<CollectionRecords {...base} sort={{key:'status',direction:'ascending',onChange:changed}} />))
+ const control = screen.getByRole('button',{name:'Sort by Status'})
+ expect(control).toHaveAttribute('aria-pressed','true')
+ expect(control).toHaveAccessibleDescription('ascending')
+ expect(control).toHaveTextContent('ascending')
+ expect(screen.queryByRole('button',{name:'Sort by Contact'})).not.toBeInTheDocument()
+ await user.click(control); expect(changed).toHaveBeenLastCalledWith('status','descending')
+ expect(screen.getAllByRole('link').map(link=>link.textContent)).toEqual(exampleRecords.map(row=>row.name))
+ rerender(themed(<CollectionRecords {...base} disabled sort={{key:'status',direction:'descending',onChange:changed}} />))
+ expect(control).toBeDisabled();expect(control).toHaveTextContent('descending')
+ rerender(themed(<CollectionRecords {...base} />))
+ expect(screen.queryByRole('group',{name:'Sort Current requests'})).not.toBeInTheDocument()
+})

@@ -73,3 +73,5 @@ The [fresh verification record](../verification/fleet-patterns/README.md) retain
 local results, corrected failures and representative synthetic visual artifacts.
 Exact-head repository CI and independent review remain required. Domain screen
 migrations and the final parity audit remain separate backlog work.
+
+Narrow records preserve owner-supported sorting with labelled native buttons for visible sortable columns, active direction and disabled state. Rows are never reordered by the pattern; the owner supplies their resulting order. Repeated deliberate synthetic searches and clears issue a fresh scoped read even if the query and cursor are unchanged.

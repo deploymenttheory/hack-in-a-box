@@ -9,9 +9,9 @@ migration or certification of every product page.
 ## Fresh local results
 
 - Web lint: PASS.
-- Full web unit suite: 102 PASS, including 25 focused pattern/owner-boundary cases.
+- Full web unit suite: 103 PASS, including 26 focused pattern/owner-boundary cases.
 - Both participant and admin production builds: PASS.
-- Focused production-built harness: 44 PASS in 32.0s across admin/participant
+- Focused production-built harness: 52 PASS in 23.4s across admin/participant
   desktop/mobile scenarios.
 - Final representative screenshot capture: 4 PASS using complete synthetic
   example views so neighbouring content and controls are not clipped.
@@ -53,6 +53,25 @@ complete corrected 44-case browser matrix pass. No authority or domain rule was
 relaxed to make the assertions pass. Final visual inspection also corrected the
 new queue badge to keep its icon with its label using bounded flex wrapping; full
 lint, both builds and the final 44-case matrix passed with that CSS correction.
+
+Independent review then reproduced two additional defects: an unchanged deliberate
+search (including an initial empty search or clearing unsubmitted text) entered
+loading without changing any read-effect dependency, and narrow records omitted
+owner-supported sorting. The synthetic owner now increments its read generation
+on every deliberate search/clear. Narrow records expose labelled controls only
+for visible declared sortable columns, including active direction and disabled
+state, while the owner still supplies rows and performs sorting. The test-only
+complete-collection owner exercises this capability without adding sorting to the
+cursor example or changing the production controlled API.
+
+The pre-fix browser run reproduced all four stuck-search cases and both missing
+mobile sort controls. Its two desktop sort failures were an incorrect fixture
+expectation for alphabetical contact order, corrected against the actual names.
+The first corrected matrix passed 51/52; the remaining existing palette check
+sampled a running CSS background transition. It now awaits the actual transition
+completion before measuring the unchanged 4.5:1 steady-palette requirement. The
+final complete matrix and all 103 unit cases pass. A local typecheck also caught
+an unsupported Testing Library `exact` test option, removed before final builds.
 
 ## Synthetic visual comparison
 
