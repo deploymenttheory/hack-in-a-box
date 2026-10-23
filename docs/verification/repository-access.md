@@ -26,7 +26,8 @@ All commands below completed successfully, with `HACKBOX_INTEGRATION=1` for the
 real PostgreSQL cases and the race detector enabled:
 
 - Full `internal/repositoryaccess` package, including all nine runtime fault,
-  coverage and invitation subcases and migration/rollback proofs: PASS (7.469s).
+  coverage and invitation subcases and migration/rollback proofs: PASS (7.048s
+  under Europe/London after the precision fixture correction).
 - Full affected `internal/githubapp` package after the cleanup correction: PASS
   (11.844s), including the native App owner and scoped transport regressions.
 - Full affected `internal/githubwebhooks` package after historical fixture
@@ -60,3 +61,15 @@ checks still prevent writes. The regression and the complete App package passed.
 No local full-repository PostgreSQL run or browser-suite result is claimed here.
 The scoped native runtime/HTTP and full static/build checks above are fresh;
 exact-head PR CI remains the complete repository gate.
+
+PR226 CI subsequently exposed nanosecond precision in the mentor fixture clock.
+The exact CI timestamp (`2026-10-23T10:41:01.745258557Z`) reproduced both mentor
+coverage flags locally under UTC: JSON retained the nanoseconds while PostgreSQL
+assignment timestamps retained microseconds. The fixture now uses a fixed UTC
+clock aligned to microseconds and verifies the database round trip preserves its
+exact boundaries. Native review regressions explicitly reject one-nanosecond
+late availability starts and early ends, accept the exact coverage start and
+expire access at the exact coverage end. Production coverage and permission
+rules remain unchanged. The focused UTC PostgreSQL/race case passed (3.483s),
+the complete affected package under Europe/London passed (7.048s), and scoped
+lint/format checks passed. The failed CI/reproduction remain part of this record.

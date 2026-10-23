@@ -541,7 +541,9 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 		func(t *testing.T) {
 			f := setupAccess(t, pool)
 			f.publish()
-			now := time.Now().UTC().Add(-2 * time.Hour)
+			// PostgreSQL timestamps retain microseconds, while JSON retains
+			// nanoseconds. Use the same exact, deterministic boundaries in both.
+			now := time.Date(2020, 1, 2, 10, 41, 1, 745258000, time.UTC)
 			start, end := now.Add(-time.Hour), now.Add(time.Hour)
 			config := event.DefaultConfiguration()
 			config.LiveStart = start
@@ -594,6 +596,53 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 				f.exec("INSERT INTO github_link_states(person_id,revision)VALUES($1,1)", person)
 			}
 			f.service.Now = func() time.Time { return now }
+			var storedStart, storedEnd time.Time
+			if err := pool.QueryRow(t.Context(), "SELECT starts_at,ends_at FROM mentor_assignments WHERE event_id=$1 AND person_id=$2 AND snapshot='published'", f.event, primary.ID).
+				Scan(&storedStart, &storedEnd); err != nil {
+				t.Fatal(err)
+			}
+			if !storedStart.Equal(start) || !storedEnd.Equal(end) {
+				t.Fatal(
+					"fixture boundaries changed during PostgreSQL round trip",
+					storedStart,
+					storedEnd,
+				)
+			}
+			// Precision alignment is a fixture requirement, not permission to
+			// round away even a one-nanosecond gap in declared availability.
+			for _, boundary := range []struct {
+				name       string
+				start, end time.Time
+			}{
+				{"late start", start.Add(time.Nanosecond), end},
+				{"early end", start, end.Add(-time.Nanosecond)},
+			} {
+				unavailable, _ := json.Marshal(
+					[]map[string]time.Time{{"start": boundary.start, "end": boundary.end}},
+				)
+				f.exec(
+					"UPDATE mentor_profiles SET availability=$2 WHERE event_id=$1",
+					f.event,
+					unavailable,
+				)
+				blocked := f.review()
+				gaps := 0
+				for _, flag := range blocked.Flags {
+					if flag.Code == "mentor_coverage_requires_review" {
+						gaps++
+					}
+				}
+				if gaps != 2 || len(blocked.Actions) != 1 ||
+					blocked.Actions[0].Member.Role != "competitor" ||
+					f.provider.writes != 0 {
+					t.Fatal("declared availability boundary was widened", boundary.name, blocked)
+				}
+			}
+			f.exec(
+				"UPDATE mentor_profiles SET availability=$2 WHERE event_id=$1",
+				f.event,
+				availability,
+			)
 			p := f.review()
 			if len(p.Actions) != 3 {
 				t.Fatal("native coverage missing", p)
@@ -610,7 +659,11 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 			if err != nil || len(own.Grants) != 1 || own.Grants[0].Member.CoverageEnd == nil {
 				t.Fatal("mentor own scoped history", own, err)
 			}
-			f.service.Now = func() time.Time { return end.Add(time.Second) }
+			f.service.Now = func() time.Time { return start }
+			if _, err = f.service.Own(t.Context(), primary.ID, f.event, f.team); err != nil {
+				t.Fatal("exact coverage start was not inclusive", err)
+			}
+			f.service.Now = func() time.Time { return end }
 			if _, err = f.service.Own(
 				t.Context(),
 				primary.ID,
