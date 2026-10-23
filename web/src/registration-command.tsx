@@ -49,7 +49,7 @@ export function useAdmissionCommand(scopeKey: string) {
     } catch (error) { if (ticket.current()) setFailure(error) }
     finally { if (ticket.current()) setReading(false) }
   }
-  return { outcome, failure, reading, run, readCurrent, pending: outcome.kind === 'pending', blocked: outcome.kind === 'pending' || outcome.kind === 'uncertain' || outcome.kind === 'stale' }
+  return { outcome, failure, reading, run, readCurrent, isBlocked: () => lock.current, pending: outcome.kind === 'pending', blocked: outcome.kind === 'pending' || outcome.kind === 'uncertain' || outcome.kind === 'stale' }
 }
 export function AdmissionFeedback({ command, read }: { command: ReturnType<typeof useAdmissionCommand>; read: () => Promise<unknown> }) {
   const value = command.outcome

@@ -72,3 +72,18 @@ test('offer policy reviews captured FIFO settings and saves the native revision 
   await expect(page.getByRole('status').filter({ hasText: 'Offer policy saved at revision 2.' })).toBeVisible(); expect(writes).toBe(1)
   await expect(page.getByText(/0 confirmed competitors · capacity 200 · minimum 30/)).toBeVisible()
 })
+
+for (const denial of ['write', 'read'] as const) test(`explicit offer policy ${denial} denial destroys private policy input and review`, async ({ page }) => {
+  await mockWorkspace(page); let writes = 0
+  await page.route(`**/events/${firstID}/registrations/**`, route => {
+    if (new URL(route.request().url()).pathname.endsWith('/offer-policy')) {
+      if (route.request().method() === 'PUT') { writes++; return route.fulfill({ status: denial === 'write' ? 403 : 503, json: { error: { code: denial === 'write' ? 'forbidden' : 'unavailable', request_id: 'synthetic' } } }) }
+      if (writes) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+      return route.fulfill({ json: { revision: 1, automated: false, working_days: 2 } })
+    }
+    return route.fulfill({ json: { items: [], next_cursor: null } })
+  })
+  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Applicants', exact: true }).click(); await page.getByText('Waitlist automation and offer policy', { exact: true }).click(); await page.getByLabel('Working days to respond').fill('17'); await page.getByLabel('Approve automatic FIFO offers').check(); await page.getByRole('button', { name: 'Review offer policy' }).click(); await page.getByRole('button', { name: 'Save offer policy' }).click()
+  if (denial === 'read') { await expect(page.getByRole('alertdialog')).toContainText('Outcome unknown'); await page.getByRole('alertdialog').getByRole('button', { name: 'Check current status' }).click() }
+  await expect(page.getByRole('alert')).toContainText('do not have access'); await expect(page.getByLabel('Working days to respond')).toHaveCount(0); await expect(page.getByRole('alertdialog')).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review offer policy' })).toHaveCount(0); expect(writes).toBe(1)
+})

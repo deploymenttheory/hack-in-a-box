@@ -34,17 +34,27 @@ function FormEditor({ event, initial, onDirty, onBlocked, paused, onDenied }: { 
   const form = useForm<{ definition: FormDefinition }>({ defaultValues: { definition: initial.definition }, resolver: zodResolver(formEditorSchema), mode: 'onChange' })
   const command = useAdmissionCommand(`${identity.person.id}:${identity.draft_scope}:${event.id}:${initial.definition.id}:form`)
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${initial.definition.id}:preview`), previewLock = useRef(false)
-  useEffect(() => { if (command.failure instanceof APIError && [401, 403].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
+  useEffect(() => { for (const error of [command.failure, failure]) if (error instanceof APIError && [401, 403].includes(error.status)) onDenied(error) }, [command.failure, failure, onDenied])
   const pending = previewPending || command.blocked || paused
   const dirty = form.formState.isDirty || command.blocked
   useEffect(() => { onBlocked(command.blocked); return () => onBlocked(false) }, [command.blocked, onBlocked])
   async function readCurrent() {
     const ticket = scope.capture()
-    const result = unwrap(await api.GET('/api/v1/events/{event_id}/registration/forms', { params: { path: { event_id: event.id } } }))
-    if (!ticket.current()) return
-    const current = result.items.find(item => item.definition.id === initial.definition.id)
-    if (current) setSaved(current)
-    setNotice('Current form versions refreshed. Your unsaved definition is retained; this read does not establish an unknown write outcome.')
+    try {
+      const result = unwrap(await api.GET('/api/v1/events/{event_id}/registration/forms', { params: { path: { event_id: event.id } } }))
+      if (!ticket.current()) return
+      const current = result.items.find(item => item.definition.id === initial.definition.id)
+      if (!current) throw new APIError(404, 'not_found')
+      const edited = form.formState.isDirty, retained = structuredClone(form.getValues('definition'))
+      setSaved(current); setAck(false); setCheck(undefined)
+      form.reset({ definition: current.definition })
+      if (edited) form.setValue('definition', retained, { shouldDirty: true, shouldValidate: true })
+      else setAnswers({})
+      setNotice(edited ? 'Current form versions refreshed. Your unsaved definition is retained against the current baseline; save and review it before publication. This read does not establish an unknown write outcome.' : 'Current form definition and version refreshed. Review the displayed definition and acknowledge publication again. This read does not establish an unknown write outcome.')
+    } catch (error) {
+      if (ticket.current() && error instanceof APIError && [401, 403].includes(error.status)) onDenied(error)
+      throw error
+    }
   }
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
   useBlocker({ shouldBlockFn: () => command.blocked || (dirty && !window.confirm('Leave this form with unsaved changes?')), enableBeforeUnload: dirty })

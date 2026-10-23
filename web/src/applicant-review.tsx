@@ -25,15 +25,17 @@ export function ApplicantReview({ event, openSetup, onDirty }: { event: EventRec
   </section>
 }
 function OfferPolicy({ event, onLocked }: { event: EventRecord; onLocked: (locked: boolean) => void }) {
-  const identity = useIdentity()
+  const identity = useIdentity(), [denied, setDenied] = useState<APIError>()
   const query = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'offer-policy'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/registrations/offer-policy', { params: { path: { event_id: event.id } } })) })
+  if (denied) return <Failure error={denied} />
   if (query.isPending) return <Loading />
   if (!query.data || (query.error instanceof APIError && [401, 403].includes(query.error.status))) return <Failure error={query.error} />
-  return <PolicyEditor event={event} onLocked={onLocked} value={query.data} paused={!!query.error} read={async () => { const result = await query.refetch(); if (result.error) throw result.error }} />
+  return <PolicyEditor onDenied={setDenied} event={event} onLocked={onLocked} value={query.data} paused={!!query.error} read={async () => { const result = await query.refetch(); if (result.error) throw result.error }} />
 }
-function PolicyEditor({ event, value, read, paused, onLocked }: { onLocked: (locked: boolean) => void; paused: boolean; event: EventRecord; value: components['schemas']['OfferSettings']; read: () => Promise<void> }) {
+function PolicyEditor({ event, value, read, paused, onLocked, onDenied }: { onDenied: (error: APIError) => void; onLocked: (locked: boolean) => void; paused: boolean; event: EventRecord; value: components['schemas']['OfferSettings']; read: () => Promise<void> }) {
   const identity = useIdentity(), cache = useQueryClient(), [automated, setAutomated] = useState(value.automated), [days, setDays] = useState(value.working_days), [review, setReview] = useState<{ automated: boolean; working_days: number; revision: number }>()
   const command = useAdmissionCommand(`${identity.person.id}:${identity.draft_scope}:${event.id}:offer-policy`)
+  useEffect(() => { if (command.failure instanceof APIError && [401, 403].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
   const dirty = automated !== value.automated || days !== value.working_days
   useEffect(() => { onLocked(command.blocked || !!review || dirty); return () => onLocked(false) }, [command.blocked, review, dirty, onLocked])
   async function save() {
