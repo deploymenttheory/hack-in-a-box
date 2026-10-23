@@ -127,6 +127,22 @@ func (q *Queries) InsertFile(ctx context.Context, arg InsertFileParams) (File, e
 	return i, err
 }
 
+const isProtectedMediaFile = `-- name: IsProtectedMediaFile :one
+SELECT EXISTS(SELECT 1 FROM media_files WHERE event_id=$1 AND file_id=$2)
+`
+
+type IsProtectedMediaFileParams struct {
+	EventID uuid.UUID
+	FileID  uuid.UUID
+}
+
+func (q *Queries) IsProtectedMediaFile(ctx context.Context, arg IsProtectedMediaFileParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isProtectedMediaFile, arg.EventID, arg.FileID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const lockEvent = `-- name: LockEvent :one
 SELECT id, name, revision, created_at, updated_at, owner_id, writes_allowed, slug, configuration, stage, published_at, team_frozen_at, completed_at FROM events WHERE id = $1 FOR UPDATE
 `

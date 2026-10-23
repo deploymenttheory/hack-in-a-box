@@ -15,6 +15,14 @@ import (
 type Action string
 
 const (
+	MediaChanged        Action = "media.changed"
+	MediaRevoked        Action = "media.revoked"
+	PhotoConsentGranted Action = "photo_consent.granted"
+	PhotoConsentRevoked Action = "photo_consent.revoked"
+	PhotoConsentUnknown Action = "photo_consent.unknown"
+)
+
+const (
 	GitHubIntegrationConfigured Action = "github.integration_configured"
 	GitHubIntegrationInstalled  Action = "github.integration_installed"
 	SurveyChanged               Action = "survey.changed"
@@ -102,6 +110,7 @@ const (
 	OrganiserDecision  Reason = "organiser_decision"
 	ThresholdException Reason = "post_publication_withdrawal"
 	RetentionPolicy    Reason = "retention_policy"
+	ConsentPolicy      Reason = "consent_policy"
 	DeadlinePolicy     Reason = "deadline_policy"
 )
 
@@ -125,7 +134,14 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case GitHubIntegrationConfigured, GitHubIntegrationInstalled, SurveyChanged,
+	case MediaChanged,
+		MediaRevoked,
+		PhotoConsentGranted,
+		PhotoConsentRevoked,
+		PhotoConsentUnknown,
+		GitHubIntegrationConfigured,
+		GitHubIntegrationInstalled,
+		SurveyChanged,
 		SurveyResponded,
 		SurveyReportChanged,
 		SurveyPersonalRemoved,
@@ -205,7 +221,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		UserRequest,
 		OrganiserDecision,
 		ThresholdException,
-		RetentionPolicy, DeadlinePolicy:
+		RetentionPolicy, DeadlinePolicy, ConsentPolicy:
 	default:
 		return access.ErrInvalid
 	}

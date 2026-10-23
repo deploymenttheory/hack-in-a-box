@@ -1,0 +1,50 @@
+# Consent-aware media collection and reviewed galleries
+
+Issue #118 owns the event media workflow. Photographers submit private photographs or external recording links, identify subjects using a minimal native photo-consent directory, and receive current review/release status. Organisers explicitly review identification and content, then separately release a version. Nothing is automatically published.
+
+## Current implementation
+
+The private uploader and organiser see draft metadata and necessary consent indicators. Released gallery readers are current confirmed participants and explicitly current organiser/photographer roles, using the same current-role/current-published-team audience predicate as native content. Anonymous users and withdrawn attendees receive no gallery grant. No sensitive contact, dietary, accessibility, travel or registration answers are included in guidance.
+
+Each metadata edit invalidates the review and removes the release. An identical retry acknowledges its immutable accepted command version, while returning only the current safe metadata/access projection; it never replays a historical recording URL or image grant. Untagged media requires an explicit organiser statement that identification was checked and no identifiable people are present. Tagged media requires current affirmative consent for every identified person at review, publication and every future image/link/reference read. The app cannot detect untagged faces; the explicit human review is required. Content review includes the challenge classification and recording destination. Operational/venue media may be explicitly released before or after the live event under ordinary native write policy. Challenge-related media remains blocked until actual common challenge publication. Planned time alone is insufficient. Archives allow authorised retained reading and self revocation, without permitting new opt-in or ordinary media writes.
+
+Consent proofs bind the native operational-profile incarnation and a photo-specific revision. Unrelated contact edits do not invalidate permission; opt-out followed by opt-in, or deleting/recreating a profile, never resurrects an old review. The retention deadline is checked synchronously before reading consent, independently of periodic deletion. A narrow self-only endpoint and independent `/events/:id/photo-consent` screen can record no/unknown on an archive, preserving all unrelated profile fields. Current staff can make their own choice without receiving a gallery grant. Native profile correction also advances the photo revision when the choice changes.
+
+Photo bytes use native checksummed/quota-limited file storage. File creation, protected association and first media version share a transaction. A failed association rolls back metadata/audit; an existing ordinary file cannot be silently adopted. Every generic file-download and native-content attachment route categorically rejects protected media files, including for organisers. The media original and generated thumbnail routes check exact current native resource authority and consent before returning bytes. PNG/JPEG decoding is bounded; arbitrary video/third-party content is not hosted. External recording links are reviewed HTTPS anchors, never fetched or embedded by the server.
+
+Gallery reads deny immediately after revocation. Maintenance records one immutable media withdrawal and safe audit when continuing consent/reviewer authority fails; reads do not depend on waiting for maintenance. The audit contains decision identities/revisions, not profile fields or image contents. Automated reconciliation records a system actor with a typed consent-policy reason; it never attributes the withdrawal to the uploader. Explicit uploads, reviews and releases retain their real actor. Revocation prevents future gallery/download/reference access and does not claim to recall previously downloaded copies or recordings hosted elsewhere.
+
+`media.Service.ResolveReferenceInTransaction` is the positive reference contract for #117: it requires an exact current explicitly released media version and the actual current reader. It returns only ID/version/kind/title and a protected native media route, never subject tags, file identifiers, storage metadata or the external recording URL. Unavailable references fail closed.
+
+## Verification to date
+
+- Real PostgreSQL media suite proves consent before/after upload; review-before-publication; untagged identification attestation; operational pre-common release versus challenge embargo; current attendee/photographer/reviewer loss; profile deletion/incarnation change; retention; same-intent upload deduplication; rejection of existing-file adoption; simultaneous publication/revocation; direct file and native content attachment bypass denial; archived released gallery → self revocation → original/thumbnail/reference denial. Repeated reconciliation retains one withdrawal record.
+- Native privacy and file-association PostgreSQL tests prove minimal guidance, photo-only revisions, archived no/unknown revocation and same-transaction callback rollback. Affected access/content suites check the shared audience predicate and existing content guards.
+- Authenticated real PostgreSQL HTTP tests validate OpenAPI responses, minimal guidance, current-cookie role/session changes, CSRF, no-store headers, denied generic downloads, protected originals/thumbnails, archived self revocation and exclusion of private profile/session values from request logs.
+- Twenty browser cases pass on the participant production build and twenty on the separate admin build, each across desktop/mobile. They cover collection, explicit untagged review then separate release, minimal guidance, identical retry after a lost upload response, archived opt-out, image/metadata clearing on denial or event change, private draft/card and image print exclusions, independent self revocation after gallery denial, cancellation of a deferred unsent write after definite denial or a fresh200 response removing collection capability, and lost upload → failed transient read → reconnect → deliberate identical retry. Transient failures hide media and pause writes while retaining private drafts/unknown commands in memory; definite denial or actual scope departure clears them. Version changes require explicitly loading current metadata before a new intent. Browser fixtures model the typed HTTP contract; they do not replace the real native policy tests.
+- A real PostgreSQL attribution regression first reproduced an automatic withdrawal falsely attributed to the photographer/user request, then passed with a nullable system actor and typed consent-policy reason. Repeated reconciliation records one withdrawal; explicit command authors remain unchanged.
+- A deferred-file regression reproduced two rapid clicks preparing two fresh upload identities. Synchronous preparation/in-flight guards reduce that to one intent, while preserving explicit identical retries after unknown responses.
+- Both production builds and web lint pass. Scoped native lint is checked separately. No real external media/provider content is fetched or sent by these tests.
+
+## Ordered migration and remaining merge gates
+
+Historical verification before the GitHub App merge used media41 on survey40; there are no placeholder migrations. The populated40→41 test creates actual approved/published survey questions, authored private answers/command receipts, a reviewed frozen suppressed report, native39 objective/rubric evidence, an ordinary protected file and legacy operational fields. Upgrade and empty-media rollback preserve those owner records. Retained media and even photo-consent-only audit history block destructive rollback. After upgrade, the native115 privacy callback still erases survey invitations, private authored revisions and commands while retaining the exact published suppressed report.
+
+The canonical `privacy.RetentionDeadline` uses UTC calendar days, matching the actual SQL privacy boundary regardless of pgx host scan location. Real London-DST timestamp decoding proves identical expiry and operational-profile deletion at the exact boundary; media cannot extend consent by an hour after a clock change.
+
+The pre-rebase composition was based on merged survey40 and preserved its privacy-erasure hook, survey worker retention/inbox/automation owner, native39 objectives/review/support/delivery routes and all generated contracts. The optional #117 consumer uses the real positive media reference owner; #118 has no reverse dependency on outcomes. Exact-head CI and independent review remain required. Issue #118 stays open until those gates and final criterion evidence are complete.
+
+## Rebase onto the GitHub App predecessor
+
+Main now includes GitHub App migration41 from PR181. Media is migration42,
+ordered directly after that actual predecessor. Both runtime services, audit
+actions and generated API contracts are retained. The populated upgrade and
+rollback fixtures now target41→42 and retain actual encrypted App configuration
+created through the native owner, alongside survey responses/reports and prior
+objective/file history. Earlier40→41 execution results above are historical;
+fresh42 integration checks run in CI after this rebase.
+
+Local rebase verification: configured Go lint reports zero issues; generated
+contracts are regenerated against both owners. PostgreSQL-backed integration
+checks could not execute on this host because no Docker daemon is available;
+they remain required in the new-head CI run.

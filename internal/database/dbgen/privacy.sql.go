@@ -73,7 +73,7 @@ func (q *Queries) ExpiredProfiles(ctx context.Context, completedAt pgtype.Timest
 }
 
 const listOperationalProfiles = `-- name: ListOperationalProfiles :many
-SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id
+SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance, p.photo_consent_revision,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id
 WHERE p.event_id=$1 AND p.id>$2 ORDER BY p.id LIMIT $3
 `
 
@@ -84,19 +84,20 @@ type ListOperationalProfilesParams struct {
 }
 
 type ListOperationalProfilesRow struct {
-	ID               uuid.UUID
-	EventID          uuid.UUID
-	PersonID         uuid.UUID
-	ContactEmail     string
-	ContactPhone     string
-	Dietary          string
-	Accessibility    string
-	PhotoConsent     string
-	Revision         int64
-	UpdatedAt        time.Time
-	TravelDetails    string
-	SocialAttendance string
-	DisplayName      string
+	ID                   uuid.UUID
+	EventID              uuid.UUID
+	PersonID             uuid.UUID
+	ContactEmail         string
+	ContactPhone         string
+	Dietary              string
+	Accessibility        string
+	PhotoConsent         string
+	Revision             int64
+	UpdatedAt            time.Time
+	TravelDetails        string
+	SocialAttendance     string
+	PhotoConsentRevision int64
+	DisplayName          string
 }
 
 func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperationalProfilesParams) ([]ListOperationalProfilesRow, error) {
@@ -121,6 +122,7 @@ func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperation
 			&i.UpdatedAt,
 			&i.TravelDetails,
 			&i.SocialAttendance,
+			&i.PhotoConsentRevision,
 			&i.DisplayName,
 		); err != nil {
 			return nil, err
@@ -134,7 +136,7 @@ func (q *Queries) ListOperationalProfiles(ctx context.Context, arg ListOperation
 }
 
 const operationalProfile = `-- name: OperationalProfile :one
-SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id WHERE p.event_id=$1 AND p.person_id=$2
+SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance, p.photo_consent_revision,person.display_name FROM operational_profiles p JOIN people person ON person.id=p.person_id WHERE p.event_id=$1 AND p.person_id=$2
 `
 
 type OperationalProfileParams struct {
@@ -143,19 +145,20 @@ type OperationalProfileParams struct {
 }
 
 type OperationalProfileRow struct {
-	ID               uuid.UUID
-	EventID          uuid.UUID
-	PersonID         uuid.UUID
-	ContactEmail     string
-	ContactPhone     string
-	Dietary          string
-	Accessibility    string
-	PhotoConsent     string
-	Revision         int64
-	UpdatedAt        time.Time
-	TravelDetails    string
-	SocialAttendance string
-	DisplayName      string
+	ID                   uuid.UUID
+	EventID              uuid.UUID
+	PersonID             uuid.UUID
+	ContactEmail         string
+	ContactPhone         string
+	Dietary              string
+	Accessibility        string
+	PhotoConsent         string
+	Revision             int64
+	UpdatedAt            time.Time
+	TravelDetails        string
+	SocialAttendance     string
+	PhotoConsentRevision int64
+	DisplayName          string
 }
 
 func (q *Queries) OperationalProfile(ctx context.Context, arg OperationalProfileParams) (OperationalProfileRow, error) {
@@ -174,7 +177,78 @@ func (q *Queries) OperationalProfile(ctx context.Context, arg OperationalProfile
 		&i.UpdatedAt,
 		&i.TravelDetails,
 		&i.SocialAttendance,
+		&i.PhotoConsentRevision,
 		&i.DisplayName,
+	)
+	return i, err
+}
+
+const photoConsentRoster = `-- name: PhotoConsentRoster :many
+SELECT p.id FROM people p WHERE p.active AND p.id>$1::uuid AND (
+ EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=$2::uuid AND c.person_id=p.id AND c.state='confirmed') OR
+ EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=$2::uuid AND m.person_id=p.id AND m.active AND m.role!='early_brief_access'))
+ORDER BY p.id LIMIT $3
+`
+
+type PhotoConsentRosterParams struct {
+	Cursor   uuid.UUID
+	EventID  uuid.UUID
+	PageSize int32
+}
+
+func (q *Queries) PhotoConsentRoster(ctx context.Context, arg PhotoConsentRosterParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, photoConsentRoster, arg.Cursor, arg.EventID, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const photoConsentSubject = `-- name: PhotoConsentSubject :one
+SELECT p.id,p.display_name,p.active,profile.id AS profile_id,COALESCE(profile.photo_consent,'unknown')::text AS photo_consent,COALESCE(profile.photo_consent_revision,0)::bigint AS consent_revision,
+ (EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=$1::uuid AND c.person_id=p.id AND c.state='confirmed') OR EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=$1::uuid AND m.person_id=p.id AND m.active AND m.role!='early_brief_access'))::boolean AS eligible
+FROM people p LEFT JOIN operational_profiles profile ON profile.event_id=$1::uuid AND profile.person_id=p.id
+WHERE p.id=$2::uuid
+`
+
+type PhotoConsentSubjectParams struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+}
+
+type PhotoConsentSubjectRow struct {
+	ID              uuid.UUID
+	DisplayName     string
+	Active          bool
+	ProfileID       *uuid.UUID
+	PhotoConsent    string
+	ConsentRevision int64
+	Eligible        bool
+}
+
+func (q *Queries) PhotoConsentSubject(ctx context.Context, arg PhotoConsentSubjectParams) (PhotoConsentSubjectRow, error) {
+	row := q.db.QueryRow(ctx, photoConsentSubject, arg.EventID, arg.PersonID)
+	var i PhotoConsentSubjectRow
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.Active,
+		&i.ProfileID,
+		&i.PhotoConsent,
+		&i.ConsentRevision,
+		&i.Eligible,
 	)
 	return i, err
 }
@@ -226,8 +300,8 @@ const saveOperationalProfile = `-- name: SaveOperationalProfile :one
 INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent,travel_details,social_attendance)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 ON CONFLICT(event_id,person_id) DO UPDATE SET contact_email=EXCLUDED.contact_email,contact_phone=EXCLUDED.contact_phone,
-dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
-RETURNING id, event_id, person_id, contact_email, contact_phone, dietary, accessibility, photo_consent, revision, updated_at, travel_details, social_attendance
+dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent_revision=CASE WHEN operational_profiles.photo_consent IS DISTINCT FROM EXCLUDED.photo_consent THEN operational_profiles.photo_consent_revision+1 ELSE operational_profiles.photo_consent_revision END,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
+RETURNING id, event_id, person_id, contact_email, contact_phone, dietary, accessibility, photo_consent, revision, updated_at, travel_details, social_attendance, photo_consent_revision
 `
 
 type SaveOperationalProfileParams struct {
@@ -268,6 +342,7 @@ func (q *Queries) SaveOperationalProfile(ctx context.Context, arg SaveOperationa
 		&i.UpdatedAt,
 		&i.TravelDetails,
 		&i.SocialAttendance,
+		&i.PhotoConsentRevision,
 	)
 	return i, err
 }
@@ -298,6 +373,41 @@ func (q *Queries) SavePrivateDraft(ctx context.Context, arg SavePrivateDraftPara
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const setOwnPhotoConsent = `-- name: SetOwnPhotoConsent :one
+INSERT INTO operational_profiles(event_id,person_id,photo_consent) VALUES($1,$2,$3)
+ON CONFLICT(event_id,person_id) DO UPDATE SET
+ photo_consent_revision=CASE WHEN operational_profiles.photo_consent IS DISTINCT FROM EXCLUDED.photo_consent THEN operational_profiles.photo_consent_revision+1 ELSE operational_profiles.photo_consent_revision END,
+ photo_consent=EXCLUDED.photo_consent,revision=operational_profiles.revision+1,updated_at=now()
+RETURNING id, event_id, person_id, contact_email, contact_phone, dietary, accessibility, photo_consent, revision, updated_at, travel_details, social_attendance, photo_consent_revision
+`
+
+type SetOwnPhotoConsentParams struct {
+	EventID      uuid.UUID
+	PersonID     uuid.UUID
+	PhotoConsent string
+}
+
+func (q *Queries) SetOwnPhotoConsent(ctx context.Context, arg SetOwnPhotoConsentParams) (OperationalProfile, error) {
+	row := q.db.QueryRow(ctx, setOwnPhotoConsent, arg.EventID, arg.PersonID, arg.PhotoConsent)
+	var i OperationalProfile
+	err := row.Scan(
+		&i.ID,
+		&i.EventID,
+		&i.PersonID,
+		&i.ContactEmail,
+		&i.ContactPhone,
+		&i.Dietary,
+		&i.Accessibility,
+		&i.PhotoConsent,
+		&i.Revision,
+		&i.UpdatedAt,
+		&i.TravelDetails,
+		&i.SocialAttendance,
+		&i.PhotoConsentRevision,
+	)
+	return i, err
 }
 
 const setPrivacyPolicy = `-- name: SetPrivacyPolicy :exec

@@ -86,28 +86,20 @@ func ContentVersionForReader(
 	if err = json.Unmarshal(v.Document, &doc); err != nil {
 		return 0, fmt.Errorf("read content audience: %w", err)
 	}
-	if (doc.Audience.Confirmed && confirmed) ||
-		slices.ContainsFunc(
-			roles,
-			func(r string) bool { return slices.Contains(doc.Audience.Roles, r) },
-		) {
-		return v.Version, nil
+	allowed, err := ContentAudienceAllows(
+		ctx,
+		q,
+		actor,
+		item.EventID,
+		doc.Audience,
+		roles,
+		confirmed,
+	)
+	if err != nil {
+		return 0, err
 	}
-	if confirmed && len(doc.Audience.Teams) > 0 {
-		memberships, err := q.ContentTeamMember(
-			ctx,
-			dbgen.ContentTeamMemberParams{
-				EventID:  item.EventID,
-				PersonID: actor,
-				TeamIds:  doc.Audience.Teams,
-			},
-		)
-		if err != nil {
-			return 0, fmt.Errorf("read content team audience: %w", err)
-		}
-		if memberships {
-			return v.Version, nil
-		}
+	if allowed {
+		return v.Version, nil
 	}
 	return 0, nil
 }
@@ -158,4 +150,40 @@ func (p EventPolicy) contentFile(
 		}
 	}
 	return ErrForbidden
+}
+
+// ContentAudienceAllows is the shared current-role/current-published-team predicate.
+// Callers must obtain roles and confirmed through ContentReader in the same transaction.
+func ContentAudienceAllows(
+	ctx context.Context,
+	q *dbgen.Queries,
+	actor, eventID uuid.UUID,
+	audience ContentAudience,
+	roles []string,
+	confirmed bool,
+) (bool, error) {
+	if (audience.Confirmed && confirmed) ||
+		slices.ContainsFunc(
+			roles,
+			func(r string) bool { return slices.Contains(audience.Roles, r) },
+		) {
+		return true, nil
+	}
+	if confirmed && len(audience.Teams) > 0 {
+		memberships, err := q.ContentTeamMember(
+			ctx,
+			dbgen.ContentTeamMemberParams{
+				EventID:  eventID,
+				PersonID: actor,
+				TeamIds:  audience.Teams,
+			},
+		)
+		if err != nil {
+			return false, fmt.Errorf("read content team audience: %w", err)
+		}
+		if memberships {
+			return true, nil
+		}
+	}
+	return false, nil
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
@@ -110,6 +111,16 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
+		Media: media.Service{
+			Pool:    pool,
+			Privacy: privacy.Service{Pool: pool},
+			Files: files.Service{
+				Pool:       pool,
+				Storage:    storage,
+				MaxBytes:   cfg.FileMaxBytes,
+				EventQuota: cfg.FileEventQuota,
+			},
+		},
 		GitHubApp: githubapp.Service{
 			Pool:     pool,
 			Keys:     cfg.CredentialKeys,
@@ -243,6 +254,11 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		}
 		if err := communicationRuntime.Surveys.Retain(ctx); err != nil {
 			return fmt.Errorf("retain private survey records: %w", err)
+		}
+		if err := (media.Service{Pool: pool, Privacy: privacy.Service{Pool: pool}}).Maintain(
+			ctx,
+		); err != nil {
+			return fmt.Errorf("reconcile current media consent: %w", err)
 		}
 		return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists)
 	}

@@ -39,6 +39,17 @@ type Upload struct {
 }
 
 func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
+	return s.UploadTransactional(ctx, input, nil)
+}
+
+// UploadTransactional lets a native resource owner associate protected metadata
+// in the SAME transaction as file creation. The trusted callback is never an HTTP
+// input. Failure rolls back metadata/audit; existing blob cleanup remains intact.
+func (s Service) UploadTransactional(
+	ctx context.Context,
+	input Upload,
+	associate func(context.Context, pgx.Tx, dbgen.File, bool) error,
+) (dbgen.File, error) {
 	if s.Policy == nil {
 		return dbgen.File{}, access.ErrForbidden
 	}
@@ -84,7 +95,7 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 		return dbgen.File{}, ErrMedia
 	}
 	var result dbgen.File
-	err = database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err = database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		event, err := q.LockEvent(ctx, input.Event)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return access.ErrNotFound
@@ -108,7 +119,7 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 				return ErrIdempotency
 			}
 			result = existing
-			return nil
+			return associateFile(ctx, tx, result, false, associate)
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("idempotent file: %w", err)
@@ -141,7 +152,10 @@ func (s Service) Upload(ctx context.Context, input Upload) (dbgen.File, error) {
 		if err != nil {
 			return fmt.Errorf("insert file: %w", err)
 		}
-		return recordUpload(ctx, q, input, event, result)
+		if err = recordUpload(ctx, q, input, event, result); err != nil {
+			return err
+		}
+		return associateFile(ctx, tx, result, true, associate)
 	})
 	if err != nil {
 		return dbgen.File{}, fmt.Errorf("finalize upload: %w", err)
@@ -306,4 +320,17 @@ func sameUpload(file dbgen.File, checksum string, input Upload) bool {
 	return file.Checksum == checksum && file.Filename == input.Filename &&
 		file.MediaType == input.MediaType &&
 		sameTeam(file.TeamID, input.TeamID)
+}
+
+func associateFile(
+	ctx context.Context,
+	tx pgx.Tx,
+	file dbgen.File,
+	created bool,
+	associate func(context.Context, pgx.Tx, dbgen.File, bool) error,
+) error {
+	if associate == nil {
+		return nil
+	}
+	return associate(ctx, tx, file, created)
 }

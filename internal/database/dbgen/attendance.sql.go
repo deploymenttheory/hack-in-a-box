@@ -202,7 +202,7 @@ func (q *Queries) CateringBuffer(ctx context.Context, id uuid.UUID) (int32, erro
 }
 
 const operationalRoster = `-- name: OperationalRoster :many
-SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance FROM operational_profiles p WHERE p.event_id=$1 AND p.person_id>$2::uuid AND (
+SELECT p.id, p.event_id, p.person_id, p.contact_email, p.contact_phone, p.dietary, p.accessibility, p.photo_consent, p.revision, p.updated_at, p.travel_details, p.social_attendance, p.photo_consent_revision FROM operational_profiles p WHERE p.event_id=$1 AND p.person_id>$2::uuid AND (
  EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=p.event_id AND c.person_id=p.person_id AND c.state='confirmed') OR
  EXISTS(SELECT 1 FROM event_memberships m JOIN people person ON person.id=m.person_id WHERE m.event_id=p.event_id AND m.person_id=p.person_id AND m.active AND person.active AND m.role!='early_brief_access'))
 ORDER BY p.person_id LIMIT $3
@@ -236,6 +236,7 @@ func (q *Queries) OperationalRoster(ctx context.Context, arg OperationalRosterPa
 			&i.UpdatedAt,
 			&i.TravelDetails,
 			&i.SocialAttendance,
+			&i.PhotoConsentRevision,
 		); err != nil {
 			return nil, err
 		}
