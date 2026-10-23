@@ -85,8 +85,8 @@ finish a newer reviewed operation. No recovery command performs provider I/O.
 
 ## Remaining merge gates
 
-Schema38 is tested on the reviewed schema37 predecessor branch; its temporary
-dependency ancestry must be dropped onto actual merged main before final parity
-and CI. Exact-head composition, generated parity and CI remain required. Tests use
+Schema38 is composed on actual merged schema37/main
+`571c69993b6383a101713d5e6010a831248f6824`; the ancestry-only rebase preserved
+the reviewed implementation tree. Exact-head CI remains required. Tests use
 only synthetic identities and local recording/TLS providers; no external emails
 or shared-channel messages are sent.

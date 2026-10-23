@@ -188,7 +188,7 @@ Keep three independent workstreams active with separate PRs. Actual automation
 merged in #207 after #208's mentor scorecard UI; delivery recovery is under #83
 implementation. #209's clarification workspace is merged after final native and browser
 composition verification. #103 shared feedback is delivered in merged PR #210;
-#104's native moderation owner is in PR #211, with its final CI gate pending.
+#104's native moderation owner is delivered in merged PR #211.
 Provider history must preserve acceptance versus delivery and immutable unknown
 outcomes; a recovery decision cannot manufacture a successful receipt. Migration
 numbers follow actual ready merges. These are selected tasks, not completed
