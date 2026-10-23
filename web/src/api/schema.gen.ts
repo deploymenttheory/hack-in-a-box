@@ -1196,6 +1196,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/integrations/github/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description GitHub App machine endpoint. Authenticate X-Hub-Signature-256 using the current event App webhook secret and exact request bytes before selecting activity. Only repository.id is read first to route through the canonical immutable repository registry; this routing lookup is read-only. Accept only JSON push/member deliveries, up to 1048576 raw bytes. No browser session or CSRF token is used. Selected activity is operational evidence only and never accepts a submission or changes a score. */
+        post: operations["ingestGitHubWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/github-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser-only operational activity and bounded delivery/retry status. Counts are never assessment input. At most 100 latest deliveries are returned. */
+        get: operations["getGitHubRepositoryActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/repositories": {
         parameters: {
             query?: never;
@@ -3952,14 +3988,48 @@ export interface components {
             people: components["schemas"]["TeamPerson"][];
             requests: components["schemas"]["TeamRequest"][];
         };
-        GitHubAppConfiguration: {
-            /** Format: int64 */
-            app_id: number;
-            app_slug: string;
-            /** Format: int64 */
-            organization_id: number;
-            organization: string;
-            template_repository: string;
+        GitHubRepositoryActivityStatus: {
+            /** @enum {boolean} */
+            informational: true;
+            activity: {
+                /** Format: uuid */
+                team_id: string;
+                /** Format: int64 */
+                pushes: number;
+                /** Format: int64 */
+                accepted_invitations: number;
+                /** Format: date-time */
+                last_provider_at: string | null;
+                /** Format: date-time */
+                last_received_at: string;
+            }[];
+            deliveries: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                team_id: string;
+                /** Format: int64 */
+                repository_id: number;
+                /** @enum {string} */
+                kind: "push" | "member";
+                /** @enum {string} */
+                action: "" | "added" | "removed" | "edited";
+                ref: string;
+                after_sha: string;
+                /** Format: date-time */
+                provider_at: string | null;
+                /** Format: date-time */
+                received_at: string;
+                /** @enum {string} */
+                disposition: "pending" | "recorded" | "discarded";
+                /** Format: uuid */
+                operation_id: string | null;
+                /** @enum {string} */
+                state: "pending" | "running" | "delivered" | "permanent" | "ambiguous" | "cancelled";
+                attempts: number;
+                approved: boolean;
+                cancelled: boolean;
+            }[];
         };
         TeamRepository: {
             /** Format: uuid */
@@ -3973,6 +4043,15 @@ export interface components {
             diagnostic: string;
             unused: boolean;
         };
+        GitHubAppConfiguration: {
+            /** Format: int64 */
+            app_id: number;
+            app_slug: string;
+            /** Format: int64 */
+            organization_id: number;
+            organization: string;
+            template_repository: string;
+        };
         GitHubAppCommand: {
             /** @enum {string} */
             action: "configure" | "rotate" | "disconnect";
@@ -3984,6 +4063,8 @@ export interface components {
             organization?: string;
             template_repository?: string;
             private_key?: string;
+            /** @description Optional high entropy App webhook secret. Omit to retain for the same App. Replacement invalidates pending deliveries authenticated with the old secret. */
+            webhook_secret?: string;
         };
         GitHubAppPermissionCheck: {
             /** @enum {string} */
@@ -4004,6 +4085,7 @@ export interface components {
             configured: boolean;
             /** Format: int64 */
             installation_id: number;
+            webhook_configured: boolean;
             configuration?: components["schemas"]["GitHubAppConfiguration"];
             diagnostics: components["schemas"]["GitHubAppDiagnostics"];
         };
@@ -9298,6 +9380,63 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AllocationSuggestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    ingestGitHubWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-GitHub-Delivery": string;
+                "X-GitHub-Event": "push" | "member";
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Authenticated delivery durably queued or already accepted. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            413: components["responses"]["Error"];
+            415: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    getGitHubRepositoryActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Informational repository activity and durable work status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubRepositoryActivityStatus"];
                 };
             };
             default: components["responses"]["Error"];

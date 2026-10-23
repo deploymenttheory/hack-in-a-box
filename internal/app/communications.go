@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubwebhooks"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
@@ -36,6 +37,7 @@ import (
 )
 
 type communicationRuntime struct {
+	GitHubWebhooks  *githubwebhooks.Service
 	Repositories    *repositories.Service
 	Outcomes        *outcomes.Service
 	Surveys         *surveys.Service
@@ -126,6 +128,7 @@ func newCommunicationRuntime(
 		"rubric.published":        automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
 	}
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
+	webhooks := &githubwebhooks.Service{Pool: pool, Keys: cfg.CredentialKeys}
 	repos := &repositories.Service{
 		Pool: pool,
 		App: githubapp.Service{
@@ -138,6 +141,7 @@ func newCommunicationRuntime(
 		pool,
 		logger,
 		map[string]jobs.Handler{
+			githubwebhooks.HandlerKind:    webhooks,
 			repositories.HandlerKind:      repos,
 			automation.HandlerKind:        auto,
 			"communication_test_in_app":   inbox.TestHandler{Service: *local},
@@ -149,6 +153,7 @@ func newCommunicationRuntime(
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
+	webhooks.Jobs = outbox
 	composer.Jobs = outbox
 	auto.Jobs = outbox
 	auto.Providers = map[string]automation.ProviderQueue{
@@ -222,9 +227,10 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		Repositories: repos,
-		Outcomes:     followThrough,
-		Surveys:      questionnaires,
+		GitHubWebhooks: webhooks,
+		Outcomes:       followThrough,
+		Surveys:        questionnaires,
+		Repositories:   repos,
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,

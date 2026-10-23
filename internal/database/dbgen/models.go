@@ -631,6 +631,45 @@ type GithubLinkState struct {
 	Revision int64
 }
 
+type GithubRepositoryActivity struct {
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	Pushes         int64
+	Invitations    int64
+	LastProviderAt pgtype.Timestamptz
+	LastReceivedAt time.Time
+}
+
+type GithubWebhookDelivery struct {
+	ID             uuid.UUID
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	RepositoryID   int64
+	AppID          int64
+	InstallationID int64
+	Provenance     uuid.UUID
+	SecretVersion  int64
+	PayloadHash    []byte
+	Kind           string
+	Action         string
+	Ref            string
+	AfterSha       string
+	MemberID       int64
+	ProviderAt     pgtype.Timestamptz
+	ReceivedAt     time.Time
+	AppliedAt      pgtype.Timestamptz
+	Disposition    string
+	OperationID    *uuid.UUID
+}
+
+type GithubWebhookSecret struct {
+	EventID   uuid.UUID
+	AppID     int64
+	Version   int64
+	KeyID     string
+	Encrypted []byte
+}
+
 type HackTeam struct {
 	ID                 uuid.UUID
 	EventID            uuid.UUID
