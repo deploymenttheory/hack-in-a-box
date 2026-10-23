@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
@@ -147,6 +148,11 @@ func (f *fixture) team(state string) uuid.UUID {
 	if state == "published" {
 		member := testdb.Person(f.t, f.pool)
 		f.member = member.ID
+		f.exec(
+			"INSERT INTO competition_claims(event_id,person_id,state) VALUES($1,$2,'confirmed')",
+			f.event,
+			member.ID,
+		)
 		f.exec(
 			"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",
 			f.event,
@@ -323,6 +329,33 @@ func TestDurableProvisioningPostgres(t *testing.T) {
 		}
 		if f.s.Reconcile(t.Context(), d) != jobs.Permanent || f.row(team).GithubRepositoryID.Valid {
 			t.Fatal("marker collision claimed")
+		}
+	})
+	t.Run("withdrawn attendee cannot use retained frozen published membership", func(t *testing.T) {
+		f := setup(t, pool)
+		team := f.team("published")
+		f.queue()
+		f.execute(team)
+		f.exec("UPDATE events SET published_at=now(),team_frozen_at=now() WHERE id=$1", f.event)
+		f.exec("UPDATE hack_teams SET frozen=true WHERE id=$1", team)
+		if rows, err := f.s.List(t.Context(), f.member, f.event); err != nil || len(rows) != 1 {
+			t.Fatalf("confirmed member unavailable: %v %v", rows, err)
+		}
+		if err := dbgen.New(pool).
+			SetCompetitionState(t.Context(), dbgen.SetCompetitionStateParams{EventID: f.event, PersonID: f.member, State: "withdrawn"}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := dbgen.New(pool).
+			TeamAssignment(t.Context(), dbgen.TeamAssignmentParams{EventID: f.event, PersonID: f.member, Snapshot: "published"}); err != nil {
+			t.Fatalf("frozen membership was not retained: %v", err)
+		}
+		if rows, err := f.s.List(
+			t.Context(),
+			f.member,
+			f.event,
+		); !errors.Is(err, access.ErrForbidden) ||
+			len(rows) != 0 {
+			t.Fatalf("withdrawn attendee read retained repository metadata: %+v %v", rows, err)
 		}
 	})
 	t.Run(
