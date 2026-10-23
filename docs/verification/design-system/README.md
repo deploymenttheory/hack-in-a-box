@@ -6,10 +6,12 @@ system and pinned browser tooling. No real account, mailbox or provider was used
 
 | Screen | Before | After |
 | --- | --- | --- |
-| Administration, desktop | [Baseline](before-admin-desktop.png) | [Shared system](after-admin-desktop.png) |
-| Administration, mobile | — | [Shared system](after-admin-mobile.png) |
+| Registration under admin shell, desktop | [Baseline](before-admin-desktop.png) | [Shared system](after-admin-desktop.png) |
+| Registration under admin shell, mobile | — | [Shared system](after-admin-mobile.png) |
 | Attendee portal, desktop | — | [Shared system](after-participant-desktop.png) |
 | Attendee portal, mobile | — | [Shared system](after-participant-mobile.png) |
+| Organiser event setup, desktop | — | [Event details, dates and calendar](after-organiser-setup-desktop.png) |
+| Organiser event setup, mobile | — | [Event details, dates and calendar](after-organiser-setup-mobile.png) |
 
 The committed `design-system.spec.ts` matrix checks actual rendered normal,
 system-dark, custom-light, custom-dark and near-threshold grey palettes on both
