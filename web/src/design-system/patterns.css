@@ -23,7 +23,7 @@
   .fleet-record-list > li:last-child { border-bottom: 0; }
   .fleet-record-heading { display: flex; align-items: start; gap: var(--space-3); }
   .fleet-record-heading h2 { flex: 1; font-size: var(--text-body); margin: 0; }
-  .fleet-record-list dl, .fleet-command-result dl { display: grid; gap: var(--space-2); margin-block: 0.75rem 0; }
+  .fleet-record-list dl, .fleet-command-result dl { display: grid; gap: var(--space-2); margin-block: var(--space-3) 0; }
   .fleet-record-list dl > div, .fleet-command-result dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-3); }
   .fleet-record-list :is(dt,dd), .fleet-command-result :is(dt,dd) { margin: 0; overflow-wrap: anywhere; }
   .fleet-record-list dt, .fleet-command-result dt { color: var(--muted-foreground); }
