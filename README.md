@@ -30,6 +30,13 @@ Set `HACKBOX_BOOTSTRAP_SUBJECT` to the stable subject of the first administrator
 
 OIDC uses authorization code flow with PKCE, one-use browser-bound state and a nonce. SCS sessions live in PostgreSQL; the database stores hashes of cookie tokens. Authentication renews the session token. Every protected request reloads the person's active status and session revision. Privilege changes must increment `people.session_revision` in the same transaction as the grant/revocation, forcing existing sessions to sign in again. Logout invalidates the server session. Unsafe API requests require the current session's `X-CSRF-Token` and an `Origin` exactly matching `HACKBOX_PUBLIC_ORIGIN`.
 
+## Interactive style guide
+
+Browse the production components, task patterns and 100 accepted UI guidelines
+independently of either portal. See [style guide publication and contribution
+instructions](docs/design/styleguide.md) for the separate Docker service on port
+8082, CI artifacts and deployment configuration.
+
 ## Develop locally
 
 Use Go 1.27.3+, Node 22.23.3 and Docker for PostgreSQL tests. Set `HACKBOX_ENV=development` and export `HACKBOX_DATABASE_URL` for an explicitly provisioned development database. Go commands read environment variables, not `.env` files. Compose derives its own connection string from `.env`.

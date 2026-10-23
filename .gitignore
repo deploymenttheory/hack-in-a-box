@@ -66,3 +66,6 @@ web/test-results-primitives-*/
 
 web/.pattern-dist/
 web/test-results-patterns/
+
+web/dist-styleguide/
+web/styleguide-test-results/

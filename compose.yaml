@@ -1,7 +1,7 @@
 name: hackbox
 x-app: &app
   image: ${HACKBOX_PUBLIC_IMAGE:-hack-in-a-box:local}
-  build: { context: ., target: public }
+  build: { context: ., target: public, args: { VITE_STYLEGUIDE_URL: "${VITE_STYLEGUIDE_URL:-http://127.0.0.1:8082}" } }
   init: true
   read_only: true
   tmpfs: [/tmp]
@@ -68,7 +68,7 @@ services:
   admin:
     <<: *app
     image: ${HACKBOX_ADMIN_IMAGE:-hack-in-a-box:admin}
-    build: { context: ., target: admin }
+    build: { context: ., target: admin, args: { VITE_STYLEGUIDE_URL: "${VITE_STYLEGUIDE_URL:-http://127.0.0.1:8082}" } }
     environment:
       <<: *environment
       HACKBOX_SURFACE: admin

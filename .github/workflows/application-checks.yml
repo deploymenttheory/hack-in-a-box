@@ -48,6 +48,39 @@ jobs:
             web/test-results-public
             web/test-results-patterns
           retention-days: 7
+  styleguide:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:7852dc5a7d72f5fe458a597d690f6c42fbc8e9e26ddfa95f8e6ef552558d9bbf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.23.3
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: npm --prefix web ci
+      - name: Build and exercise independent static guide
+        working-directory: web
+        env:
+          VITE_STYLEGUIDE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run test:e2e:styleguide
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: styleguide-${{ github.event.pull_request.head.sha || github.sha }}
+          path: web/dist-styleguide/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: styleguide-browser-failures
+          path: web/styleguide-test-results/
+          retention-days: 7
   image:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
