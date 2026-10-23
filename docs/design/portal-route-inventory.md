@@ -17,8 +17,8 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/` | `EventDirectory` | Admin, Participant | #234 |
 | `/account` | `AccountPage` | Admin, Participant | #234 |
 | `/events/$eventId` | `EventWorkspace` | Admin, Participant | #235–244 (nested ownership below) |
-| `/events/$eventId/clarifications` | `ClarificationWorkspacePage` | Admin, Participant | #239 |
-| `/events/$eventId/clarifications/$answerId` | `ClarificationReader` | Admin, Participant | #239 |
+| `/events/$eventId/clarifications` | `ClarificationWorkspacePage` | Admin, Participant | #240 |
+| `/events/$eventId/clarifications/$answerId` | `ClarificationReader` | Admin, Participant | #240 |
 | `/events/$eventId/communications/deliveries` | `DeliveryHistoryPage` | Admin, Participant | #239 |
 | `/events/$eventId/communications/deliveries/$deliveryId` | `DeliveryHistoryPage` | Admin, Participant | #239 |
 | `/events/$eventId/feedback-followups/$followupId` | `FeedbackReader` | Admin, Participant | #240 |
@@ -31,7 +31,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/events/$eventId/mentor/$teamId` | `MentorWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/mentor/$teamId/scorecards` | `ScorecardWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/photo-consent` | `OwnPhotoConsentPage` | Admin, Participant | #243 |
-| `/events/$eventId/questions/$questionId` | `ClarificationWorkspacePage` | Admin, Participant | #239 |
+| `/events/$eventId/questions/$questionId` | `ClarificationWorkspacePage` | Admin, Participant | #240 |
 | `/events/$eventId/resources/$resourceId` | `ResourcePage` | Admin, Participant | #238 |
 | `/events/$eventId/review` | `ReviewDashboard` | Admin, Participant | #240 |
 | `/events/$eventId/review/$teamId` | `TeamReviewPage` | Admin, Participant | #240 |
@@ -65,7 +65,10 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | Teams / mentors / team access | Team requests/roster, allocation/freeze, team member readers, mentor roster/coverage/conflicts, retained repository/access status | #237 |
 | Inventory / attendance / operations / logistics / staff preparation | Event-configuration inventory/assignment/returns, venue/logistics/check-in, staff planning/preparation/readiness exceptions and export composition | #235 |
 | Released resources / participant preparation / deliverables | Released resource library/editor/readers, attachments, credential reveal, participant preparation evidence/checklists, working deliverable and formal submission boundaries | #238 |
-| Campaigns / content / Inbox / Q&A | Campaign composer/review/approval/test, Teams confirmation, automation status/reconciliation, content authoring/preview/publish, notification reader/mark-read, delivery history/receipt detail, clarification/private-question author/read/review | #239 |
+| Rules setup | Focused rules authoring/review/publication using the native content editor; released version and acknowledgement readiness | #235 |
+| Resource content authoring | General challenge/brief/resource content editor/preview/publication; released readers, rules acknowledgement and support contacts | #238 |
+| Campaigns / Inbox | Campaign composer/message templates/review/approval/test, Teams confirmation, automation status/reconciliation, notification reader/mark-read, delivery history/receipt detail | #239 |
+| Clarifications / private questions | Question author/read/review, explicit common-answer review/publication and released answer reader | #240 |
 | Mentor / help / review / feedback | Mentor workspace/private draft recovery, scorecards/observations/evidence, helper queue/request thread, review dashboard, team inspector/judge summary, moderation/huddle/feedback readers and follow-ups | #240 |
 | Surveys | Directory, audience/authoring/publish, respondent version, answer privacy, management/close/results/export and results review | #241 |
 | Ideas / outcomes / projects | Idea create/detail/review, current team follow-through, project eligibility/published/private readers and explicit next actions | #242 |
