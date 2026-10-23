@@ -110,7 +110,11 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		GitHubApp:       githubapp.Service{Pool: pool, Keys: cfg.CredentialKeys, Provider: githubapp.NewProvider()},
+		GitHubApp: githubapp.Service{
+			Pool:     pool,
+			Keys:     cfg.CredentialKeys,
+			Provider: githubapp.NewProvider(),
+		},
 		Surveys:         communicationRuntime.Surveys,
 		Deliveries:      communicationRuntime.Deliveries,
 		Help:            communicationRuntime.Help,
