@@ -25,10 +25,11 @@ export function ClarificationReader() {
   if (answer.error || older.error) return <Failure error={answer.error || older.error} retry={() => { void answer.refetch(); if (older.isError) void older.refetch() }} />
   const page = answer.data!, current = page.answer
   const history = [...page.history, ...(older.data?.pages.flatMap(page => page.items) ?? [])]
-  return <section className="workspace"><Link to="/inbox">← Your inbox</Link><article className="panel">
+  return <section className="workspace"><Link to="/inbox">← Your inbox</Link><p><Link to="/events/$eventId/clarifications" params={{ eventId }}>Search common official answers</Link></p><article className="panel">
     <p className="eyebrow">Reviewed common clarification · version {current.version}</p><h1>{current.document.title}</h1>
     <p>Published {new Date(current.published_at).toLocaleString()} · Author {current.author_name}</p>
     <p>Challenge version {current.source.challenge_version} · Rubric version {current.source.rubric.version}</p>
+    <p><Link to="/events/$eventId/resources/$resourceId" params={{ eventId, resourceId: current.source.challenge_id }}>Read the current owning challenge</Link> · <Link to="/events/$eventId/clarifications" params={{ eventId }} hash="published-rubric">Current published rubric</Link></p>
     {!current.source_current && <p role="status">This answer applies to an earlier published challenge or rubric. Check the current common resources.</p>}
     {current.document.kind !== 'clarification' && <p>This answer announces a change already published through the challenge or rubric review process.</p>}
     {page.archived && <p>This event is archived. Published answers remain read-only.</p>}

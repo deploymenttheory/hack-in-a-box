@@ -2352,6 +2352,18 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ContentList'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/clarification-workspace:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: getClarificationWorkspace
+      responses:
+        '200':
+          description: Current native question capabilities after actual common publication; aggregate review audience is organiser-only.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationWorkspace'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/questions:
     parameters:
       - {$ref: '#/components/parameters/EventID'}
@@ -2451,6 +2463,22 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PrivateQuestion'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/questions/{question_id}/review:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - name: question_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getClarificationReview
+      responses:
+        '200':
+          description: Explicit organiser review of an existing private question, nullable draft and current common audience/source, atomically authorised.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ClarificationReview'}
         default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/questions/{question_id}/answer:
     parameters:
@@ -6064,6 +6092,35 @@ components:
           maxItems: 10
           uniqueItems: true
           items: {type: string, format: uuid}
+    ClarificationReview:
+      type: object
+      additionalProperties: false
+      required: [draft, workspace]
+      properties:
+        draft:
+          allOf:
+            - {$ref: '#/components/schemas/ClarificationConfiguration'}
+          nullable: true
+        workspace: {$ref: '#/components/schemas/ClarificationWorkspace'}
+    ClarificationWorkspace:
+      type: object
+      additionalProperties: false
+      required: [source, archived, team_id, can_ask, can_review, staff_attachments_open, review_audience]
+      properties:
+        source: {$ref: '#/components/schemas/ClarificationSource'}
+        archived: {type: boolean}
+        team_id: {type: string, format: uuid, nullable: true}
+        can_ask: {type: boolean}
+        can_review: {type: boolean}
+        staff_attachments_open: {type: boolean}
+        review_audience:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [label, count]
+          properties:
+            label: {type: string}
+            count: {type: integer, minimum: 0}
     PrivateQuestion:
       type: object
       additionalProperties: false

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
@@ -21,6 +22,7 @@ export function ContentWorkspace({ event, onDirty, openSection }: { event: Event
   function choose(page?: ContentPage) { if (!dirty || window.confirm('Leave this page with unsaved content?')) setSelected(page) }
   function leave(section: string) { if (!dirty || window.confirm('Leave this page with unsaved content?')) openSection(section) }
   return <section className="content-workspace"><div className="preparation-heading"><div><p className="eyebrow">Briefs and resources</p><h2>Content</h2><p>Write once, review the version, then release it to the right people.</p></div></div>
+    {event.can_edit && <p><Link to="/events/$eventId/clarifications" params={{ eventId: event.id }}>Review private questions and common official answers</Link></p>}
     {selected ? <>{teams.error ? <Failure error={teams.error} retry={() => void teams.refetch()} /> : teams.isPending ? <Loading /> : <ContentEditor key={selected.id} initial={selected} event={event} teams={teams.data.teams} readiness={readiness.data} onDirty={markDirty} close={() => choose()} openSection={leave} />}{readiness.error && <Failure error={readiness.error} retry={() => void readiness.refetch()} />}</> : <>
       <EventGuidance event={event} readiness />
       {event.can_edit && <section className="panel content-start"><h3>Start a page</h3><label htmlFor="content-template">Starting template</label><select id="content-template" value={template} onChange={e => setTemplate(e.target.value)}>{templates.map(t => <option key={t.id} value={t.id} disabled={t.id === 'challenge' && items.some(p => p.kind === 'challenge')}>{t.name}{t.id === 'challenge' && items.some(p => p.kind === 'challenge') ? ' (already exists)' : ''}</option>)}</select><p>Event-template role briefs are reusable. Copies start as private drafts and require their own attachments and approval.</p><Button disabled={!chosen || (chosen.id === 'challenge' && items.some(p => p.kind === 'challenge'))} onClick={() => chosen && choose(draftPage(chosen.input))}>Start from template</Button>{definitions.isPending && <p role="status">Loading event templates…</p>}{definitions.error && <Failure error={definitions.error} retry={() => void definitions.refetch()} />}</section>}

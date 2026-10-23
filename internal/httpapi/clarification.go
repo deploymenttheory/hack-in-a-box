@@ -13,6 +13,28 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 )
 
+func (h handlers) GetClarificationWorkspace(
+	ctx context.Context,
+	r contract.GetClarificationWorkspaceRequestObject,
+) (contract.GetClarificationWorkspaceResponseObject, error) {
+	v, err := h.Clarifications.Workspace(ctx, actor(ctx).ID, r.EventId)
+	if err != nil {
+		return nil, fmt.Errorf("current clarification workspace: %w", err)
+	}
+	return convertDTO[contract.GetClarificationWorkspace200JSONResponse](v)
+}
+
+func (h handlers) GetClarificationReview(
+	ctx context.Context,
+	r contract.GetClarificationReviewRequestObject,
+) (contract.GetClarificationReviewResponseObject, error) {
+	v, err := h.Clarifications.Review(ctx, actor(ctx).ID, r.EventId, r.QuestionId)
+	if err != nil {
+		return nil, fmt.Errorf("private official answer review: %w", err)
+	}
+	return convertDTO[contract.GetClarificationReview200JSONResponse](v)
+}
+
 func (h handlers) SearchPublishedClarifications(
 	ctx context.Context,
 	r contract.SearchPublishedClarificationsRequestObject,
