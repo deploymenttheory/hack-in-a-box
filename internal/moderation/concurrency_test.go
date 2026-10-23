@@ -224,3 +224,52 @@ func TestSubmittedCardChangeAndCurrentRoleLossInvalidatePanelContext(t *testing.
 		t.Fatal("role loss retained private decision history", err)
 	}
 }
+
+func TestInactiveDisbandedOrWithdrawnFrozenOutputCannotFinalise(t *testing.T) {
+	for _, state := range []string{"disbanded", "inactive", "withdrawn"} {
+		t.Run(state, func(t *testing.T) {
+			f, s, h := finalContext(t, true)
+			switch state {
+			case "disbanded":
+				f.exec(
+					`UPDATE hack_teams SET state='disbanded' WHERE event_id=$1 AND id=$2`,
+					f.event,
+					f.team,
+				)
+			case "inactive":
+				f.exec(
+					`UPDATE competition_entries SET active=false WHERE event_id=$1 AND team_id=$2`,
+					f.event,
+					f.team,
+				)
+			case "withdrawn":
+				f.exec(
+					`UPDATE submission_states SET outcome='withdrawn' WHERE event_id=$1 AND team_id=$2`,
+					f.event,
+					f.team,
+				)
+			}
+			if _, err := s.Change(
+				t.Context(),
+				f.owner.ID,
+				f.event,
+				f.team,
+				h.Definition.ID,
+				f.revision(),
+				Command{
+					Action:  "sign_off",
+					Version: h.Version,
+					Reason:  "Unused output must not be finalised",
+				},
+			); err == nil {
+				t.Fatal("invalid competition output finalised")
+			}
+			var count int
+			if err := f.pool.QueryRow(t.Context(), `SELECT count(*) FROM mentor_scorecard_signoffs WHERE event_id=$1`, f.event).
+				Scan(&count); err != nil ||
+				count != 0 {
+				t.Fatal("invalid output retained final proof", count, err)
+			}
+		})
+	}
+}

@@ -2,6 +2,7 @@ package scorecards
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -54,6 +55,9 @@ func (s Service) SubmittedReviewInTransaction(
 		ctx,
 		dbgen.LatestMentorScorecardParams{EventID: eventID, ID: cardID(cp, teamID, author)},
 	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Card{}, access.ErrConflict
+	}
 	if err != nil {
 		return Card{}, fmt.Errorf("read required independent review: %w", err)
 	}

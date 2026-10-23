@@ -26,6 +26,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
+	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
@@ -35,6 +36,14 @@ import (
 )
 
 func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) {
+	scorecardHTTP(t, false)
+}
+
+func TestModerationHTTPCurrentSessionPanelPrivacyAndExplicitDecisions(t *testing.T) {
+	scorecardHTTP(t, true)
+}
+
+func scorecardHTTP(t *testing.T, withModeration bool) {
 	ctx := t.Context()
 	pool := testdb.New(t, true)
 	owner, mentor, second, member := testdb.Person(
@@ -213,22 +222,20 @@ func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) 
 	}
 	composer.Channels = map[string]communications.ChannelProvider{"in_app": &mailbox}
 	var logs bytes.Buffer
-	router := NewRouter(
-		cfg,
-		slog.New(slog.NewTextHandler(&logs, nil)),
-		Dependencies{
-			Pool:       pool,
-			Auth:       auth,
-			Scorecards: scorecards.Service{Pool: pool, Now: func() time.Time { return now }},
-			Teams:      teams.Service{Pool: pool},
-			Attendance: attendance.Service{
-				Pool: pool,
-			},
-			Presentation:   room,
-			Communications: composer,
-			Inbox:          mailbox,
+	deps := Dependencies{
+		Pool:       pool,
+		Auth:       auth,
+		Scorecards: scorecards.Service{Pool: pool, Now: func() time.Time { return now }},
+		Teams:      teams.Service{Pool: pool},
+		Attendance: attendance.Service{
+			Pool: pool,
 		},
-	)
+		Presentation:   room,
+		Communications: composer,
+		Inbox:          mailbox,
+	}
+	logger := slog.New(slog.NewTextHandler(&logs, nil))
+	router := NewRouter(cfg, logger, deps)
 	revision := func() int64 {
 		t.Helper()
 		row, err := dbgen.New(pool).Event(ctx, eventID)
@@ -409,6 +416,33 @@ func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) 
 		),
 		http.StatusBadRequest,
 	)
+	var huddlePaths []string
+	if withModeration {
+		huddlePaths = verifyHuddleHTTP(
+			t,
+			moderationHTTPHarness{
+				Pool:       pool,
+				EventID:    eventID,
+				TeamID:     teamID,
+				Owner:      owner,
+				Primary:    mentor,
+				Second:     second,
+				Member:     member,
+				Checkpoint: checkpoint,
+				Dates:      dates,
+				Now:        func() time.Time { return now },
+				Revision:   revision,
+				Request:    request,
+				Check:      check,
+				Exec:       exec,
+				Install: func(owner *moderation.Service) {
+					deps.Moderation = owner
+					deps.Scorecards.Moderation = owner
+					router = NewRouter(cfg, logger, deps)
+				},
+			},
+		)
+	}
 	participant := request(member, http.MethodGet, base+"/teams", nil, revision(), true)
 	check(participant, http.StatusOK)
 	if strings.Contains(participant.Body.String(), "HTTP-PRIVATE-SCORE-EVIDENCE-CANARY") {
@@ -421,6 +455,7 @@ func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) 
 			t.Fatal("privacy fixture unpopulated", w.Body.String())
 		}
 		if strings.Contains(w.Body.String(), "HTTP-PRIVATE-SCORE-EVIDENCE-CANARY") ||
+			strings.Contains(w.Body.String(), "HTTP-PRIVATE-HUDDLE-CANARY") ||
 			strings.Contains(w.Body.String(), "category_id") ||
 			strings.Contains(w.Body.String(), "rubric_version") {
 			t.Fatal("private scorecard entered unrelated payload")
@@ -591,14 +626,24 @@ func TestScorecardHTTPAuthorPrivacyClockEvidenceAndCurrentSession(t *testing.T) 
 		eventID,
 		mentor.ID,
 	)
-	for _, target := range []string{path, historyPath, assigned} {
+	for _, target := range append([]string{path, historyPath, assigned}, huddlePaths...) {
 		w = request(mentor, http.MethodGet, target, nil, revision(), true)
 		check(w, http.StatusForbidden)
 		if strings.Contains(w.Body.String(), "HTTP-PRIVATE-SCORE-EVIDENCE-CANARY") {
 			t.Fatal("revoked cookie retained scores")
 		}
 	}
-	if strings.Contains(logs.String(), "HTTP-PRIVATE-SCORE-EVIDENCE-CANARY") {
+	if withModeration {
+		exec(`UPDATE people SET session_revision=session_revision+1 WHERE id=$1`, owner.ID)
+		for _, target := range huddlePaths {
+			check(
+				request(owner, http.MethodGet, target, nil, revision(), true),
+				http.StatusUnauthorized,
+			)
+		}
+	}
+	if strings.Contains(logs.String(), "HTTP-PRIVATE-SCORE-EVIDENCE-CANARY") ||
+		strings.Contains(logs.String(), "HTTP-PRIVATE-HUDDLE-CANARY") {
 		t.Fatal("private scoring entered request logs")
 	}
 }

@@ -1,7 +1,7 @@
 # Moderation huddles (#104): implementation checkpoint
 
 This is an incomplete local backend checkpoint, not a readiness or migration
-claim. Native #103 integration, HTTP/generated contracts, final normal migration
+claim. Native #103 integration, final normal migration
 and final verification remain outstanding. The unnumbered development schema is
 applied only by this checkpoint's fixtures. It must become a normal ordered
 migration after actual merged #103 before the implementation is ready.
@@ -45,7 +45,7 @@ card/source/authority changes do not create new approval or replay a decision.
 
 ## Checkpoint evidence
 
-Real PostgreSQL/race local suite PASS 11.711s: native guarded common rubric and
+Real PostgreSQL/race local lifecycle suite PASS 11.999s: native guarded common rubric and
 scorecard journeys, intended-panel/draft/history privacy, current conflicts,
 pre-live denial, distinct second reviewer, absent action owner, explicit formal
 gap/proposal decisions, frozen final evidence, immutable original values,
@@ -55,3 +55,14 @@ card/role/disbandment denial. Scoped Go lint reports zero issues.
 The operational action-policy fixture is explicitly synthetic and persisted in
 PostgreSQL. It proves the typed transaction contract only. It does not claim
 actual #103 records/runtime integration; that integration remains required.
+
+The owner-only stack is based on actual merged automation main1cb275b/schema35.
+Generated private huddle list/detail/history/decision contracts preserve the
+combined automation/help/clarification/recovery/scorecard API. Strict HTTP proof
+passes5.245s; bounded1,006 huddle/history records, current panel revocation and
+unused output denial pass21.687s, with HTTP/current-session regressions6.728s.
+Original nil-policy scorecard denial is retained before installing the real
+huddle policy in the same native HTTP fixture. Populated huddle evidence is
+excluded from participant/logistics/export/MC/display/notification payloads and
+logs. No action-source success is fabricated: the HTTP fixture's absent-source
+adapter denies every action; actual103 action/gap composition remains required.
