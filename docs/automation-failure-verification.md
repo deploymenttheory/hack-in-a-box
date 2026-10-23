@@ -53,3 +53,10 @@ This verification does not complete live Teams tenant acceptance (#80), future
 published-results integration (#112), or the named outcome-review journey
 (#117). Those require their actual owners and acceptance evidence; #84 does not
 replace or close them.
+
+The CI race-test timeout is ten minutes per complete package, within the existing
+twenty-minute job limit. The growing HTTP integration suite starts and cleans up
+isolated PostgreSQL containers for its journeys; the former five-minute package
+limit expired during normal container cleanup while the active test was only
+five seconds old. This keeps a bounded deadlock limit without dropping race
+checks, reducing coverage or extending individual provider acceptance deadlines.

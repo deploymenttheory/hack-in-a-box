@@ -42,6 +42,7 @@ jobs:
       - name: Race tests
         env:
           HACKBOX_INTEGRATION: '1'
-        run: go test -race -timeout 5m ./cmd/... ./internal/...
+        # The timeout covers each complete package, including isolated PostgreSQL startup/cleanup.
+        run: go test -race -timeout 10m ./cmd/... ./internal/...
       - name: Verify generated contracts and queries
         run: sh scripts/check-generated.sh
