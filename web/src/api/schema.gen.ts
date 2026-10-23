@@ -2493,7 +2493,7 @@ export interface components {
         FeedbackCommand: {
             /** @enum {string} */
             action: "save" | "review" | "publish" | "withdraw";
-            input: components["schemas"]["FeedbackInput"];
+            input: components["schemas"]["FeedbackInput"] | null;
         };
         FeedbackAcknowledgement: {
             /** Format: int64 */
@@ -2524,8 +2524,8 @@ export interface components {
             command_version: number | null;
             /** Format: int64 */
             current_version: number;
-            published: components["schemas"]["SharedFeedbackDocument"];
-            draft: components["schemas"]["SharedFeedbackDocument"];
+            published: components["schemas"]["SharedFeedbackDocument"] | null;
+            draft: components["schemas"]["SharedFeedbackDocument"] | null;
             can_manage: boolean;
             can_acknowledge: boolean;
             acknowledgements: components["schemas"]["FeedbackAcknowledgement"][];
@@ -2575,7 +2575,7 @@ export interface components {
         SupportActionCommand: {
             /** @enum {string} */
             action: "details" | "status";
-            input: components["schemas"]["SupportActionInput"];
+            input: components["schemas"]["SupportActionInput"] | null;
             /** @enum {string} */
             status: "" | "open" | "in_progress" | "done" | "cancelled";
         };

@@ -19,14 +19,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
-	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
-	Feedback       feedback.Service
+	Feedback       *feedback.Service
 	Help           help.Service
 	Clarifications *clarification.Service
 	Automation     *automation.Service
@@ -64,7 +64,7 @@ func newCommunicationRuntime(
 	answers := &clarification.Service{Pool: pool}
 	answers.Notifications = clarificationInboxSink{Inbox: local}
 	helpProvider := help.Service{Pool: pool}
-	shared := feedback.Service{Pool: pool, Sources: map[string]feedback.SourcePolicy{
+	shared := &feedback.Service{Pool: pool, Sources: map[string]feedback.SourcePolicy{
 		"observation": observationFeedbackSource{Service: observations.Service{Pool: pool}},
 		"question":    questionFeedbackSource{Service: answers},
 		"help":        helpFeedbackSource{Service: helpProvider},

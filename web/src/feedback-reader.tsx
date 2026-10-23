@@ -11,7 +11,7 @@ import { Failure, Loading } from './components/states'
 // original source provenance is rendered by this reader.
 export function FeedbackReader() {
   const { eventId, feedbackId, followupId } = useParams({ strict: false }), identity = useIdentity()
-  const query = useQuery({ queryKey: [...privateKey(identity.person.id, eventId!, 'shared-feedback-reader'), feedbackId ?? followupId], queryFn: async () => followupId ? unwrap(await api.GET('/api/v1/events/{event_id}/feedback-followups/{followup_id}', { params: { path: { event_id: eventId!, followup_id: followupId } } })) : unwrap(await api.GET('/api/v1/events/{event_id}/feedback/{feedback_id}', { params: { path: { event_id: eventId!, feedback_id: feedbackId! } } })), refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
+  const query = useQuery({ queryKey: [...privateKey(identity.person.id, eventId!, 'shared-feedback-reader'), followupId ? 'followup' : 'feedback', feedbackId ?? followupId], queryFn: async () => followupId ? unwrap(await api.GET('/api/v1/events/{event_id}/feedback-followups/{followup_id}', { params: { path: { event_id: eventId!, followup_id: followupId } } })) : unwrap(await api.GET('/api/v1/events/{event_id}/feedback/{feedback_id}', { params: { path: { event_id: eventId!, feedback_id: feedbackId! } } })), refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
   if (query.isPending) return <Loading />
   if (query.error) return <Failure error={query.error} retry={() => void query.refetch()} />
   const document = query.data.published

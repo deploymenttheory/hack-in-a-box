@@ -4110,8 +4110,10 @@ components:
             ]
           },
           "input": {
-            "$ref": "#/components/schemas/FeedbackInput",
-            "nullable": true
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/FeedbackInput"}
+            ]
           }
         }
       }
@@ -4208,12 +4210,16 @@ components:
             "format": "int64"
           },
           "published": {
-            "$ref": "#/components/schemas/SharedFeedbackDocument",
-            "nullable": true
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SharedFeedbackDocument"}
+            ]
           },
           "draft": {
-            "$ref": "#/components/schemas/SharedFeedbackDocument",
-            "nullable": true
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SharedFeedbackDocument"}
+            ]
           },
           "can_manage": {
             "type": "boolean"
@@ -4397,8 +4403,10 @@ components:
             ]
           },
           "input": {
-            "$ref": "#/components/schemas/SupportActionInput",
-            "nullable": true
+            "nullable": true,
+            "allOf": [
+              {"$ref": "#/components/schemas/SupportActionInput"}
+            ]
           },
           "status": {
             "type": "string",

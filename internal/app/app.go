@@ -110,7 +110,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
 		Help:           communicationRuntime.Help,
-		Feedback:       communicationRuntime.Feedback,
+		Feedback:       *communicationRuntime.Feedback,
 		Clarifications: *communicationRuntime.Clarifications,
 		Presentation:   presentation.Service{Pool: pool},
 		Automation:     communicationRuntime.Automation,
@@ -197,8 +197,8 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		if err := (content.Service{Pool: pool, Storage: storage}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain actual content release: %w", err)
 		}
-		if err := communicationRuntime.Help.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain native help sources: %w", err)
+		if err := communicationRuntime.maintainSupport(ctx); err != nil {
+			return fmt.Errorf("maintain native support sources: %w", err)
 		}
 		if err := communicationRuntime.Automation.Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain reviewed communication occurrences: %w", err)

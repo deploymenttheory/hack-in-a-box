@@ -13,7 +13,7 @@ import (
 )
 
 type feedbackInboxOwner struct {
-	Service  feedback.Service
+	Service  *feedback.Service
 	Followup bool
 }
 
@@ -23,6 +23,9 @@ func (o feedbackInboxOwner) AuthorizeNotification(
 	actor, eventID uuid.UUID,
 	source inbox.Source,
 ) (inbox.Destination, error) {
+	if o.Service == nil {
+		return inbox.Destination{}, access.ErrNotFound
+	}
 	if o.Followup {
 		if source.Kind != "feedback_followup" || source.Version != 1 {
 			return inbox.Destination{}, access.ErrNotFound
@@ -96,6 +99,18 @@ func (s feedbackInboxSink) RecordFeedbackFollowupInTransaction(
 		inbox.Source{Kind: "feedback_followup", ID: id, Version: 1},
 	); err != nil {
 		return fmt.Errorf("record overdue feedback follow-up: %w", err)
+	}
+	return nil
+}
+
+// maintainSupport runs after guarded common publication and independently of
+// campaign bindings; zero-campaign events still receive overdue support prompts.
+func (r communicationRuntime) maintainSupport(ctx context.Context) error {
+	if err := r.Help.Maintain(ctx); err != nil {
+		return fmt.Errorf("maintain native help: %w", err)
+	}
+	if err := r.Feedback.Maintain(ctx); err != nil {
+		return fmt.Errorf("maintain reviewed support: %w", err)
 	}
 	return nil
 }
