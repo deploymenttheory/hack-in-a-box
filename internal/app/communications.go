@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
@@ -25,6 +26,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -34,6 +36,7 @@ import (
 )
 
 type communicationRuntime struct {
+	Repositories    *repositories.Service
 	Outcomes        *outcomes.Service
 	Surveys         *surveys.Service
 	ReviewDashboard *reviewdashboard.Service
@@ -123,10 +126,19 @@ func newCommunicationRuntime(
 		"rubric.published":        automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
 	}
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
+	repos := &repositories.Service{
+		Pool: pool,
+		App: githubapp.Service{
+			Pool:     pool,
+			Keys:     cfg.CredentialKeys,
+			Provider: githubapp.NewProvider(),
+		},
+	}
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
+			repositories.HandlerKind:      repos,
 			automation.HandlerKind:        auto,
 			"communication_test_in_app":   inbox.TestHandler{Service: *local},
 			"communication_test_smtp":     provider,
@@ -210,8 +222,9 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		Outcomes: followThrough,
-		Surveys:  questionnaires,
+		Repositories: repos,
+		Outcomes:     followThrough,
+		Surveys:      questionnaires,
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,

@@ -227,8 +227,7 @@ func (p *RESTProvider) Inspect(
 }
 
 // scopedClient mints only repository-specific, operation-specific tokens. The
-// current implementation performs read-only configuration verification; future
-// provisioners must supply event-authorised repository names and recheck live
+// App owner supplies event-authorised repository names and rechecks live
 // installation/permission state before asking for a write client. No token or
 // authenticated client crosses a browser-facing service boundary.
 func (p *RESTProvider) scopedClient(

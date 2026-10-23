@@ -1525,6 +1525,7 @@ type TeamRepository struct {
 	AppID                int64
 	InstallationID       int64
 	TemplateRepository   string
+	RequestedBy          uuid.UUID
 	Provenance           uuid.UUID
 	GithubRepositoryID   pgtype.Int8
 	TemplateRepositoryID pgtype.Int8

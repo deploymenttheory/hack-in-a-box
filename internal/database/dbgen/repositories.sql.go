@@ -13,8 +13,41 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const authorizeRepositoryRecovery = `-- name: AuthorizeRepositoryRecovery :exec
+UPDATE team_repositories SET requested_by=$3 WHERE event_id=$1 AND team_id=$2
+`
+
+type AuthorizeRepositoryRecoveryParams struct {
+	EventID     uuid.UUID
+	TeamID      uuid.UUID
+	RequestedBy uuid.UUID
+}
+
+func (q *Queries) AuthorizeRepositoryRecovery(ctx context.Context, arg AuthorizeRepositoryRecoveryParams) error {
+	_, err := q.db.Exec(ctx, authorizeRepositoryRecovery, arg.EventID, arg.TeamID, arg.RequestedBy)
+	return err
+}
+
+const dBPublishedTeam = `-- name: DBPublishedTeam :one
+SELECT t.id FROM hack_teams t JOIN competition_entries e ON e.event_id=t.event_id AND e.team_id=t.id
+WHERE t.event_id=$1 AND t.id=$2::uuid AND t.state='published' AND e.active
+AND EXISTS(SELECT 1 FROM hack_team_members m WHERE m.event_id=t.event_id AND m.team_id=t.id AND m.snapshot='published')
+`
+
+type DBPublishedTeamParams struct {
+	EventID uuid.UUID
+	TeamID  uuid.UUID
+}
+
+func (q *Queries) DBPublishedTeam(ctx context.Context, arg DBPublishedTeamParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, dBPublishedTeam, arg.EventID, arg.TeamID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const eventRepositories = `-- name: EventRepositories :many
-SELECT r.event_id, r.team_id, r.organization_id, r.organization, r.name, r.app_id, r.installation_id, r.template_repository, r.provenance, r.github_repository_id, r.template_repository_id, r.attempted, r.state, r.diagnostic, r.created_at, r.updated_at,t.state AS team_state FROM team_repositories r JOIN hack_teams t ON t.event_id=r.event_id AND t.id=r.team_id WHERE r.event_id=$1 ORDER BY r.team_id
+SELECT r.event_id, r.team_id, r.organization_id, r.organization, r.name, r.app_id, r.installation_id, r.template_repository, r.requested_by, r.provenance, r.github_repository_id, r.template_repository_id, r.attempted, r.state, r.diagnostic, r.created_at, r.updated_at,t.state AS team_state FROM team_repositories r JOIN hack_teams t ON t.event_id=r.event_id AND t.id=r.team_id WHERE r.event_id=$1 ORDER BY r.team_id
 `
 
 type EventRepositoriesRow struct {
@@ -26,6 +59,7 @@ type EventRepositoriesRow struct {
 	AppID                int64
 	InstallationID       int64
 	TemplateRepository   string
+	RequestedBy          uuid.UUID
 	Provenance           uuid.UUID
 	GithubRepositoryID   pgtype.Int8
 	TemplateRepositoryID pgtype.Int8
@@ -55,6 +89,7 @@ func (q *Queries) EventRepositories(ctx context.Context, eventID uuid.UUID) ([]E
 			&i.AppID,
 			&i.InstallationID,
 			&i.TemplateRepository,
+			&i.RequestedBy,
 			&i.Provenance,
 			&i.GithubRepositoryID,
 			&i.TemplateRepositoryID,
@@ -76,8 +111,8 @@ func (q *Queries) EventRepositories(ctx context.Context, eventID uuid.UUID) ([]E
 }
 
 const insertTeamRepository = `-- name: InsertTeamRepository :exec
-INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(event_id,team_id) DO NOTHING
+INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,requested_by)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(event_id,team_id) DO UPDATE SET requested_by=EXCLUDED.requested_by
 `
 
 type InsertTeamRepositoryParams struct {
@@ -89,6 +124,7 @@ type InsertTeamRepositoryParams struct {
 	AppID              int64
 	InstallationID     int64
 	TemplateRepository string
+	RequestedBy        uuid.UUID
 }
 
 func (q *Queries) InsertTeamRepository(ctx context.Context, arg InsertTeamRepositoryParams) error {
@@ -101,12 +137,70 @@ func (q *Queries) InsertTeamRepository(ctx context.Context, arg InsertTeamReposi
 		arg.AppID,
 		arg.InstallationID,
 		arg.TemplateRepository,
+		arg.RequestedBy,
 	)
 	return err
 }
 
+const markRepositoryAttempt = `-- name: MarkRepositoryAttempt :execrows
+UPDATE team_repositories SET attempted=true,template_repository_id=$3,state='ambiguous',diagnostic='create_uncertain',updated_at=now() WHERE event_id=$1 AND team_id=$2 AND NOT attempted
+`
+
+type MarkRepositoryAttemptParams struct {
+	EventID              uuid.UUID
+	TeamID               uuid.UUID
+	TemplateRepositoryID pgtype.Int8
+}
+
+func (q *Queries) MarkRepositoryAttempt(ctx context.Context, arg MarkRepositoryAttemptParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markRepositoryAttempt, arg.EventID, arg.TeamID, arg.TemplateRepositoryID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const provisioningEvents = `-- name: ProvisioningEvents :many
+SELECT DISTINCT e.id, e.name, e.revision, e.created_at, e.updated_at, e.owner_id, e.writes_allowed, e.slug, e.configuration, e.stage, e.published_at, e.team_frozen_at, e.completed_at FROM events e JOIN hack_teams t ON t.event_id=e.id JOIN github_app_integrations a ON a.event_id=e.id
+WHERE e.writes_allowed AND e.stage NOT IN ('cancelled','completed','archived') AND t.state='published' AND a.installation_id>0 ORDER BY e.id
+`
+
+func (q *Queries) ProvisioningEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.Query(ctx, provisioningEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Revision,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.OwnerID,
+			&i.WritesAllowed,
+			&i.Slug,
+			&i.Configuration,
+			&i.Stage,
+			&i.PublishedAt,
+			&i.TeamFrozenAt,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const repositoryByGitHubID = `-- name: RepositoryByGitHubID :one
-SELECT event_id, team_id, organization_id, organization, name, app_id, installation_id, template_repository, provenance, github_repository_id, template_repository_id, attempted, state, diagnostic, created_at, updated_at FROM team_repositories WHERE github_repository_id=$1
+SELECT event_id, team_id, organization_id, organization, name, app_id, installation_id, template_repository, requested_by, provenance, github_repository_id, template_repository_id, attempted, state, diagnostic, created_at, updated_at FROM team_repositories WHERE github_repository_id=$1
 `
 
 func (q *Queries) RepositoryByGitHubID(ctx context.Context, githubRepositoryID pgtype.Int8) (TeamRepository, error) {
@@ -121,6 +215,7 @@ func (q *Queries) RepositoryByGitHubID(ctx context.Context, githubRepositoryID p
 		&i.AppID,
 		&i.InstallationID,
 		&i.TemplateRepository,
+		&i.RequestedBy,
 		&i.Provenance,
 		&i.GithubRepositoryID,
 		&i.TemplateRepositoryID,
@@ -133,8 +228,50 @@ func (q *Queries) RepositoryByGitHubID(ctx context.Context, githubRepositoryID p
 	return i, err
 }
 
+const resolveRepositoryOperation = `-- name: ResolveRepositoryOperation :exec
+UPDATE operations SET state='delivered',updated_at=now()
+WHERE event_id=$1 AND target_id=$2 AND kind='repository.provision' AND state IN ('ambiguous','permanent') AND NOT cancelled
+`
+
+type ResolveRepositoryOperationParams struct {
+	EventID  uuid.UUID
+	TargetID uuid.UUID
+}
+
+func (q *Queries) ResolveRepositoryOperation(ctx context.Context, arg ResolveRepositoryOperationParams) error {
+	_, err := q.db.Exec(ctx, resolveRepositoryOperation, arg.EventID, arg.TargetID)
+	return err
+}
+
+const setRepositoryResult = `-- name: SetRepositoryResult :execrows
+UPDATE team_repositories SET github_repository_id=COALESCE(github_repository_id,$5::bigint),state=$3,diagnostic=$4,updated_at=now()
+WHERE event_id=$1 AND team_id=$2
+`
+
+type SetRepositoryResultParams struct {
+	EventID            uuid.UUID
+	TeamID             uuid.UUID
+	State              string
+	Diagnostic         string
+	GithubRepositoryID pgtype.Int8
+}
+
+func (q *Queries) SetRepositoryResult(ctx context.Context, arg SetRepositoryResultParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setRepositoryResult,
+		arg.EventID,
+		arg.TeamID,
+		arg.State,
+		arg.Diagnostic,
+		arg.GithubRepositoryID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const teamRepository = `-- name: TeamRepository :one
-SELECT event_id, team_id, organization_id, organization, name, app_id, installation_id, template_repository, provenance, github_repository_id, template_repository_id, attempted, state, diagnostic, created_at, updated_at FROM team_repositories WHERE event_id=$1 AND team_id=$2
+SELECT event_id, team_id, organization_id, organization, name, app_id, installation_id, template_repository, requested_by, provenance, github_repository_id, template_repository_id, attempted, state, diagnostic, created_at, updated_at FROM team_repositories WHERE event_id=$1 AND team_id=$2
 `
 
 type TeamRepositoryParams struct {
@@ -154,6 +291,7 @@ func (q *Queries) TeamRepository(ctx context.Context, arg TeamRepositoryParams) 
 		&i.AppID,
 		&i.InstallationID,
 		&i.TemplateRepository,
+		&i.RequestedBy,
 		&i.Provenance,
 		&i.GithubRepositoryID,
 		&i.TemplateRepositoryID,

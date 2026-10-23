@@ -15,16 +15,17 @@ import (
 type Action string
 
 const (
-	SurveyResponsesExported Action = "survey.responses_exported"
-	MediaChanged            Action = "media.changed"
-	MediaRevoked            Action = "media.revoked"
-	PhotoConsentGranted     Action = "photo_consent.granted"
-	PhotoConsentRevoked     Action = "photo_consent.revoked"
-	PhotoConsentUnknown     Action = "photo_consent.unknown"
-	OutcomeChanged          Action = "outcome.changed"
-	OutcomeArchivedUpdated  Action = "outcome.archived_updated"
-	OutcomeProjectChanged   Action = "outcome.project_changed"
-	OutcomeReviewChanged    Action = "outcome.review_changed"
+	RepositoryProvisioningChanged Action = "repository.provisioning_changed"
+	SurveyResponsesExported       Action = "survey.responses_exported"
+	MediaChanged                  Action = "media.changed"
+	MediaRevoked                  Action = "media.revoked"
+	PhotoConsentGranted           Action = "photo_consent.granted"
+	PhotoConsentRevoked           Action = "photo_consent.revoked"
+	PhotoConsentUnknown           Action = "photo_consent.unknown"
+	OutcomeChanged                Action = "outcome.changed"
+	OutcomeArchivedUpdated        Action = "outcome.archived_updated"
+	OutcomeProjectChanged         Action = "outcome.project_changed"
+	OutcomeReviewChanged          Action = "outcome.review_changed"
 )
 
 const (
@@ -139,7 +140,7 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case SurveyResponsesExported, MediaChanged,
+	case RepositoryProvisioningChanged, SurveyResponsesExported, MediaChanged,
 		MediaRevoked,
 		PhotoConsentGranted,
 		PhotoConsentRevoked,

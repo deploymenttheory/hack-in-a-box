@@ -8,6 +8,7 @@ CREATE TABLE team_repositories (
  app_id bigint NOT NULL CHECK(app_id>0),
  installation_id bigint NOT NULL CHECK(installation_id>0),
  template_repository text NOT NULL,
+ requested_by uuid NOT NULL REFERENCES people(id),
  provenance uuid NOT NULL DEFAULT gen_random_uuid(),
  github_repository_id bigint UNIQUE CHECK(github_repository_id>0),
  template_repository_id bigint CHECK(template_repository_id>0),
