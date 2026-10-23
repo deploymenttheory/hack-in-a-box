@@ -50,6 +50,7 @@ test('applicant progresses from waitlist to offer, corrects answers and withdraw
   await expect(page.getByText('Your competitor place is confirmed.')).toBeVisible()
   await page.getByRole('button', { name: 'Review or correct answers' }).click()
   await page.getByLabel('What would you like to learn? (required)').fill('Accessible collaboration')
+  await page.getByLabel('What would you like to learn? (required)').press('Enter'); expect(answer).toBe('Teamwork')
   await page.getByRole('button', { name: 'Review corrected answers', exact: true }).click()
   await page.getByRole('button', { name: 'Save corrected answers' }).click()
   await expect.poll(() => answer).toBe('Accessible collaboration')

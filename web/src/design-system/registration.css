@@ -1,4 +1,7 @@
 @layer components {
+ .fleet-registration-workspace > a { display: inline-flex; align-items: center; gap: var(--space-2); }
+ .fleet-application-chooser { max-width: 52rem; }
+ .fleet-application-chooser > h2 { font-size: var(--text-section); font-weight: var(--weight-emphasis); margin-block: var(--space-4); }
  .fleet-registration-workspace { max-width: 76rem; margin-inline: auto; }
  .fleet-admission-section { padding-block: var(--space-6); border-top: 1px solid var(--border); }
  .fleet-admission-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }

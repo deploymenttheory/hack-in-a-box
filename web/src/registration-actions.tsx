@@ -56,6 +56,7 @@ function AnswerCorrection({ eventID, registrationID, response, read, paused, onL
   const command = useAdmissionCommand(identity.person.id + ':' + identity.draft_scope + ':' + eventID + ':' + registrationID + ':answers')
   useEffect(() => { onLocked(command.blocked); return () => onLocked(false) }, [command.blocked, onLocked])
   async function save() {
+    if (!review || command.blocked || paused) return
     const expected = response.revision, captured = Object.fromEntries(visibleFields(response.definition, answers).filter(field => field.id in answers).map(field => [field.id, structuredClone(answers[field.id])]))
     await command.run({ label: 'Save corrected answers', resource: registrationID, revision: expected }, async () => {
       const result = unwrap(await api.PUT('/api/v1/events/{event_id}/registrations/{registration_id}/response', { params: { path: { event_id: eventID, registration_id: registrationID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': '"' + expected + '"' } }, body: captured }))
