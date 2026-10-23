@@ -88,17 +88,18 @@ func (s Service) Dashboard(ctx context.Context, actor, eventID, id uuid.UUID) (D
 		for _, person := range current {
 			eligible[person] = true
 		}
+		at := s.now()
 		out = Dashboard{
 			Configuration:       cfg,
 			CanManage:           e.WritesAllowed,
 			RetainedInvitations: len(invites),
 			SubmittedResponses:  len(responses),
-			ObservedAt:          s.now(),
+			ObservedAt:          at,
 			ResponseVisibility:  ResponseVisibility,
 		}
 		out.CanReviewReport = e.WritesAllowed && cfg.PublishedAt != nil &&
-			!s.now().Before(cfg.Definition.ClosesAt) &&
-			!s.now().Before(dates.LiveEnd)
+			!at.Before(cfg.Definition.ClosesAt) &&
+			!at.Before(dates.LiveEnd)
 		out.Timezone = dates.Timezone
 		out.EventRevision = e.Revision
 

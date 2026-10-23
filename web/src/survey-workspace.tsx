@@ -9,7 +9,7 @@ import { SurveyPrivateResponses, SurveyReportReview } from './survey-review'
 import { SurveyInvitations } from './survey-invitations'
 import { SurveyComparison } from './survey-comparison'
 import { localDate } from './event-time'
-import type { SurveyConfiguration, SurveyDashboard } from './survey-context'
+import { nativeDenied, type SurveyConfiguration, type SurveyDashboard } from './survey-context'
 
 export function SurveyManagePage() {
   const { eventId, surveyId } = useParams({ strict: false }) as { eventId: string; surveyId: string }, identity = useIdentity()
@@ -21,20 +21,25 @@ function Manage({ eventId, surveyId }: { eventId: string; surveyId: string }) {
   const event = useQuery({ queryKey: [...key, 'event'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}', { params: { path: { event_id: eventId } } })) })
   const dashboard = useQuery({ queryKey: [...key, 'dashboard'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/surveys/{survey_id}/dashboard', { params: { path: { event_id: eventId, survey_id: surveyId } } })) })
   useEffect(() => () => { cache.removeQueries({ queryKey: key }) }, [cache, key])
-  const error = denied || event.error || dashboard.error
+  const error = denied || (nativeDenied(event.error) ? event.error : undefined) || (nativeDenied(dashboard.error) ? dashboard.error : undefined)
+  const networkError = event.error || dashboard.error
   useEffect(() => { if (error) cache.removeQueries({ queryKey: key }) }, [cache, key, error])
   function deny(error: unknown) { setDenied(error); cache.removeQueries({ queryKey: ['private', identity.person.id, eventId] }) }
   function receive(configuration: SurveyConfiguration) { cache.setQueryData([...key, 'dashboard'], (value: SurveyDashboard | undefined) => value && ({ ...value, configuration })); void dashboard.refetch() }
   if (error) return <Failure error={error} retry={() => { setDenied(undefined); void event.refetch(); void dashboard.refetch() }} />
-  if (event.isPending || dashboard.isPending || !dashboard.isFetchedAfterMount) return <Loading />
+  if (!event.data || !dashboard.data) return networkError ? <Failure error={networkError} retry={() => { void event.refetch(); void dashboard.refetch() }} /> : <Loading />
   const current = dashboard.data, configuration = current.configuration
   const sections = ['overview', 'questions', 'invitations', 'restricted responses', 'reviewed report', 'compare editions']
   return <section className="workspace survey-workspace survey-private"><Link to="/events/$eventId/surveys" params={{ eventId }}>← Surveys and feedback</Link><p className="eyebrow">{event.data.name} · Current organisers only</p><h1>{configuration.definition.form.name}</h1><p>{current.response_visibility}</p>{!current.can_manage && <p className="notice">This event is read-only. Unsaved editing state is cleared; authorised history remains available until its privacy deadline.</p>}
+    {!!networkError && <p role="alert">Current survey authority could not be refreshed. Local drafts and retry identities remain in this page; writes are paused until a successful refresh.</p>}
+    <button onClick={() => { void event.refetch(); void dashboard.refetch() }}>Refresh survey authority</button>
     <nav className="tabs" aria-label="Survey sections">{sections.map(section => <button key={section} aria-current={tab === section ? 'page' : undefined} onClick={() => { if (!dirty || window.confirm('Leave unsaved survey text or an uncertain operation? The private page state and retained retry command will be cleared.')) { setTab(section); setDirty(false) } }}>{section[0].toUpperCase() + section.slice(1)}</button>)}</nav>
+    <fieldset disabled={!!networkError} className="survey-network-scope">
     {tab === 'questions' ? <SurveyAuthoring key={`${surveyId}:${current.can_manage}`} event={event.data} initial={configuration} writable={current.can_manage} onDirty={setDirty} receive={receive} deny={deny} /> : tab === 'restricted responses' ? <SurveyPrivateResponses timezone={event.data.configuration.timezone} eventId={eventId} configuration={configuration} deny={deny} /> : tab === 'reviewed report' ? <SurveyReportReview timezone={event.data.configuration.timezone} eventId={eventId} configuration={configuration} writable={current.can_manage && current.can_review_report} onDirty={setDirty} deny={deny} /> : tab === 'invitations' ? <SurveyInvitations event={event.data} configuration={configuration} writable={current.can_manage} onDirty={setDirty} deny={deny} /> : tab === 'compare editions' ? <SurveyComparison event={event.data} configuration={configuration} deny={deny} /> : <>
       <SurveyParticipation dashboard={current} /><section><h2>Configured objectives and success measures</h2><p>Definition references stay fixed. Baselines and targets are planning inputs, not achieved outcomes. Missing values are unknown and no monetary ROI is calculated.</p>{configuration.definition.measures.length === 0 ? <p>No success measure is linked to this questionnaire. This does not mean zero achievement.</p> : configuration.definition.measures.map(measure => <ObjectiveMeasure key={`${measure.question_id}:${measure.measure.measure_id}`} eventId={eventId} measure={measure} />)}</section>
       <p><Link to="/events/$eventId/surveys/$surveyId/results" params={{ eventId, surveyId }}>Open the separately published, suppressed report</Link></p>
     </>}
+    </fieldset>
   </section>
 }
 export function SurveyParticipation({ dashboard }: { dashboard: SurveyDashboard }) {
@@ -56,10 +61,12 @@ function Create({ eventId, fromEvent, fromSurvey }: { eventId: string; fromEvent
   const event = useQuery({ queryKey: [...privateKey(identity.person.id, eventId, 'new-survey-event'), identity.draft_scope], gcTime: 0, retry: false, refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}', { params: { path: { event_id: eventId } } })) })
   const permission = useQuery({ queryKey: [...privateKey(identity.person.id, eventId, 'new-survey-authority'), identity.draft_scope], gcTime: 0, retry: false, refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/surveys/configurations', { params: { path: { event_id: eventId }, query: { limit: 1 } } })) })
   const source = useQuery({ queryKey: [...privateKey(identity.person.id, fromEvent ?? eventId, 'survey-question-copy-source'), identity.draft_scope, fromSurvey], gcTime: 0, retry: false, enabled: !!fromEvent && !!fromSurvey, refetchOnWindowFocus: 'always', refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/surveys/{survey_id}/configuration', { params: { path: { event_id: fromEvent!, survey_id: fromSurvey! } } })) })
-  if (denied || event.error || permission.error || source.error) return <Failure error={denied || event.error || permission.error || source.error} />
-  if (event.isPending || permission.isPending || !!fromEvent && !!fromSurvey && source.isPending) return <Loading />
+  const networkError = event.error || permission.error || source.error
+  const denial = denied || [event.error, permission.error, source.error].find(nativeDenied)
+  if (denial) return <Failure error={denial} />
+  if (!event.data || !permission.data || !!fromEvent && !!fromSurvey && !source.data) return networkError ? <Failure error={networkError} retry={() => { void event.refetch(); void permission.refetch(); if (fromSurvey) void source.refetch() }} /> : <Loading />
   if (!permission.data.can_manage) return <section className="workspace survey-workspace"><h1>Survey creation is unavailable</h1><p>Current native authority does not permit creating a survey. No unsent draft is retained.</p></section>
-  return <section className="workspace survey-workspace"><Link to="/events/$eventId/surveys" params={{ eventId }}>← Surveys and feedback</Link><h1>Create post-event survey</h1><NewSurveyEditor key={permission.data.can_manage.toString()} event={event.data} configuration={configuration} source={source.data} crossEdition={fromEvent !== eventId} receive={setConfiguration} deny={setDenied} />{configuration && <Link className="primary-link" to="/events/$eventId/surveys/$surveyId/manage" params={{ eventId, surveyId: configuration.id }}>Open saved survey workspace</Link>}</section>
+  return <section className="workspace survey-workspace"><Link to="/events/$eventId/surveys" params={{ eventId }}>← Surveys and feedback</Link><h1>Create post-event survey</h1>{!!networkError && <p role="alert">Current authority could not be refreshed. The local draft remains in this page; writes are paused.</p>}<button onClick={() => { void event.refetch(); void permission.refetch(); if (fromSurvey) void source.refetch() }}>Refresh survey authority</button><fieldset disabled={!!networkError} className="survey-network-scope"><NewSurveyEditor key={permission.data.can_manage.toString()} event={event.data} configuration={configuration} source={source.data} crossEdition={fromEvent !== eventId} receive={setConfiguration} deny={setDenied} /></fieldset>{configuration && <Link className="primary-link" to="/events/$eventId/surveys/$surveyId/manage" params={{ eventId, surveyId: configuration.id }}>Open saved survey workspace</Link>}</section>
 }
 function NewSurveyEditor({ event, configuration, source, crossEdition, receive, deny }: { event: EventRecord; configuration?: SurveyConfiguration; source?: SurveyConfiguration; crossEdition: boolean; receive: (value: SurveyConfiguration) => void; deny: (error: unknown) => void }) {
   const identity = useIdentity(), [initial] = useState<SurveyConfiguration>(() => {
