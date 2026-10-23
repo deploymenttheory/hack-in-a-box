@@ -48,7 +48,18 @@ explicit zero versus unknown, rejected fabricated achieved fields and inactive
 session denial. Pure template/model tests cover ID remapping, owner clearing,
 independent values and bounded exact decimal parsing.
 
-The schema/queries currently remain provisional outside Goose, compiled through
-an isolated temporary sqlc configuration. Concrete normal migration numbering,
-ordered preservation/guarded rollback, canonical generated-query integration and
-final full integration gates are required before this work becomes a PR.
+Normal migration39 follows the concrete schema38 delivery-history source, after
+schema37 moderation. The temporary query package has been removed; canonical
+SQL/Go/TypeScript generation owns these endpoints. A populated38→39 upgrade
+preserves every existing public table byte for byte (apart from Goose's own
+migration ledger), including real retained content and configuration. Empty39
+rollback is supported; rollback with objective history is deliberately blocked
+at39, and tests restore latest after the explicit preservation boundary.
+
+Current affected real PostgreSQL/race suites pass: objectives8.406s,
+templates10.247s, content19.697s, authenticated HTTP118.932s and actual shared
+runtime12.923s. Dedicated actual38→39/guarded/empty rollback checks pass4.699s.
+Both frontend builds and web lint passed before canonical schema integration;
+final parity/lint/compose verification and exact-head CI remain required. The
+final branch must drop temporary37/38 ancestry onto actual merged main before
+merge; prerequisite branches are not themselves evidence of merged schema.

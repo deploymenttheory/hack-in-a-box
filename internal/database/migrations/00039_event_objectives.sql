@@ -1,5 +1,4 @@
--- Provisional ordered migration body. Move into the normal migrations directory
--- with its concrete readiness-order number before integration/PR verification.
+-- Normal ordered upgrade after the concrete schema38 delivery-history source.
 -- +goose Up
 CREATE TABLE event_objectives (
  event_id uuid NOT NULL REFERENCES events(id),

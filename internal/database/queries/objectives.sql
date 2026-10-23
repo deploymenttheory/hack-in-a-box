@@ -1,4 +1,3 @@
--- Provisional sqlc queries: move into database/queries with the concrete ordered schema.
 -- name: ObjectiveHead :one
 SELECT * FROM event_objectives WHERE event_id=$1 AND id=$2;
 

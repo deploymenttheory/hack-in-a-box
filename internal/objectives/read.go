@@ -11,7 +11,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	oq "github.com/deploymenttheory/hack-in-a-box/internal/objectives/objectivequery"
 )
 
 func (s Service) List(
@@ -28,10 +27,10 @@ func (s Service) List(
 		if err != nil {
 			return err
 		}
-		q := oq.New(tx)
+		q := dbgen.New(tx)
 		rows, err := q.ObjectiveHeads(
 			ctx,
-			oq.ObjectiveHeadsParams{EventID: eventID, Cursor: cursor, PageSize: limit + 1},
+			dbgen.ObjectiveHeadsParams{EventID: eventID, Cursor: cursor, PageSize: limit + 1},
 		)
 		if err != nil {
 			return fmt.Errorf("list objective heads: %w", err)
@@ -77,10 +76,10 @@ func (s Service) History(
 		if _, err := authorize(ctx, tx, actor, eventID, false); err != nil {
 			return err
 		}
-		q := oq.New(tx)
+		q := dbgen.New(tx)
 		if _, err := q.ObjectiveHead(
 			ctx,
-			oq.ObjectiveHeadParams{EventID: eventID, ID: id},
+			dbgen.ObjectiveHeadParams{EventID: eventID, ID: id},
 		); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return access.ErrNotFound
@@ -89,7 +88,7 @@ func (s Service) History(
 		}
 		rows, err := q.ObjectiveHistory(
 			ctx,
-			oq.ObjectiveHistoryParams{
+			dbgen.ObjectiveHistoryParams{
 				EventID:       eventID,
 				ObjectiveID:   id,
 				BeforeVersion: before,
@@ -139,7 +138,7 @@ func ResolveMeasureInTransaction(
 	if _, err := authorize(ctx, tx, actor, eventID, false); err != nil {
 		return out, err
 	}
-	v, err := load(ctx, oq.New(tx), eventID, ref.Objective)
+	v, err := load(ctx, dbgen.New(tx), eventID, ref.Objective)
 	if err != nil {
 		return out, err
 	}

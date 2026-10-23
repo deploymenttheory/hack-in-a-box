@@ -13,7 +13,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	oq "github.com/deploymenttheory/hack-in-a-box/internal/objectives/objectivequery"
 )
 
 // Disclosure selects an exact immutable objective snapshot and its explicitly
@@ -77,18 +76,18 @@ func ValidateDisclosuresInTransaction(
 			return access.ErrInvalid
 		}
 		seen[ref.Objective.ID] = true
-		v, err := load(ctx, oq.New(tx), eventID, ref.Objective)
+		v, err := load(ctx, dbgen.New(tx), eventID, ref.Objective)
 		if err != nil {
 			return err
 		}
-		head, err := oq.New(tx).
-			ObjectiveHead(ctx, oq.ObjectiveHeadParams{EventID: eventID, ID: ref.Objective.ID})
+		head, err := dbgen.New(tx).
+			ObjectiveHead(ctx, dbgen.ObjectiveHeadParams{EventID: eventID, ID: ref.Objective.ID})
 		if err != nil {
 			return fmt.Errorf("read objective disclosure head: %w", err)
 		}
 		current, err := load(
 			ctx,
-			oq.New(tx),
+			dbgen.New(tx),
 			eventID,
 			Reference{ID: head.ID, Version: head.CurrentVersion},
 		)
@@ -167,7 +166,7 @@ func (s Service) Public(
 		if selected == nil {
 			return access.ErrNotFound
 		}
-		v, err := load(ctx, oq.New(tx), eventID, ref)
+		v, err := load(ctx, dbgen.New(tx), eventID, ref)
 		if err != nil {
 			return err
 		}

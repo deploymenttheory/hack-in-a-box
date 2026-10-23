@@ -16,7 +16,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	oq "github.com/deploymenttheory/hack-in-a-box/internal/objectives/objectivequery"
 )
 
 type (
@@ -93,11 +92,16 @@ func authorize(
 	return row, nil
 }
 
-func load(ctx context.Context, q *oq.Queries, eventID uuid.UUID, ref Reference) (Version, error) {
+func load(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	ref Reference,
+) (Version, error) {
 	var out Version
 	row, err := q.ObjectiveVersion(
 		ctx,
-		oq.ObjectiveVersionParams{EventID: eventID, ObjectiveID: ref.ID, Version: ref.Version},
+		dbgen.ObjectiveVersionParams{EventID: eventID, ObjectiveID: ref.ID, Version: ref.Version},
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return out, access.ErrNotFound
@@ -127,8 +131,8 @@ func (s Service) Read(
 		if err != nil {
 			return err
 		}
-		q := oq.New(tx)
-		head, err := q.ObjectiveHead(ctx, oq.ObjectiveHeadParams{EventID: eventID, ID: id})
+		q := dbgen.New(tx)
+		head, err := q.ObjectiveHead(ctx, dbgen.ObjectiveHeadParams{EventID: eventID, ID: id})
 		if errors.Is(err, pgx.ErrNoRows) {
 			return access.ErrNotFound
 		}
@@ -165,8 +169,8 @@ func (s Service) Change(
 		if _, err := authorize(ctx, tx, actor, eventID, true); err != nil {
 			return err
 		}
-		oqx := oq.New(tx)
-		head, err := oqx.ObjectiveHead(ctx, oq.ObjectiveHeadParams{EventID: eventID, ID: id})
+		oqx := dbgen.New(tx)
+		head, err := oqx.ObjectiveHead(ctx, dbgen.ObjectiveHeadParams{EventID: eventID, ID: id})
 		exists := err == nil
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("read objective write base: %w", err)
@@ -209,7 +213,7 @@ func (s Service) Change(
 		if !exists {
 			if err = oqx.CreateObjectiveHead(
 				ctx,
-				oq.CreateObjectiveHeadParams{EventID: eventID, ID: id},
+				dbgen.CreateObjectiveHeadParams{EventID: eventID, ID: id},
 			); err != nil {
 				return fmt.Errorf("create objective identity: %w", err)
 			}
@@ -217,7 +221,7 @@ func (s Service) Change(
 		now := s.now()
 		if err = oqx.AppendObjectiveVersion(
 			ctx,
-			oq.AppendObjectiveVersionParams{
+			dbgen.AppendObjectiveVersionParams{
 				EventID:     eventID,
 				ObjectiveID: id,
 				Version:     next,
@@ -232,7 +236,7 @@ func (s Service) Change(
 		}
 		if err = oqx.AdvanceObjectiveHead(
 			ctx,
-			oq.AdvanceObjectiveHeadParams{EventID: eventID, ID: id, CurrentVersion: next},
+			dbgen.AdvanceObjectiveHeadParams{EventID: eventID, ID: id, CurrentVersion: next},
 		); err != nil {
 			return fmt.Errorf("advance objective head: %w", err)
 		}

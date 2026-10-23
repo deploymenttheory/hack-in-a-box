@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
-	oq "github.com/deploymenttheory/hack-in-a-box/internal/objectives/objectivequery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
 // SnapshotInTransaction copies active planning configuration by value. It cannot
@@ -24,12 +24,12 @@ func SnapshotInTransaction(
 	if _, err := authorize(ctx, tx, actor, eventID, false); err != nil {
 		return out, err
 	}
-	q := oq.New(tx)
+	q := dbgen.New(tx)
 	cursor := uuid.Nil
 	for {
 		rows, err := q.ObjectiveHeads(
 			ctx,
-			oq.ObjectiveHeadsParams{EventID: eventID, Cursor: cursor, PageSize: 100},
+			dbgen.ObjectiveHeadsParams{EventID: eventID, Cursor: cursor, PageSize: 100},
 		)
 		if err != nil {
 			return nil, fmt.Errorf("read objective configuration snapshot: %w", err)
@@ -62,7 +62,7 @@ func (s Service) ImportInTransaction(
 	if _, err := authorize(ctx, tx, actor, eventID, true); err != nil {
 		return err
 	}
-	q := oq.New(tx)
+	q := dbgen.New(tx)
 	for _, config := range configs {
 		if config.ID == uuid.Nil || config.Definition.OwnerID != nil {
 			return access.ErrInvalid
@@ -76,13 +76,13 @@ func (s Service) ImportInTransaction(
 		}
 		if err = q.CreateObjectiveHead(
 			ctx,
-			oq.CreateObjectiveHeadParams{EventID: eventID, ID: config.ID},
+			dbgen.CreateObjectiveHeadParams{EventID: eventID, ID: config.ID},
 		); err != nil {
 			return fmt.Errorf("create cloned objective: %w", err)
 		}
 		if err = q.AppendObjectiveVersion(
 			ctx,
-			oq.AppendObjectiveVersionParams{
+			dbgen.AppendObjectiveVersionParams{
 				EventID:     eventID,
 				ObjectiveID: config.ID,
 				Version:     1,

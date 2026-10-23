@@ -442,6 +442,12 @@ type EventNotice struct {
 	CreatedAt        time.Time
 }
 
+type EventObjective struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	CurrentVersion int64
+}
+
 type EventPrivacy struct {
 	EventID       uuid.UUID
 	RetentionDays int32
@@ -841,6 +847,17 @@ type ModerationHuddleVersion struct {
 	ActorID   uuid.UUID
 	Reason    string
 	ChangedAt time.Time
+}
+
+type ObjectiveVersion struct {
+	EventID     uuid.UUID
+	ObjectiveID uuid.UUID
+	Version     int64
+	Definition  []byte
+	Retired     bool
+	Reason      string
+	ActorID     uuid.UUID
+	CreatedAt   time.Time
 }
 
 type Operation struct {

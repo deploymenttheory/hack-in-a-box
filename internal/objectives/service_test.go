@@ -2,9 +2,7 @@ package objectives
 
 import (
 	"errors"
-	"os"
 	"slices"
-	"strings"
 	"sync"
 	"testing"
 
@@ -16,16 +14,7 @@ import (
 
 func TestObjectivesNativeVersionsIsolationCurrentAuthorityAndConcurrentRevision(t *testing.T) {
 	pool := testdb.New(t, true)
-	schema, err := os.ReadFile("schema.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(
-		t.Context(),
-		strings.Split(string(schema), "-- +goose Down")[0],
-	); err != nil {
-		t.Fatal(err)
-	}
+
 	owner := testdb.Person(t, pool)
 	stranger := testdb.Person(t, pool)
 	eventID := testdb.Event(t, pool, owner.ID)

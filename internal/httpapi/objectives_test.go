@@ -3,7 +3,6 @@ package httpapi
 import (
 	"encoding/json"
 	"log/slog"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -24,16 +23,7 @@ func TestObjectivesHTTPPrivateConfigurationVersionsAndRejectedResultClaims(t *te
 	if err := database.Migrate(t.Context(), pool, 0); err != nil {
 		t.Fatal(err)
 	}
-	schema, err := os.ReadFile("../objectives/schema.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(
-		t.Context(),
-		strings.Split(string(schema), "-- +goose Down")[0],
-	); err != nil {
-		t.Fatal(err)
-	}
+
 	native := objectives.Service{Pool: pool, Clock: func() time.Time { return f.now }}
 	f.router = NewRouter(
 		f.cfg,
@@ -63,7 +53,7 @@ func TestObjectivesHTTPPrivateConfigurationVersionsAndRejectedResultClaims(t *te
 		t.Fatal("planning response cacheable")
 	}
 	var view objectives.View
-	if err = json.Unmarshal(saved.Body.Bytes(), &view); err != nil {
+	if err := json.Unmarshal(saved.Body.Bytes(), &view); err != nil {
 		t.Fatal(err)
 	}
 	if view.Reference.Version != 1 || view.Definition.Measures[0].Baseline != nil ||

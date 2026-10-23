@@ -3,7 +3,6 @@ package objectives_test
 import (
 	"encoding/json"
 	"errors"
-	"os"
 	"strings"
 	"testing"
 
@@ -17,16 +16,7 @@ import (
 
 func TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion(t *testing.T) {
 	pool := testdb.New(t, true)
-	schema, err := os.ReadFile("schema.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(
-		t.Context(),
-		strings.Split(string(schema), "-- +goose Down")[0],
-	); err != nil {
-		t.Fatal(err)
-	}
+
 	owner, reader, outsider := testdb.Person(
 		t,
 		pool,
@@ -38,7 +28,7 @@ func TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion(t *testi
 		pool,
 	)
 	eventID := testdb.Event(t, pool, owner.ID)
-	if _, err = pool.Exec(
+	if _, err := pool.Exec(
 		t.Context(),
 		"INSERT INTO event_memberships(event_id,person_id,role,active) VALUES($1,$2,'logistics',true)",
 		eventID,
