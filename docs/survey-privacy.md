@@ -119,3 +119,13 @@ each portal (admin18.1s, participant19.0s), and both surfaces build. Actual
 composed HTTP authority passes8.676s, app runtime4.736s and populated39→40 native
 preservation3.538s. Later actual-main restacks still require explicit composition
 review and fresh CI before merge.
+
+The editing workspace's typed fixture exposed a generated nullable-reference
+contract defect before merge: an unanswered native survey became a fabricated
+revision-zero response in the HTTP projection. The authenticated HTTP regression
+reproduces that failure. Nullable survey response, optional definition and
+unlinked question-measure references now use the established nullable/allOf
+pattern, preserving JSON null in both generated clients. The expanded actual
+HTTP journey passes4.070s, including an empty own response and deliberately
+published suppressed report with null measure provenance/counts. Both portals
+still build. No missing response or measure is presented as a real zero value.

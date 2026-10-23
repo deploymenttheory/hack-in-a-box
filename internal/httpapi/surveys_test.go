@@ -98,6 +98,9 @@ func TestSurveyHTTPPrivateResponsesNativePrivacyErasureAndCurrentAuthority(t *te
 	if err := json.Unmarshal(read.Body.Bytes(), &own); err != nil || own.Timezone != f.c.Timezone {
 		t.Fatal("survey must use its event timezone", own.Timezone, f.c.Timezone, err)
 	}
+	if own.Response != nil || !strings.Contains(read.Body.String(), `"response":null`) {
+		t.Fatal("unanswered survey must remain null, never a fabricated revision-zero response", read.Body.String())
+	}
 	if !strings.Contains(read.Header().Get("Cache-Control"), "no-store") ||
 		!strings.Contains(read.Body.String(), surveys.ResponseVisibility) {
 		t.Fatal("missing private response contract")
@@ -161,6 +164,32 @@ func TestSurveyHTTPPrivateResponsesNativePrivacyErasureAndCurrentAuthority(t *te
 	f.expect(closed, 200)
 	if !strings.Contains(closed.Body.String(), `"can_respond":false`) {
 		t.Fatal("closed reader still offers writes")
+	}
+	// Exercise the generated HTTP report DTO, not just the native aggregate:
+	// absent measure provenance and suppressed counts must remain JSON null.
+	reviewID := uuid.New()
+	for _, action := range []string{"review_text", "approve", "publish"} {
+		expected := int64(1)
+		if action == "review_text" {
+			expected = 0
+		}
+		f.expect(f.request(f.owner, "PUT", path+"/report/review", surveys.ReportCommand{
+			Action: action, ReviewID: reviewID, ReviewedText: action == "review_text",
+		}, expected), 200)
+	}
+	released := f.request(peer, "GET", path+"/report", nil, 0)
+	f.expect(released, 200)
+	var report struct {
+		Respondents json.RawMessage `json:"respondents"`
+		Questions   []struct {
+			Measure  json.RawMessage `json:"measure"`
+			Answered json.RawMessage `json:"answered"`
+		} `json:"questions"`
+	}
+	if err := json.Unmarshal(released.Body.Bytes(), &report); err != nil ||
+		string(report.Respondents) != "null" || len(report.Questions) != 1 ||
+		string(report.Questions[0].Measure) != "null" || string(report.Questions[0].Answered) != "null" {
+		t.Fatal("absent measure and suppressed counts must remain null", released.Body.String(), err)
 	}
 	// Native privacy removal works even without an operational profile; no orphan
 	// response revision/command/invitation survives as a second private store.

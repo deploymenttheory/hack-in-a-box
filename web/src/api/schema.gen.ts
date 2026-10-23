@@ -6102,7 +6102,7 @@ export interface components {
             response_visibility: string;
             measures: components["schemas"]["SurveyQuestionMeasure"][];
             can_respond: boolean;
-            response: components["schemas"]["SurveyResponse"];
+            response: components["schemas"]["SurveyResponse"] | null;
             timezone: string;
         };
         SurveyResponseCommand: {
@@ -6115,7 +6115,7 @@ export interface components {
         SurveyCommand: {
             /** @enum {string} */
             action: "save" | "approve" | "publish" | "cancel";
-            definition?: components["schemas"]["SurveyDefinition"];
+            definition?: components["schemas"]["SurveyDefinition"] | null;
         };
         SurveyAuthoredResponse: {
             /** Format: uuid */
@@ -6143,7 +6143,7 @@ export interface components {
             answered: number | null;
             unknown: number | null;
             cells: components["schemas"]["SurveyAggregateCell"][];
-            measure: components["schemas"]["SurveyQuestionMeasure"];
+            measure: components["schemas"]["SurveyQuestionMeasure"] | null;
         };
         SurveyReport: {
             /** Format: uuid */
