@@ -106,15 +106,19 @@ func (s Service) approve(
 		at := s.now()
 		if _, err = tx.Exec(
 			ctx,
-			"UPDATE repository_access_plans SET approved_by=$2,approved_at=$3 WHERE id=$1 AND approved_at IS NULL",
+			"UPDATE repository_access_plans SET approved_by=$2,approved_at=$3,approval_reason=$4 WHERE id=$1 AND approved_at IS NULL",
 			plan.ID,
 			actor,
 			at,
+			strings.TrimSpace(command.Reason),
 		); err != nil {
 			return nil, fmt.Errorf("approve exact repository access plan: %w", err)
 		}
 		plan.ApprovedAt = &at
 		plan.ApprovedBy = &actor
+		plan.ApprovalReason = strings.TrimSpace(command.Reason)
+	} else if plan.ApprovalReason != strings.TrimSpace(command.Reason) {
+		return nil, access.ErrConflict
 	}
 	if err = s.queue(ctx, tx, q, e, r, *plan); err != nil {
 		return nil, err

@@ -71,19 +71,20 @@ type Action struct {
 	GrantID       *uuid.UUID `json:"grant_id"`
 }
 type Plan struct {
-	Reason       string     `json:"reason"`
-	ID           uuid.UUID  `json:"id"`
-	Version      int64      `json:"version"`
-	EventID      uuid.UUID  `json:"event_id"`
-	TeamID       uuid.UUID  `json:"team_id"`
-	RepositoryID int64      `json:"repository_id"`
-	Fingerprint  string     `json:"fingerprint"`
-	Members      []Member   `json:"members"`
-	Actions      []Action   `json:"actions"`
-	Flags        []Flag     `json:"flags"`
-	CreatedAt    time.Time  `json:"created_at"`
-	ApprovedAt   *time.Time `json:"approved_at"`
-	ApprovedBy   *uuid.UUID `json:"approved_by"`
+	Reason         string     `json:"reason"`
+	ApprovalReason string     `json:"approval_reason"`
+	ID             uuid.UUID  `json:"id"`
+	Version        int64      `json:"version"`
+	EventID        uuid.UUID  `json:"event_id"`
+	TeamID         uuid.UUID  `json:"team_id"`
+	RepositoryID   int64      `json:"repository_id"`
+	Fingerprint    string     `json:"fingerprint"`
+	Members        []Member   `json:"members"`
+	Actions        []Action   `json:"actions"`
+	Flags          []Flag     `json:"flags"`
+	CreatedAt      time.Time  `json:"created_at"`
+	ApprovedAt     *time.Time `json:"approved_at"`
+	ApprovedBy     *uuid.UUID `json:"approved_by"`
 }
 type Grant struct {
 	Uncertain    bool       `json:"effect_uncertain"`

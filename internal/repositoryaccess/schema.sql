@@ -11,6 +11,8 @@ CREATE TABLE repository_access_plans (
  created_at timestamptz NOT NULL DEFAULT now(),
  approved_by uuid REFERENCES people(id),
  approved_at timestamptz,
+ approval_reason text NOT NULL DEFAULT '',
+ CHECK((approved_at IS NULL AND approval_reason='') OR (approved_at IS NOT NULL AND length(btrim(approval_reason))>0)),
  CHECK((approved_by IS NULL)=(approved_at IS NULL)),
  UNIQUE(event_id,team_id,version),
  UNIQUE(id,event_id,team_id),
@@ -72,7 +74,7 @@ BEGIN
  IF TG_TABLE_NAME='repository_access_plans' THEN
   IF (NEW.id,NEW.event_id,NEW.team_id,NEW.version,NEW.fingerprint,NEW.definition,NEW.created_by,NEW.created_at) IS DISTINCT FROM
      (OLD.id,OLD.event_id,OLD.team_id,OLD.version,OLD.fingerprint,OLD.definition,OLD.created_by,OLD.created_at)
-   OR (OLD.approved_at IS NOT NULL AND (NEW.approved_by,NEW.approved_at) IS DISTINCT FROM (OLD.approved_by,OLD.approved_at))
+   OR (OLD.approved_at IS NOT NULL AND (NEW.approved_by,NEW.approved_at,NEW.approval_reason) IS DISTINCT FROM (OLD.approved_by,OLD.approved_at,OLD.approval_reason))
   THEN RAISE EXCEPTION 'repository access review history is immutable'; END IF;
  ELSIF TG_TABLE_NAME='repository_access_effects' THEN
   IF (NEW.id,NEW.plan_id,NEW.event_id,NEW.team_id,NEW.definition,NEW.created_at) IS DISTINCT FROM

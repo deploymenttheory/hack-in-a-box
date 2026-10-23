@@ -4118,6 +4118,7 @@ export interface components {
             repository_id: number;
             fingerprint: string;
             reason: string;
+            approval_reason: string;
             members: components["schemas"]["RepositoryAccessMember"][];
             actions: components["schemas"]["RepositoryAccessAction"][];
             flags: components["schemas"]["RepositoryAccessFlag"][];

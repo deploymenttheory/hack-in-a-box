@@ -17,8 +17,9 @@ func readPlan(ctx context.Context, tx pgx.Tx, eventID, teamID uuid.UUID) (*Plan,
 	var encoded []byte
 	var approvedAt *time.Time
 	var approvedBy *uuid.UUID
-	err := tx.QueryRow(ctx, `SELECT definition,approved_at,approved_by FROM repository_access_plans WHERE event_id=$1 AND team_id=$2 ORDER BY version DESC LIMIT 1`, eventID, teamID).
-		Scan(&encoded, &approvedAt, &approvedBy)
+	var approvalReason string
+	err := tx.QueryRow(ctx, `SELECT definition,approved_at,approved_by,approval_reason FROM repository_access_plans WHERE event_id=$1 AND team_id=$2 ORDER BY version DESC LIMIT 1`, eventID, teamID).
+		Scan(&encoded, &approvedAt, &approvedBy, &approvalReason)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil //nolint:nilnil // No review exists until native roster maintenance or an explicit review creates one.
 	}
@@ -31,6 +32,7 @@ func readPlan(ctx context.Context, tx pgx.Tx, eventID, teamID uuid.UUID) (*Plan,
 	}
 	out.ApprovedAt = approvedAt
 	out.ApprovedBy = approvedBy
+	out.ApprovalReason = approvalReason
 	return &out, nil
 }
 

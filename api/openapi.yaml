@@ -7405,7 +7405,7 @@ components:
     RepositoryAccessPlan:
       type: object
       additionalProperties: false
-      required: [id, version, event_id, team_id, repository_id, fingerprint, reason, members, actions, flags, created_at, approved_at, approved_by]
+      required: [id, version, event_id, team_id, repository_id, fingerprint, reason, approval_reason, members, actions, flags, created_at, approved_at, approved_by]
       properties:
         id: { type: string, format: uuid }
         version: { type: integer, format: int64 }
@@ -7414,6 +7414,7 @@ components:
         repository_id: { type: integer, format: int64 }
         fingerprint: { type: string }
         reason: { type: string }
+        approval_reason: { type: string }
         members: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessMember' } }
         actions: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessAction' } }
         flags: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessFlag' } }

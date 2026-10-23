@@ -192,6 +192,10 @@ func (s Service) Change(
 		if err != nil {
 			return err
 		}
+		metadata := audit.Metadata{}
+		if out.Receipt != nil {
+			metadata.ReferenceID = &out.Receipt.ID
+		}
 		if err = audit.Append(
 			ctx,
 			q,
@@ -201,6 +205,7 @@ func (s Service) Change(
 				TargetID: teamID,
 				Action:   audit.RepositoryAccessChanged,
 				Reason:   audit.OrganiserDecision,
+				Metadata: metadata,
 			},
 		); err != nil {
 			return wrap("audit repository access review", err)
