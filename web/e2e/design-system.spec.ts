@@ -8,6 +8,7 @@ const palettes = [
   { name: 'normal', scheme: 'light', branding: defaultBranding },
   { name: 'system dark', scheme: 'dark', branding: defaultBranding },
   { name: 'custom light', scheme: 'light', branding: { ...defaultBranding, primary: '#233c78', foreground: '#283b51', background: '#fff8e9', accent: '#ffedbb' } },
+  { name: 'custom light under dark system', scheme: 'dark', branding: { ...defaultBranding, primary: '#233c78', foreground: '#283b51', background: '#fff8e9', accent: '#ffedbb' } },
   { name: 'threshold grey', scheme: 'light', branding: { ...defaultBranding, primary: '#767676', foreground: '#767676', background: '#ffffff', accent: '#ffffee' } },
   { name: 'custom dark', scheme: 'dark', branding: { ...defaultBranding, primary: '#b1d2ff', foreground: '#eaf1ff', background: '#172238', accent: '#160f30' } },
 ] as const
@@ -19,16 +20,17 @@ for (const palette of palettes) test(`${palette.name} palette keeps registration
   const field = page.getByLabel('What would you like to learn? (required)'), submit = page.getByRole('button', { name: 'Submit application' }), select = page.getByLabel('Team preference', { exact: true })
   await expect(field).toBeVisible()
   await field.focus(); await expect(field).toBeFocused()
-  await expect(field).toHaveCSS('border-radius', '8px'); await expect(select).toHaveCSS('border-radius', '8px')
-  await expect(field).toHaveCSS('outline-style', 'solid'); await expect(field).toHaveCSS('outline-width', '3px')
+  await expect(field).toHaveCSS('border-radius', '4px'); await expect(select).toHaveCSS('border-radius', '4px')
+  await expect(field).toHaveCSS('outline-style', 'solid'); await expect(field).toHaveCSS('outline-width', '2px')
   await expect(field).toHaveCSS('transition-duration', '0s')
   expect(await contrastOf(field)).toBeGreaterThanOrEqual(4.5)
   expect(await contrastOf(field, 'border-top-color')).toBeGreaterThanOrEqual(3)
+  expect(await contrastOf(field, 'outline-color')).toBeGreaterThanOrEqual(3)
   expect(await contrastOf(select)).toBeGreaterThanOrEqual(4.5)
   expect(await contrastOf(page.locator('.theme .theme .panel p').first())).toBeGreaterThanOrEqual(4.5)
   expect(await contrastOf(submit)).toBeGreaterThanOrEqual(4.5)
   await submit.hover(); expect(await contrastOf(submit)).toBeGreaterThanOrEqual(4.5)
-  expect((await submit.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  expect((await submit.boundingBox())!.height).toBeGreaterThanOrEqual(await page.evaluate(() => matchMedia('(pointer: coarse)').matches) ? 44 : 36)
   await field.fill('A synthetic keyboard learning goal'); await select.focus(); await page.keyboard.press('ArrowDown')
   await expect(page.locator('.theme .theme').first()).toHaveCSS('--primary', palette.branding.primary)
   const localPortal = page.locator('.theme .theme [data-theme-portals]').first()
@@ -78,4 +80,31 @@ test('shared checkbox labels retain flex layout, native names and keyboard toggl
  const checkbox = page.getByRole('checkbox', { name: 'Mentoring', exact: true })
  await expect(page.locator('label.check').filter({ hasText: 'Mentoring' })).toHaveCSS('display', 'flex')
  await checkbox.focus(); await page.keyboard.press('Space'); await expect(checkbox).toBeChecked()
+})
+
+test('Fleet foundation loads a local font and explicit modes override system preference without leaving the theme scope', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
+  await mockWorkspace(page)
+  const fonts: string[] = []
+  page.on('request', request => { if (request.resourceType() === 'font') fonts.push(request.url()) })
+  await page.goto('/')
+  const scope = page.locator('.theme').first()
+  await expect(scope).toHaveCSS('background-color', 'rgb(26, 28, 33)')
+  await page.evaluate(() => document.fonts.ready)
+  expect(await page.evaluate(() => document.fonts.check('14px Inter'))).toBe(true)
+  expect(fonts.some(url => new URL(url).pathname === '/fonts/inter/InterVariable.woff2')).toBe(true)
+  expect(fonts.filter(url => new URL(url).origin !== new URL(page.url()).origin)).toEqual([])
+  await expect(page.getByRole('heading', { level: 1 }).first()).toHaveCSS('font-size', '24px')
+  await scope.evaluate(element => element.setAttribute('data-theme', 'light'))
+  await expect(scope).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await scope.evaluate(element => element.setAttribute('data-theme', 'dark'))
+  await expect(scope).toHaveCSS('background-color', 'rgb(26, 28, 33)')
+  await page.getByRole('button', { name: 'Synthetic Person', exact: true }).click()
+  const menu = page.getByRole('menu')
+  await expect(menu).toBeVisible()
+  expect(await contrastOf(page.getByRole('menuitem', { name: 'Account settings' }))).toBeGreaterThanOrEqual(4.5)
+  await expect(page.locator('[data-theme-portals]').first()).toHaveCSS('--background', '#1a1c21')
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
 })

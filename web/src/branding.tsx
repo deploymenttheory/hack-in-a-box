@@ -9,7 +9,7 @@ import { Failure, Loading } from './components/states'
 import { Button } from './components/ui/button'
 
 export type Branding = components['schemas']['TemplateBranding']
-export const defaultBranding: Branding = { primary: '#173a35', accent: '#d17c32', background: '#f8f9f5', foreground: '#173a35', assets: [] }
+export const defaultBranding: Branding = { primary: '#007e67', accent: '#007e67', background: '#ffffff', foreground: '#192147', assets: [] }
 function luminance(hex: string) {
   return [0.2126, 0.7152, 0.0722].reduce((sum, weight, i) => { const n = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255; return sum + weight * (n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4) }, 0)
 }
@@ -25,12 +25,17 @@ function brandSurface(foreground: string, background: string, amount: number) {
 // Shared, bounded render inputs for web pages and future email/display adapters.
 export function brandStyle(b: Branding): CSSProperties {
   const safe = brandingErrors(b).length ? defaultBranding : b
-  const card = brandSurface(safe.foreground, safe.background, .025)
+  const card = safe.background
   const muted = brandSurface(safe.foreground, safe.background, .06)
-  const destructive = ['#a32632', '#ffb4b5', safe.foreground].find(color => contrast(color, card) >= 4.5) ?? safe.foreground
+  const status = (colours: string[]) => colours.find(colour => [card, muted].every(surface => contrast(colour, surface) >= 4.5)) ?? safe.foreground
+  const destructive = status(['#a33049', '#ffadc0'])
+  const primaryForeground = contrast('#ffffff', safe.primary) >= 4.5 ? '#ffffff' : '#000000'
   return {
     '--primary': safe.primary,
-    '--primary-foreground': contrast('#ffffff', safe.primary) >= 4.5 ? '#ffffff' : '#000000',
+    '--primary-foreground': primaryForeground,
+    '--primary-hover': safe.primary,
+    '--link': safe.primary,
+    '--ring': safe.primary,
     '--accent': safe.accent,
     '--background': safe.background,
     '--foreground': safe.foreground,
@@ -42,9 +47,9 @@ export function brandStyle(b: Branding): CSSProperties {
     '--destructive': destructive,
     '--destructive-foreground': contrast('#ffffff', destructive) >= 4.5 ? '#ffffff' : '#000000',
     '--destructive-surface': card,
-    '--warning': safe.foreground,
+    '--warning': status(['#885900', '#f2cf83']),
     '--warning-surface': muted,
-    '--success': safe.foreground,
+    '--success': status(['#147250', '#78d7b1']),
     colorScheme: luminance(safe.background) < .18 ? 'dark' : 'light',
   } as CSSProperties
 }

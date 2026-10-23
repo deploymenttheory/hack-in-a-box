@@ -1,0 +1,28 @@
+{
+  "result": "pass",
+  "journeys": [
+    "workspace: full recovery → scoped access review → queued outcome",
+    "workspace: validation → draft saved → live review → accepted revision",
+    "workspace: known failure retains draft; unknown result uses status read",
+    "workspace: uncertain external invitation remains blocked after status read",
+    "review: full recovery → scoped access review → queued outcome",
+    "review: validation → draft saved → live review → accepted revision",
+    "review: known failure retains draft; unknown result uses status read",
+    "review: uncertain external invitation remains blocked after status read",
+    "queue: full recovery → scoped access review → queued outcome",
+    "queue: validation → draft saved → live review → accepted revision",
+    "queue: known failure retains draft; unknown result uses status read",
+    "queue: uncertain external invitation remains blocked after status read"
+  ],
+  "responsiveWidths": [
+    1024,
+    736,
+    360,
+    320
+  ],
+  "schemes": [
+    "light",
+    "dark"
+  ],
+  "browserErrors": []
+}
