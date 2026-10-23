@@ -84,6 +84,7 @@ type Configuration struct {
 }
 
 type ParticipantSurvey struct {
+	Timezone           string            `json:"timezone"`
 	ID                 uuid.UUID         `json:"id"`
 	Version            int64             `json:"version"`
 	Form               forms.Definition  `json:"form"`

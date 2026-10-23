@@ -7,7 +7,7 @@ async function prepare(page: Page) {
   await mockWorkspace(page)
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false, draft_scope: '48e4056e-ce21-4b45-8fc1-6dc7dde63572' } }))
   let allowed = true, open = true
-  const survey: components['schemas']['SurveyParticipant'] = { id: surveyID, version: 1, form: { id: surveyID, name: 'Learning after the hack', audience: 'attendee', fields: [{ id: questionID, label: 'Private explanation', type: 'text', required: false, help: 'Only you and current organisers can read this response.', choices: [] }] }, opens_at: '2027-06-21T09:00:00Z', closes_at: '2027-06-28T09:00:00Z', response_visibility: 'Responses are identifiable to current event organisers, not anonymous. Other participants cannot read your response.', measures: [], can_respond: true, response: { revision: 2, form_version: 1, answers: { [questionID]: secret }, submitted_at: '2027-06-22T09:00:00Z' } }
+  const survey: components['schemas']['SurveyParticipant'] = { id: surveyID, version: 1, timezone: 'Pacific/Auckland', form: { id: surveyID, name: 'Learning after the hack', audience: 'attendee', fields: [{ id: questionID, label: 'Private explanation', type: 'text', required: false, help: 'Only you and current organisers can read this response.', choices: [] }] }, opens_at: '2027-06-21T09:00:00Z', closes_at: '2027-06-28T09:00:00Z', response_visibility: 'Responses are identifiable to current event organisers, not anonymous. Other participants cannot read your response.', measures: [], can_respond: true, response: { revision: 2, form_version: 1, answers: { [questionID]: secret }, submitted_at: '2027-06-22T09:00:00Z' } }
   await page.route(`**/api/v1/events/${firstID}/surveys/${surveyID}`, route => allowed ? route.fulfill({ json: { ...survey, can_respond: open } }) : route.fulfill({ status: 404, json: { error: { code: 'not_found', message: 'Survey unavailable.', request_id: 'synthetic' } } }))
   const item = { id: notificationID, event_id: firstID, event_name: 'Synthetic event', label: 'Event announcement', created_at: survey.opens_at, read_at: null }
   await page.route('**/api/v1/inbox**', route => new URL(route.request().url()).pathname === '/api/v1/inbox' ? route.fulfill({ json: { items: allowed ? [item] : [], next_cursor: null, unread: allowed ? 1 : 0 } }) : route.fulfill({ json: { item, subject: 'Reviewed survey invitation', body: 'Approved invitation body remains unchanged.', format: 'text', destination: { kind: 'survey', resource_id: surveyID } } }))
@@ -22,7 +22,8 @@ test('approved invitation opens own private reader by keyboard', async ({ page }
   await expect(page.getByText('Your saved response: revision 2', { exact: false })).toBeVisible()
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>).SURVEY_PWNED)).toBeUndefined()
   expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain(secret)
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await expect(page.getByText('Opens 21 Jun 2027, 21:00 · Closes 28 Jun 2027, 21:00 · Pacific/Auckland', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
 })
 test('close retains own history while stopping response capability', async ({ page }) => {
   const state = await prepare(page); await page.clock.install(); await page.goto(path)

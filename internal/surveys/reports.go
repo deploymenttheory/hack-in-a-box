@@ -188,6 +188,13 @@ func (s Service) ChangeReport(
 		if !e.WritesAllowed {
 			return access.ErrForbidden
 		}
+		ended, err := eventEnded(e, s.now())
+		if err != nil {
+			return err
+		}
+		if !ended {
+			return access.ErrForbidden
+		}
 		snapshot, err := s.freezeReport(ctx, q, e, id)
 		if err != nil {
 			return err

@@ -94,6 +94,10 @@ func TestSurveyHTTPPrivateResponsesNativePrivacyErasureAndCurrentAuthority(t *te
 	) // staff is not silently an invited attendee
 	read := f.request(member, "GET", path, nil, 0)
 	f.expect(read, 200)
+	var own surveys.ParticipantSurvey
+	if err := json.Unmarshal(read.Body.Bytes(), &own); err != nil || own.Timezone != f.c.Timezone {
+		t.Fatal("survey must use its event timezone", own.Timezone, f.c.Timezone, err)
+	}
 	if !strings.Contains(read.Header().Get("Cache-Control"), "no-store") ||
 		!strings.Contains(read.Body.String(), surveys.ResponseVisibility) {
 		t.Fatal("missing private response contract")

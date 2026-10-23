@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -19,6 +20,27 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 )
+
+// eventEnded intersects retained survey windows with the current native event
+// end. Postponement never moves an approved survey window or rewrites history.
+func eventEnded(e dbgen.Event, at time.Time) (bool, error) {
+	var dates event.Configuration
+	if err := json.Unmarshal(e.Configuration, &dates); err != nil {
+		return false, fmt.Errorf("read survey event dates: %w", err)
+	}
+	return !dates.LiveEnd.IsZero() && !at.Before(dates.LiveEnd), nil
+}
+
+func validateOpening(e dbgen.Event, d Definition) error {
+	var dates event.Configuration
+	if err := json.Unmarshal(e.Configuration, &dates); err != nil {
+		return fmt.Errorf("read survey event dates: %w", err)
+	}
+	if d.OpensAt.Before(dates.LiveEnd) {
+		return access.ErrInvalid
+	}
+	return nil
+}
 
 func authorize(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID) error {
 	err := (access.EventPolicy{Queries: q}).Authorize(
@@ -217,6 +239,11 @@ func (s Service) Change(
 			if head.Cancelled {
 				return access.ErrConflict
 			}
+			if c.Action == "approve" || c.Action == "publish" {
+				if err = validateOpening(e, cfg.Definition); err != nil {
+					return err
+				}
+			}
 			switch c.Action {
 			case "approve":
 				if head.PublishedVersion.Valid || !cfg.Definition.ClosesAt.After(s.now()) {
@@ -301,12 +328,8 @@ func (s Service) saveVersion(
 	if !definition.ClosesAt.After(s.now()) {
 		return access.ErrInvalid
 	}
-	var dates event.Configuration
-	if err = json.Unmarshal(e.Configuration, &dates); err != nil {
-		return fmt.Errorf("read survey event dates: %w", err)
-	}
-	if definition.OpensAt.Before(dates.LiveEnd) {
-		return access.ErrInvalid
+	if err = validateOpening(e, *definition); err != nil {
+		return err
 	}
 	if err = s.resolveMeasures(ctx, tx, actor, eventID, *definition); err != nil {
 		return err

@@ -28,6 +28,8 @@ SELECT * FROM survey_invitations WHERE event_id=$1 AND survey_id=$2 ORDER BY per
 SELECT * FROM survey_invitations WHERE event_id=$1 AND person_id=$2 AND survey_id>sqlc.arg(after_id) ORDER BY survey_id LIMIT sqlc.arg(page_size);
 -- name: SurveyResponse :one
 SELECT r.* FROM survey_response_heads h JOIN survey_responses r ON r.event_id=h.event_id AND r.survey_id=h.survey_id AND r.person_id=h.person_id AND r.revision=h.revision WHERE h.event_id=$1 AND h.survey_id=$2 AND h.person_id=$3;
+-- name: SurveyResponseVersion :one
+SELECT * FROM survey_responses WHERE event_id=$1 AND survey_id=$2 AND person_id=$3 AND revision=$4;
 -- name: SurveyResponseHeadsPage :many
 SELECT * FROM survey_response_heads WHERE event_id=$1 AND survey_id=$2 AND person_id>sqlc.arg(after_person) ORDER BY person_id LIMIT sqlc.arg(page_size);
 -- name: SurveyResponseHistoryPage :many
@@ -36,8 +38,8 @@ SELECT * FROM survey_responses WHERE event_id=$1 AND survey_id=$2 AND person_id=
 SELECT r.* FROM survey_response_heads h JOIN survey_responses r ON r.event_id=h.event_id AND r.survey_id=h.survey_id AND r.person_id=h.person_id AND r.revision=h.revision WHERE h.event_id=$1 AND h.survey_id=$2 ORDER BY h.person_id LIMIT 10001;
 -- name: SetSurveyResponseHead :exec
 INSERT INTO survey_response_heads(event_id,survey_id,person_id,revision) VALUES($1,$2,$3,$4) ON CONFLICT(event_id,survey_id,person_id) DO UPDATE SET revision=EXCLUDED.revision;
--- name: InsertSurveyResponse :exec
-INSERT INTO survey_responses(event_id,survey_id,person_id,revision,form_version,answers,submitted_at) VALUES($1,$2,$3,$4,$5,$6,$7);
+-- name: InsertSurveyResponse :one
+INSERT INTO survey_responses(event_id,survey_id,person_id,revision,form_version,answers,submitted_at) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *;
 -- name: SurveyCommand :one
 SELECT * FROM survey_commands WHERE event_id=$1 AND survey_id=$2 AND person_id=$3 AND command_id=$4;
 -- name: InsertSurveyCommand :exec

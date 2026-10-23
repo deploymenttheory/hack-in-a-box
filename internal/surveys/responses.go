@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 )
 
@@ -72,7 +73,7 @@ func decodeResponse(row dbgen.SurveyResponse) (Response, error) {
 	out := Response{
 		Revision:    row.Revision,
 		FormVersion: row.FormVersion,
-		SubmittedAt: row.SubmittedAt,
+		SubmittedAt: row.SubmittedAt.UTC(),
 		Answers:     forms.Answers{},
 	}
 	if err := json.Unmarshal(row.Answers, &out.Answers); err != nil {
@@ -121,7 +122,12 @@ func (s Service) ReadOwn(
 		if err != nil {
 			return err
 		}
+		var dates event.Configuration
+		if err = json.Unmarshal(e.Configuration, &dates); err != nil {
+			return fmt.Errorf("read survey event timezone: %w", err)
+		}
 		out = ParticipantSurvey{
+			Timezone:           dates.Timezone,
 			ID:                 id,
 			Version:            cfg.Version,
 			Form:               cfg.Definition.Form,
@@ -130,6 +136,7 @@ func (s Service) ReadOwn(
 			ResponseVisibility: ResponseVisibility,
 			Measures:           cfg.Definition.Measures,
 			CanRespond: e.WritesAllowed && !head.Cancelled &&
+				!dates.LiveEnd.IsZero() && !s.now().Before(dates.LiveEnd) &&
 				!s.now().Before(cfg.Definition.OpensAt) &&
 				s.now().Before(cfg.Definition.ClosesAt),
 			Response: response,
@@ -179,7 +186,11 @@ func (s Service) Respond(
 		if err != nil {
 			return err
 		}
-		if head.Cancelled || s.now().Before(cfg.Definition.OpensAt) ||
+		ended, err := eventEnded(e, s.now())
+		if err != nil {
+			return err
+		}
+		if !ended || head.Cancelled || s.now().Before(cfg.Definition.OpensAt) ||
 			!s.now().Before(cfg.Definition.ClosesAt) {
 			return access.ErrForbidden
 		}
@@ -208,15 +219,17 @@ func (s Service) Respond(
 			if previous.PayloadDigest != digest {
 				return access.ErrConflict
 			}
-			r, readErr := ownResponse(ctx, q, eventID, id, actor)
-			if readErr != nil {
-				return readErr
-			}
-			if r == nil {
+			retained, readErr := q.SurveyResponseVersion(ctx, dbgen.SurveyResponseVersionParams{
+				EventID: eventID, SurveyID: id, PersonID: actor, Revision: previous.ResultRevision,
+			})
+			if errors.Is(readErr, pgx.ErrNoRows) {
 				return access.ErrConflict
 			}
-			out = *r
-			return nil
+			if readErr != nil {
+				return fmt.Errorf("read exact survey command receipt: %w", readErr)
+			}
+			out, readErr = decodeResponse(retained)
+			return readErr
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("read survey command identity: %w", err)
@@ -248,7 +261,7 @@ func (s Service) Respond(
 		if err != nil {
 			return fmt.Errorf("encode survey answers: %w", err)
 		}
-		if err = q.InsertSurveyResponse(
+		retained, err := q.InsertSurveyResponse(
 			ctx,
 			dbgen.InsertSurveyResponseParams{
 				EventID:     eventID,
@@ -259,7 +272,8 @@ func (s Service) Respond(
 				Answers:     body,
 				SubmittedAt: s.now(),
 			},
-		); err != nil {
+		)
+		if err != nil {
 			return fmt.Errorf("retain authored survey response: %w", err)
 		}
 		if err = q.InsertSurveyCommand(
@@ -278,13 +292,8 @@ func (s Service) Respond(
 		if err = record(ctx, q, actor, eventID, id, audit.SurveyResponded, expected); err != nil {
 			return err
 		}
-		out = Response{
-			Revision:    version,
-			FormVersion: cfg.Version,
-			Answers:     checked.Answers,
-			SubmittedAt: s.now(),
-		}
-		return nil
+		out, err = decodeResponse(retained)
+		return err
 	})
 	if err != nil {
 		return out, fmt.Errorf("save survey response: %w", err)

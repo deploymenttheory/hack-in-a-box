@@ -255,8 +255,8 @@ func (q *Queries) InsertSurveyReportSnapshot(ctx context.Context, arg InsertSurv
 	return err
 }
 
-const insertSurveyResponse = `-- name: InsertSurveyResponse :exec
-INSERT INTO survey_responses(event_id,survey_id,person_id,revision,form_version,answers,submitted_at) VALUES($1,$2,$3,$4,$5,$6,$7)
+const insertSurveyResponse = `-- name: InsertSurveyResponse :one
+INSERT INTO survey_responses(event_id,survey_id,person_id,revision,form_version,answers,submitted_at) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING event_id, survey_id, person_id, revision, form_version, answers, submitted_at
 `
 
 type InsertSurveyResponseParams struct {
@@ -269,8 +269,8 @@ type InsertSurveyResponseParams struct {
 	SubmittedAt time.Time
 }
 
-func (q *Queries) InsertSurveyResponse(ctx context.Context, arg InsertSurveyResponseParams) error {
-	_, err := q.db.Exec(ctx, insertSurveyResponse,
+func (q *Queries) InsertSurveyResponse(ctx context.Context, arg InsertSurveyResponseParams) (SurveyResponse, error) {
+	row := q.db.QueryRow(ctx, insertSurveyResponse,
 		arg.EventID,
 		arg.SurveyID,
 		arg.PersonID,
@@ -279,7 +279,17 @@ func (q *Queries) InsertSurveyResponse(ctx context.Context, arg InsertSurveyResp
 		arg.Answers,
 		arg.SubmittedAt,
 	)
-	return err
+	var i SurveyResponse
+	err := row.Scan(
+		&i.EventID,
+		&i.SurveyID,
+		&i.PersonID,
+		&i.Revision,
+		&i.FormVersion,
+		&i.Answers,
+		&i.SubmittedAt,
+	)
+	return i, err
 }
 
 const insertSurveyVersion = `-- name: InsertSurveyVersion :exec
@@ -957,6 +967,37 @@ func (q *Queries) SurveyResponseHistoryPage(ctx context.Context, arg SurveyRespo
 		return nil, err
 	}
 	return items, nil
+}
+
+const surveyResponseVersion = `-- name: SurveyResponseVersion :one
+SELECT event_id, survey_id, person_id, revision, form_version, answers, submitted_at FROM survey_responses WHERE event_id=$1 AND survey_id=$2 AND person_id=$3 AND revision=$4
+`
+
+type SurveyResponseVersionParams struct {
+	EventID  uuid.UUID
+	SurveyID uuid.UUID
+	PersonID uuid.UUID
+	Revision int64
+}
+
+func (q *Queries) SurveyResponseVersion(ctx context.Context, arg SurveyResponseVersionParams) (SurveyResponse, error) {
+	row := q.db.QueryRow(ctx, surveyResponseVersion,
+		arg.EventID,
+		arg.SurveyID,
+		arg.PersonID,
+		arg.Revision,
+	)
+	var i SurveyResponse
+	err := row.Scan(
+		&i.EventID,
+		&i.SurveyID,
+		&i.PersonID,
+		&i.Revision,
+		&i.FormVersion,
+		&i.Answers,
+		&i.SubmittedAt,
+	)
+	return i, err
 }
 
 const surveyVersion = `-- name: SurveyVersion :one

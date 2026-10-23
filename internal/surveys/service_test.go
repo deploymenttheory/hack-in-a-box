@@ -3,6 +3,8 @@ package surveys
 import (
 	"encoding/json"
 	"errors"
+	"maps"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -169,11 +171,22 @@ func TestFixedSurveyVersionPrivateAuthorshipEligibilityAndDuplicateResponses(t *
 		retained != 1 {
 		t.Fatal("duplicate response created another authored record", err)
 	}
+	original := input
+	original.Answers = maps.Clone(input.Answers)
 	input.CommandID = uuid.New()
 	input.Answers[f.choice.String()] = json.RawMessage(`"yes"`)
 	input.Answers[f.text.String()] = json.RawMessage(`"PRIVATE-AUTHORED-RESPONSE"`)
 	if _, err = f.s.Respond(t.Context(), f.person.ID, f.event, f.id, 1, input); err != nil {
 		t.Fatal(err)
+	}
+	replayed, err := f.s.Respond(t.Context(), f.person.ID, f.event, f.id, 0, original)
+	if err != nil || !reflect.DeepEqual(replayed, *own.Response) {
+		t.Fatal("old command must return its exact original response receipt after later edits", replayed, own.Response, err)
+	}
+	latest, err := f.s.ReadOwn(t.Context(), f.person.ID, f.event, f.id)
+	if err != nil || latest.Response == nil || latest.Response.Revision != 2 ||
+		string(latest.Response.Answers[f.choice.String()]) != `"yes"` {
+		t.Fatal("replayed old receipt must not change the latest response", latest, err)
 	}
 	if _, err = f.s.Responses(
 		t.Context(),

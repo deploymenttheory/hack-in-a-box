@@ -6103,6 +6103,7 @@ export interface components {
             measures: components["schemas"]["SurveyQuestionMeasure"][];
             can_respond: boolean;
             response: components["schemas"]["SurveyResponse"];
+            timezone: string;
         };
         SurveyResponseCommand: {
             /** Format: uuid */

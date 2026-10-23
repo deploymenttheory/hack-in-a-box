@@ -18,7 +18,9 @@ import (
 // current self/administrative authority check and event lock, or by the retention
 // worker after checking the same event privacy deadline. It retains no raw answer
 // hash, respondent mapping or command identity. Reviewed suppressed snapshots
-// are independent, immutable and contain no respondent identifiers.
+// are independent, immutable and contain no respondent identifiers. Separate
+// organiser-only audit history retains safe actors/resource IDs/actions/times;
+// this erasure does not promise removal of that participation metadata.
 func ErasePersonInTransaction(
 	ctx context.Context,
 	tx pgx.Tx,

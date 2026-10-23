@@ -148,6 +148,10 @@ func (s Service) OwnDirectory(
 		if err = s.privateCurrent(ctx, q, e); err != nil {
 			return err
 		}
+		ended, err := eventEnded(e, s.now())
+		if err != nil {
+			return err
+		}
 		rows, err := q.OwnSurveyInvitationsPage(
 			ctx,
 			dbgen.OwnSurveyInvitationsPageParams{
@@ -183,7 +187,7 @@ func (s Service) OwnDirectory(
 				Name:     cfg.Definition.Form.Name,
 				OpensAt:  cfg.Definition.OpensAt,
 				ClosesAt: cfg.Definition.ClosesAt,
-				CanRespond: e.WritesAllowed && !head.Cancelled &&
+				CanRespond: e.WritesAllowed && ended && !head.Cancelled &&
 					!s.now().Before(cfg.Definition.OpensAt) &&
 					s.now().Before(cfg.Definition.ClosesAt),
 				HasResponded: response != nil,

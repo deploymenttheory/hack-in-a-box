@@ -44,6 +44,13 @@ func (s Service) DiscoverNotificationSourcesPageInTransaction(
 	if err = s.privateCurrent(ctx, q, e); err != nil {
 		return out, nil, err
 	}
+	ended, err := eventEnded(e, s.now())
+	if err != nil {
+		return out, nil, err
+	}
+	if !ended {
+		return out, nil, nil
+	}
 	rows, err := q.SurveyOpenSourcesPage(
 		ctx,
 		dbgen.SurveyOpenSourcesPageParams{
@@ -107,6 +114,13 @@ func (s Service) ResolveInvitationAudienceInTransaction(
 	}
 	if err = s.privateCurrent(ctx, q, e); err != nil {
 		return nil, err
+	}
+	ended, err := eventEnded(e, s.now())
+	if err != nil {
+		return nil, err
+	}
+	if !ended {
+		return nil, access.ErrForbidden
 	}
 	head, cfg, err := current(ctx, q, eventID, id)
 	if err != nil {
