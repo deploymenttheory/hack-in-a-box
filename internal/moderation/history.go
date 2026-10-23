@@ -91,7 +91,7 @@ func (s Service) authorizeHistoricalSnapshot(
 			return fmt.Errorf("authorize historical independent review: %w", err)
 		}
 	}
-	if err := s.authorizeDecisionSources(ctx, tx, actor, eventID, h, true); err != nil {
+	if err := s.authorizeDecisionReader(ctx, tx, actor, eventID, h); err != nil {
 		return fmt.Errorf("authorize historical decision sources: %w", err)
 	}
 	return nil

@@ -2633,6 +2633,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/review-coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** Current authorised coordination facts; private panel access remains separate. */
+        get: operations["getReviewCoverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/review-checkpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** Current authorised coordination facts; private panel access remains separate. */
+        get: operations["getReviewCheckpoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/review-agenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** Current authorised coordination facts; private panel access remains separate. */
+        get: operations["getReviewAgenda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/judge-summary-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** Current authorised coordination facts; private panel access remains separate. */
+        get: operations["getJudgeSummaryPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5498,6 +5577,262 @@ export interface components {
             /** @enum {string} */
             action: "retry" | "cancel" | "cancel_resend" | "resolve_no_resend" | "resend_acknowledged";
             reason: string;
+        };
+        ReviewCoveragePage: {
+            /** Format: uuid */
+            event_id: string;
+            event_name: string;
+            timezone: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: date-time */
+            now: string;
+            organiser: boolean;
+            moderators: components["schemas"]["ReviewPerson"][];
+            teams: components["schemas"]["ReviewTeam"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ReviewPerson: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        ReviewTeam: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            state: string;
+            assignments: components["schemas"]["ReviewAssignment"][];
+            coverage_issues: string[];
+            output: components["schemas"]["ReviewOutputSummary"];
+            support: components["schemas"]["ReviewSupport"];
+            assessment: components["schemas"]["ReviewAssessment"];
+            agenda: components["schemas"]["ReviewHuddleSummary"][];
+            more_agenda: boolean;
+        };
+        ReviewAssignment: {
+            /** Format: uuid */
+            person_id: string;
+            name: string;
+            slot: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+        };
+        ReviewSupport: {
+            risk: string;
+            availability: string;
+            operational: components["schemas"]["ReviewOperationalStatus"];
+            actions: components["schemas"]["ReviewActionSummary"];
+            help: components["schemas"]["ReviewHelpMetrics"];
+        };
+        ReviewHelpMetrics: {
+            /** Format: int32 */
+            waiting: number;
+            /** Format: int32 */
+            claimed: number;
+            /** Format: int32 */
+            unresolved: number;
+            /** Format: int32 */
+            resolved: number;
+            /** Format: int32 */
+            cancelled: number;
+            /** Format: int32 */
+            overdue_waiting: number;
+            /** Format: int64 */
+            oldest_waiting_seconds: number | null;
+            /** Format: int64 */
+            oldest_open_seconds: number | null;
+            first_response: components["schemas"]["ReviewTimingSummary"];
+            completion: components["schemas"]["ReviewTimingSummary"];
+            requests: components["schemas"]["HelpSummary"][];
+            more_requests: boolean;
+        };
+        ReviewTimingSummary: {
+            /** Format: int32 */
+            samples: number;
+            /** Format: double */
+            mean_seconds: number | null;
+        };
+        ReviewAssessment: {
+            availability: string;
+            output_state: string;
+            live: components["schemas"]["ReviewCompletion"];
+            final: components["schemas"]["ReviewCompletion"];
+            canonical_final: boolean;
+        };
+        ReviewCompletion: {
+            /** Format: int32 */
+            checkpoints: number;
+            /** Format: int32 */
+            required_reviews: number;
+            /** Format: int32 */
+            missing_assignment: number;
+            /** Format: int32 */
+            missing: number;
+            /** Format: int32 */
+            drafts: number;
+            /** Format: int32 */
+            submitted: number;
+            /** Format: int32 */
+            not_open: number;
+            /** Format: int32 */
+            unavailable: number;
+            /** Format: int32 */
+            pending_categories: number;
+            /** Format: int32 */
+            missing_evidence: number;
+            /** Format: int32 */
+            overdue_checkins: number;
+            complete: boolean;
+        };
+        ReviewFactualPreview: {
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            team_id: string;
+            team_name: string;
+            team_state: string;
+            /** Format: date-time */
+            generated_at: string;
+            output: components["schemas"]["ReviewOutputSummary"];
+        };
+        ReviewCheckpointPage: {
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
+            /** Format: date-time */
+            now: string;
+            coverage: components["schemas"]["ReviewCheckpointCoverage"];
+        };
+        ReviewAgendaPage: {
+            /** Format: int64 */
+            revision: number;
+            timezone: string;
+            /** Format: date-time */
+            now: string;
+            availability: string;
+            agenda: components["schemas"]["ReviewHuddleAgenda"];
+        };
+        ReviewOutputSummary: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            entry_id: string;
+            outcome: string;
+            /** Format: date-time */
+            frozen_at: string | null;
+            /** Format: int64 */
+            frozen_revision: number | null;
+            /** Format: date-time */
+            submitted_at: string | null;
+            artifacts: components["schemas"]["ReviewArtifactCount"][];
+        };
+        ReviewArtifactCount: {
+            kind: string;
+            /** Format: int32 */
+            count: number;
+        };
+        ReviewActionSummary: {
+            /** Format: int32 */
+            unresolved: number;
+            /** Format: int32 */
+            overdue: number;
+            /** Format: int32 */
+            unavailable_owners: number;
+            examples: components["schemas"]["ReviewAction"][];
+        };
+        ReviewAction: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            feedback_id: string;
+            /** Format: int64 */
+            version: number;
+            status: string;
+            /** Format: date-time */
+            due_at: string;
+            owner_available: boolean;
+        };
+        ReviewOperationalStatus: {
+            state: string;
+            /** Format: date-time */
+            changed_at: string | null;
+        };
+        ReviewCheckpointCoverage: {
+            availability: string;
+            items: components["schemas"]["ReviewCheckpoint"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ReviewCheckpoint: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            name: string;
+            purpose: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: date-time */
+            opens_at: string;
+            /** Format: date-time */
+            closes_at: string;
+            reviews: components["schemas"]["ReviewIndependentCompletion"][];
+        };
+        ReviewIndependentCompletion: {
+            /** Format: uuid */
+            person_id: string | null;
+            name: string;
+            slot: string;
+            state: string;
+            /** Format: int32 */
+            pending_categories: number | null;
+            /** Format: int32 */
+            missing_evidence: number | null;
+            overdue: boolean;
+        };
+        ReviewHuddleAgenda: {
+            items: components["schemas"]["ReviewHuddleSummary"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ReviewHuddleSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            checkpoint_id: string;
+            checkpoint_name: string;
+            purpose: string;
+            state: string;
+            source_state: string;
+            /** Format: uuid */
+            moderator_id: string;
+            /** Format: uuid */
+            primary_id: string;
+            /** Format: uuid */
+            second_id: string;
+            /** Format: date-time */
+            review_due_at: string;
+            second_complete: boolean;
+            review_overdue: boolean;
+            /** Format: int32 */
+            gap_count: number;
+            /** Format: int32 */
+            unresolved_gaps: number;
+            /** Format: int32 */
+            blocking_decisions: number;
+            /** Format: int32 */
+            pending_proposals: number;
+            canonical_signed: boolean;
+            can_open: boolean;
+            can_manage: boolean;
+            can_record: boolean;
+            can_reconfigure: boolean;
         };
     };
     responses: {
@@ -10475,6 +10810,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicObjective"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReviewCoverage: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                team_id?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current source-authorised projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewCoveragePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReviewCheckpoints: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current source-authorised projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewCheckpointPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReviewAgenda: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current source-authorised projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewAgendaPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeSummaryPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current source-authorised projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewFactualPreview"];
                 };
             };
             default: components["responses"]["Error"];

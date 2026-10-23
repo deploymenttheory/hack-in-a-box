@@ -24,10 +24,13 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
+	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -43,7 +46,11 @@ func TestModerationHTTPCurrentSessionPanelPrivacyAndExplicitDecisions(t *testing
 	scorecardHTTP(t, true)
 }
 
-func scorecardHTTP(t *testing.T, withModeration bool) {
+func TestReviewDashboardHTTPCurrentAuthorityPrivateSourcesAndFactualBoundary(t *testing.T) {
+	scorecardHTTP(t, true, true)
+}
+
+func scorecardHTTP(t *testing.T, withModeration bool, withDashboard ...bool) {
 	ctx := t.Context()
 	pool := testdb.New(t, true)
 	owner, mentor, second, member := testdb.Person(
@@ -442,6 +449,37 @@ func scorecardHTTP(t *testing.T, withModeration bool) {
 				},
 			},
 		)
+	}
+	if len(withDashboard) > 0 && withDashboard[0] {
+		clock := func() time.Time { return now }
+		deps.ReviewDashboard = &reviewdashboard.Service{Pool: pool, Clock: clock, Help: help.Service{Pool: pool, Clock: clock}, Feedback: &feedback.Service{Pool: pool, Clock: clock}, Cards: &deps.Scorecards, Moderation: deps.Moderation}
+		router = NewRouter(cfg, logger, deps)
+		reviewPath := base + "/review-coverage?team_id=" + teamID.String()
+		reviewTeam := base + "/teams/" + teamID.String()
+		for _, target := range []string{reviewPath, reviewTeam + "/review-checkpoints", reviewTeam + "/review-agenda"} {
+			check(request(dbgen.Person{}, http.MethodGet, target, nil, revision(), true), http.StatusUnauthorized)
+			check(request(member, http.MethodGet, target, nil, revision(), true), http.StatusForbidden)
+			check(request(logistics, http.MethodGet, target, nil, revision(), true), http.StatusForbidden)
+			w = request(owner, http.MethodGet, target, nil, revision(), true)
+			check(w, http.StatusOK)
+			if w.Header().Get("Cache-Control") != "no-store" {
+				t.Fatal("private coordination cached", w.Header())
+			}
+			for _, canary := range []string{"HTTP-PRIVATE-SCORE-EVIDENCE-CANARY", "HTTP-PRIVATE-HUDDLE-CANARY", `"scores":`, `"evidence":`, `"proposals":`} {
+				if strings.Contains(w.Body.String(), canary) {
+					t.Fatal("private panel payload entered metadata", target, canary)
+				}
+			}
+			huddlePaths = append(huddlePaths, target)
+		}
+		preview := reviewTeam + "/judge-summary-preview"
+		check(request(owner, http.MethodGet, preview, nil, revision(), true), http.StatusOK)
+		check(request(mentor, http.MethodGet, preview, nil, revision(), true), http.StatusForbidden)
+		judge := testdb.Person(t, pool)
+		exec(`INSERT INTO event_memberships(event_id,person_id,role)VALUES($1,$2,'judge')`, eventID, judge.ID)
+		check(request(judge, http.MethodGet, preview, nil, revision(), true), http.StatusForbidden)
+		check(request(judge, http.MethodGet, reviewPath, nil, revision(), true), http.StatusForbidden)
+		check(request(owner, http.MethodGet, base+"/review-coverage?limit=51", nil, revision(), true), http.StatusBadRequest)
 	}
 	participant := request(member, http.MethodGet, base+"/teams", nil, revision(), true)
 	check(participant, http.StatusOK)

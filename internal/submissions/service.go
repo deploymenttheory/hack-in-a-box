@@ -52,6 +52,21 @@ func (s Service) scoped(
 	tx pgx.Tx,
 	actor, eventID, teamID uuid.UUID,
 ) (scope, error) {
+	v, err := s.authorizedScope(ctx, tx, actor, eventID, teamID)
+	if err != nil {
+		return v, err
+	}
+	if err = s.Settle(ctx, tx, v.row, s.now()); err != nil {
+		return v, err
+	}
+	return loadScopeState(ctx, dbgen.New(tx), v, eventID, teamID)
+}
+
+func (s Service) authorizedScope(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID uuid.UUID,
+) (scope, error) {
 	var v scope
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
@@ -82,9 +97,18 @@ func (s Service) scoped(
 		(v.config.SubmissionCutoff.IsZero() || s.now().Before(v.config.SubmissionCutoff)) {
 		return v, access.ErrForbidden
 	}
-	if err = s.Settle(ctx, tx, row, s.now()); err != nil {
-		return v, err
-	}
+	return v, nil
+}
+
+func loadScopeState(
+	ctx context.Context,
+	q *dbgen.Queries,
+	v scope,
+	eventID, teamID uuid.UUID,
+) (scope, error) {
+	var err error
+	a := v.authority
+
 	if err = q.EnsureSubmissionState(
 		ctx,
 		dbgen.EnsureSubmissionStateParams{EventID: eventID, TeamID: teamID},

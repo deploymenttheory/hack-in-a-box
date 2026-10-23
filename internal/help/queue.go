@@ -67,8 +67,26 @@ func summary(r Request, settings Settings, now time.Time) Summary {
 }
 
 func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, error) {
+	var result Queue
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var readErr error
+		result, readErr = s.ListInTransaction(ctx, tx, actor, eventID)
+		return readErr
+	})
+	return result, wrap("read help queue", err)
+}
+
+// ListInTransaction supplies the same current-authority metadata and native
+// reconciliation as List to a caller that already owns the event transaction.
+// It preserves the owner's notification sink and never returns request prose.
+func (s Service) ListInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+) (Queue, error) {
 	result := Queue{Items: []Summary{}}
-	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+	q := dbgen.New(tx)
+	err := func() error {
 		row, err := lock(ctx, q, eventID)
 		if err != nil {
 			return err
@@ -164,7 +182,7 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, err
 			}
 		}
 		return nil
-	})
+	}()
 	return result, wrap("read help queue", err)
 }
 

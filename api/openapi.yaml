@@ -4360,6 +4360,207 @@ paths:
         ]
       }
     }
+  "/api/v1/events/{event_id}/review-coverage":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        }
+      ],
+      "get": {
+        "operationId": "getReviewCoverage",
+        "summary": "Current authorised coordination facts; private panel access remains separate.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "team_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current source-authorised projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewCoveragePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  "/api/v1/events/{event_id}/teams/{team_id}/review-checkpoints":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getReviewCheckpoints",
+        "summary": "Current authorised coordination facts; private panel access remains separate.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current source-authorised projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewCheckpointPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  "/api/v1/events/{event_id}/teams/{team_id}/review-agenda":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getReviewAgenda",
+        "summary": "Current authorised coordination facts; private panel access remains separate.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current source-authorised projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewAgendaPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  "/api/v1/events/{event_id}/teams/{team_id}/judge-summary-preview":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getJudgeSummaryPreview",
+        "summary": "Current authorised coordination facts; private panel access remains separate.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current source-authorised projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewFactualPreview"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
 components:
   securitySchemes:
     display:
@@ -10143,3 +10344,858 @@ components:
         request_id: {type: string, format: uuid}
         action: {type: string, enum: [retry, cancel, cancel_resend, resolve_no_resend, resend_acknowledged]}
         reason: {type: string, minLength: 1, maxLength: 2000}
+
+    "ReviewCoveragePage":
+      {
+        "type": "object",
+        "required": [
+          "event_id",
+          "event_name",
+          "timezone",
+          "revision",
+          "now",
+          "organiser",
+          "moderators",
+          "teams",
+          "next_cursor"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event_name": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "organiser": {
+            "type": "boolean"
+          },
+          "moderators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewPerson"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewTeam"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    "ReviewPerson":
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    "ReviewTeam":
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "state",
+          "assignments",
+          "coverage_issues",
+          "output",
+          "support",
+          "assessment",
+          "agenda",
+          "more_agenda"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewAssignment"
+            }
+          },
+          "coverage_issues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "output": {
+            "$ref": "#/components/schemas/ReviewOutputSummary",
+            "nullable": true
+          },
+          "support": {
+            "$ref": "#/components/schemas/ReviewSupport"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/ReviewAssessment"
+          },
+          "agenda": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewHuddleSummary"
+            }
+          },
+          "more_agenda": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewAssignment":
+      {
+        "type": "object",
+        "required": [
+          "person_id",
+          "name",
+          "slot",
+          "starts_at",
+          "ends_at"
+        ],
+        "properties": {
+          "person_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    "ReviewSupport":
+      {
+        "type": "object",
+        "required": [
+          "risk",
+          "availability",
+          "operational",
+          "actions",
+          "help"
+        ],
+        "properties": {
+          "risk": {
+            "type": "string"
+          },
+          "availability": {
+            "type": "string"
+          },
+          "operational": {
+            "$ref": "#/components/schemas/ReviewOperationalStatus"
+          },
+          "actions": {
+            "$ref": "#/components/schemas/ReviewActionSummary",
+            "nullable": true
+          },
+          "help": {
+            "$ref": "#/components/schemas/ReviewHelpMetrics"
+          }
+        }
+      }
+    "ReviewHelpMetrics":
+      {
+        "type": "object",
+        "required": [
+          "waiting",
+          "claimed",
+          "unresolved",
+          "resolved",
+          "cancelled",
+          "overdue_waiting",
+          "oldest_waiting_seconds",
+          "oldest_open_seconds",
+          "first_response",
+          "completion",
+          "requests",
+          "more_requests"
+        ],
+        "properties": {
+          "waiting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claimed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unresolved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "resolved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cancelled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdue_waiting": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "oldest_waiting_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "oldest_open_seconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/ReviewTimingSummary"
+          },
+          "completion": {
+            "$ref": "#/components/schemas/ReviewTimingSummary"
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HelpSummary"
+            }
+          },
+          "more_requests": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewTimingSummary":
+      {
+        "type": "object",
+        "required": [
+          "samples",
+          "mean_seconds"
+        ],
+        "properties": {
+          "samples": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mean_seconds": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        }
+      }
+    "ReviewAssessment":
+      {
+        "type": "object",
+        "required": [
+          "availability",
+          "output_state",
+          "live",
+          "final",
+          "canonical_final"
+        ],
+        "properties": {
+          "availability": {
+            "type": "string"
+          },
+          "output_state": {
+            "type": "string"
+          },
+          "live": {
+            "$ref": "#/components/schemas/ReviewCompletion"
+          },
+          "final": {
+            "$ref": "#/components/schemas/ReviewCompletion"
+          },
+          "canonical_final": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewCompletion":
+      {
+        "type": "object",
+        "required": [
+          "checkpoints",
+          "required_reviews",
+          "missing_assignment",
+          "missing",
+          "drafts",
+          "submitted",
+          "not_open",
+          "unavailable",
+          "pending_categories",
+          "missing_evidence",
+          "overdue_checkins",
+          "complete"
+        ],
+        "properties": {
+          "checkpoints": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "required_reviews": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missing_assignment": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missing": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "drafts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "submitted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "not_open": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unavailable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending_categories": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missing_evidence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdue_checkins": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewFactualPreview":
+      {
+        "type": "object",
+        "required": [
+          "event_id",
+          "team_id",
+          "team_name",
+          "team_state",
+          "generated_at",
+          "output"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "team_name": {
+            "type": "string"
+          },
+          "team_state": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "output": {
+            "$ref": "#/components/schemas/ReviewOutputSummary"
+          }
+        }
+      }
+    "ReviewCheckpointPage":
+      {
+        "type": "object",
+        "required": [
+          "revision",
+          "timezone",
+          "now",
+          "coverage"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/ReviewCheckpointCoverage"
+          }
+        }
+      }
+    "ReviewAgendaPage":
+      {
+        "type": "object",
+        "required": [
+          "revision",
+          "timezone",
+          "now",
+          "availability",
+          "agenda"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "availability": {
+            "type": "string"
+          },
+          "agenda": {
+            "$ref": "#/components/schemas/ReviewHuddleAgenda"
+          }
+        }
+      }
+    "ReviewOutputSummary":
+      {
+        "type": "object",
+        "required": [
+          "team_id",
+          "entry_id",
+          "outcome",
+          "frozen_at",
+          "frozen_revision",
+          "submitted_at",
+          "artifacts"
+        ],
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entry_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "frozen_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "frozen_revision": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewArtifactCount"
+            }
+          }
+        }
+      }
+    "ReviewArtifactCount":
+      {
+        "type": "object",
+        "required": [
+          "kind",
+          "count"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    "ReviewActionSummary":
+      {
+        "type": "object",
+        "required": [
+          "unresolved",
+          "overdue",
+          "unavailable_owners",
+          "examples"
+        ],
+        "properties": {
+          "unresolved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overdue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unavailable_owners": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewAction"
+            }
+          }
+        }
+      }
+    "ReviewAction":
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "feedback_id",
+          "version",
+          "status",
+          "due_at",
+          "owner_available"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "feedback_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "owner_available": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewOperationalStatus":
+      {
+        "type": "object",
+        "required": [
+          "state",
+          "changed_at"
+        ],
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      }
+    "ReviewCheckpointCoverage":
+      {
+        "type": "object",
+        "required": [
+          "availability",
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "availability": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewCheckpoint"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    "ReviewCheckpoint":
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "name",
+          "purpose",
+          "run_id",
+          "opens_at",
+          "closes_at",
+          "reviews"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "opens_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closes_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewIndependentCompletion"
+            }
+          }
+        }
+      }
+    "ReviewIndependentCompletion":
+      {
+        "type": "object",
+        "required": [
+          "person_id",
+          "name",
+          "slot",
+          "state",
+          "pending_categories",
+          "missing_evidence",
+          "overdue"
+        ],
+        "properties": {
+          "person_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "pending_categories": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "missing_evidence": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "overdue": {
+            "type": "boolean"
+          }
+        }
+      }
+    "ReviewHuddleAgenda":
+      {
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewHuddleSummary"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+    "ReviewHuddleSummary":
+      {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "checkpoint_id",
+          "checkpoint_name",
+          "purpose",
+          "state",
+          "source_state",
+          "moderator_id",
+          "primary_id",
+          "second_id",
+          "review_due_at",
+          "second_complete",
+          "review_overdue",
+          "gap_count",
+          "unresolved_gaps",
+          "blocking_decisions",
+          "pending_proposals",
+          "canonical_signed",
+          "can_open",
+          "can_manage",
+          "can_record",
+          "can_reconfigure"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "checkpoint_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkpoint_name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "source_state": {
+            "type": "string"
+          },
+          "moderator_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "primary_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "second_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "review_due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "second_complete": {
+            "type": "boolean"
+          },
+          "review_overdue": {
+            "type": "boolean"
+          },
+          "gap_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unresolved_gaps": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blocking_decisions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending_proposals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canonical_signed": {
+            "type": "boolean"
+          },
+          "can_open": {
+            "type": "boolean"
+          },
+          "can_manage": {
+            "type": "boolean"
+          },
+          "can_record": {"type": "boolean"},
+          "can_reconfigure": {
+            "type": "boolean"
+          }
+        }
+      }

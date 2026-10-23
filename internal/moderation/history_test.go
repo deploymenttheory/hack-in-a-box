@@ -170,6 +170,14 @@ func TestPlannedReplacementFiltersRetainedSecondReviewAfterNativeAuthorRevocatio
 		)
 	}
 	changeCoverage(mentors.Command{Action: "publish"})
+	var repairAgenda Agenda
+	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var readErr error
+		repairAgenda, readErr = s.AgendaInTransaction(t.Context(), tx, f.owner.ID, f.event, f.team, uuid.Nil, 10)
+		return readErr
+	}); err != nil || len(repairAgenda.Items) != 1 || !repairAgenda.Items[0].CanReconfigure || repairAgenda.Items[0].CanOpen || repairAgenda.Items[0].CanManage {
+		t.Fatal("actual coverage replacement hid explicit planned repair or disclosed obsolete context", repairAgenda, err)
+	}
 	definition := h.Definition
 	definition.SecondReviewerID = replacement.ID
 	h = f.change(

@@ -43,6 +43,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
@@ -54,39 +55,40 @@ import (
 )
 
 type Dependencies struct {
-	Objectives     objectives.Service
-	Feedback       feedback.Service
-	Moderation     *moderation.Service
-	Deliveries     *deliveryhistory.Service
-	Clarifications clarification.Service
-	Automation     *automation.Service
-	TeamsWorkflow  *teamsworkflow.Service
-	SMTP           *smtpintegration.Service
-	MailContacts   mailcontact.Service
-	Scorecards     scorecards.Service
-	Rubrics        rubric.Service
-	Inbox          inbox.Service
-	Help           help.Service
-	Presentation   presentation.Service
-	Communications communications.Service
-	Credentials    credentials.Service
-	Mentors        mentors.Service
-	Observations   observations.Service
-	Content        content.Service
-	Submissions    submissions.Service
-	Attendance     attendance.Service
-	Preparation    preparation.Service
-	Teams          teams.Service
-	GitHub         *githubidentity.Service
-	Pool           *pgxpool.Pool
-	Auth           *identity.Auth
-	Audit          audit.Service
-	Files          files.Service
-	Permissions    permissions.Service
-	Events         event.Service
-	Privacy        privacy.Service
-	Templates      templates.Service
-	Registration   registration.Service
+	Objectives      objectives.Service
+	Feedback        feedback.Service
+	ReviewDashboard *reviewdashboard.Service
+	Moderation      *moderation.Service
+	Deliveries      *deliveryhistory.Service
+	Clarifications  clarification.Service
+	Automation      *automation.Service
+	TeamsWorkflow   *teamsworkflow.Service
+	SMTP            *smtpintegration.Service
+	MailContacts    mailcontact.Service
+	Scorecards      scorecards.Service
+	Rubrics         rubric.Service
+	Inbox           inbox.Service
+	Help            help.Service
+	Presentation    presentation.Service
+	Communications  communications.Service
+	Credentials     credentials.Service
+	Mentors         mentors.Service
+	Observations    observations.Service
+	Content         content.Service
+	Submissions     submissions.Service
+	Attendance      attendance.Service
+	Preparation     preparation.Service
+	Teams           teams.Service
+	GitHub          *githubidentity.Service
+	Pool            *pgxpool.Pool
+	Auth            *identity.Auth
+	Audit           audit.Service
+	Files           files.Service
+	Permissions     permissions.Service
+	Events          event.Service
+	Privacy         privacy.Service
+	Templates       templates.Service
+	Registration    registration.Service
 }
 type handlers struct{ Dependencies }
 
