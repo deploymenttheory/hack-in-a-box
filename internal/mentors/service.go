@@ -21,7 +21,10 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 		result, readErr = s.ReadInTransaction(ctx, tx, actor, eventID)
 		return readErr
 	})
-	return result, err
+	if err != nil {
+		return result, fmt.Errorf("read mentor coverage: %w", err)
+	}
+	return result, nil
 }
 
 // ReadInTransaction preserves the roster's current-person/role and restricted

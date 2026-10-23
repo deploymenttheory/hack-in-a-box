@@ -73,7 +73,7 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) (Queue, err
 		result, readErr = s.ListInTransaction(ctx, tx, actor, eventID)
 		return readErr
 	})
-	return result, err
+	return result, wrap("read help queue", err)
 }
 
 // ListInTransaction supplies the same current-authority metadata and native

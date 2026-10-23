@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
 // Coverage is coordination metadata. It contains no values, rubric category
@@ -112,6 +113,7 @@ func (s Service) CoverageInTransaction(
 		return out, nil
 	}
 	out.Availability = "current"
+	verifiedRuns := map[uuid.UUID]bool{}
 	targets, err := coverageTargets(
 		ctx,
 		q,
@@ -150,6 +152,23 @@ func (s Service) CoverageInTransaction(
 		if run.Status != "current" || cp.Rubric.ID != common.ID ||
 			cp.Rubric.Version != common.PublishedVersion.Int64 {
 			continue
+		}
+		if !verifiedRuns[cp.Definition.RunID] {
+			if publicationErr := rubric.ValidateRunPublicationInTransaction(
+				ctx,
+				tx,
+				eventID,
+				cp.Definition.RunID,
+			); publicationErr != nil {
+				if errors.Is(publicationErr, access.ErrConflict) ||
+					errors.Is(publicationErr, access.ErrForbidden) ||
+					errors.Is(publicationErr, access.ErrNotFound) {
+					out.Availability = "review_required"
+					continue
+				}
+				return out, publicationErr
+			}
+			verifiedRuns[cp.Definition.RunID] = true
 		}
 		window, windowErr := resolveWindow(row, cp)
 		if windowErr != nil || !window.OpensAt.Equal(cp.OpensAt) ||
@@ -225,6 +244,14 @@ func (s Service) reviewCoverage(
 	}
 	out.PersonID = &target.person
 	out.State = "missing"
+	if _, err := s.guard(ctx, q, target.person, eventID, teamID); err != nil {
+		if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) ||
+			errors.Is(err, access.ErrConflict) {
+			out.State = "unavailable"
+			return out, nil
+		}
+		return out, err
+	}
 	out.Overdue = !s.now().Before(cp.ClosesAt)
 	if s.now().Before(cp.OpensAt) {
 		out.State = "not_open"
