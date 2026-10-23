@@ -87,7 +87,7 @@ coincidentally identical IDs with different retained measure definitions.
 Fresh validation on the current outcomes/schema-43 main baseline includes the
 canonical SQLC/OpenAPI generator, full Go build/vet, Go lint (zero issues), web
 lint, both portal builds, 60 web unit cases and 60 desktop/mobile survey browser
-cases against the admin build. Real PostgreSQL survey service and HTTP journeys
+cases against each portal build (120 browser cases total). Real PostgreSQL survey service and HTTP journeys
 ran with `HACKBOX_INTEGRATION=1 go test -race -timeout 10m
 ./internal/surveys ./internal/httpapi -run Survey -count=1` and passed.
 Synthetic browser screenshots show the reviewed report, configured objectives and
