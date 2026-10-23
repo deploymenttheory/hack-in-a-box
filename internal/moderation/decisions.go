@@ -24,7 +24,8 @@ func (s Service) changeGap(
 		return access.ErrForbidden
 	}
 	if input.Action == "add_gap" {
-		if input.GapID == uuid.Nil || input.ActionID == uuid.Nil || input.ActionVersion < 1 ||
+		if len(h.Gaps) >= 100 || input.GapID == uuid.Nil || input.ActionID == uuid.Nil ||
+			input.ActionVersion < 1 ||
 			slices.ContainsFunc(h.Gaps, func(g Gap) bool { return g.ID == input.GapID }) {
 			return access.ErrInvalid
 		}
@@ -134,6 +135,13 @@ func (s Service) changeProposal(
 		if p.State != "proposed" {
 			return access.ErrConflict
 		}
+		if input.Action == "accept_change" &&
+			slices.ContainsFunc(h.Proposals, func(prior Proposal) bool {
+				return prior.ID != p.ID && prior.State == "accepted" && prior.Card == p.Card &&
+					prior.Original.CategoryID == p.Original.CategoryID
+			}) {
+			return access.ErrConflict
+		}
 		now := s.now()
 		p.DecidedAt = &now
 		p.DecidedBy = &actor
@@ -141,7 +149,7 @@ func (s Service) changeProposal(
 		p.State = map[string]string{"accept_change": "accepted", "reject_change": "rejected"}[input.Action]
 		return nil
 	}
-	if input.ProposalID == uuid.Nil || input.ProposedValue == nil ||
+	if len(h.Proposals) >= 100 || input.ProposalID == uuid.Nil || input.ProposedValue == nil ||
 		slices.ContainsFunc(
 			h.Proposals,
 			func(p Proposal) bool { return p.ID == input.ProposalID },

@@ -54,7 +54,7 @@ func ReviewCoverageInTransaction(
 			gap.PersonID != nil &&
 				(*gap.PersonID == out.Primary.PersonID || *gap.PersonID == out.Second.PersonID)
 		if gap.Hard && relevant {
-			return ReviewCoverage{}, ErrCoverage
+			return ReviewCoverage{}, fmt.Errorf("%w: %w", access.ErrConflict, ErrCoverage)
 		}
 	}
 	for _, person := range []uuid.UUID{out.Primary.PersonID, out.Second.PersonID} {

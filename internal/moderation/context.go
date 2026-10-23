@@ -35,6 +35,9 @@ func (s Service) ResolveScorecardContextInTransaction(
 	if _, err = s.currentCards(ctx, tx, eventID, h); err != nil {
 		return scorecards.ModerationContext{}, err
 	}
+	if err = s.authorizeDecisionReader(ctx, tx, actor, eventID, h); err != nil {
+		return scorecards.ModerationContext{}, err
+	}
 	unresolved, err := s.unresolved(ctx, tx, actor, eventID, h)
 	if err != nil {
 		return scorecards.ModerationContext{}, err
@@ -147,4 +150,57 @@ func (s Service) Panel(
 		return nil, fmt.Errorf("read actual huddle panel: %w", err)
 	}
 	return cards, nil
+}
+
+// Intended-panel context does not confer the action owner's separate category
+// or resource permission. Submitted/proposed evidence also retains author ACLs.
+func (s Service) authorizeDecisionReader(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	h Huddle,
+) error {
+	for _, gap := range h.Gaps {
+		if s.Actions == nil {
+			return access.ErrForbidden
+		}
+		if _, err := s.Actions.ResolveModerationActionInTransaction(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			h.TeamID,
+			gap.ActionID,
+			gap.ActionVersion,
+		); err != nil {
+			return fmt.Errorf("authorize current native gap action: %w", err)
+		}
+		if gap.ResolvedBy != nil {
+			if err := s.Cards.AuthorizeModerationEvidenceInTransaction(
+				ctx,
+				tx,
+				*gap.ResolvedBy,
+				eventID,
+				h.TeamID,
+				gap.Evidence,
+				h.SubmissionRevision,
+			); err != nil {
+				return fmt.Errorf("authorize recorded gap evidence: %w", err)
+			}
+		}
+	}
+	for _, proposal := range h.Proposals {
+		if err := s.Cards.AuthorizeModerationEvidenceInTransaction(
+			ctx,
+			tx,
+			proposal.ProposedBy,
+			eventID,
+			h.TeamID,
+			proposal.Evidence,
+			h.SubmissionRevision,
+		); err != nil {
+			return fmt.Errorf("authorize proposed change evidence: %w", err)
+		}
+	}
+	return nil
 }

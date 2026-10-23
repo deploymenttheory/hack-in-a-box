@@ -32,6 +32,9 @@ func (s Service) Read(ctx context.Context, actor, eventID, teamID, id uuid.UUID)
 				return fmt.Errorf("resolve moderation dependency: %w", err)
 			}
 		}
+		if err = s.authorizeDecisionReader(ctx, tx, actor, eventID, h); err != nil {
+			return err
+		}
 		out = h
 		return nil
 	})
@@ -65,6 +68,9 @@ func (s Service) History(
 			if _, err = s.currentCards(ctx, tx, eventID, current); err != nil {
 				return fmt.Errorf("resolve moderation dependency: %w", err)
 			}
+		}
+		if err = s.authorizeDecisionReader(ctx, tx, actor, eventID, current); err != nil {
+			return err
 		}
 		rows, err := tx.Query(
 			ctx,
@@ -161,6 +167,9 @@ func (s Service) List(
 				_, e = s.current(ctx, tx, actor, eventID, h, false)
 				if e == nil && len(h.Cards) > 0 {
 					_, e = s.currentCards(ctx, tx, eventID, h)
+				}
+				if e == nil {
+					e = s.authorizeDecisionReader(ctx, tx, actor, eventID, h)
 				}
 				if e != nil {
 					if errors.Is(e, access.ErrForbidden) || errors.Is(e, access.ErrConflict) ||

@@ -43,30 +43,10 @@ func (s Service) Change(
 			return fmt.Errorf("resolve moderation dependency: %w", err)
 		}
 		if input.Action == "configure" {
-			if input.Definition == nil || input.Definition.ID != id {
-				return access.ErrInvalid
+			h, err = s.configure(ctx, tx, actor, eventID, teamID, id, h, missing, input)
+			if err != nil {
+				return err
 			}
-			if missing {
-				if input.Version != 0 {
-					return access.ErrConflict
-				}
-			} else {
-				if _, err = s.current(ctx, tx, actor, eventID, h, true); err != nil {
-					return fmt.Errorf("resolve moderation dependency: %w", err)
-				}
-				if actor != h.Definition.ModeratorID || input.Version != h.Version ||
-					h.State != "planned" {
-					return access.ErrConflict
-				}
-			}
-			next, e := s.newHuddle(ctx, tx, actor, eventID, teamID, *input.Definition)
-			if e != nil {
-				return fmt.Errorf("read moderation dependency: %w", e)
-			}
-			if !missing {
-				next.Version = h.Version
-			}
-			h = next
 		} else {
 			if missing {
 				return access.ErrNotFound
@@ -77,6 +57,11 @@ func (s Service) Change(
 			if h.Version != input.Version ||
 				slices.Contains([]string{"signed", "cancelled"}, h.State) {
 				return access.ErrConflict
+			}
+			if h.State == "open" && input.Action != "cancel" {
+				if _, err = s.currentCards(ctx, tx, eventID, h); err != nil {
+					return err
+				}
 			}
 			err = s.decide(ctx, tx, actor, eventID, &h, input)
 			if err != nil {
@@ -267,4 +252,39 @@ func (s Service) decide(
 		return fmt.Errorf("apply moderation decision: %w", err)
 	}
 	return nil
+}
+
+func (s Service) configure(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID, id uuid.UUID,
+	h Huddle,
+	missing bool,
+	input Command,
+) (Huddle, error) {
+	var err error
+	if input.Definition == nil || input.Definition.ID != id {
+		return Huddle{}, access.ErrInvalid
+	}
+	if missing {
+		if input.Version != 0 {
+			return Huddle{}, access.ErrConflict
+		}
+	} else {
+		if _, err = s.current(ctx, tx, actor, eventID, h, true); err != nil {
+			return Huddle{}, fmt.Errorf("resolve moderation dependency: %w", err)
+		}
+		if actor != h.Definition.ModeratorID || input.Version != h.Version ||
+			h.State != "planned" {
+			return Huddle{}, access.ErrConflict
+		}
+	}
+	next, e := s.newHuddle(ctx, tx, actor, eventID, teamID, *input.Definition)
+	if e != nil {
+		return Huddle{}, fmt.Errorf("read moderation dependency: %w", e)
+	}
+	if !missing {
+		next.Version = h.Version
+	}
+	return next, nil
 }
