@@ -248,6 +248,8 @@ func (p *RESTProvider) scopedClient(
 	case "create":
 		permissions.Contents = new("read")
 		permissions.Administration = new("write")
+	case "access_read":
+		permissions.Administration = new("read")
 	case "invite":
 		permissions.Administration = new("write")
 	default:
