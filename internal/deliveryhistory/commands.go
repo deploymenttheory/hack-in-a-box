@@ -50,6 +50,9 @@ func (s Service) Change(
 			input,
 		); replayed ||
 			replayErr != nil {
+			if freezeErr := writableEvent(ctx, q, actor, eventID); freezeErr != nil {
+				return freezeErr
+			}
 			return replayErr
 		}
 		var locked bool
@@ -60,10 +63,7 @@ func (s Service) Change(
 		if !locked {
 			return access.ErrConflict
 		}
-		if _, err = q.LockEvent(ctx, eventID); err != nil {
-			return fmt.Errorf("lock delivery review event: %w", err)
-		}
-		if err = authorize(ctx, q, actor, eventID); err != nil {
+		if err = writableEvent(ctx, q, actor, eventID); err != nil {
 			return err
 		}
 		row, err = lookup(ctx, q, eventID, deliveryID)
@@ -346,6 +346,20 @@ func cancelResend(
 	}
 	if changed != 1 {
 		return access.ErrConflict
+	}
+	return nil
+}
+
+func writableEvent(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID) error {
+	event, err := q.LockEvent(ctx, eventID)
+	if err != nil {
+		return fmt.Errorf("lock delivery review event: %w", err)
+	}
+	if err = authorize(ctx, q, actor, eventID); err != nil {
+		return err
+	}
+	if !event.WritesAllowed {
+		return access.ErrForbidden
 	}
 	return nil
 }

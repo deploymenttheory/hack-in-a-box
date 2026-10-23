@@ -21,8 +21,8 @@ func (s Service) Detail(
 	if beforeAttempt < 0 {
 		return Detail{}, access.ErrInvalid
 	}
-	out := Detail{Attempts: []Attempt{}, Reviews: []Review{}}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	out := Detail{Attempts: []Attempt{}, Reviews: []Review{}, Actions: []string{}}
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		event, err := q.LockEvent(ctx, eventID)
 		if err != nil {
 			return fmt.Errorf("lock delivery detail: %w", err)
@@ -73,14 +73,16 @@ func (s Service) Detail(
 			out.Reviews = append(
 				out.Reviews,
 				Review{
-					ID:        r.ID,
-					ActorID:   r.ActorID,
-					Action:    r.Action,
-					Reason:    r.Reason,
-					CreatedAt: r.CreatedAt,
+					ExpectedRevision: r.ExpectedRevision,
+					ID:               r.ID,
+					ActorID:          r.ActorID,
+					Action:           r.Action,
+					Reason:           r.Reason,
+					CreatedAt:        r.CreatedAt,
 				},
 			)
 		}
+		out.Actions = s.availableActions(ctx, tx, q, row, out.Paused, out.Archived)
 		return nil
 	})
 	if err != nil {

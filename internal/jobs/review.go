@@ -61,6 +61,10 @@ func ResendGrantInTransaction(
 
 // EnqueueReviewedInTransaction adds a new River identity only for a durable
 // current reviewed operation. Normal operations retain their existing uniqueness.
+// A retry only nudges an already-authorised, definitely rejected delivery; its
+// original approval remains the execution authority. It grants no resend after
+// acceptance or uncertainty. Resend grants separately recheck their reviewer
+// inside the provider's attempt transaction through ResendGrantInTransaction.
 func (s *Service) EnqueueReviewedInTransaction(
 	ctx context.Context,
 	tx pgx.Tx,

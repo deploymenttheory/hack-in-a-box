@@ -110,8 +110,8 @@ scheduling. An unavailable provider remains visible and cannot be silently dropp
 or reported as delivered. #78 and #79 are delivered in PRs #189 and #194.
 #80's implementation merged in PR #196; its required live shared-channel check
 remains outstanding. #81's core merged in PR #198, while the named help,
-clarification and outcome-review journeys (#159/#161/#117) remain open. #82's
-unattended automation still retains its complete issue acceptance.
+clarification and outcome-review journeys (#159/#161/#117) remain open. #82's implementation merged in PR #207; aggregate retry and confidentiality
+verification remains #84.
 
 ## Batch 7 — fair assessment contracts and event-day support
 
@@ -186,8 +186,8 @@ These are selected work, not delivery claims.
 
 Keep three independent workstreams active with separate PRs. Actual automation
 merged in #207 after #208's mentor scorecard UI; delivery recovery is under #83
-implementation. #209's clarification workspace remains under final review and
-integration. #103 shared feedback is a separate active implementation lane.
+implementation. #209's clarification workspace is merged after final native and browser
+composition verification. #103 shared feedback is a separate active implementation lane.
 Provider history must preserve acceptance versus delivery and immutable unknown
 outcomes; a recovery decision cannot manufacture a successful receipt. Migration
 numbers follow actual ready merges. These are selected tasks, not completed

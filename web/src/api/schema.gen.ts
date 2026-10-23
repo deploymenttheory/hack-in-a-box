@@ -5271,6 +5271,8 @@ export interface components {
             retry_at: string | null;
         };
         DeliveryHistoryReview: {
+            /** Format: int64 */
+            expected_revision: number;
             /** Format: uuid */
             id: string;
             /** Format: uuid */
@@ -5282,6 +5284,7 @@ export interface components {
             created_at: string;
         };
         DeliveryHistoryDetail: {
+            actions: ("retry" | "cancel" | "cancel_resend" | "resolve_no_resend" | "resend_acknowledged")[];
             item: components["schemas"]["DeliveryHistoryItem"];
             attempts: components["schemas"]["DeliveryHistoryAttempt"][];
             /** Format: int32 */

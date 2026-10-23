@@ -13,7 +13,9 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
+	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
 func (f *fixture) approvePastProduction() {
@@ -39,6 +41,229 @@ func (f *fixture) approvePastProduction() {
 	}
 	f.campaign = result.Campaign.Campaign
 	f.approveProduction()
+}
+
+func TestCancelOnlyQueuedSMTPResendRetainsAcceptedOrUncertainOriginalWithoutEffect(t *testing.T) {
+	for _, prior := range []maildelivery.State{maildelivery.Accepted, maildelivery.Ambiguous} {
+		t.Run(string(prior), func(t *testing.T) {
+			f := setup(t)
+			f.approvePastProduction()
+			f.transport.state = prior
+			d := f.queueProduction()
+			if err := f.worker.Execute(t.Context(), d.ID); err != nil {
+				t.Fatal(err)
+			}
+			q := dbgen.New(f.pool)
+			op, err := q.Operation(t.Context(), d.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			history := deliveryhistory.Service{
+				Pool:      f.pool,
+				Jobs:      f.worker,
+				Providers: map[string]deliveryhistory.RecoveryProvider{"smtp": f.service},
+			}
+			grant := deliveryhistory.Command{
+				RequestID: uuid.New(),
+				Action:    "resend_acknowledged",
+				Reason:    "Synthetic queued resend",
+			}
+			queued, err := history.Change(
+				t.Context(),
+				f.owner.ID,
+				f.event,
+				d.ID,
+				op.Revision,
+				grant,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cancel := deliveryhistory.Command{
+				RequestID: uuid.New(),
+				Action:    "cancel_resend",
+				Reason:    "Synthetic cancel only unspent resend",
+			}
+			stopped, err := history.Change(
+				t.Context(),
+				f.owner.ID,
+				f.event,
+				d.ID,
+				queued.Item.Revision,
+				cancel,
+			)
+			if err != nil || !stopped.Item.Cancelled || len(stopped.Reviews) != 2 {
+				t.Fatalf("cancel queued resend=%+v err%v", stopped, err)
+			}
+			if stopped.Item.State != map[maildelivery.State]string{maildelivery.Accepted: "provider_accepted", maildelivery.Ambiguous: "ambiguous"}[prior] {
+				t.Fatal("cancellation rewrote original provider outcome")
+			}
+			if _, err = history.Change(
+				t.Context(),
+				f.owner.ID,
+				f.event,
+				d.ID,
+				queued.Item.Revision,
+				cancel,
+			); err != nil {
+				t.Fatal(err)
+			}
+			if err = f.worker.Execute(t.Context(), d.ID); err != nil {
+				t.Fatal(err)
+			}
+			if err = f.worker.Reconcile(t.Context()); err != nil {
+				t.Fatal(err)
+			}
+			if f.transport.count() != 1 {
+				t.Fatal("cancelled resend caused another external effect")
+			}
+			var consumed int
+			if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM communication_delivery_resend_uses WHERE review_id=$1", grant.RequestID).
+				Scan(&consumed); err != nil ||
+				consumed != 0 {
+				t.Fatal("cancelled grant was spent", err)
+			}
+		})
+	}
+}
+
+func TestSMTPResendReviewerRevocationDeniesEffectWhileOriginalApproverRemainsCurrent(t *testing.T) {
+	f := setup(t)
+	reviewer := testdb.Person(t, f.pool)
+	f.exec(
+		"INSERT INTO event_memberships(event_id,person_id,role,active) VALUES($1,$2,'organiser',true)",
+		f.event,
+		reviewer.ID,
+	)
+	f.approvePastProduction()
+	d := f.queueProduction()
+	if err := f.worker.Execute(t.Context(), d.ID); err != nil {
+		t.Fatal(err)
+	}
+	q := dbgen.New(f.pool)
+	op, err := q.Operation(t.Context(), d.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	history := deliveryhistory.Service{
+		Pool:      f.pool,
+		Jobs:      f.worker,
+		Providers: map[string]deliveryhistory.RecoveryProvider{"smtp": f.service},
+	}
+	input := deliveryhistory.Command{
+		RequestID: uuid.New(),
+		Action:    "resend_acknowledged",
+		Reason:    "Synthetic independently authorised reviewer",
+	}
+	if _, err = history.Change(
+		t.Context(),
+		reviewer.ID,
+		f.event,
+		d.ID,
+		op.Revision,
+		input,
+	); err != nil {
+		t.Fatal(err)
+	}
+	f.exec(
+		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2",
+		f.event,
+		reviewer.ID,
+	)
+	if err = f.worker.Execute(t.Context(), d.ID); err != nil {
+		t.Fatal(err)
+	}
+	if f.transport.count() != 1 {
+		t.Fatal("revoked resend reviewer bypassed current authority")
+	}
+	var consumed int
+	if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM communication_delivery_resend_uses WHERE review_id=$1", input.RequestID).
+		Scan(&consumed); err != nil ||
+		consumed != 0 {
+		t.Fatal("revoked grant consumed", err)
+	}
+	var active bool
+	if err = f.pool.QueryRow(t.Context(), "SELECT active FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND role='organiser'", f.event, f.owner.ID).
+		Scan(&active); err != nil ||
+		!active {
+		t.Fatal("test also revoked original approver", err)
+	}
+}
+
+func TestDefiniteSMTPRetryNudgeRetainsOriginalApprovalAsExecutionAuthority(t *testing.T) {
+	for _, revoke := range []string{"retry_operator", "original_approver"} {
+		t.Run(revoke, func(t *testing.T) {
+			f := setup(t)
+			reviewer := testdb.Person(t, f.pool)
+			f.exec(
+				"INSERT INTO event_memberships(event_id,person_id,role,active) VALUES($1,$2,'organiser',true)",
+				f.event,
+				reviewer.ID,
+			)
+			f.approvePastProduction()
+			f.transport.state = maildelivery.Retryable
+			d := f.queueProduction()
+			if err := f.worker.Execute(t.Context(), d.ID); !errors.Is(err, jobs.ErrRetry) {
+				t.Fatalf("definite rejection=%v", err)
+			}
+			q := dbgen.New(f.pool)
+			op, err := q.Operation(t.Context(), d.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			history := deliveryhistory.Service{
+				Pool:      f.pool,
+				Jobs:      f.worker,
+				Providers: map[string]deliveryhistory.RecoveryProvider{"smtp": f.service},
+			}
+			command := deliveryhistory.Command{
+				RequestID: uuid.New(),
+				Action:    "retry",
+				Reason:    "Nudge an independently approved definite rejection",
+			}
+			if _, err = history.Change(
+				t.Context(),
+				reviewer.ID,
+				f.event,
+				d.ID,
+				op.Revision,
+				command,
+			); err != nil {
+				t.Fatal(err)
+			}
+			person := reviewer.ID
+			if revoke == "original_approver" {
+				person = f.owner.ID
+			}
+			f.exec(
+				"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2",
+				f.event,
+				person,
+			)
+			f.transport.state = maildelivery.Accepted
+			// Exercise the direct jobs path as well as reconciliation: neither may
+			// treat the retry decision as replacement campaign authority.
+			if err = f.worker.Execute(t.Context(), d.ID); err != nil {
+				t.Fatal(err)
+			}
+			if err = f.worker.Reconcile(t.Context()); err != nil {
+				t.Fatal(err)
+			}
+			want := 2
+			if revoke == "original_approver" {
+				want = 1
+			}
+			if f.transport.count() != want {
+				t.Fatalf("physical calls=%d want%d", f.transport.count(), want)
+			}
+			var uses int
+			if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM communication_delivery_resend_uses WHERE review_id=$1", command.RequestID).
+				Scan(&uses); err != nil ||
+				uses != 0 {
+				t.Fatal("retry invented resend authority", err)
+			}
+		})
+	}
 }
 
 func TestUnknownSMTPNoResendResolutionRetainsUncertaintyAndHasNoProviderEffect(t *testing.T) {

@@ -323,3 +323,8 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 @media print { .clarification-private { display: none !important; } }
 
 .feedback-reader, .feedback-reader article { min-width: 0; overflow-wrap: anywhere; }
+.delivery-history { min-width: 0; overflow-wrap: anywhere; }
+.delivery-history fieldset { min-width: 0; }
+.delivery-history textarea { width: 100%; min-height: 7rem; }
+.delivery-reason { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media print { .delivery-private, .delivery-reason { display: none !important; } }

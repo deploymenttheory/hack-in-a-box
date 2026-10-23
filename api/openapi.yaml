@@ -9417,8 +9417,9 @@ components:
     DeliveryHistoryReview:
       type: object
       additionalProperties: false
-      required: [id, actor_id, action, reason, created_at]
+      required: [id, actor_id, action, reason, created_at, expected_revision]
       properties:
+        expected_revision: {type: integer, format: int64, minimum: 1}
         id: {type: string, format: uuid}
         actor_id: {type: string, format: uuid}
         action: {type: string, enum: [retry, cancel, cancel_resend, resolve_no_resend, resend_acknowledged]}
@@ -9427,8 +9428,9 @@ components:
     DeliveryHistoryDetail:
       type: object
       additionalProperties: false
-      required: [item, attempts, next_attempt_number, reviews, next_review_id, archived, paused]
+      required: [item, attempts, next_attempt_number, reviews, next_review_id, archived, paused, actions]
       properties:
+        actions: {type: array, maxItems: 5, items: {type: string, enum: [retry, cancel, cancel_resend, resolve_no_resend, resend_acknowledged]}}
         item: {$ref: '#/components/schemas/DeliveryHistoryItem'}
         attempts: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/DeliveryHistoryAttempt'}}
         next_attempt_number: {type: integer, format: int32, minimum: 1, nullable: true}

@@ -61,13 +61,15 @@ type Attempt struct {
 	RetryAt    *time.Time `json:"retry_at"`
 }
 type Review struct {
-	ID        uuid.UUID `json:"id"`
-	ActorID   uuid.UUID `json:"actor_id"`
-	Action    string    `json:"action"`
-	Reason    string    `json:"reason"`
-	CreatedAt time.Time `json:"created_at"`
+	ExpectedRevision int64     `json:"expected_revision"`
+	ID               uuid.UUID `json:"id"`
+	ActorID          uuid.UUID `json:"actor_id"`
+	Action           string    `json:"action"`
+	Reason           string    `json:"reason"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 type Detail struct {
+	Actions           []string   `json:"actions"`
 	Item              Item       `json:"item"`
 	Attempts          []Attempt  `json:"attempts"`
 	NextAttemptNumber *int32     `json:"next_attempt_number"`
