@@ -16,3 +16,7 @@ web/test-results-public
 
 web/dist-styleguide
 web/styleguide-test-results
+
+web/.pattern-dist
+web/test-results-patterns
+web/test-results-primitives

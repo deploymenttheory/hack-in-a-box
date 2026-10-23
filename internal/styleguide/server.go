@@ -20,7 +20,12 @@ func Open(directory string) (*Server, error) {
 	return &Server{root: root}, nil
 }
 
-func (s *Server) Close() error { return s.root.Close() }
+func (s *Server) Close() error {
+	if err := s.root.Close(); err != nil {
+		return fmt.Errorf("close static style guide root: %w", err)
+	}
+	return nil
+}
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().
@@ -35,7 +40,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/healthz" || r.URL.Path == "/readyz" {
 		if r.URL.Path == "/readyz" {
-			for _, name := range []string{"index.html", "samples.html"} {
+			for _, name := range []string{"index.html", "samples.html", "patterns.html"} {
 				file, err := s.root.Open(name)
 				if err != nil {
 					http.Error(w, "Guide unavailable", http.StatusServiceUnavailable)
@@ -58,7 +63,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 	if name == "." || name == "" || name == "index.html" {
 		name = "index.html"
-	} else if name != "samples.html" && !strings.HasPrefix(name, "assets/") {
+	} else if name != "samples.html" && name != "patterns.html" && !strings.HasPrefix(name, "assets/") {
 		http.NotFound(w, r)
 		return
 	}

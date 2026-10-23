@@ -69,3 +69,9 @@
 .guide-frame-content > h1 { font-size: var(--text-page); margin: 0 0 var(--space-3); }
 .guide-frame-content h2 { font-size: var(--text-section); font-weight: var(--weight-emphasis); }
 .guide-frame-content p { margin-block: var(--space-3); }
+
+.guide-api-entry { border-top: 1px solid var(--border); padding-block: var(--space-4); }
+.guide-api-entry summary { cursor: pointer; font-weight: var(--weight-emphasis); overflow-wrap: anywhere; }
+.guide-api-entry dl { display: grid; gap: var(--space-2); }
+.guide-api-entry dt { font-weight: var(--weight-emphasis); }
+.guide-api-entry dd { margin: 0 0 var(--space-3); }

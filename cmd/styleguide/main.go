@@ -16,14 +16,17 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/styleguide"
 )
 
-func main() {
+func main() { os.Exit(serve()) }
+
+func serve() int {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx); err != nil {
 		logger.Error("style guide stopped", "error", err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 func run(ctx context.Context) error {
@@ -37,7 +40,7 @@ func run(ctx context.Context) error {
 	}
 	handler, err := styleguide.Open(directory)
 	if err != nil {
-		return err
+		return fmt.Errorf("prepare static style guide: %w", err)
 	}
 	defer func() { _ = handler.Close() }()
 	server := &http.Server{
@@ -57,7 +60,7 @@ func run(ctx context.Context) error {
 		}
 		return fmt.Errorf("serve static style guide: %w", err)
 	case <-ctx.Done():
-		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		shutdown, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdown); err != nil {
 			return fmt.Errorf("stop static style guide: %w", err)

@@ -4,6 +4,8 @@ WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ ./
+ARG VITE_STYLEGUIDE_URL=http://127.0.0.1:8082
+ENV VITE_STYLEGUIDE_URL=$VITE_STYLEGUIDE_URL
 RUN npm run build
 
 FROM golang:1.27.3-bookworm@sha256:21ade014faf952365b9ecbd8dbdb87176fbacb82fac9fb132d9f2a7b8cc3f132 AS go

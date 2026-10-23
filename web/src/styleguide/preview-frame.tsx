@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import type { PreviewOptions } from './preferences'
 
-export function PreviewFrame({ options, width }: { options: PreviewOptions; width: string }) {
+export function PreviewFrame({ options, width, story = 'components' }: { options: PreviewOptions; width: string; story?: 'components' | 'patterns' }) {
   const frame = useRef<HTMLIFrameElement>(null)
   const send = useCallback(() => frame.current?.contentWindow?.postMessage(options, location.origin), [options])
   useEffect(() => { send() }, [send])
@@ -13,5 +13,5 @@ export function PreviewFrame({ options, width }: { options: PreviewOptions; widt
     addEventListener('message', ready)
     return () => removeEventListener('message', ready)
   }, [send])
-  return <div className="guide-frame-host" style={{ maxInlineSize: width === 'full' ? undefined : `${width}px` }}><iframe ref={frame} src="/samples.html" title="Production component examples" className="guide-example-frame" onLoad={send} allow="clipboard-write" /><p className="guide-frame-caption">A real nested viewport. Theme and density changes preserve example state; Reset examples clears it.</p></div>
+  return <div className="guide-frame-host" style={{ maxInlineSize: width === 'full' ? undefined : `${width}px` }}><iframe ref={frame} src={story === 'patterns' ? '/patterns.html' : '/samples.html'} title={story === 'patterns' ? 'Production task pattern examples' : 'Production component examples'} className="guide-example-frame" onLoad={send} allow="clipboard-write" /><p className="guide-frame-caption">A real nested viewport. Theme and density changes preserve example state; Reset examples clears it.</p></div>
 }

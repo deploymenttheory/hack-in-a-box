@@ -11,6 +11,7 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu'
 import { api, APIError, getSession, type Session } from './api/client'
 import { Button } from './components/ui/button'
+import { styleguideURL } from './styleguide-url'
 import { Theme } from './components/theme'
 import { Failure, Loading } from './components/states'
 import { clearPrivateDrafts, loginURL } from './auth'
@@ -82,7 +83,7 @@ export function Shell() {
       {!(import.meta.env.MODE === 'admin' ? /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/templates(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/(new|[a-f0-9-]+)(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname) : /^\/$|^\/ideas(?:\/[a-f0-9-]+|\/reviews\/[a-f0-9-]+)?$|^\/projects(?:\/[a-f0-9-]+)?$|^\/register(?:\/[a-f0-9-]+)?$|^\/inbox$|^\/events\/[a-f0-9-]+\/(?:resources|help|clarifications|questions|feedback|feedback-followups|surveys|media)\/[a-f0-9-]+$|^\/events\/[a-f0-9-]+\/(?:help|clarifications|media|photo-consent)$|^\/events\/[a-f0-9-]+\/review(?:\/[a-f0-9-]+(?:\/summary-preview)?)?$|^\/events\/[a-f0-9-]+\/communications\/deliveries(?:\/[a-f0-9-]+)?$|^\/events\/[a-f0-9-]+\/surveys(?:\/new|\/[a-f0-9-]+\/(?:manage|results))?$|^\/account$|^\/events\/[a-f0-9-]+(?:\/mentor(?:\/[a-f0-9-]+(?:\/scorecards)?)?)?$/i.test(pathname)) ? <NotFound /> : session.isPending ? <Loading /> : session.error && !signedOut ? <Failure error={session.error} retry={() => void session.refetch()} /> :
         signedOut ? <Welcome expired={expired} /> : session.data ? <IdentityContext.Provider value={session.data}><PrivateCache key={`${session.data.person.id}:${session.data.draft_scope}`}><Outlet /></PrivateCache></IdentityContext.Provider> : <Welcome />}
     </main>
-    <footer>Make something worth sharing.</footer>
+    <footer>Make something worth sharing. <a href={styleguideURL} target="_blank" rel="noopener noreferrer">About this interface · Style guide</a></footer>
   </Theme>
 }
 
