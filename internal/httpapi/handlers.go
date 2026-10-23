@@ -30,6 +30,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubwebhooks"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
@@ -60,6 +61,7 @@ import (
 )
 
 type Dependencies struct {
+	GitHubWebhooks  *githubwebhooks.Service
 	Repositories    repositories.Service
 	Media           media.Service
 	GitHubApp       githubapp.Service

@@ -1552,6 +1552,48 @@ paths:
                 $ref: '#/components/schemas/AllocationSuggestion'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/integrations/github/webhook:
+    post:
+      operationId: ingestGitHubWebhook
+      security: []
+      description: >-
+        GitHub App machine endpoint. Authenticate X-Hub-Signature-256 using the
+        current event App webhook secret and exact request bytes before selecting activity.
+        Only repository.id is read first to route through the canonical immutable
+        repository registry; this routing lookup is read-only.
+        Accept only JSON push/member deliveries, up to 1048576 raw bytes.
+        No browser session or CSRF token is used. Selected activity is operational
+        evidence only and never accepts a submission or changes a score.
+      parameters:
+        - { name: X-GitHub-Delivery, in: header, required: true, schema: { type: string, format: uuid } }
+        - { name: X-GitHub-Event, in: header, required: true, schema: { type: string, enum: [push, member] } }
+        - { name: X-Hub-Signature-256, in: header, required: true, schema: { type: string, pattern: '^sha256=[a-fA-F0-9]{64}$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '202': { description: Authenticated delivery durably queued or already accepted. }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/github-activity:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getGitHubRepositoryActivity
+      description: Current organiser-only operational activity and bounded delivery/retry status. Counts are never assessment input. At most 100 latest deliveries are returned.
+      responses:
+        '200':
+          description: Informational repository activity and durable work status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GitHubRepositoryActivityStatus' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/repositories:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -7243,16 +7285,47 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TeamRequest'
-    GitHubAppConfiguration:
+    GitHubRepositoryActivityStatus:
       type: object
       additionalProperties: false
-      required: [app_id, app_slug, organization_id, organization, template_repository]
+      required: [informational, activity, deliveries]
       properties:
-        app_id: { type: integer, format: int64, minimum: 1 }
-        app_slug: { type: string, maxLength: 100 }
-        organization_id: { type: integer, format: int64, minimum: 1 }
-        organization: { type: string, maxLength: 100 }
-        template_repository: { type: string, maxLength: 100 }
+        informational: { type: boolean, enum: [true] }
+        activity:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [team_id, pushes, accepted_invitations, last_provider_at, last_received_at]
+            properties:
+              team_id: { type: string, format: uuid }
+              pushes: { type: integer, format: int64 }
+              accepted_invitations: { type: integer, format: int64 }
+              last_provider_at: { type: string, format: date-time, nullable: true }
+              last_received_at: { type: string, format: date-time }
+        deliveries:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, team_id, repository_id, kind, action, ref, after_sha, provider_at, received_at, disposition, operation_id, state, attempts, approved, cancelled]
+            properties:
+              id: { type: string, format: uuid }
+              team_id: { type: string, format: uuid }
+              repository_id: { type: integer, format: int64 }
+              kind: { type: string, enum: [push, member] }
+              action: { type: string, enum: ['', added, removed, edited] }
+              ref: { type: string, maxLength: 1024 }
+              after_sha: { type: string, maxLength: 64 }
+              provider_at: { type: string, format: date-time, nullable: true }
+              received_at: { type: string, format: date-time }
+              disposition: { type: string, enum: [pending, recorded, discarded] }
+              operation_id: { type: string, format: uuid, nullable: true }
+              state: { type: string, enum: [pending, running, delivered, permanent, ambiguous, cancelled] }
+              attempts: { type: integer }
+              approved: { type: boolean }
+              cancelled: { type: boolean }
     TeamRepository:
       type: object
       additionalProperties: false
@@ -7265,6 +7338,16 @@ components:
         state: { type: string, enum: [pending, ready, review, ambiguous] }
         diagnostic: { type: string }
         unused: { type: boolean }
+    GitHubAppConfiguration:
+      type: object
+      additionalProperties: false
+      required: [app_id, app_slug, organization_id, organization, template_repository]
+      properties:
+        app_id: { type: integer, format: int64, minimum: 1 }
+        app_slug: { type: string, maxLength: 100 }
+        organization_id: { type: integer, format: int64, minimum: 1 }
+        organization: { type: string, maxLength: 100 }
+        template_repository: { type: string, maxLength: 100 }
     GitHubAppCommand:
       type: object
       additionalProperties: false
@@ -7277,6 +7360,7 @@ components:
         organization: { type: string, maxLength: 100 }
         template_repository: { type: string, maxLength: 100 }
         private_key: { type: string, maxLength: 32768, writeOnly: true }
+        webhook_secret: { type: string, minLength: 32, maxLength: 256, writeOnly: true, description: Optional high entropy App webhook secret. Omit to retain for the same App. Replacement invalidates pending deliveries authenticated with the old secret. }
     GitHubAppPermissionCheck:
       type: object
       additionalProperties: false
@@ -7298,11 +7382,12 @@ components:
     GitHubAppStatus:
       type: object
       additionalProperties: false
-      required: [revision, configured, installation_id, diagnostics]
+      required: [revision, configured, installation_id, diagnostics, webhook_configured]
       properties:
         revision: { type: integer, format: int64 }
         configured: { type: boolean }
         installation_id: { type: integer, format: int64 }
+        webhook_configured: { type: boolean }
         configuration: { $ref: '#/components/schemas/GitHubAppConfiguration' }
         diagnostics: { $ref: '#/components/schemas/GitHubAppDiagnostics' }
     CredentialMetadata:

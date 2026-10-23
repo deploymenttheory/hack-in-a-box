@@ -58,6 +58,83 @@ References checked against primary documentation:
 
 App private keys use the same deployment keyring utility as supplied team credentials, with a distinct authenticated context bound to the event, App ID and credential version. App credentials have their own organiser policy and never use the team-reveal API. Retain old deployment keys until all app ciphertext and retained backups have been rotated. Restore an accidentally removed deployment key under its original identifier. If the App key is revoked at GitHub, generate a replacement at GitHub and submit a new `configure` command; installation must be revalidated. Disconnecting the app locally does not revoke already issued provider tokens, remove collaborators or uninstall the provider App. Apply provider revocations separately when required.
 
+## Signed repository activity
+
+Configure the GitHub App's single webhook URL as
+`https://<workspace-origin>/api/v1/integrations/github/webhook`, with JSON payloads
+and a high entropy webhook secret. The `push` subscription requires repository
+Contents read access (already covered by the base App's Contents write scope).
+The optional `member` subscription additionally requires organisation Members
+read access. This extra permission belongs to the webhook subscription; the
+base repository collaborator API does not require organisation Members access.
+See GitHub's [push](https://docs.github.com/en/webhooks/webhook-events-and-payloads#push)
+and [member](https://docs.github.com/en/webhooks/webhook-events-and-payloads#member)
+subscription requirements.
+
+The `member` event with action `added` records acceptance of a repository
+invitation; this is selected operational evidence, not the invitation management
+state owned by #93. Without the optional Members permission/subscription, no
+member deliveries are expected and the webhook acceptance count is incomplete.
+Use #93's invitation/collaborator polling path for acceptance reconciliation
+instead. This implementation does not change external App permissions.
+
+Supply the same App webhook secret as the write-only `webhook_secret` field on
+an authorised `configure` command to the event's existing GitHub App endpoint.
+It must contain 32–256 bytes. The server encrypts it under the credential keyring
+with a separate event/App/version purpose from App signing keys and participant
+identity tokens. Status returns only `webhook_configured`; secret values are
+never returned. Omitting the field retains the secret for the same App; replacing
+the App clears an omitted secret, and disconnect removes its encrypted copy.
+The existing `rotate` command re-encrypts the retained secret with the active
+local key; it does not change GitHub's shared secret or make provider calls.
+
+GitHub has one App-level webhook secret. Event-bound encrypted copies for an App
+must correspond to that configured secret. When rotating the shared secret in
+GitHub, update every relevant event configuration explicitly. This service never
+changes GitHub's webhook configuration. Replacing or locally re-encrypting an
+event secret invalidates pending deliveries authenticated with its old version;
+operators can see their discarded disposition. New deliveries must authenticate
+with the current secret.
+
+The machine endpoint has no browser session or CSRF dependency. It reads only an
+untrusted numeric repository ID to route through #92's immutable registry, then
+checks HMAC-SHA256 over the exact original body before selecting or writing
+activity. It accepts at most 1 MiB, rejects unsupported content encoding/events,
+checks the current App/installation/organisation/repository identity, and admits
+at most 1,000 pending deliveries per event. At capacity it returns 503 with a
+30-second `Retry-After`; GitHub redelivery is explicit. A delivery GUID identifies
+one original payload, and ingestion and durable job creation share a transaction.
+
+`GET /api/v1/events/{event_id}/github-activity` requires current organiser access
+and returns additive informational totals plus the latest 100 delivery records,
+operation IDs, attempts, approval/cancellation, job state and recorded/discarded
+status. The existing durable worker/reconciliation loop retries local failures
+and recovers interrupted application transactions without double counting. A
+read-only event retains readable evidence and rejects further webhook mutation;
+work waits under the existing job policy while writes are disabled. A worker
+rechecks approval, current source identity, secret version, team and repository
+state before applying selected metadata. No payload, commit message, private
+repository description, credential or webhook signature is logged or stored.
+Member deliveries have no provider occurrence timestamp, so `provider_at` remains
+null; push provider time uses repository `pushed_at`, never commit authored time.
+
+Push activity is admitted after actual challenge publication, including before
+live start. Delayed activity cannot lower the latest provider time, overwrite a
+branch head or change repository readiness. Counts are operational evidence only:
+webhooks never create formal submissions, alter assessment scores, reactivate a
+disbanded competition entry, delete repositories or execute attendee code.
+
+Primary references checked against the installed `go-github/v89` event types:
+[GitHub signature validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)
+and [GitHub webhook events and payloads](https://docs.github.com/en/webhooks/webhook-events-and-payloads).
+
+## Webhook migration rollback
+
+Migration 46 rollback is allowed only while its webhook tables are empty and no
+`github_webhook_activity` durable operations exist. Configured secrets, delivery
+GUID/digest/provenance, selected metadata, activity and associated work prevent
+rollback. An empty migration 46 rollback preserves retained schema 45 repository and
+provisioning history. The migration does not purge retained evidence.
 
 ## Native repository provisioning
 

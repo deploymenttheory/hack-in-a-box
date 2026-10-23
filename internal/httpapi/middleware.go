@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubwebhooks"
 )
 
 type requestIDKey struct{}
@@ -93,7 +95,11 @@ func (w jsonTimeoutWriter) WriteHeader(status int) {
 func limitBody(limit int64) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.ContentLength > limit {
+			requestLimit := limit
+			if githubWebhookRoute(r) && requestLimit > githubwebhooks.MaxBodyBytes {
+				requestLimit = githubwebhooks.MaxBodyBytes
+			}
+			if r.ContentLength > requestLimit {
 				writeError(
 					w,
 					r,
@@ -106,7 +112,7 @@ func limitBody(limit int64) func(http.Handler) http.Handler {
 			if r.Body != nil && r.Body != http.NoBody {
 				// Reading up to the cap also checks chunked bodies and handlers which
 				// do not consume a body. Allocation is bounded by the configured cap.
-				body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, limit))
+				body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, requestLimit))
 				if err != nil {
 					var tooLarge *http.MaxBytesError
 					if errors.As(err, &tooLarge) {

@@ -29,6 +29,7 @@ const (
 )
 
 const (
+	GitHubActivityRecorded      Action = "github.activity_recorded"
 	GitHubIntegrationConfigured Action = "github.integration_configured"
 	GitHubIntegrationInstalled  Action = "github.integration_installed"
 	SurveyChanged               Action = "survey.changed"
@@ -145,6 +146,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		PhotoConsentGranted,
 		PhotoConsentRevoked,
 		PhotoConsentUnknown,
+		GitHubActivityRecorded,
 		GitHubIntegrationConfigured,
 		GitHubIntegrationInstalled,
 		OutcomeChanged,

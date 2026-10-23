@@ -31,16 +31,18 @@ type (
 		Provider Provider
 	}
 	Status struct {
-		Revision       int64          `json:"revision"`
-		Configured     bool           `json:"configured"`
-		Configuration  *Configuration `json:"configuration,omitempty"`
-		InstallationID int64          `json:"installation_id"`
-		Diagnostics    Diagnostics    `json:"diagnostics"`
+		Revision          int64          `json:"revision"`
+		WebhookConfigured bool           `json:"webhook_configured"`
+		Configured        bool           `json:"configured"`
+		Configuration     *Configuration `json:"configuration,omitempty"`
+		InstallationID    int64          `json:"installation_id"`
+		Diagnostics       Diagnostics    `json:"diagnostics"`
 	}
 	Command struct {
 		Action string `json:"action"`
 		Configuration
-		PrivateKey string `json:"private_key"`
+		PrivateKey    string `json:"private_key"`
+		WebhookSecret string `json:"webhook_secret"`
 	}
 )
 
@@ -117,6 +119,11 @@ func (s Service) Status(ctx context.Context, actor, eventID uuid.UUID) (Status, 
 		c := config(row)
 		result.Configured = true
 		result.Configuration = &c
+		secret, secretErr := q.GitHubWebhookSecret(ctx, eventID)
+		if secretErr != nil && !errors.Is(secretErr, pgx.ErrNoRows) {
+			return database.ErrDatabase
+		}
+		result.WebhookConfigured = secretErr == nil && secret.AppID == row.AppID
 		result.InstallationID = row.InstallationID
 		result.Diagnostics = diagnostic("installation_required")
 		if row.InstallationID == 0 {
@@ -181,6 +188,13 @@ func (s Service) Configure(
 			); err != nil {
 				return database.ErrDatabase
 			}
+		}
+		currentAppID := input.AppID
+		if input.Action == "rotate" {
+			currentAppID = old.AppID
+		}
+		if err = s.configureWebhookSecret(ctx, q, eventID, currentAppID, input); err != nil {
+			return err
 		}
 		if err = q.ClearGitHubAppAttempts(ctx, eventID); err != nil {
 			return database.ErrDatabase

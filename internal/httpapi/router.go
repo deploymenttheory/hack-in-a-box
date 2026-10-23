@@ -38,8 +38,9 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 		router.Use(func(next http.Handler) http.Handler {
 			session := deps.Auth.Sessions.LoadAndSave(next)
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if !displayRoute(r) && (strings.HasPrefix(r.URL.Path, "/api/") ||
-					strings.HasPrefix(r.URL.Path, "/auth/")) {
+				if !githubWebhookRoute(r) && !displayRoute(r) &&
+					(strings.HasPrefix(r.URL.Path, "/api/") ||
+						strings.HasPrefix(r.URL.Path, "/auth/")) {
 					// TimeoutHandler buffers headers separately from identify's
 					// writer. Preserve no-store when SCS adds its cookie directive.
 					w.Header().Set("Cache-Control", "no-store")
@@ -141,6 +142,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 			},
 		},
 	)
+	router.Post(githubWebhookPath, githubWebhookHandler(deps))
 	router.Get("/ops/metrics", metrics.serve(deps.Pool, cfg.MetricsToken))
 	if deps.Auth != nil {
 		if deps.GitHub != nil {
