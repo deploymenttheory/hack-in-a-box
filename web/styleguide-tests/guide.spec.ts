@@ -190,3 +190,27 @@ test('permitted destination search excludes records and resets with examples', a
   await expect(page.getByLabel('Find a guide destination', { exact: true })).toHaveValue('')
   await expect(page.getByRole('link', { name: 'Component examples', exact: true })).toBeVisible()
 })
+
+test('keyboard skip focuses current guide content without replacing the section or draft', async ({ page }) => {
+  const frame = await examples(page, 'Components')
+  await frame.getByLabel('Example label (required)', { exact: true }).fill('Keep this synthetic draft')
+  const skip = page.getByRole('link', { name: 'Skip to guide content', exact: true })
+  await skip.focus()
+  await skip.press('Enter')
+  await expect(page).toHaveURL(/#components$/)
+  await expect(page.locator('#guide-main')).toBeFocused()
+  await expect(frame.getByLabel('Example label (required)', { exact: true })).toHaveValue('Keep this synthetic draft')
+})
+test('preview skip preserves the current request and does not trigger unsent navigation guards', async ({ page }) => {
+  const frame = await examples(page, 'Task patterns')
+  await frame.getByRole('link', { name: 'Project Atlas', exact: true }).click()
+  await frame.getByLabel('Decision note', { exact: true }).fill('Keep this synthetic decision')
+  const dialogs: string[] = []
+  page.on('dialog', async dialog => { dialogs.push(dialog.message()); await dialog.dismiss() })
+  const skip = frame.getByRole('link', { name: 'Skip to examples', exact: true })
+  await skip.focus()
+  await skip.press('Enter')
+  await expect(frame.locator('#preview-main')).toBeFocused()
+  await expect(frame.getByLabel('Decision note', { exact: true })).toHaveValue('Keep this synthetic decision')
+  expect(dialogs).toEqual([])
+})

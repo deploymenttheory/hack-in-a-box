@@ -1,3 +1,4 @@
+import { GuideSkipLink } from './skip-link'
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Button } from '../components/ui/button'
@@ -53,7 +54,7 @@ function App() {
   const revision = import.meta.env.VITE_STYLEGUIDE_REVISION as string | undefined
   const navIcons: Record<Section, IconName> = { overview: 'book', tokens: 'palette', typography: 'type', components: 'layout', patterns: 'list', qualities: 'check', contributing: 'code' }
   const version = revision && /^[a-f0-9]{7,40}$/i.test(revision) ? revision.slice(0, 12) : 'Local build'
-  return <Theme mode={mode} density={density}><a className="skip-link" href="#guide-main">Skip to guide content</a><div className="guide-shell">
+  return <Theme mode={mode} density={density}><GuideSkipLink target="guide-main">Skip to guide content</GuideSkipLink><div className="guide-shell">
     <header className="guide-header"><a href="#overview" className="guide-brand"><Icon name="book" />Hack-in-a-Box <span>Style guide</span></a><span className="guide-version">{version}</span></header>
     <div className="guide-controls" aria-label="Guide preview controls"><Field id="guide-theme" label="Theme"><Select value={mode} onChange={event => setMode(event.target.value as Mode)}><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></Select></Field><Field id="guide-palette" label="Example palette"><Select value={palette} onChange={event => setPalette(event.target.value as Palette)}><option value="platform">Platform</option><option value="light">Custom light</option><option value="dark">Custom dark</option><option value="threshold">Threshold contrast</option></Select></Field><Field id="guide-density" label="Density"><Select value={density} onChange={event => setDensity(event.target.value as typeof density)}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></Select></Field><Field id="guide-width" label="Example viewport" description="Applies to interactive component and task pattern examples."><Select disabled={section !== 'components' && section !== 'patterns'} value={width} onChange={event => setWidth(event.target.value)}><option value="full">Available width</option><option value="736">736px</option><option value="360">360px</option></Select></Field><Button icon="refresh" variant="outline" onClick={() => setResetKey(value => value + 1)}>Reset examples</Button></div>
     <p className="guide-synthetic">Interactive documentation with synthetic examples. This guide does not connect to your event, account or providers.</p>

@@ -69,3 +69,21 @@ independent Go host on 127.0.0.1:4187. It contained all three entries, productio
 assets/font and license, displayed source version 32fd13b47d7e, and passed the
 same 18 browser journeys. Full repository CI, independent review and final
 dependency rebase remain required in this draft.
+
+## Independent review corrections
+
+The guide-only Standards review found no issues. Spec review reproduced a P2
+keyboard bug: the parent skip anchor changed `#components` to `#guide-main`, so
+hash routing selected Principles and unmounted the current example. The nested
+preview skip also produced a history event and triggered the synthetic owner's
+unsent-note navigation guard. Four desktop/mobile regressions failed against the
+real Docker guide before the fix (parent section changed; preview opened an
+unsent-note confirmation).
+
+Both entries now use one guide-only skip component that moves focus without
+changing navigation/history. Current section, draft, selected request and exact
+intent remain mounted. All 26 guide browser journeys then passed against the actual
+Go host (20.1s), including the four new keyboard regressions and private-store/API/
+console guards. Current dependency stack also passes 104 units, lint and both portal
+builds. The prior Docker/artifact evidence remains explicitly scoped to 32fd13b;
+final-head CI and dependency merge/rebase remain required.
