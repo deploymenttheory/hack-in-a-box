@@ -15,15 +15,15 @@ const empty = (): Metadata => ({ kind: 'photo', title: '', caption: '', captured
 
 function useMediaWrite(context: MediaContext) {
   const identity = useIdentity(), [pending, setPending] = useState(false), [uncertain, setUncertain] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState('')
-  const alive = useRef(true)
+  const alive = useRef(true), inFlight = useRef(false)
   const retained = useRef<Operation | null>(null), generation = useRef(0), request = useRef<AbortController | null>(null)
   useEffect(() => () => { alive.current = false; generation.current++; request.current?.abort(); retained.current = null }, [])
   async function send(operation?: Operation) {
-    if (!alive.current || pending || !context.writable) return
+    if (!alive.current || inFlight.current || pending || !context.writable) return
     if (uncertain && operation) return
     const intent = operation ?? retained.current
     if (!intent) return
-    retained.current = intent; const ticket = generation.current, abort = new AbortController(); request.current = abort
+    inFlight.current = true; retained.current = intent; const ticket = generation.current, abort = new AbortController(); request.current = abort
     setPending(true); setFailure(undefined); setNotice('Checking current access…')
     try {
       const session = await getSession({ signal: abort.signal })
@@ -43,13 +43,16 @@ function useMediaWrite(context: MediaContext) {
       if (error instanceof APIError && error.status < 500) { retained.current = null; setUncertain(false); setNotice('The request was rejected. Refresh and review before a new intent.') }
       else { setUncertain(true); setNotice('The outcome is uncertain. Check current media before deliberately retrying this identical intent. No automatic retry will run.') }
       await context.refresh()
-    } finally { if (ticket === generation.current) setPending(false) }
+    } finally { inFlight.current = false; if (ticket === generation.current) setPending(false) }
   }
   return { pending, uncertain, send, notice, controls: <>{!!failure && <Failure error={failure} />}<p role="status">{notice}</p>{uncertain && <div className="actions"><Button variant="outline" disabled={pending} onClick={() => void context.refresh()}>Check current media</Button><Button variant="outline" disabled={pending || !context.writable} onClick={() => void send()}>Retry identical media intent</Button><Button variant="outline" disabled={pending} onClick={() => { retained.current = null; setUncertain(false); setNotice('Retained intent discarded. Check current media before starting again.'); setFailure(undefined) }}>Discard retained intent</Button></div>}</> }
 }
 export function MediaCollector({ context }: { context: MediaContext }) {
+  const preparing = useRef(false)
   const [metadata, setMetadata] = useState(empty), [file, setFile] = useState<File | null>(null), [reason, setReason] = useState(''), [localError, setLocalError] = useState<unknown>(), write = useMediaWrite(context)
   async function submit() {
+    if (preparing.current) return
+    preparing.current = true
     setLocalError(undefined)
     try {
       if (metadata.kind === 'photo') {
@@ -57,7 +60,7 @@ export function MediaCollector({ context }: { context: MediaContext }) {
         const bytes = new Uint8Array(await file.arrayBuffer()); let binary = ''; for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
         await write.send({ revision: context.revision, key: crypto.randomUUID(), upload: { id: crypto.randomUUID(), metadata, reason, filename: file.name, media_type: file.type as 'image/png' | 'image/jpeg', content: btoa(binary) } })
       } else await write.send({ id: crypto.randomUUID(), revision: context.revision, command: { action: 'save', version: 0, command_id: crypto.randomUUID(), metadata, reason } })
-    } catch (error) { setLocalError(error) }
+    } catch (error) { setLocalError(error) } finally { preparing.current = false }
   }
   return <section className="panel media-private"><h2>Submit media for organiser review</h2><p>Uploads and unsent metadata are private to you and organisers. Tag every identifiable participant. Unknown or refused consent blocks release; untagged media still needs an explicit identification review. Keep other sensitive details out of captions.</p><form onSubmit={event => { event.preventDefault(); void submit() }}><fieldset disabled={write.pending || write.uncertain || !context.writable}>
     <label htmlFor="media-kind">Media type</label><select id="media-kind" value={metadata.kind} onChange={e => { setMetadata({ ...metadata, kind: e.target.value as Metadata['kind'], recording_url: '' }); setFile(null) }}><option value="photo">Photograph</option><option value="recording">External recording link</option></select>

@@ -699,3 +699,52 @@ func TestPhotoIntentIdempotencyAndOrdinaryFileCannotBeAdopted(t *testing.T) {
 		t.Fatal("existing receipt bypassed current photographer authority", err)
 	}
 }
+
+func TestNativeStaffSelfConsentDoesNotGrantGalleryOrPhotographerGuidance(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	f.exec(
+		`UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2`,
+		f.event,
+		f.other,
+	)
+	f.exec(
+		`INSERT INTO event_memberships(event_id,person_id,role)VALUES($1,$2,'mentor')`,
+		f.event,
+		f.other,
+	)
+	choice, err := f.privacy.OwnPhotoConsent(ctx, f.other, f.event)
+	if err != nil || !choice.CanOptIn {
+		t.Fatal("current staff could not make own choice", choice, err)
+	}
+	choice, err = f.privacy.SetOwnPhotoConsent(ctx, f.other, f.event, choice.Revision, "yes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.s.List(
+		ctx,
+		f.other,
+		f.event,
+		uuid.Nil,
+		50,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("self consent conferred gallery authority", err)
+	}
+	f.exec(
+		`UPDATE events SET stage='archived',writes_allowed=false,completed_at=$2 WHERE id=$1`,
+		f.event,
+		f.now,
+	)
+	if _, err = f.privacy.SetOwnPhotoConsent(
+		ctx,
+		f.other,
+		f.event,
+		choice.Revision,
+		"no",
+	); err != nil {
+		t.Fatal("archived staff self revocation blocked by gallery policy", err)
+	}
+}

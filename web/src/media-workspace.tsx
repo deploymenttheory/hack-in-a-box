@@ -16,6 +16,10 @@ export function MediaWorkspacePage() {
   const { eventId, mediaId } = useParams({ strict: false }), identity = useIdentity()
   return eventId ? <MediaWorkspace key={`${identity.person.id}:${identity.draft_scope}:${eventId}:${mediaId ?? ''}`} eventID={eventId} mediaID={mediaId} /> : <Failure error={new Error('Missing event')} />
 }
+export function OwnPhotoConsentPage() {
+  const { eventId } = useParams({ strict: false }), identity = useIdentity()
+  return eventId ? <section className="workspace media-workspace" key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><h1>Your event photo consent</h1><p>This self-only choice does not grant gallery access. Withdrawing consent blocks future protected media access; it cannot recall copies already downloaded or recordings hosted elsewhere.</p><PhotoConsent eventID={eventId} refresh={async () => {}} deny={() => {}} /></section> : <Failure error={new Error('Missing event')} />
+}
 function MediaWorkspace({ eventID, mediaID }: { eventID: string; mediaID?: string }) {
   const identity = useIdentity(), cache = useQueryClient(), [denial, setDenial] = useState<unknown>()
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'media'), identity.draft_scope], [identity.person.id, identity.draft_scope, eventID])
@@ -26,7 +30,7 @@ function MediaWorkspace({ eventID, mediaID }: { eventID: string; mediaID?: strin
   const deny = useCallback((error: unknown) => { if (mediaDenied(error)) setDenial(error) }, [])
   async function refresh() { const result = await query.refetch(); if (mediaID) await detail.refetch(); if (!result.error) setDenial(undefined) }
   const currentError = denial || query.error || (mediaID ? detail.error : undefined), page = query.data?.pages[0]
-  if (currentError) return <section className="workspace"><h1>Event media</h1><p>Current media access could not be verified. Images, local forms and private review details have been cleared.</p><Failure error={currentError} retry={() => void refresh()} /></section>
+  if (currentError) return <section className="workspace"><h1>Event media</h1><Link to="/events/$eventId/photo-consent" params={{ eventId: eventID }}>Manage your own photo consent</Link><p>Current media access could not be verified. Images, local forms and private review details have been cleared.</p><Failure error={currentError} retry={() => void refresh()} /></section>
   if (!page || (mediaID && !detail.data)) return <Loading />
   const context: MediaContext = { eventID, revision: page.revision, refresh, deny, writable: page.can_collect }
   const items = mediaID ? [detail.data!] : query.data!.pages.flatMap(p => p.items)
@@ -63,7 +67,7 @@ function PhotoConsent({ eventID, refresh, deny }: { eventID: string; refresh: ()
   return <section className="panel media-consent"><h2>Your photo consent</h2><p>Current choice: <strong>{query.data.choice}</strong>. This changes only your event photo consent, without editing other registration details.</p><div className="actions"><Button disabled={pending || uncertain || !query.data.can_opt_in} onClick={() => void choose('yes')}>Allow identifiable event media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('no')}>Do not allow identifiable media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('unknown')}>Withdraw my consent choice</Button></div>{uncertain && <p role="status">The save outcome is uncertain. Your current choice was refreshed above. Check it before making another explicit choice. <Button variant="outline" onClick={() => { setUncertain(false); setFailure(undefined) }}>I have checked my current choice</Button></p>}{!!failure && <Failure error={failure} />}</section>
 }
 function MediaCard({ item, context }: { item: Item; context: MediaContext }) {
-  return <article className="panel media-card"><p className="eyebrow">{item.kind} · {item.state} · version {item.version}</p><h3><Link to="/events/$eventId/media/$mediaId" params={{ eventId: context.eventID, mediaId: item.id }}>{item.title}</Link></h3><p>{item.caption}</p>{item.captured_at && <p>Captured {new Date(item.captured_at).toLocaleString()}</p>}
+  return <article className={`panel media-card${item.state !== 'released' || item.consent_state !== 'reviewed' ? ' media-private' : ''}`}><p className="eyebrow">{item.kind} · {item.state} · version {item.version}</p><h3><Link to="/events/$eventId/media/$mediaId" params={{ eventId: context.eventID, mediaId: item.id }}>{item.title}</Link></h3><p>{item.caption}</p>{item.captured_at && <p>Captured {new Date(item.captured_at).toLocaleString()}</p>}
     {item.kind === 'photo' && item.can_read_original && <ProtectedPhoto item={item} context={context} />}
     {item.recording_url && <p><a href={item.recording_url} target="_blank" rel="noopener noreferrer">Open reviewed external recording</a> · Hosted elsewhere; this app does not host or recall third-party copies.</p>}
     {item.can_edit && <MediaEditor item={item} context={context} />}

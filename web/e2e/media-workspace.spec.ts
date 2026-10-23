@@ -73,6 +73,7 @@ test('organiser explicitly reviews untagged content before separate release and 
   const s = state(); s.role = 'organiser'; s.items = [{ ...source(), state: 'draft', can_edit: true, can_review: true, can_publish: false, can_withdraw: true, consent_state: 'not_reviewed' }]; await mockMedia(page, s); await page.goto(gallery)
   await page.getByRole('button', { name: 'Open private media review' }).click()
   await page.getByLabel('Reason for this action').fill('Checked venue image')
+  await page.emulateMedia({ media: 'print' }); await expect(page.locator('.media-card')).toBeHidden(); await page.emulateMedia({ media: 'screen' })
   await expect(page.getByRole('button', { name: 'Record organiser review' })).toBeDisabled()
   await page.getByLabel('I checked the media and identified every recognisable person.').check(); await page.getByLabel('No identifiable people are present.').check(); await page.getByLabel('I reviewed the content, caption, recording destination and challenge classification.').check()
   await page.getByRole('button', { name: 'Record organiser review' }).click(); await page.getByRole('button', { name: 'Open private media review' }).click()
@@ -92,4 +93,31 @@ test('event navigation clears protected image and private unsent metadata', asyn
   await page.getByLabel('Media title', { exact: true }).fill('UNSENT PRIVATE CAPTION')
   await page.getByRole('button', { name: 'View protected photo' }).click(); await expect(page.locator('.media-photo img')).toBeVisible()
   await page.goto(`/events/${secondID}/media`); await expect(page.locator('.media-photo img')).toHaveCount(0); await expect(page.locator('input[value="UNSENT PRIVATE CAPTION"]')).toHaveCount(0)
+})
+
+test('two submits during deferred local file reading retain only one upload intent', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = File.prototype.arrayBuffer
+    const readers: (() => void)[] = []
+    Object.assign(window, { mediaFileReaders: readers })
+    File.prototype.arrayBuffer = function () { return new Promise(resolve => { readers.push(() => { void original.call(this).then(resolve) }) }) }
+  })
+  const s = state(); s.role = 'photographer'; s.items = []; await mockMedia(page, s); await page.goto(gallery)
+  await page.getByLabel('Media title', { exact: true }).fill('One deliberate photo')
+  await page.getByLabel('Photograph (PNG or JPEG, up to 8 MiB)').setInputFiles({ name: 'venue.png', mimeType: 'image/png', buffer: png })
+  await page.getByLabel('Submission reason').fill('One collection intent')
+  await page.getByRole('button', { name: 'Submit private media draft' }).click()
+  await page.getByRole('button', { name: 'Submit private media draft' }).click()
+  await page.evaluate(() => { const readers = (window as unknown as { mediaFileReaders: (() => void)[] }).mediaFileReaders; readers.forEach(read => read()) })
+  await expect(page.getByText('Saved. Current media has been refreshed.')).toBeVisible()
+  expect(s.uploads).toHaveLength(1)
+})
+
+test('own consent remains reachable after gallery denial without granting gallery access', async ({ page }) => {
+  const s = state(); s.denied = true; s.archived = true; await mockMedia(page, s); await page.goto(gallery)
+  await page.getByRole('link', { name: 'Manage your own photo consent' }).click()
+  await expect(page.getByRole('heading', { name: 'Your event photo consent', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Do not allow identifiable media' }).click()
+  await expect(page.getByText('Current choice:', { exact: false })).toContainText('no')
+  await expect(page.getByRole('button', { name: 'View protected photo' })).toHaveCount(0); expect(s.denied).toBe(true)
 })
