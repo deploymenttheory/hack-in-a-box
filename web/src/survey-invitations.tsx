@@ -37,7 +37,7 @@ export function SurveyInvitations({ event, configuration, writable, onDirty, den
       const value = unwrap(await api.POST('/api/v1/events/{event_id}/communications/automation', { params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.eventRevision}"` } }, body: command }))
       if (!active.current) return
       setUncertain(undefined); setReason(''); setNotice(`Native invitation operation ${command.action.replaceAll('_', ' ')} recorded. This is not a provider receipt.`)
-      cache.setQueryData([...key, 'automation'], { pages: [value.page], pageParams: [{}] }); await refresh()
+      cache.setQueryData([...key, 'automation'], { pages: [value.page], pageParams: [{}] }); await refresh().catch(error => { if (nativeDenied(error)) deny(error); else setFailure(error) })
     } catch (error) {
       if (!active.current) return
       if (nativeDenied(error)) { deny(error); return }
@@ -62,7 +62,7 @@ export function SurveyInvitations({ event, configuration, writable, onDirty, den
     {!configuration.published_at && <p role="status">Publish the fixed survey invitations before creating its native communication binding.</p>}
     <Button variant="outline" onClick={() => { if (!composeDirty || window.confirm('Leave unsaved campaign text? It is kept only in the campaign editor and will be cleared.')) { setCompose(!compose); setComposeDirty(false) } }}>{compose ? 'Close invitation composer' : 'Compose and approve invitation message'}</Button>
     {compose && <CampaignWorkspace key={`${event.id}:${writable}`} event={event} onDirty={setComposeDirty} />}
-    {automation.error || campaigns.error ? <Failure error={automation.error || campaigns.error} /> : !page || campaigns.isPending ? <Loading /> : <>
+    {automation.error || campaigns.error ? <Failure error={automation.error || campaigns.error} retry={() => void refresh().catch(error => { if (nativeDenied(error)) deny(error); else setFailure(error) })} /> : !page || campaigns.isPending ? <Loading /> : <>
       {page.paused && <p className="notice">Event communication automation is paused. Approval does not resume it or claim delivery.</p>}
       <fieldset disabled={pending || !!uncertain || !writable}><legend>Native survey-opening binding</legend><label htmlFor="survey-invitation-campaign">Approved invitation campaign and exact version</label><select id="survey-invitation-campaign" value={campaignId} onChange={e => setCampaignId(e.target.value)}><option value="">Choose a currently approved campaign</option>{approved.map(item => <option key={item.campaign.definition.id} value={item.campaign.definition.id}>{item.campaign.definition.name} · version {item.campaign.version}</option>)}</select>
         <label htmlFor="survey-invitation-lateness">Explicit maximum lateness (seconds)</label><input id="survey-invitation-lateness" type="number" min={1} max={86400} value={lateness} onChange={e => setLateness(e.target.valueAsNumber)} /><label htmlFor="survey-invitation-reason">Reason for this invitation decision</label><textarea id="survey-invitation-reason" maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} />

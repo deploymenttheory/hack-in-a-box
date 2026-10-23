@@ -27,7 +27,12 @@ func TestSurveyMeasurementDashboardConsumesNativeRetainedOutcomeEvidence(t *test
 	f.router = NewRouter(
 		f.cfg,
 		slog.New(slog.NewJSONHandler(&f.logs, nil)),
-		Dependencies{Pool: pool, Auth: f.auth, Outcomes: native},
+		Dependencies{
+			Pool:       pool,
+			Auth:       f.auth,
+			Outcomes:   native,
+			Objectives: objectives.Service{Pool: pool},
+		},
 	)
 	id, objectiveID, measureID := uuid.New(), uuid.New(), uuid.New()
 	command := outcomes.Command{
@@ -158,6 +163,12 @@ func TestSurveyMeasurementDashboardConsumesNativeRetainedOutcomeEvidence(t *test
 		); err != nil {
 			t.Fatal(err)
 		}
+	}
+	planning := f.request(f.owner, "GET", f.base()+"/objectives", nil, 0)
+	f.expect(planning, 200)
+	if !strings.Contains(planning.Body.String(), `"unit":"people"`) ||
+		!strings.Contains(planning.Body.String(), `"version":2`) {
+		t.Fatal("current planning version did not remain separate", planning.Body.String())
 	}
 	path := f.base() + "/outcomes/observations?limit=1"
 	f.expect(f.request(dbgen.Person{}, "GET", path, nil, 0), 401)

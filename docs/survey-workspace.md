@@ -42,6 +42,11 @@ insufficient. Counts keep separate cohorts, denominators and publication dates;
 they are never pooled. Reusing questions creates a new unapproved draft and never
 silently retargets another edition's success measure.
 
+The overview also lists the native paginated current planning objectives, including
+objectives with no survey link. A later planning version is labelled separately
+from an older exact survey or outcome snapshot; no new definition retargets a
+retained observation. Definition creation time is not an observation date.
+
 The follow-through panel consumes the native outcome owner's paginated
 `/events/{event_id}/outcomes/observations` projection. It displays estimates,
 self-reports and demonstrated-adoption records separately. Every record keeps its

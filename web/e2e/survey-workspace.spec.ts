@@ -234,3 +234,29 @@ test('archived organiser dashboard retains only native-authorised historical fol
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await expect(page.getByRole('button',{name:'Freeze cohort and save reviewed summary'})).toBeDisabled()
  expect(f.reportWrites).toHaveLength(0)
 })
+
+
+test('configured objectives without survey links remain distinct from retained outcome definitions',async({page},info)=>{
+ const f=await surveyFixture(page,true),retained=observation('self_report',1,'3'),reference=retained.measures[0].reference
+ retained.measures[0].definition.unit='teams'
+ const current:components['schemas']['ObjectiveView']={reference:{id:reference.objective.id,version:2},definition:{description:'Current configured objective without a questionnaire link',owner_id:null,theme_sensitive:true,measures:[{...retained.measures[0].definition,unit:'people',baseline:{value:'0',basis:'estimate'},target:'50'}]},retired:false,reason:'Explicit current planning revision',actor_id:'e1706650-33c9-464e-9cbc-56ed670a27bf',at:'2027-06-28T08:00:00Z',current_version:2,can_manage:true,planning_gaps:[]}
+ const later=structuredClone(current);later.reference.id='c6bcc811-0168-4190-b5d7-2b3f575094de';later.definition.description='Retired planning objective';later.retired=true
+ f.state.objectivePages=[[current],[later]];f.state.observationPages=[[retained]]
+ await page.goto(managePath)
+ const configured=page.getByRole('region',{name:'Configured event objectives',exact:true});await expect(configured).toContainText('Current configured objective without a questionnaire link')
+ await expect(configured).toContainText('Current planning version 2');await expect(configured.getByRole('cell',{name:'0 (estimate)',exact:true})).toBeVisible();await expect(configured.getByRole('cell',{name:'people',exact:true})).toBeVisible()
+ await expect(page.getByRole('region',{name:'Self-reported follow-through',exact:true})).toContainText('Exact retained objective version 1');await expect(page.getByRole('region',{name:'Self-reported follow-through',exact:true}).getByRole('cell',{name:'teams',exact:true})).toBeVisible()
+ await expect(page.getByText('No success measure is linked to this questionnaire.',{exact:false})).toBeVisible()
+ await page.getByRole('button',{name:'More configured event objectives'}).focus();await page.keyboard.press('Enter');await expect(configured).toContainText('Retired planning objective');await expect(configured).toContainText('Retired')
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await configured.screenshot({path:info.outputPath('configured-objectives.png')})
+})
+
+
+test('a confirmed invitation operation stays confirmed when its later refresh fails',async({page})=>{
+ const f=await surveyFixture(page,true)
+ await page.route('**/communications/automation',async route=>route.request().method()==='GET'&&f.automationWrites.length?route.fulfill({status:503,json:{error:{code:'unavailable',message:'Temporary native read failure.',request_id:'synthetic'}}}):route.fallback())
+ await page.goto(managePath);await page.getByRole('button',{name:'Invitations',exact:true}).click();await page.getByLabel('Approved invitation campaign and exact version').selectOption(f.campaign.campaign.definition.id)
+ await page.getByLabel('Reason for this invitation decision').fill('Reviewed native invitation');await page.getByRole('button',{name:'Save exact survey invitation binding'}).click()
+ await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('operation save recorded');await expect(page.getByRole('button',{name:'Check exact invitation operation'})).toHaveCount(0)
+ expect(f.automationWrites).toHaveLength(1);expect(f.automation.bindings).toHaveLength(1)
+})
