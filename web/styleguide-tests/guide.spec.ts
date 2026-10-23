@@ -214,3 +214,18 @@ test('preview skip preserves the current request and does not trigger unsent nav
   await expect(frame.getByLabel('Decision note', { exact: true })).toHaveValue('Keep this synthetic decision')
   expect(dialogs).toEqual([])
 })
+
+test('local records use actual action buttons and preserve detail return focus', async ({ page }) => {
+  const frame = await examples(page, 'Task patterns')
+  const local = frame.getByRole('region', { name: 'Local record actions', exact: true })
+  await expect(local.getByRole('link', { name: 'Synthetic local draft', exact: true })).toHaveCount(0)
+  const open = local.getByRole('button', { name: 'Review Synthetic local draft', exact: true })
+  await open.focus(); await open.press('Enter')
+  await expect(local.getByRole('heading', { name: 'Synthetic local draft', exact: true })).toBeFocused()
+  await local.getByRole('link', { name: 'Back to local drafts', exact: true }).click()
+  await expect(open).toBeFocused()
+  await open.click()
+  await page.getByLabel('Synthetic portal', { exact: true }).selectOption('participant')
+  await expect(local.getByRole('region', { name: 'Synthetic local draft', exact: true })).toHaveCount(0)
+  await expect(open).toBeVisible()
+})

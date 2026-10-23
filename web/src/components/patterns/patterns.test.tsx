@@ -215,3 +215,15 @@ test('narrow sorting exposes only declared columns and reports owner direction w
  rerender(themed(<CollectionRecords {...base} />))
  expect(screen.queryByRole('group',{name:'Sort Current requests'})).not.toBeInTheDocument()
 })
+
+test('local record actions do not manufacture links and retain keyboard focus across a breakpoint', async () => {
+ const user = userEvent.setup(), opened = vi.fn()
+ render(themed(<CollectionRecords {...base} destination={undefined} actions={row => <button data-record-focus={row.id} onClick={() => opened(row.id)}>Review {row.name}</button>} />))
+ expect(screen.queryByRole('link')).not.toBeInTheDocument()
+ const button = screen.getByRole('button', { name: 'Review Project Atlas' })
+ button.focus(); await user.keyboard('{Enter}'); expect(opened).toHaveBeenCalledExactlyOnceWith('atlas')
+ act(() => { narrow = true; listeners.forEach(listener => listener()) })
+ expect(screen.queryByRole('table')).not.toBeInTheDocument()
+ expect(screen.getByRole('button', { name: 'Review Project Atlas' })).toHaveFocus()
+ expect(screen.queryByRole('link')).not.toBeInTheDocument()
+})

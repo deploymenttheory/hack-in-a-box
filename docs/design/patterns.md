@@ -75,3 +75,15 @@ Exact-head repository CI and independent review remain required. Domain screen
 migrations and the final parity audit remain separate backlog work.
 
 Narrow records preserve owner-supported sorting with labelled native buttons for visible sortable columns, active direction and disabled state. Rows are never reordered by the pattern; the owner supplies their resulting order. Repeated deliberate synthetic searches and clears issue a fresh scoped read even if the query and cursor are unchanged.
+
+
+## Local records without a route
+
+Omit CollectionRecords.destination for local editor selections that have no
+addressable route. The record name remains text; supply a labelled native button
+through actions. Routed records retain the existing real anchor/href semantics.
+Do not invent fragment/bookmark destinations for a domain screen that cannot
+restore them. Owners retain dirty/uncertain navigation guards and return focus
+when their inspector closes. Set data-record-focus to the row key on the primary
+local action when it must preserve focus across a responsive breakpoint. The
+interactive guide includes the actual production composition and keyboard example.
