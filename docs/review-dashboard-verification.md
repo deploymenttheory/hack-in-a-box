@@ -53,3 +53,13 @@ shared participant test selection for both review dashboards and automation
 recovery. The combined participant dashboard/delivery/recovery check passes 42
 cases in 16.5 s. The rebase leaves reviewed production source unchanged; its only
 conflict was the additive test-selection list.
+
+After #215 merged, final composition rebases onto actual main `5db301f` (schema
+39). Additive conflicts preserve both Objectives and Review coverage navigation,
+both style blocks and every participant test entry. The combined build exposed
+an accidental huddle-only `can_record` addition in three unrelated schemas;
+removing those fields and regenerating preserves every pre-existing schema
+exactly, with 22 new dashboard schemas only. Actual objective/feedback/help
+PostgreSQL/race HTTP checks pass in 14.039 s. Both surfaces build; the composed
+admin objectives/templates/content/dashboard check passes 82 cases in 50.6 s,
+and participant disclosure/dashboard/delivery/recovery passes 48 cases in 29.0 s.
