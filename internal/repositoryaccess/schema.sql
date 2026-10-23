@@ -13,11 +13,12 @@ CREATE TABLE repository_access_plans (
  approved_at timestamptz,
  CHECK((approved_by IS NULL)=(approved_at IS NULL)),
  UNIQUE(event_id,team_id,version),
+ UNIQUE(id,event_id,team_id),
  FOREIGN KEY(event_id,team_id) REFERENCES team_repositories(event_id,team_id)
 );
 CREATE TABLE repository_access_effects (
  id uuid PRIMARY KEY,
- plan_id uuid NOT NULL REFERENCES repository_access_plans(id),
+ plan_id uuid NOT NULL,
  event_id uuid NOT NULL,
  team_id uuid NOT NULL,
  definition jsonb NOT NULL CHECK(jsonb_typeof(definition)='object'),
@@ -28,12 +29,15 @@ CREATE TABLE repository_access_effects (
  created_at timestamptz NOT NULL DEFAULT now(),
  updated_at timestamptz NOT NULL DEFAULT now(),
  CHECK(attempted=(dispatch_id IS NOT NULL)),
+ FOREIGN KEY(plan_id,event_id,team_id) REFERENCES repository_access_plans(id,event_id,team_id),
+ UNIQUE(id,event_id,team_id),
  FOREIGN KEY(event_id,team_id) REFERENCES team_repositories(event_id,team_id)
 );
 CREATE TABLE repository_access_grants (
- id uuid PRIMARY KEY REFERENCES repository_access_effects(id),
+ id uuid PRIMARY KEY,
  event_id uuid NOT NULL,
  team_id uuid NOT NULL,
+ FOREIGN KEY(id,event_id,team_id) REFERENCES repository_access_effects(id,event_id,team_id),
  person_id uuid NOT NULL REFERENCES people(id),
  github_id bigint NOT NULL CHECK(github_id>0),
  link_revision bigint NOT NULL CHECK(link_revision>=0),
@@ -58,3 +62,32 @@ CREATE TABLE repository_access_observations (
  PRIMARY KEY(event_id,team_id),
  FOREIGN KEY(event_id,team_id) REFERENCES team_repositories(event_id,team_id)
 );
+-- +goose StatementBegin
+CREATE FUNCTION protect_repository_access_history() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+ IF TG_TABLE_NAME='repository_access_plans' THEN
+  IF (NEW.id,NEW.event_id,NEW.team_id,NEW.version,NEW.fingerprint,NEW.definition,NEW.created_by,NEW.created_at) IS DISTINCT FROM
+     (OLD.id,OLD.event_id,OLD.team_id,OLD.version,OLD.fingerprint,OLD.definition,OLD.created_by,OLD.created_at)
+   OR (OLD.approved_at IS NOT NULL AND (NEW.approved_by,NEW.approved_at) IS DISTINCT FROM (OLD.approved_by,OLD.approved_at))
+  THEN RAISE EXCEPTION 'repository access review history is immutable'; END IF;
+ ELSIF TG_TABLE_NAME='repository_access_effects' THEN
+  IF (NEW.id,NEW.plan_id,NEW.event_id,NEW.team_id,NEW.definition,NEW.created_at) IS DISTINCT FROM
+     (OLD.id,OLD.plan_id,OLD.event_id,OLD.team_id,OLD.definition,OLD.created_at)
+   OR (OLD.attempted AND (NOT NEW.attempted OR NEW.dispatch_id IS DISTINCT FROM OLD.dispatch_id OR NEW.state='planned'))
+  THEN RAISE EXCEPTION 'repository access dispatch history is immutable'; END IF;
+ ELSIF TG_TABLE_NAME='repository_access_grants' THEN
+  IF (NEW.id,NEW.event_id,NEW.team_id,NEW.person_id,NEW.github_id,NEW.link_revision,NEW.role,NEW.permission,NEW.created_at) IS DISTINCT FROM
+     (OLD.id,OLD.event_id,OLD.team_id,OLD.person_id,OLD.github_id,OLD.link_revision,OLD.role,OLD.permission,OLD.created_at)
+   OR (OLD.app_managed AND NOT NEW.app_managed)
+   OR (OLD.invitation_id IS NOT NULL AND NEW.invitation_id IS DISTINCT FROM OLD.invitation_id)
+  THEN RAISE EXCEPTION 'repository access grant provenance is immutable'; END IF;
+ END IF;
+ RETURN NEW;
+END $$;
+-- +goose StatementEnd
+CREATE TRIGGER repository_access_plans_identity BEFORE UPDATE ON repository_access_plans FOR EACH ROW EXECUTE FUNCTION protect_repository_access_history();
+CREATE TRIGGER repository_access_effects_identity BEFORE UPDATE ON repository_access_effects FOR EACH ROW EXECUTE FUNCTION protect_repository_access_history();
+CREATE TRIGGER repository_access_grants_identity BEFORE UPDATE ON repository_access_grants FOR EACH ROW EXECUTE FUNCTION protect_repository_access_history();
+CREATE TRIGGER repository_access_plans_retained BEFORE DELETE OR TRUNCATE ON repository_access_plans FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
+CREATE TRIGGER repository_access_effects_retained BEFORE DELETE OR TRUNCATE ON repository_access_effects FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
+CREATE TRIGGER repository_access_grants_retained BEFORE DELETE OR TRUNCATE ON repository_access_grants FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();

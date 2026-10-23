@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type OwnView struct {
@@ -36,7 +37,7 @@ func (s Service) Own(ctx context.Context, actor, eventID, teamID uuid.UUID) (Own
 		}
 		authority, err := access.TeamPermissions(ctx, q, actor, eventID, teamID)
 		if err != nil {
-			return err
+			return wrap("authorize own repository scope", err)
 		}
 		if !authority.Active {
 			return access.ErrForbidden
@@ -47,15 +48,17 @@ func (s Service) Own(ctx context.Context, actor, eventID, teamID uuid.UUID) (Own
 			}
 			roster, err := (mentors.Service{}).ReadInTransaction(ctx, tx, actor, eventID)
 			if err != nil {
-				return err
+				return wrap("authorize own current mentor invitations", err)
 			}
 			current := false
 			for _, assignment := range roster.Published {
-				if assignment.TeamID == teamID && assignment.PersonID == actor && !s.now().Before(assignment.Window.Start) && s.now().Before(assignment.Window.End) {
+				if assignment.TeamID == teamID && assignment.PersonID == actor &&
+					!s.now().Before(assignment.Window.Start) &&
+					s.now().Before(assignment.Window.End) {
 					current = true
 				}
 			}
-			if !current {
+			if !current || invalidCoverage(roster.PublishedGaps, teamID, actor) {
 				return access.ErrForbidden
 			}
 		}
@@ -86,5 +89,5 @@ func (s Service) Own(ctx context.Context, actor, eventID, teamID uuid.UUID) (Own
 		_, out.ObservedAt, out.Diagnostic, err = readObservation(ctx, tx, eventID, teamID)
 		return err
 	})
-	return out, err
+	return out, wrap("read own repository invitations", err)
 }

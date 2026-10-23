@@ -31,19 +31,32 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 			if tokens == 1 {
 				expected = "read"
 			}
-			if len(input.Repositories) != 1 || input.Repositories[0] != "hackbox-team" || len(input.Permissions) != 2 || input.Permissions["metadata"] != "read" || input.Permissions["administration"] != expected {
+			if len(input.Repositories) != 1 || input.Repositories[0] != "hackbox-team" ||
+				len(input.Permissions) != 2 ||
+				input.Permissions["metadata"] != "read" ||
+				input.Permissions["administration"] != expected {
 				t.Errorf("unsafe token scope %+v", input)
 			}
-			fmt.Fprintf(w, `{"token":"synthetic-private-token","expires_at":%q}`, time.Now().Add(time.Hour).UTC().Format(time.RFC3339))
+			fmt.Fprintf(
+				w,
+				`{"token":"synthetic-private-token","expires_at":%q}`,
+				time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+			)
 		case "/repos/synthetic-org/hackbox-team":
-			fmt.Fprint(w, `{"id":900,"name":"hackbox-team","private":true,"description":"hackbox-provisioning:synthetic","owner":{"id":99}}`)
+			fmt.Fprint(
+				w,
+				`{"id":900,"name":"hackbox-team","private":true,"description":"hackbox-provisioning:synthetic","owner":{"id":99}}`,
+			)
 		case "/repos/synthetic-org/hackbox-team/collaborators":
 			if r.URL.Query().Get("affiliation") != "direct" {
 				t.Error("unbounded indirect collaborator view")
 			}
 			fmt.Fprint(w, `[{"id":101,"login":"renamed-user","role_name":"write"}]`)
 		case "/repos/synthetic-org/hackbox-team/invitations":
-			fmt.Fprint(w, `[{"id":501,"invitee":{"id":102},"permissions":"read","expired":true,"created_at":"2027-01-01T00:00:00Z"}]`)
+			fmt.Fprint(
+				w,
+				`[{"id":501,"invitee":{"id":102},"permissions":"read","expired":true,"created_at":"2027-01-01T00:00:00Z"}]`,
+			)
 		case "/user/101":
 			id := 101
 			if mode == "identity-mismatch" {
@@ -75,7 +88,10 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 				return
 			}
 			w.WriteHeader(201)
-			fmt.Fprint(w, `{"id":502,"invitee":{"id":101},"repository":{"id":900},"permissions":"write","created_at":"2027-01-01T00:00:00Z"}`)
+			fmt.Fprint(
+				w,
+				`{"id":502,"invitee":{"id":101},"repository":{"id":900},"permissions":"write","created_at":"2027-01-01T00:00:00Z"}`,
+			)
 		case "/repos/synthetic-org/hackbox-team/invitations/502":
 			if r.Method != "DELETE" {
 				t.Error("wrong invitation removal method")
@@ -89,15 +105,31 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 	}))
 	defer server.Close()
 	provider := &RESTProvider{transport: server.Client().Transport, baseURL: server.URL + "/"}
-	configuration := Configuration{AppID: 42, OrganizationID: 99, Organization: "synthetic-org", TemplateRepository: "template"}
-	request := AccessRequest{RepositoryRequest: RepositoryRequest{Configuration: configuration, InstallationID: 55, Name: "hackbox-team", Marker: "hackbox-provisioning:synthetic"}, RepositoryID: 900}
+	configuration := Configuration{
+		AppID:              42,
+		OrganizationID:     99,
+		Organization:       "synthetic-org",
+		TemplateRepository: "template",
+	}
+	request := AccessRequest{
+		RepositoryRequest: RepositoryRequest{
+			Configuration:  configuration,
+			InstallationID: 55,
+			Name:           "hackbox-team",
+			Marker:         "hackbox-provisioning:synthetic",
+		},
+		RepositoryID: 900,
+	}
 	snapshot, err := provider.InspectCollaborators(t.Context(), configuration, key, 55, request)
-	if err != nil || len(snapshot.Collaborators) != 1 || snapshot.Collaborators[0].ID != 101 || len(snapshot.Invitations) != 1 || !snapshot.Invitations[0].Expired {
+	if err != nil || len(snapshot.Collaborators) != 1 || snapshot.Collaborators[0].ID != 101 ||
+		len(snapshot.Invitations) != 1 ||
+		!snapshot.Invitations[0].Expired {
 		t.Fatal("lost current identity/status", snapshot, err)
 	}
 	change := AccessChange{AccountID: 101, Permission: "push"}
 	result, err := provider.ChangeCollaborator(t.Context(), configuration, key, 55, request, change)
-	if err != nil || result.Invitation == nil || result.Invitation.ID != 502 || result.Invitation.AccountID != 101 {
+	if err != nil || result.Invitation == nil || result.Invitation.ID != 502 ||
+		result.Invitation.AccountID != 101 {
 		t.Fatal(result, err)
 	}
 	mode = "accepted"
@@ -106,20 +138,50 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 		t.Fatal("204 was not distinct", result, err)
 	}
 	mode = "identity-mismatch"
-	if _, err = provider.ChangeCollaborator(t.Context(), configuration, key, 55, request, change); !errors.Is(err, ErrIntegration) || writes != 2 {
+	if _, err = provider.ChangeCollaborator(
+		t.Context(),
+		configuration,
+		key,
+		55,
+		request,
+		change,
+	); !errors.Is(err, ErrIntegration) ||
+		writes != 2 {
 		t.Fatal("stale numeric identity sent a write", writes, err)
 	}
 	mode = "policy"
-	if _, err = provider.ChangeCollaborator(t.Context(), configuration, key, 55, request, change); !errors.Is(err, ErrAccessRejected) || strings.Contains(err.Error(), "PRIVATE") {
+	if _, err = provider.ChangeCollaborator(
+		t.Context(),
+		configuration,
+		key,
+		55,
+		request,
+		change,
+	); !errors.Is(err, ErrAccessRejected) ||
+		strings.Contains(err.Error(), "PRIVATE") {
 		t.Fatal("unsafe policy diagnostics", err)
 	}
 	mode = "remove"
 	change.Remove = true
-	if _, err = provider.ChangeCollaborator(t.Context(), configuration, key, 55, request, change); err != nil {
+	if _, err = provider.ChangeCollaborator(
+		t.Context(),
+		configuration,
+		key,
+		55,
+		request,
+		change,
+	); err != nil {
 		t.Fatal(err)
 	}
 	change.InvitationID = 502
-	if _, err = provider.ChangeCollaborator(t.Context(), configuration, key, 55, request, change); err != nil {
+	if _, err = provider.ChangeCollaborator(
+		t.Context(),
+		configuration,
+		key,
+		55,
+		request,
+		change,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if writes != 5 {

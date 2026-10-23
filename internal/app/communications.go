@@ -140,7 +140,14 @@ func newCommunicationRuntime(
 			Provider: githubapp.NewProvider(),
 		},
 	}
-	accessOwner := &repositoryaccess.Service{Pool: pool, App: githubapp.Service{Pool: pool, Keys: cfg.CredentialKeys, Provider: githubapp.NewProvider()}}
+	accessOwner := &repositoryaccess.Service{
+		Pool: pool,
+		App: githubapp.Service{
+			Pool:     pool,
+			Keys:     cfg.CredentialKeys,
+			Provider: githubapp.NewProvider(),
+		},
+	}
 	outbox, err := jobs.New(
 		pool,
 		logger,

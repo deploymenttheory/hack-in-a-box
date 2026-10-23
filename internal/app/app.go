@@ -111,7 +111,8 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
-		Repositories: *communicationRuntime.Repositories,
+		Repositories:     *communicationRuntime.Repositories,
+		RepositoryAccess: *communicationRuntime.RepositoryAccess,
 		Media: media.Service{
 			Pool:    pool,
 			Privacy: privacy.Service{Pool: pool},

@@ -142,7 +142,10 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case RepositoryAccessChanged, RepositoryProvisioningChanged, SurveyResponsesExported, MediaChanged,
+	case RepositoryAccessChanged,
+		RepositoryProvisioningChanged,
+		SurveyResponsesExported,
+		MediaChanged,
 		MediaRevoked,
 		PhotoConsentGranted,
 		PhotoConsentRevoked,

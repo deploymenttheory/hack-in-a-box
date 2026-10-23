@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/google/go-github/v89/github"
 	"github.com/google/uuid"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
 // AccessRequest retains immutable repository identity. User handles are resolved
@@ -45,15 +46,36 @@ type AccessResult struct {
 	Accepted   bool
 }
 
-var ErrAccessNotSent = errors.New("repository access write was not sent")
-var ErrAccessRejected = errors.New("repository access is restricted by provider policy")
+var (
+	ErrAccessNotSent  = errors.New("repository access write was not sent")
+	ErrAccessRejected = errors.New("repository access is restricted by provider policy")
+)
 
 type CollaboratorProvider interface {
-	InspectCollaborators(context.Context, Configuration, []byte, int64, AccessRequest) (AccessSnapshot, error)
-	ChangeCollaborator(context.Context, Configuration, []byte, int64, AccessRequest, AccessChange) (AccessResult, error)
+	InspectCollaborators(
+		context.Context,
+		Configuration,
+		[]byte,
+		int64,
+		AccessRequest,
+	) (AccessSnapshot, error)
+	ChangeCollaborator(
+		context.Context,
+		Configuration,
+		[]byte,
+		int64,
+		AccessRequest,
+		AccessChange,
+	) (AccessResult, error)
 }
 
-func (s Service) accessOwner(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, request AccessRequest, change *AccessChange) (AccessSnapshot, AccessResult, error) {
+func (s Service) accessOwner(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	request AccessRequest,
+	change *AccessChange,
+) (AccessSnapshot, AccessResult, error) {
 	failed := func() (AccessSnapshot, AccessResult, error) {
 		err := ErrIntegration
 		if change != nil {
@@ -63,7 +85,9 @@ func (s Service) accessOwner(ctx context.Context, q *dbgen.Queries, eventID uuid
 	}
 
 	row, err := q.GitHubAppIntegration(ctx, eventID)
-	if err != nil || config(row) != request.Configuration || row.InstallationID != request.InstallationID || request.RepositoryID <= 0 {
+	if err != nil || config(row) != request.Configuration ||
+		row.InstallationID != request.InstallationID ||
+		request.RepositoryID <= 0 {
 		return failed()
 	}
 	key, err := s.Keys.Open(row.KeyID, row.PrivateKeyEncrypted, binding(row))
@@ -79,22 +103,67 @@ func (s Service) accessOwner(ctx context.Context, q *dbgen.Queries, eventID uuid
 		return failed()
 	}
 	if change != nil {
-		result, err := provider.ChangeCollaborator(ctx, request.Configuration, key, row.InstallationID, request, *change)
-		return AccessSnapshot{}, result, err
+		result, err := provider.ChangeCollaborator(
+			ctx,
+			request.Configuration,
+			key,
+			row.InstallationID,
+			request,
+			*change,
+		)
+		if err != nil {
+			return AccessSnapshot{}, result, fmt.Errorf(
+				"change current repository collaborator: %w",
+				err,
+			)
+		}
+		return AccessSnapshot{}, result, nil
 	}
-	snapshot, err := provider.InspectCollaborators(ctx, request.Configuration, key, row.InstallationID, request)
-	return snapshot, AccessResult{}, err
+	snapshot, err := provider.InspectCollaborators(
+		ctx,
+		request.Configuration,
+		key,
+		row.InstallationID,
+		request,
+	)
+	if err != nil {
+		return snapshot, AccessResult{}, fmt.Errorf(
+			"inspect current repository collaborators: %w",
+			err,
+		)
+	}
+	return snapshot, AccessResult{}, nil
 }
-func (s Service) InspectCollaborators(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, request AccessRequest) (AccessSnapshot, error) {
+
+func (s Service) InspectCollaborators(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	request AccessRequest,
+) (AccessSnapshot, error) {
 	snapshot, _, err := s.accessOwner(ctx, q, eventID, request, nil)
 	return snapshot, err
 }
-func (s Service) ChangeCollaborator(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, request AccessRequest, change AccessChange) (AccessResult, error) {
+
+func (s Service) ChangeCollaborator(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	request AccessRequest,
+	change AccessChange,
+) (AccessResult, error) {
 	_, result, err := s.accessOwner(ctx, q, eventID, request, &change)
 	return result, err
 }
 
-func (p *RESTProvider) accessClient(ctx context.Context, c Configuration, key []byte, installation int64, request AccessRequest, write bool) (*github.Client, error) {
+func (p *RESTProvider) accessClient(
+	ctx context.Context,
+	c Configuration,
+	key []byte,
+	installation int64,
+	request AccessRequest,
+	write bool,
+) (*github.Client, error) {
 	operation := "access_read"
 	if write {
 		operation = "invite"
@@ -104,19 +173,40 @@ func (p *RESTProvider) accessClient(ctx context.Context, c Configuration, key []
 		return nil, err
 	}
 	repo, _, err := client.Repositories.Get(ctx, c.Organization, request.Name)
-	if err != nil || repo.GetID() != request.RepositoryID || repo.GetOwner().GetID() != c.OrganizationID || !repo.GetPrivate() || repo.GetArchived() || repo.GetDisabled() || repo.GetName() != request.Name || repo.GetDescription() != request.Marker {
+	if err != nil || repo.GetID() != request.RepositoryID ||
+		repo.GetOwner().GetID() != c.OrganizationID ||
+		!repo.GetPrivate() ||
+		repo.GetArchived() ||
+		repo.GetDisabled() ||
+		repo.GetName() != request.Name ||
+		repo.GetDescription() != request.Marker {
 		return nil, ErrIntegration
 	}
 	return client, nil
 }
-func (p *RESTProvider) InspectCollaborators(ctx context.Context, c Configuration, key []byte, installation int64, request AccessRequest) (AccessSnapshot, error) {
+
+func (p *RESTProvider) InspectCollaborators(
+	ctx context.Context,
+	c Configuration,
+	key []byte,
+	installation int64,
+	request AccessRequest,
+) (AccessSnapshot, error) {
 	out := AccessSnapshot{Collaborators: []Collaborator{}, Invitations: []Invitation{}}
 	client, err := p.accessClient(ctx, c, key, installation, request, false)
 	if err != nil {
 		return out, err
 	}
 	for page := 1; page <= 10; page++ {
-		users, response, err := client.Repositories.ListCollaborators(ctx, c.Organization, request.Name, &github.ListCollaboratorsOptions{Affiliation: "direct", ListOptions: github.ListOptions{Page: page, PerPage: 100}})
+		users, response, err := client.Repositories.ListCollaborators(
+			ctx,
+			c.Organization,
+			request.Name,
+			&github.ListCollaboratorsOptions{
+				Affiliation: "direct",
+				ListOptions: github.ListOptions{Page: page, PerPage: 100},
+			},
+		)
 		if err != nil {
 			return out, accessFailure(response, err)
 		}
@@ -124,7 +214,14 @@ func (p *RESTProvider) InspectCollaborators(ctx context.Context, c Configuration
 			if user.GetID() <= 0 {
 				return out, ErrIntegration
 			}
-			out.Collaborators = append(out.Collaborators, Collaborator{ID: user.GetID(), Login: user.GetLogin(), Permission: user.GetRoleName()})
+			out.Collaborators = append(
+				out.Collaborators,
+				Collaborator{
+					ID:         user.GetID(),
+					Login:      user.GetLogin(),
+					Permission: user.GetRoleName(),
+				},
+			)
 		}
 		if response.NextPage == 0 {
 			break
@@ -134,7 +231,12 @@ func (p *RESTProvider) InspectCollaborators(ctx context.Context, c Configuration
 		}
 	}
 	for page := 1; page <= 10; page++ {
-		invites, response, err := client.Repositories.ListInvitations(ctx, c.Organization, request.Name, &github.ListOptions{Page: page, PerPage: 100})
+		invites, response, err := client.Repositories.ListInvitations(
+			ctx,
+			c.Organization,
+			request.Name,
+			&github.ListOptions{Page: page, PerPage: 100},
+		)
 		if err != nil {
 			return out, accessFailure(response, err)
 		}
@@ -142,7 +244,16 @@ func (p *RESTProvider) InspectCollaborators(ctx context.Context, c Configuration
 			if invitation.GetID() <= 0 || invitation.GetInvitee().GetID() <= 0 {
 				return out, ErrIntegration
 			}
-			out.Invitations = append(out.Invitations, Invitation{ID: invitation.GetID(), AccountID: invitation.GetInvitee().GetID(), Permission: invitation.GetPermissions(), CreatedAt: invitation.GetCreatedAt().Time, Expired: invitation.GetExpired()})
+			out.Invitations = append(
+				out.Invitations,
+				Invitation{
+					ID:         invitation.GetID(),
+					AccountID:  invitation.GetInvitee().GetID(),
+					Permission: invitation.GetPermissions(),
+					CreatedAt:  invitation.GetCreatedAt().Time,
+					Expired:    invitation.GetExpired(),
+				},
+			)
 		}
 		if response.NextPage == 0 {
 			break
@@ -153,14 +264,24 @@ func (p *RESTProvider) InspectCollaborators(ctx context.Context, c Configuration
 	}
 	return out, nil
 }
+
 func accessFailure(response *github.Response, err error) error {
 	if response != nil && (response.StatusCode == 403 || response.StatusCode == 422) {
 		return ErrAccessRejected
 	}
 	return fmt.Errorf("GitHub access request unavailable: %w", ErrIntegration)
 }
-func (p *RESTProvider) ChangeCollaborator(ctx context.Context, c Configuration, key []byte, installation int64, request AccessRequest, change AccessChange) (AccessResult, error) {
-	if change.AccountID <= 0 || (!change.Remove && change.Permission != "push" && change.Permission != "pull") {
+
+func (p *RESTProvider) ChangeCollaborator(
+	ctx context.Context,
+	c Configuration,
+	key []byte,
+	installation int64,
+	request AccessRequest,
+	change AccessChange,
+) (AccessResult, error) {
+	if change.AccountID <= 0 ||
+		(!change.Remove && change.Permission != "push" && change.Permission != "pull") {
 		return AccessResult{}, ErrIntegration
 	}
 	client, err := p.accessClient(ctx, c, key, installation, request, true)
@@ -176,25 +297,48 @@ func (p *RESTProvider) ChangeCollaborator(ctx context.Context, c Configuration, 
 	}
 	if change.Remove {
 		if change.InvitationID > 0 {
-			response, err = client.Repositories.DeleteInvitation(ctx, c.Organization, request.Name, change.InvitationID)
+			response, err = client.Repositories.DeleteInvitation(
+				ctx,
+				c.Organization,
+				request.Name,
+				change.InvitationID,
+			)
 		} else {
-			response, err = client.Repositories.RemoveCollaborator(ctx, c.Organization, request.Name, user.GetLogin())
+			response, err = client.Repositories.RemoveCollaborator(
+				ctx,
+				c.Organization,
+				request.Name,
+				user.GetLogin(),
+			)
 		}
 		if err != nil {
 			return AccessResult{}, accessFailure(response, err)
 		}
 		return AccessResult{}, nil
 	}
-	invitation, response, err := client.Repositories.AddCollaborator(ctx, c.Organization, request.Name, user.GetLogin(), &github.RepositoryAddCollaboratorOptions{Permission: change.Permission})
+	invitation, response, err := client.Repositories.AddCollaborator(
+		ctx,
+		c.Organization,
+		request.Name,
+		user.GetLogin(),
+		&github.RepositoryAddCollaboratorOptions{Permission: change.Permission},
+	)
 	if err != nil {
 		return AccessResult{}, accessFailure(response, err)
 	}
 	if response.StatusCode == http.StatusNoContent {
 		return AccessResult{Accepted: true}, nil
 	}
-	if response.StatusCode != http.StatusCreated || invitation.GetID() <= 0 || invitation.GetInvitee().GetID() != change.AccountID || invitation.GetRepo().GetID() != request.RepositoryID {
+	if response.StatusCode != http.StatusCreated || invitation.GetID() <= 0 ||
+		invitation.GetInvitee().GetID() != change.AccountID ||
+		invitation.GetRepo().GetID() != request.RepositoryID {
 		return AccessResult{}, ErrIntegration
 	}
-	value := Invitation{ID: invitation.GetID(), AccountID: change.AccountID, Permission: invitation.GetPermissions(), CreatedAt: invitation.GetCreatedAt().Time}
+	value := Invitation{
+		ID:         invitation.GetID(),
+		AccountID:  change.AccountID,
+		Permission: invitation.GetPermissions(),
+		CreatedAt:  invitation.GetCreatedAt().Time,
+	}
 	return AccessResult{Invitation: &value}, nil
 }

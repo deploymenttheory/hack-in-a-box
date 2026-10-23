@@ -48,6 +48,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
+	"github.com/deploymenttheory/hack-in-a-box/internal/repositoryaccess"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -61,46 +62,48 @@ import (
 )
 
 type Dependencies struct {
-	GitHubWebhooks  *githubwebhooks.Service
-	Repositories    repositories.Service
-	Media           media.Service
-	GitHubApp       githubapp.Service
-	Outcomes        *outcomes.Service
-	Surveys         *surveys.Service
-	Objectives      objectives.Service
-	Feedback        feedback.Service
-	ReviewDashboard *reviewdashboard.Service
-	Moderation      *moderation.Service
-	Deliveries      *deliveryhistory.Service
-	Clarifications  clarification.Service
-	Automation      *automation.Service
-	TeamsWorkflow   *teamsworkflow.Service
-	SMTP            *smtpintegration.Service
-	MailContacts    mailcontact.Service
-	Scorecards      scorecards.Service
-	Rubrics         rubric.Service
-	Inbox           inbox.Service
-	Help            help.Service
-	Presentation    presentation.Service
-	Communications  communications.Service
-	Credentials     credentials.Service
-	Mentors         mentors.Service
-	Observations    observations.Service
-	Content         content.Service
-	Submissions     submissions.Service
-	Attendance      attendance.Service
-	Preparation     preparation.Service
-	Teams           teams.Service
-	GitHub          *githubidentity.Service
-	Pool            *pgxpool.Pool
-	Auth            *identity.Auth
-	Audit           audit.Service
-	Files           files.Service
-	Permissions     permissions.Service
-	Events          event.Service
-	Privacy         privacy.Service
-	Templates       templates.Service
-	Registration    registration.Service
+	GitHubWebhooks *githubwebhooks.Service
+	RepositoryAccess repositoryaccess.Service
+	Repositories     repositories.Service
+	Media            media.Service
+	GitHubApp        githubapp.Service
+	Outcomes         *outcomes.Service
+	Surveys          *surveys.Service
+	Objectives       objectives.Service
+	Feedback         feedback.Service
+	ReviewDashboard  *reviewdashboard.Service
+	Moderation       *moderation.Service
+	Deliveries       *deliveryhistory.Service
+	Clarifications   clarification.Service
+	Automation       *automation.Service
+	TeamsWorkflow    *teamsworkflow.Service
+	SMTP             *smtpintegration.Service
+	MailContacts     mailcontact.Service
+	Scorecards       scorecards.Service
+	Rubrics          rubric.Service
+	Inbox            inbox.Service
+	Help             help.Service
+	Presentation     presentation.Service
+	Communications   communications.Service
+	Credentials      credentials.Service
+	Mentors          mentors.Service
+	Observations     observations.Service
+	Content          content.Service
+	Submissions      submissions.Service
+	Attendance       attendance.Service
+	Preparation      preparation.Service
+	Teams            teams.Service
+	GitHub           *githubidentity.Service
+	Pool             *pgxpool.Pool
+	Auth             *identity.Auth
+	Audit            audit.Service
+	Files            files.Service
+	Permissions      permissions.Service
+	Events           event.Service
+	Privacy          privacy.Service
+	Templates        templates.Service
+	Registration     registration.Service
+
 }
 type handlers struct{ Dependencies }
 

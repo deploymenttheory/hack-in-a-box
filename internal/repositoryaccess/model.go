@@ -12,17 +12,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 )
 
 const HandlerKind = "repository.access"
 
 type App interface {
-	InspectCollaborators(context.Context, *dbgen.Queries, uuid.UUID, githubapp.AccessRequest) (githubapp.AccessSnapshot, error)
-	ChangeCollaborator(context.Context, *dbgen.Queries, uuid.UUID, githubapp.AccessRequest, githubapp.AccessChange) (githubapp.AccessResult, error)
+	InspectCollaborators(
+		context.Context,
+		*dbgen.Queries,
+		uuid.UUID,
+		githubapp.AccessRequest,
+	) (githubapp.AccessSnapshot, error)
+	ChangeCollaborator(
+		context.Context,
+		*dbgen.Queries,
+		uuid.UUID,
+		githubapp.AccessRequest,
+		githubapp.AccessChange,
+	) (githubapp.AccessResult, error)
 }
 type Service struct {
 	Pool *pgxpool.Pool
@@ -38,11 +50,13 @@ func (s Service) now() time.Time {
 }
 
 type Member struct {
-	PersonID     uuid.UUID `json:"person_id"`
-	GitHubID     int64     `json:"github_id"`
-	LinkRevision int64     `json:"link_revision"`
-	Permission   string    `json:"permission"`
-	Role         string    `json:"role"`
+	CoverageStart *time.Time `json:"coverage_start"`
+	CoverageEnd   *time.Time `json:"coverage_end"`
+	PersonID      uuid.UUID  `json:"person_id"`
+	GitHubID      int64      `json:"github_id"`
+	LinkRevision  int64      `json:"link_revision"`
+	Permission    string     `json:"permission"`
+	Role          string     `json:"role"`
 }
 type Flag struct {
 	Code     string     `json:"code"`
@@ -57,6 +71,7 @@ type Action struct {
 	GrantID       *uuid.UUID `json:"grant_id"`
 }
 type Plan struct {
+	Reason       string     `json:"reason"`
 	ID           uuid.UUID  `json:"id"`
 	Version      int64      `json:"version"`
 	EventID      uuid.UUID  `json:"event_id"`
@@ -101,13 +116,14 @@ type View struct {
 
 func fingerprint(repositoryID int64, provenance uuid.UUID, members []Member) string {
 	value, _ := json.Marshal(struct {
-		RepositoryID int64
-		Provenance   uuid.UUID
-		Members      []Member
+		RepositoryID int64     `json:"repository_id"`
+		Provenance   uuid.UUID `json:"provenance"`
+		Members      []Member  `json:"members"`
 	}{repositoryID, provenance, members})
 	sum := sha256.Sum256(value)
 	return hex.EncodeToString(sum[:])
 }
+
 func permissionName(value string) string {
 	if value == "push" {
 		return "write"
@@ -125,12 +141,44 @@ func proposalFingerprint(actions []Action, flags []Flag) string {
 	}
 	sorted := slices.Clone(flags)
 	slices.SortFunc(sorted, func(a, b Flag) int {
-		return strings.Compare(fmt.Sprint(a.Code, a.PersonID, a.GitHubID), fmt.Sprint(b.Code, b.PersonID, b.GitHubID))
+		return strings.Compare(flagKey(a), flagKey(b))
 	})
 	value, _ := json.Marshal(struct {
-		Actions []Action
-		Flags   []Flag
+		Actions []Action `json:"actions"`
+		Flags   []Flag   `json:"flags"`
 	}{normalized, sorted})
 	sum := sha256.Sum256(value)
 	return hex.EncodeToString(sum[:])
+}
+
+func flagKey(flag Flag) string {
+	person := ""
+	if flag.PersonID != nil {
+		person = flag.PersonID.String()
+	}
+	id := int64(0)
+	if flag.GitHubID != nil {
+		id = *flag.GitHubID
+	}
+	return fmt.Sprintf("%s:%s:%020d", flag.Code, person, id)
+}
+
+func sameMember(a, b Member) bool {
+	return a.PersonID == b.PersonID && a.GitHubID == b.GitHubID &&
+		a.LinkRevision == b.LinkRevision &&
+		a.Permission == b.Permission &&
+		a.Role == b.Role &&
+		sameTime(a.CoverageStart, b.CoverageStart) &&
+		sameTime(a.CoverageEnd, b.CoverageEnd)
+}
+
+func sameTime(a, b *time.Time) bool {
+	return a == nil && b == nil || a != nil && b != nil && a.Equal(*b)
+}
+
+func wrap(operation string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("%s: %w", operation, err)
 }

@@ -1252,6 +1252,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/repositories/{team_id}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser-only reviewed access plan, durable effect history and provider observations. Unknown access is flagged rather than adopted. */
+        get: operations["getRepositoryAccess"];
+        put?: never;
+        /** @description Review, approve the exact plan version, or refresh provider observations. New grants require actual frozen published teams and challenge publication. This never changes assignments. */
+        post: operations["changeRepositoryAccess"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/repositories/{team_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current confirmed member or current published mentor sees only their own identity and grant history after actual challenge publication. No other collaborator identities or organiser plan are disclosed. */
+        get: operations["getOwnRepositoryInvitations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/github-app": {
         parameters: {
             query?: never;
@@ -4030,6 +4071,127 @@ export interface components {
                 approved: boolean;
                 cancelled: boolean;
             }[];
+        };
+        RepositoryAccessMember: {
+            /** Format: date-time */
+            coverage_start: string | null;
+            /** Format: date-time */
+            coverage_end: string | null;
+            /** Format: uuid */
+            person_id: string;
+            /** Format: int64 */
+            github_id: number;
+            /** Format: int64 */
+            link_revision: number;
+            /** @enum {string} */
+            permission: "push" | "pull";
+            /** @enum {string} */
+            role: "competitor" | "mentor";
+        };
+        RepositoryAccessFlag: {
+            code: string;
+            /** Format: uuid */
+            person_id: string | null;
+            /** Format: int64 */
+            github_id: number | null;
+        };
+        RepositoryAccessAction: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "invite" | "remove";
+            member: components["schemas"]["RepositoryAccessMember"];
+            /** Format: uuid */
+            grant_id: string | null;
+            previous_state: string;
+        };
+        RepositoryAccessPlan: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            repository_id: number;
+            fingerprint: string;
+            reason: string;
+            members: components["schemas"]["RepositoryAccessMember"][];
+            actions: components["schemas"]["RepositoryAccessAction"][];
+            flags: components["schemas"]["RepositoryAccessFlag"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            approved_at: string | null;
+            /** Format: uuid */
+            approved_by: string | null;
+        };
+        RepositoryAccessGrant: {
+            /** Format: uuid */
+            id: string;
+            member: components["schemas"]["RepositoryAccessMember"];
+            app_managed: boolean;
+            effect_uncertain: boolean;
+            /** @enum {string} */
+            state: "ambiguous" | "pending" | "accepted" | "expired" | "failed" | "revoked";
+            /** Format: int64 */
+            invitation_id: number | null;
+            diagnostic: string;
+            /** Format: date-time */
+            observed_at: string | null;
+        };
+        RepositoryAccessExecution: {
+            /** Format: uuid */
+            action_id: string;
+            /** @enum {string} */
+            state: "planned" | "ambiguous" | "delivered" | "failed" | "cancelled";
+            diagnostic: string;
+            attempted: boolean;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        RepositoryAccessView: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            team_id: string;
+            plan: components["schemas"]["RepositoryAccessPlan"] | null;
+            grants: components["schemas"]["RepositoryAccessGrant"][];
+            execution: components["schemas"]["RepositoryAccessExecution"][];
+            can_manage: boolean;
+            grants_open: boolean;
+            flags: components["schemas"]["RepositoryAccessFlag"][];
+            /** Format: date-time */
+            observed_at: string | null;
+        };
+        RepositoryAccessCommand: {
+            /** @enum {string} */
+            action: "review" | "approve" | "refresh";
+            /** Format: uuid */
+            plan_id: string;
+            /** Format: int64 */
+            plan_version: number;
+            reason: string;
+        };
+        RepositoryAccessResult: {
+            receipt: components["schemas"]["RepositoryAccessPlan"] | null;
+            current: components["schemas"]["RepositoryAccessView"];
+        };
+        OwnRepositoryInvitations: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            repository_id: number;
+            /** Format: int64 */
+            current_github_id: number | null;
+            /** Format: int64 */
+            link_revision: number;
+            grants: components["schemas"]["RepositoryAccessGrant"][];
+            /** Format: date-time */
+            observed_at: string | null;
+            diagnostic: string;
         };
         TeamRepository: {
             /** Format: uuid */
@@ -9496,6 +9658,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeamRepository"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRepositoryAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current access review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryAccessView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeRepositoryAccess: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepositoryAccessCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact command receipt separately from current review state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryAccessResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnRepositoryInvitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current person's private invitation state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnRepositoryInvitations"];
                 };
             };
             default: components["responses"]["Error"];
