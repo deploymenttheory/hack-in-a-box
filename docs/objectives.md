@@ -59,7 +59,9 @@ at39, and tests restore latest after the explicit preservation boundary.
 Current affected real PostgreSQL/race suites pass: objectives8.406s,
 templates10.247s, content19.697s, authenticated HTTP118.932s and actual shared
 runtime12.923s. Dedicated actual38→39/guarded/empty rollback checks pass4.699s.
-Both frontend builds and web lint passed before canonical schema integration;
-final parity/lint/compose verification and exact-head CI remain required. The
-final branch must drop temporary37/38 ancestry onto actual merged main before
-merge; prerequisite branches are not themselves evidence of merged schema.
+Canonical generation parity, full Go lint, both frontend builds and web lint
+passed. The branch is composed on actual merged schema38/main
+`971eebd4e919d868f3cdc86ff11e43d07c9d5115`; the ancestry-only rebase preserved
+the reviewed implementation tree. Independent native migration, disclosure,
+clone-isolation and authenticated HTTP checks passed in7.039s/3.854s.
+Fresh exact-head CI remains required before merge.
