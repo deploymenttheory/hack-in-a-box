@@ -22,7 +22,7 @@ test('masked inventory identifies missing resources and reviews keyboard reassig
   await expect(page.getByRole('heading', { name: 'Resource inventory', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Teams missing an active resource' }).locator('..')).toContainText('South Stars')
   await expect(page.getByLabel('Stored secret masked')).toHaveCount(3)
-  await expect(page.getByRole('table')).toContainText('Expired')
+  await expect(page.locator('.fleet-collection-records')).toContainText('Expired')
   await page.getByRole('button', { name: 'Assign Cloud account', exact: true }).click()
   await page.getByLabel(/North Stars/).uncheck(); await page.getByLabel(/South Stars/).check()
   await page.getByRole('button', { name: 'Preview resource assignment', exact: true }).click()

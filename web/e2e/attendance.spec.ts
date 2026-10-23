@@ -84,8 +84,8 @@ async function prepare(page: Page, logisticsOnly = false) {
   await expect(page.getByRole('heading', { name: 'Arrivals and headcounts' })).toBeVisible()
   return { state, event, preparation, arrivalRequests, bufferRequests, taskRequests }
 }
-const row = (page: Page, name: string) => page.locator('.arrival-list li').filter({ has: page.getByText(name, { exact: true }) })
-const metric = (page: Page, name: string) => page.locator('.attendance-counts > div').filter({ has: page.locator('dt').filter({ hasText: name }) })
+const row = (page: Page, name: string) => page.locator('.fleet-record-list > li, .fleet-collection-table tbody > tr').filter({ has: page.getByText(name, { exact: true }) })
+const metric = (page: Page, name: string) => page.locator('.fleet-planning-metrics > div').filter({ has: page.locator('dt').filter({ hasText: name }) })
 
 test('uses keyboard check-in on each day and keeps admission, staff and catering distinct', async ({ page }, info) => {
   const { state } = await prepare(page)
@@ -180,9 +180,9 @@ test('keeps restricted logistics separate, paginates exports and rechecks revoke
   expect(state.staffRequests).toBe(0); expect(state.logisticsRequests).toBe(0)
   await page.getByRole('button', { name: 'Open restricted logistics' }).click()
   await expect(page.getByText('alex@example.test')).toBeVisible()
-  await expect(page.getByText('Unknown — not confirmed')).toBeVisible()
-  await page.getByLabel('Search this logistics page').fill('Blair'); await expect(page.locator('.logistics-grid article')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Next page', exact: true }).click()
+  await page.getByRole('button',{name:'Review Alex Arrival',exact:true}).click();await expect(page.getByText('Unknown — not confirmed')).toBeVisible()
+  await page.getByLabel('Search this logistics page').fill('Blair'); await expect(page.locator('.fleet-record-list > li, .fleet-collection-table tbody > tr')).toHaveCount(0)
+  await page.getByRole('button', { name: 'More records', exact: true }).click()
   await expect(page.getByText('blair@example.test')).toBeVisible()
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download page 2' }).click()

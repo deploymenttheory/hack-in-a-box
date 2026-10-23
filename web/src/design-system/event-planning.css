@@ -5,7 +5,7 @@
   .fleet-planning-heading h1 { font-size: var(--text-page); margin: 0 0 var(--space-2); }
   .fleet-planning-heading p { max-width: 70ch; }
   .fleet-planning-layout { display: grid; grid-template-columns: 13rem minmax(0,1fr); gap: var(--space-6); padding-top: var(--space-4); }
-  .fleet-planning-nav { min-width: 0; }
+  .fleet-planning-nav { display: block; min-width: 0; width: auto; order: initial; font-size: var(--text-body); }
   .fleet-planning-nav h2 { font-size: var(--text-caption); color: var(--muted-foreground); font-weight: var(--weight-emphasis); margin: var(--space-4) var(--space-2) var(--space-2); }
   .fleet-planning-nav ul { list-style: none; padding: 0; margin: 0; }
   .fleet-planning-nav button { width: 100%; display: flex; align-items: center; gap: var(--space-2); border: 0; background: transparent; text-align: start; padding: var(--space-2); min-height: var(--control-height); border-radius: var(--radius-control); color: var(--foreground); }
@@ -45,5 +45,5 @@
   .fleet-event-brand-assets details img { max-width: 100%; max-height: 15rem; object-fit: contain; }
   .fleet-brand-preview { padding: var(--space-4); border: 1px solid var(--input); background: var(--background); color: var(--foreground); }
   @media (max-width: 64rem) { .fleet-editor-sections { grid-template-columns: 1fr; } .fleet-editor-sections > nav { flex-direction: row; flex-wrap: wrap; } }
-  @media (max-width: 48rem) { .fleet-planning-layout, .fleet-planning-detail { grid-template-columns: minmax(0,1fr); } .fleet-planning-nav { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); } .fleet-planning-nav section { flex: 1 1 9rem; } .fleet-planning-heading { padding-block: var(--space-3); } }
+  @media (max-width: 48rem) { .fleet-planning-layout, .fleet-planning-detail { grid-template-columns: minmax(0,1fr); } .fleet-planning-nav { display: flex; flex-wrap: wrap; align-items: start; gap: var(--space-2) var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); } .fleet-planning-nav section { flex: 1 1 8rem; } .fleet-planning-heading { padding-block: var(--space-3); } }
 }

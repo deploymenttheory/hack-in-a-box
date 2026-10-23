@@ -31,6 +31,7 @@ test('unsafe image selection is explained without sending a save', async ({ page
   await mockWorkspace(page)
   await page.goto(`/events/${firstID}`)
   await page.getByRole('button', { name: 'Branding', exact: true }).click()
+  await page.getByRole('button',{name:'Images',exact:true}).click()
   await page.getByLabel('Logo image').setInputFiles({ name: 'unsafe.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') })
   await expect(page.getByRole('alert')).toContainText('PNG or JPEG')
 })

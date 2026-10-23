@@ -1,4 +1,3 @@
-@import "./design-system/event-planning.css";
 @import "tailwindcss";
 @import "./design-system/tokens.css";
 @import "./design-system/foundations.css";
@@ -6,3 +5,4 @@
 @import "./design-system/primitives.css";
 @import "./design-system/patterns.css";
 @import "./design-system/portal-shell.css";
+@import "./design-system/event-planning.css";

@@ -13,3 +13,10 @@ all affected domain assertions remain to be completed. Full exact-head repositor
 CI and independent review are required before readiness.
 
 See [complete panel ownership inventory](../../design/event-planning-inventory.md).
+
+The first after capture exposed two new CSS defects: importing the component
+layer before Tailwind changed layer priority, and a planning nav inherited the
+old global flex layout. Both were corrected before draft publication. The
+intermediate images are not presented as final visual evidence. The first unit
+run also exposed jsdom's absent native matchMedia; the suite setup now models
+its desktop default while responsive-specific tests override it explicitly.
