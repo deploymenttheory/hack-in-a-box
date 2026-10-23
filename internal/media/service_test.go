@@ -748,3 +748,65 @@ func TestNativeStaffSelfConsentDoesNotGrantGalleryOrPhotographerGuidance(t *test
 		t.Fatal("archived staff self revocation blocked by gallery policy", err)
 	}
 }
+
+func TestAutomaticConsentWithdrawalRecordsSystemPolicyNotPhotographerAction(t *testing.T) {
+	f := newFixture(t)
+	ctx := t.Context()
+	f.consent("yes")
+	item := f.release(f.upload([]uuid.UUID{f.subject}))
+	// Explicit submissions and decisions retain their actual independent actors.
+	rows, err := f.pool.Query(
+		ctx,
+		`SELECT action,actor_id FROM media_versions WHERE event_id=$1 AND id=$2 ORDER BY version`,
+		f.event,
+		item.ID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var action string
+		var actor uuid.UUID
+		if err = rows.Scan(&action, &actor); err != nil {
+			t.Fatal(err)
+		}
+		expected := f.owner
+		if action == "upload" {
+			expected = f.photographer
+		}
+		if actor != expected {
+			t.Fatal("explicit media actor changed", action, actor, expected)
+		}
+	}
+	rows.Close()
+	if err = rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	f.consent("no")
+	if err = f.s.Maintain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err = f.s.Maintain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var actor *uuid.UUID
+	var reason string
+	var count int
+	if err = f.pool.QueryRow(ctx, `SELECT actor_id,reason_code FROM audit_events WHERE event_id=$1 AND action='media.revoked'`, f.event).
+		Scan(&actor, &reason); err != nil {
+		t.Fatal(err)
+	}
+	if actor != nil || reason != "consent_policy" {
+		t.Fatal("automatic privacy reconciliation falsely attributes a user request", actor, reason)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT actor_id FROM media_versions WHERE event_id=$1 AND id=$2 AND action='consent_revoked'`, f.event, item.ID).
+		Scan(&actor); err != nil ||
+		actor != nil {
+		t.Fatal("immutable withdrawal invents a person actor", actor, err)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM audit_events WHERE event_id=$1 AND action='media.revoked'`, f.event).
+		Scan(&count); err != nil ||
+		count != 1 {
+		t.Fatal("automatic withdrawal journal duplicated", count, err)
+	}
+}

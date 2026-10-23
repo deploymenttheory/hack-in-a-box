@@ -52,7 +52,7 @@ type InsertMediaVersionParams struct {
 	ID        uuid.UUID
 	Version   int64
 	Document  []byte
-	ActorID   uuid.UUID
+	ActorID   *uuid.UUID
 	Action    string
 	Reason    string
 	CreatedAt time.Time

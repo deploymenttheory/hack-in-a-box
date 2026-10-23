@@ -110,6 +110,7 @@ const (
 	OrganiserDecision  Reason = "organiser_decision"
 	ThresholdException Reason = "post_publication_withdrawal"
 	RetentionPolicy    Reason = "retention_policy"
+	ConsentPolicy      Reason = "consent_policy"
 	DeadlinePolicy     Reason = "deadline_policy"
 )
 
@@ -220,7 +221,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 		UserRequest,
 		OrganiserDecision,
 		ThresholdException,
-		RetentionPolicy, DeadlinePolicy:
+		RetentionPolicy, DeadlinePolicy, ConsentPolicy:
 	default:
 		return access.ErrInvalid
 	}

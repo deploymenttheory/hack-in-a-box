@@ -66,7 +66,7 @@ func (s Service) Maintain(ctx context.Context) error {
 						d.State = "withdrawn"
 						d.Action = "consent_revoked"
 						d.Reason = "Current publication or identified-person consent authority no longer permits sharing"
-						d.ActorID = d.OwnerID
+						d.ActorID = nil
 						d.ChangedAt = s.now()
 						d.ReleasedAt = nil
 						d.ReleasedBy = nil

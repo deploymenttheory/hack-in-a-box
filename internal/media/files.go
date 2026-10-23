@@ -58,10 +58,7 @@ func (p collectorPolicy) Authorize(
 	}
 	roles, _, err := access.ContentReader(ctx, p.q, actor, eventID)
 	if err != nil {
-		if err != nil {
-			return fmt.Errorf("resolve current media policy: %w", err)
-		}
-		return nil
+		return fmt.Errorf("resolve current media policy: %w", err)
 	}
 	for _, role := range roles {
 		if role == "organiser" || role == "photographer" {
@@ -143,7 +140,7 @@ func (s Service) CollectPhoto(ctx context.Context, input Upload) (Item, error) {
 				State:     "draft",
 				Metadata:  input.Metadata,
 				FileID:    &file.ID,
-				ActorID:   input.File.Actor,
+				ActorID:   &input.File.Actor,
 				Action:    "upload",
 				Reason:    input.Reason,
 				ChangedAt: s.now(),

@@ -89,7 +89,7 @@ func (s Service) Change(
 			return err
 		}
 		d.Version++
-		d.ActorID = actor
+		d.ActorID = &actor
 		d.Action = c.Action
 		d.Reason = c.Reason
 		d.ChangedAt = s.now()
@@ -172,15 +172,19 @@ func (s Service) persist(
 	if _, err = q.BumpEventRevision(ctx, eventID); err != nil {
 		return fmt.Errorf("advance media event revision: %w", err)
 	}
+	reason := audit.UserRequest
+	if action == audit.MediaRevoked {
+		reason = audit.ConsentPolicy
+	}
 	err = audit.Append(
 		ctx,
 		q,
 		audit.Record{
-			ActorID:  &d.ActorID,
+			ActorID:  d.ActorID,
 			EventID:  &eventID,
 			TargetID: d.ID,
 			Action:   action,
-			Reason:   audit.UserRequest,
+			Reason:   reason,
 			Metadata: audit.Metadata{Revision: &d.Version},
 		},
 	)

@@ -16,10 +16,7 @@ import (
 func (s Service) reader(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID) error {
 	roles, confirmed, err := access.ContentReader(ctx, dbgen.New(tx), actor, eventID)
 	if err != nil {
-		if err != nil {
-			return fmt.Errorf("resolve current media policy: %w", err)
-		}
-		return nil
+		return fmt.Errorf("resolve current media policy: %w", err)
 	}
 	allowed, err := access.ContentAudienceAllows(
 		ctx,
@@ -31,10 +28,7 @@ func (s Service) reader(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID
 		confirmed,
 	)
 	if err != nil {
-		if err != nil {
-			return fmt.Errorf("resolve current media policy: %w", err)
-		}
-		return nil
+		return fmt.Errorf("resolve current media policy: %w", err)
 	}
 	if !allowed {
 		return access.ErrForbidden

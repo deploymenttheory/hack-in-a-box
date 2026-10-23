@@ -53,7 +53,7 @@ type Document struct {
 	ReleasedBy *uuid.UUID                    `json:"released_by"`
 	ReviewedAt *time.Time                    `json:"reviewed_at"`
 	ReleasedAt *time.Time                    `json:"released_at"`
-	ActorID    uuid.UUID                     `json:"actor_id"`
+	ActorID    *uuid.UUID                    `json:"actor_id"`
 	Action     string                        `json:"action"`
 	Reason     string                        `json:"reason"`
 	ChangedAt  time.Time                     `json:"changed_at"`
