@@ -257,7 +257,10 @@ func (s Service) configure(
 			return Huddle{}, access.ErrConflict
 		}
 	} else {
-		if _, err = s.current(ctx, tx, actor, eventID, h, true); err != nil {
+		// A planned context may be explicitly repaired after native #66 replaces
+		// coverage. Current actor authority remains required, while newHuddle below
+		// validates the replacement published reviewers in full.
+		if _, _, err = s.guard(ctx, tx, actor, eventID, teamID, true); err != nil {
 			return Huddle{}, fmt.Errorf("resolve moderation dependency: %w", err)
 		}
 		if actor != h.Definition.ModeratorID || input.Version != h.Version ||
