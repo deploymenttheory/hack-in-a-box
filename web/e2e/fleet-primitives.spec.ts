@@ -65,7 +65,7 @@ test('an uncertain transport result never replays the confirmed write during rec
  await expect(page.getByText('it does not prove the workflow posted to Teams', { exact: false })).toBeVisible()
 })
 
-test('native Enter submits registration once and server errors keep current field guidance and draft geometry', async ({ page }, info) => {
+test('native Enter reviews registration before one explicit submission and server errors keep current field guidance and draft geometry', async ({ page }, info) => {
  await mockWorkspace(page)
  const form = structuredClone(attendeeForm)
  form.definition.fields = [form.definition.fields[0]]
@@ -77,13 +77,13 @@ test('native Enter submits registration once and server errors keep current fiel
  const field = page.getByLabel('What would you like to learn? (required)'), button = page.getByRole('button', { name: 'Submit application' })
  await field.fill('Recoverable synthetic draft')
  const before = (await field.boundingBox())!
- await field.press('Enter'); await expect(field).toHaveAttribute('aria-invalid', 'true')
+ await field.press('Enter'); await expect(page.getByRole('heading', { name: 'Review your application' })).toBeVisible(); expect(attempts).toBe(0); await expect(field).toBeDisabled(); await button.hover(); expect(await contrastOf(button)).toBeGreaterThanOrEqual(4.5); await button.click(); await expect(field).toHaveAttribute('aria-invalid', 'true')
  await expect(field).toBeFocused(); await expect(field).toHaveValue('Recoverable synthetic draft')
  const after = (await field.boundingBox())!
  expect(after.width).toBe(before.width); expect(after.height).toBe(before.height); expect(attempts).toBe(1)
  await expect(field).toHaveAccessibleDescription('Use a synthetic learning goal. Explain the learning goal.')
  expect(await field.evaluate(el => el.getAttribute('aria-describedby')!.split(' ').every(id => !!document.getElementById(id)))).toBe(true)
- await button.hover(); expect(await contrastOf(button)).toBeGreaterThanOrEqual(4.5)
+ const review = page.getByRole('button', { name: 'Review application', exact: true }); await review.hover(); expect(await contrastOf(review)).toBeGreaterThanOrEqual(4.5)
  await page.screenshot({ path: info.outputPath('fleet-form-error.png'), fullPage: true })
  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('Recoverable synthetic draft')
 })
