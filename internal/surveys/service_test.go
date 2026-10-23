@@ -341,3 +341,85 @@ func TestResponseRechecksClockAndEligibilityAfterWaitingForEventLock(t *testing.
 		})
 	}
 }
+
+func TestDifferentResponseCommandsRaceAndNativeRoleAudienceRemainsCurrent(t *testing.T) {
+	f := setup(t)
+	f.definition.Form.Audience = "mentor"
+	for _, id := range []uuid.UUID{f.person.ID, f.other.ID} {
+		f.exec(
+			"INSERT INTO event_memberships(event_id,person_id,role,active)VALUES($1,$2,'mentor',true)",
+			f.event,
+			id,
+		)
+	}
+	cfg := f.publish()
+	results := make(chan error, 2)
+	for range 2 {
+		go func() {
+			_, err := f.s.Respond(
+				t.Context(),
+				f.person.ID,
+				f.event,
+				f.id,
+				0,
+				ResponseCommand{
+					CommandID:   uuid.New(),
+					FormVersion: cfg.Version,
+					Answers:     forms.Answers{f.choice.String(): json.RawMessage(`"no"`)},
+				},
+			)
+			results <- err
+		}()
+	}
+	a, b := <-results, <-results
+	if (a == nil) == (b == nil) || (a != nil && !errors.Is(a, access.ErrConflict)) ||
+		(b != nil && !errors.Is(b, access.ErrConflict)) {
+		t.Fatal("competing commands both wrote or failed unexpectedly", a, b)
+	}
+	f.exec(
+		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='mentor'",
+		f.event,
+		f.person.ID,
+	)
+	// Confirmed attendance does not preserve access to a mentor-only survey.
+	if _, err := f.s.ReadOwn(
+		t.Context(),
+		f.person.ID,
+		f.event,
+		f.id,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("wrong current role retained own answers", err)
+	}
+	if _, err := f.s.Respond(
+		t.Context(),
+		f.person.ID,
+		f.event,
+		f.id,
+		1,
+		ResponseCommand{
+			CommandID:   uuid.New(),
+			FormVersion: cfg.Version,
+			Answers:     forms.Answers{f.choice.String(): json.RawMessage(`"no"`)},
+		},
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("revoked native role updated survey", err)
+	}
+	f.exec("UPDATE people SET active=false WHERE id=$1", f.other.ID)
+	if _, err := f.s.ReadOwn(
+		t.Context(),
+		f.other.ID,
+		f.event,
+		f.id,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("inactive account retained invitation", err)
+	}
+}
