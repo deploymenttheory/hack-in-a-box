@@ -1,0 +1,71 @@
+@layer components {
+  .fleet-icon { width: var(--icon-size); height: var(--icon-size); flex: 0 0 var(--icon-size); stroke-width: var(--icon-stroke); color: currentColor; }
+  .fleet-icon-slot { display: inline-grid; place-items: center; width: var(--icon-size); height: var(--icon-size); flex: 0 0 var(--icon-size); }
+  .fleet-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-height); max-width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid transparent; border-radius: var(--radius-control); font: inherit; font-size: var(--text-body); font-weight: var(--weight-emphasis); line-height: 1.25; text-align: center; text-decoration: none; overflow-wrap: anywhere; cursor: pointer; transition: background-color var(--motion-duration) var(--motion-easing); }
+  .fleet-button:focus-visible { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }
+  .fleet-button-primary { background: var(--primary); color: var(--primary-foreground); }
+  .fleet-button-primary:hover:not(:disabled), .fleet-button-primary:active:not(:disabled) { background: var(--primary-hover); text-decoration: underline; }
+  .fleet-button-outline { border-color: var(--input); background: var(--background); color: var(--foreground); }
+  .fleet-button-secondary { background: var(--secondary); color: var(--foreground); }
+  .fleet-button-ghost { background: transparent; color: var(--foreground); }
+  .fleet-button-outline:hover:not(:disabled), .fleet-button-secondary:hover:not(:disabled), .fleet-button-ghost:hover:not(:disabled) { background: var(--accent-surface); }
+  .fleet-button:active:not(:disabled) { box-shadow: inset 0 0 0 1px currentColor; }
+  .fleet-button-danger { background: var(--background); color: var(--destructive); border-color: var(--destructive); }
+  .fleet-button-danger:hover:not(:disabled) { background: var(--destructive-surface); }
+  .fleet-button-link { color: var(--link); background: transparent; text-decoration: underline; }
+  .fleet-button:disabled { opacity: .6; cursor: not-allowed; }
+  .fleet-button[aria-busy=true] { cursor: progress; }
+  .fleet-button-small { font-size: var(--text-caption); }
+  .fleet-button-large { min-height: 3rem; padding: var(--space-3) var(--space-4); }
+  .fleet-button-icon { width: var(--control-height); height: var(--control-height); padding: var(--space-2); }
+  .fleet-button-icon.fleet-button-large { width: 3rem; height: 3rem; }
+  .fleet-surface { border-block: 1px solid var(--border); padding-block: var(--space-4); }
+  .fleet-alert { border-inline-start: 3px solid var(--input); padding: var(--space-4); background: var(--muted); }
+  .fleet-alert[data-tone=destructive] { border-inline-start-color: var(--destructive); background: var(--destructive-surface); }
+  .fleet-alert[data-tone=warning] { border-inline-start-color: var(--warning); }
+  .fleet-alert[data-tone=success] { border-inline-start-color: var(--success); }
+  .fleet-alert h2 { display: flex; align-items: center; gap: var(--space-2); }
+  .fleet-field { display: grid; gap: var(--space-2); min-width: 0; }
+  .fleet-label { display: block; font-weight: var(--weight-emphasis); font-size: var(--text-body); line-height: var(--line-body); }
+  .fleet-field-help, .fleet-description { margin: 0; color: var(--muted-foreground); }
+  .fleet-field-error { margin: 0; color: var(--destructive); }
+  .theme :where(input, select, textarea)[aria-invalid=true] { border-width: 1px; border-color: var(--destructive); box-shadow: inset 0 0 0 1px var(--destructive); }
+  .fleet-positioner { z-index: 60; }
+  .fleet-menu, .fleet-popover, .fleet-tooltip { max-width: min(28rem, calc(100vw - 2rem)); padding: var(--space-2); border: 1px solid var(--input); border-radius: var(--radius-control); background: var(--popover); color: var(--foreground); box-shadow: var(--shadow-overlay); }
+  .fleet-menu { min-width: 12rem; }
+  .fleet-menu-item { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-2) var(--space-3); font-weight: var(--weight-body); text-decoration: none; cursor: pointer; outline: none; }
+  .fleet-menu-item[data-highlighted] { background: var(--accent-surface); box-shadow: inset 0 0 0 2px var(--ring); }
+  .fleet-menu-item[data-disabled] { color: var(--muted-foreground); cursor: not-allowed; }
+  .fleet-popover { padding: var(--space-4); }
+  .fleet-tooltip { font-size: var(--text-caption); padding: var(--space-2); }
+  .fleet-backdrop { position: fixed; inset: 0; background: color-mix(in srgb, var(--foreground) 25%, transparent); z-index: 70; }
+  .fleet-dialog-viewport { position: fixed; inset: 0; z-index: 71; display: grid; align-items: center; justify-items: center; padding: var(--space-4); overflow: auto; }
+  .fleet-dialog { width: min(34rem, 100%); max-height: calc(100dvh - 2rem); overflow: auto; background: var(--background); color: var(--foreground); border: 1px solid var(--input); border-radius: var(--radius-control); padding: var(--space-6); box-shadow: var(--shadow-overlay); }
+  .fleet-dialog-heading { display: flex; align-items: start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
+  .fleet-dialog-title { margin: 0; font-size: var(--text-section); font-weight: var(--weight-emphasis); }
+  .fleet-dialog-body { padding-block: var(--space-4); }
+  .fleet-dialog-footer { display: flex; flex-wrap: wrap; justify-content: end; gap: var(--space-2); border-top: 1px solid var(--border); margin-top: var(--space-4); padding-top: var(--space-4); }
+  .fleet-tabs { display: flex; gap: var(--space-2); overflow: auto; border-bottom: 1px solid var(--border); }
+  .fleet-tab { border: 0; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted-foreground); padding: var(--space-3); min-height: var(--control-height); white-space: nowrap; }
+  .fleet-tab[data-active] { border-bottom-color: var(--foreground); color: var(--foreground); font-weight: var(--weight-emphasis); }
+  .fleet-status { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); color: var(--foreground); }
+  .fleet-status[data-tone=success] .fleet-icon { color: var(--success); }
+  .fleet-status[data-tone=warning] .fleet-icon { color: var(--warning); }
+  .fleet-status[data-tone=destructive] .fleet-icon { color: var(--destructive); }
+  .fleet-progress { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .fleet-progress progress { accent-color: var(--primary); max-width: 100%; }
+  .fleet-toasts { position: fixed; bottom: var(--space-4); right: var(--space-4); z-index: 90; display: grid; gap: var(--space-2); width: min(24rem, calc(100vw - 2rem)); }
+  .fleet-toast { display: flex; align-items: start; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); background: var(--popover); color: var(--foreground); border: 1px solid var(--input); border-radius: var(--radius-control); box-shadow: var(--shadow-overlay); }
+  .fleet-toast[data-limited] { display: none; }
+  .fleet-spinner { animation: fleet-spin .8s linear infinite; }
+  @keyframes fleet-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .fleet-spinner { animation: none; } }
+  @media (forced-colors: active) {
+    .fleet-button:focus-visible { outline-color: Highlight; }
+    .fleet-menu-item[data-highlighted], .fleet-menu-item:focus-visible {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+    .fleet-status .fleet-icon { color: CanvasText; }
+  }
+}

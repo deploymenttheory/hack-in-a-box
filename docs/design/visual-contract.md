@@ -26,7 +26,7 @@ No branding is written to `body` or to a different event. Inter is imported by a
 | Canvas | Flat surfaces, fine separators; no card shadow or rounded dashboard panels |
 | Focus | 2px semantic ring with 3px offset; forced colours use system Highlight |
 | Motion | 100ms fast / 160ms normal, ease-out; reduced motion removes animation/transitions |
-| Icons | 16px semantic size, 1.75 stroke reference; consistent Lucide primitives arrive in #231 |
+| Icons | 16px semantic size, 1.75 stroke; curated named Lucide registry in `components/ui/icon.tsx` |
 
 `Theme` accepts `mode="system" | "light" | "dark"` and
 `density="comfortable" | "compact"`; system/comfortable are defaults. Explicit

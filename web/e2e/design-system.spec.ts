@@ -45,7 +45,7 @@ for (const palette of palettes) test(`${palette.name} palette keeps registration
   await page.screenshot({ path: info.outputPath(`design-system-${palette.name.replaceAll(' ', '-')}.png`), fullPage: true })
   await page.route(`**/api/v1/events/${firstID}/registrations`, route => route.fulfill({ status: 422, json: { error: { code: 'invalid', message: 'Review the answer', request_id: 'synthetic', blockers: [{ field: questionID, code: 'invalid', message: 'Explain the learning goal.' }] } } }))
   await submit.click(); await expect(field).toHaveAttribute('aria-invalid', 'true')
-  expect(await contrastOf(page.locator('.field-error').first())).toBeGreaterThanOrEqual(4.5)
+  expect(await contrastOf(page.locator('[id$="-error"].fleet-field-error').first())).toBeGreaterThanOrEqual(4.5)
   expect(await contrastOf(page.locator('.state[role=alert] p').first())).toBeGreaterThanOrEqual(4.5)
 })
 
@@ -59,7 +59,7 @@ test('native errors, disabled actions and private drafts keep their existing sem
   await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(field).toHaveAttribute('aria-invalid', 'true')
   expect(await contrastOf(field, 'border-top-color')).toBeGreaterThanOrEqual(3)
-  expect(await contrastOf(page.locator('.field-error').first())).toBeGreaterThanOrEqual(4.5)
+  expect(await contrastOf(page.locator('[id$="-error"].fleet-field-error').first())).toBeGreaterThanOrEqual(4.5)
   await expect(field).toHaveValue('PRIVATE-DESIGN-SYSTEM-DRAFT')
   expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-DESIGN-SYSTEM-DRAFT')
   await page.route('**/api/v1/account/email', route => route.fulfill({ json: { configured: true, verified: false, masked_mailbox: '', provenance: '', pending: false, request_state: '', expires_at: null, retry_after_seconds: 0 } }))
@@ -107,4 +107,28 @@ test('Fleet foundation loads a local font and explicit modes override system pre
   await expect(page.locator('[data-theme-portals]').first()).toHaveCSS('--background', '#1a1c21')
   await page.keyboard.press('Escape')
   await expect(menu).toHaveCount(0)
+})
+
+test('forced-colour account menu preserves a visible keyboard highlight and returns focus', async ({ page }, info) => {
+  await page.emulateMedia({ forcedColors: 'active' })
+  await mockWorkspace(page)
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: 'Synthetic Person', exact: true })
+  await trigger.focus(); await page.keyboard.press('ArrowDown')
+  const first = page.getByRole('menuitem', { name: 'Account settings' })
+  await expect(first).toBeFocused(); await expect(first).toHaveAttribute('data-highlighted', '')
+  const highlight = await page.evaluate(() => {
+    const probe = document.createElement('span'); probe.style.color = 'Highlight'
+    document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour
+  })
+  await expect(first).toHaveCSS('outline-style', 'solid')
+  await expect(first).toHaveCSS('outline-width', '2px')
+  await expect(first).toHaveCSS('outline-color', highlight)
+  await page.keyboard.press('ArrowDown')
+  const next = page.getByRole('menuitem', { name: 'Sign out' })
+  await expect(next).toBeFocused(); await expect(next).toHaveAttribute('data-highlighted', '')
+  await expect(next).toHaveCSS('outline-style', 'solid'); await expect(next).toHaveCSS('outline-color', highlight)
+  await expect(first).not.toHaveAttribute('data-highlighted', '')
+  await page.screenshot({ path: info.outputPath('forced-colour-menu.png') })
+  await page.keyboard.press('Escape'); await expect(page.getByRole('menu')).toHaveCount(0); await expect(trigger).toBeFocused()
 })
