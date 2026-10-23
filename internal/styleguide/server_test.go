@@ -17,7 +17,7 @@ func TestStaticGuideNeedsNoApplicationAuthorityOrServices(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, "assets"), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	for name, body := range map[string][]byte{"index.html": []byte("<!doctype html><title>Synthetic component guide</title>"), "assets/guide-hash.js": []byte("export const synthetic = true"), "assets/InterVariable-hash.woff2": []byte("wOF2synthetic-font")} {
+	for name, body := range map[string][]byte{"samples.html": []byte("<!doctype html><title>Synthetic component examples</title>"), "index.html": []byte("<!doctype html><title>Synthetic component guide</title>"), "assets/guide-hash.js": []byte("export const synthetic = true"), "assets/InterVariable-hash.woff2": []byte("wOF2synthetic-font")} {
 		if err := os.WriteFile(filepath.Join(root, name), body, 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -40,7 +40,7 @@ func TestStaticGuideNeedsNoApplicationAuthorityOrServices(t *testing.T) {
 	}{
 		{"GET", "/", 200},
 		{"HEAD", "/", 200},
-		{"GET", "/index.html", 200},
+		{"GET", "/index.html", 200}, {"GET", "/samples.html", 200},
 		{"GET", "/assets/guide-hash.js", 200},
 		{"GET", "/assets/InterVariable-hash.woff2", 200},
 		{"GET", "/healthz", 200},
@@ -115,6 +115,14 @@ func TestReadinessNeedsOnlyTheStaticEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
+	server.ServeHTTP(response, httptest.NewRequest("GET", "/readyz", nil))
+	if response.Code != 503 {
+		t.Fatal("Missing example entry incorrectly passed readiness")
+	}
+	if err := os.WriteFile(filepath.Join(root, "samples.html"), []byte("<title>Synthetic samples</title>"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	response = httptest.NewRecorder()
 	server.ServeHTTP(response, httptest.NewRequest("GET", "/readyz", nil))
 	if response.Code != 200 {
 		t.Fatal("Static entry did not make guide ready")

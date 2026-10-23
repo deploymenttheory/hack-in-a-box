@@ -1,0 +1,57 @@
+import { useRef, useState, type FormEvent } from 'react'
+import { ActionLink, Button, IconButton } from '../components/ui/button'
+import { Icon, iconNames } from '../components/ui/icon'
+import { Checkbox, Field, Input, Select, Textarea, focusFirstInvalid } from '../components/ui/fields'
+import { ConfirmationDialog, Dialog, DialogClose, DialogContent, DialogTrigger } from '../components/ui/dialog'
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '../components/ui/menu'
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '../components/ui/popover'
+import { Tab, TabList, TabPanel, Tabs } from '../components/ui/tabs'
+import { Tooltip } from '../components/ui/tooltip'
+import { LiveMessage, Progress, StatusBadge } from '../components/ui/feedback'
+import { ToastProvider, useToast } from '../components/ui/toast'
+import { Snippet } from './snippet'
+
+function Actions() {
+  const [pending, setPending] = useState(false)
+  const [message, setMessage] = useState('')
+  return <section className="guide-section"><h2>Buttons and links</h2><p>Use one specific primary action, with a meaningful icon and visible text. Secondary actions have less visual weight. Navigation remains a real link.</p><div className="guide-example"><Button icon="save" onClick={() => setMessage('Synthetic save action activated.')}>Save draft</Button><Button variant="outline" onClick={() => setMessage('Synthetic edit cancelled.')}>Cancel</Button><Button variant="secondary" icon="refresh" onClick={() => setMessage('Synthetic status viewed.')}>View status</Button><Button variant="destructive" icon="remove" onClick={() => setMessage('Synthetic remove action activated.')}>Remove example</Button><IconButton icon="more" label="More example actions" onClick={() => setMessage('Named icon action activated.')} /><ActionLink href="/#contributing" target="_top" icon="book">Read contribution guide</ActionLink></div>
+    <Field id="guide-pending-state" label="Show pending state"><Checkbox checked={pending} onChange={event => setPending(event.target.checked)} /></Field><div className="guide-example"><Button icon="send" pending={pending}>Send example with icon</Button><Button pending={pending}>Send example without icon</Button><Button disabled>Unavailable example</Button></div><p>Pending controls keep their text and dimensions. Bind the pending boolean from the beginning; a supplied false state reserves the loading slot. Disabled actions need a visible reason in the owning workflow.</p><LiveMessage>{message}</LiveMessage><Snippet>{'<Button icon="save" pending={pending} onClick={saveDraft}>\n  Save draft\n</Button>'}</Snippet></section>
+}
+function Fields() {
+  const [label, setLabel] = useState('')
+  const [description, setDescription] = useState('')
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const form = useRef<HTMLFormElement>(null)
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    const invalid = !label.trim()
+    setError(invalid ? 'Enter an example label.' : '')
+    setMessage(invalid ? '' : 'Example validated. No application request was sent.')
+    if (invalid) requestAnimationFrame(() => { if (form.current) focusFirstInvalid(form.current) })
+  }
+  return <section className="guide-section"><h2>Fields and validation</h2><p>Use native controls and form submission. Keep help and errors associated with the control. Pristine fields do not start in an error state; the owning validator decides whether submission is allowed.</p><form ref={form} noValidate onSubmit={submit} className="guide-demo-form"><Field id="guide-label" label="Example label (required)" description="Use a short synthetic label." error={error}><Input value={label} onChange={event => setLabel(event.target.value)} onBlur={() => { if (label && !label.trim()) setError('Enter an example label.') }} maxLength={80} /></Field><Field id="guide-category" label="Example category"><Select defaultValue="workspace"><option value="workspace">Workspace</option><option value="review">Review desk</option><option value="queue">Action queue</option></Select></Field><Field id="guide-description" label="Optional description" description="This example remains in local memory."><Textarea value={description} onChange={event => setDescription(event.target.value)} maxLength={300} /></Field><Button type="submit" icon="check">Validate example</Button><LiveMessage>{message}</LiveMessage></form><Snippet>{'<Field id="name" label="Name" description="Use the team name." error={error}>\n  <Input value={name} onChange={changeName} />\n</Field>'}</Snippet><p>Visual field wrappers do not replace native, React Hook Form, Zod or server validation. Clear irrelevant errors when a dependent field is removed, and preserve recoverable input after known transport failures.</p></section>
+}
+function Overlays() {
+  const [confirmation, setConfirmation] = useState(false)
+  const [message, setMessage] = useState('')
+  const opener = useRef<HTMLButtonElement>(null)
+  return <section className="guide-section"><h2>Dialogs, menus and hints</h2><p>Keep a focused task named, scoped to its entity and dismissible when safe. Portals inherit the owning production Theme. Confirmation is an explicit caller action; a dialog never sends or retries a command.</p><div className="guide-example"><Dialog><DialogTrigger render={<Button icon="info" variant="outline" />}>Open example dialog</DialogTrigger><DialogContent title="Example details" description="Synthetic content rendered in a production dialog." footer={<DialogClose render={<Button variant="outline" />}>Close details</DialogClose>}><p>Tab stays inside the dialog. Escape closes it and returns focus to the opener.</p></DialogContent></Dialog><Button ref={opener} icon="check" onClick={() => setConfirmation(true)}>Review example decision</Button><Menu><MenuTrigger render={<Button icon="more" variant="outline" />}>Example actions</MenuTrigger><MenuContent><MenuItem icon="save" onClick={() => setMessage('Synthetic menu action selected.')}>Save example</MenuItem><MenuItem disabled>Unavailable example action</MenuItem><MenuItem icon="refresh" onClick={() => setMessage('Synthetic status action selected.')}>View example status</MenuItem></MenuContent></Menu><Popover><PopoverTrigger render={<Button icon="help" variant="ghost" />}>View guidance</PopoverTrigger><PopoverContent title="Example guidance"><p>Use a popover for supporting context near the current task.</p><PopoverClose render={<Button variant="outline" />}>Close guidance</PopoverClose></PopoverContent></Popover><Tooltip content="Hints supplement visible guidance."><IconButton label="Example control hint" icon="info" /></Tooltip></div><ConfirmationDialog open={confirmation} onOpenChange={setConfirmation} title="Confirm example decision" description="This is a local synthetic decision. It affects no team or provider." confirmLabel="Confirm example" finalFocus={opener} onConfirm={() => { setMessage('Synthetic decision confirmed.'); setConfirmation(false) }} /><LiveMessage>{message}</LiveMessage><p>Keyboard focus and Escape rules are part of the component contract. Essential instructions and disabled-action reasons remain visible outside tooltips.</p><Snippet>{'<ConfirmationDialog\n  open={open}\n  onOpenChange={setOpen}\n  title="Review exact change"\n  description={reviewedEffect}\n  confirmLabel="Confirm change"\n  finalFocus={opener}\n  pending={pending}\n  onConfirm={confirm}\n/>'}</Snippet></section>
+}
+function Notifications() {
+  const toast = useToast()
+  const [progress, setProgress] = useState(2)
+  const [message, setMessage] = useState('')
+  return <section className="guide-section"><h2>Status, progress and announcements</h2><p>Status always includes text and an icon. Only deliberate feedback is announced; a page full of status badges is not a collection of live regions. Unknown progress is indeterminate, not zero.</p><div className="guide-example"><StatusBadge>Draft</StatusBadge><StatusBadge tone="success">Ready</StatusBadge><StatusBadge tone="warning">Needs review</StatusBadge><StatusBadge tone="destructive">Failed</StatusBadge></div><div className="guide-progress-examples"><Progress label="Known example progress" value={progress} max={5} /><Progress label="Unknown example progress" /></div><div className="guide-example"><Button icon="next" variant="outline" disabled={progress === 5} onClick={() => setProgress(value => Math.min(5, value + 1))}>Advance example progress</Button><Button icon="info" variant="outline" onClick={() => { setMessage('Persistent example receipt: draft saved.'); toast.notify({ title: 'Example draft saved', description: 'The persistent message remains below.' }) }}>Show example notification</Button></div><LiveMessage>{message}</LiveMessage><p>Critical failures and exact receipts stay inline. Toasts are secondary feedback and are scoped to the current identity/event by their owner; they never store private drafts.</p><Snippet>{'<ToastProvider scopeKey={`${personId}:${eventId}`}>\n  <Workspace />\n</ToastProvider>\n\n<Progress label="Upload progress" />'}</Snippet></section>
+}
+function Navigation() {
+  return <section className="guide-section"><h2>Local tabs</h2><p>Tabs belong to the current entity. Arrow keys move focus; Enter selects a panel. Use links for actual navigation and preserve the collection’s return context.</p><Tabs defaultValue="summary"><TabList aria-label="Example detail sections"><Tab value="summary">Summary</Tab><Tab value="evidence">Evidence</Tab><Tab value="history">History</Tab></TabList><TabPanel value="summary"><p>Current synthetic summary.</p></TabPanel><TabPanel value="evidence"><p>Explicit evidence references belong to the selected entity.</p></TabPanel><TabPanel value="history"><p>Safe retained history is distinct from current approval.</p></TabPanel></Tabs><Snippet>{'<Tabs defaultValue="summary">\n  <TabList aria-label="Team sections">\n    <Tab value="summary">Summary</Tab>\n    <Tab value="evidence">Evidence</Tab>\n  </TabList>\n  <TabPanel value="summary">{summary}</TabPanel>\n  <TabPanel value="evidence">{evidence}</TabPanel>\n</Tabs>'}</Snippet></section>
+}
+function IconCatalogue() {
+  const [query, setQuery] = useState('')
+  const visible = iconNames.filter(name => name.toLowerCase().includes(query.trim().toLowerCase()))
+  return <section className="guide-section"><h2>Production Lucide catalogue</h2><p>The list is derived from the actual shared icon registry. Glyphs use currentColor, the shared 16px size and a consistent stroke; decorative SVGs do not duplicate the accessible label.</p><Field id="guide-icon-query" label="Find an icon"><Input type="search" value={query} onChange={event => setQuery(event.target.value)} /></Field><p role="status">{visible.length} of {iconNames.length} supported icons</p><ul className="guide-icons">{visible.map(name => <li key={name}><Icon name={name} /><code>{name}</code></li>)}</ul><Snippet>{'<Button icon="save">Save draft</Button>\n<IconButton icon="close" label="Close review" />'}</Snippet></section>
+}
+export function PrimitiveExamples({ resetKey }: { resetKey: number }) {
+  return <ToastProvider scopeKey={`guide:${resetKey}`}><Actions /><Fields /><Overlays /><Navigation /><Notifications /><IconCatalogue /></ToastProvider>
+}
