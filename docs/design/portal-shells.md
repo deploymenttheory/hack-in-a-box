@@ -13,6 +13,15 @@ the same event query key as the feature workspace. A failed current event read
 withdraws the event name, access description and contextual destinations. Server
 capability facts label access; the portal hostname never stands in for a role.
 
+`Event.can_read_review_coverage` is an optional additive permission fact from the
+shared `access.ReviewCoverageAuthority` check used by the existing coverage guard:
+current event read plus an active organiser or mentor role. Absent means false.
+The organiser-only `can_read_staff` fact does not gate mentor discovery. This is
+permission to open the owning service, not proof of service availability or access
+to every team's private records; roster/content/configuration checks remain in
+that service. Navigation does not fetch or index assessment records. The new
+projection changes no role, policy, schema or grant.
+
 The event switcher loads the existing bounded cursor API only when opened. It
 rechecks cached choices and hides them during the current read or on failure;
 "More events" fetches the next real cursor page. Each destination still performs

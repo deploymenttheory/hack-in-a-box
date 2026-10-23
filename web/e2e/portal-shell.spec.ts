@@ -9,6 +9,10 @@ test('shell collection, permitted destination search and current event context a
   const target = page.getByRole('button', { name: 'Find a destination' })
   const box = (await target.boundingBox())!, minimum = await page.evaluate(() => matchMedia('(pointer: coarse)').matches ? 44 : 36)
   expect(box.width).toBeGreaterThanOrEqual(minimum); expect(box.height).toBeGreaterThanOrEqual(minimum)
+  const inbox = page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: /^Inbox/ })
+  const inboxBox = (await inbox.boundingBox())!
+  expect(inboxBox.width).toBeGreaterThanOrEqual(minimum); expect(inboxBox.height).toBeGreaterThanOrEqual(minimum)
+  await expect(inbox.locator('svg')).toHaveCount(1)
   await target.focus(); await page.keyboard.press('Enter')
   const search = page.getByRole('searchbox', { name: 'Search permitted destinations' })
   await search.fill('no such destination'); await expect(page.getByText('No matching destinations. Try another name.')).toBeVisible()
@@ -30,7 +34,7 @@ test('host does not invent event authority and revoked current reads withdraw co
   await mockWorkspace(page)
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', draft_scope: '22222222-2222-4222-8222-222222222222', can_create_events: false } }))
   let revoked = false
-  const event = { ...fixtureEvent(), can_read_staff: false, can_edit: false, can_present: false, can_transition: false, can_manage_owner: false }
+  const event = { ...fixtureEvent(), can_read_staff: false, can_read_review_coverage: false, can_edit: false, can_present: false, can_transition: false, can_manage_owner: false }
   await page.route(`**/api/v1/events/${firstID}`, route => revoked ? route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Synthetic', request_id: 'synthetic' } } }) : route.fulfill({ json: event }))
   await page.goto(`/events/${firstID}`)
   await expect(page.locator('.fleet-shell-context')).toContainText('Event access')
@@ -129,4 +133,25 @@ test('event switcher rechecks its paginated choices instead of advertising a rem
   await expect(choices.getByRole('link', { name: 'North Star Hack', exact: true })).toBeVisible()
   expect(reads).toBe(1)
   await expect(choices.getByRole('link', { name: 'Southern Lights Hack', exact: true })).toHaveCount(0)
+})
+
+test('mentor-only review authority is discoverable and revocation withdraws it without reading private review records', async ({ page }) => {
+  await mockWorkspace(page)
+  let allowed = true, privateReads = 0
+  const event = { ...fixtureEvent(), can_read_staff: false, can_edit: false, can_present: false, can_manage_owner: false, can_transition: false }
+  await page.route(`**/api/v1/events/${firstID}`, route => route.fulfill({ json: { ...event, can_read_review_coverage: allowed } }))
+  page.on('request', request => { if (new URL(request.url()).pathname.endsWith('/review-coverage')) privateReads++ })
+  await page.goto(`/events/${firstID}`)
+  await expect(page.locator('.fleet-shell-context')).toContainText('North Star Hack')
+  await page.getByRole('button', { name: 'Find a destination' }).click()
+  await page.getByRole('searchbox', { name: 'Search permitted destinations' }).fill('Support and assessment')
+  const destination = page.getByRole('link', { name: 'Support and assessment', exact: true })
+  await expect(destination).toBeVisible(); await expect(destination).toHaveAttribute('href', `/events/${firstID}/review`)
+  expect(privateReads).toBe(0)
+  allowed = false
+  await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')))
+  await expect(destination).toHaveCount(0)
+  await expect(page.getByText('No matching destinations. Try another name.')).toBeVisible()
+  await expect(page.locator('.fleet-shell-context')).toContainText('North Star Hack')
+  expect(privateReads).toBe(0)
 })

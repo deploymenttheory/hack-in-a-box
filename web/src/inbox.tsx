@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { Link, useParams } from '@tanstack/react-router'
 import { api, privateKey, unwrap } from './api/client'
 import { useIdentity } from './session'
+import { Icon } from './components/ui/icon'
 import { Button } from './components/ui/button'
 import { Failure, Loading } from './components/states'
 import { SafeMarkdown } from './components/safe-markdown'
@@ -12,7 +13,7 @@ import { EventBrand } from './branding'
 export function InboxLink({ active = false }: { active?: boolean }) {
   const identity = useIdentity()
   const inbox = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-badge'), queryFn: async () => unwrap(await api.GET('/api/v1/inbox', { params: { query: { limit: 1 } } })), refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
-  return <Link to="/inbox" aria-current={active ? 'page' : undefined}>Inbox{inbox.data && !inbox.error && inbox.data.unread > 0 ? ` (${inbox.data.unread} unread)` : ''}</Link>
+  return <Link className="fleet-shell-inbox" data-active={active || undefined} to="/inbox" aria-current={active ? 'page' : undefined}><Icon name="list" /><span>Inbox{inbox.data && !inbox.error && inbox.data.unread > 0 ? ` (${inbox.data.unread} unread)` : ''}</span></Link>
 }
 export function InboxPage() {
   const identity = useIdentity(), [eventID, setEventID] = useState(''), [selected, setSelected] = useState<string>()

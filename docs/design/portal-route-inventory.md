@@ -59,11 +59,12 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 
 | Entry | Nested components / states / overlays | Presentation owner |
 |---|---|---|
-| Event overview / setup | Dates, blockers, stage transition reason/attendance exception, event form, preview, schedule, branding editor, objectives, staff/ownership transfers, template editor/import/publish/clone | #235 |
-| Event Today | Current event guidance; complete readiness and action ownership remains #88 | #235 chrome, #88 product; applicable readiness #238 |
+| Event overview / setup | Dates, blockers, stage transition reason/attendance exception, event form, preview, schedule, branding editor, objectives, staff/ownership transfers, template editor/import/publish/clone, configuration inventory, venue/logistics/check-in, staff planning/preparation/readiness/export composition | #235 |
+| Event Today | Current event guidance; complete readiness and action ownership remains #88 | #235 admin chrome/readiness composition, #238 participant preparation evidence/checklists, #88 full Today/live aggregation |
 | Registration / applicants | Application chooser, branching questions, offers/deadlines, withdrawals, applicant review/detail/reasons, form editor/preview/publish acknowledgement | #236 |
 | Teams / mentors / team access | Team requests/roster, allocation/freeze, team member readers, mentor roster/coverage/conflicts, retained repository/access status | #237 |
-| Resources / preparation / inventory / attendance / operations / logistics / deliverables | Resource library/readers, preparation board, attendance/check-in, readiness exceptions, resource inventory/assignment/returns, venue logistics, working deliverable and formal submission boundaries | #238 |
+| Inventory / attendance / operations / logistics / staff preparation | Event-configuration inventory/assignment/returns, venue/logistics/check-in, staff planning/preparation/readiness exceptions and export composition | #235 |
+| Released resources / participant preparation / deliverables | Released resource library/editor/readers, attachments, credential reveal, participant preparation evidence/checklists, working deliverable and formal submission boundaries | #238 |
 | Campaigns / content / Inbox / Q&A | Campaign composer/review/approval/test, Teams confirmation, automation status/reconciliation, content authoring/preview/publish, notification reader/mark-read, delivery history/receipt detail, clarification/private-question author/read/review | #239 |
 | Mentor / help / review / feedback | Mentor workspace/private draft recovery, scorecards/observations/evidence, helper queue/request thread, review dashboard, team inspector/judge summary, moderation/huddle/feedback readers and follow-ups | #240 |
 | Surveys | Directory, audience/authoring/publish, respondent version, answer privacy, management/close/results/export and results review | #241 |
@@ -76,3 +77,5 @@ Domain readers retain their current query/CSRF/revision/receipt/private-draft
 services. Their feature owners migrate nested forms, dialogs and inspectors
 alongside their primary screen. No automatic replay, new grant, endpoint or
 cross-portal runtime dependency is introduced by this assignment.
+
+Shared parent components may host both admin configuration and released participant views: #235 owns the former and #238 owns the latter. Preserve the existing domain readers and audience boundaries while migrating each composition. #88 continues to own complete Today/live aggregation logic.

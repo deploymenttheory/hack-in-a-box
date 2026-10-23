@@ -30,8 +30,8 @@ The complete Today/readiness product remains #88.
 
 ## Verification
 
-- ESLint clean; 105 unit/component tests; TypeScript and both production builds.
-- Focused production browser runs: 66 admin and 60 participant cases, covering
+- ESLint clean; 106 unit/component tests; TypeScript and both production builds.
+- Focused production browser runs: 68 admin and 62 participant cases, covering
   desktop/mobile:
   permitted navigation/search/no-match, event switching, current access removal,
   direct routes/login return, expiry, loading/empty/retry, native account fields,
@@ -58,3 +58,22 @@ A new coarse-pointer geometry assertion caught a 42px-wide search control when i
 mobile label became visually hidden. The shell now applies the semantic control
 minimum to its width as well as its height; the 44px proof is retained in both
 portal browser runs. Labels remain accessible and normal desktop labels visible.
+
+## Independent review corrections
+
+- **Mentor discovery:** the organiser-only staff flag hid the review destination
+  for a current mentor. The browser regression reproduced that absence. Navigation
+  now consumes optional `Event.can_read_review_coverage` (absent is false), an
+  additive generated capability from the exact current authority check shared by
+  the coverage guard. No private assessment payload is fetched/indexed for nav.
+  Real PostgreSQL/race helper and HTTP proofs cover organiser and mentor-only
+  positives, other roles and platform administration denied, and mentor revocation
+  while a separately added photographer role retains event read. The capability
+  remains a permission fact when the coverage service is unavailable.
+- **Inbox target:** the mobile wrapper was 44px tall but its actual link was about
+  31px wide and 18px tall. The red browser proof now measures the real anchor.
+  The icon and full navigation target now belong to that anchor; both portals
+  retain the 44px coarse-pointer width/height assertion and require its SVG child.
+
+This review adds a small API capability projection and shared authority helper;
+it does not change domain policy, storage schema, roles or write behavior.

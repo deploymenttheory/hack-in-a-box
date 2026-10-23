@@ -3896,6 +3896,8 @@ export interface components {
             can_edit: boolean;
             can_manage_owner: boolean;
             can_read_staff: boolean;
+            /** @description Current authority to open review coverage (event read plus active organiser or mentor role). Permission only; not a service-availability or private-record grant. Absent means false. */
+            can_read_review_coverage?: boolean;
             can_read_attendance?: boolean;
             can_read_logistics?: boolean;
             can_transition: boolean;

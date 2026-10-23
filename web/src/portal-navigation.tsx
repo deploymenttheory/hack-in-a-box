@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover
 import { InboxLink } from './inbox'
 
 export type PortalDestination = { href: string; label: string; icon: IconName }
-export function permittedDestinations(session: Pick<Session, 'can_create_events'>, admin: boolean, event?: Pick<EventRecord, 'id' | 'name' | 'can_read_staff'>): PortalDestination[] {
+export function permittedDestinations(session: Pick<Session, 'can_create_events'>, admin: boolean, event?: Pick<EventRecord, 'id' | 'name' | 'can_read_review_coverage'>): PortalDestination[] {
   return [
     { href: '/', label: 'Workspace', icon: 'layout' },
     { href: '/ideas', label: 'Ideas & projects', icon: 'book' },
@@ -23,7 +23,7 @@ export function permittedDestinations(session: Pick<Session, 'can_create_events'
       { href: `/events/${event.id}/media`, label: 'Event media', icon: 'layout' } as const,
       { href: `/events/${event.id}/photo-consent`, label: 'Your photo consent', icon: 'user' } as const,
       { href: `/events/${event.id}/help`, label: 'Event help', icon: 'help' } as const,
-      ...(event.can_read_staff ? [{ href: `/events/${event.id}/review`, label: 'Support and assessment', icon: 'shield' } as const] : []),
+      ...(event.can_read_review_coverage === true ? [{ href: `/events/${event.id}/review`, label: 'Support and assessment', icon: 'shield' } as const] : []),
     ] : []),
   ]
 }
@@ -48,7 +48,7 @@ export function PortalNavigation({ session, pathname, account }: { session: Sess
   const event = eventID && !query.error ? query.data : undefined
   const destinations = permittedDestinations(session, admin, event)
   const top = destinations.filter(item => ['/', '/ideas', '/inbox', '/register'].includes(item.href))
-  return <><header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-navigation"><nav aria-label="Main navigation">{top.map(item => item.href === '/inbox' ? <span className="fleet-shell-inbox" data-active={pathname === '/inbox' || undefined} key={item.href}><Icon name="list" /><InboxLink active={pathname === '/inbox'} /></span> : <Link key={item.href} to={item.href} activeOptions={{ exact: item.href === '/' }} activeProps={{ 'aria-current': 'page', className: 'fleet-nav-active' }}><Icon name={item.icon} />{item.label}</Link>)}</nav></div><DestinationSearch key={`${session.person.id}:${eventID ?? ''}`} destinations={destinations} /><div className="fleet-shell-account">{account}</div></header><div className="fleet-shell-context"><span>{admin ? 'Administration' : 'Participant portal'}</span>{event ? <><EventSwitcher key={event.id} session={session} event={event} /><strong>{event.name}</strong><span>{event.stage}</span><span>{event.can_edit ? 'Event editor access' : event.can_read_staff ? 'Staff access' : 'Event access'}</span></> : <span>{eventID ? query.error ? 'Event access unavailable' : 'Checking event access…' : 'No event selected'}</span>}</div></>
+  return <><header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-navigation"><nav aria-label="Main navigation">{top.map(item => item.href === '/inbox' ? <InboxLink key={item.href} active={pathname === '/inbox'} /> : <Link key={item.href} to={item.href} activeOptions={{ exact: item.href === '/' }} activeProps={{ 'aria-current': 'page', className: 'fleet-nav-active' }}><Icon name={item.icon} />{item.label}</Link>)}</nav></div><DestinationSearch key={`${session.person.id}:${eventID ?? ''}`} destinations={destinations} /><div className="fleet-shell-account">{account}</div></header><div className="fleet-shell-context"><span>{admin ? 'Administration' : 'Participant portal'}</span>{event ? <><EventSwitcher key={event.id} session={session} event={event} /><strong>{event.name}</strong><span>{event.stage}</span><span>{event.can_edit ? 'Event editor access' : event.can_read_staff ? 'Staff access' : 'Event access'}</span></> : <span>{eventID ? query.error ? 'Event access unavailable' : 'Checking event access…' : 'No event selected'}</span>}</div></>
 }
 function PortalBrand() { return <Link className="fleet-shell-brand" to="/" aria-label="Hack in a Box home"><Icon name="layout" />Hack in a Box{import.meta.env.MODE === 'admin' ? ' · Admin' : ''}</Link> }
 export function PortalFrame({ account, navigation, children }: { account: ReactNode; navigation?: ReactNode; children: ReactNode }) {

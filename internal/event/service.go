@@ -290,6 +290,8 @@ func (s Service) view(
 		row.ID,
 		access.PresentationControl,
 	) == nil
+	_, reviewAuthorityErr := access.ReviewCoverageAuthority(ctx, q, actor, row.ID)
+	view.CanReadReviewCoverage = reviewAuthorityErr == nil
 	view.CanReadStaff = policy.Authorize(ctx, actor, row.ID, row.ID, access.StaffRead) == nil
 	view.CanReadAttendance = policy.Authorize(ctx, actor, row.ID, row.ID, access.RosterRead) == nil
 	view.CanReadLogistics = policy.Authorize(
