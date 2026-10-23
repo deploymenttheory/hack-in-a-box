@@ -1,3 +1,4 @@
+import { styleguideURL } from './styleguide-url'
 import { useState, type ReactNode } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
@@ -52,5 +53,5 @@ export function PortalNavigation({ session, pathname, account }: { session: Sess
 }
 function PortalBrand() { return <Link className="fleet-shell-brand" to="/" aria-label="Hack in a Box home"><Icon name="layout" />Hack in a Box{import.meta.env.MODE === 'admin' ? ' · Admin' : ''}</Link> }
 export function PortalFrame({ account, navigation, children }: { account: ReactNode; navigation?: ReactNode; children: ReactNode }) {
-  return <div className="fleet-portal-shell"><a className="skip-link" href="#main">Skip to content</a>{navigation ?? <header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-account">{account}</div></header>}{children}<footer className="fleet-shell-footer">Make something worth sharing.</footer></div>
+  return <div className="fleet-portal-shell"><a className="skip-link" href="#main">Skip to content</a>{navigation ?? <header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-account">{account}</div></header>}{children}<footer className="fleet-shell-footer">Make something worth sharing. <a href={styleguideURL} target="_blank" rel="noopener noreferrer">About this interface · Style guide</a></footer></div>
 }

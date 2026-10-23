@@ -78,3 +78,15 @@ portal browser runs. Labels remain accessible and normal desktop labels visible.
 
 This review adds a small API capability projection and shared authority helper;
 it does not change domain policy, storage schema, roles or write behavior.
+
+## Final dependency reconciliation
+
+Rebased the four reviewed #234 commits onto actual main53a38d3 after #248 merged.
+The conflict resolution retains both guide and shell test coverage/ignore entries
+and moves the already reviewed public style-guide link into the new PortalFrame
+footer. Comparing with efdf4d3 finds only the merged guide files and that explicit
+footer integration; no reviewed shell, authority, native request or receipt logic
+was lost. Fresh lint, all107 units and both portal builds pass. The focused shell
+and guide-link journeys pass in both portals (18admin +18participant), including
+mentor capability/revocation, actual44px Inbox anchors and footer availability after
+session expiry. Full exact-head repository CI remains the merge gate.

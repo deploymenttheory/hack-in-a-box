@@ -7,7 +7,9 @@ Each process serves its own compiled assets and keeps its own existing session
 cookie. Neither frontend forwards a request through the other deployment.
 
 `PortalFrame` supplies a compact global header, skip link, content boundary and
-footer. `PortalNavigation` runs inside the existing private QueryClient lifetime,
+footer, including the independently published style-guide link from #233. The
+same public `VITE_STYLEGUIDE_URL` setting applies to both builds; the link remains
+available after expiry and carries no session parameters. `PortalNavigation` runs inside the existing private QueryClient lifetime,
 keyed by authenticated person and session draft scope. Current event context uses
 the same event query key as the feature workspace. A failed current event read
 withdraws the event name, access description and contextual destinations. Server
