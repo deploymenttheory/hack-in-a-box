@@ -42,6 +42,14 @@ type ActionState struct {
 	OwnerEligible   bool      `json:"owner_eligible"`
 }
 type ActionPolicy interface {
+	AuthorizeModerationActionHistoryInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		uuid.UUID,
+		uuid.UUID,
+		ActionState,
+	) error
 	ResolveModerationActionInTransaction(
 		context.Context,
 		pgx.Tx,

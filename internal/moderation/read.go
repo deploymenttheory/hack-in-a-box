@@ -72,38 +72,37 @@ func (s Service) History(
 		if err = s.authorizeDecisionReader(ctx, tx, actor, eventID, current); err != nil {
 			return err
 		}
-		rows, err := tx.Query(
-			ctx,
-			`SELECT document FROM moderation_huddle_versions WHERE event_id=$1 AND team_id=$2 AND id=$3 AND ($4::bigint IS NULL OR version<$4) ORDER BY version DESC LIMIT $5`,
-			eventID,
-			teamID,
-			id,
-			before,
-			limit+1,
-		)
-		if err != nil {
-			return fmt.Errorf("page huddle decision history: %w", err)
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var raw []byte
-			if err = rows.Scan(&raw); err != nil {
-				return fmt.Errorf("resolve moderation dependency: %w", err)
+		cursor := before
+		for len(out.Items) <= int(limit) {
+			batch, err := historyBatch(ctx, tx, eventID, teamID, id, cursor)
+			if err != nil {
+				return err
 			}
-			var h Huddle
-			if err = json.Unmarshal(raw, &h); err != nil {
-				return fmt.Errorf("resolve moderation dependency: %w", err)
+			for _, h := range batch {
+				v := h.Version
+				cursor = &v
+				if err = s.authorizeHistoricalSnapshot(ctx, tx, actor, eventID, h); err != nil {
+					if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) ||
+						errors.Is(err, access.ErrConflict) {
+						continue
+					}
+					return err
+				}
+				out.Items = append(out.Items, h)
+				if len(out.Items) > int(limit) {
+					break
+				}
 			}
-			out.Items = append(out.Items, h)
-		}
-		if err = rows.Err(); err != nil {
-			return fmt.Errorf("resolve moderation dependency: %w", err)
+			if len(batch) < 100 {
+				break
+			}
 		}
 		if len(out.Items) > int(limit) {
 			out.Items = out.Items[:limit]
 			v := out.Items[len(out.Items)-1].Version
 			out.NextCursor = &v
 		}
+
 		return nil
 	})
 	if err != nil {

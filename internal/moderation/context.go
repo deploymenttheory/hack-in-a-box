@@ -170,21 +170,38 @@ func (s Service) authorizeDecisionReader(
 	actor, eventID uuid.UUID,
 	h Huddle,
 ) error {
+	return s.authorizeDecisionSources(ctx, tx, actor, eventID, h, false)
+}
+
+func (s Service) authorizeDecisionSources(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	h Huddle,
+	historical bool,
+) error {
 	for _, gap := range h.Gaps {
 		if s.Actions == nil {
 			return access.ErrForbidden
 		}
-		if _, err := s.Actions.ResolveModerationActionInTransaction(
-			ctx,
-			tx,
-			actor,
-			eventID,
-			h.TeamID,
-			gap.ActionID,
-			gap.ActionVersion,
-		); err != nil {
+		if historical {
+			if gap.Action == nil {
+				return access.ErrConflict
+			}
+			if err := s.Actions.AuthorizeModerationActionHistoryInTransaction(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				h.TeamID,
+				*gap.Action,
+			); err != nil {
+				return fmt.Errorf("authorize retained native gap action: %w", err)
+			}
+		} else if _, err := s.Actions.ResolveModerationActionInTransaction(ctx, tx, actor, eventID, h.TeamID, gap.ActionID, gap.ActionVersion); err != nil {
 			return fmt.Errorf("authorize current native gap action: %w", err)
 		}
+
 		if gap.ResolvedBy != nil {
 			if err := s.Cards.AuthorizeModerationEvidenceInTransaction(
 				ctx,

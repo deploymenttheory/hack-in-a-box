@@ -47,3 +47,30 @@ func (p FeedbackActions) ResolveModerationActionInTransaction(
 	out.Binding = binding(out)
 	return out, nil
 }
+
+// AuthorizeModerationActionHistoryInTransaction preserves immutable metadata
+// while delegating current reader authority to its real native owner.
+func (p FeedbackActions) AuthorizeModerationActionHistoryInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID uuid.UUID,
+	state ActionState,
+) error {
+	if p.Service == nil {
+		return access.ErrForbidden
+	}
+	if err := p.Service.AuthorizeRetainedActionInTransaction(
+		ctx,
+		tx,
+		actor,
+		eventID,
+		teamID,
+		state.FeedbackID,
+		state.ID,
+		state.FeedbackVersion,
+		state.Version,
+	); err != nil {
+		return fmt.Errorf("authorize retained native action: %w", err)
+	}
+	return nil
+}

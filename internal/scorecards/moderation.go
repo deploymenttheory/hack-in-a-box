@@ -132,3 +132,46 @@ func (s Service) AuthorizeModerationEvidenceInTransaction(
 		frozen,
 	)
 }
+
+// AuthorizeSubmittedHistoryInTransaction validates a retained submitted card's
+// exact identity and its author's current native evidence authority. It does
+// not require that immutable version to remain the latest independent card.
+func (s Service) AuthorizeSubmittedHistoryInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, teamID, author uuid.UUID,
+	ref CardReference,
+) error {
+	q := dbgen.New(tx)
+	row, err := q.MentorScorecardVersion(
+		ctx,
+		dbgen.MentorScorecardVersionParams{EventID: eventID, ID: ref.ID, Version: ref.Version},
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return access.ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("read retained submitted review: %w", err)
+	}
+	card, err := decodeCard(row.Document)
+	if err != nil {
+		return err
+	}
+	if card.TeamID != teamID || card.AuthorID != author || card.State != "submitted" {
+		return access.ErrForbidden
+	}
+	if err = s.cardAuthority(ctx, q, author, eventID, teamID, card); err != nil {
+		return err
+	}
+	return s.evidence(
+		ctx,
+		tx,
+		author,
+		eventID,
+		teamID,
+		card.Scores,
+		true,
+		false,
+		card.SubmissionRevision,
+	)
+}

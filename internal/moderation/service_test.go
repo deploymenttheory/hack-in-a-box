@@ -460,6 +460,23 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 			Reason: "All independent final cards and current evidence reviewed",
 		},
 	)
+	history, historyErr := s.History(
+		f.t.Context(),
+		f.owner.ID,
+		f.event,
+		f.team,
+		h.Definition.ID,
+		nil,
+		100,
+	)
+	if historyErr != nil || len(history.Items) != int(h.Version) {
+		f.t.Fatal(
+			"normal native action advancement hid legitimate original history",
+			len(history.Items),
+			h.Version,
+			historyErr,
+		)
+	}
 	if h.State != "signed" || h.SignoffID == nil || h.SignoffContext == nil {
 		t.Fatal("canonical signoff proof absent")
 	}

@@ -19,7 +19,11 @@ author's revision history remain private. Opening captures exact submitted card
 references. Every panel/context/history request rechecks current roles,
 assignment conflicts, common rubric, checkpoint/run, active team and native
 card/evidence authority. Changing a submitted card invalidates that context;
-it is not silently adopted. A generic organiser role does not join a panel.
+it is not silently adopted. A generic organiser role does not join a panel. Historical pages additionally
+check each original intended panel and native source/evidence readers, filtering
+inaccessible snapshots with deterministic version cursors. Legitimate old action
+and submitted-card versions remain readable under current native permission;
+version advancement alone does not erase history.
 Checkpoint creation and review use actual server time and event-local native
 checkpoint windows; no competition assessment begins before live start.
 
