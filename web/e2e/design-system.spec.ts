@@ -1,21 +1,9 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { contrastOf } from './design-system-contrast'
+import { expect, test } from '@playwright/test'
 import { firstID, mockWorkspace } from './fixtures'
 import { attendeeForm, questionID, registrationEvent } from './registration-fixtures'
 import { defaultBranding } from '../src/branding'
 
-async function contrastOf(locator: Locator, foreground = 'color') {
-  return locator.evaluate((element, property) => {
-    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
-    const ctx = canvas.getContext('2d')!
-    function rgb(value: string) { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = value; ctx.fillRect(0, 0, 1, 1); return [...ctx.getImageData(0, 0, 1, 1).data] }
-    let background = [255, 255, 255, 255]
-    const ancestors: Element[] = []; for (let node: Element | null = element; node; node = node.parentElement) ancestors.unshift(node)
-    for (const node of ancestors) { const color = rgb(getComputedStyle(node).backgroundColor), alpha = color[3] / 255; background = background.map((value, i) => i < 3 ? color[i] * alpha + value * (1 - alpha) : 255) }
-    function luminance(channels: number[]) { return channels.slice(0, 3).reduce((total, value, i) => { const c = value / 255; return total + [0.2126, 0.7152, 0.0722][i] * (c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4) }, 0) }
-    const a = luminance(rgb(getComputedStyle(element).getPropertyValue(property))), b = luminance(background)
-    return (Math.max(a, b) + .05) / (Math.min(a, b) + .05)
-  }, foreground)
-}
 const palettes = [
   { name: 'normal', scheme: 'light', branding: defaultBranding },
   { name: 'system dark', scheme: 'dark', branding: defaultBranding },
@@ -78,4 +66,16 @@ test('native errors, disabled actions and private drafts keep their existing sem
   await expect(page.getByRole('button', { name: 'Send confirmation code' })).toHaveCSS('opacity', '0.6')
   await expect(page.getByLabel('Your account ID')).toHaveAttribute('readonly', '')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+
+test('shared checkbox labels retain flex layout, native names and keyboard toggling', async ({ page }) => {
+ await mockWorkspace(page)
+ const form = structuredClone(attendeeForm)
+ form.definition.fields.push({ id: '5f911266-011c-43e8-9029-eb36f9813811', label: 'Areas of interest', type: 'multiple', required: false, help: '', choices: ['Mentoring', 'Collaboration'] })
+ await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [form], registrations: [] } }))
+ await page.goto(`/register/${firstID}`)
+ const checkbox = page.getByRole('checkbox', { name: 'Mentoring', exact: true })
+ await expect(page.locator('label.check').filter({ hasText: 'Mentoring' })).toHaveCSS('display', 'flex')
+ await checkbox.focus(); await page.keyboard.press('Space'); await expect(checkbox).toBeChecked()
 })
