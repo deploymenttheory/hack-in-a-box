@@ -145,6 +145,73 @@ CREATE TABLE outcome_review_versions (
 );
 CREATE TRIGGER outcome_review_versions_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON outcome_review_versions FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 
+-- Native outcome approvals extend only the retained capability used by jobs;
+-- the original generic retained proof remains byte-for-byte intact.
+-- +goose StatementBegin
+CREATE FUNCTION retained_communication_occurrence_before_outcomes(e uuid,o uuid,at_time timestamptz) RETURNS boolean LANGUAGE sql STABLE AS $$
+ SELECT EXISTS(
+ SELECT 1 FROM communication_occurrences co
+ JOIN communication_automation_versions av ON av.event_id=co.event_id AND av.id=co.binding_id AND av.version=co.binding_version
+ JOIN events ev ON ev.id=co.event_id
+ LEFT JOIN event_privacy ep ON ep.event_id=ev.id
+ JOIN communication_facts f ON f.event_id=co.event_id AND f.id=co.source_id AND f.revision=co.source_revision
+ JOIN people recipient ON recipient.id=f.owner_id AND recipient.active
+ JOIN event_memberships authority ON authority.event_id=av.event_id AND authority.person_id=av.actor_id AND authority.role='organiser' AND authority.active
+ JOIN people approver ON approver.id=av.actor_id AND approver.active
+ WHERE co.event_id=e AND co.id=o AND co.source_kind='outcome.follow_up'
+ AND co.state IN ('pending','queued','partially_queued') AND COALESCE(co.review_until,co.deadline)>=at_time
+ AND av.version=(SELECT max(v.version) FROM communication_automation_versions v WHERE v.event_id=e AND v.id=av.id)
+ AND COALESCE((av.document->>'cancelled')::boolean,false)=false AND av.document->>'approved_at' IS NOT NULL
+ AND av.document->'definition'->>'trigger'='outcome.follow_up'
+ AND (av.document->'definition'->>'retain_after_archive')::boolean=true
+ AND (av.document->'definition'->>'retain_until')::timestamptz>at_time
+ AND ev.stage IN ('completed','archived') AND ev.completed_at IS NOT NULL
+ AND (av.document->'definition'->>'retain_until')::timestamptz<=ev.completed_at+make_interval(days=>COALESCE(ep.retention_days,90))
+ AND at_time<ev.completed_at+make_interval(days=>COALESCE(ep.retention_days,90))
+ AND f.kind='outcome_review' AND f.status='open' AND f.owner_id IS NOT NULL
+ );
+$$;
+-- +goose StatementEnd
+-- +goose StatementBegin
+CREATE FUNCTION outcome_review_sendable(e uuid,r uuid,v bigint,at_time timestamptz) RETURNS boolean LANGUAGE sql STABLE AS $$
+ SELECT EXISTS(
+ SELECT 1 FROM outcome_review_heads rh
+ JOIN outcome_review_versions rv ON rv.review_id=rh.id AND rv.version=rh.current_version
+ JOIN outcome_heads oh ON oh.id=rh.outcome_id
+ JOIN events ev ON ev.id=rh.event_id
+ LEFT JOIN event_privacy ep ON ep.event_id=ev.id
+ JOIN people owner ON owner.id=oh.owner_id AND owner.active
+ JOIN event_memberships authority ON authority.event_id=ev.id AND authority.person_id=rv.actor_id AND authority.role='organiser' AND authority.active
+ JOIN people approver ON approver.id=rv.actor_id AND approver.active
+ WHERE rh.event_id=e AND rh.id=r AND rh.current_version=v AND rh.state='approved'
+ AND rv.document->>'state'='approved'
+ AND oh.current_version=(rv.proof->>'outcome_version')::bigint
+ AND oh.status IN ('accepted','in_progress')
+ AND oh.owner_id=(rv.proof->>'owner_id')::uuid
+ AND outcome_eligible_owner(oh.id,oh.owner_id)
+ AND outcome_readable(oh.id,oh.owner_id,at_time)
+ AND COALESCE(ep.revision,0)=(rv.proof->>'privacy_revision')::bigint
+ AND (rv.proof->>'retain_until')::timestamptz>at_time
+ );
+$$;
+-- +goose StatementEnd
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION retained_communication_occurrence(e uuid,o uuid,at_time timestamptz) RETURNS boolean LANGUAGE sql STABLE AS $$
+ SELECT CASE WHEN EXISTS(
+ SELECT 1 FROM communication_occurrences co JOIN communication_automation_versions av ON av.event_id=co.event_id AND av.id=co.binding_id AND av.version=co.binding_version
+ WHERE co.event_id=e AND co.id=o AND av.document->'native_outcome_approval' IS NOT NULL AND av.document->'native_outcome_approval'<>'null'::jsonb
+ ) THEN
+ retained_communication_occurrence_before_outcomes(e,o,at_time) AND EXISTS(
+ SELECT 1 FROM communication_occurrences co JOIN communication_automation_versions av ON av.event_id=co.event_id AND av.id=co.binding_id AND av.version=co.binding_version
+ JOIN outcome_review_versions rv ON rv.review_id=co.source_id AND rv.version=co.source_revision
+ WHERE co.event_id=e AND co.id=o
+ AND av.document->'native_outcome_approval'->>'kind'='native_outcome_review'
+ AND av.document->'native_outcome_approval'->>'binding'=rv.proof->>'binding'
+ AND outcome_review_sendable(e,co.source_id,co.source_revision,at_time)
+ ) ELSE retained_communication_occurrence_before_outcomes(e,o,at_time) END;
+$$;
+-- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DO $$ BEGIN
@@ -155,6 +222,33 @@ END $$;
 -- +goose StatementEnd
 DROP TABLE outcome_review_versions;
 DROP TABLE outcome_review_heads;
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION retained_communication_occurrence(e uuid,o uuid,at_time timestamptz) RETURNS boolean LANGUAGE sql STABLE AS $$
+ SELECT EXISTS(
+ SELECT 1 FROM communication_occurrences co
+ JOIN communication_automation_versions av ON av.event_id=co.event_id AND av.id=co.binding_id AND av.version=co.binding_version
+ JOIN events ev ON ev.id=co.event_id
+ LEFT JOIN event_privacy ep ON ep.event_id=ev.id
+ JOIN communication_facts f ON f.event_id=co.event_id AND f.id=co.source_id AND f.revision=co.source_revision
+ JOIN people recipient ON recipient.id=f.owner_id AND recipient.active
+ JOIN event_memberships authority ON authority.event_id=av.event_id AND authority.person_id=av.actor_id AND authority.role='organiser' AND authority.active
+ JOIN people approver ON approver.id=av.actor_id AND approver.active
+ WHERE co.event_id=e AND co.id=o AND co.source_kind='outcome.follow_up'
+ AND co.state IN ('pending','queued','partially_queued') AND COALESCE(co.review_until,co.deadline)>=at_time
+ AND av.version=(SELECT max(v.version) FROM communication_automation_versions v WHERE v.event_id=e AND v.id=av.id)
+ AND COALESCE((av.document->>'cancelled')::boolean,false)=false AND av.document->>'approved_at' IS NOT NULL
+ AND av.document->'definition'->>'trigger'='outcome.follow_up'
+ AND (av.document->'definition'->>'retain_after_archive')::boolean=true
+ AND (av.document->'definition'->>'retain_until')::timestamptz>at_time
+ AND ev.stage IN ('completed','archived') AND ev.completed_at IS NOT NULL
+ AND (av.document->'definition'->>'retain_until')::timestamptz<=ev.completed_at+make_interval(days=>COALESCE(ep.retention_days,90))
+ AND at_time<ev.completed_at+make_interval(days=>COALESCE(ep.retention_days,90))
+ AND f.kind='outcome_review' AND f.status='open' AND f.owner_id IS NOT NULL
+ );
+$$;
+-- +goose StatementEnd
+DROP FUNCTION retained_communication_occurrence_before_outcomes(uuid,uuid,timestamptz);
+DROP FUNCTION outcome_review_sendable(uuid,uuid,bigint,timestamptz);
 DROP FUNCTION outcome_project_readable(uuid,uuid,timestamptz);
 DROP TABLE outcome_project_versions;
 DROP TABLE outcome_project_heads;

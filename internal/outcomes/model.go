@@ -14,12 +14,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 )
 
 type Service struct {
-	Composer *communications.Service
+	WorkspaceOrigin string
+	Composer        *communications.Service
+	Automation      *automation.Service
 
 	Media MediaReferences
 	Pool  *pgxpool.Pool
@@ -81,13 +84,13 @@ type Command struct {
 	ID         uuid.UUID                     `json:"id"`
 	Action     string                        `json:"action"`
 	Reason     string                        `json:"reason"`
-	Definition *Definition                   `json:"definition"`
-	Provenance *Provenance                   `json:"provenance"`
+	Definition *Definition                   `json:"definition,omitempty"`
+	Provenance *Provenance                   `json:"provenance,omitempty"`
 	Status     string                        `json:"status"`
 	OwnerID    *uuid.UUID                    `json:"owner_id"`
 	ReviewAt   *time.Time                    `json:"review_at"`
 	Measures   []objectives.MeasureReference `json:"measures"`
-	Evidence   *Evidence                     `json:"evidence"`
+	Evidence   *Evidence                     `json:"evidence,omitempty"`
 }
 type Capability struct {
 	CanRevise   bool `json:"can_revise"`

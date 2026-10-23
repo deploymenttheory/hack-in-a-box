@@ -89,6 +89,26 @@ func (s Service) resolveApprovedScopedCampaign(
 	}
 	var approved ApprovedCampaign
 	switch {
+	case audience.Approval != nil && audience.Approval.Kind == "native_outcome_review":
+		if s.OutcomePlans == nil {
+			return ApprovedCampaign{}, access.ErrForbidden
+		}
+		proof := audience.Approval
+		if proof.ID != campaignID || proof.SourceID != campaignID ||
+			proof.SourceVersion != version {
+			return ApprovedCampaign{}, access.ErrForbidden
+		}
+		approved, err = s.OutcomePlans.ResolveOutcomePlanInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			version,
+			proof.Binding,
+			projection.personID,
+			projection.literal,
+			true,
+		)
 	case audience.Approval != nil && audience.Approval.Kind == "expected_publication":
 		approved, err = s.resolveExpectedPublication(
 			ctx,

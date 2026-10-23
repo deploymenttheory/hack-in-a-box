@@ -40,6 +40,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
@@ -60,6 +61,7 @@ import (
 type Dependencies struct {
 	Media           media.Service
 	GitHubApp       githubapp.Service
+	Outcomes        *outcomes.Service
 	Surveys         *surveys.Service
 	Objectives      objectives.Service
 	Feedback        feedback.Service

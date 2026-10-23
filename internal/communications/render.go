@@ -69,7 +69,7 @@ func (s Service) factAllowed(
 	if f.Status == "withdrawn" {
 		return false, nil
 	}
-	if f.Kind == "help" {
+	if f.Kind == "help" || f.Kind == "outcome_review" {
 		if owner := s.FactOwners[f.Kind]; owner != nil {
 			allowed, err := owner.AuthorizeCommunicationFact(ctx, q, p.ID, f)
 			return allowed, contextError("authorize owning communication fact", err)

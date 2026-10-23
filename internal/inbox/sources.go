@@ -139,7 +139,7 @@ func nativeDestination(source Source, destination Destination) (*Destination, er
 		return nil, access.ErrNotFound
 	}
 	switch source.Kind {
-	case "help", "clarification", "feedback", "feedback_followup", "survey":
+	case "help", "clarification", "feedback", "feedback_followup", "survey", "outcome_review":
 		return &destination, nil
 	default:
 		return nil, access.ErrNotFound
@@ -152,7 +152,8 @@ func (s Service) nativeResourceDestination(
 	actor, eventID uuid.UUID,
 	ref communications.ResourceReference,
 ) (*Destination, error) {
-	if ref.Kind != "survey" || ref.ID == uuid.Nil || ref.Version < 1 {
+	if (ref.Kind != "survey" && ref.Kind != "outcome_review") || ref.ID == uuid.Nil ||
+		ref.Version < 1 {
 		return nil, access.ErrNotFound
 	}
 	owner := s.Owners[ref.Kind]

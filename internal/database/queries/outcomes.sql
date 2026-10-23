@@ -107,3 +107,13 @@ ORDER BY ph.outcome_id LIMIT sqlc.arg(page_size);
 
 -- name: OutcomeReviewHeadsEventPage :many
 SELECT * FROM outcome_review_heads WHERE event_id=$1 AND id>sqlc.arg(after_id) ORDER BY id LIMIT sqlc.arg(page_size);
+
+-- name: OutcomeReviewSendable :one
+SELECT outcome_review_sendable(sqlc.arg(event_id)::uuid,sqlc.arg(review_id)::uuid,sqlc.arg(version)::bigint,sqlc.arg(at_time)::timestamptz)::boolean AS allowed;
+
+-- name: OutcomeObservationsPage :many
+SELECT oe.* FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
+WHERE oh.event_id=sqlc.arg(event_id)::uuid
+AND outcome_readable(oh.id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
+AND (oe.outcome_id,oe.id)>(sqlc.arg(after_outcome_id)::uuid,sqlc.arg(after_evidence_id)::uuid)
+ORDER BY oe.outcome_id,oe.id LIMIT sqlc.arg(page_size);

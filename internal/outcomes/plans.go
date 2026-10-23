@@ -36,12 +36,12 @@ type ReviewPlan struct {
 	At            time.Time      `json:"at"`
 }
 type PlanCommand struct {
-	Message       *ReviewMessage  `json:"message"`
+	Message       *ReviewMessage  `json:"message,omitempty"`
 	ID            uuid.UUID       `json:"id"`
 	Action        string          `json:"action"`
 	Reason        string          `json:"reason"`
 	SourceVersion int64           `json:"source_version"`
-	Schedule      *ReviewSchedule `json:"schedule"`
+	Schedule      *ReviewSchedule `json:"schedule,omitempty"`
 }
 
 func (s ReviewSchedule) Validate() error {

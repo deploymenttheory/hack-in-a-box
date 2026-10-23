@@ -3066,6 +3066,219 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outcomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOutcomes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcome"];
+        put: operations["changeOutcome"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomeHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomeEvidence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomeOwners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomePublication"];
+        put: operations["changeOutcomePublication"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["listOutcomeReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcomes/{outcome_id}/reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["changeOutcomeReview"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/outcome-reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomeReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPublishedProjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{outcome_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getPublishedProject"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/outcomes/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getOutcomeObservations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6517,6 +6730,317 @@ export interface components {
         MediaConsentGuidance: {
             items: components["schemas"]["MediaConsentSubject"][];
             /** Format: uuid */
+            next_cursor: string | null;
+        };
+        OutcomeMeasureReference: {
+            objective: components["schemas"]["ObjectiveReference"];
+            /** Format: uuid */
+            measure_id: string;
+        };
+        OutcomeDefinition: {
+            /** @enum {string} */
+            kind: "pitch" | "team_outcome";
+            problem: string;
+            audience: string;
+            proposed_value: string;
+            solution: string;
+            backlog_url: string;
+            theme_sensitive: boolean;
+        };
+        OutcomeProvenance: {
+            /** Format: uuid */
+            event_id: string | null;
+            /** Format: uuid */
+            team_id: string | null;
+        };
+        OutcomeVersion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            command_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            reason: string;
+            definition: components["schemas"]["OutcomeDefinition"];
+            provenance: components["schemas"]["OutcomeProvenance"];
+            /** @enum {string} */
+            status: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
+            /** Format: uuid */
+            owner_id: string | null;
+            /** Format: date-time */
+            review_at: string | null;
+            measures: components["schemas"]["OutcomeMeasureReference"][];
+            /** Format: uuid */
+            evidence_added_id: string | null;
+        };
+        OutcomeView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            command_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            reason: string;
+            definition: components["schemas"]["OutcomeDefinition"];
+            provenance: components["schemas"]["OutcomeProvenance"];
+            /** @enum {string} */
+            status: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
+            /** Format: uuid */
+            owner_id: string | null;
+            /** Format: date-time */
+            review_at: string | null;
+            measures: components["schemas"]["OutcomeMeasureReference"][];
+            /** Format: uuid */
+            evidence_added_id: string | null;
+            capability: components["schemas"]["OutcomeCapability"];
+            /** Format: int64 */
+            current_version: number;
+        };
+        OutcomeCapability: {
+            can_revise: boolean;
+            can_moderate: boolean;
+            can_follow_up: boolean;
+            can_adopt: boolean;
+            archived: boolean;
+        };
+        OutcomeEvidence: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            basis: "estimate" | "self_report" | "demonstrated_adoption";
+            claim: string;
+            value: string | null;
+            denominator: string | null;
+            source: string;
+            /** Format: date-time */
+            observed_at: string | null;
+            measures: components["schemas"]["OutcomeMeasureReference"][];
+        };
+        OutcomeEvidenceRecord: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            basis: "estimate" | "self_report" | "demonstrated_adoption";
+            claim: string;
+            value: string | null;
+            denominator: string | null;
+            source: string;
+            /** Format: date-time */
+            observed_at: string | null;
+            measures: components["schemas"]["OutcomeMeasureReference"][];
+            /** Format: int64 */
+            outcome_version: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+        };
+        OutcomeCommand: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            action: "propose" | "revise" | "adopt" | "moderate" | "progress" | "assign" | "evidence";
+            reason: string;
+            definition?: components["schemas"]["OutcomeDefinition"];
+            provenance?: components["schemas"]["OutcomeProvenance"];
+            status?: string;
+            /** Format: uuid */
+            owner_id?: string | null;
+            /** Format: date-time */
+            review_at?: string | null;
+            measures?: components["schemas"]["OutcomeMeasureReference"][] | null;
+            evidence?: components["schemas"]["OutcomeEvidence"];
+        };
+        OutcomeList: {
+            items: components["schemas"]["OutcomeView"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        OutcomeHistory: {
+            items: components["schemas"]["OutcomeVersion"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        OutcomeEvidencePage: {
+            items: components["schemas"]["OutcomeEvidenceRecord"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        OutcomeOwnerPage: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                display_name: string;
+            }[];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        OutcomeMediaReference: {
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+        };
+        OutcomeProjectLink: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            url: string;
+        };
+        OutcomePublicLink: {
+            label: string;
+            url: string;
+            media: boolean;
+        };
+        OutcomePublicationFields: {
+            problem: string;
+            solution: string;
+            links: components["schemas"]["OutcomeProjectLink"][];
+            media: components["schemas"]["OutcomeMediaReference"][];
+            /** @enum {string} */
+            audience: "organisation" | "event" | "team";
+            share_event_name: boolean;
+            share_team_name: boolean;
+        };
+        OutcomePublication: {
+            /** Format: uuid */
+            outcome_id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: int64 */
+            source_version: number;
+            /** Format: uuid */
+            command_id: string;
+            fields: components["schemas"]["OutcomePublicationFields"];
+            /** @enum {string} */
+            state: "draft" | "published" | "withdrawn";
+            reason: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            /** Format: int64 */
+            current_version: number;
+            /** Format: int64 */
+            published_version: number | null;
+        };
+        OutcomePublicationCommand: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            action: "save" | "publish" | "withdraw";
+            /** Format: int64 */
+            source_version: number;
+            fields?: components["schemas"]["OutcomePublicationFields"];
+            reason: string;
+        };
+        OutcomeProject: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            problem: string;
+            solution: string;
+            links: components["schemas"]["OutcomePublicLink"][];
+            source: components["schemas"]["OutcomeProvenance"];
+            event_name: string | null;
+            team_name: string | null;
+            /** @enum {string} */
+            follow_up_status: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
+            /** Format: date-time */
+            published_at: string;
+        };
+        OutcomeProjectPage: {
+            items: components["schemas"]["OutcomeProject"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        OutcomeReviewSchedule: {
+            /** @enum {integer} */
+            days: 30 | 60 | 90;
+            wall_time: string;
+            timezone: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+            channels: ("smtp" | "in_app")[];
+        };
+        OutcomeReviewMessage: {
+            subject: string;
+            body: string;
+        };
+        OutcomeReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            outcome_id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            command_id: string;
+            /** Format: int64 */
+            source_version: number;
+            /** Format: uuid */
+            owner_id: string;
+            schedule: components["schemas"]["OutcomeReviewSchedule"];
+            message: components["schemas"]["OutcomeReviewMessage"];
+            /** Format: date-time */
+            due_at: string;
+            /** @enum {string} */
+            state: "draft" | "approved" | "cancelled";
+            reason: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            /** Format: int64 */
+            current_version: number;
+            /** @enum {string} */
+            effective_state: "draft" | "approved" | "cancelled" | "review_required";
+            blockers: string[];
+        };
+        OutcomeReviewList: {
+            items: components["schemas"]["OutcomeReview"][];
+        };
+        OutcomeReviewCommand: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            action: "save" | "approve" | "cancel";
+            reason: string;
+            /** Format: int64 */
+            source_version: number;
+            schedule?: components["schemas"]["OutcomeReviewSchedule"];
+            message?: components["schemas"]["OutcomeReviewMessage"];
+        };
+        OutcomeObservation: {
+            /** Format: uuid */
+            outcome_id: string;
+            /** Format: int64 */
+            outcome_version: number;
+            evidence: components["schemas"]["OutcomeEvidence"];
+            /** Format: date-time */
+            recorded_at: string;
+            measures: {
+                reference: components["schemas"]["OutcomeMeasureReference"];
+                definition: components["schemas"]["ObjectiveMeasure"];
+            }[];
+        };
+        OutcomeObservationPage: {
+            items: components["schemas"]["OutcomeObservation"][];
             next_cursor: string | null;
         };
     };
@@ -12251,6 +12775,375 @@ export interface operations {
                 };
                 content: {
                     "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOutcomes: {
+        parameters: {
+            query?: {
+                mode?: "own" | "all" | "review";
+                event_id?: string;
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcome: {
+        parameters: {
+            query?: {
+                version?: number;
+                command_id?: string;
+            };
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeOutcome: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomeCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomeHistory: {
+        parameters: {
+            query?: {
+                before_version?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomeEvidence: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeEvidencePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomeOwners: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeOwnerPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomePublication: {
+        parameters: {
+            query?: {
+                command_id?: string;
+            };
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomePublication"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeOutcomePublication: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomePublicationCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomePublication"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOutcomeReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeReviewList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeOutcomeReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                outcome_id: string;
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomeReviewCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeReview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomeReview: {
+        parameters: {
+            query?: {
+                version?: number;
+                command_id?: string;
+            };
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeReview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPublishedProjects: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                search?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeProjectPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPublishedProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outcome_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeProject"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOutcomeObservations: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native outcome authority; restricted evidence is never an implicit published project. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutcomeObservationPage"];
                 };
             };
             default: components["responses"]["Error"];

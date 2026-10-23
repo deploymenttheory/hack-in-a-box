@@ -447,6 +447,57 @@ func (q *Queries) OutcomeHistory(ctx context.Context, arg OutcomeHistoryParams) 
 	return items, nil
 }
 
+const outcomeObservationsPage = `-- name: OutcomeObservationsPage :many
+SELECT oe.outcome_id, oe.id, oe.outcome_version, oe.actor_id, oe.document, oe.created_at FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
+WHERE oh.event_id=$1::uuid
+AND outcome_readable(oh.id,$2::uuid,$3::timestamptz)
+AND (oe.outcome_id,oe.id)>($4::uuid,$5::uuid)
+ORDER BY oe.outcome_id,oe.id LIMIT $6
+`
+
+type OutcomeObservationsPageParams struct {
+	EventID         uuid.UUID
+	ActorID         uuid.UUID
+	AtTime          time.Time
+	AfterOutcomeID  uuid.UUID
+	AfterEvidenceID uuid.UUID
+	PageSize        int32
+}
+
+func (q *Queries) OutcomeObservationsPage(ctx context.Context, arg OutcomeObservationsPageParams) ([]OutcomeEvidence, error) {
+	rows, err := q.db.Query(ctx, outcomeObservationsPage,
+		arg.EventID,
+		arg.ActorID,
+		arg.AtTime,
+		arg.AfterOutcomeID,
+		arg.AfterEvidenceID,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OutcomeEvidence{}
+	for rows.Next() {
+		var i OutcomeEvidence
+		if err := rows.Scan(
+			&i.OutcomeID,
+			&i.ID,
+			&i.OutcomeVersion,
+			&i.ActorID,
+			&i.Document,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const outcomeOwnerCandidates = `-- name: OutcomeOwnerCandidates :many
 SELECT p.id,p.display_name FROM people p WHERE p.id>$1 AND outcome_eligible_owner($2::uuid,p.id) ORDER BY p.id LIMIT $3
 `
@@ -771,6 +822,29 @@ func (q *Queries) OutcomeReviewHeadsEventPage(ctx context.Context, arg OutcomeRe
 		return nil, err
 	}
 	return items, nil
+}
+
+const outcomeReviewSendable = `-- name: OutcomeReviewSendable :one
+SELECT outcome_review_sendable($1::uuid,$2::uuid,$3::bigint,$4::timestamptz)::boolean AS allowed
+`
+
+type OutcomeReviewSendableParams struct {
+	EventID  uuid.UUID
+	ReviewID uuid.UUID
+	Version  int64
+	AtTime   time.Time
+}
+
+func (q *Queries) OutcomeReviewSendable(ctx context.Context, arg OutcomeReviewSendableParams) (bool, error) {
+	row := q.db.QueryRow(ctx, outcomeReviewSendable,
+		arg.EventID,
+		arg.ReviewID,
+		arg.Version,
+		arg.AtTime,
+	)
+	var allowed bool
+	err := row.Scan(&allowed)
+	return allowed, err
 }
 
 const outcomeReviewVersion = `-- name: OutcomeReviewVersion :one

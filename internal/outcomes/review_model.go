@@ -28,6 +28,7 @@ type ReviewProof struct {
 	ActorID              uuid.UUID         `json:"actor_id"`
 	ConfigurationBinding string            `json:"configuration_binding"`
 	PrivacyRevision      int64             `json:"privacy_revision"`
+	Schedule             ReviewSchedule    `json:"schedule"`
 	Template             ReviewMessage     `json:"template"`
 	Channels             map[string]string `json:"channels"`
 	DueAt                time.Time         `json:"due_at"`

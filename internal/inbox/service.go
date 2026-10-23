@@ -61,7 +61,7 @@ func (s Service) List(
 			}
 		}
 		for _, row := range rows {
-			_, err = s.authorize(
+			destination, authErr := s.authorize(
 				ctx,
 				tx,
 				actor,
@@ -69,6 +69,7 @@ func (s Service) List(
 				Source{Kind: row.SourceKind, ID: row.SourceID, Version: row.SourceVersion},
 				row.Provenance,
 			)
+			err = authErr
 			if hidden(err) {
 				continue
 			}
@@ -91,6 +92,10 @@ func (s Service) List(
 					ReadAt:     row.ReadAt,
 				},
 			)
+			if destination != nil && destination.Kind == "outcome_review" {
+				item.EventName = ""
+				item.Label = label("outcome_review")
+			}
 			if len(result.Items) < limit {
 				result.Items = append(result.Items, item)
 			} else if result.NextCursor == nil {
@@ -162,6 +167,10 @@ func (s Service) Open(ctx context.Context, actor, id uuid.UUID, read *bool) (Det
 			Body:        row.Body,
 			Format:      row.Format,
 			Destination: destination,
+		}
+		if destination != nil && destination.Kind == "outcome_review" {
+			result.Item.EventName = ""
+			result.Item.Label = label("outcome_review")
 		}
 		return nil
 	})

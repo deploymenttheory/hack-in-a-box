@@ -134,6 +134,21 @@ func (s Service) ChangePlan(
 		if err = appendPlan(ctx, q, v, c, expected, proof); err != nil {
 			return err
 		}
+		if s.Automation != nil {
+			if err = s.installReviewComposition(ctx, q, event.ID, v); err != nil {
+				return err
+			}
+			if err = s.Automation.InstallNativeOutcomePlanInTransaction(
+				ctx,
+				tx,
+				actor,
+				event.ID,
+				v.ID,
+				v.Version,
+			); err != nil {
+				return wrap("install exact native review schedule", err)
+			}
+		}
 		rh.CurrentVersion = v.Version
 		rh.State = v.State
 		out, err = s.planView(ctx, tx, q, event, rh, v)
@@ -218,6 +233,7 @@ func (s Service) approvalProof(
 		OwnerID:              v.OwnerID,
 		ActorID:              v.ActorID,
 		Template:             v.Message,
+		Schedule:             v.Schedule,
 		DueAt:                v.DueAt,
 		Channels:             map[string]string{},
 	}
@@ -248,7 +264,7 @@ func (s Service) approvalProof(
 		}
 		anchor = cfg.LiveEnd
 	}
-	proof.RetainUntil = anchor.AddDate(0, 0, int(policy.RetentionDays))
+	proof.RetainUntil = anchor.UTC().AddDate(0, 0, int(policy.RetentionDays))
 	if !s.now().Before(proof.RetainUntil) || v.DueAt.After(proof.RetainUntil) {
 		return proof, access.ErrInvalid
 	}
@@ -487,4 +503,52 @@ func (s Service) Plans(ctx context.Context, actor, outcomeID uuid.UUID) (PlanPag
 		return nil
 	})
 	return out, wrap("review plans", err)
+}
+
+func (s Service) Review(ctx context.Context, actor, id uuid.UUID, version int64) (PlanView, error) {
+	var out PlanView
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+		if err := active(ctx, q, actor); err != nil {
+			return err
+		}
+		rh, err := q.OutcomeReviewHead(ctx, id)
+		if err != nil {
+			return wrap("read review resource", err)
+		}
+		head, err := q.OutcomeHead(ctx, rh.OutcomeID)
+		if err != nil {
+			return wrap("read review outcome", err)
+		}
+		cap, err := capabilities(ctx, q, actor, head, s.now())
+		if err != nil {
+			return err
+		}
+		if !cap.CanModerate && (head.OwnerID == nil || *head.OwnerID != actor) {
+			return access.ErrNotFound
+		}
+		if version == 0 {
+			version = rh.CurrentVersion
+		}
+		row, err := q.OutcomeReviewVersion(
+			ctx,
+			dbgen.OutcomeReviewVersionParams{ReviewID: id, Version: version},
+		)
+		if err != nil {
+			return wrap("read retained native review", err)
+		}
+		v, err := reviewVersion(row)
+		if err != nil {
+			return err
+		}
+		if !cap.CanModerate && v.OwnerID != actor {
+			return access.ErrNotFound
+		}
+		event, err := q.Event(ctx, rh.EventID)
+		if err != nil {
+			return wrap("read review eligibility event", err)
+		}
+		out, err = s.planView(ctx, tx, q, event, rh, v)
+		return err
+	})
+	return out, wrap("review resource", err)
 }

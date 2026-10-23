@@ -247,6 +247,25 @@ func TestNativeOrganisationMemberPitchOwnershipHistoryArchiveAndRevocation(t *te
 		evidencePage.Items[0].Measures[0] != ref {
 		t.Fatal("restricted evidence page", evidencePage, err)
 	}
+	observations, err := s.Observations(t.Context(), organiser.ID, eventID, "", 1)
+	if err != nil || len(observations.Items) != 1 || len(observations.Items[0].Measures) != 1 ||
+		observations.Items[0].Measures[0].Reference != ref ||
+		observations.Items[0].Measures[0].Definition.Unit != "adopting team" ||
+		observations.Items[0].Evidence.Value != nil {
+		t.Fatal("exact native restricted observations", observations, err)
+	}
+	if _, err = s.Observations(
+		t.Context(),
+		author.ID,
+		eventID,
+		"",
+		1,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("owner enumerated private event measurement dashboard", err)
+	}
 	history, err := s.History(t.Context(), author.ID, id, 0, 3)
 	if err != nil || len(history.Items) != 3 || history.NextCursor == nil {
 		t.Fatal("own paginated history", history, err)

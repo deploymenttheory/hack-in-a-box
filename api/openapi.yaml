@@ -4868,6 +4868,648 @@ paths:
                 format: "binary"
         default:
           $ref: "#/components/responses/Error"
+  /api/v1/outcomes:
+    {
+      "get": {
+        "operationId": "listOutcomes",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeList"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "own",
+                "all",
+                "review"
+              ]
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
+  /api/v1/outcomes/{outcome_id}:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcome",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeView"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "command_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "changeOutcome",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeView"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+
+  /api/v1/outcomes/{outcome_id}/history:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomeHistory",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeHistory"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "before_version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
+  /api/v1/outcomes/{outcome_id}/evidence:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomeEvidence",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeEvidencePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
+  /api/v1/outcomes/{outcome_id}/owners:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomeOwners",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeOwnerPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
+  /api/v1/outcomes/{outcome_id}/publication:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomePublication",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomePublication"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "command_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "put": {
+        "operationId": "changeOutcomePublication",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomePublication"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomePublicationCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+
+  /api/v1/outcomes/{outcome_id}/reviews:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listOutcomeReviews",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeReviewList"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  /api/v1/outcomes/{outcome_id}/reviews/{review_id}:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "review_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "changeOutcomeReview",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeReview"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CSRF"
+          },
+          {
+            "name": "If-Match", "in": "header", "required": true, "schema": {"type":"string","pattern":"^\"(0|[1-9][0-9]*)\"$"}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeReviewCommand"
+              }
+            }
+          }
+        }
+      }
+    }
+  /api/v1/outcome-reviews/{review_id}:
+    {
+      "parameters": [
+        {
+          "name": "review_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomeReview",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeReview"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "command_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    }
+
+  /api/v1/projects:
+    {
+      "get": {
+        "operationId": "listPublishedProjects",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeProjectPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
+  /api/v1/projects/{outcome_id}:
+    {
+      "parameters": [
+        {
+          "name": "outcome_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getPublishedProject",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeProject"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  /api/v1/events/{event_id}/outcomes/observations:
+    {
+      "parameters": [
+        {
+          "name": "event_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOutcomeObservations",
+        "responses": {
+          "200": {
+            "description": "Current native outcome authority; restricted evidence is never an implicit published project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutcomeObservationPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ]
+      }
+    }
 components:
   securitySchemes:
     display:
@@ -11906,3 +12548,1224 @@ components:
           type: "string"
           format: "uuid"
           nullable: true
+
+    OutcomeMeasureReference:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objective",
+          "measure_id"
+        ],
+        "properties": {
+          "objective": {
+            "$ref": "#/components/schemas/ObjectiveReference"
+          },
+          "measure_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeDefinition:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "problem",
+          "audience",
+          "proposed_value",
+          "solution",
+          "backlog_url",
+          "theme_sensitive"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "pitch",
+              "team_outcome"
+            ]
+          },
+          "problem": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "audience": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "proposed_value": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "solution": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "backlog_url": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "theme_sensitive": {
+            "type": "boolean"
+          }
+        }
+      }
+    OutcomeProvenance:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "team_id"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "team_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeVersion:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "command_id",
+          "author_id",
+          "actor_id",
+          "at",
+          "reason",
+          "definition",
+          "provenance",
+          "status",
+          "owner_id",
+          "review_at",
+          "measures",
+          "evidence_added_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "command_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "author_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "definition": {
+            "$ref": "#/components/schemas/OutcomeDefinition"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/OutcomeProvenance"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "reviewing",
+              "accepted",
+              "in_progress",
+              "closed"
+            ]
+          },
+          "owner_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "review_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMeasureReference"
+            },
+            "maxItems": 50
+          },
+          "evidence_added_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeView:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "command_id",
+          "author_id",
+          "actor_id",
+          "at",
+          "reason",
+          "definition",
+          "provenance",
+          "status",
+          "owner_id",
+          "review_at",
+          "measures",
+          "evidence_added_id",
+          "capability",
+          "current_version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "command_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "author_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "definition": {
+            "$ref": "#/components/schemas/OutcomeDefinition"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/OutcomeProvenance"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "reviewing",
+              "accepted",
+              "in_progress",
+              "closed"
+            ]
+          },
+          "owner_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "review_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMeasureReference"
+            },
+            "maxItems": 50
+          },
+          "evidence_added_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "capability": {
+            "$ref": "#/components/schemas/OutcomeCapability"
+          },
+          "current_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      }
+    OutcomeCapability:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "can_revise",
+          "can_moderate",
+          "can_follow_up",
+          "can_adopt",
+          "archived"
+        ],
+        "properties": {
+          "can_revise": {
+            "type": "boolean"
+          },
+          "can_moderate": {
+            "type": "boolean"
+          },
+          "can_follow_up": {
+            "type": "boolean"
+          },
+          "can_adopt": {
+            "type": "boolean"
+          },
+          "archived": {
+            "type": "boolean"
+          }
+        }
+      }
+    OutcomeEvidence:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "basis",
+          "claim",
+          "value",
+          "denominator",
+          "source",
+          "observed_at",
+          "measures"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "estimate",
+              "self_report",
+              "demonstrated_adoption"
+            ]
+          },
+          "claim": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "denominator": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMeasureReference"
+            },
+            "maxItems": 50
+          }
+        }
+      }
+    OutcomeEvidenceRecord:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "basis",
+          "claim",
+          "value",
+          "denominator",
+          "source",
+          "observed_at",
+          "measures",
+          "outcome_version",
+          "actor_id",
+          "at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "estimate",
+              "self_report",
+              "demonstrated_adoption"
+            ]
+          },
+          "claim": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "denominator": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "observed_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMeasureReference"
+            },
+            "maxItems": 50
+          },
+          "outcome_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    OutcomeCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "propose",
+              "revise",
+              "adopt",
+              "moderate",
+              "progress",
+              "assign",
+              "evidence"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "definition": {
+            "$ref": "#/components/schemas/OutcomeDefinition"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/OutcomeProvenance"
+          },
+          "status": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "review_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "measures": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMeasureReference"
+            },
+            "maxItems": 50
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/OutcomeEvidence"
+          }
+        }
+      }
+    OutcomeList:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeView"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeHistory:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeVersion"
+            }
+          },
+          "next_cursor": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "nullable": true
+          }
+        }
+      }
+    OutcomeEvidencePage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeEvidenceRecord"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeOwnerPage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "display_name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "display_name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeMediaReference:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "id",
+          "version"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      }
+    OutcomeProjectLink:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      }
+    OutcomePublicLink:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "url",
+          "media"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "media": {
+            "type": "boolean"
+          }
+        }
+      }
+    OutcomePublicationFields:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "problem",
+          "solution",
+          "links",
+          "media",
+          "audience",
+          "share_event_name",
+          "share_team_name"
+        ],
+        "properties": {
+          "problem": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "solution": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeProjectLink"
+            },
+            "maxItems": 30
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeMediaReference"
+            },
+            "maxItems": 30
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "organisation",
+              "event",
+              "team"
+            ]
+          },
+          "share_event_name": {
+            "type": "boolean"
+          },
+          "share_team_name": {
+            "type": "boolean"
+          }
+        }
+      }
+    OutcomePublication:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome_id",
+          "version",
+          "source_version",
+          "command_id",
+          "fields",
+          "state",
+          "reason",
+          "actor_id",
+          "at",
+          "current_version",
+          "published_version"
+        ],
+        "properties": {
+          "outcome_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "source_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "command_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fields": {
+            "$ref": "#/components/schemas/OutcomePublicationFields"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "withdrawn"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "published_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "nullable": true
+          }
+        }
+      }
+    OutcomePublicationCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "source_version",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "save",
+              "publish",
+              "withdraw"
+            ]
+          },
+          "source_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "fields": {
+            "$ref": "#/components/schemas/OutcomePublicationFields"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      }
+    OutcomeProject:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "problem",
+          "solution",
+          "links",
+          "source",
+          "event_name",
+          "team_name",
+          "follow_up_status",
+          "published_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "problem": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "solution": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomePublicLink"
+            }
+          },
+          "source": {
+            "$ref": "#/components/schemas/OutcomeProvenance"
+          },
+          "event_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "team_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "follow_up_status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "reviewing",
+              "accepted",
+              "in_progress",
+              "closed"
+            ]
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    OutcomeProjectPage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeProject"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        }
+      }
+    OutcomeReviewSchedule:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "days",
+          "wall_time",
+          "timezone",
+          "dst_choice",
+          "channels"
+        ],
+        "properties": {
+          "days": {
+            "type": "integer",
+            "enum": [
+              30,
+              60,
+              90
+            ]
+          },
+          "wall_time": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "dst_choice": {
+            "type": "string",
+            "enum": [
+              "",
+              "earlier",
+              "later"
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "smtp",
+                "in_app"
+              ]
+            },
+            "maxItems": 2
+          }
+        }
+      }
+    OutcomeReviewMessage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject",
+          "body"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 20000
+          }
+        }
+      }
+    OutcomeReview:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "outcome_id",
+          "version",
+          "command_id",
+          "source_version",
+          "owner_id",
+          "schedule",
+          "message",
+          "due_at",
+          "state",
+          "reason",
+          "actor_id",
+          "at",
+          "current_version",
+          "effective_state",
+          "blockers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "command_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/OutcomeReviewSchedule"
+          },
+          "message": {
+            "$ref": "#/components/schemas/OutcomeReviewMessage"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approved",
+              "cancelled"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "effective_state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approved",
+              "cancelled",
+              "review_required"
+            ]
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    OutcomeReviewList:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeReview"
+            }
+          }
+        }
+      }
+    OutcomeReviewCommand:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "reason",
+          "source_version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "save",
+              "approve",
+              "cancel"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "source_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/OutcomeReviewSchedule"
+          },
+          "message": {
+            "$ref": "#/components/schemas/OutcomeReviewMessage"
+          }
+        }
+      }
+    OutcomeObservation:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome_id",
+          "outcome_version",
+          "evidence",
+          "recorded_at",
+          "measures"
+        ],
+        "properties": {
+          "outcome_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/OutcomeEvidence"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "reference",
+                "definition"
+              ],
+              "properties": {
+                "reference": {
+                  "$ref": "#/components/schemas/OutcomeMeasureReference"
+                },
+                "definition": {
+                  "$ref": "#/components/schemas/ObjectiveMeasure"
+                }
+              }
+            }
+          }
+        }
+      }
+    OutcomeObservationPage:
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutcomeObservation"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      }

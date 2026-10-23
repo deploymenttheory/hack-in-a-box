@@ -468,6 +468,12 @@ func (s Service) applyPublication(
 			return Project{}, access.ErrInvalid
 		}
 		v.Fields = *c.Fields
+		if v.Fields.Links == nil {
+			v.Fields.Links = []ProjectLink{}
+		}
+		if v.Fields.Media == nil {
+			v.Fields.Media = []MediaReference{}
+		}
 		v.State = "draft"
 		v.SourceVersion = c.SourceVersion
 	case "publish":

@@ -73,7 +73,7 @@ type PublicationCommand struct {
 	ID            uuid.UUID          `json:"id"`
 	Action        string             `json:"action"`
 	SourceVersion int64              `json:"source_version"`
-	Fields        *PublicationFields `json:"fields"`
+	Fields        *PublicationFields `json:"fields,omitempty"`
 	Reason        string             `json:"reason"`
 }
 

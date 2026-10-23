@@ -604,7 +604,11 @@ func (s Service) applyEvidence(
 
 func appendEvidence(ctx context.Context, q *dbgen.Queries, v Version, c Command) error {
 	if c.Action == "evidence" {
-		raw, e := json.Marshal(c.Evidence)
+		record := *c.Evidence
+		if record.Measures == nil {
+			record.Measures = []objectives.MeasureReference{}
+		}
+		raw, e := json.Marshal(record)
 		if e != nil {
 			return wrap("encode restricted evidence", e)
 		}
