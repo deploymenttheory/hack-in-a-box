@@ -115,7 +115,7 @@ test('a delayed401 from the previous session cannot erase a newer session local 
   const peer = await context.newPage(); await prepare(peer, state); await peer.goto('/')
   await expect(peer.getByRole('heading', { name: 'Your events' })).toBeVisible()
   await expect.poll(() => eventReads).toBeGreaterThan(1)
-  await expect(page.getByRole('heading', { name: 'North Star Hack', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'North Star Hack', exact: true })).toBeVisible()
   const currentCopy = await putSyntheticLocalCopy(page, nextScope)
   const finished = page.waitForEvent('requestfinished', async request => (await request.response())?.status() === 401)
   await oldRequest(); await finished

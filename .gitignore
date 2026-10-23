@@ -69,3 +69,4 @@ web/test-results-patterns/
 
 web/dist-styleguide/
 web/styleguide-test-results/
+web/test-results-shell-*/

@@ -8,7 +8,7 @@ Register both origins' `/auth/callback` URLs with the identity provider, or conf
 
 For development, `npm --prefix web run dev` serves participants and `npm --prefix web run dev:admin` serves administration. Point each Vite proxy at its corresponding API process. `npm --prefix web run build` produces `web/dist` and `web/dist-admin`; existing organiser browser checks use the admin artifact.
 
-`sh scripts/smoke-compose.sh` creates an isolated database and file volume, stops the public app, and verifies admin health, database readiness, deep links, protected API response and authenticated operational metrics. It then verifies restart persistence and removes only its synthetic project. Its uniquely tagged images do not replace a running preview image.
+`sh scripts/smoke-compose.sh` creates an isolated database and file volume, stops the public app, and verifies admin health, database readiness, compiled JS/CSS assets, deep links, protected API response and authenticated operational metrics. It then starts the participant process, stops administration, and verifies the participant health/readiness, assets, deep links and separate protected session boundary. It then verifies restart persistence and removes only its synthetic project. Its uniquely tagged images do not replace a running preview image.
 
 Shared database, file storage, identity provider and Docker host failures can still affect both apps. Schema changes must remain compatible with both deployments. Independent containers provide process and release isolation, not disaster recovery for shared infrastructure.
 

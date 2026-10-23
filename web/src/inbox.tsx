@@ -9,10 +9,10 @@ import { SafeMarkdown } from './components/safe-markdown'
 import { ResourceReader } from './resource-library'
 import { EventBrand } from './branding'
 
-export function InboxLink() {
+export function InboxLink({ active = false }: { active?: boolean }) {
   const identity = useIdentity()
   const inbox = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-badge'), queryFn: async () => unwrap(await api.GET('/api/v1/inbox', { params: { query: { limit: 1 } } })), refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
-  return <Link to="/inbox">Inbox{inbox.data && !inbox.error && inbox.data.unread > 0 ? ` (${inbox.data.unread} unread)` : ''}</Link>
+  return <Link to="/inbox" aria-current={active ? 'page' : undefined}>Inbox{inbox.data && !inbox.error && inbox.data.unread > 0 ? ` (${inbox.data.unread} unread)` : ''}</Link>
 }
 export function InboxPage() {
   const identity = useIdentity(), [eventID, setEventID] = useState(''), [selected, setSelected] = useState<string>()

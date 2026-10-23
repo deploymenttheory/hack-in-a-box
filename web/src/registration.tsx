@@ -1,3 +1,5 @@
+import { CollectionFrame, CollectionHeading, CollectionRecords, CollectionPagination } from './components/patterns'
+import { StatusBadge } from './components/ui/feedback'
 import { TeamWorkspace } from './teams'
 import { RegistrationActions } from './registration-actions'
 import { useRef, useState } from 'react'
@@ -21,7 +23,14 @@ export function eventTime(value: string, timezone: string) { return new Intl.Dat
 export function RegistrationDirectory() {
   const identity = useIdentity()
   const query = useInfiniteQuery({ queryKey: privateKey(identity.person.id, '', 'registration-directory'), initialPageParam: undefined as string | undefined, queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/registration/events', { params: { query: { after: pageParam } } })), getNextPageParam: last => last.next_cursor ?? undefined })
-  return <section className="workspace"><h1>Find your next hack</h1><p>Each person registers using their organisation account. Team invitations do not reserve places.</p>{query.isPending ? <Loading /> : query.error ? <Failure error={query.error} /> : <>{query.data.pages.flatMap(p => p.items).map(event => <article className="panel section-heading" key={event.id}><h2><Link to="/register/$eventId" params={{ eventId: event.id }}>{event.name}</Link></h2><p>{event.description}</p><p>{eventTime(event.live_start, event.timezone)} · {event.venue} · {event.timezone}</p><p>{event.open ? 'Applications open' : 'Applications closed'}</p></article>)}{!query.data.pages[0].items.length && <p>No open events or previous applications are available.</p>}{query.hasNextPage && <Button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>More events</Button>}</>}</section>
+  const items = query.data?.pages.flatMap(page => page.items) ?? []
+  const state = query.isPending ? { kind: 'loading' as const } : query.error ? { kind: 'failed' as const, message: 'Available events could not be loaded.', read: { label: 'Try again', onSelect: () => void query.refetch() } } : !items.length ? { kind: 'empty' as const, message: 'No open events or previous applications are available.' } : { kind: 'ready' as const }
+  return <CollectionFrame scopeKey={identity.person.id} state={state} heading={<CollectionHeading title="Find your next hack" scope={{ entity: 'Event registration' }} description="Each person registers using their organisation account. Team invitations do not reserve places." />}><CollectionRecords label="Available events and applications" rows={items} rowKey={event => event.id} rowLabel={event => event.name} destination={event => ({ label: event.name, href: `/register/${event.id}` })} columns={[
+    { id: 'applications', label: 'Applications', essential: true, cell: event => <StatusBadge tone={event.open ? 'success' : 'neutral'}>{event.open ? 'Applications open' : 'Applications closed'}</StatusBadge> },
+    { id: 'start', label: 'Live start', cell: event => eventTime(event.live_start, event.timezone) },
+    { id: 'venue', label: 'Venue', cell: event => event.venue },
+    { id: 'timezone', label: 'Timezone', cell: event => event.timezone },
+  ]} /><CollectionPagination source={{ kind: 'cursor', loaded: items.length, next: query.hasNextPage ? () => void query.fetchNextPage() : undefined, busy: query.isFetchingNextPage }} label="Registration directory pages" /></CollectionFrame>
 }
 export function RegistrationPage() {
   const { eventId } = useParams({ strict: false }), identity = useIdentity()
