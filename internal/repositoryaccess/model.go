@@ -7,6 +7,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
@@ -47,10 +50,11 @@ type Flag struct {
 	GitHubID *int64     `json:"github_id"`
 }
 type Action struct {
-	ID      uuid.UUID  `json:"id"`
-	Kind    string     `json:"kind"`
-	Member  Member     `json:"member"`
-	GrantID *uuid.UUID `json:"grant_id"`
+	PreviousState string     `json:"previous_state"`
+	ID            uuid.UUID  `json:"id"`
+	Kind          string     `json:"kind"`
+	Member        Member     `json:"member"`
+	GrantID       *uuid.UUID `json:"grant_id"`
 }
 type Plan struct {
 	ID           uuid.UUID  `json:"id"`
@@ -67,6 +71,7 @@ type Plan struct {
 	ApprovedBy   *uuid.UUID `json:"approved_by"`
 }
 type Grant struct {
+	Uncertain    bool       `json:"effect_uncertain"`
 	ID           uuid.UUID  `json:"id"`
 	Member       Member     `json:"member"`
 	Managed      bool       `json:"app_managed"`
@@ -75,15 +80,23 @@ type Grant struct {
 	Diagnostic   string     `json:"diagnostic"`
 	ObservedAt   *time.Time `json:"observed_at"`
 }
+type Execution struct {
+	ActionID   uuid.UUID `json:"action_id"`
+	State      string    `json:"state"`
+	Diagnostic string    `json:"diagnostic"`
+	Attempted  bool      `json:"attempted"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
 type View struct {
-	Revision   int64      `json:"revision"`
-	TeamID     uuid.UUID  `json:"team_id"`
-	Plan       *Plan      `json:"plan"`
-	Grants     []Grant    `json:"grants"`
-	CanManage  bool       `json:"can_manage"`
-	GrantsOpen bool       `json:"grants_open"`
-	Flags      []Flag     `json:"flags"`
-	ObservedAt *time.Time `json:"observed_at"`
+	Execution  []Execution `json:"execution"`
+	Revision   int64       `json:"revision"`
+	TeamID     uuid.UUID   `json:"team_id"`
+	Plan       *Plan       `json:"plan"`
+	Grants     []Grant     `json:"grants"`
+	CanManage  bool        `json:"can_manage"`
+	GrantsOpen bool        `json:"grants_open"`
+	Flags      []Flag      `json:"flags"`
+	ObservedAt *time.Time  `json:"observed_at"`
 }
 
 func fingerprint(repositoryID int64, provenance uuid.UUID, members []Member) string {
@@ -103,4 +116,21 @@ func permissionName(value string) string {
 		return "read"
 	}
 	return value
+}
+
+func proposalFingerprint(actions []Action, flags []Flag) string {
+	normalized := slices.Clone(actions)
+	for i := range normalized {
+		normalized[i].ID = uuid.Nil
+	}
+	sorted := slices.Clone(flags)
+	slices.SortFunc(sorted, func(a, b Flag) int {
+		return strings.Compare(fmt.Sprint(a.Code, a.PersonID, a.GitHubID), fmt.Sprint(b.Code, b.PersonID, b.GitHubID))
+	})
+	value, _ := json.Marshal(struct {
+		Actions []Action
+		Flags   []Flag
+	}{normalized, sorted})
+	sum := sha256.Sum256(value)
+	return hex.EncodeToString(sum[:])
 }

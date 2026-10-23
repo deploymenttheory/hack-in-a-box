@@ -24,7 +24,7 @@ func desired(ctx context.Context, tx pgx.Tx, q *dbgen.Queries, e dbgen.Event, re
 	if err != nil {
 		return out, flags, fmt.Errorf("read access team: %w", err)
 	}
-	if team.State != "published" {
+	if team.State != "published" || e.Stage == "cancelled" || e.Stage == "archived" {
 		return out, flags, nil
 	}
 	add := func(person uuid.UUID, role, permission string) error {
@@ -123,7 +123,23 @@ func propose(members []Member, grants []Grant, source githubapp.AccessSnapshot) 
 		}
 	}
 	for id, member := range desiredIDs {
+		uncertain := slices.ContainsFunc(grants, func(g Grant) bool { return g.Member.GitHubID == id && (g.Uncertain || g.State == "ambiguous") })
+		if uncertain {
+			value := id
+			flags = append(flags, Flag{Code: "external_effect_requires_reconciliation", GitHubID: &value})
+			continue
+		}
 		grant, managed := owned[id]
+		if managed && grant.Member.Permission != member.Permission {
+			user, collaborator := existing[id]
+			invitation, invited := pending[id]
+			proven := collaborator && user.Permission == permissionName(grant.Member.Permission) || invited && grant.InvitationID != nil && invitation.ID == *grant.InvitationID && invitation.Permission == permissionName(grant.Member.Permission)
+			if proven {
+				grantID := grant.ID
+				actions = append(actions, Action{ID: uuid.New(), Kind: "remove", Member: grant.Member, GrantID: &grantID, PreviousState: grant.State}, Action{ID: uuid.New(), Kind: "invite", Member: member})
+				continue
+			}
+		}
 		if user, ok := existing[id]; ok {
 			if !managed || permissionName(grant.Member.Permission) != user.Permission {
 				value := id
@@ -138,19 +154,13 @@ func propose(members []Member, grants []Grant, source githubapp.AccessSnapshot) 
 			}
 			continue
 		}
-		uncertain := slices.ContainsFunc(grants, func(g Grant) bool { return g.Member.GitHubID == id && g.State == "ambiguous" })
-		if uncertain {
-			value := id
-			flags = append(flags, Flag{Code: "external_effect_requires_reconciliation", GitHubID: &value})
-			continue
-		}
 		actions = append(actions, Action{ID: uuid.New(), Kind: "invite", Member: member})
 	}
 	for id, grant := range owned {
 		if _, wanted := desiredIDs[id]; wanted {
 			continue
 		}
-		if grant.State == "ambiguous" {
+		if grant.Uncertain || grant.State == "ambiguous" {
 			value := id
 			flags = append(flags, Flag{Code: "external_effect_requires_reconciliation", GitHubID: &value})
 			continue
@@ -160,7 +170,7 @@ func propose(members []Member, grants []Grant, source githubapp.AccessSnapshot) 
 		proven := collaborator && user.Permission == permissionName(grant.Member.Permission) || invited && grant.InvitationID != nil && invitation.ID == *grant.InvitationID && invitation.Permission == permissionName(grant.Member.Permission)
 		if proven {
 			grantID := grant.ID
-			actions = append(actions, Action{ID: uuid.New(), Kind: "remove", Member: grant.Member, GrantID: &grantID})
+			actions = append(actions, Action{ID: uuid.New(), Kind: "remove", Member: grant.Member, GrantID: &grantID, PreviousState: grant.State})
 		} else if collaborator || invited {
 			value := id
 			flags = append(flags, Flag{Code: "managed_permission_changed", GitHubID: &value})

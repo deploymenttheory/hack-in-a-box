@@ -231,6 +231,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		return nil
 	}
 	worker.Maintenance = func(ctx context.Context) error {
+		if err := communicationRuntime.RepositoryAccess.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain reviewed repository access: %w", err)
+		}
 		if err := communicationRuntime.Repositories.Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain repository intents: %w", err)
 		}

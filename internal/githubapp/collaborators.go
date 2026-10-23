@@ -45,6 +45,7 @@ type AccessResult struct {
 	Accepted   bool
 }
 
+var ErrAccessNotSent = errors.New("repository access write was not sent")
 var ErrAccessRejected = errors.New("repository access is restricted by provider policy")
 
 type CollaboratorProvider interface {
@@ -53,21 +54,29 @@ type CollaboratorProvider interface {
 }
 
 func (s Service) accessOwner(ctx context.Context, q *dbgen.Queries, eventID uuid.UUID, request AccessRequest, change *AccessChange) (AccessSnapshot, AccessResult, error) {
+	failed := func() (AccessSnapshot, AccessResult, error) {
+		err := ErrIntegration
+		if change != nil {
+			return AccessSnapshot{}, AccessResult{}, errors.Join(ErrAccessNotSent, err)
+		}
+		return AccessSnapshot{}, AccessResult{}, err
+	}
+
 	row, err := q.GitHubAppIntegration(ctx, eventID)
 	if err != nil || config(row) != request.Configuration || row.InstallationID != request.InstallationID || request.RepositoryID <= 0 {
-		return AccessSnapshot{}, AccessResult{}, ErrIntegration
+		return failed()
 	}
 	key, err := s.Keys.Open(row.KeyID, row.PrivateKeyEncrypted, binding(row))
 	if err != nil {
-		return AccessSnapshot{}, AccessResult{}, ErrIntegration
+		return failed()
 	}
 	defer clear(key)
 	provider, ok := s.Provider.(CollaboratorProvider)
 	if !ok {
-		return AccessSnapshot{}, AccessResult{}, ErrIntegration
+		return failed()
 	}
 	if s.Provider.Inspect(ctx, request.Configuration, key, row.InstallationID).Code != "healthy" {
-		return AccessSnapshot{}, AccessResult{}, ErrIntegration
+		return failed()
 	}
 	if change != nil {
 		result, err := provider.ChangeCollaborator(ctx, request.Configuration, key, row.InstallationID, request, *change)
@@ -156,14 +165,14 @@ func (p *RESTProvider) ChangeCollaborator(ctx context.Context, c Configuration, 
 	}
 	client, err := p.accessClient(ctx, c, key, installation, request, true)
 	if err != nil {
-		return AccessResult{}, err
+		return AccessResult{}, errors.Join(ErrAccessNotSent, err)
 	}
 	user, response, err := client.Users.GetByID(ctx, change.AccountID)
 	if err != nil {
-		return AccessResult{}, accessFailure(response, err)
+		return AccessResult{}, errors.Join(ErrAccessNotSent, accessFailure(response, err))
 	}
 	if user.GetID() != change.AccountID || user.GetLogin() == "" {
-		return AccessResult{}, ErrIntegration
+		return AccessResult{}, errors.Join(ErrAccessNotSent, ErrIntegration)
 	}
 	if change.Remove {
 		if change.InvitationID > 0 {

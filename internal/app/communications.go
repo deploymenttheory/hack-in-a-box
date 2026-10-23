@@ -28,6 +28,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
+	"github.com/deploymenttheory/hack-in-a-box/internal/repositoryaccess"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -37,24 +38,26 @@ import (
 )
 
 type communicationRuntime struct {
-	GitHubWebhooks  *githubwebhooks.Service
-	Repositories    *repositories.Service
-	Outcomes        *outcomes.Service
-	Surveys         *surveys.Service
-	ReviewDashboard *reviewdashboard.Service
-	Moderation      *moderation.Service
-	Scorecards      *scorecards.Service
-	Feedback        *feedback.Service
-	Deliveries      *deliveryhistory.Service
-	Help            help.Service
-	Clarifications  *clarification.Service
-	Automation      *automation.Service
-	Inbox           *inbox.Service
-	Communications  *communications.Service
-	SMTP            *smtpintegration.Service
-	Teams           *teamsworkflow.Service
-	Jobs            *jobs.Service
-	MailContacts    mailcontact.Service
+	GitHubWebhooks *githubwebhooks.Service
+	RepositoryAccess *repositoryaccess.Service
+	Repositories     *repositories.Service
+	Outcomes         *outcomes.Service
+	Surveys          *surveys.Service
+	ReviewDashboard  *reviewdashboard.Service
+	Moderation       *moderation.Service
+	Scorecards       *scorecards.Service
+	Feedback         *feedback.Service
+	Deliveries       *deliveryhistory.Service
+	Help             help.Service
+	Clarifications   *clarification.Service
+	Automation       *automation.Service
+	Inbox            *inbox.Service
+	Communications   *communications.Service
+	SMTP             *smtpintegration.Service
+	Teams            *teamsworkflow.Service
+	Jobs             *jobs.Service
+	MailContacts     mailcontact.Service
+
 }
 
 // newCommunicationRuntime supplies the same provider/readiness/handler graph to
@@ -137,12 +140,15 @@ func newCommunicationRuntime(
 			Provider: githubapp.NewProvider(),
 		},
 	}
+	accessOwner := &repositoryaccess.Service{Pool: pool, App: githubapp.Service{Pool: pool, Keys: cfg.CredentialKeys, Provider: githubapp.NewProvider()}}
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
 			githubwebhooks.HandlerKind:    webhooks,
 			repositories.HandlerKind:      repos,
+			repositoryaccess.HandlerKind:  accessOwner,
+			repositoryaccess.PollKind:     repositoryaccess.PollHandler{Service: accessOwner},
 			automation.HandlerKind:        auto,
 			"communication_test_in_app":   inbox.TestHandler{Service: *local},
 			"communication_test_smtp":     provider,
@@ -228,9 +234,11 @@ func newCommunicationRuntime(
 	teams.Composer = *composer
 	return communicationRuntime{
 		GitHubWebhooks: webhooks,
-		Outcomes:       followThrough,
-		Surveys:        questionnaires,
-		Repositories:   repos,
+		Repositories:     repos,
+		RepositoryAccess: accessOwner,
+		Outcomes:         followThrough,
+		Surveys:          questionnaires,
+
 		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,
