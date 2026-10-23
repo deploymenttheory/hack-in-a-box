@@ -28,8 +28,23 @@ Gallery reads deny immediately after revocation. Maintenance records one immutab
 
 ## Ordered migration and remaining merge gates
 
-Normal migration **41 follows the concrete survey40 predecessor**; there are no placeholder migrations. The populated40→41 test creates actual approved/published survey questions, authored private answers/command receipts, a reviewed frozen suppressed report, native39 objective/rubric evidence, an ordinary protected file and legacy operational fields. Upgrade and empty-media rollback preserve those owner records. Retained media and even photo-consent-only audit history block destructive rollback. After upgrade, the native115 privacy callback still erases survey invitations, private authored revisions and commands while retaining the exact published suppressed report.
+Historical verification before the GitHub App merge used media41 on survey40; there are no placeholder migrations. The populated40→41 test creates actual approved/published survey questions, authored private answers/command receipts, a reviewed frozen suppressed report, native39 objective/rubric evidence, an ordinary protected file and legacy operational fields. Upgrade and empty-media rollback preserve those owner records. Retained media and even photo-consent-only audit history block destructive rollback. After upgrade, the native115 privacy callback still erases survey invitations, private authored revisions and commands while retaining the exact published suppressed report.
 
 The canonical `privacy.RetentionDeadline` uses UTC calendar days, matching the actual SQL privacy boundary regardless of pgx host scan location. Real London-DST timestamp decoding proves identical expiry and operational-profile deletion at the exact boundary; media cannot extend consent by an hour after a clock change.
 
-Final composition is based on actual merged survey40 and preserves its privacy-erasure hook, survey worker retention/inbox/automation owner, native39 objectives/review/support/delivery routes and all generated contracts. The optional #117 consumer uses the real positive media reference owner; #118 has no reverse dependency on outcomes. Exact-head CI and independent review remain required. Issue #118 stays open until those gates and final criterion evidence are complete.
+The pre-rebase composition was based on merged survey40 and preserved its privacy-erasure hook, survey worker retention/inbox/automation owner, native39 objectives/review/support/delivery routes and all generated contracts. The optional #117 consumer uses the real positive media reference owner; #118 has no reverse dependency on outcomes. Exact-head CI and independent review remain required. Issue #118 stays open until those gates and final criterion evidence are complete.
+
+## Rebase onto the GitHub App predecessor
+
+Main now includes GitHub App migration41 from PR181. Media is migration42,
+ordered directly after that actual predecessor. Both runtime services, audit
+actions and generated API contracts are retained. The populated upgrade and
+rollback fixtures now target41→42 and retain actual encrypted App configuration
+created through the native owner, alongside survey responses/reports and prior
+objective/file history. Earlier40→41 execution results above are historical;
+fresh42 integration checks run in CI after this rebase.
+
+Local rebase verification: configured Go lint reports zero issues; generated
+contracts are regenerated against both owners. PostgreSQL-backed integration
+checks could not execute on this host because no Docker daemon is available;
+they remain required in the new-head CI run.

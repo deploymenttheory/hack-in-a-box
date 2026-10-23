@@ -1,5 +1,5 @@
 -- +goose Up
--- Media41 follows the concrete reviewed survey40 predecessor.
+-- Media42 follows actual GitHub App41 and survey40 predecessors.
 -- Final actual-main composition is required before readiness.
 ALTER TABLE operational_profiles ADD COLUMN photo_consent_revision bigint NOT NULL DEFAULT 1 CHECK(photo_consent_revision>0);
 CREATE TABLE event_media (

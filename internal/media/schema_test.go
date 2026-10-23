@@ -1,7 +1,12 @@
 package media_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
@@ -21,9 +26,11 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -39,11 +46,11 @@ func mediaMigrator(t *testing.T, pool *pgxpool.Pool) *goose.Provider {
 	return m
 }
 
-func retained40(t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) map[string]string {
+func retained41(t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) map[string]string {
 	t.Helper()
 	out := map[string]string{}
 	// These are fixed owning tables, never caller-controlled SQL identifiers.
-	for _, table := range []string{"survey_heads", "survey_versions", "survey_approvals", "survey_publications", "survey_invitations", "survey_response_heads", "survey_responses", "survey_commands", "survey_report_snapshots", "survey_report_reviews", "survey_report_approvals", "survey_report_publications", "objective_versions", "rubric_versions", "rubric_approvals", "files"} {
+	for _, table := range []string{"survey_heads", "survey_versions", "survey_approvals", "survey_publications", "survey_invitations", "survey_response_heads", "survey_responses", "survey_commands", "survey_report_snapshots", "survey_report_reviews", "survey_report_approvals", "survey_report_publications", "objective_versions", "rubric_versions", "rubric_approvals", "files", "github_app_integrations", "github_app_install_attempts"} {
 		var rows string
 		query := fmt.Sprintf(
 			`SELECT COALESCE(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),'[]'::jsonb)::text FROM %s t WHERE event_id=$1`,
@@ -63,10 +70,10 @@ func retained40(t *testing.T, pool *pgxpool.Pool, eventID uuid.UUID) map[string]
 	return out
 }
 
-func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(t *testing.T) {
+func TestMedia42Populated41UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(t *testing.T) {
 	pool := testdb.New(t, false)
 	ctx := t.Context()
-	if err := database.Migrate(ctx, pool, 40); err != nil {
+	if err := database.Migrate(ctx, pool, 41); err != nil {
 		t.Fatal(err)
 	}
 	owner, subject := testdb.Person(t, pool), testdb.Person(t, pool)
@@ -96,13 +103,52 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 		eventID,
 		subject.ID,
 	)
-	// Historical fixture deliberately uses the actual40 columns; latest generated
-	// privacy queries include41's new column and cannot seed an older schema.
+	// Historical fixture deliberately uses the actual41 columns; latest generated
+	// privacy queries include42's new column and cannot seed an older schema.
 	exec(
 		`INSERT INTO operational_profiles(event_id,person_id,contact_email,dietary,accessibility,photo_consent)VALUES($1,$2,'legacy-private@example.test','LEGACY-DIETARY','LEGACY-ACCESS','yes')`,
 		eventID,
 		subject.ID,
 	)
+	keyMaterial := make([]byte, 32)
+	if _, err := rand.Read(keyMaterial); err != nil {
+		t.Fatal(err)
+	}
+	keys, err := secretbox.Parse(
+		fmt.Sprintf(
+			`{"active":"fixture","keys":{"fixture":"%s"}}`,
+			base64.StdEncoding.EncodeToString(keyMaterial),
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	app := githubapp.Service{Pool: pool, Keys: keys, Provider: githubapp.NewProvider()}
+	beforeApp, err := dbgen.New(pool).Event(ctx, eventID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = app.Configure(ctx, owner.ID, eventID, beforeApp.Revision, githubapp.Command{
+		Action: "configure",
+		Configuration: githubapp.Configuration{
+			AppID:              123,
+			AppSlug:            "synthetic-app",
+			OrganizationID:     456,
+			Organization:       "synthetic-org",
+			TemplateRepository: "synthetic-template",
+		},
+		PrivateKey: string(
+			pem.EncodeToMemory(
+				&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(rsaKey)},
+			),
+		),
+	}); err != nil {
+		t.Fatal("configure actual predecessor41 encrypted App state", err)
+	}
 	objective, err := (objectives.Service{Pool: pool}).Change(
 		ctx,
 		owner.ID,
@@ -152,7 +198,7 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 			Revision:  fileEvent.Revision,
 			Filename:  "predecessor.txt",
 			MediaType: "text/plain",
-			Content:   []byte("ACTUAL40-NATIVE-FILE"),
+			Content:   []byte("ACTUAL41-NATIVE-FILE"),
 		},
 	)
 	if err != nil {
@@ -163,7 +209,7 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	definition := surveys.Definition{
 		Form: forms.Definition{
 			ID:       surveyID,
-			Name:     "Actual40 retained survey",
+			Name:     "Actual41 retained survey",
 			Audience: "attendee",
 			Fields: []forms.Field{
 				{ID: questionID, Label: "Private response", Type: "text", Required: true},
@@ -202,7 +248,7 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 		CommandID:   uuid.New(),
 		FormVersion: config.Version,
 		Answers: forms.Answers{
-			questionID.String(): json.RawMessage(`"ACTUAL40-PRIVATE-ANSWER"`),
+			questionID.String(): json.RawMessage(`"ACTUAL41-PRIVATE-ANSWER"`),
 		},
 	}
 	if _, err = survey.Respond(ctx, subject.ID, eventID, surveyID, 0, response); err != nil {
@@ -237,17 +283,17 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	if err != nil {
 		t.Fatal(err)
 	}
-	before := retained40(t, pool, eventID)
+	before := retained41(t, pool, eventID)
 	for _, table := range []string{"survey_responses", "survey_commands", "survey_report_publications", "objective_versions", "rubric_versions", "files"} {
 		if before[table] == "[]" {
 			t.Fatal("preservation fixture was empty", table)
 		}
 	}
-	if err = database.Migrate(ctx, pool, 41); err != nil {
+	if err = database.Migrate(ctx, pool, 42); err != nil {
 		t.Fatal(err)
 	}
-	if after := retained40(t, pool, eventID); !reflect.DeepEqual(before, after) {
-		t.Fatal("normal40→41 changed owning survey/prior39 history", before, after)
+	if after := retained41(t, pool, eventID); !reflect.DeepEqual(before, after) {
+		t.Fatal("normal41→42 changed owning survey/prior39 history", before, after)
 	}
 
 	if _, data, e := nativeFiles.Download(
@@ -256,23 +302,23 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 		eventID,
 		oldFile.ID,
 	); e != nil ||
-		string(data) != "ACTUAL40-NATIVE-FILE" {
-		t.Fatal("media41 changed predecessor ordinary-file scope/bytes", e)
+		string(data) != "ACTUAL41-NATIVE-FILE" {
+		t.Fatal("media42 changed predecessor ordinary-file scope/bytes", e)
 	}
 	own, err := survey.ReadOwn(ctx, subject.ID, eventID, surveyID)
 	if err != nil || own.Response == nil ||
-		string(own.Response.Answers[questionID.String()]) != `"ACTUAL40-PRIVATE-ANSWER"` {
+		string(own.Response.Answers[questionID.String()]) != `"ACTUAL41-PRIVATE-ANSWER"` {
 		t.Fatal("upgraded native reader lost private authored response", own, err)
 	}
-	// Empty media rollback is allowed even though genuine40/39 evidence exists.
+	// Empty media rollback is allowed even though genuine41/39 evidence exists.
 	migrator := mediaMigrator(t, pool)
-	if _, err = migrator.DownTo(ctx, 40); err != nil {
+	if _, err = migrator.DownTo(ctx, 41); err != nil {
 		t.Fatal(err)
 	}
-	if after := retained40(t, pool, eventID); !reflect.DeepEqual(before, after) {
+	if after := retained41(t, pool, eventID); !reflect.DeepEqual(before, after) {
 		t.Fatal("media rollback changed retained predecessor data")
 	}
-	if err = database.Migrate(ctx, pool, 41); err != nil {
+	if err = database.Migrate(ctx, pool, 42); err != nil {
 		t.Fatal(err)
 	}
 	native := media.Service{Pool: pool, Clock: func() time.Time { return now }}
@@ -290,7 +336,7 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 			Reason:    "Guard immutable media history",
 			Metadata: &media.Metadata{
 				Kind:         "recording",
-				Title:        "Native41 recording",
+				Title:        "Native42 recording",
 				RecordingURL: "https://recordings.example.test/review",
 			},
 		},
@@ -299,13 +345,13 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	}
 	if _, err = migrator.DownTo(
 		ctx,
-		40,
+		41,
 	); err == nil ||
 		!strings.Contains(err.Error(), "Reviewed media") {
 		t.Fatal("populated media rollback discarded retained history", err)
 	}
-	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 41 {
-		t.Fatal("guard did not preserve schema41", version, e)
+	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 42 {
+		t.Fatal("guard did not preserve schema42", version, e)
 	}
 	// The concrete115 native privacy callback must still erase invitations,
 	// private authored revisions and command receipts, preserving the frozen report.
@@ -339,20 +385,20 @@ func TestMedia41Populated40UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	}
 }
 
-func TestMedia41EmptyRollbackAndPhotoConsentOnlyHistoryGuard(t *testing.T) {
+func TestMedia42EmptyRollbackAndPhotoConsentOnlyHistoryGuard(t *testing.T) {
 	pool := testdb.New(t, false)
 	ctx := t.Context()
-	if err := database.Migrate(ctx, pool, 40); err != nil {
+	if err := database.Migrate(ctx, pool, 41); err != nil {
 		t.Fatal(err)
 	}
-	if err := database.Migrate(ctx, pool, 41); err != nil {
+	if err := database.Migrate(ctx, pool, 42); err != nil {
 		t.Fatal(err)
 	}
 	migrator := mediaMigrator(t, pool)
-	if _, err := migrator.DownTo(ctx, 40); err != nil {
+	if _, err := migrator.DownTo(ctx, 41); err != nil {
 		t.Fatal(err)
 	}
-	if err := database.Migrate(ctx, pool, 41); err != nil {
+	if err := database.Migrate(ctx, pool, 42); err != nil {
 		t.Fatal(err)
 	}
 	owner := testdb.Person(t, pool)
@@ -364,12 +410,12 @@ func TestMedia41EmptyRollbackAndPhotoConsentOnlyHistoryGuard(t *testing.T) {
 	}
 	if _, err = migrator.DownTo(
 		ctx,
-		40,
+		41,
 	); err == nil ||
 		!strings.Contains(err.Error(), "Photo-consent") {
 		t.Fatal("photo-only audit provenance lost on rollback", err)
 	}
-	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 41 {
-		t.Fatal("photo-only guard lost schema41", version, e)
+	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 42 {
+		t.Fatal("photo-only guard lost schema42", version, e)
 	}
 }
