@@ -84,6 +84,26 @@ func (s Service) retain(
 			return fmt.Errorf("retain exact huddle card: %w", err)
 		}
 	}
+	for _, gap := range h.Gaps {
+		if gap.Action == nil || gap.Action.ID != gap.ActionID ||
+			gap.Action.Version != gap.ActionVersion {
+			return access.ErrConflict
+		}
+		if _, err = tx.Exec(
+			ctx,
+			`INSERT INTO moderation_gap_actions(event_id,huddle_id,huddle_version,gap_id,action_id,action_version,feedback_id,feedback_version)VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+			eventID,
+			h.Definition.ID,
+			h.Version,
+			gap.ID,
+			gap.ActionID,
+			gap.ActionVersion,
+			gap.Action.FeedbackID,
+			gap.Action.FeedbackVersion,
+		); err != nil {
+			return fmt.Errorf("retain exact native gap/action source: %w", err)
+		}
+	}
 	q := dbgen.New(tx)
 	row, err := q.BumpEventRevision(ctx, eventID)
 	if err != nil {

@@ -34,13 +34,20 @@ func (s Service) Change(
 		if err != nil {
 			return fmt.Errorf("resolve moderation dependency: %w", err)
 		}
-		if row.Revision != revision {
-			return access.ErrConflict
-		}
 		h, err := load(ctx, tx, eventID, teamID, id)
 		missing := errors.Is(err, access.ErrNotFound)
 		if err != nil && !missing {
 			return fmt.Errorf("resolve moderation dependency: %w", err)
+		}
+		if !missing && h.State == "signed" && input.Action == "sign_off" {
+			if err = s.signedRetry(ctx, tx, actor, eventID, h, input); err != nil {
+				return err
+			}
+			out = h
+			return nil
+		}
+		if row.Revision != revision {
+			return access.ErrConflict
 		}
 		if input.Action == "configure" {
 			h, err = s.configure(ctx, tx, actor, eventID, teamID, id, h, missing, input)
@@ -222,29 +229,8 @@ func (s Service) decide(
 	case "propose_change", "accept_change", "reject_change":
 		err = s.changeProposal(ctx, tx, actor, eventID, h, input)
 	case "sign_off":
-		if actor != h.Definition.ModeratorID || h.State != "open" ||
-			h.Checkpoint.Purpose != "mentor_final" {
-			return access.ErrForbidden
-		}
-		// The real native owner calls its sole finalisation seam in THIS decision
-		// transaction. A failed gap/action/card check retains neither side.
-		native := *s.Cards
-		native.Moderation = &s
-		signed, e := native.SignOffInTransaction(
-			ctx,
-			tx,
-			actor,
-			eventID,
-			h.TeamID,
-			h.Definition.ID,
-			h.Cards,
-		)
-		if e != nil {
-			return fmt.Errorf("read moderation dependency: %w", e)
-		}
-		h.State = "signed"
-		h.SignoffID = &signed.ID
-		h.SignoffContext = &signed.Context
+		err = s.signOff(ctx, tx, actor, eventID, h)
+
 	default:
 		return access.ErrInvalid
 	}

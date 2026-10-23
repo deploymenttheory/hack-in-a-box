@@ -19,13 +19,17 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
+	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
+	Moderation     *moderation.Service
+	Scorecards     *scorecards.Service
 	Feedback       *feedback.Service
 	Help           help.Service
 	Clarifications *clarification.Service
@@ -70,6 +74,13 @@ func newCommunicationRuntime(
 		"help":        helpFeedbackSource{Service: helpProvider},
 	}}
 	shared.Notifications = feedbackInboxSink{Inbox: local}
+	cards := &scorecards.Service{Pool: pool}
+	huddles := &moderation.Service{
+		Pool:    pool,
+		Cards:   cards,
+		Actions: moderation.FeedbackActions{Service: shared},
+	}
+	cards.Moderation = huddles
 	local.Owners = map[string]inbox.ResourceOwner{
 		"feedback":          feedbackInboxOwner{Service: shared},
 		"feedback_followup": feedbackInboxOwner{Service: shared, Followup: true},
@@ -171,6 +182,7 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
+		Moderation: huddles, Scorecards: cards,
 		Feedback:       shared,
 		Clarifications: answers,
 		Automation:     auto,

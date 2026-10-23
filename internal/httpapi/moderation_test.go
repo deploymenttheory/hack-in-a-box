@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,12 +11,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -35,22 +33,6 @@ type moderationHTTPHarness struct {
 	Check                          func(*httptest.ResponseRecorder, int)
 	Exec                           func(string, ...any)
 	Install                        func(*moderation.Service)
-}
-
-// This policy never grants a fake operational action. Actual103 action-resource
-// integration remains a separate required proof before104 readiness.
-type denyUnknownAction struct{}
-
-func (denyUnknownAction) ResolveModerationActionInTransaction(
-	context.Context,
-	pgx.Tx,
-	uuid.UUID,
-	uuid.UUID,
-	uuid.UUID,
-	uuid.UUID,
-	int64,
-) (moderation.ActionState, error) {
-	return moderation.ActionState{}, access.ErrNotFound
 }
 
 func verifyHuddleHTTP(t *testing.T, f moderationHTTPHarness) []string {
@@ -76,7 +58,7 @@ func verifyHuddleHTTP(t *testing.T, f moderationHTTPHarness) []string {
 		Pool:    f.Pool,
 		Clock:   f.Now,
 		Cards:   &native,
-		Actions: denyUnknownAction{},
+		Actions: moderation.FeedbackActions{Service: &feedback.Service{Pool: f.Pool, Clock: f.Now}},
 	}
 	f.Install(owner)
 	base := fmt.Sprintf("/api/v1/events/%s/teams/%s", f.EventID, f.TeamID)

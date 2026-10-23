@@ -2,6 +2,7 @@ package moderation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -37,6 +38,15 @@ func (s Service) ResolveScorecardContextInTransaction(
 	}
 	if err = s.authorizeDecisionReader(ctx, tx, actor, eventID, h); err != nil {
 		return scorecards.ModerationContext{}, err
+	}
+	if h.Checkpoint.Purpose == "mentor_final" {
+		decision, e := finalDecision(ctx, tx, eventID, teamID, h.Checkpoint.Definition.RunID)
+		if e == nil && decision.HuddleID != id {
+			return scorecards.ModerationContext{}, access.ErrConflict
+		}
+		if e != nil && !errors.Is(e, access.ErrNotFound) {
+			return scorecards.ModerationContext{}, e
+		}
 	}
 	unresolved, err := s.unresolved(ctx, tx, actor, eventID, h)
 	if err != nil {

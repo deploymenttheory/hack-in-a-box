@@ -96,7 +96,8 @@ func TestConcurrentSignoffHasOneNativeProofAndOneDecision(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if successes != 1 || conflicts != 1 {
+	// The second identical request is an uncertain-outcome retry, not a new decision.
+	if successes != 2 || conflicts != 0 {
 		t.Fatalf("concurrent signoff result %d/%d", successes, conflicts)
 	}
 	var proofs, decisions int

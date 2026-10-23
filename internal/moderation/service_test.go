@@ -1,7 +1,6 @@
 package moderation
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -12,39 +11,114 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
-// Synthetic action owner verifies the narrow transaction contract only. Final
-// #104 acceptance also requires the actual #103 runtime adapter and records.
-type recordedActionPolicy struct{}
-
-func (recordedActionPolicy) ResolveModerationActionInTransaction(
-	ctx context.Context,
-	tx pgx.Tx,
-	actor, eventID, teamID, id uuid.UUID,
-	version int64,
-) (ActionState, error) {
-	var state ActionState
-	err := tx.QueryRow(ctx, `SELECT id,version,feedback_id,feedback_version,binding,status,owner_eligible FROM synthetic_feedback_actions WHERE event_id=$1 AND team_id=$2 AND id=$3 AND version=$4`, eventID, teamID, id, version).
-		Scan(&state.ID, &state.Version, &state.FeedbackID, &state.FeedbackVersion, &state.Binding, &state.Status, &state.OwnerEligible)
-	if err != nil {
-		return ActionState{}, access.ErrConflict
-	}
-	return state, nil
+func (f *fixture) feedback() *feedback.Service {
+	return &feedback.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
 }
 
 func (f *fixture) huddles() *Service {
-	f.exec(
-		`CREATE TABLE synthetic_feedback_actions(event_id uuid,team_id uuid,id uuid PRIMARY KEY,version bigint,feedback_id uuid,feedback_version bigint,binding text,status text,owner_eligible boolean)`,
-	)
 	return &Service{
 		Pool:    f.pool,
 		Clock:   func() time.Time { return f.now },
 		Cards:   &f.s,
-		Actions: recordedActionPolicy{},
+		Actions: FeedbackActions{Service: f.feedback()},
 	}
+}
+
+func (f *fixture) nativeAction() (*feedback.Service, uuid.UUID, feedback.ActionView) {
+	f.t.Helper()
+	native := f.feedback()
+	id := uuid.New()
+	page, err := native.Change(
+		f.t.Context(),
+		f.owner.ID,
+		f.event,
+		id,
+		0,
+		uuid.New(),
+		feedback.Command{
+			Action: "save",
+			Input: &feedback.Input{
+				TeamID:   f.team,
+				Category: "competition_output",
+				Title:    "Reviewed output follow-up",
+				Body:     "Shared support guidance, not private scores",
+				Sources:  []feedback.Source{},
+			},
+		},
+	)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	for _, action := range []string{"review", "publish"} {
+		page, err = native.Change(
+			f.t.Context(),
+			f.owner.ID,
+			f.event,
+			id,
+			page.CurrentVersion,
+			uuid.New(),
+			feedback.Command{Action: action},
+		)
+		if err != nil {
+			f.t.Fatal(err)
+		}
+	}
+	taskID := uuid.New()
+	task, err := native.ChangeAction(
+		f.t.Context(),
+		f.owner.ID,
+		f.event,
+		id,
+		taskID,
+		0,
+		uuid.New(),
+		feedback.ActionCommand{
+			Action: "details",
+			Input: &feedback.ActionInput{
+				Reviewed: true,
+				Title:    "Check frozen demonstration evidence",
+				Body:     "Operational action completion requires separate formal review",
+				OwnerID:  f.member.ID,
+				DueAt:    f.now.Add(time.Hour),
+			},
+		},
+	)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	return native, id, task
+}
+
+func (f *fixture) actionStatus(
+	native *feedback.Service,
+	feedbackID uuid.UUID,
+	task feedback.ActionView,
+	status string,
+) feedback.ActionView {
+	f.t.Helper()
+	actor := f.member.ID
+	if status == "open" {
+		actor = f.owner.ID
+	}
+	next, err := native.ChangeAction(
+		f.t.Context(),
+		actor,
+		f.event,
+		feedbackID,
+		task.Action.ID,
+		task.Action.Version,
+		uuid.New(),
+		feedback.ActionCommand{Action: "status", Status: status},
+	)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	return next
 }
 
 func (f *fixture) create(s *Service, cp scorecards.Checkpoint) Huddle {
@@ -288,14 +362,9 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 	h := f.create(s, cp)
 	h = f.change(s, h, f.second.ID, Command{Action: "complete_second_review"})
 	h = f.change(s, h, f.owner.ID, Command{Action: "open"})
-	actionID, gapID, proposalID := uuid.New(), uuid.New(), uuid.New()
-	f.exec(
-		`INSERT INTO synthetic_feedback_actions VALUES($1,$2,$3,1,$4,1,'native-source-v1','done',true)`,
-		f.event,
-		f.team,
-		actionID,
-		uuid.New(),
-	)
+	native, feedbackID, task := f.nativeAction()
+	task = f.actionStatus(native, feedbackID, task, "done")
+	actionID, gapID, proposalID := task.Action.ID, uuid.New(), uuid.New()
 	h = f.change(
 		s,
 		h,
@@ -304,7 +373,7 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 			Action:        "add_gap",
 			GapID:         gapID,
 			ActionID:      actionID,
-			ActionVersion: 1,
+			ActionVersion: task.Action.Version,
 			Reason:        "Independent supporting evidence still needs formal review",
 		},
 	)
@@ -336,7 +405,7 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 		Command{
 			Action:        "resolve_gap",
 			GapID:         gapID,
-			ActionVersion: 1,
+			ActionVersion: task.Action.Version,
 			Evidence:      evidence,
 			Reason:        "Native operational done plus explicit formal evidence decision",
 		},
@@ -367,15 +436,9 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 			Reason:     "Explicitly accept recorded proposed interpretation",
 		},
 	)
-	f.exec(
-		`UPDATE synthetic_feedback_actions SET version=2,status='open',binding='native-source-v2' WHERE id=$1`,
-		actionID,
-	)
+	task = f.actionStatus(native, feedbackID, task, "open")
 	deniedSignoff()
-	f.exec(
-		`UPDATE synthetic_feedback_actions SET version=3,status='done',binding='native-source-v3' WHERE id=$1`,
-		actionID,
-	)
+	task = f.actionStatus(native, feedbackID, task, "done")
 	h = f.change(
 		s,
 		h,
@@ -383,7 +446,7 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 		Command{
 			Action:        "resolve_gap",
 			GapID:         gapID,
-			ActionVersion: 3,
+			ActionVersion: task.Action.Version,
 			Evidence:      evidence,
 			Reason:        "Explicitly re-review reopened operational action",
 		},
@@ -427,10 +490,10 @@ func TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions(t *testing.T)
 	if err != nil || len(historical.Items) < 7 {
 		t.Fatal("decision history missing", err)
 	}
-	native := f.s
-	native.Moderation = s
+	canonical := f.s
+	canonical.Moderation = s
 	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-		_, e := native.SignOffInTransaction(
+		_, e := canonical.SignOffInTransaction(
 			t.Context(),
 			tx,
 			f.owner.ID,

@@ -54,6 +54,7 @@ func (s Service) changeGap(
 				ActionID:      input.ActionID,
 				ActionVersion: input.ActionVersion,
 				Reason:        input.Reason,
+				Action:        &action,
 				Evidence:      []scorecards.EvidenceReference{},
 			},
 		)
