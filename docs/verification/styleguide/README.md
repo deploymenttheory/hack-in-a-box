@@ -48,6 +48,10 @@ screen migrations are finished. Example previews are real nested viewports with
 independent scrolling; a full-page outer screenshot need not reveal all example
 content below the frame's scroll position.
 
+A subsequent local 22-case run also covers actual clipboard copying versus a
+permission-denied fallback and reset of the permitted guide-destination example.
+The prior 18-case Docker/artifact evidence above remains scoped to 32fd13b.
+
 ## Independent Docker runtime
 
 The opt-in Compose build completed and started healthy on 127.0.0.1:8082.
