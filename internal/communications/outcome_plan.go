@@ -52,3 +52,12 @@ type NativeOutcomePlanState struct {
 	RetainUntil time.Time
 	Approval    *ScopeApproval
 }
+
+// NativeOutcomeEffectGuard is implemented by external private-message providers.
+// A new explicit approval must not replace an unresolved effect for the same
+// native checkpoint, even if its selected channel or date changes. The provider
+// retains its own operations/attempts and applies any existing reviewed recovery
+// disposition; this interface neither sends nor rewrites a receipt.
+type NativeOutcomeEffectGuard interface {
+	CheckOutcomeReviewApprovalInTransaction(context.Context, pgx.Tx, uuid.UUID, uuid.UUID) error
+}

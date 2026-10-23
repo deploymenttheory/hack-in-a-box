@@ -112,7 +112,12 @@ Populated41→42 preservation, empty rollback and history-protected rollback pas
 Published project reads and search retain the current event retention deadline.
 Four organiser desktop/mobile cases cover deliberate positive publication,
 withdrawal, optional timezone-aware approval and cancellation with unavailable
-SMTP reported honestly. Participant22/22 and organiser4/4 desktop/mobile cases pass; affected native
+SMTP reported honestly. Participant24/24 and organiser4/4 desktop/mobile cases pass; affected native
 race suites pass. Remaining before readiness: final actual-main ancestry/CI and
 independent acceptance review. See docs/verification/outcomes/README.md. No results/awards capability is claimed and no
 real external messages have been sent.
+
+Replacement approval checks the existing provider's durable pending/unknown
+barrier for the same checkpoint, including when the selected channel changes.
+A new approval/date does not dispose of an earlier unknown effect. No generic
+archived recovery guard is widened.

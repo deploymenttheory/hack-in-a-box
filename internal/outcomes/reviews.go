@@ -11,6 +11,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
@@ -132,7 +133,8 @@ func (s Service) ChangePlan(
 		if err != nil {
 			return err
 		}
-		if err = appendPlan(ctx, q, v, c, expected, proof); err != nil {
+
+		if err = s.appendCheckedPlan(ctx, tx, q, event.ID, v, c, expected, proof); err != nil {
 			return err
 		}
 		if s.Automation != nil {
@@ -565,4 +567,50 @@ func planReaderProjection(view PlanView, organiser bool) PlanView {
 		view.ActorID = uuid.Nil
 	}
 	return view
+}
+
+// The selected replacement channel does not erase an unresolved prior external
+// effect. The actual provider owns its existing immutable attempt disposition.
+func (s Service) checkPlanEffects(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, reviewID uuid.UUID,
+	selected []string,
+) error {
+	for channel, provider := range s.Composer.Channels {
+		guard, ok := provider.(communications.NativeOutcomeEffectGuard)
+		if !ok {
+			if channel != "in_app" && slices.Contains(selected, channel) {
+				return access.ErrForbidden
+			}
+			continue
+		}
+		if err := guard.CheckOutcomeReviewApprovalInTransaction(
+			ctx,
+			tx,
+			eventID,
+			reviewID,
+		); err != nil {
+			return wrap("review unresolved prior provider effect", err)
+		}
+	}
+	return nil
+}
+
+func (s Service) appendCheckedPlan(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	v ReviewPlan,
+	c PlanCommand,
+	expected int64,
+	proof ReviewProof,
+) error {
+	if c.Action == "approve" {
+		if err := s.checkPlanEffects(ctx, tx, eventID, v.ID, v.Schedule.Channels); err != nil {
+			return err
+		}
+	}
+	return appendPlan(ctx, q, v, c, expected, proof)
 }

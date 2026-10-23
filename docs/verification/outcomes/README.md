@@ -20,7 +20,7 @@ SMTP/Teams request or external backlog ticket has been sent/created.
 
 Current local results:
 
-- Participant desktop/mobile22/22,37.3s; organiser desktop/mobile4/4,2.9s.
+- Participant desktop/mobile24/24,52.0s; organiser desktop/mobile4/4,2.9s.
 - PostgreSQL race suites: outcomes27.673s, communications50.711s,
   automation83.498s, inbox26.168s, SMTP108.313s, privacy10.296s.
 - Current native outcome/API/runtime selection: outcomes9.188s,
@@ -38,6 +38,20 @@ Mobile captures were inspected for inert hostile text, legible controls and no
 horizontal overflow: [ordinary member](ordinary-member-mobile.png) and
 [organiser publication](organiser-publication-mobile.png). These synthetic data
 captures contain no real personal information.
+
+The additional same-checkpoint replacement regression first reproduced a new
+channel/date bypassing an unknown original effect. A provider-owned native
+approval guard now checks existing operations/attempts under the event lock.
+Pending or undisposed ambiguous original effects block replacement approval,
+even if the new plan selects in-app only; cancellation does not rewrite the old
+attempt. Actual factory pending/unknown tests and existing SMTP recovery tests
+pass. Generic archived recovery remains read-only; an attempted unknown send is
+not treated as an unsent schedule that can safely be moved into a second send.
+
+Historical media41 tests preserve their concrete rollback assertions and restore
+latest before current native queries; the real PostgreSQL pair passes4.343s.
+Active source-team denial also clears event-only choices/input while the general
+idea route remains available, with no automatic write.
 
 Remaining merge requirements: independent acceptance review, actual merged41
 ancestry rebase and every exact-head CI check. This document does not close117 or

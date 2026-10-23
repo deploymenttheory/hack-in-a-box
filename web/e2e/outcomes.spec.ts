@@ -132,3 +132,18 @@ test('ordinary no-event-role owner opens a native inbox review destination witho
  await page.getByRole('link',{name:'Open your current follow-through'}).click();await expect(page.getByRole('heading',{name:'Idea and follow-through',exact:true})).toBeVisible()
  expect(state.requests).toHaveLength(0);expect(state.eventReads).toBe(0)
 })
+test('current source-team denial clears event-context choices and unsent team input without blocking general ideas',async({page})=>{
+ const {state}=await mock(page)
+ const teamID='74444444-4444-4444-8444-444444444444'
+ let revoked=false
+ await page.route(`**/api/v1/events/${firstID}/teams`,route=>revoked?route.fulfill({status:403,json:{error:{code:'forbidden',message:'Current source team denied',request_id:'synthetic'}}}):route.fulfill({json:{teams:[{id:teamID,name:'PRIVATE SOURCE TEAM',state:'published'}],people:[],requests:[],revision:1,can_manage:false,can_create:false,frozen:true,freeze_at:'2026-09-01T12:00:00Z'}}))
+ await page.goto(`/ideas?event=${firstID}`);await page.getByRole('button',{name:'Propose an idea',exact:true}).click()
+ await page.getByLabel('Source',{exact:true}).selectOption(teamID)
+ await page.getByLabel('Problem or opportunity',{exact:true}).fill('PRIVATE UNSENT TEAM OUTPUT')
+ revoked=true
+ await expect(page.getByLabel('Problem or opportunity',{exact:true})).toHaveCount(0,{timeout:20_000})
+ await expect(page.getByText('PRIVATE SOURCE TEAM',{exact:false})).toHaveCount(0)
+ expect(state.requests).toHaveLength(0)
+ await page.goto('/ideas');await page.getByRole('button',{name:'Propose an idea',exact:true}).click()
+ await expect(page.getByLabel('Problem or opportunity',{exact:true})).toHaveValue('')
+})

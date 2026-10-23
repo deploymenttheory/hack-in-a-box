@@ -357,6 +357,27 @@ func (q *Queries) SMTPMessageSnapshot(ctx context.Context, operationID uuid.UUID
 	return i, err
 }
 
+const sMTPNativeOutcomeReviewUnresolved = `-- name: SMTPNativeOutcomeReviewUnresolved :one
+SELECT EXISTS(
+ SELECT 1 FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
+ WHERE m.event_id=$1 AND m.campaign_id=$2
+ AND m.snapshot->'scope_approval'->>'kind'='native_outcome_review'
+ AND (o.state IN ('pending','running') OR NOT o.cancelled AND (m.state='prepared' OR o.state='ambiguous'))
+)
+`
+
+type SMTPNativeOutcomeReviewUnresolvedParams struct {
+	EventID    uuid.UUID
+	CampaignID uuid.UUID
+}
+
+func (q *Queries) SMTPNativeOutcomeReviewUnresolved(ctx context.Context, arg SMTPNativeOutcomeReviewUnresolvedParams) (bool, error) {
+	row := q.db.QueryRow(ctx, sMTPNativeOutcomeReviewUnresolved, arg.EventID, arg.CampaignID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const sMTPOccurrenceReviewPending = `-- name: SMTPOccurrenceReviewPending :one
 SELECT EXISTS(SELECT 1 FROM smtp_campaign_messages m JOIN operations o ON o.id=m.operation_id
 WHERE m.event_id=$1 AND m.campaign_id=$2 AND m.campaign_version=$3 AND m.occurrence_id=$4

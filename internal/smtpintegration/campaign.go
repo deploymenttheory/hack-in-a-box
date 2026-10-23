@@ -658,3 +658,24 @@ func existingOccurrenceIntents(
 
 	return byPerson, nil
 }
+
+// CheckOutcomeReviewApprovalInTransaction preserves the existing provider-owned
+// unknown/in-flight barrier when the native owner approves a replacement date or
+// channel. Caller holds the same event lock as queue/prepare and plan approval.
+// Old attempt/receipt history remains immutable; only an existing deliberate
+// recovery disposition can remove uncertainty, never a new plan generation.
+func (s Service) CheckOutcomeReviewApprovalInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, planID uuid.UUID,
+) error {
+	pending, err := dbgen.New(tx).
+		SMTPNativeOutcomeReviewUnresolved(ctx, dbgen.SMTPNativeOutcomeReviewUnresolvedParams{EventID: eventID, CampaignID: planID})
+	if err != nil {
+		return fmt.Errorf("check native outcome SMTP effect: %w", err)
+	}
+	if pending {
+		return access.ErrConflict
+	}
+	return nil
+}

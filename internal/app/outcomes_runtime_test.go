@@ -267,6 +267,10 @@ func TestOutcomeActualRuntimeArchivedOwnerReminderAndHistoricalRead(t *testing.T
 	testOutcomeRuntimeReminder(t, "in_app", maildelivery.Accepted)
 }
 
+func TestOutcomeActualRuntimeSMTPPendingEffectBlocksReplacementApproval(t *testing.T) {
+	testOutcomeRuntimeReminder(t, "smtp", maildelivery.Retryable)
+}
+
 func TestOutcomeActualRuntimeSMTPAmbiguousAttemptNeverAutomaticallyResends(t *testing.T) {
 	testOutcomeRuntimeReminder(t, "smtp", maildelivery.Ambiguous)
 }
@@ -479,6 +483,38 @@ func testOutcomeRuntimeReminder(t *testing.T, channel string, receipt maildelive
 			Scan(&providerOperation); err != nil {
 			t.Fatal(err)
 		}
+		if receipt == maildelivery.Retryable {
+			// No SMTP submission is attempted in this pending-operation scenario.
+			reschedule := save
+			reschedule.ID = uuid.New()
+			reschedule.Schedule = &outcomes.ReviewSchedule{
+				Days:     30,
+				WallTime: actual.Add(time.Hour).Format("2006-01-02T15:04:05"),
+				Timezone: "UTC",
+				Channels: []string{"in_app"},
+			}
+			if _, err = s.ChangePlan(t.Context(), org.ID, id, review, 2, reschedule); err != nil {
+				t.Fatal(err)
+			}
+			approve.ID = uuid.New()
+			if _, err = s.ChangePlan(
+				t.Context(),
+				org.ID,
+				id,
+				review,
+				3,
+				approve,
+			); !errors.Is(
+				err,
+				access.ErrConflict,
+			) {
+				t.Fatal("pending original operation bypassed by replacement", err)
+			}
+			if relay.calls.Load() != 0 {
+				t.Fatal("approval sent the pending message")
+			}
+			return
+		}
 		if err = outbox.Execute(t.Context(), providerOperation); err != nil {
 			t.Fatal(err)
 		}
@@ -531,6 +567,40 @@ func testOutcomeRuntimeReminder(t *testing.T, channel string, receipt maildelive
 			Scan(&attempts); err != nil ||
 			attempts != 1 {
 			t.Fatal("unknown attempt history changed", attempts, err)
+		}
+		// Changing the schedule or selected channel is not an explicit disposition
+		// of a previous unknown SMTP effect for this same checkpoint.
+		reschedule := save
+		reschedule.ID = uuid.New()
+		reschedule.Schedule = &outcomes.ReviewSchedule{
+			Days:     30,
+			WallTime: actual.Add(time.Hour).Format("2006-01-02T15:04:05"),
+			Timezone: "UTC",
+			Channels: []string{"in_app"},
+		}
+		if _, err = s.ChangePlan(t.Context(), org.ID, id, review, 3, reschedule); err != nil {
+			t.Fatal(err)
+		}
+		approve.ID = uuid.New()
+		if _, err = s.ChangePlan(
+			t.Context(),
+			org.ID,
+			id,
+			review,
+			4,
+			approve,
+		); !errors.Is(
+			err,
+			access.ErrConflict,
+		) {
+			t.Fatal("new channel/date bypassed unknown original effect", err)
+		}
+		current, err := s.Review(t.Context(), org.ID, review, 0)
+		if err != nil || current.Version != 4 || current.State != "draft" {
+			t.Fatal("blocked approval changed exact plan", current, err)
+		}
+		if relay.calls.Load() != 1 {
+			t.Fatal("replacement approved or resent unknown effect")
 		}
 		return
 	}
