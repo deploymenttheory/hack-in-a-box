@@ -48,8 +48,8 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 				`{"id":900,"name":"hackbox-team","private":true,"description":"hackbox-provisioning:synthetic","owner":{"id":99}}`,
 			)
 		case "/repos/synthetic-org/hackbox-team/collaborators":
-			if r.URL.Query().Get("affiliation") != "direct" {
-				t.Error("unbounded indirect collaborator view")
+			if r.URL.Query().Get("affiliation") != "all" {
+				t.Error("collaborator observation omitted visible inherited access")
 			}
 			fmt.Fprint(w, `[{"id":101,"login":"renamed-user","role_name":"write"}]`)
 		case "/repos/synthetic-org/hackbox-team/invitations":

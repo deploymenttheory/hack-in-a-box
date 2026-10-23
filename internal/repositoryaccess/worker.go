@@ -156,13 +156,15 @@ func (s Service) retainGrant(
 	action := current.Effect.Action
 	_, err := tx.Exec(
 		ctx,
-		`INSERT INTO repository_access_grants(id,event_id,team_id,person_id,github_id,link_revision,role,permission,app_managed,state,invitation_id,diagnostic,observed_at)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)ON CONFLICT(id)DO UPDATE SET app_managed=repository_access_grants.app_managed OR EXCLUDED.app_managed,state=EXCLUDED.state,invitation_id=COALESCE(repository_access_grants.invitation_id,EXCLUDED.invitation_id),diagnostic=EXCLUDED.diagnostic,observed_at=EXCLUDED.observed_at,updated_at=now()`,
+		`INSERT INTO repository_access_grants(id,event_id,team_id,person_id,github_id,link_revision,coverage_start,coverage_end,role,permission,app_managed,state,invitation_id,diagnostic,observed_at)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)ON CONFLICT(id)DO UPDATE SET app_managed=repository_access_grants.app_managed OR EXCLUDED.app_managed,state=EXCLUDED.state,invitation_id=COALESCE(repository_access_grants.invitation_id,EXCLUDED.invitation_id),diagnostic=EXCLUDED.diagnostic,observed_at=EXCLUDED.observed_at,updated_at=now()`,
 		action.ID,
 		current.Event.ID,
 		current.Repository.TeamID,
 		action.Member.PersonID,
 		action.Member.GitHubID,
 		action.Member.LinkRevision,
+		action.Member.CoverageStart,
+		action.Member.CoverageEnd,
 		action.Member.Role,
 		action.Member.Permission,
 		managed,
@@ -610,13 +612,8 @@ func (s Service) noEffect(
 	diagnostic string,
 ) error {
 	if action.Kind == "invite" {
-		if _, err := tx.Exec(
-			ctx,
-			`UPDATE repository_access_grants SET state='failed',diagnostic=$2,updated_at=now()WHERE id=$1`,
-			action.ID,
-			diagnostic,
-		); err != nil {
-			return fmt.Errorf("retain rejected invitation: %w", err)
+		if err := updateGrant(ctx, tx, action.ID, "failed", diagnostic, s.now()); err != nil {
+			return err
 		}
 	} else if action.GrantID != nil && (action.PreviousState == "pending" || action.PreviousState == "accepted" || action.PreviousState == "expired") {
 		if _, err := tx.Exec(

@@ -41,6 +41,10 @@ CREATE TABLE repository_access_grants (
  person_id uuid NOT NULL REFERENCES people(id),
  github_id bigint NOT NULL CHECK(github_id>0),
  link_revision bigint NOT NULL CHECK(link_revision>=0),
+ coverage_start timestamptz,
+ coverage_end timestamptz,
+ CHECK((coverage_start IS NULL)=(coverage_end IS NULL)),
+ CHECK(coverage_end IS NULL OR coverage_end>coverage_start),
  role text NOT NULL CHECK(role IN('competitor','mentor')),
  permission text NOT NULL CHECK(permission IN('push','pull')),
  app_managed boolean NOT NULL DEFAULT false,
@@ -76,8 +80,8 @@ BEGIN
    OR (OLD.attempted AND (NOT NEW.attempted OR NEW.dispatch_id IS DISTINCT FROM OLD.dispatch_id OR NEW.state='planned'))
   THEN RAISE EXCEPTION 'repository access dispatch history is immutable'; END IF;
  ELSIF TG_TABLE_NAME='repository_access_grants' THEN
-  IF (NEW.id,NEW.event_id,NEW.team_id,NEW.person_id,NEW.github_id,NEW.link_revision,NEW.role,NEW.permission,NEW.created_at) IS DISTINCT FROM
-     (OLD.id,OLD.event_id,OLD.team_id,OLD.person_id,OLD.github_id,OLD.link_revision,OLD.role,OLD.permission,OLD.created_at)
+  IF (NEW.id,NEW.event_id,NEW.team_id,NEW.person_id,NEW.github_id,NEW.link_revision,NEW.coverage_start,NEW.coverage_end,NEW.role,NEW.permission,NEW.created_at) IS DISTINCT FROM
+     (OLD.id,OLD.event_id,OLD.team_id,OLD.person_id,OLD.github_id,OLD.link_revision,OLD.coverage_start,OLD.coverage_end,OLD.role,OLD.permission,OLD.created_at)
    OR (OLD.app_managed AND NOT NEW.app_managed)
    OR (OLD.invitation_id IS NOT NULL AND NEW.invitation_id IS DISTINCT FROM OLD.invitation_id)
   THEN RAISE EXCEPTION 'repository access grant provenance is immutable'; END IF;

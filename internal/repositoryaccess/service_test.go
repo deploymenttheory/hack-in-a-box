@@ -2,6 +2,7 @@ package repositoryaccess
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
@@ -197,7 +199,7 @@ func setupAccess(t *testing.T, pool *pgxpool.Pool) *accessFixture {
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
 		map[string]jobs.Handler{
 			repositories.HandlerKind: repoOwner,
-			HandlerKind:              f.service,
+			HandlerKind:              &f.service,
 			PollKind:                 PollHandler{Service: &f.service},
 		},
 	)
@@ -428,6 +430,57 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 			}
 		}
 	})
+	t.Run("receipt commit failure retains barrier and cannot resend", func(t *testing.T) {
+		f := setupAccess(t, pool)
+		f.publish()
+		p := f.review()
+		f.approve(p)
+		f.exec(
+			"CREATE FUNCTION fixture_reject_access_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic receipt commit failure'; END $$",
+		)
+		f.exec(
+			"CREATE CONSTRAINT TRIGGER fixture_access_receipt AFTER UPDATE ON repository_access_grants DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (NEW.app_managed) EXECUTE FUNCTION fixture_reject_access_receipt()",
+		)
+		f.execute(p.Actions[0])
+		f.exec("DROP TRIGGER fixture_access_receipt ON repository_access_grants")
+		f.exec("DROP FUNCTION fixture_reject_access_receipt()")
+		f.refresh()
+		v := f.view()
+		if f.provider.writes != 1 || len(v.Grants) != 1 || !v.Grants[0].Uncertain ||
+			v.Grants[0].Managed {
+			t.Fatal("rolled-back receipt lost barrier", v)
+		}
+		f.service.Reconcile(t.Context(), jobs.Delivery{EventID: f.event, TargetID: p.Actions[0].ID})
+		if f.provider.writes != 1 || len(f.review().Actions) != 0 {
+			t.Fatal("commit failure repeated external invitation")
+		}
+	})
+	t.Run("concurrent native workers dispatch once", func(t *testing.T) {
+		f := setupAccess(t, pool)
+		f.publish()
+		p := f.review()
+		f.approve(p)
+		var operationID uuid.UUID
+		if err := pool.QueryRow(t.Context(), "SELECT id FROM operations WHERE event_id=$1 AND target_id=$2", f.event, p.Actions[0].ID).
+			Scan(&operationID); err != nil {
+			t.Fatal(err)
+		}
+		var workers sync.WaitGroup
+		errs := make(chan error, 2)
+		for range 2 {
+			workers.Go(func() { errs <- f.jobs.Execute(t.Context(), operationID) })
+		}
+		workers.Wait()
+		close(errs)
+		for err := range errs {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		if f.provider.writes != 1 {
+			t.Fatal("concurrent workers duplicated provider write", f.provider.writes)
+		}
+	})
 	t.Run("stale link revision and withdrawn claim stop queued grants", func(t *testing.T) {
 		f := setupAccess(t, pool)
 		f.publish()
@@ -450,6 +503,114 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 			t.Fatal("withdrawn identity granted")
 		}
 	})
+	t.Run(
+		"published mentor coverage expires without changing frozen assignments",
+		func(t *testing.T) {
+			f := setupAccess(t, pool)
+			f.publish()
+			now := time.Now().UTC().Add(-2 * time.Hour)
+			start, end := now.Add(-time.Hour), now.Add(time.Hour)
+			config := event.DefaultConfiguration()
+			config.LiveStart = start
+			config.LiveEnd = end
+			config.SubmissionCutoff = end.Add(-10 * time.Minute)
+			encoded, _ := json.Marshal(config)
+			f.exec(
+				"UPDATE events SET configuration=$2,published_at=$3 WHERE id=$1",
+				f.event,
+				encoded,
+				start.Add(-time.Hour),
+			)
+			primary, second := testdb.Person(t, pool), testdb.Person(t, pool)
+			availability, _ := json.Marshal([]map[string]time.Time{{"start": start, "end": end}})
+			for i, person := range []uuid.UUID{primary.ID, second.ID} {
+				slot := "primary"
+				if i == 1 {
+					slot = "second"
+				}
+				f.exec(
+					"INSERT INTO event_memberships(event_id,person_id,role)VALUES($1,$2,'mentor')",
+					f.event,
+					person,
+				)
+				f.exec(
+					"INSERT INTO mentor_profiles(event_id,person_id,availability)VALUES($1,$2,$3)",
+					f.event,
+					person,
+					availability,
+				)
+				f.exec(
+					"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,$4,'published',$5,$6)",
+					f.event,
+					f.team,
+					person,
+					slot,
+					start,
+					end,
+				)
+				var numericID int64
+				if err := pool.QueryRow(t.Context(), "SELECT COALESCE(MAX(github_id),100)+1 FROM github_accounts").
+					Scan(&numericID); err != nil {
+					t.Fatal(err)
+				}
+				f.exec(
+					"INSERT INTO github_accounts(person_id,github_id,login,token_encrypted)VALUES($1,$2,'synthetic-mentor',decode('00','hex'))",
+					person,
+					numericID,
+				)
+				f.exec("INSERT INTO github_link_states(person_id,revision)VALUES($1,1)", person)
+			}
+			f.service.Now = func() time.Time { return now }
+			p := f.review()
+			if len(p.Actions) != 3 {
+				t.Fatal("native coverage missing", p)
+			}
+			f.approve(p)
+			for _, action := range p.Actions {
+				if action.Member.Role == "mentor" &&
+					(action.Member.Permission != "pull" || action.Member.CoverageEnd == nil) {
+					t.Fatal("mentor scope widened", action)
+				}
+				f.execute(action)
+			}
+			own, err := f.service.Own(t.Context(), primary.ID, f.event, f.team)
+			if err != nil || len(own.Grants) != 1 || own.Grants[0].Member.CoverageEnd == nil {
+				t.Fatal("mentor own scoped history", own, err)
+			}
+			f.service.Now = func() time.Time { return end.Add(time.Second) }
+			if _, err = f.service.Own(
+				t.Context(),
+				primary.ID,
+				f.event,
+				f.team,
+			); !errors.Is(
+				err,
+				access.ErrForbidden,
+			) {
+				t.Fatal("expired mentor retained invitation access", err)
+			}
+			next := f.review()
+			if len(next.Actions) != 2 {
+				t.Fatal("expired coverage did not propose removal", next)
+			}
+			f.approve(next)
+			for _, action := range next.Actions {
+				if action.Kind != "remove" {
+					t.Fatal(action)
+				}
+				f.execute(action)
+			}
+			if f.provider.writes != 5 {
+				t.Fatal("expired mentor removals were not executed", f.provider.writes)
+			}
+			var retained int
+			if err = pool.QueryRow(t.Context(), "SELECT count(*) FROM mentor_assignments WHERE event_id=$1 AND snapshot='published'", f.event).
+				Scan(&retained); err != nil ||
+				retained != 2 {
+				t.Fatal("frozen mentor history changed", err)
+			}
+		},
+	)
 	t.Run("expired owned invitation is cancelled before replacement", func(t *testing.T) {
 		f := setupAccess(t, pool)
 		f.publish()

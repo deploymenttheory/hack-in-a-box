@@ -37,7 +37,7 @@ func readPlan(ctx context.Context, tx pgx.Tx, eventID, teamID uuid.UUID) (*Plan,
 func readGrants(ctx context.Context, tx pgx.Tx, eventID, teamID uuid.UUID) ([]Grant, error) {
 	rows, err := tx.Query(
 		ctx,
-		`SELECT g.id,g.person_id,g.github_id,g.link_revision,g.role,g.permission,g.app_managed,g.state,g.invitation_id,g.diagnostic,g.observed_at,EXISTS(SELECT 1 FROM repository_access_effects x WHERE x.event_id=g.event_id AND x.team_id=g.team_id AND x.attempted AND x.state='ambiguous' AND x.definition->'member'->>'github_id'=g.github_id::text) FROM repository_access_grants g WHERE g.event_id=$1 AND g.team_id=$2 ORDER BY g.created_at,g.id`,
+		`SELECT g.id,g.person_id,g.github_id,g.link_revision,g.coverage_start,g.coverage_end,g.role,g.permission,g.app_managed,g.state,g.invitation_id,g.diagnostic,g.observed_at,EXISTS(SELECT 1 FROM repository_access_effects x WHERE x.event_id=g.event_id AND x.team_id=g.team_id AND x.attempted AND x.state='ambiguous' AND x.definition->'member'->>'github_id'=g.github_id::text) FROM repository_access_grants g WHERE g.event_id=$1 AND g.team_id=$2 ORDER BY g.created_at,g.id`,
 		eventID,
 		teamID,
 	)
@@ -53,6 +53,8 @@ func readGrants(ctx context.Context, tx pgx.Tx, eventID, teamID uuid.UUID) ([]Gr
 			&grant.Member.PersonID,
 			&grant.Member.GitHubID,
 			&grant.Member.LinkRevision,
+			&grant.Member.CoverageStart,
+			&grant.Member.CoverageEnd,
 			&grant.Member.Role,
 			&grant.Member.Permission,
 			&grant.Managed,
@@ -176,6 +178,15 @@ func updateGrant(
 	)
 	if err != nil {
 		return fmt.Errorf("retain current repository grant status: %w", err)
+	}
+	if state == "accepted" || state == "expired" || state == "failed" || state == "revoked" {
+		if _, err = tx.Exec(
+			ctx,
+			"UPDATE github_invitation_bindings SET state='delivered',updated_at=now() WHERE id=$1 AND state<>'delivered'",
+			id,
+		); err != nil {
+			return fmt.Errorf("complete no-longer-pending GitHub invitation binding: %w", err)
+		}
 	}
 	return nil
 }

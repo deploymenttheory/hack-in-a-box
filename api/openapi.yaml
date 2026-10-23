@@ -7460,7 +7460,7 @@ components:
     RepositoryAccessCommand:
       type: object
       additionalProperties: false
-      required: [action, plan_id, plan_version, reason]
+      required: [action, reason]
       properties:
         action: { type: string, enum: [review, approve, refresh] }
         plan_id: { type: string, format: uuid }

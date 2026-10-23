@@ -35,8 +35,15 @@ func (h handlers) ChangeRepositoryAccess(
 	if r.Body == nil {
 		return nil, access.ErrInvalid
 	}
+	command := repositoryaccess.Command{Action: string(r.Body.Action), Reason: r.Body.Reason}
+	if r.Body.PlanId != nil {
+		command.PlanID = *r.Body.PlanId
+	}
+	if r.Body.PlanVersion != nil {
+		command.PlanVersion = *r.Body.PlanVersion
+	}
 	result, err := h.repositoryAccess().
-		Change(ctx, actor(ctx).ID, r.EventId, r.TeamId, revision(r.Params.IfMatch), repositoryaccess.Command{Action: string(r.Body.Action), PlanID: r.Body.PlanId, PlanVersion: r.Body.PlanVersion, Reason: r.Body.Reason})
+		Change(ctx, actor(ctx).ID, r.EventId, r.TeamId, revision(r.Params.IfMatch), command)
 	if err != nil {
 		return nil, fmt.Errorf("repository access API: %w", err)
 	}

@@ -203,7 +203,7 @@ func (p *RESTProvider) InspectCollaborators(
 			c.Organization,
 			request.Name,
 			&github.ListCollaboratorsOptions{
-				Affiliation: "direct",
+				Affiliation: "all",
 				ListOptions: github.ListOptions{Page: page, PerPage: 100},
 			},
 		)

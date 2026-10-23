@@ -35,8 +35,8 @@ of becoming successful receipts.
 
 A returned new invitation can prove app ownership. An existing collaborator or
 HTTP 204 cannot prove that the App owns the grant; it is retained as unmanaged.
-Unknown collaborators, unknown invitations and changed permission levels are
-flagged. Org policy rejection is explicit. The App never removes unknown grants,
+The bounded collaborator read includes all visible access sources. Unknown
+collaborators, unknown invitations and changed permission levels are flagged. Org policy rejection is explicit. The App never removes unknown grants,
 changes organisation policy, or adopts inherited organisation/team permissions.
 An expired invitation is distinct from a disappeared invitation; only a current
 provider expiry flag establishes expiry. Owned expired invitations are cancelled

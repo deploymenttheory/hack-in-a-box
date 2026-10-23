@@ -4170,9 +4170,9 @@ export interface components {
             /** @enum {string} */
             action: "review" | "approve" | "refresh";
             /** Format: uuid */
-            plan_id: string;
+            plan_id?: string;
             /** Format: int64 */
-            plan_version: number;
+            plan_version?: number;
             reason: string;
         };
         RepositoryAccessResult: {
