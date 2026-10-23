@@ -42,6 +42,16 @@ CREATE TABLE github_repository_activity (
  FOREIGN KEY(event_id,team_id) REFERENCES team_repositories(event_id,team_id)
 );
 -- +goose Down
+-- +goose StatementBegin
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM github_webhook_secrets)
+ OR EXISTS(SELECT 1 FROM github_webhook_deliveries)
+ OR EXISTS(SELECT 1 FROM github_repository_activity)
+ OR EXISTS(SELECT 1 FROM operations WHERE kind='github_webhook_activity') THEN
+  RAISE EXCEPTION 'Webhook configuration or activity history exists; preserve it before rollback';
+ END IF;
+END $$;
+-- +goose StatementEnd
 DROP TABLE github_repository_activity;
 DROP TABLE github_webhook_deliveries;
 DROP TABLE github_webhook_secrets;

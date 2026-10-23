@@ -128,6 +128,14 @@ Primary references checked against the installed `go-github/v89` event types:
 [GitHub signature validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)
 and [GitHub webhook events and payloads](https://docs.github.com/en/webhooks/webhook-events-and-payloads).
 
+## Webhook migration rollback
+
+Migration 46 rollback is allowed only while its webhook tables are empty and no
+`github_webhook_activity` durable operations exist. Configured secrets, delivery
+GUID/digest/provenance, selected metadata, activity and associated work prevent
+rollback. An empty migration 46 rollback preserves retained schema 45 repository and
+provisioning history. The migration does not purge retained evidence.
+
 ## Native repository provisioning
 
 The worker records one `repository.provision` operation per actual published team, including when the App is configured after allocation publication. Draft allocations never provision. An organiser can also queue the same idempotent batch at `POST /api/v1/events/{event_id}/repositories` with `{"action":"queue"}`, CSRF and the current quoted event revision. `GET` returns separate pending/ready/review/ambiguous results for each team. Currently confirmed team members can read only their own mapping after actual challenge publication, including during preparation before live start. Provisioning never creates a submission, accepts competition output or awards a score. Invitation/membership management remains a separate integration responsibility.
