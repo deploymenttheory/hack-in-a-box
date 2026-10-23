@@ -8,6 +8,7 @@ import { SurveyAuthoring } from './survey-authoring'
 import { SurveyPrivateResponses, SurveyReportReview } from './survey-review'
 import { SurveyInvitations } from './survey-invitations'
 import { SurveyComparison } from './survey-comparison'
+import { SurveyOutcomeObservations } from './survey-outcome-observations'
 import { localDate } from './event-time'
 import { nativeDenied, type SurveyConfiguration, type SurveyDashboard } from './survey-context'
 
@@ -37,6 +38,7 @@ function Manage({ eventId, surveyId }: { eventId: string; surveyId: string }) {
     <fieldset disabled={!!networkError} className="survey-network-scope">
     {tab === 'questions' ? <SurveyAuthoring key={`${surveyId}:${current.can_manage}`} event={event.data} initial={configuration} writable={current.can_manage} onDirty={setDirty} receive={receive} deny={deny} /> : tab === 'restricted responses' ? <SurveyPrivateResponses timezone={event.data.configuration.timezone} eventId={eventId} configuration={configuration} deny={deny} /> : tab === 'reviewed report' ? <SurveyReportReview timezone={event.data.configuration.timezone} eventId={eventId} configuration={configuration} writable={current.can_manage && current.can_review_report} onDirty={setDirty} deny={deny} /> : tab === 'invitations' ? <SurveyInvitations event={event.data} configuration={configuration} writable={current.can_manage} onDirty={setDirty} deny={deny} /> : tab === 'compare editions' ? <SurveyComparison event={event.data} configuration={configuration} deny={deny} /> : <>
       <SurveyParticipation dashboard={current} /><section><h2>Configured objectives and success measures</h2><p>Definition references stay fixed. Baselines and targets are planning inputs, not achieved outcomes. Missing values are unknown and no monetary ROI is calculated.</p>{configuration.definition.measures.length === 0 ? <p>No success measure is linked to this questionnaire. This does not mean zero achievement.</p> : configuration.definition.measures.map(measure => <ObjectiveMeasure key={`${measure.question_id}:${measure.measure.measure_id}`} eventId={eventId} measure={measure} />)}</section>
+      <SurveyOutcomeObservations eventId={eventId} timezone={event.data.configuration.timezone} deny={deny} />
       <p><Link to="/events/$eventId/surveys/$surveyId/results" params={{ eventId, surveyId }}>Open the separately published, suppressed report</Link></p>
     </>}
     </fieldset>

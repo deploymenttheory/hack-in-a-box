@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import type { components } from '../src/api/schema.gen'
 import { firstID } from './fixtures'
 import { surveyFixture, surveyPath, managePath, privateText, questionID, textID } from './survey-workspace-fixtures'
 
@@ -79,7 +80,7 @@ test('dirty question tab switch requires explicit consent and clears only acknow
  await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue('Post-event learning')
  expect(f.configurationWrites).toHaveLength(0)
 })
-test('organisers explicitly review authored text, export privately and publish only reviewed prose',async({page})=>{
+test('organisers explicitly review authored text, export privately and publish only reviewed prose',async({page},info)=>{
  const f=await surveyFixture(page,true);await page.goto(managePath)
  await page.getByRole('button',{name:'Restricted responses',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toBeVisible()
  const download=page.waitForEvent('download');await page.getByRole('link',{name:'Download restricted responses CSV'}).click();expect((await download).suggestedFilename()).toBe('restricted-survey-responses.csv')
@@ -93,6 +94,7 @@ test('organisers explicitly review authored text, export privately and publish o
  expect(f.reportWrites.map(command=>command.action)).toEqual(['review_text','approve','publish']);expect(JSON.stringify(f.reportWrites)).not.toContain(privateText)
  await page.goto(surveyPath+'/results');await expect(page.getByText('Reviewed public learning themes.',{exact:true})).toBeVisible();await expect(page.getByRole('table')).toHaveCount(1)
  await expect(page.getByText(privateText,{exact:true})).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ await page.screenshot({path:info.outputPath('reviewed-survey-report.png'),fullPage:true})
 })
 test('uncertain reviewed summary keeps its exact command across a refused local tab leave',async({page})=>{
  const f=await surveyFixture(page,true);f.state.dropReport=1;await page.goto(managePath)
@@ -195,4 +197,40 @@ test('unknown invitation operation reconciles durable binding without automatic 
  await page.getByRole('button',{name:'Save exact survey invitation binding'}).click();await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('outcome is unknown')
  await page.getByRole('button',{name:'Check exact invitation operation'}).click();await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('No second operation was sent')
  expect(f.automationWrites).toHaveLength(1);expect(f.automation.bindings).toHaveLength(1);expect(f.automation.bindings[0].approved_at).toBeNull()
+})
+
+
+function observation(basis:components['schemas']['OutcomeEvidence']['basis'],version:number,value:string|null):components['schemas']['OutcomeObservation']{
+ const reference={objective:{id:'01c8a898-5703-4231-8c6e-95e1e062fcbd',version},measure_id:'339c1a9a-7dd7-4f3a-b550-bad4cab883ce'}
+ return{outcome_id:'638c35ca-56f0-451c-b213-7aa0ee2d49e2',outcome_version:version,evidence:{id:`41d2ae8d-8d97-4ccd-822f-${String(version).padStart(12,'0')}`,basis,claim:`Retained ${basis} observation v${version}`,value,denominator:null,source:'Private organiser observation source',observed_at:basis==='demonstrated_adoption'?'2027-06-28T09:00:00Z':null,measures:[reference]},recorded_at:'2027-06-29T09:00:00Z',measures:[{reference,definition:{id:reference.measure_id,description:`Native retained definition v${version}`,unit:version===1?'people':'teams',method:'Retained native measurement method',evidence_source:'Configured review evidence source',baseline:null,target:version===1?'10':'20',review_horizon:'One month'}}]}
+}
+test('native observations keep estimates, self-reports and demonstrated records separate with exact paged provenance',async({page},info)=>{
+ const f=await surveyFixture(page,true);f.state.observationPages=[[observation('estimate',1,null),observation('self_report',2,'3')],[observation('demonstrated_adoption',3,'0')]]
+ await page.goto(managePath)
+ await expect(page.getByRole('region',{name:'Estimates',exact:true})).toContainText('Unknown / not recorded')
+ await expect(page.getByRole('region',{name:'Self-reported follow-through',exact:true})).toContainText('Native retained definition v2')
+ await expect(page.getByRole('region',{name:'Demonstrated adoption records',exact:true})).toHaveCount(0)
+ await page.getByRole('button',{name:'More native follow-through observations'}).click()
+ const demonstrated=page.getByRole('region',{name:'Demonstrated adoption records',exact:true});await expect(demonstrated).toBeVisible();await expect(demonstrated.getByRole('cell',{name:'0',exact:true})).toBeVisible()
+ await expect(demonstrated).toContainText('Unknown / not recorded');await expect(demonstrated).toContainText('Exact retained objective version 3');await expect(demonstrated).toContainText('01c8a898-5703-4231-8c6e-95e1e062fcbd')
+ await expect(page.getByRole('region',{name:'Estimates',exact:true})).toContainText('people');await expect(demonstrated).toContainText('teams')
+ await demonstrated.screenshot({path:info.outputPath('native-observations.png')})
+ expect(f.observationCursors).toEqual([null,'synthetic-native-page-1'])
+ expect(await page.evaluate(()=>JSON.stringify(localStorage)+JSON.stringify(sessionStorage))).not.toContain('Private organiser observation source')
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+})
+test('pending follow-through has no fabricated zero and native resource loss clears restricted observations',async({page})=>{
+ const f=await surveyFixture(page,true);await page.clock.install();await page.goto(managePath)
+ await expect(page.getByText('No retained follow-through observations are available.',{exact:false})).toBeVisible()
+ f.state.observationPages=[[observation('self_report',1,'3')]];await page.clock.fastForward(16_000)
+ await expect(page.getByText('Private organiser observation source',{exact:true})).toBeVisible()
+ f.state.observationDenied=true;await page.clock.fastForward(16_000)
+ await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByText('Private organiser observation source',{exact:true})).toHaveCount(0)
+ await expect(page.getByRole('heading',{name:'Restricted participation and completion'})).toHaveCount(0)
+})
+test('archived organiser dashboard retains only native-authorised historical follow-through',async({page})=>{
+ const f=await surveyFixture(page,true);f.state.writable=false;f.state.observationPages=[[observation('demonstrated_adoption',1,'2')]]
+ await page.goto(managePath);await expect(page.getByText('This event is read-only.',{exact:false})).toBeVisible();await expect(page.getByRole('region',{name:'Demonstrated adoption records',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await expect(page.getByRole('button',{name:'Freeze cohort and save reviewed summary'})).toBeDisabled()
+ expect(f.reportWrites).toHaveLength(0)
 })

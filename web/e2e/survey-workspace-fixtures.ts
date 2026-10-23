@@ -12,7 +12,8 @@ export async function surveyFixture(page:Page,staff=false){
  await mockWorkspace(page)
  const event=fixtureEvent();event.name='Synthetic survey edition';event.stage='completed';event.can_read_staff=staff;event.can_edit=staff;event.can_present=false;event.configuration.timezone='Pacific/Auckland'
  const configuration:Configuration={id:surveyID,version:1,definition:{form:{id:surveyID,name:'Post-event learning',audience:'attendee',fields:[{id:questionID,label:'Did you learn something?',type:'single',required:true,help:'Use your own experience, not a team score.',choices:['yes','no']},{id:textID,label:'Private explanation',type:'text',required:false,help:'Only you and current organisers can read this response.',choices:[],visible_when:{field_id:questionID,equals:'yes'}}]},opens_at:'2027-06-21T09:00:00Z',closes_at:'2027-06-28T09:00:00Z',minimum_cohort:5,measures:[]},author_id:person.id,created_at:'2027-06-20T09:00:00Z',approved_at:'2027-06-20T09:05:00Z',published_at:'2027-06-20T09:10:00Z',cancelled:false}
- const state={allowed:true,staff,writable:true,open:true,reportOpen:true,readFailure:false,response:null as Response|null,dropResponse:0,commitDroppedResponse:true,dropConfiguration:0,dropReport:0,commitDroppedReport:true,otherVersion:2,review:null as ReportReview|null,publishedReport:null as ReportReview|null,otherChanged:false,small:false,dropAutomation:0}
+ const state={allowed:true,staff,writable:true,open:true,reportOpen:true,readFailure:false,response:null as Response|null,dropResponse:0,commitDroppedResponse:true,dropConfiguration:0,dropReport:0,commitDroppedReport:true,otherVersion:2,review:null as ReportReview|null,publishedReport:null as ReportReview|null,otherChanged:false,small:false,dropAutomation:0,observationDenied:false,observationPages:[[]] as components['schemas']['OutcomeObservation'][][]}
+ const observationCursors:(string|null)[]=[]
  const commands=new Map<string,Response>(), puts:ResponseCommand[]=[],configurationWrites:unknown[]=[],reportWrites:components['schemas']['SurveyReportCommand'][]=[],configurations=new Map<string,Configuration>([[surveyID,configuration]])
  const automation:components['schemas']['AutomationPage']={revision:7,paused:false,bindings:[],occurrences:[],next_binding_cursor:null,next_occurrence_cursor:null}, automationWrites:components['schemas']['AutomationCommand'][]=[]
  const campaignID='46d32a82-0660-4509-8263-a702802a473e'
@@ -25,6 +26,11 @@ export async function surveyFixture(page:Page,staff=false){
   if(path==='/api/v1/inbox')return route.fulfill({json:{items:[],next_cursor:null,unread:0}})
   if(path==='/api/v1/events')return route.fulfill({json:{items:[event,{...event,id:secondID,name:'Other edition',can_read_staff:state.staff}],next_cursor:null}})
   if(path===`/api/v1/events/${firstID}`||path===`/api/v1/events/${secondID}`)return state.allowed?route.fulfill({json:{...event,id:path.endsWith(secondID)?secondID:firstID,can_read_staff:state.staff,can_edit:state.staff&&state.writable}}):route.fulfill({status:403,json:failure()})
+  if(path===`/api/v1/events/${firstID}/outcomes/observations`){
+   if(!state.allowed||!state.staff||state.observationDenied)return route.fulfill({status:403,json:failure()})
+   const cursor=url.searchParams.get('cursor');observationCursors.push(cursor);const index=cursor?Number(cursor.split('-').at(-1)):0
+   return route.fulfill({json:{items:state.observationPages[index]??[],next_cursor:index+1<state.observationPages.length?`synthetic-native-page-${index+1}`:null}})
+  }
   if(path===`/api/v1/events/${firstID}/communications/campaigns`)return state.allowed&&state.staff?route.fulfill({json:{revision:automation.revision,timezone:event.configuration.timezone,can_manage:state.writable,campaigns:[campaign],providers:[]}}):route.fulfill({status:403,json:failure()})
   if(path===`/api/v1/events/${firstID}/communications/automation`){
    if(!state.allowed||!state.staff)return route.fulfill({status:403,json:failure()})
@@ -108,5 +114,5 @@ export async function surveyFixture(page:Page,staff=false){
   if(path==='/api/v1/time/resolve'){const body=request.postDataJSON();return route.fulfill({json:{instant:new Date(new Date(body.wall_time+'Z').getTime()-12*3_600_000).toISOString()}})}
   return route.fallback()
  })
- return{state,event,configuration,configurations,commands,puts,configurationWrites,reportWrites,automation,automationWrites,campaign}
+ return{state,event,configuration,configurations,commands,puts,configurationWrites,reportWrites,automation,automationWrites,campaign,observationCursors}
 }

@@ -14,8 +14,11 @@ One person has one current response with immutable retained revisions. An explic
 same-command retry returns its original persisted revision and timestamp even after
 a later response edit. It is idempotent while the survey is open; it cannot bypass close,
 withdrawal, account deactivation or archive. List projections omit answer bodies.
-API responses are private/no-store. The minimal inbox destination is a read-only
-own-survey reader; the separate #116 workspace owns authoring and response controls.
+API responses are private/no-store. The inbox destination opens the native own-survey reader; the separate survey
+workspace supplies authoring, explicit response commands and reviewed reports.
+See [the workspace contract](survey-workspace.md) for the organiser-only current
+administrative counts and private export, which never become public aggregate
+denominators.
 Opening, closing and submission times are displayed in the native event timezone.
 
 Save, approval and publication recheck that the approved opening does not precede
