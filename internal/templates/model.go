@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
@@ -84,13 +85,14 @@ type (
 		Assets     []Asset `json:"assets"`
 	}
 	Definitions struct {
-		Forms        []Form        `json:"forms"`
-		Tasks        []Task        `json:"tasks"`
-		Deliverables []Deliverable `json:"deliverables"`
-		RoleBriefs   []RoleBrief   `json:"role_briefs"`
-		Rubrics      []Rubric      `json:"rubrics"`
-		Messages     []Message     `json:"messages"`
-		Branding     Branding      `json:"branding"`
+		Objectives   []objectives.Configuration `json:"objectives,omitempty"`
+		Forms        []Form                     `json:"forms"`
+		Tasks        []Task                     `json:"tasks"`
+		Deliverables []Deliverable              `json:"deliverables"`
+		RoleBriefs   []RoleBrief                `json:"role_briefs"`
+		Rubrics      []Rubric                   `json:"rubrics"`
+		Messages     []Message                  `json:"messages"`
+		Branding     Branding                   `json:"branding"`
 	}
 	Bundle struct {
 		Event       event.Configuration `json:"event"`
@@ -155,6 +157,9 @@ func Validate(bundle Bundle) error {
 		return &event.Blocked{Issues: issues}
 	}
 	d := bundle.Definitions
+	if err := validateObjectives(d.Objectives); err != nil {
+		return err
+	}
 	if err := validateCounts(d); err != nil {
 		return err
 	}
@@ -414,6 +419,15 @@ func Remap(source Bundle, input CloneInput) (Bundle, error) {
 	for i := range result.Definitions.Messages {
 		link(&result.Definitions.Messages[i].ScheduleID)
 	}
+	for i := range result.Definitions.Objectives {
+		objective := &result.Definitions.Objectives[i]
+		objective.ID = uuid.NewSHA1(input.ID, []byte("objective:"+objective.ID.String()))
+		for j := range objective.Definition.Measures {
+			m := &objective.Definition.Measures[j]
+			m.ID = uuid.NewSHA1(objective.ID, m.ID[:])
+		}
+		objective.Definition.OwnerID = nil
+	}
 	if err := rebase(&result.Event, input); err != nil {
 		return Bundle{}, err
 	}
@@ -471,7 +485,8 @@ func rebase(c *event.Configuration, input CloneInput) error {
 }
 
 func validateCounts(d Definitions) error {
-	if len(d.Forms) > 50 || len(d.Tasks) > 200 || len(d.Deliverables) > 100 ||
+	if len(d.Objectives) > 100 || len(d.Forms) > 50 || len(d.Tasks) > 200 ||
+		len(d.Deliverables) > 100 ||
 		len(d.RoleBriefs) > 20 ||
 		len(d.Rubrics) > 20 ||
 		len(d.Messages) > 200 ||
@@ -495,4 +510,19 @@ func validDeliverableOptions(d Deliverable) bool {
 		}
 	}
 	return len(d.EvidenceKinds) <= 3 && len(d.Audience) <= 3
+}
+
+func validateObjectives(configs []objectives.Configuration) error {
+	objectiveIDs := map[uuid.UUID]bool{}
+	for _, objective := range configs {
+		if objective.ID == uuid.Nil || objectiveIDs[objective.ID] {
+			return access.ErrInvalid
+		}
+		objectiveIDs[objective.ID] = true
+		if err := objective.Definition.Validate(); err != nil {
+			return fmt.Errorf("validate template objective: %w", err)
+		}
+	}
+
+	return nil
 }

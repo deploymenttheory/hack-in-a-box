@@ -10,6 +10,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
@@ -25,15 +26,16 @@ type Acknowledgement struct {
 }
 
 type Document struct {
-	Purpose                string                 `json:"purpose,omitempty"`
-	Contacts               []Contact              `json:"contacts,omitempty"`
-	Rubric                 *rubric.Reference      `json:"rubric,omitempty"`
-	RequireAcknowledgement bool                   `json:"require_acknowledgement"`
-	Title                  string                 `json:"title"`
-	Markdown               string                 `json:"markdown"`
-	Audience               access.ContentAudience `json:"audience"`
-	Attachments            []uuid.UUID            `json:"attachments"`
-	ScheduledAt            *time.Time             `json:"scheduled_at"`
+	Objectives             []objectives.Disclosure `json:"objectives,omitempty"`
+	Purpose                string                  `json:"purpose,omitempty"`
+	Contacts               []Contact               `json:"contacts,omitempty"`
+	Rubric                 *rubric.Reference       `json:"rubric,omitempty"`
+	RequireAcknowledgement bool                    `json:"require_acknowledgement"`
+	Title                  string                  `json:"title"`
+	Markdown               string                  `json:"markdown"`
+	Audience               access.ContentAudience  `json:"audience"`
+	Attachments            []uuid.UUID             `json:"attachments"`
+	ScheduledAt            *time.Time              `json:"scheduled_at"`
 }
 type Input struct {
 	Kind     string   `json:"kind"`
@@ -95,7 +97,7 @@ func validate(input Input) error {
 		strings.TrimSpace(d.Title) == "" ||
 		len(d.Title) > 200 ||
 		len(d.Markdown) > 100000 ||
-		len(d.Attachments) > 30 ||
+		len(d.Attachments) > 30 || len(d.Objectives) > 100 ||
 		len(d.Audience.Teams) > 100 ||
 		len(d.Audience.Roles) > len(permissions.Roles) {
 		return access.ErrInvalid

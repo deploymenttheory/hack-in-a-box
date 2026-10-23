@@ -2539,6 +2539,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/objectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listObjectives"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/objectives/{objective_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getObjective"];
+        put: operations["changeObjective"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/objectives/{objective_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getObjectiveHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/objective-owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getObjectiveOwners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/content/{content_id}/objectives/{objective_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getDisclosedObjective"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4032,6 +4126,7 @@ export interface components {
             assets: components["schemas"]["TemplateAsset"][];
         };
         EventDefinitions: {
+            objectives?: components["schemas"]["ObjectiveConfiguration"][];
             forms: components["schemas"]["TemplateForm"][];
             tasks: components["schemas"]["TemplateTask"][];
             deliverables: components["schemas"]["TemplateDeliverable"][];
@@ -4487,7 +4582,109 @@ export interface components {
             /** Format: uuid */
             previous_run_id?: string;
         };
+        ObjectiveReference: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+        };
+        ObjectiveBaseline: {
+            value: string;
+            /** @enum {string} */
+            basis: "estimate" | "self_report";
+        };
+        ObjectiveMeasure: {
+            /** Format: uuid */
+            id: string;
+            description: string;
+            baseline: components["schemas"]["ObjectiveBaseline"] | null;
+            target: string | null;
+            unit: string;
+            method: string;
+            evidence_source: string;
+            review_horizon: string;
+        };
+        ObjectiveDefinition: {
+            description: string;
+            /** Format: uuid */
+            owner_id: string | null;
+            theme_sensitive: boolean;
+            measures: components["schemas"]["ObjectiveMeasure"][];
+        };
+        ObjectiveConfiguration: {
+            /** Format: uuid */
+            id: string;
+            definition: components["schemas"]["ObjectiveDefinition"];
+        };
+        ObjectiveVersion: {
+            reference: components["schemas"]["ObjectiveReference"];
+            definition: components["schemas"]["ObjectiveDefinition"];
+            retired: boolean;
+            reason: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+        };
+        ObjectiveView: {
+            reference: components["schemas"]["ObjectiveReference"];
+            definition: components["schemas"]["ObjectiveDefinition"];
+            retired: boolean;
+            reason: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            /** Format: int64 */
+            current_version: number;
+            can_manage: boolean;
+            planning_gaps: string[];
+        };
+        ObjectiveCommand: {
+            /** @enum {string} */
+            action: "save" | "retire";
+            definition: components["schemas"]["ObjectiveDefinition"] | null;
+            reason: string;
+        };
+        ObjectiveList: {
+            items: components["schemas"]["ObjectiveView"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ObjectiveHistory: {
+            items: components["schemas"]["ObjectiveVersion"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        ObjectiveDisclosure: {
+            objective: components["schemas"]["ObjectiveReference"];
+            measure_ids: string[];
+        };
+        PublicObjectiveMeasure: {
+            /** Format: uuid */
+            id: string;
+            description: string;
+            target: string | null;
+            unit: string;
+            method: string;
+            evidence_source: string;
+            review_horizon: string;
+        };
+        PublicObjective: {
+            reference: components["schemas"]["ObjectiveReference"];
+            description: string;
+            measures: components["schemas"]["PublicObjectiveMeasure"][];
+        };
+        ObjectiveOwner: {
+            /** Format: uuid */
+            id: string;
+            display_name: string;
+        };
+        ObjectiveOwners: {
+            items: components["schemas"]["ObjectiveOwner"][];
+        };
         ContentDocument: {
+            objectives?: components["schemas"]["ObjectiveDisclosure"][];
             /**
              * @description Optional native-page guidance purpose. Never valid on a challenge or role brief.
              * @enum {string}
@@ -10118,6 +10315,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModerationHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listObjectives: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getObjective: {
+        parameters: {
+            query?: {
+                version?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeObjective: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ObjectiveCommand"];
+            };
+        };
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getObjectiveHistory: {
+        parameters: {
+            query?: {
+                before_version?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getObjectiveOwners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOwners"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDisclosedObjective: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                content_id: string;
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority objective projection. Planning configuration is organiser-only; disclosure uses the exact current released native content audience. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicObjective"];
                 };
             };
             default: components["responses"]["Error"];
