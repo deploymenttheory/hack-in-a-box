@@ -47,3 +47,9 @@ sixteen participant browser cases pass in 4.5 s, and the desktop/mobile admin
 panel checks pass in 1.6 s with the viewport assertion. The assertion compares
 against Playwright's configured viewport, since a mobile layout viewport can
 expand along with overflowing content.
+
+Final composition on actual main `642de7f` (merged #214, schema 39) preserves the
+shared participant test selection for both review dashboards and automation
+recovery. The combined participant dashboard/delivery/recovery check passes 42
+cases in 16.5 s. The rebase leaves reviewed production source unchanged; its only
+conflict was the additive test-selection list.
