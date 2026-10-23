@@ -173,3 +173,22 @@ three independent implementation/PR lanes and require final exact-head CI plus
 reviewed evidence for each merge. Git-dependent #108 and aggregate Today #88
 wait for real #96/#93 contracts: no fabricated Git receipts or readiness claims.
 These are selected work, not delivery claims.
+
+## Batch10 — communication recovery and measurable outcomes
+
+| Issue | Work | Why it follows now |
+| --- | --- | --- |
+| #83 | Delivery history and failure review | Uses the actual approved campaign, provider receipts, private recipient intents and automation occurrences to support truthful history and deliberate recovery. |
+| #84 | Automation retry and confidentiality verification | Exercises the completed provider and recovery boundaries together after #83, including uncertain sends and current-authority changes. |
+| #156 | Versioned event objectives and success measures | Establishes the owning objective/version contract before its editor and later outcome reporting. |
+| #157 | Objective setup and measure editing | Uses #156's real versions and authority for a deliberate setup workflow. |
+| #115 | Private feedback surveys and aggregates | Supplies response privacy and aggregate contracts before the outcome-review surfaces consume them. |
+
+Keep three independent workstreams active with separate PRs. Actual automation
+merged in #207 after #208's mentor scorecard UI; delivery recovery is under #83
+implementation. #209's clarification workspace remains under final review and
+integration. #103 shared feedback is a separate active implementation lane.
+Provider history must preserve acceptance versus delivery and immutable unknown
+outcomes; a recovery decision cannot manufacture a successful receipt. Migration
+numbers follow actual ready merges. These are selected tasks, not completed
+acceptance claims; the external Teams shared-channel verification is still open.

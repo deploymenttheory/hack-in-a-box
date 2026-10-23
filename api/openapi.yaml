@@ -1639,6 +1639,63 @@ paths:
                 $ref: '#/components/schemas/CommunicationPage'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/communications/deliveries:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+    get:
+      operationId: getCommunicationDeliveries
+      description: Current organiser-only bounded recipient/attempt metadata. Addresses, message bodies, endpoints and raw provider errors are never returned. Selection time is the persisted actual recipient intent time, not proof of delivery.
+      parameters:
+        - {name: campaign_id, in: query, schema: {type: string, format: uuid}}
+        - {name: channel, in: query, schema: {type: string, enum: [smtp, teams, in_app]}}
+        - {name: before_at, in: query, schema: {type: string, format: date-time}}
+        - {name: before_id, in: query, schema: {type: string, format: uuid}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+      responses:
+        '200':
+          description: Safe retained selection and provider evidence. External acceptance is not confirmed delivery.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeliveryHistoryPage'}
+        default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/communications/deliveries/{delivery_id}:
+    parameters:
+      - {$ref: '#/components/parameters/EventID'}
+      - {name: delivery_id, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: getCommunicationDelivery
+      parameters:
+        - {name: before_attempt, in: query, schema: {type: integer, minimum: 0, default: 0}}
+        - {name: before_review, in: query, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Immutable provider attempts and operator decisions, with current event/pause metadata.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeliveryHistoryDetail'}
+        default: {$ref: '#/components/responses/Error'}
+    post:
+      operationId: reviewCommunicationDelivery
+      description: Deliberate reasoned recovery of this typed delivery under current native policy. Use the operation revision in If-Match and retain the same request_id/payload for an explicit uncertain-command retry. Resend acknowledges possible duplication and consumes one durable authorisation. Cancellation never recalls an accepted or uncertain effect; cancel_resend stops only a still-unspent queued resend. No-resend resolution retains the original uncertain provider evidence.
+      parameters:
+        - {$ref: '#/components/parameters/CSRF'}
+        - name: If-Match
+          in: header
+          required: true
+          description: Quoted delivery operation revision from the current history item.
+          schema: {type: string, pattern: '^"[0-9]+"$'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DeliveryReviewCommand'}
+      responses:
+        '200':
+          description: Committed decision/current history, never a fabricated external delivery receipt.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DeliveryHistoryDetail'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/communications/tests/{test_id}/delivery:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -9308,3 +9365,82 @@ components:
           }
         }
       }
+    DeliveryHistoryItem:
+      type: object
+      additionalProperties: false
+      required: [id, campaign_id, campaign_version, recipient_id, recipient_name, channel, purpose, selected_at, state, reason, attempted, attempts, revision, operation_state, cancelled]
+      properties:
+        id: {type: string, format: uuid}
+        campaign_id: {type: string, format: uuid, nullable: true}
+        campaign_version: {type: integer, format: int64, minimum: 0}
+        recipient_id: {type: string, format: uuid, nullable: true}
+        recipient_name: {type: string}
+        channel: {type: string, enum: [smtp, teams, in_app]}
+        purpose: {type: string, enum: [campaign, self_test, omission, broadcast, connection_test]}
+        selected_at: {type: string, format: date-time}
+        state: {type: string, enum: [never_attempted, provider_accepted, retryable, permanent, ambiguous, in_progress, local_persisted, unavailable]}
+        reason: {type: string, maxLength: 100}
+        attempted: {type: boolean}
+        attempts: {type: integer, format: int32, minimum: 0}
+        revision: {type: integer, format: int64, minimum: 0}
+        operation_state: {type: string, enum: ['', pending, running, delivered, permanent, ambiguous, cancelled]}
+        cancelled: {type: boolean}
+    DeliveryHistoryCursor:
+      type: object
+      additionalProperties: false
+      required: [at, id]
+      properties:
+        at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    DeliveryHistoryPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor, archived, paused]
+      properties:
+        items: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/DeliveryHistoryItem'}}
+        next_cursor: {nullable: true, allOf: [{$ref: '#/components/schemas/DeliveryHistoryCursor'}]}
+        archived: {type: boolean}
+        paused: {type: boolean}
+    DeliveryHistoryAttempt:
+      type: object
+      additionalProperties: false
+      required: [id, number, started_at, state, reason, recorded_at, http_status, retry_at]
+      properties:
+        id: {type: string, format: uuid}
+        number: {type: integer, format: int32, minimum: 1}
+        started_at: {type: string, format: date-time}
+        state: {type: string, enum: [provider_accepted, retryable, permanent, ambiguous]}
+        reason: {type: string, maxLength: 100}
+        recorded_at: {type: string, format: date-time, nullable: true}
+        http_status: {type: integer, format: int32, minimum: 100, maximum: 599, nullable: true}
+        retry_at: {type: string, format: date-time, nullable: true}
+    DeliveryHistoryReview:
+      type: object
+      additionalProperties: false
+      required: [id, actor_id, action, reason, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        actor_id: {type: string, format: uuid}
+        action: {type: string, enum: [retry, cancel, cancel_resend, resolve_no_resend, resend_acknowledged]}
+        reason: {type: string, minLength: 1, maxLength: 2000}
+        created_at: {type: string, format: date-time}
+    DeliveryHistoryDetail:
+      type: object
+      additionalProperties: false
+      required: [item, attempts, next_attempt_number, reviews, next_review_id, archived, paused]
+      properties:
+        item: {$ref: '#/components/schemas/DeliveryHistoryItem'}
+        attempts: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/DeliveryHistoryAttempt'}}
+        next_attempt_number: {type: integer, format: int32, minimum: 1, nullable: true}
+        reviews: {type: array, maxItems: 20, items: {$ref: '#/components/schemas/DeliveryHistoryReview'}}
+        next_review_id: {type: string, format: uuid, nullable: true}
+        archived: {type: boolean}
+        paused: {type: boolean}
+    DeliveryReviewCommand:
+      type: object
+      additionalProperties: false
+      required: [request_id, action, reason]
+      properties:
+        request_id: {type: string, format: uuid}
+        action: {type: string, enum: [retry, cancel, cancel_resend, resolve_no_resend, resend_acknowledged]}
+        reason: {type: string, minLength: 1, maxLength: 2000}

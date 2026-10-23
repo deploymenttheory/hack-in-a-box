@@ -57,6 +57,7 @@ type Handler interface {
 }
 type Args struct {
 	OperationID uuid.UUID `json:"operation_id"`
+	ReviewID    uuid.UUID `json:"review_id,omitzero"`
 }
 
 func (Args) Kind() string { return "deliver_operation" }
@@ -173,7 +174,7 @@ func (s *Service) enqueue(
 		if _, err := s.Client.InsertTx(
 			ctx,
 			tx,
-			Args{op.ID},
+			Args{OperationID: op.ID},
 			&river.InsertOpts{ScheduledAt: op.DueAt},
 		); err != nil {
 			return dbgen.Operation{}, fmt.Errorf("enqueue operation: %w", err)
@@ -183,6 +184,15 @@ func (s *Service) enqueue(
 }
 
 func (s *Service) Work(ctx context.Context, job *river.Job[Args]) error {
+	if job.Args.ReviewID != uuid.Nil {
+		valid, err := s.currentReview(ctx, job.Args.OperationID, job.Args.ReviewID)
+		if err != nil {
+			return err
+		}
+		if !valid {
+			return nil
+		}
+	}
 	if err := s.Execute(ctx, job.Args.OperationID); err != nil {
 		return err
 	}
@@ -450,7 +460,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 			if _, err := s.Client.InsertTx(
 				ctx,
 				tx,
-				Args{op.ID},
+				Args{OperationID: op.ID},
 				&river.InsertOpts{ScheduledAt: op.DueAt},
 			); err != nil {
 				return fmt.Errorf("insert tx: %w", err)

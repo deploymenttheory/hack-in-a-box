@@ -165,6 +165,24 @@ type CommunicationCampaignVersion struct {
 	CreatedAt time.Time
 }
 
+type CommunicationDeliveryResendUse struct {
+	ReviewID  uuid.UUID
+	AttemptID uuid.UUID
+	UsedAt    time.Time
+}
+
+type CommunicationDeliveryReview struct {
+	ID               uuid.UUID
+	EventID          uuid.UUID
+	OperationID      uuid.UUID
+	ActorID          uuid.UUID
+	ExpectedRevision int64
+	Action           string
+	Reason           string
+	PriorAttemptID   *uuid.UUID
+	CreatedAt        time.Time
+}
+
 type CommunicationFact struct {
 	EventID    uuid.UUID
 	ID         uuid.UUID

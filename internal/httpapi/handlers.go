@@ -23,6 +23,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/credentials"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/feedback"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
@@ -54,6 +55,7 @@ import (
 type Dependencies struct {
 	Feedback       feedback.Service
 	Moderation     *moderation.Service
+	Deliveries     *deliveryhistory.Service
 	Clarifications clarification.Service
 	Automation     *automation.Service
 	TeamsWorkflow  *teamsworkflow.Service
