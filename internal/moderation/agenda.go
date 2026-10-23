@@ -43,6 +43,7 @@ type (
 		PendingProposals  int       `json:"pending_proposals"`
 		CanonicalSigned   bool      `json:"canonical_signed"`
 		CanOpen           bool      `json:"can_open"`
+		CanRecord         bool      `json:"can_record"`
 		CanManage         bool      `json:"can_manage"`
 		CanReconfigure    bool      `json:"can_reconfigure"`
 	}
@@ -65,7 +66,7 @@ func (s Service) AgendaInTransaction(
 		eventID,
 		teamID,
 	); err != nil {
-		return out, err
+		return out, fmt.Errorf("authorize current agenda scope: %w", err)
 	}
 	q := dbgen.New(tx)
 	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
@@ -126,43 +127,9 @@ func (s Service) agendaItem(
 	actor, eventID uuid.UUID,
 	h Huddle,
 ) (AgendaItem, error) {
-	out := AgendaItem{
-		ID:             h.Definition.ID,
-		Version:        h.Version,
-		CheckpointID:   h.Definition.CheckpointID,
-		CheckpointName: h.Checkpoint.Definition.Name,
-		Purpose:        h.Checkpoint.Purpose,
-		State:          h.State,
-		SourceState:    "review_required",
-		ModeratorID:    h.Definition.ModeratorID,
-		PrimaryID:      h.PrimaryID,
-		SecondID:       h.Review.ReviewerID,
-		ReviewDueAt:    h.Review.DueAt,
-		SecondComplete: h.Review.CompletedAt != nil,
-		GapCount:       len(h.Gaps),
-	}
-	out.ReviewOverdue = !out.SecondComplete && !s.now().Before(h.Review.DueAt) &&
-		h.State != "cancelled" &&
-		h.State != "signed"
-	for _, gap := range h.Gaps {
-		if gap.ResolvedAt == nil {
-			out.UnresolvedGaps++
-		}
-	}
-	for _, proposal := range h.Proposals {
-		if proposal.State == "proposed" {
-			out.PendingProposals++
-		}
-	}
-	// A planned context may be repaired after #66 changes coverage. This
-	// capability authorizes only the named current organiser's configure entry;
-	// Change still validates the exact version and NEW published coverage.
-	if actor == h.Definition.ModeratorID && h.State == "planned" {
-		_, organiser, guardErr := s.guard(ctx, tx, actor, eventID, h.TeamID, true)
-		if guardErr != nil && !isAgendaDenial(guardErr) {
-			return out, guardErr
-		}
-		out.CanReconfigure = guardErr == nil && organiser
+	out, err := s.agendaFacts(ctx, tx, actor, eventID, h)
+	if err != nil {
+		return out, err
 	}
 	run, err := dbgen.New(tx).
 		RubricRun(ctx, dbgen.RubricRunParams{EventID: eventID, ID: h.Checkpoint.Definition.RunID})
@@ -193,7 +160,7 @@ func (s Service) agendaItem(
 		)
 		if reviewErr != nil || h.Review.Card == nil || currentReview.Reference != *h.Review.Card {
 			if reviewErr != nil && !isAgendaDenial(reviewErr) {
-				return out, reviewErr
+				return out, fmt.Errorf("validate current second review completion: %w", reviewErr)
 			}
 			out.SecondComplete = false
 			out.ReviewOverdue = !s.now().Before(h.Review.DueAt) && h.State != "cancelled" &&
@@ -246,6 +213,18 @@ func (s Service) agendaItem(
 			decision.SignoffID == *h.SignoffID &&
 			out.BlockingDecisions == 0
 	}
+	return s.agendaAccess(ctx, tx, actor, eventID, h, eventRow, out)
+}
+
+func (s Service) agendaAccess(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	h Huddle,
+	eventRow dbgen.Event,
+	out AgendaItem,
+) (AgendaItem, error) {
+	var err error
 	if !slices.Contains(h.PanelIDs, actor) {
 		return out, nil
 	}
@@ -262,7 +241,11 @@ func (s Service) agendaItem(
 		return out, err
 	}
 	out.CanOpen = true
-	out.CanManage = eventRow.WritesAllowed &&
+	out.CanRecord = eventRow.WritesAllowed &&
+		slices.Contains([]string{"live", "assessment"}, eventRow.Stage) &&
+		h.State != "signed" &&
+		h.State != "cancelled"
+	out.CanManage = out.CanRecord &&
 		slices.Contains([]string{"live", "assessment"}, eventRow.Stage) &&
 		actor == h.Definition.ModeratorID &&
 		h.State != "signed" &&
@@ -273,4 +256,51 @@ func (s Service) agendaItem(
 func isAgendaDenial(err error) bool {
 	return errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) ||
 		errors.Is(err, access.ErrConflict)
+}
+
+func (s Service) agendaFacts(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	h Huddle,
+) (AgendaItem, error) {
+	out := AgendaItem{
+		ID:             h.Definition.ID,
+		Version:        h.Version,
+		CheckpointID:   h.Definition.CheckpointID,
+		CheckpointName: h.Checkpoint.Definition.Name,
+		Purpose:        h.Checkpoint.Purpose,
+		State:          h.State,
+		SourceState:    "review_required",
+		ModeratorID:    h.Definition.ModeratorID,
+		PrimaryID:      h.PrimaryID,
+		SecondID:       h.Review.ReviewerID,
+		ReviewDueAt:    h.Review.DueAt,
+		SecondComplete: h.Review.CompletedAt != nil,
+		GapCount:       len(h.Gaps),
+	}
+	out.ReviewOverdue = !out.SecondComplete && !s.now().Before(h.Review.DueAt) &&
+		h.State != "cancelled" &&
+		h.State != "signed"
+	for _, gap := range h.Gaps {
+		if gap.ResolvedAt == nil {
+			out.UnresolvedGaps++
+		}
+	}
+	for _, proposal := range h.Proposals {
+		if proposal.State == "proposed" {
+			out.PendingProposals++
+		}
+	}
+	// A planned context may be repaired after #66 changes coverage. This
+	// capability authorizes only the named current organiser's configure entry;
+	// Change still validates the exact version and NEW published coverage.
+	if actor == h.Definition.ModeratorID && h.State == "planned" {
+		_, organiser, guardErr := s.guard(ctx, tx, actor, eventID, h.TeamID, true)
+		if guardErr != nil && !isAgendaDenial(guardErr) {
+			return out, fmt.Errorf("authorize planned configuration repair: %w", guardErr)
+		}
+		out.CanReconfigure = guardErr == nil && organiser
+	}
+	return out, nil
 }

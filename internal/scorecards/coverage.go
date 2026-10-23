@@ -76,7 +76,7 @@ func (s Service) CoverageInTransaction(
 		eventID,
 		teamID,
 	); err != nil {
-		return out, err
+		return out, fmt.Errorf("authorize current coordination panel scope: %w", err)
 	}
 	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
 	if err != nil {
@@ -101,7 +101,10 @@ func (s Service) CoverageInTransaction(
 		out.Availability = "not_applicable"
 		return out, nil
 	}
-	state, stateErr := q.SubmissionState(ctx, dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID})
+	state, stateErr := q.SubmissionState(
+		ctx,
+		dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID},
+	)
 	if stateErr != nil && !errors.Is(stateErr, pgx.ErrNoRows) {
 		return out, fmt.Errorf("read native final assessment outcome: %w", stateErr)
 	}
@@ -154,62 +157,25 @@ func (s Service) CoverageInTransaction(
 		out.NextCursor = &id
 	}
 	for _, raw := range rows {
-		cp, decodeErr := decodeCheckpoint(raw.Document)
-		if decodeErr != nil {
-			return out, decodeErr
-		}
-		run, runErr := q.RubricRun(
+		item, reviewRequired, itemErr := s.coordinationCheckpoint(
 			ctx,
-			dbgen.RubricRunParams{EventID: eventID, ID: cp.Definition.RunID},
+			tx,
+			row,
+			common,
+			teamID,
+			raw.Document,
+			targets,
+			verifiedRuns,
 		)
-		if runErr != nil {
-			return out, fmt.Errorf("read coordination assessment run: %w", runErr)
+		if itemErr != nil {
+			return out, itemErr
 		}
-		if run.Status != "current" || cp.Rubric.ID != common.ID ||
-			cp.Rubric.Version != common.PublishedVersion.Int64 {
-			continue
-		}
-		if !verifiedRuns[cp.Definition.RunID] {
-			if publicationErr := rubric.ValidateRunPublicationInTransaction(
-				ctx,
-				tx,
-				eventID,
-				cp.Definition.RunID,
-			); publicationErr != nil {
-				if errors.Is(publicationErr, access.ErrConflict) ||
-					errors.Is(publicationErr, access.ErrForbidden) ||
-					errors.Is(publicationErr, access.ErrNotFound) {
-					out.Availability = "review_required"
-					continue
-				}
-				return out, publicationErr
-			}
-			verifiedRuns[cp.Definition.RunID] = true
-		}
-		window, windowErr := resolveWindow(row, cp)
-		if windowErr != nil || !window.OpensAt.Equal(cp.OpensAt) ||
-			!window.ClosesAt.Equal(cp.ClosesAt) {
+		if reviewRequired {
 			out.Availability = "review_required"
-			continue
 		}
-		item := CheckpointCoverage{
-			ID:       cp.Definition.ID,
-			Version:  cp.Version,
-			Name:     cp.Definition.Name,
-			Purpose:  cp.Purpose,
-			RunID:    cp.Definition.RunID,
-			OpensAt:  cp.OpensAt,
-			ClosesAt: cp.ClosesAt,
-			Reviews:  []ReviewCoverage{},
+		if item != nil {
+			out.Items = append(out.Items, *item)
 		}
-		for _, target := range targets {
-			review, reviewErr := s.reviewCoverage(ctx, q, eventID, teamID, cp, target)
-			if reviewErr != nil {
-				return out, reviewErr
-			}
-			item.Reviews = append(item.Reviews, review)
-		}
-		out.Items = append(out.Items, item)
 	}
 	return out, nil
 }
@@ -315,4 +281,72 @@ func (s Service) reviewCoverage(
 	out.MissingEvidence = &missing
 	out.Overdue = out.Overdue && (card.State != "submitted" || pending > 0 || missing > 0)
 	return out, nil
+}
+
+func (s Service) coordinationCheckpoint(
+	ctx context.Context,
+	tx pgx.Tx,
+	row dbgen.Event,
+	common dbgen.EventRubric,
+	teamID uuid.UUID,
+	document []byte,
+	targets []coverageTarget,
+	verifiedRuns map[uuid.UUID]bool,
+) (*CheckpointCoverage, bool, error) {
+	q := dbgen.New(tx)
+	eventID := row.ID
+	cp, decodeErr := decodeCheckpoint(document)
+	if decodeErr != nil {
+		return nil, false, decodeErr
+	}
+	run, runErr := q.RubricRun(
+		ctx,
+		dbgen.RubricRunParams{EventID: eventID, ID: cp.Definition.RunID},
+	)
+	if runErr != nil {
+		return nil, false, fmt.Errorf("read coordination assessment run: %w", runErr)
+	}
+	if run.Status != "current" || cp.Rubric.ID != common.ID ||
+		cp.Rubric.Version != common.PublishedVersion.Int64 {
+		return nil, false, nil
+	}
+	if !verifiedRuns[cp.Definition.RunID] {
+		if publicationErr := rubric.ValidateRunPublicationInTransaction(
+			ctx,
+			tx,
+			eventID,
+			cp.Definition.RunID,
+		); publicationErr != nil {
+			if errors.Is(publicationErr, access.ErrConflict) ||
+				errors.Is(publicationErr, access.ErrForbidden) ||
+				errors.Is(publicationErr, access.ErrNotFound) {
+				return nil, true, nil
+			}
+			return nil, false, fmt.Errorf("validate coordination publication: %w", publicationErr)
+		}
+		verifiedRuns[cp.Definition.RunID] = true
+	}
+	window, windowErr := resolveWindow(row, cp)
+	if windowErr != nil || !window.OpensAt.Equal(cp.OpensAt) ||
+		!window.ClosesAt.Equal(cp.ClosesAt) {
+		return nil, true, nil
+	}
+	item := CheckpointCoverage{
+		ID:       cp.Definition.ID,
+		Version:  cp.Version,
+		Name:     cp.Definition.Name,
+		Purpose:  cp.Purpose,
+		RunID:    cp.Definition.RunID,
+		OpensAt:  cp.OpensAt,
+		ClosesAt: cp.ClosesAt,
+		Reviews:  []ReviewCoverage{},
+	}
+	for _, target := range targets {
+		review, reviewErr := s.reviewCoverage(ctx, q, eventID, teamID, cp, target)
+		if reviewErr != nil {
+			return nil, false, reviewErr
+		}
+		item.Reviews = append(item.Reviews, review)
+	}
+	return &item, false, nil
 }

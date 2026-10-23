@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
@@ -107,7 +108,10 @@ func (s Service) Read(
 				return fmt.Errorf("read current moderation choices: %w", readErr)
 			}
 			for _, person := range moderators {
-				out.Moderators = append(out.Moderators, PersonReference{ID: person.ID, Name: person.DisplayName})
+				out.Moderators = append(
+					out.Moderators,
+					PersonReference{ID: person.ID, Name: person.DisplayName},
+				)
 			}
 		}
 		helpQueue, err := s.Help.ListInTransaction(ctx, tx, actor, eventID)
@@ -140,80 +144,19 @@ func (s Service) Read(
 			return fmt.Errorf("read canonical formal-output facts: %w", err)
 		}
 		for _, candidate := range candidates {
-			row := Team{
-				ID:             candidate.ID,
-				Name:           candidate.Name,
-				State:          candidate.State,
-				Assignments:    []Assignment{},
-				CoverageIssues: []string{},
-				Agenda:         []moderation.AgendaItem{},
-				Support: Support{
-					Availability: "not_applicable",
-					Risk:         "unknown",
-					Operational:  observations.SupportStatus{State: "unknown"},
-					Help:         helpMetrics(helpQueue.Items, candidate.ID, s.now()),
-				},
-				Assessment: Assessment{Availability: "not_open", OutputState: "not_open"},
-			}
-			for i := range outcomes {
-				if outcomes[i].TeamID == row.ID {
-					copy := outcomes[i]
-					row.Output = &copy
-					row.Assessment.OutputState = copy.Outcome
-				}
-			}
-			if !hasEntry[row.ID] {
-				row.Assessment.OutputState = "not_entered"
-				row.Assessment.Availability = "not_applicable"
-			}
-			decorateAssignments(&row, scope.roster)
-			if row.State == "published" {
-				row.Support.Availability = "current"
-				status, statusErr := (observations.Service{Pool: s.Pool, Now: s.Clock}).SupportInTransaction(
-					ctx,
-					tx,
-					actor,
-					eventID,
-					row.ID,
-				)
-				if statusErr != nil {
-					if expectedDenial(statusErr) {
-						row.Support.Availability = "limited"
-					} else {
-						return fmt.Errorf("read operational status metadata: %w", statusErr)
-					}
-				} else {
-					row.Support.Operational = status
-				}
-				actions, actionErr := s.Feedback.SupportInTransaction(
-					ctx,
-					tx,
-					actor,
-					eventID,
-					row.ID,
-				)
-				if actionErr != nil {
-					if expectedDenial(actionErr) {
-						row.Support.Availability = "limited"
-					} else {
-						return fmt.Errorf("read support action metadata: %w", actionErr)
-					}
-				} else {
-					row.Support.Actions = &actions
-				}
-				row.Support.Risk = supportRisk(row.Support)
-				unused := row.Output != nil &&
-					(row.Output.Outcome == "withdrawn" || row.Output.Outcome == "not_submitted")
-				if unused || !hasEntry[row.ID] {
-					row.Assessment.Availability = "not_applicable"
-				} else if err = s.assessment(ctx, tx, actor, eventID, &row); err != nil {
-					return err
-				}
-			} else {
-				row.Assessment.Availability = "not_applicable"
-				if row.State == "disbanded" {
-					row.Assessment.OutputState = "disbanded"
-				}
+			row, composeErr := s.composeTeam(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				scope,
+				candidate,
+				hasEntry[candidate.ID],
+				outcomes,
+				helpQueue,
+			)
+			if composeErr != nil {
+				return composeErr
 			}
 			out.Teams = append(out.Teams, row)
 		}
@@ -238,7 +181,7 @@ func teamPage(
 	scope readScope,
 	limit int32,
 ) ([]dbgen.HackTeam, error) {
-	allowed := []uuid.UUID{}
+	allowed := make([]uuid.UUID, 0, len(scope.roster.Teams))
 	for _, team := range scope.roster.Teams {
 		allowed = append(allowed, team.ID)
 	}
@@ -331,4 +274,92 @@ func supportRisk(s Support) string {
 		return "on_track"
 	}
 	return "unknown"
+}
+
+func (s Service) composeTeam(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	scope readScope,
+	candidate dbgen.HackTeam,
+	hasEntry bool,
+	outcomes []submissions.OutputSummary,
+	helpQueue help.Queue,
+) (Team, error) {
+	row := Team{
+		ID:             candidate.ID,
+		Name:           candidate.Name,
+		State:          candidate.State,
+		Assignments:    []Assignment{},
+		CoverageIssues: []string{},
+		Agenda:         []moderation.AgendaItem{},
+		Support: Support{
+			Availability: "not_applicable",
+			Risk:         "unknown",
+			Operational:  observations.SupportStatus{State: "unknown"},
+			Help:         helpMetrics(helpQueue.Items, candidate.ID, s.now()),
+		},
+		Assessment: Assessment{Availability: "not_open", OutputState: "not_open"},
+	}
+	for i := range outcomes {
+		if outcomes[i].TeamID == row.ID {
+			copy := outcomes[i]
+			row.Output = &copy
+			row.Assessment.OutputState = copy.Outcome
+		}
+	}
+	if !hasEntry {
+		row.Assessment.OutputState = "not_entered"
+		row.Assessment.Availability = "not_applicable"
+	}
+	decorateAssignments(&row, scope.roster)
+	if row.State == "published" {
+		row.Support.Availability = "current"
+		status, statusErr := (observations.Service{Pool: s.Pool, Now: s.Clock}).SupportInTransaction(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			row.ID,
+		)
+		if statusErr != nil {
+			if expectedDenial(statusErr) {
+				row.Support.Availability = "limited"
+			} else {
+				return row, fmt.Errorf("read operational status metadata: %w", statusErr)
+			}
+		} else {
+			row.Support.Operational = status
+		}
+		actions, actionErr := s.Feedback.SupportInTransaction(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			row.ID,
+		)
+		if actionErr != nil {
+			if expectedDenial(actionErr) {
+				row.Support.Availability = "limited"
+			} else {
+				return row, fmt.Errorf("read support action metadata: %w", actionErr)
+			}
+		} else {
+			row.Support.Actions = &actions
+		}
+		row.Support.Risk = supportRisk(row.Support)
+		unused := row.Output != nil &&
+			(row.Output.Outcome == "withdrawn" || row.Output.Outcome == "not_submitted")
+		if unused || !hasEntry {
+			row.Assessment.Availability = "not_applicable"
+		} else if err := s.assessment(ctx, tx, actor, eventID, &row); err != nil {
+			return row, err
+		}
+	} else {
+		row.Assessment.Availability = "not_applicable"
+		if row.State == "disbanded" {
+			row.Assessment.OutputState = "disbanded"
+		}
+	}
+	return row, nil
 }

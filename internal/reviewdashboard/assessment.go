@@ -29,9 +29,10 @@ func (s Service) assessment(
 			row.Assessment.Availability = page.Availability
 		}
 		for _, checkpoint := range page.Items {
-			if checkpoint.Purpose == "checkpoint" {
+			switch checkpoint.Purpose {
+			case "checkpoint":
 				addCoverage(&row.Assessment.Live, checkpoint)
-			} else if checkpoint.Purpose == "mentor_final" {
+			case "mentor_final":
 				addCoverage(&row.Assessment.Final, checkpoint)
 			}
 		}
@@ -47,7 +48,15 @@ func (s Service) assessment(
 	agendaCursor := uuid.Nil
 	total := 0
 	for {
-		agenda, err := s.Moderation.AgendaInTransaction(ctx, tx, actor, eventID, row.ID, agendaCursor, 100)
+		agenda, err := s.Moderation.AgendaInTransaction(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			row.ID,
+			agendaCursor,
+			100,
+		)
 		if err != nil {
 			if expectedDenial(err) {
 				return nil

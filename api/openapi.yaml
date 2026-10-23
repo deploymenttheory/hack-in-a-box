@@ -4901,6 +4901,7 @@ components:
           "published",
           "draft",
           "can_manage",
+          "can_record",
           "can_acknowledge",
           "acknowledgements",
           "escalations"
@@ -4930,6 +4931,7 @@ components:
           "can_manage": {
             "type": "boolean"
           },
+          "can_record": {"type": "boolean"},
           "can_acknowledge": {
             "type": "boolean"
           },
@@ -8494,6 +8496,7 @@ components:
           "at",
           "current_version",
           "can_manage",
+          "can_record",
           "planning_gaps"
         ],
         "properties": {
@@ -8526,6 +8529,7 @@ components:
           "can_manage": {
             "type": "boolean"
           },
+          "can_record": {"type": "boolean"},
           "planning_gaps": {
             "type": "array",
             "items": {
@@ -9451,6 +9455,7 @@ components:
           "resolved",
           "cancelled",
           "can_manage",
+          "can_record",
           "can_request",
           "request_team"
         ],
@@ -9476,6 +9481,7 @@ components:
           "can_manage": {
             "type": "boolean"
           },
+          "can_record": {"type": "boolean"},
           "can_request": {
             "type": "boolean"
           },
@@ -11118,6 +11124,7 @@ components:
           "canonical_signed",
           "can_open",
           "can_manage",
+          "can_record",
           "can_reconfigure"
         ],
         "properties": {
@@ -11192,6 +11199,7 @@ components:
           "can_manage": {
             "type": "boolean"
           },
+          "can_record": {"type": "boolean"},
           "can_reconfigure": {
             "type": "boolean"
           }

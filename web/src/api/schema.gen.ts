@@ -2798,6 +2798,7 @@ export interface components {
             published: components["schemas"]["SharedFeedbackDocument"] | null;
             draft: components["schemas"]["SharedFeedbackDocument"] | null;
             can_manage: boolean;
+            can_record: boolean;
             can_acknowledge: boolean;
             acknowledgements: components["schemas"]["FeedbackAcknowledgement"][];
             escalations: components["schemas"]["FeedbackEscalation"][];
@@ -4717,6 +4718,7 @@ export interface components {
             /** Format: int64 */
             current_version: number;
             can_manage: boolean;
+            can_record: boolean;
             planning_gaps: string[];
         };
         ObjectiveCommand: {
@@ -5186,6 +5188,7 @@ export interface components {
             resolved: number;
             cancelled: number;
             can_manage: boolean;
+            can_record: boolean;
             can_request: boolean;
             request_team: components["schemas"]["HelpTeamReference"] | null;
         };
@@ -5831,6 +5834,7 @@ export interface components {
             canonical_signed: boolean;
             can_open: boolean;
             can_manage: boolean;
+            can_record: boolean;
             can_reconfigure: boolean;
         };
     };

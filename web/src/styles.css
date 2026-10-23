@@ -338,3 +338,11 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .released-objective { margin-block: 1.5rem; padding-block: 1rem; border-top: 1px solid var(--border, #ccd5d0); }
 .released-objective dl div { margin-block: .8rem; }
 .released-objective dd { margin-inline-start: 0; white-space: pre-wrap; }
+
+.review-dashboard select,.review-team-page select,.private-review select { max-width: 100%; width: 100%; }
+.review-team p,.private-review p,.review-team li,.private-review li { overflow-wrap: anywhere; }
+.private-review fieldset { min-width: 0; }
+.private-review label { display: block; margin-block: .7rem; }
+.private-review textarea,.private-review input { max-width: 100%; width: 100%; }
+.private-review .actions { flex-wrap: wrap; }
+@media print { .private-review,.review-dashboard,.review-team-page { display: none !important; } }
