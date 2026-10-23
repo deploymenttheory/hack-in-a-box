@@ -33,6 +33,7 @@
   .fleet-collection-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   .fleet-detail-workspace { display: grid; grid-template-columns: minmax(0, 1fr); }
   .fleet-detail-workspace[data-detail-open] { grid-template-columns: minmax(0, 1fr) minmax(0, var(--collection-inspector-width)); }
+  .fleet-detail-feedback { grid-column: 1 / -1; }
   .fleet-detail-collection, .fleet-detail-region { min-width: 0; }
   .fleet-detail-region { border-inline-start: 1px solid var(--border); padding: var(--space-6); }
   .fleet-inspector h2 { font-size: var(--text-section); margin-block: var(--space-3); }

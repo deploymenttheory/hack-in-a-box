@@ -1,6 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from '../ui/icon'
-import type { NavigationTarget, ScopeLabel } from './model'
+import { CollectionStateMessage } from './state'
+import { WorkspaceFeedbackContext } from './workspace-context'
+import type { CollectionState, NavigationTarget, ScopeLabel } from './model'
 
 export function ContextLink({ target, back = false }: { target: NavigationTarget; back?: boolean }) {
   return <a href={target.href} onClick={event => { if (target.onNavigate && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); target.onNavigate() } }}>{back && <Icon name="back" />}{target.label}</a>
@@ -15,6 +17,8 @@ export function Inspector({ identity, title, scope, back, children }: { identity
 }
 // Selection and URLs are supplied by the router/domain owner. At narrow widths
 // the selected route owns the canvas rather than becoming a cramped overlay.
-export function DetailWorkspace({ collection, detail }: { collection: ReactNode; detail?: ReactNode }) {
-  return <div className="fleet-detail-workspace" data-detail-open={detail ? 'true' : undefined}><div className="fleet-detail-collection">{collection}</div>{detail && <aside className="fleet-detail-region">{detail}</aside>}</div>
+export function DetailWorkspace({ collection, detail, state }: { collection: ReactNode; detail?: ReactNode; state?: CollectionState }) {
+  if (state?.kind === 'denied') return <CollectionStateMessage state={state} />
+  const announce = detail !== undefined && state !== undefined
+  return <WorkspaceFeedbackContext.Provider value={announce}><div className="fleet-detail-workspace" data-detail-open={detail ? 'true' : undefined}>{announce && state && <div className="fleet-detail-feedback"><CollectionStateMessage state={state} /></div>}<div className="fleet-detail-collection">{collection}</div>{detail && <aside className="fleet-detail-region">{detail}</aside>}</div></WorkspaceFeedbackContext.Provider>
 }

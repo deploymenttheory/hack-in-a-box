@@ -4,7 +4,8 @@ import { beforeEach, expect, test, vi } from 'vitest'
 import { useState } from 'react'
 import { Theme } from '../theme'
 import { Input } from '../ui/fields'
-import { ActionQueue, Breadcrumbs, CollectionColumns, CollectionFrame, CollectionHeading, CollectionPagination, CollectionRecords, CollectionToolbar, CommandDestinations, CommandState, Inspector, ReviewFlow, type CollectionColumn, type CommandView } from './index'
+import { ActionQueue, Breadcrumbs, CollectionColumns, CollectionFrame, CollectionHeading, CollectionPagination, CollectionRecords, CollectionToolbar, CommandDestinations, CommandState, DetailWorkspace, Inspector, ReviewFlow, type CollectionColumn, type CommandView } from './index'
+import { PatternExamples } from './examples'
 import { createExampleTransport, examplePage, exampleReceiptMatches, exampleRecords, type ExampleIntent, type ExampleMode, type ExampleReceipt, type ExampleRecord } from './scenario'
 
 let narrow = false
@@ -177,4 +178,22 @@ test('cursor toolbar rejects complete-array search at the type boundary',()=>{
  // @ts-expect-error Cursor sources cannot claim complete-array search capability.
  const invalid:Parameters<typeof CollectionToolbar>[0]={source:'cursor',search:{kind:'complete',completeCollection:true,label:'Wrong scope',value:'',onChange:vi.fn(),onSearch:vi.fn(),onClear:vi.fn()}}
  expect(invalid.source).toBe('cursor')
+})
+
+test('selected detail announces one shared failure and definite denial removes both panes',()=>{
+ const state={kind:'paused' as const,message:'Current source unavailable'}
+ const collection=<CollectionFrame scopeKey="one" state={state} heading={<h1>Private collection</h1>}><p>Private rows</p></CollectionFrame>
+ const {rerender}=render(themed(<DetailWorkspace state={state} collection={collection} detail={<p>Private selected detail</p>}/>))
+ expect(screen.getAllByRole('status')).toHaveLength(1)
+ expect(screen.getByRole('status')).toHaveTextContent('Current source unavailable')
+ rerender(themed(<DetailWorkspace state={{kind:'denied',message:'Access ended'}} collection={collection} detail={<p>Private selected detail</p>}/>))
+ expect(screen.getByRole('alert')).toHaveTextContent('Access ended')
+ expect(screen.queryByText('Private selected detail')).not.toBeInTheDocument();expect(screen.queryByText('Private rows')).not.toBeInTheDocument();expect(screen.queryByText('Private collection')).not.toBeInTheDocument()
+})
+test('guide example can inherit the actual caller theme and portal without nested appearance defaults',async()=>{
+ const {container}=render(<Theme mode="dark"><PatternExamples withinTheme /></Theme>)
+ await screen.findByRole('link',{name:'Project Atlas'})
+ expect(container.querySelectorAll('.theme')).toHaveLength(1)
+ expect(container.querySelector('.theme')).toHaveAttribute('data-theme','dark')
+ expect(screen.queryByLabelText('Example appearance')).not.toBeInTheDocument()
 })

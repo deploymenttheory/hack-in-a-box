@@ -19,7 +19,9 @@ Import production patterns from `web/src/components/patterns/index.ts`:
   heading, toolbar and records. Temporary failure retains mounted values and
   pauses activation. Key the frame by the owner's identity/session/event scope.
 - `DetailWorkspace` / `Inspector`: a wide detail pane becomes the selected detail
-  canvas on narrow screens. URLs, browser history and back context remain owned
+  canvas on narrow screens. Supply the shared owner state to keep one visible
+  failure banner above a selected detail; definite denial removes both panes.
+  URLs, browser history and back context remain owned
   by the router adapter. `Breadcrumbs` / `ContextLink` retain native anchors.
 - `ReviewFlow` / `CommandState`: prepare, review/correct/cancel, deliberate confirm,
   exact receipt and relevant next action. Unknown outcomes expose a read callback
@@ -54,6 +56,7 @@ use their established unsent/uncertain intent guards.
 ## Shared guide examples and verification
 
 The guide can import `PatternExamples` directly from `components/patterns/examples`
+with `withinTheme` when the guide supplies its own authoritative Theme/portal scope,
 and pure fixture functions/types from `components/patterns/scenario`. These modules
 use synthetic people/records and a backend-free owner transport. They are separate
 from the production pattern barrel and contain no production API client calls.

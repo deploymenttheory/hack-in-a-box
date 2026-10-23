@@ -1,9 +1,10 @@
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Button } from '../ui/button'
 import { Checkbox, Input, Label } from '../ui/fields'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { PatternActionControl } from './actions'
 import { CollectionStateMessage, collectionRetainsRecords } from './state'
+import { WorkspaceFeedbackContext } from './workspace-context'
 import type { CollectionColumn, CollectionSource, CollectionState, NavigationTarget, PatternAction, ScopeLabel, SearchControl, SelectionControl, SortControl } from './model'
 
 export function CollectionHeading({ title, scope, description, primary, secondary = [], status }: { title: string; scope: ScopeLabel; description?: ReactNode; primary?: PatternAction; secondary?: readonly PatternAction[]; status?: ReactNode }) {
@@ -53,10 +54,11 @@ function PageSelection<T>({ rows, selection, rowKey, disabled }: RecordsProps<T>
 // Keying the frame resets presentation state when the owner replaces identity,
 // session or event. Owners still fence asynchronous reads with PrivateRequestScope.
 export function CollectionFrame({ scopeKey, state, children, heading, toolbar }: { scopeKey: string; state: CollectionState; heading: ReactNode; toolbar?: ReactNode; children: ReactNode }) {
-  return <CollectionLifetime key={scopeKey} state={state} heading={heading} toolbar={toolbar}>{children}</CollectionLifetime>
+  const workspaceFeedback = useContext(WorkspaceFeedbackContext)
+  return <CollectionLifetime key={scopeKey} state={state} heading={heading} toolbar={toolbar} announce={!workspaceFeedback}>{children}</CollectionLifetime>
 }
-function CollectionLifetime({ state, heading, children, toolbar }: { state: CollectionState; heading: ReactNode; children: ReactNode; toolbar?: ReactNode }) {
-  return <section className="fleet-collection" data-collection-state={state.kind}>{state.kind !== 'denied' && <fieldset className="fleet-collection-fieldset" disabled={state.kind !== 'ready' && state.kind !== 'empty' && state.kind !== 'no-match'}>{heading}{toolbar}</fieldset>}<CollectionStateMessage state={state} />{collectionRetainsRecords(state) && <div aria-busy={state.kind === 'paused' || undefined}><fieldset className="fleet-collection-fieldset" disabled={state.kind !== 'ready'}>{children}</fieldset></div>}</section>
+function CollectionLifetime({ state, heading, children, toolbar, announce }: { state: CollectionState; heading: ReactNode; children: ReactNode; toolbar?: ReactNode; announce: boolean }) {
+  return <section className="fleet-collection" data-collection-state={state.kind}>{state.kind !== 'denied' && <fieldset className="fleet-collection-fieldset" disabled={state.kind !== 'ready' && state.kind !== 'empty' && state.kind !== 'no-match'}>{heading}{toolbar}</fieldset>}{announce && <CollectionStateMessage state={state} />}{collectionRetainsRecords(state) && <div aria-busy={state.kind === 'paused' || undefined}><fieldset className="fleet-collection-fieldset" disabled={state.kind !== 'ready'}>{children}</fieldset></div>}</section>
 }
 
 // Optional presentation memory is local to a mounted scope; private query text,
