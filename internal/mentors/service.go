@@ -16,7 +16,24 @@ import (
 
 func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, error) {
 	var result Page
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var readErr error
+		result, readErr = s.ReadInTransaction(ctx, tx, actor, eventID)
+		return readErr
+	})
+	return result, err
+}
+
+// ReadInTransaction preserves the roster's current-person/role and restricted
+// audience policy while composing metadata inside the caller's event lock.
+func (s Service) ReadInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+) (Page, error) {
+	var result Page
+	q := dbgen.New(tx)
+	err := func() error {
 		row, err := q.LockEvent(ctx, eventID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return access.ErrNotFound
@@ -49,7 +66,7 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 			result = restricted(result, actor, own, slices.Contains(roles, "mentor"))
 		}
 		return nil
-	})
+	}()
 	if err != nil {
 		return result, fmt.Errorf("read mentor coverage: %w", err)
 	}
