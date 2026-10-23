@@ -34,6 +34,33 @@ test('actual shell reports network loss and checks the server after reconnect wi
   expect(state.writes).toEqual([])
 })
 
+test('late verified API response cannot clear the actual shell offline state', async ({ page, context }) => {
+  const state = { session: initial(), reads: 0, writes: [] as string[] }
+  await prepare(page, state)
+  let release!: () => void
+  const pending = new Promise<void>(resolve => { release = resolve })
+  let started = false
+  await page.route(/\/api\/v1\/events(?:\?.*)?$/, async route => {
+    started = true
+    await pending
+    await route.fallback()
+  })
+  await page.goto('/')
+  await expect(page.getByLabel('Connection status')).toContainText('Connected to server')
+  await expect.poll(() => started).toBe(true)
+  await context.setOffline(true)
+  expect(await page.evaluate(() => navigator.onLine)).toBe(false)
+  await expect(page.getByLabel('Connection status')).toContainText('Offline')
+  await page.evaluate(() => window.addEventListener('workspace-response', () => {
+    document.documentElement.dataset.lateRecoveryResponse = 'received'
+  }, { once: true }))
+  release()
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.lateRecoveryResponse)).toBe('received')
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+  await expect(page.getByLabel('Connection status')).toContainText('Offline')
+  expect(state.writes).toEqual([])
+})
+
 test('session-scoped local storage survives same-session refresh then expires or clears on session replacement', async ({ page }) => {
   const state = { session: initial(), reads: 0, writes: [] as string[] }
   await prepare(page, state)
