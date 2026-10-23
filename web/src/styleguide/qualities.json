@@ -1,0 +1,602 @@
+[
+  {
+    "id": "Q01",
+    "principle": "A quiet main canvas gives data priority.",
+    "guidance": "One continuous page surface; remove dashboard-card grids.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q02",
+    "principle": "Secondary surfaces are only slightly different.",
+    "guidance": "Low-contrast navigation and table headers.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q03",
+    "principle": "Navy/neutral text carries most of the interface.",
+    "guidance": "Colour does not decorate every section.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q04",
+    "principle": "Strong colour identifies interaction.",
+    "guidance": "One recognisable primary action colour.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q05",
+    "principle": "Status colours are separate from action colours.",
+    "guidance": "Labelled status icons, with independent primary buttons.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q06",
+    "principle": "A small type scale establishes hierarchy.",
+    "guidance": "24px page title, 16px section title, 14px body, 12px metadata.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q07",
+    "principle": "Inter is the main interface face.",
+    "guidance": "Shared sans-serif type; remove oversized editorial greetings.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q08",
+    "principle": "Regular and semibold weights do the work.",
+    "guidance": "Avoid heavy headings on every row.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q09",
+    "principle": "Spacing follows a repeatable scale.",
+    "guidance": "Shared 4/8/12/16/24/32px roles.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q10",
+    "principle": "Controls have modest corner radii.",
+    "guidance": "4px controls; no repeated rounded containers.",
+    "owner": "DS-01"
+  },
+  {
+    "id": "Q11",
+    "principle": "Main destinations occupy a compact top bar.",
+    "guidance": "Visible icon-and-label navigation in both portals.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q12",
+    "principle": "The active destination has a restrained underline.",
+    "guidance": "Current section stays obvious without a large filled tile.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q13",
+    "principle": "The current collection/scope sits beside its heading.",
+    "guidance": "Event context directly above the teams or task list.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q14",
+    "principle": "A dropdown changes scope in place.",
+    "guidance": "Event picker clears stale selection and pagination.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q15",
+    "principle": "Account tools are separated from main work.",
+    "guidance": "Compact profile menu with account and sign-out actions.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q16",
+    "principle": "Local section navigation stays local.",
+    "guidance": "Overview/access/activity tabs belong inside a team detail.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q17",
+    "principle": "Returning to a collection is explicit.",
+    "guidance": "Named back link preserves the collection filter.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q18",
+    "principle": "Global navigation supports keyboard search.",
+    "guidance": "Command search routes to relevant screens.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q19",
+    "principle": "Commands use verb-first, sentence-case labels.",
+    "guidance": "\u201cReview access\u201d, \u201cSave draft\u201d, \u201cConfirm submission\u201d.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q20",
+    "principle": "Entity actions stay with the selected entity.",
+    "guidance": "Team changes appear on rows/details, not global search.",
+    "owner": "UI-01"
+  },
+  {
+    "id": "Q21",
+    "principle": "One shared icon component keeps shapes consistent.",
+    "guidance": "Use the same Lucide stroke set throughout.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q22",
+    "principle": "Action icons use a restrained size.",
+    "guidance": "16px navigation, search, export and row-action icons.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q23",
+    "principle": "Icon colour follows the action's text.",
+    "guidance": "CurrentColor icons remain readable in every variant.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q24",
+    "principle": "Icons identify the kind of action.",
+    "guidance": "Search, filter, export, columns, external reference and overflow are distinct.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q25",
+    "principle": "Important actions include text labels.",
+    "guidance": "No icon-only primary actions.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q26",
+    "principle": "Icon-only controls need an accessible name.",
+    "guidance": "Label close, more, command and clear controls.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q27",
+    "principle": "The page's main action is easy to locate.",
+    "guidance": "Primary action sits beside the title, not inside an arbitrary card.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q28",
+    "principle": "Secondary actions have less visual weight.",
+    "guidance": "Export/columns are quiet text-and-icon controls.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q29",
+    "principle": "Hover, press and focus are distinct.",
+    "guidance": "Shared interaction variants, visible keyboard focus.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q30",
+    "principle": "A loading action retains its dimensions and variant.",
+    "guidance": "Spinner and loading text replace content without a layout jump.",
+    "owner": "DS-02"
+  },
+  {
+    "id": "Q31",
+    "principle": "A table is the collection's main content.",
+    "guidance": "Teams and people are rows, not a grid of cards.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q32",
+    "principle": "Headers use a subtle contrasting surface.",
+    "guidance": "Quiet header band and fine separators.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q33",
+    "principle": "Rows align comparable information into columns.",
+    "guidance": "Team, members, repository and access state share baselines.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q34",
+    "principle": "Entity names act as the detail entry point.",
+    "guidance": "Named team links open the selected detail journey.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q35",
+    "principle": "Supporting metadata sits below the main identifier.",
+    "guidance": "Small published/draft context under team names.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q36",
+    "principle": "Sort affordances live in the column heading.",
+    "guidance": "Click name/member headers to change actual row order.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q37",
+    "principle": "The sort direction remains visible.",
+    "guidance": "Directional arrow and aria-sort reflect the active order.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q38",
+    "principle": "Row selection has its own column.",
+    "guidance": "Labelled native checkboxes, separate from entity links.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q39",
+    "principle": "Selection changes the available actions.",
+    "guidance": "Selected-count toolbar exposes a scoped review action.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q40",
+    "principle": "Clearing selection is explicit.",
+    "guidance": "A visible \u201cClear selection\u201d action restores the normal toolbar.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q41",
+    "principle": "A result count anchors the toolbar.",
+    "guidance": "Count updates with filters and search.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q42",
+    "principle": "Search belongs next to the collection.",
+    "guidance": "Search team/person names without leaving the page.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q43",
+    "principle": "Search has an identifiable magnifier.",
+    "guidance": "Visible icon and a programmatic input label.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q44",
+    "principle": "Status filtering is a compact dropdown.",
+    "guidance": "All / needs attention / ready / unused states.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q45",
+    "principle": "Filters and search can combine.",
+    "guidance": "Apply both predicates and show the resulting count.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q46",
+    "principle": "Columns can be adjusted.",
+    "guidance": "A column menu changes optional visible columns.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q47",
+    "principle": "Export is available from the collection toolbar.",
+    "guidance": "Preview the exact safe filtered CSV fields; production download uses authorised data.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q48",
+    "principle": "Pagination has named previous/next actions.",
+    "guidance": "Real page slices with boundary-disabled controls.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q49",
+    "principle": "Filter changes reset an obsolete page.",
+    "guidance": "Return to the first page after narrowing results.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q50",
+    "principle": "Single-page collections omit unnecessary paging.",
+    "guidance": "Hide pagination when all matching records fit.",
+    "owner": "DS-03"
+  },
+  {
+    "id": "Q51",
+    "principle": "Fields have concise labels.",
+    "guidance": "Keep labels visible in draft and review forms.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q52",
+    "principle": "Help text is separate from error text.",
+    "guidance": "URL guidance remains distinct from validation feedback.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q53",
+    "principle": "Pristine fields do not start in an error state.",
+    "guidance": "No red warnings on first opening the form.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q54",
+    "principle": "Edited fields validate at a sensible boundary.",
+    "guidance": "Validate a touched field on blur.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q55",
+    "principle": "Submit validates the whole form.",
+    "guidance": "Surface all required evidence errors together.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q56",
+    "principle": "An invalid submit does not call the operation.",
+    "guidance": "Keep the form open and focus the first invalid input.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q57",
+    "principle": "An editable invalid form still allows a submit attempt.",
+    "guidance": "Let the action reveal how to fix it rather than silently disabling it.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q58",
+    "principle": "One actionable error appears per field.",
+    "guidance": "\u201cEnter a valid demo URL\u201d; no stacked generic warnings.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q59",
+    "principle": "Optional empty fields are valid.",
+    "guidance": "An optional note does not block the next step.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q60",
+    "principle": "Irrelevant dependent errors clear.",
+    "guidance": "Clear stale format errors when a field is removed or no longer required.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q61",
+    "principle": "Whitespace is handled consistently.",
+    "guidance": "Trim URL and label inputs before validation/review.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q62",
+    "principle": "Input length follows the contract.",
+    "guidance": "Bound evidence labels and URLs; do not introduce unbounded fields.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q63",
+    "principle": "A native form owns submission.",
+    "guidance": "Enter, the local form event and the review action share one validation boundary in the preview.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q64",
+    "principle": "In-flight actions prevent duplicate submission.",
+    "guidance": "Both button state and an intent guard prevent double clicks.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q65",
+    "principle": "Fields freeze while a request is in flight.",
+    "guidance": "Submitted values cannot change behind a pending confirmation.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q66",
+    "principle": "Failures restore editing.",
+    "guidance": "Restore fields and retain the same draft after a known failure.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q67",
+    "principle": "Field errors and transport errors differ.",
+    "guidance": "Inline validation versus a clear save failure message.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q68",
+    "principle": "Cancelling a focused form is available.",
+    "guidance": "Cancel returns to the source context with the draft intact.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q69",
+    "principle": "Successful work gives visible confirmation.",
+    "guidance": "Completion message, updated row, and next relevant action.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q70",
+    "principle": "Sensitive values stay out of ordinary display.",
+    "guidance": "Never render installation tokens or App private keys.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q71",
+    "principle": "A modal has one clear task title.",
+    "guidance": "\u201cReview repository recovery\u201d or \u201cConfirm submission\u201d.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q72",
+    "principle": "Close has a predictable position.",
+    "guidance": "Labelled close control at the top right.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q73",
+    "principle": "Escape exits a dismissible task.",
+    "guidance": "Keyboard escape and focus return work.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q74",
+    "principle": "The background remains recognisable.",
+    "guidance": "Keep source-list context behind a focused decision.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q75",
+    "principle": "Task width matches its content.",
+    "guidance": "Narrow confirmation, wider form, no full-screen tiny dialog.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q76",
+    "principle": "Local options sit inside the current task.",
+    "guidance": "Choose an operation before reviewing its consequences.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q77",
+    "principle": "Main and cancellation actions have clear hierarchy.",
+    "guidance": "Quiet Back/Cancel and one specific confirmation action.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q78",
+    "principle": "Modal contents are separated from the action footer.",
+    "guidance": "Stable footer with the next step and current step count.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q79",
+    "principle": "The task remains bound to the selected entity.",
+    "guidance": "Team name stays in list, detail, review and confirmation.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q80",
+    "principle": "Task completion preserves the working context.",
+    "guidance": "Return to the source list/detail; its record updates and filters remain intact.",
+    "owner": "DS-02 / DS-03"
+  },
+  {
+    "id": "Q81",
+    "principle": "Status includes a text label.",
+    "guidance": "\u201cNeeds review\u201d remains understandable without colour.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q82",
+    "principle": "Status and warning icons reinforce meaning.",
+    "guidance": "Check, clock and warning icons distinguish conditions.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q83",
+    "principle": "An empty collection has a purposeful next action.",
+    "guidance": "Draft event explains publication and offers \u201cReview allocation\u201d.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q84",
+    "principle": "No matches is different from no records.",
+    "guidance": "A clear-filters path restores an existing collection.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q85",
+    "principle": "Collection headings survive state changes.",
+    "guidance": "Keep scope and toolbar visible during load/no-match states.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q86",
+    "principle": "Loading indicates an operation is underway.",
+    "guidance": "Spinner and action text are announced; no fake success.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q87",
+    "principle": "Disabled actions have contextual explanations.",
+    "guidance": "Explain frozen allocation or a not-yet-open submission window beside the control.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q88",
+    "principle": "Feedback appears near the completed work.",
+    "guidance": "Toast/status message plus updated row or accepted revision.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q89",
+    "principle": "Explanatory tooltips supplement visible text.",
+    "guidance": "Icon hints are optional; essential instructions stay visible.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q90",
+    "principle": "Details reveal evidence progressively.",
+    "guidance": "Activity and recovery evidence appear after selecting a team.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q91",
+    "principle": "Shared colour roles have a single owner.",
+    "guidance": "CSS-first Tailwind v4 semantic tokens feed every proposal.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q92",
+    "principle": "Dark mode changes roles, not arbitrary components.",
+    "guidance": "Paired light/dark tokens keep the same hierarchy.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q93",
+    "principle": "A reusable button variant system keeps actions consistent.",
+    "guidance": "Shared primary, secondary, ghost, destructive and link roles.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q94",
+    "principle": "API-derived permission gates match the destination.",
+    "guidance": "Prototype phase capabilities model, rather than bypass, backend gates.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q95",
+    "principle": "Navigation keeps current scope in mind.",
+    "guidance": "Account/event changes clear stale selected entities.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q96",
+    "principle": "Query/search and local editing have different lifecycles.",
+    "guidance": "Search does not overwrite an in-progress submission draft.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q97",
+    "principle": "User-supplied strings are treated as data.",
+    "guidance": "Escape labels and notes before inserting them into the prototype.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q98",
+    "principle": "Wide data is contained, not allowed to break the page.",
+    "guidance": "Reflow rows on phones and constrain table overflow where needed.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q99",
+    "principle": "Keyboard handling respects native controls.",
+    "guidance": "Native buttons, fields and form submit; scoped command shortcut.",
+    "owner": "DS-03 / UI-01"
+  },
+  {
+    "id": "Q100",
+    "principle": "Tests focus on visible outcomes.",
+    "guidance": "Verify complete journeys, validation, retained context and changed rows.",
+    "owner": "DS-03 / UI-01"
+  }
+]

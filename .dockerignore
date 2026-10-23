@@ -13,3 +13,6 @@ coverage*
 *.log
 *.tsbuildinfo
 web/test-results-public
+
+web/dist-styleguide
+web/styleguide-test-results

@@ -1,0 +1,27 @@
+# A separate opt-in project: no app configuration, credentials, volumes or APIs.
+name: hackbox-styleguide
+services:
+  styleguide:
+    profiles: [styleguide]
+    image: ${HACKBOX_STYLEGUIDE_IMAGE:-hack-in-a-box:styleguide}
+    build:
+      context: .
+      target: styleguide
+      args:
+        STYLEGUIDE_REVISION: ${HACKBOX_STYLEGUIDE_REVISION:-local}
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+      HACKBOX_WEB_DIR: /app/web
+    ports: ['127.0.0.1:${HACKBOX_STYLEGUIDE_PORT:-8082}:8080']
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped

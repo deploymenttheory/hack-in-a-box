@@ -8,5 +8,5 @@
     "baseUrl": ".", "paths": { "@/*": ["./src/*"] },
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"]
   },
-  "include": ["src", "vite.config.ts", "vite.patterns.config.ts", "playwright.patterns.config.ts", "playwright.config.ts", "e2e"]
+  "include": ["src", "vite.config.ts", "vite.patterns.config.ts", "vite.styleguide.config.ts", "playwright.patterns.config.ts", "playwright.config.ts", "e2e"]
 }

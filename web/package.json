@@ -19,7 +19,9 @@
     "test:e2e:public": "playwright test --config playwright.public.config.ts",
     "build:patterns": "vite build --config vite.patterns.config.ts",
     "preview:patterns": "vite preview --config vite.patterns.config.ts --host 127.0.0.1 --port 4393 --strictPort",
-    "test:e2e:patterns": "npm run build:patterns && playwright test --config playwright.patterns.config.ts"
+    "test:e2e:patterns": "npm run build:patterns && playwright test --config playwright.patterns.config.ts",
+    "build:styleguide": "tsc -b && vite build --config vite.styleguide.config.ts",
+    "preview:styleguide": "vite preview --config vite.styleguide.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
