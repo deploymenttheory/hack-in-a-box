@@ -45,7 +45,7 @@ for (const palette of palettes) test(`${palette.name} palette keeps registration
   await page.screenshot({ path: info.outputPath(`design-system-${palette.name.replaceAll(' ', '-')}.png`), fullPage: true })
   await page.route(`**/api/v1/events/${firstID}/registrations`, route => route.fulfill({ status: 422, json: { error: { code: 'invalid', message: 'Review the answer', request_id: 'synthetic', blockers: [{ field: questionID, code: 'invalid', message: 'Explain the learning goal.' }] } } }))
   await submit.click(); await expect(field).toHaveAttribute('aria-invalid', 'true')
-  expect(await contrastOf(page.locator('.field-error').first())).toBeGreaterThanOrEqual(4.5)
+  expect(await contrastOf(page.locator('[id$="-error"].fleet-field-error').first())).toBeGreaterThanOrEqual(4.5)
   expect(await contrastOf(page.locator('.state[role=alert] p').first())).toBeGreaterThanOrEqual(4.5)
 })
 
@@ -59,7 +59,7 @@ test('native errors, disabled actions and private drafts keep their existing sem
   await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(field).toHaveAttribute('aria-invalid', 'true')
   expect(await contrastOf(field, 'border-top-color')).toBeGreaterThanOrEqual(3)
-  expect(await contrastOf(page.locator('.field-error').first())).toBeGreaterThanOrEqual(4.5)
+  expect(await contrastOf(page.locator('[id$="-error"].fleet-field-error').first())).toBeGreaterThanOrEqual(4.5)
   await expect(field).toHaveValue('PRIVATE-DESIGN-SYSTEM-DRAFT')
   expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-DESIGN-SYSTEM-DRAFT')
   await page.route('**/api/v1/account/email', route => route.fulfill({ json: { configured: true, verified: false, masked_mailbox: '', provenance: '', pending: false, request_state: '', expires_at: null, retry_after_seconds: 0 } }))

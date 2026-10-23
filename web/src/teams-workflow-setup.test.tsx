@@ -2,6 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, test, vi } from 'vitest'
 import { TeamsWorkflowSetup } from './teams-workflow-setup'
+import { Theme } from './components/theme'
+import userEvent from '@testing-library/user-event'
 import { api } from './api/client'
 
 vi.mock('./session', () => ({ useIdentity: () => ({ person: { id: 'organiser' }, csrf_token: 'csrf' }) }))
@@ -11,7 +13,7 @@ afterEach(() => vi.restoreAllMocks())
 function mount(data = safe) {
   vi.spyOn(api, 'GET').mockResolvedValue(success(data) as never)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } }), changed = vi.fn()
-  const view = render(<QueryClientProvider client={client}><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></QueryClientProvider>)
+  const view = render(<Theme><QueryClientProvider client={client}><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></QueryClientProvider></Theme>)
   return { client, changed, ...view }
 }
 test('write-only endpoint clears before a pending save and never enters shared caches or storage', async () => {
@@ -34,11 +36,12 @@ test('write-only endpoint clears before a pending save and never enters shared c
 })
 test('fixed shared-channel test requires explicit confirmation and carries no campaign content', async () => {
   const post = vi.spyOn(api, 'POST').mockResolvedValue(success(safe) as never)
-  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+  const user = userEvent.setup()
   mount()
   const button = await screen.findByRole('button', { name: 'Queue shared-channel TEST' })
-  fireEvent.click(button); expect(post).not.toHaveBeenCalled()
-  confirm.mockReturnValue(true); fireEvent.click(button)
+  await user.click(button); expect(post).not.toHaveBeenCalled()
+  await user.click(await screen.findByRole('button', { name: 'Cancel' })); expect(post).not.toHaveBeenCalled()
+  await user.click(button);await user.click(await screen.findByRole('button',{name:'Queue TEST message'}))
   await waitFor(() => expect(post).toHaveBeenCalledOnce())
   expect(post.mock.calls[0][0]).toBe('/api/v1/events/{event_id}/teams-workflow/test')
   expect(post.mock.calls[0][1]).toEqual(expect.objectContaining({ body: { request_id: expect.any(String) } }))

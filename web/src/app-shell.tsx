@@ -8,10 +8,10 @@ import { GitHubAccount } from './github-account'
 import { useEffect, useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
-import { Menu } from '@base-ui/react/menu'
+import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu'
 import { api, APIError, getSession, type Session } from './api/client'
 import { Button } from './components/ui/button'
-import { Theme, useThemePortal } from './components/theme'
+import { Theme } from './components/theme'
 import { Failure, Loading } from './components/states'
 import { clearPrivateDrafts, loginURL } from './auth'
 import { IdentityContext, useIdentity } from './session'
@@ -25,7 +25,6 @@ function PrivateCache({ children }: { children: ReactNode }) {
 }
 
 function Account({ session }: { session: Session }) {
-  const portal = useThemePortal()
   const [failure, setFailure] = useState<unknown>()
   const [pending, setPending] = useState(false)
   async function logout() {
@@ -41,14 +40,10 @@ function Account({ session }: { session: Session }) {
     } catch (error) { setFailure(error); setPending(false) }
   }
   return <div>
-    <Menu.Root>
-      <Menu.Trigger render={<Button variant="outline" />} disabled={pending}>{session.person.display_name || 'Your account'}</Menu.Trigger>
-      <Menu.Portal container={portal}>
-        <Menu.Positioner sideOffset={8} className="z-50">
-          <Menu.Popup className="menu"><Menu.Item className="menu-item" render={<Link to="/account" />}>Account settings</Menu.Item><Menu.Item className="menu-item" onClick={() => void logout()}>Sign out</Menu.Item></Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+    <Menu>
+      <MenuTrigger render={<Button variant="outline" icon="user" />} disabled={pending}>{session.person.display_name || 'Your account'}</MenuTrigger>
+      <MenuContent><MenuItem icon="user" render={<Link to="/account" />}>Account settings</MenuItem><MenuItem icon="logout" onClick={() => void logout()}>Sign out</MenuItem></MenuContent>
+    </Menu>
     {!!failure && <Failure error={failure} />}
   </div>
 }
