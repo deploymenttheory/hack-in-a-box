@@ -108,3 +108,27 @@ test('Fleet foundation loads a local font and explicit modes override system pre
   await page.keyboard.press('Escape')
   await expect(menu).toHaveCount(0)
 })
+
+test('forced-colour account menu preserves a visible keyboard highlight and returns focus', async ({ page }, info) => {
+  await page.emulateMedia({ forcedColors: 'active' })
+  await mockWorkspace(page)
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: 'Synthetic Person', exact: true })
+  await trigger.focus(); await page.keyboard.press('ArrowDown')
+  const first = page.getByRole('menuitem', { name: 'Account settings' })
+  await expect(first).toBeFocused(); await expect(first).toHaveAttribute('data-highlighted', '')
+  const highlight = await page.evaluate(() => {
+    const probe = document.createElement('span'); probe.style.color = 'Highlight'
+    document.body.append(probe); const colour = getComputedStyle(probe).color; probe.remove(); return colour
+  })
+  await expect(first).toHaveCSS('outline-style', 'solid')
+  await expect(first).toHaveCSS('outline-width', '2px')
+  await expect(first).toHaveCSS('outline-color', highlight)
+  await page.keyboard.press('ArrowDown')
+  const next = page.getByRole('menuitem', { name: 'Sign out' })
+  await expect(next).toBeFocused(); await expect(next).toHaveAttribute('data-highlighted', '')
+  await expect(next).toHaveCSS('outline-style', 'solid'); await expect(next).toHaveCSS('outline-color', highlight)
+  await expect(first).not.toHaveAttribute('data-highlighted', '')
+  await page.screenshot({ path: info.outputPath('forced-colour-menu.png') })
+  await page.keyboard.press('Escape'); await expect(page.getByRole('menu')).toHaveCount(0); await expect(trigger).toBeFocused()
+})

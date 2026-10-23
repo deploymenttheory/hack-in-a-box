@@ -63,7 +63,9 @@ uses a constant border width with an inset indicator to preserve geometry.
 Their content uses `Theme`'s local portal host, never a body fallback while the
 host is initially absent. This includes initially open content. Menu and popover
 items use the same semantic text/focus/target tokens; disabled menu items remain
-unavailable. Tabs activate manually with Enter/Space after arrow-key focus.
+unavailable. In forced-colour mode, highlighted and keyboard-focused menu items
+use a 2px inset system `Highlight` outline; the indicator does not depend on
+background colour or box-shadow. Tabs activate manually with Enter/Space after arrow-key focus.
 Route navigation remains links rather than fake tabs.
 
 `DialogContent` requires a title, accepts a description/footer and forwards

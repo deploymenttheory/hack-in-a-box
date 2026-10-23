@@ -49,3 +49,20 @@ Teams screens are tested only in the admin bundle. No product route was exposed
 to make the participant test suite pass.
 
 These focused tests do not close the independent full accessibility audit #122.
+
+## Forced-colour menu review regression
+
+The actual account menu initially failed on both viewports: ArrowDown focused and
+highlighted Account settings, but computed `outline-style` was `none`. Forced
+colours removes its normal inset shadow, making the focused row indistinguishable.
+The scoped media rule now gives highlighted/focus-visible menu items a 2px inset
+system `Highlight` outline. Normal palette rules are unchanged.
+
+After the fix, all 20 design-system cases passed in each production bundle (40
+cases total), including the new desktop/mobile keyboard navigation and Escape
+focus-return proofs. Both production builds and ESLint passed again. Captures:
+
+| Portal | Desktop | Mobile |
+|---|---|---|
+| Admin | [Forced colours](admin-desktop-forced-colour-menu.png) | [Forced colours](admin-mobile-forced-colour-menu.png) |
+| Participant | [Forced colours](participant-desktop-forced-colour-menu.png) | [Forced colours](participant-mobile-forced-colour-menu.png) |

@@ -60,5 +60,12 @@
   .fleet-spinner { animation: fleet-spin .8s linear infinite; }
   @keyframes fleet-spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .fleet-spinner { animation: none; } }
-  @media (forced-colors: active) { .fleet-button:focus-visible { outline-color: Highlight; } .fleet-status .fleet-icon { color: CanvasText; } }
+  @media (forced-colors: active) {
+    .fleet-button:focus-visible { outline-color: Highlight; }
+    .fleet-menu-item[data-highlighted], .fleet-menu-item:focus-visible {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+    .fleet-status .fleet-icon { color: CanvasText; }
+  }
 }
