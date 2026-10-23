@@ -71,6 +71,7 @@ test('dirty question tab switch requires explicit consent and clears only acknow
  const f=await surveyFixture(page,true);f.configuration.published_at=null;f.configuration.approved_at=null
  await page.goto(managePath);await page.getByRole('button',{name:'Questions',exact:true}).click()
  await page.getByLabel('Form name',{exact:true}).fill(privateText)
+ await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
  let dialog=page.waitForEvent('dialog'),switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).dismiss();await switching
  await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
  dialog=page.waitForEvent('dialog');switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).accept();await switching

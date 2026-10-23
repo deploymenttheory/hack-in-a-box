@@ -58,7 +58,7 @@ function ResponseForm({ page, eventId, surveyId, refresh, networkBlocked, deny }
       if (nativeDenied(error)) { deny(error); return }
       setFailure(error)
       if (unknownOutcome(error)) setUncertain(intent)
-      else { setUncertain(undefined); if (error instanceof APIError && error.status === 409) setConflict(true); await refresh() }
+      else { setUncertain(undefined); if (error instanceof APIError && error.status === 409) setConflict(true); await refresh().catch(() => {}) }
     } finally { if (active.current) setPending(false) }
   }
   function loadCurrent() {

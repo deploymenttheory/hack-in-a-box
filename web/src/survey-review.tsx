@@ -14,20 +14,18 @@ type ReportCommand = components['schemas']['SurveyReportCommand']
 export function SurveyReportReview({ eventId, configuration, timezone, writable, onDirty, deny }: { eventId: string; configuration: SurveyConfiguration; timezone: string; writable: boolean; onDirty: (dirty: boolean) => void; deny: (error: unknown) => void }) {
   const identity = useIdentity(), cache = useQueryClient(), id = configuration.id
   const key = useMemo(() => [...privateKey(identity.person.id, eventId, 'survey-report-review'), identity.draft_scope, id], [identity.person.id, identity.draft_scope, eventId, id])
-  const query = useQuery({ queryKey: key, gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 15_000, queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/surveys/{survey_id}/report/review', { params: { path: { event_id: eventId, survey_id: id } } })) })
-  const missing = query.error instanceof APIError && query.error.status === 404
+  const query = useQuery({ queryKey: key, gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 15_000, queryFn: async () => { try { return unwrap(await api.GET('/api/v1/events/{event_id}/surveys/{survey_id}/report/review', { params: { path: { event_id: eventId, survey_id: id } } })) } catch (error) { if (error instanceof APIError && error.status === 404) return null; throw error } } })
   useEffect(() => () => { cache.removeQueries({ queryKey: key }) }, [cache, key])
-  useEffect(() => { if (query.error && !missing && nativeDenied(query.error)) deny(query.error) }, [query.error, missing, deny])
-  const latest = query.data
-  const [loaded, setLoaded] = useState(false)
-  useEffect(() => { if (query.isFetchedAfterMount && (!query.error || missing)) setLoaded(true) }, [query.isFetchedAfterMount, query.error, missing])
-  const networkBlocked = !!query.error && !missing
+  useEffect(() => { if (nativeDenied(query.error)) deny(query.error) }, [query.error, deny])
+  const latest = query.data ?? undefined
+  const loaded = query.data !== undefined
+  const networkBlocked = !!query.error
   function receive(value: ReportReview) { cache.setQueryData(key, value) }
   return <section><h2>Frozen aggregates and explicitly reviewed text</h2><p>Wait until close. The first deliberate review freezes one cohort for this question version. There are no filters or live totals. Prose corrections retain that same aggregate. Raw answers never become published text automatically.</p>
     {networkBlocked && <p role="alert">Current review authority could not be refreshed. Local text and the exact retry command remain in this page; writes are paused until a successful refresh.</p>}
-    {!loaded ? query.error && !missing ? <Failure error={query.error} retry={() => void query.refetch()} /> : <Loading /> : <>
+    {!loaded ? query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <Loading /> : <>
       {latest && <><p>Organiser preview of the exact retained review. Wider release exists only after its explicit publication.</p><SurveyReportView report={{ ...latest.report, reviewed_text_version: latest.published_at ? latest.version : 0, published_at: latest.published_at }} timezone={timezone} /></>}
-      <ReportEditor key={`${id}:${writable}`} eventId={eventId} configuration={configuration} initial={latest} writable={writable} networkBlocked={networkBlocked} receive={receive} refresh={async () => { const result = await query.refetch(); if (result.error && !(result.error instanceof APIError && result.error.status === 404)) throw result.error; return result.error ? undefined : result.data }} onDirty={onDirty} deny={deny} />
+      <ReportEditor key={`${id}:${writable}`} eventId={eventId} configuration={configuration} initial={latest} writable={writable} networkBlocked={networkBlocked} receive={receive} refresh={async () => { const result = await query.refetch(); if (result.error) throw result.error; return result.data ?? undefined }} onDirty={onDirty} deny={deny} />
     </>}
   </section>
 }
@@ -50,7 +48,7 @@ function ReportEditor({ eventId, configuration, initial, writable, networkBlocke
     } catch (error) {
       if (!active.current) return
       if (nativeDenied(error)) { deny(error); return }
-      setFailure(error); if (unknownOutcome(error)) setUncertain(intent); else { setUncertain(undefined); setConflict(true); await refresh() }
+      setFailure(error); if (unknownOutcome(error)) setUncertain(intent); else { setUncertain(undefined); setConflict(true); await refresh().catch(currentError => { if (nativeDenied(currentError)) deny(currentError); else setFailure(currentError) }) }
     } finally { if (active.current) setPending(false) }
   }
   async function reconcile() {
