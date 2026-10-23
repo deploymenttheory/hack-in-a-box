@@ -784,6 +784,47 @@ type MentorTeamStatusVersion struct {
 	ChangedAt  time.Time
 }
 
+type ModerationFinalDecision struct {
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	RunID          uuid.UUID
+	HuddleID       uuid.UUID
+	HuddleVersion  int64
+	ContextVersion int64
+	SignoffID      uuid.UUID
+}
+
+type ModerationGapAction struct {
+	EventID         uuid.UUID
+	HuddleID        uuid.UUID
+	HuddleVersion   int64
+	GapID           uuid.UUID
+	ActionID        uuid.UUID
+	ActionVersion   int64
+	FeedbackID      uuid.UUID
+	FeedbackVersion int64
+}
+
+type ModerationHuddleCard struct {
+	EventID       uuid.UUID
+	HuddleID      uuid.UUID
+	HuddleVersion int64
+	CardID        uuid.UUID
+	CardVersion   int64
+}
+
+type ModerationHuddleVersion struct {
+	EventID   uuid.UUID
+	TeamID    uuid.UUID
+	ID        uuid.UUID
+	Version   int64
+	RunID     uuid.UUID
+	Document  []byte
+	ActorID   uuid.UUID
+	Reason    string
+	ChangedAt time.Time
+}
+
 type Operation struct {
 	ID                   uuid.UUID
 	EventID              uuid.UUID

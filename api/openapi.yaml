@@ -3855,6 +3855,201 @@ paths:
         }
       }
     }
+  "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getModerationHuddles",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current intended-panel private moderation projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "huddle_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getModerationHuddle",
+        "responses": {
+          "200": {
+            "description": "Current intended-panel private moderation projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationHuddle"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "changeModerationHuddle",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Revision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current intended-panel private moderation projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationHuddle"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}/history":
+    {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/EventID"
+        },
+        {
+          "name": "team_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "huddle_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getModerationHuddleHistory",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current intended-panel private moderation projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationHistory"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
 components:
   securitySchemes:
     display:
@@ -8541,3 +8736,575 @@ components:
         publication_preview:
           nullable: true
           allOf: [{$ref: '#/components/schemas/PublicationPlanPreview'}]
+
+    "ModerationDefinition":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "checkpoint_id",
+          "checkpoint_version",
+          "moderator_id",
+          "second_reviewer_id",
+          "review_due_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkpoint_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkpoint_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "moderator_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "second_reviewer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "review_due_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+
+    "ModerationSecondReview":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reviewer_id",
+          "due_at",
+          "card",
+          "completed_at"
+        ],
+        "properties": {
+          "reviewer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "card": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScorecardReference"
+              }
+            ]
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      }
+
+    "ModerationActionState":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "feedback_id",
+          "feedback_version",
+          "binding",
+          "status",
+          "owner_eligible"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "feedback_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "feedback_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "binding": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "in_progress",
+              "done",
+              "cancelled"
+            ]
+          },
+          "owner_eligible": {
+            "type": "boolean"
+          }
+        }
+      }
+
+    "ModerationGap":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action_id",
+          "action_version",
+          "reason",
+          "resolved_by",
+          "resolved_at",
+          "resolution",
+          "action",
+          "evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action_version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "resolved_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "action": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModerationActionState"
+              }
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/ScorecardEvidence"
+            }
+          }
+        }
+      }
+
+    "ModerationProposal":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "card",
+          "original_reviewer_id",
+          "original",
+          "proposed_value",
+          "evidence",
+          "proposed_by",
+          "proposed_at",
+          "reason",
+          "state",
+          "decided_by",
+          "decided_at",
+          "decision_reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card": {
+            "$ref": "#/components/schemas/ScorecardReference"
+          },
+          "original_reviewer_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "original": {
+            "$ref": "#/components/schemas/ScorecardCategory"
+          },
+          "proposed_value": {
+            "type": "integer"
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/ScorecardEvidence"
+            }
+          },
+          "proposed_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected"
+            ]
+          },
+          "decided_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "decision_reason": {
+            "type": "string"
+          }
+        }
+      }
+
+    "ModerationContext":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "binding",
+          "team_id",
+          "run_id",
+          "submission_revision",
+          "required_author_ids",
+          "cards",
+          "unresolved_gaps"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "binding": {
+            "type": "string"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submission_revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "required_author_ids": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "cards": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ScorecardReference"
+            }
+          },
+          "unresolved_gaps": {
+            "type": "integer"
+          }
+        }
+      }
+
+    "ModerationHuddle":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "definition",
+          "team_id",
+          "version",
+          "state",
+          "checkpoint",
+          "primary_id",
+          "panel_ids",
+          "second_review",
+          "cards",
+          "gaps",
+          "proposals",
+          "submission_revision",
+          "actor_id",
+          "action",
+          "reason",
+          "changed_at",
+          "signoff_id",
+          "signoff_context"
+        ],
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/ModerationDefinition"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "open",
+              "signed",
+              "cancelled"
+            ]
+          },
+          "checkpoint": {
+            "$ref": "#/components/schemas/ScorecardCheckpoint"
+          },
+          "primary_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "panel_ids": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "second_review": {
+            "$ref": "#/components/schemas/ModerationSecondReview"
+          },
+          "cards": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ScorecardReference"
+            }
+          },
+          "gaps": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModerationGap"
+            }
+          },
+          "proposals": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModerationProposal"
+            }
+          },
+          "submission_revision": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signoff_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "signoff_context": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModerationContext"
+              }
+            ]
+          }
+        }
+      }
+
+    "ModerationCommand":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "configure",
+              "complete_second_review",
+              "open",
+              "cancel",
+              "add_gap",
+              "resolve_gap",
+              "propose_change",
+              "accept_change",
+              "reject_change",
+              "sign_off"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "definition": {
+            "$ref": "#/components/schemas/ModerationDefinition"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "gap_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action_version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/ScorecardEvidence"
+            }
+          },
+          "proposal_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card": {
+            "$ref": "#/components/schemas/ScorecardReference"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "proposed_value": {
+            "type": "integer"
+          }
+        }
+      }
+
+    "ModerationPage":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModerationHuddle"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      }
+
+    "ModerationHistory":
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModerationHuddle"
+            }
+          },
+          "next_cursor": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
+      }

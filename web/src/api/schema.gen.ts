@@ -2441,6 +2441,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getModerationHuddles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                huddle_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getModerationHuddle"];
+        put: operations["changeModerationHuddle"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                huddle_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getModerationHuddleHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4962,6 +5021,158 @@ export interface components {
         AutomationChange: {
             page: components["schemas"]["AutomationPage"];
             publication_preview: components["schemas"]["PublicationPlanPreview"] | null;
+        };
+        ModerationDefinition: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            checkpoint_id: string;
+            /** Format: int64 */
+            checkpoint_version: number;
+            /** Format: uuid */
+            moderator_id: string;
+            /** Format: uuid */
+            second_reviewer_id: string;
+            /** Format: date-time */
+            review_due_at: string;
+        };
+        ModerationSecondReview: {
+            /** Format: uuid */
+            reviewer_id: string;
+            /** Format: date-time */
+            due_at: string;
+            card: components["schemas"]["ScorecardReference"] | null;
+            /** Format: date-time */
+            completed_at: string | null;
+        };
+        ModerationActionState: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            feedback_id: string;
+            /** Format: int64 */
+            feedback_version: number;
+            binding: string;
+            /** @enum {string} */
+            status: "open" | "in_progress" | "done" | "cancelled";
+            owner_eligible: boolean;
+        };
+        ModerationGap: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            action_id: string;
+            /** Format: int64 */
+            action_version: number;
+            reason: string;
+            /** Format: uuid */
+            resolved_by: string | null;
+            /** Format: date-time */
+            resolved_at: string | null;
+            resolution: string;
+            action: components["schemas"]["ModerationActionState"] | null;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+        };
+        ModerationProposal: {
+            /** Format: uuid */
+            id: string;
+            card: components["schemas"]["ScorecardReference"];
+            /** Format: uuid */
+            original_reviewer_id: string;
+            original: components["schemas"]["ScorecardCategory"];
+            proposed_value: number;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+            /** Format: uuid */
+            proposed_by: string;
+            /** Format: date-time */
+            proposed_at: string;
+            reason: string;
+            /** @enum {string} */
+            state: "proposed" | "accepted" | "rejected";
+            /** Format: uuid */
+            decided_by: string | null;
+            /** Format: date-time */
+            decided_at: string | null;
+            decision_reason: string;
+        };
+        ModerationContext: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            binding: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: int64 */
+            submission_revision: number;
+            required_author_ids: string[];
+            cards: components["schemas"]["ScorecardReference"][];
+            unresolved_gaps: number;
+        };
+        ModerationHuddle: {
+            definition: components["schemas"]["ModerationDefinition"];
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            state: "planned" | "open" | "signed" | "cancelled";
+            checkpoint: components["schemas"]["ScorecardCheckpoint"];
+            /** Format: uuid */
+            primary_id: string;
+            panel_ids: string[];
+            second_review: components["schemas"]["ModerationSecondReview"];
+            cards: components["schemas"]["ScorecardReference"][];
+            gaps: components["schemas"]["ModerationGap"][];
+            proposals: components["schemas"]["ModerationProposal"][];
+            /** Format: int64 */
+            submission_revision: number | null;
+            /** Format: uuid */
+            actor_id: string;
+            action: string;
+            reason: string;
+            /** Format: date-time */
+            changed_at: string;
+            /** Format: uuid */
+            signoff_id: string | null;
+            signoff_context: components["schemas"]["ModerationContext"] | null;
+        };
+        ModerationCommand: {
+            /** @enum {string} */
+            action: "configure" | "complete_second_review" | "open" | "cancel" | "add_gap" | "resolve_gap" | "propose_change" | "accept_change" | "reject_change" | "sign_off";
+            /** Format: int64 */
+            version: number;
+            definition?: components["schemas"]["ModerationDefinition"];
+            reason: string;
+            /** Format: uuid */
+            gap_id?: string;
+            /** Format: uuid */
+            action_id?: string;
+            /** Format: int64 */
+            action_version?: number;
+            evidence?: components["schemas"]["ScorecardEvidence"][];
+            /** Format: uuid */
+            proposal_id?: string;
+            card?: components["schemas"]["ScorecardReference"];
+            /** Format: uuid */
+            category_id?: string;
+            proposed_value?: number;
+        };
+        ModerationPage: {
+            /** Format: int64 */
+            revision: number;
+            items: components["schemas"]["ModerationHuddle"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ModerationHistory: {
+            items: components["schemas"]["ModerationHuddle"][];
+            /** Format: int64 */
+            next_cursor: number | null;
         };
     };
     responses: {
@@ -9579,6 +9790,118 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getModerationHuddles: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current intended-panel private moderation projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getModerationHuddle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                huddle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current intended-panel private moderation projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationHuddle"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeModerationHuddle: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                huddle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerationCommand"];
+            };
+        };
+        responses: {
+            /** @description Current intended-panel private moderation projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationHuddle"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getModerationHuddleHistory: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                huddle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current intended-panel private moderation projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModerationHistory"];
                 };
             };
             default: components["responses"]["Error"];

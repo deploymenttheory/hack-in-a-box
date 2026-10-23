@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
+	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -50,6 +51,13 @@ func TestCommunicationFactoryUsesCanonicalWorkspaceAcrossSeparateSurfaces(t *tes
 			runtime, err := newCommunicationRuntime(pool, cfg, logger)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if runtime.Moderation == nil || runtime.Scorecards == nil || runtime.Scorecards.Moderation != runtime.Moderation || runtime.Moderation.Cards != runtime.Scorecards {
+				t.Fatal("API and worker lost canonical moderation/card graph")
+			}
+			actions, ok := runtime.Moderation.Actions.(moderation.FeedbackActions)
+			if !ok || actions.Service != runtime.Feedback {
+				t.Fatal("moderation must use the actual shared native feedback owner")
 			}
 			ready, err := runtime.SMTP.Readiness(t.Context(), eventID, owner.ID)
 			if err != nil || !ready.Available || ready.ConfigRevision == "" {
