@@ -14,7 +14,12 @@ import (
 
 func (f *fixture) retainedBinding() Binding {
 	f.t.Helper()
-	f.now = time.Now().UTC().Add(-70 * time.Second).Truncate(time.Second)
+	return f.retainedBindingAt(time.Now().UTC().Add(-70 * time.Second).Truncate(time.Second))
+}
+
+func (f *fixture) retainedBindingAt(now time.Time) Binding {
+	f.t.Helper()
+	f.now = now
 	f.exec("INSERT INTO event_gate_facts(event_id) VALUES($1) ON CONFLICT DO NOTHING", f.id)
 	f.exec(
 		"UPDATE events SET stage='completed',completed_at=$2 WHERE id=$1",

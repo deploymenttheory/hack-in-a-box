@@ -69,7 +69,13 @@ func TestNativeClarificationBroadSubscriptionAndPinnedVersionUseActualCurrentPub
 	t *testing.T,
 ) {
 	f := newFixture(t)
-	_, relay := installProviders(t, f)
+	smtp, _ := installProviders(t, f)
+	relay := &capturingAcceptedRelay{}
+	smtp.Transport = relay
+	if err := dbgen.New(f.pool).
+		ConfirmPersonEmail(t.Context(), dbgen.ConfirmPersonEmailParams{PersonID: f.person.ID, Mailbox: "common-answer-reader@example.test"}); err != nil {
+		t.Fatal(err)
+	}
 	_, content, challenge, team := prepareNativeCommonChallenge(t, f)
 	f.now = f.now.Add(time.Minute)
 	if err := content.Dispatch(t.Context(), f.id, challenge.ID, challenge.Revision); err != nil {
@@ -111,7 +117,7 @@ func TestNativeClarificationBroadSubscriptionAndPinnedVersionUseActualCurrentPub
 	if err != nil {
 		t.Fatal(err)
 	}
-	f.campaign("reminder", "An approved common answer is available.", true, "in_app")
+	f.campaign("reminder", "An approved common answer is available.", true, "in_app", "smtp")
 	bind := func(version int64) Binding {
 		t.Helper()
 		page, _ := f.change(
@@ -223,6 +229,43 @@ func TestNativeClarificationBroadSubscriptionAndPinnedVersionUseActualCurrentPub
 		)
 	}
 	f.execute(oldPinned)
+	// Version1 was locally persisted before its correction, but its still-pending
+	// external notice must not execute after version2 becomes current. The newer
+	// immutable source may send once to its current verified recipient.
+	rows, err := f.pool.Query(
+		t.Context(),
+		"SELECT operation_id FROM smtp_campaign_messages ORDER BY created_at,operation_id",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	operations := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err = rows.Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		operations = append(operations, id)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range operations {
+		if err = f.s.Jobs.Execute(t.Context(), id); err != nil {
+			t.Fatal(err)
+		}
+		if err = f.s.Jobs.Execute(t.Context(), id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	messages := relay.snapshot()
+	if len(messages) != 1 || messages[0].Recipient != "common-answer-reader@example.test" ||
+		strings.Contains(messages[0].PlainText, "PRIVATE") ||
+		strings.Contains(messages[0].PlainText, question.ID.String()) {
+		t.Fatal("corrected native publication sent obsolete/private or repeated notice")
+	}
 	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
 		items, _, e := answers.DiscoverNotificationSourcesPageInTransaction(
 			t.Context(),
@@ -311,12 +354,12 @@ func TestNativeClarificationBroadSubscriptionAndPinnedVersionUseActualCurrentPub
 		Scan(&delivered, &body); err != nil {
 		t.Fatal(err)
 	}
-	if delivered != 4 || strings.Contains(body, "PRIVATE") || relay.calls.Load() != 0 {
+	if delivered != 4 || strings.Contains(body, "PRIVATE") || len(relay.snapshot()) != 1 {
 		t.Fatalf(
 			"approved current local receipt truth changed: count%d body%q relay%d",
 			delivered,
 			body,
-			relay.calls.Load(),
+			len(relay.snapshot()),
 		)
 	}
 }
