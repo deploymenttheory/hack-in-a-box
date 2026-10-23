@@ -16,6 +16,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
@@ -117,7 +118,7 @@ func (s Service) Save(
 	if err := validate(input); err != nil {
 		return result, err
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		row, err := editor(ctx, q, actor, eventID)
 		if err != nil {
 			return err
@@ -156,6 +157,17 @@ func (s Service) Save(
 			if err = rubric.ValidateReference(ctx, q, eventID, d.Rubric, false); err != nil {
 				return fmt.Errorf("validate authored rubric reference: %w", err)
 			}
+		}
+		if err = objectives.ValidateDisclosuresInTransaction(
+			ctx,
+			tx,
+			eventID,
+			d.Objectives,
+			false,
+			false,
+			s.now(),
+		); err != nil {
+			return fmt.Errorf("validate authored objective references: %w", err)
 		}
 		if err = checkReferences(ctx, q, eventID, id, d); err != nil {
 			return err
@@ -253,7 +265,7 @@ func (s Service) Action(
 				return err
 			}
 		} else {
-			if err = s.change(ctx, q, row, &item, actor, action, reason); err != nil {
+			if err = s.change(ctx, tx, q, row, &item, actor, action, reason); err != nil {
 				return err
 			}
 		}
@@ -268,6 +280,7 @@ func (s Service) Action(
 
 func (s Service) change(
 	ctx context.Context,
+	tx pgx.Tx,
 	q *dbgen.Queries,
 	row dbgen.Event,
 	item *dbgen.ContentItem,
@@ -296,6 +309,17 @@ func (s Service) change(
 				"unresolved_placeholder",
 				"Resolve template placeholders before approval.",
 			)
+		}
+		if err = objectives.ValidateDisclosuresInTransaction(
+			ctx,
+			tx,
+			row.ID,
+			d.Objectives,
+			false,
+			false,
+			s.now(),
+		); err != nil {
+			return fmt.Errorf("validate approved objective references: %w", err)
 		}
 		if err = approveGuidance(d); err != nil {
 			return err

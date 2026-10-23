@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
@@ -84,13 +85,14 @@ type (
 		Assets     []Asset `json:"assets"`
 	}
 	Definitions struct {
-		Forms        []Form        `json:"forms"`
-		Tasks        []Task        `json:"tasks"`
-		Deliverables []Deliverable `json:"deliverables"`
-		RoleBriefs   []RoleBrief   `json:"role_briefs"`
-		Rubrics      []Rubric      `json:"rubrics"`
-		Messages     []Message     `json:"messages"`
-		Branding     Branding      `json:"branding"`
+		Objectives   []objectives.Configuration `json:"objectives,omitempty"`
+		Forms        []Form                     `json:"forms"`
+		Tasks        []Task                     `json:"tasks"`
+		Deliverables []Deliverable              `json:"deliverables"`
+		RoleBriefs   []RoleBrief                `json:"role_briefs"`
+		Rubrics      []Rubric                   `json:"rubrics"`
+		Messages     []Message                  `json:"messages"`
+		Branding     Branding                   `json:"branding"`
 	}
 	Bundle struct {
 		Event       event.Configuration `json:"event"`
@@ -155,6 +157,11 @@ func Validate(bundle Bundle) error {
 		return &event.Blocked{Issues: issues}
 	}
 	d := bundle.Definitions
+	for _, objective := range d.Objectives {
+		if err := objective.Definition.Validate(); err != nil {
+			return fmt.Errorf("validate template objective: %w", err)
+		}
+	}
 	if err := validateCounts(d); err != nil {
 		return err
 	}
@@ -322,6 +329,13 @@ func validateMessage(m Message) error {
 }
 
 func visitIDs(b *Bundle, visit func(*uuid.UUID)) {
+	for i := range b.Definitions.Objectives {
+		objective := &b.Definitions.Objectives[i]
+		visit(&objective.ID)
+		for j := range objective.Definition.Measures {
+			visit(&objective.Definition.Measures[j].ID)
+		}
+	}
 	for i := range b.Event.Schedule {
 		visit(&b.Event.Schedule[i].ID)
 	}
@@ -414,6 +428,9 @@ func Remap(source Bundle, input CloneInput) (Bundle, error) {
 	for i := range result.Definitions.Messages {
 		link(&result.Definitions.Messages[i].ScheduleID)
 	}
+	for i := range result.Definitions.Objectives {
+		result.Definitions.Objectives[i].Definition.OwnerID = nil
+	}
 	if err := rebase(&result.Event, input); err != nil {
 		return Bundle{}, err
 	}
@@ -471,7 +488,8 @@ func rebase(c *event.Configuration, input CloneInput) error {
 }
 
 func validateCounts(d Definitions) error {
-	if len(d.Forms) > 50 || len(d.Tasks) > 200 || len(d.Deliverables) > 100 ||
+	if len(d.Objectives) > 100 || len(d.Forms) > 50 || len(d.Tasks) > 200 ||
+		len(d.Deliverables) > 100 ||
 		len(d.RoleBriefs) > 20 ||
 		len(d.Rubrics) > 20 ||
 		len(d.Messages) > 200 ||

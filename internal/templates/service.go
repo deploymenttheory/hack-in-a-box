@@ -20,6 +20,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 )
 
 type Service struct{ Pool *pgxpool.Pool }
@@ -315,7 +316,12 @@ func (s Service) Publish(
 	return result, nil
 }
 
-func snapshot(ctx context.Context, q *dbgen.Queries, actor, id uuid.UUID) (Bundle, error) {
+func snapshot(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	actor, id uuid.UUID,
+) (Bundle, error) {
 	if err := (access.EventPolicy{Queries: q}).Authorize(
 		ctx,
 		actor,
@@ -334,20 +340,32 @@ func snapshot(ctx context.Context, q *dbgen.Queries, actor, id uuid.UUID) (Bundl
 		return result, fmt.Errorf("decode snapshot configuration: %w", err)
 	}
 	definitions, err := q.EventDefinitions(ctx, id)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return result, nil
-	}
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return result, fmt.Errorf("load definition snapshot: %w", err)
 	}
-	if err := json.Unmarshal(definitions.Definitions, &result.Definitions); err != nil {
-		return result, fmt.Errorf("decode definitions: %w", err)
+	if err == nil {
+		if err = json.Unmarshal(definitions.Definitions, &result.Definitions); err != nil {
+			return result, fmt.Errorf("decode definitions: %w", err)
+		}
+	}
+	result.Definitions.Objectives, err = objectives.SnapshotInTransaction(ctx, tx, actor, id)
+	if err != nil {
+		return result, fmt.Errorf("snapshot native objectives: %w", err)
 	}
 	return result, nil
 }
 
 func (s Service) Snapshot(ctx context.Context, actor, id uuid.UUID) (Bundle, error) {
-	return snapshot(ctx, dbgen.New(s.Pool), actor, id)
+	var result Bundle
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+		var err error
+		result, err = snapshot(ctx, tx, q, actor, id)
+		return err
+	})
+	if err != nil {
+		return result, fmt.Errorf("snapshot event configuration: %w", err)
+	}
+	return result, nil
 }
 
 func (s Service) SaveDefinitions(
@@ -357,7 +375,7 @@ func (s Service) SaveDefinitions(
 	definitions Definitions,
 ) (Bundle, error) {
 	var result Bundle
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		row, err := q.LockEvent(ctx, id)
 		if err != nil {
 			return fmt.Errorf("lock definitions: %w", err)
@@ -374,7 +392,7 @@ func (s Service) SaveDefinitions(
 		if row.Revision != revision {
 			return access.ErrConflict
 		}
-		result, err = snapshot(ctx, q, actor, id)
+		result, err = snapshot(ctx, tx, q, actor, id)
 		if err != nil {
 			return err
 		}
@@ -389,6 +407,12 @@ func (s Service) SaveDefinitions(
 					},
 				},
 			}
+		}
+		if definitions.Objectives == nil {
+			definitions.Objectives = result.Definitions.Objectives
+		}
+		if !reflect.DeepEqual(definitions.Objectives, result.Definitions.Objectives) {
+			return access.ErrInvalid
 		}
 		result.Definitions = definitions
 		if err := Validate(result); err != nil {
@@ -449,7 +473,7 @@ func (s Service) clone(
 ) (event.View, error) {
 	var result event.View
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
-		bundle, err := s.cloneSource(ctx, q, actor, source, input.Version, fromTemplate)
+		bundle, err := s.cloneSource(ctx, tx, q, actor, source, input.Version, fromTemplate)
 		if err != nil {
 			return err
 		}
@@ -522,6 +546,15 @@ func (s Service) clone(
 		if err := q.SaveEventDefinitions(ctx, params); err != nil {
 			return fmt.Errorf("commit independent snapshot: %w", err)
 		}
+		if err := (objectives.Service{Pool: s.Pool}).ImportInTransaction(
+			ctx,
+			tx,
+			actor,
+			result.ID,
+			cloned.Definitions.Objectives,
+		); err != nil {
+			return fmt.Errorf("materialise independent objective configuration: %w", err)
+		}
 		return audit.Append(
 			ctx,
 			q,
@@ -543,6 +576,7 @@ func (s Service) clone(
 
 func (s Service) cloneSource(
 	ctx context.Context,
+	tx pgx.Tx,
 	q *dbgen.Queries,
 	actor, source uuid.UUID,
 	version int32,
@@ -552,7 +586,7 @@ func (s Service) cloneSource(
 		if _, err := q.LockEvent(ctx, source); err != nil {
 			return Bundle{}, fmt.Errorf("lock source snapshot: %w", err)
 		}
-		return snapshot(ctx, q, actor, source)
+		return snapshot(ctx, tx, q, actor, source)
 	}
 	row, err := q.LockTemplate(ctx, source)
 	if err != nil {

@@ -181,7 +181,7 @@ func (s Service) SaveBrand(
 	brand Branding,
 ) (BrandView, error) {
 	var result BrandView
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		row, err := q.LockEvent(ctx, id)
 		if err != nil {
 			return fmt.Errorf("lock branding: %w", err)
@@ -201,7 +201,7 @@ func (s Service) SaveBrand(
 		if err := validateBranding(brand); err != nil {
 			return err
 		}
-		bundle, err := snapshot(ctx, q, actor, id)
+		bundle, err := snapshot(ctx, tx, q, actor, id)
 		if err != nil {
 			return err
 		}

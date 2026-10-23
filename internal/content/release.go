@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 )
@@ -59,6 +60,17 @@ func (s Service) release(
 	doc, err := document(ctx, q, *item, item.Version)
 	if err != nil {
 		return err
+	}
+	if err = objectives.ValidateDisclosuresInTransaction(
+		ctx,
+		tx,
+		row.ID,
+		doc.Objectives,
+		true,
+		item.Kind == "challenge" && !row.PublishedAt.Valid,
+		now,
+	); err != nil {
+		return fmt.Errorf("validate released objective disclosure: %w", err)
 	}
 	if err = s.verifyAttachments(ctx, q, *item.ApprovedBy, row.ID, doc); err != nil {
 		return err

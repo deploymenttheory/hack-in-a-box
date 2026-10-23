@@ -36,6 +36,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/permissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
@@ -53,6 +54,7 @@ import (
 )
 
 type Dependencies struct {
+	Objectives     objectives.Service
 	Feedback       feedback.Service
 	Moderation     *moderation.Service
 	Deliveries     *deliveryhistory.Service
