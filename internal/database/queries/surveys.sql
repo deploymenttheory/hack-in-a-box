@@ -24,6 +24,8 @@ INSERT INTO survey_invitations(event_id,survey_id,person_id,version,invited_at) 
 SELECT * FROM survey_invitations WHERE event_id=$1 AND survey_id=$2 AND person_id=$3;
 -- name: SurveyInvitations :many
 SELECT * FROM survey_invitations WHERE event_id=$1 AND survey_id=$2 ORDER BY person_id LIMIT 10001;
+-- name: OwnSurveyInvitationsPage :many
+SELECT * FROM survey_invitations WHERE event_id=$1 AND person_id=$2 AND survey_id>sqlc.arg(after_id) ORDER BY survey_id LIMIT sqlc.arg(page_size);
 -- name: SurveyResponse :one
 SELECT r.* FROM survey_response_heads h JOIN survey_responses r ON r.event_id=h.event_id AND r.survey_id=h.survey_id AND r.person_id=h.person_id AND r.revision=h.revision WHERE h.event_id=$1 AND h.survey_id=$2 AND h.person_id=$3;
 -- name: SurveyResponseHeadsPage :many
@@ -43,7 +45,7 @@ INSERT INTO survey_commands(event_id,survey_id,person_id,command_id,payload_dige
 -- name: SurveyReportSnapshot :one
 SELECT * FROM survey_report_snapshots WHERE event_id=$1 AND survey_id=$2;
 -- name: InsertSurveyReportSnapshot :exec
-INSERT INTO survey_report_snapshots(event_id,survey_id,survey_version,response_digest,document,created_at) VALUES($1,$2,$3,$4,$5,$6);
+INSERT INTO survey_report_snapshots(event_id,survey_id,survey_version,aggregate_digest,document,created_at) VALUES($1,$2,$3,$4,$5,$6);
 -- name: SurveyReportReview :one
 SELECT * FROM survey_report_reviews WHERE event_id=$1 AND survey_id=$2 AND id=$3;
 -- name: LatestSurveyReportReview :one
@@ -68,3 +70,7 @@ DELETE FROM survey_response_heads WHERE event_id=$1 AND person_id=$2;
 DELETE FROM survey_invitations WHERE event_id=$1 AND person_id=$2;
 -- name: SurveyPrivacyEvents :many
 SELECT DISTINCT e.id FROM events e JOIN survey_invitations i ON i.event_id=e.id WHERE e.stage IN ('completed','cancelled','archived') AND e.completed_at IS NOT NULL AND e.id>sqlc.arg(after_id) ORDER BY e.id LIMIT 100;
+-- name: SurveyPrivacyPeoplePage :many
+SELECT DISTINCT person_id FROM survey_invitations WHERE event_id=$1 AND person_id>sqlc.arg(after_person) ORDER BY person_id LIMIT 100;
+-- name: SurveyOpenSourcesPage :many
+SELECT p.survey_id,p.version,v.document FROM survey_publications p JOIN survey_heads h ON h.event_id=p.event_id AND h.id=p.survey_id AND h.published_version=p.version JOIN survey_versions v ON v.event_id=p.event_id AND v.survey_id=p.survey_id AND v.version=p.version WHERE p.event_id=$1 AND NOT h.cancelled AND (sqlc.narg(source_id)::uuid IS NULL OR p.survey_id=sqlc.narg(source_id)) AND p.survey_id>sqlc.arg(after_id) AND (v.document->>'opens_at')::timestamptz<=sqlc.arg(at_time)::timestamptz AND (v.document->>'closes_at')::timestamptz>sqlc.arg(at_time) ORDER BY p.survey_id LIMIT sqlc.arg(page_size);

@@ -151,7 +151,7 @@ Dependencies follow the actual owning contracts:89→100,99+107→101,159→160 
 161→162. The recovery core merged in #202 and the actual #100 workspace merged
 in #204 with interrupted-save, team-switch, conflict and recovered pre-live
 denial verification. #101 checkpoint assessments merged in #203 and #160 help
-controls merged in #206. #162 is under final workspace verification. Full support
+controls merged in #206. #162 is delivered in merged PR #209. Full support
 surfaces use the real owning APIs independently of the aggregate Today dashboard;
 no fake saved observation or unimplemented deep link substitutes for those
 journeys.
@@ -185,11 +185,20 @@ These are selected work, not delivery claims.
 | #115 | Private feedback surveys and aggregates | Supplies response privacy and aggregate contracts before the outcome-review surfaces consume them. |
 
 Keep three independent workstreams active with separate PRs. Actual automation
-merged in #207 after #208's mentor scorecard UI; delivery recovery is under #83
-implementation. #209's clarification workspace is merged after final native and browser
+merged in #207 after #208's mentor scorecard UI; delivery recovery merged in PR #212 and aggregate fault/confidentiality verification in PR #214. #209's clarification workspace is merged after final native and browser
 composition verification. #103 shared feedback is delivered in merged PR #210;
 #104's native moderation owner is delivered in merged PR #211.
 Provider history must preserve acceptance versus delivery and immutable unknown
 outcomes; a recovery decision cannot manufacture a successful receipt. Migration
 numbers follow actual ready merges. These are selected tasks, not completed
 acceptance claims; the external Teams shared-channel verification is still open.
+
+
+#115 supplies native versioned post-event questionnaires, identifiable private
+responses, frozen suppressed reports and approved invitation routing. Its minimal
+read-only survey destination precedes the separate #116 editing workspace. #156
+objective definitions merged in PR #213; #157 configuration remains in PR #215
+and #105 support-risk views in PR #216 at this checkpoint. #115's migration40 is
+provisional until its final actual-main readiness gate; none of these implementation
+checkpoints imply the remaining live Teams verification or future outcome owners
+are complete.

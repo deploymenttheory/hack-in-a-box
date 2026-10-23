@@ -46,7 +46,7 @@ CREATE TABLE survey_commands (
 );
 CREATE TABLE survey_report_snapshots (
  event_id uuid NOT NULL, survey_id uuid NOT NULL, survey_version bigint NOT NULL,
- response_digest text NOT NULL, document jsonb NOT NULL, created_at timestamptz NOT NULL,
+ aggregate_digest text NOT NULL, document jsonb NOT NULL, created_at timestamptz NOT NULL,
  PRIMARY KEY(event_id,survey_id), FOREIGN KEY(event_id,survey_id,survey_version) REFERENCES survey_versions(event_id,survey_id,version)
 );
 CREATE TABLE survey_report_reviews (

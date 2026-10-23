@@ -91,7 +91,7 @@ func ownResponse(
 		dbgen.SurveyResponseParams{EventID: eventID, SurveyID: id, PersonID: person},
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
+		return nil, nil //nolint:nilnil // An absent own response is a valid unsubmitted invitation.
 	}
 	if err != nil {
 		return nil, fmt.Errorf("read own survey response: %w", err)
@@ -144,8 +144,8 @@ func (s Service) ReadOwn(
 
 func responseDigest(c ResponseCommand, expected int64) (string, error) {
 	body, err := json.Marshal(struct {
-		Command  ResponseCommand
-		Expected int64
+		Command  ResponseCommand `json:"command"`
+		Expected int64           `json:"expected"`
 	}{c, expected})
 	if err != nil {
 		return "", fmt.Errorf("digest survey command: %w", err)

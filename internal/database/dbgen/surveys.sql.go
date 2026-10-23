@@ -231,16 +231,16 @@ func (q *Queries) InsertSurveyReportReview(ctx context.Context, arg InsertSurvey
 }
 
 const insertSurveyReportSnapshot = `-- name: InsertSurveyReportSnapshot :exec
-INSERT INTO survey_report_snapshots(event_id,survey_id,survey_version,response_digest,document,created_at) VALUES($1,$2,$3,$4,$5,$6)
+INSERT INTO survey_report_snapshots(event_id,survey_id,survey_version,aggregate_digest,document,created_at) VALUES($1,$2,$3,$4,$5,$6)
 `
 
 type InsertSurveyReportSnapshotParams struct {
-	EventID        uuid.UUID
-	SurveyID       uuid.UUID
-	SurveyVersion  int64
-	ResponseDigest string
-	Document       []byte
-	CreatedAt      time.Time
+	EventID         uuid.UUID
+	SurveyID        uuid.UUID
+	SurveyVersion   int64
+	AggregateDigest string
+	Document        []byte
+	CreatedAt       time.Time
 }
 
 func (q *Queries) InsertSurveyReportSnapshot(ctx context.Context, arg InsertSurveyReportSnapshotParams) error {
@@ -248,7 +248,7 @@ func (q *Queries) InsertSurveyReportSnapshot(ctx context.Context, arg InsertSurv
 		arg.EventID,
 		arg.SurveyID,
 		arg.SurveyVersion,
-		arg.ResponseDigest,
+		arg.AggregateDigest,
 		arg.Document,
 		arg.CreatedAt,
 	)
@@ -352,6 +352,48 @@ func (q *Queries) LatestSurveyReportReview(ctx context.Context, arg LatestSurvey
 		&i.ReviewedAt,
 	)
 	return i, err
+}
+
+const ownSurveyInvitationsPage = `-- name: OwnSurveyInvitationsPage :many
+SELECT event_id, survey_id, person_id, version, invited_at FROM survey_invitations WHERE event_id=$1 AND person_id=$2 AND survey_id>$3 ORDER BY survey_id LIMIT $4
+`
+
+type OwnSurveyInvitationsPageParams struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+	AfterID  uuid.UUID
+	PageSize int32
+}
+
+func (q *Queries) OwnSurveyInvitationsPage(ctx context.Context, arg OwnSurveyInvitationsPageParams) ([]SurveyInvitation, error) {
+	rows, err := q.db.Query(ctx, ownSurveyInvitationsPage,
+		arg.EventID,
+		arg.PersonID,
+		arg.AfterID,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SurveyInvitation{}
+	for rows.Next() {
+		var i SurveyInvitation
+		if err := rows.Scan(
+			&i.EventID,
+			&i.SurveyID,
+			&i.PersonID,
+			&i.Version,
+			&i.InvitedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const publishSurvey = `-- name: PublishSurvey :exec
@@ -592,6 +634,50 @@ func (q *Queries) SurveyInvitations(ctx context.Context, arg SurveyInvitationsPa
 	return items, nil
 }
 
+const surveyOpenSourcesPage = `-- name: SurveyOpenSourcesPage :many
+SELECT p.survey_id,p.version,v.document FROM survey_publications p JOIN survey_heads h ON h.event_id=p.event_id AND h.id=p.survey_id AND h.published_version=p.version JOIN survey_versions v ON v.event_id=p.event_id AND v.survey_id=p.survey_id AND v.version=p.version WHERE p.event_id=$1 AND NOT h.cancelled AND ($2::uuid IS NULL OR p.survey_id=$2) AND p.survey_id>$3 AND (v.document->>'opens_at')::timestamptz<=$4::timestamptz AND (v.document->>'closes_at')::timestamptz>$4 ORDER BY p.survey_id LIMIT $5
+`
+
+type SurveyOpenSourcesPageParams struct {
+	EventID  uuid.UUID
+	SourceID *uuid.UUID
+	AfterID  uuid.UUID
+	AtTime   time.Time
+	PageSize int32
+}
+
+type SurveyOpenSourcesPageRow struct {
+	SurveyID uuid.UUID
+	Version  int64
+	Document []byte
+}
+
+func (q *Queries) SurveyOpenSourcesPage(ctx context.Context, arg SurveyOpenSourcesPageParams) ([]SurveyOpenSourcesPageRow, error) {
+	rows, err := q.db.Query(ctx, surveyOpenSourcesPage,
+		arg.EventID,
+		arg.SourceID,
+		arg.AfterID,
+		arg.AtTime,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SurveyOpenSourcesPageRow{}
+	for rows.Next() {
+		var i SurveyOpenSourcesPageRow
+		if err := rows.Scan(&i.SurveyID, &i.Version, &i.Document); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const surveyPrivacyEvents = `-- name: SurveyPrivacyEvents :many
 SELECT DISTINCT e.id FROM events e JOIN survey_invitations i ON i.event_id=e.id WHERE e.stage IN ('completed','cancelled','archived') AND e.completed_at IS NOT NULL AND e.id>$1 ORDER BY e.id LIMIT 100
 `
@@ -609,6 +695,35 @@ func (q *Queries) SurveyPrivacyEvents(ctx context.Context, afterID uuid.UUID) ([
 			return nil, err
 		}
 		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const surveyPrivacyPeoplePage = `-- name: SurveyPrivacyPeoplePage :many
+SELECT DISTINCT person_id FROM survey_invitations WHERE event_id=$1 AND person_id>$2 ORDER BY person_id LIMIT 100
+`
+
+type SurveyPrivacyPeoplePageParams struct {
+	EventID     uuid.UUID
+	AfterPerson uuid.UUID
+}
+
+func (q *Queries) SurveyPrivacyPeoplePage(ctx context.Context, arg SurveyPrivacyPeoplePageParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, surveyPrivacyPeoplePage, arg.EventID, arg.AfterPerson)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var person_id uuid.UUID
+		if err := rows.Scan(&person_id); err != nil {
+			return nil, err
+		}
+		items = append(items, person_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -710,7 +825,7 @@ func (q *Queries) SurveyReportReview(ctx context.Context, arg SurveyReportReview
 }
 
 const surveyReportSnapshot = `-- name: SurveyReportSnapshot :one
-SELECT event_id, survey_id, survey_version, response_digest, document, created_at FROM survey_report_snapshots WHERE event_id=$1 AND survey_id=$2
+SELECT event_id, survey_id, survey_version, aggregate_digest, document, created_at FROM survey_report_snapshots WHERE event_id=$1 AND survey_id=$2
 `
 
 type SurveyReportSnapshotParams struct {
@@ -725,7 +840,7 @@ func (q *Queries) SurveyReportSnapshot(ctx context.Context, arg SurveyReportSnap
 		&i.EventID,
 		&i.SurveyID,
 		&i.SurveyVersion,
-		&i.ResponseDigest,
+		&i.AggregateDigest,
 		&i.Document,
 		&i.CreatedAt,
 	)

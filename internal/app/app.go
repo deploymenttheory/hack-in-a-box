@@ -109,6 +109,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
+		Surveys:         communicationRuntime.Surveys,
 		Deliveries:      communicationRuntime.Deliveries,
 		Help:            communicationRuntime.Help,
 		Feedback:        *communicationRuntime.Feedback,
@@ -230,6 +231,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		}
 		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
 			return fmt.Errorf("retain private records: %w", err)
+		}
+		if err := communicationRuntime.Surveys.Retain(ctx); err != nil {
+			return fmt.Errorf("retain private survey records: %w", err)
 		}
 		return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists)
 	}

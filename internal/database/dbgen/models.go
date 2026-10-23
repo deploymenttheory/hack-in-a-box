@@ -1329,12 +1329,12 @@ type SurveyReportReview struct {
 }
 
 type SurveyReportSnapshot struct {
-	EventID        uuid.UUID
-	SurveyID       uuid.UUID
-	SurveyVersion  int64
-	ResponseDigest string
-	Document       []byte
-	CreatedAt      time.Time
+	EventID         uuid.UUID
+	SurveyID        uuid.UUID
+	SurveyVersion   int64
+	AggregateDigest string
+	Document        []byte
+	CreatedAt       time.Time
 }
 
 type SurveyResponse struct {

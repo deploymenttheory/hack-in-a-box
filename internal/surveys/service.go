@@ -16,17 +16,19 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/forms"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 )
 
 func authorize(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID) error {
-	return (access.EventPolicy{Queries: q}).Authorize(
+	err := (access.EventPolicy{Queries: q}).Authorize(
 		ctx,
 		actor,
 		eventID,
 		eventID,
 		access.StaffRead,
 	)
+	return wrap("authorize survey organiser", err)
 }
 
 func load(
@@ -152,7 +154,11 @@ func record(
 	action audit.Action,
 	version int64,
 ) error {
-	return audit.Append(
+	reason := audit.OrganiserDecision
+	if action == audit.SurveyResponded {
+		reason = audit.UserRequest
+	}
+	err := audit.Append(
 		ctx,
 		q,
 		audit.Record{
@@ -160,10 +166,11 @@ func record(
 			EventID:  &eventID,
 			TargetID: id,
 			Action:   action,
-			Reason:   audit.OrganiserDecision,
+			Reason:   reason,
 			Metadata: audit.Metadata{PreviousRevision: &version},
 		},
 	)
+	return wrap("record survey action", err)
 }
 
 func (s Service) Change(
@@ -173,19 +180,10 @@ func (s Service) Change(
 	c Command,
 ) (Configuration, error) {
 	var out Configuration
-	if id == uuid.Nil || expected < 0 ||
-		!slices.Contains([]string{"save", "approve", "publish", "cancel"}, c.Action) ||
-		(c.Action == "save") != (c.Definition != nil) {
-		return out, access.ErrInvalid
+	if err := c.validate(id, expected); err != nil {
+		return out, err
 	}
-	if c.Definition != nil {
-		if err := c.Definition.Validate(); err != nil {
-			return out, err
-		}
-		if c.Definition.Form.ID != id {
-			return out, access.ErrInvalid
-		}
-	}
+
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		e, err := q.LockEvent(ctx, eventID)
 		if err != nil {
@@ -196,6 +194,9 @@ func (s Service) Change(
 		}
 		if !e.WritesAllowed {
 			return access.ErrForbidden
+		}
+		if err = s.privateCurrent(ctx, q, e); err != nil {
+			return err
 		}
 		head, cfg, err := current(ctx, q, eventID, id)
 		if errors.Is(err, access.ErrNotFound) && c.Action == "save" && expected == 0 {
@@ -209,49 +210,9 @@ func (s Service) Change(
 			return access.ErrConflict
 		}
 		if c.Action == "save" {
-			if head.PublishedVersion.Valid || head.Cancelled {
-				return access.ErrConflict
-			}
-			if !c.Definition.ClosesAt.After(s.now()) {
-				return access.ErrInvalid
-			}
-			var dates event.Configuration
-			if err = json.Unmarshal(e.Configuration, &dates); err != nil {
-				return fmt.Errorf("read survey event dates: %w", err)
-			}
-			if c.Definition.OpensAt.Before(dates.LiveEnd) {
-				return access.ErrInvalid
-			}
-			if err = s.resolveMeasures(ctx, tx, actor, eventID, *c.Definition); err != nil {
+			if err = s.saveVersion(ctx, tx, q, actor, e, id, &head, c.Definition); err != nil {
 				return err
 			}
-			version := expected + 1
-			if expected == 0 {
-				if err = q.InsertSurveyHead(
-					ctx,
-					dbgen.InsertSurveyHeadParams{EventID: eventID, ID: id},
-				); err != nil {
-					return fmt.Errorf("create survey: %w", err)
-				}
-			}
-			body, encodeErr := json.Marshal(c.Definition)
-			if encodeErr != nil {
-				return fmt.Errorf("encode survey definition: %w", encodeErr)
-			}
-			if err = q.InsertSurveyVersion(
-				ctx,
-				dbgen.InsertSurveyVersionParams{
-					EventID:   eventID,
-					SurveyID:  id,
-					Version:   version,
-					Document:  body,
-					ActorID:   actor,
-					CreatedAt: s.now(),
-				},
-			); err != nil {
-				return fmt.Errorf("retain survey version: %w", err)
-			}
-			head.CurrentVersion = version
 		} else {
 			if head.Cancelled {
 				return access.ErrConflict
@@ -277,51 +238,20 @@ func (s Service) Change(
 					return fmt.Errorf("approve survey version: %w", err)
 				}
 			case "publish":
-				if head.PublishedVersion.Valid || !cfg.Definition.ClosesAt.After(s.now()) {
+				if head.PublishedVersion.Valid {
 					return access.ErrConflict
 				}
-				approval, readErr := q.SurveyApproval(
+				if err = s.publishVersion(
 					ctx,
-					dbgen.SurveyApprovalParams{EventID: eventID, SurveyID: id, Version: expected},
-				)
-				if readErr != nil {
-					return access.ErrConflict
-				}
-				if err = authorize(ctx, q, approval.ActorID, eventID); err != nil {
-					return err
-				}
-				if err = s.resolveMeasures(ctx, tx, actor, eventID, cfg.Definition); err != nil {
-					return err
-				}
-				people, readErr := s.people(ctx, q, eventID, uuid.Nil, cfg.Definition.Form.Audience)
-				if readErr != nil {
-					return readErr
-				}
-				if err = q.PublishSurvey(
-					ctx,
-					dbgen.PublishSurveyParams{
-						EventID:     eventID,
-						SurveyID:    id,
-						Version:     expected,
-						ActorID:     actor,
-						PublishedAt: s.now(),
-					},
+					tx,
+					q,
+					actor,
+					eventID,
+					id,
+					expected,
+					cfg,
 				); err != nil {
-					return fmt.Errorf("publish survey: %w", err)
-				}
-				for _, person := range people {
-					if err = q.InviteSurveyPerson(
-						ctx,
-						dbgen.InviteSurveyPersonParams{
-							EventID:   eventID,
-							SurveyID:  id,
-							PersonID:  person,
-							Version:   expected,
-							InvitedAt: s.now(),
-						},
-					); err != nil {
-						return fmt.Errorf("retain survey invitation: %w", err)
-					}
+					return err
 				}
 				head.PublishedVersion = pgtype.Int8{Int64: expected, Valid: true}
 			case "cancel":
@@ -351,4 +281,154 @@ func (s Service) Change(
 		return out, fmt.Errorf("change survey: %w", err)
 	}
 	return out, nil
+}
+
+func (s Service) saveVersion(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	actor uuid.UUID,
+	e dbgen.Event,
+	id uuid.UUID,
+	head *dbgen.SurveyHead,
+	definition *Definition,
+) error {
+	eventID := e.ID
+	var err error
+	if head.PublishedVersion.Valid || head.Cancelled {
+		return access.ErrConflict
+	}
+	if !definition.ClosesAt.After(s.now()) {
+		return access.ErrInvalid
+	}
+	var dates event.Configuration
+	if err = json.Unmarshal(e.Configuration, &dates); err != nil {
+		return fmt.Errorf("read survey event dates: %w", err)
+	}
+	if definition.OpensAt.Before(dates.LiveEnd) {
+		return access.ErrInvalid
+	}
+	if err = s.resolveMeasures(ctx, tx, actor, eventID, *definition); err != nil {
+		return err
+	}
+	version := head.CurrentVersion + 1
+	if head.CurrentVersion == 0 {
+		if err = q.InsertSurveyHead(
+			ctx,
+			dbgen.InsertSurveyHeadParams{EventID: eventID, ID: id},
+		); err != nil {
+			return fmt.Errorf("create survey: %w", err)
+		}
+	}
+	normalized := *definition
+	normalized.Form.Fields = append([]forms.Field{}, definition.Form.Fields...)
+	for i := range normalized.Form.Fields {
+		if normalized.Form.Fields[i].Choices == nil {
+			normalized.Form.Fields[i].Choices = []string{}
+		}
+	}
+	if normalized.Measures == nil {
+		normalized.Measures = []QuestionMeasure{}
+	}
+	body, encodeErr := json.Marshal(normalized)
+	if encodeErr != nil {
+		return fmt.Errorf("encode survey definition: %w", encodeErr)
+	}
+	if err = q.InsertSurveyVersion(
+		ctx,
+		dbgen.InsertSurveyVersionParams{
+			EventID:   eventID,
+			SurveyID:  id,
+			Version:   version,
+			Document:  body,
+			ActorID:   actor,
+			CreatedAt: s.now(),
+		},
+	); err != nil {
+		return fmt.Errorf("retain survey version: %w", err)
+	}
+	head.CurrentVersion = version
+	return nil
+}
+
+func (s Service) publishVersion(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	actor, eventID, id uuid.UUID,
+	expected int64,
+	cfg Configuration,
+) error {
+	var err error
+	if !cfg.Definition.ClosesAt.After(s.now()) {
+		return access.ErrConflict
+	}
+	approval, readErr := q.SurveyApproval(
+		ctx,
+		dbgen.SurveyApprovalParams{EventID: eventID, SurveyID: id, Version: expected},
+	)
+	if readErr != nil {
+		return access.ErrConflict
+	}
+	if err = authorize(ctx, q, approval.ActorID, eventID); err != nil {
+		return err
+	}
+	if err = s.resolveMeasures(ctx, tx, actor, eventID, cfg.Definition); err != nil {
+		return err
+	}
+	people, readErr := s.people(ctx, q, eventID, uuid.Nil, cfg.Definition.Form.Audience)
+	if readErr != nil {
+		return readErr
+	}
+	if err = q.PublishSurvey(
+		ctx,
+		dbgen.PublishSurveyParams{
+			EventID:     eventID,
+			SurveyID:    id,
+			Version:     expected,
+			ActorID:     actor,
+			PublishedAt: s.now(),
+		},
+	); err != nil {
+		return fmt.Errorf("publish survey: %w", err)
+	}
+	for _, person := range people {
+		if err = q.InviteSurveyPerson(
+			ctx,
+			dbgen.InviteSurveyPersonParams{
+				EventID:   eventID,
+				SurveyID:  id,
+				PersonID:  person,
+				Version:   expected,
+				InvitedAt: s.now(),
+			},
+		); err != nil {
+			return fmt.Errorf("retain survey invitation: %w", err)
+		}
+	}
+	return nil
+}
+
+func wrap(op string, err error) error {
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
+func (c Command) validate(id uuid.UUID, expected int64) error {
+	if id == uuid.Nil || expected < 0 ||
+		!slices.Contains([]string{"save", "approve", "publish", "cancel"}, c.Action) ||
+		(c.Action == "save") != (c.Definition != nil) {
+		return access.ErrInvalid
+	}
+	if c.Definition != nil {
+		if err := c.Definition.Validate(); err != nil {
+			return err
+		}
+		if c.Definition.Form.ID != id {
+			return access.ErrInvalid
+		}
+	}
+	return nil
 }

@@ -18,6 +18,7 @@ const (
 	SurveyChanged             Action = "survey.changed"
 	SurveyResponded           Action = "survey.responded"
 	SurveyReportChanged       Action = "survey.report_changed"
+	SurveyPersonalRemoved     Action = "survey.personal_removed"
 	FeedbackChanged           Action = "feedback.changed"
 	ClarificationChanged      Action = "clarification.changed"
 	RubricChanged             Action = "rubric.changed"
@@ -125,6 +126,7 @@ func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	case SurveyChanged,
 		SurveyResponded,
 		SurveyReportChanged,
+		SurveyPersonalRemoved,
 		FeedbackChanged,
 		ClarificationChanged,
 		RubricChanged,

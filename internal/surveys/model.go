@@ -45,7 +45,7 @@ type Definition struct {
 
 func (d Definition) Validate() error {
 	if err := forms.Validate(d.Form); err != nil {
-		return err
+		return wrap("validate native survey form", err)
 	}
 	if len(d.Form.Fields) == 0 || d.OpensAt.IsZero() || !d.ClosesAt.After(d.OpensAt) ||
 		d.ClosesAt.Sub(d.OpensAt) > 90*24*time.Hour ||
@@ -110,7 +110,7 @@ type ResponseCommand struct {
 
 type Command struct {
 	Action     string      `json:"action"`
-	Definition *Definition `json:"definition"`
+	Definition *Definition `json:"definition,omitempty"`
 }
 
 type Cell struct {
@@ -130,13 +130,15 @@ type QuestionAggregate struct {
 }
 
 type Report struct {
-	SurveyID           uuid.UUID           `json:"survey_id"`
-	SurveyVersion      int64               `json:"survey_version"`
-	ResponseVisibility string              `json:"response_visibility"`
-	Suppressed         bool                `json:"suppressed"`
-	Respondents        *int                `json:"respondents"`
-	Questions          []QuestionAggregate `json:"questions"`
-	ReviewedSummary    string              `json:"reviewed_summary"`
+	ReviewedTextVersion int64               `json:"reviewed_text_version"`
+	PublishedAt         *time.Time          `json:"published_at"`
+	SurveyID            uuid.UUID           `json:"survey_id"`
+	SurveyVersion       int64               `json:"survey_version"`
+	ResponseVisibility  string              `json:"response_visibility"`
+	Suppressed          bool                `json:"suppressed"`
+	Respondents         *int                `json:"respondents"`
+	Questions           []QuestionAggregate `json:"questions"`
+	ReviewedSummary     string              `json:"reviewed_summary"`
 }
 
 func validText(s string, max int) bool {

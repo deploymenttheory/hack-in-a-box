@@ -20,6 +20,7 @@ type DeliveryScope struct {
 // Binding identifies immutable occurrence/approval/source intent; it excludes
 // provider secrets and private content. Broadcast is false for private triggers.
 type ScopeAudience struct {
+	Resource        *ResourceReference
 	Binding         string
 	RecipientIDs    []uuid.UUID
 	Broadcast       bool
@@ -27,6 +28,22 @@ type ScopeAudience struct {
 	AllowArchived   bool
 	Approval        *ScopeApproval
 	Review          *ScopeReview
+}
+
+// ResourceReference is derived only by an authoritative native source. It is
+// retained alongside approved campaign provenance, never accepted from an HTTP
+// caller or used as recipient authority, and has no destination URL field.
+type ResourceReference struct {
+	Kind    string    `json:"kind"`
+	ID      uuid.UUID `json:"id"`
+	Version int64     `json:"version"`
+}
+
+func SameResourceReference(left, right *ResourceReference) bool {
+	if left == nil || right == nil {
+		return left == right
+	}
+	return *left == *right
 }
 
 // ScopePolicy must lock the event in tx and recheck the current occurrence,
