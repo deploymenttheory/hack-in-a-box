@@ -1,0 +1,26 @@
+{
+  "accepted_by": "User explicitly accepted fleet-preview approach on 23 October 2026",
+  "backlog": "https://github.com/deploymenttheory/hack-in-a-box/issues/227",
+  "upstream_study_commit": "dc2161d163e3391bf671e0a28daff9477fe59186",
+  "files": {
+    "fleet-preview.html": "85d750e48e0145f0bce0ebc40d538e77369b345517376e5857eb91a0f73a0756",
+    "fleet-inspired-directions.source.html": "e23ba70a26cb271df39e3380453a03fc683ffe5a79eeb2dcb8c8b4626e4f1e0c",
+    "fleet-inspired-directions.html": "3929dca1e49f8d43652db2a980df2a620858447ec224d40e676147e981f45a01",
+    "fleet-tokens.css": "247ae7ef28754e626c45994d1abf8267e51b43d64ecf3b178f405be4292931f8",
+    "fleet-study/100-ui-qualities.md": "797f98bb6a03bf01b97b59e8e168615b4cd535de89f1b2cb6902c064cb0fbcd1",
+    "fleet-verification.json": "cea00bea5d5ac5ed12c1df4077bc7dffe907f1886deb75dc65d7013634573e37",
+    "fleet-review-participant.png": "115490d2d44b19f7acfc5f8a283a21259a4b76ff5787c164c39412fc04a20a2b",
+    "fleet-queue-admin.png": "6b761b50d43f47ab9b1502c73328f7a331333c89979a9ea9ff4d9993a51adc33",
+    "fleet-workspace-participant.png": "d495b14bd1576a8a86f776c864de971fcd2e543e9d6b294a468e3ca3a802cd9b",
+    "fleet-review-participant-mobile.png": "3fc8679aceb09d8b2d6f927b0f650b32d4c3c5f11d2e1b1622a28ec3e7af7948",
+    "fleet-queue-participant-mobile.png": "b6326d544c0fa9edc0c3262618844d7a9a7b31d160c449fd50e6106d62f50a50",
+    "fleet-review-admin-mobile.png": "6f1fdd81ada81fea847d33e9f749ea549e0fc863993f5cca7f9602ea5bdad231",
+    "fleet-queue-participant.png": "6ba571b1081585672802be42a78e5a77618d187cb305ed3ea32a397afaef9281",
+    "fleet-review-admin.png": "5b5afe6fd799c72d8d15a1a63dc22003ae85a997109f1cb201620051736bc33b",
+    "fleet-queue-admin-mobile.png": "4aa4f2b60f1fe77455a716133c578aef6c0ec0453014e67855303206994c8f82",
+    "fleet-workspace-participant-mobile.png": "d9f787f854b5dde26aecb46e960252e3ca2f6d9a9f0fe2920b69ab1de2866159",
+    "fleet-workspace-admin-mobile.png": "08525760cd4b7fc373f765095702e8a180841a7ce852c3b004260aab298aee22",
+    "fleet-workspace-admin.png": "ba549be6fdcde7782650b235ee7c9063c833f05304f0082b2251a8df40b133cf",
+    "quality-coverage.csv": "0d20893c75dbfa01a13dc28883771ee90f15a1e6b80034de15aa7d69f3171150"
+  }
+}

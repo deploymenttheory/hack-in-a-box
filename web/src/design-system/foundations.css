@@ -6,11 +6,11 @@
   *, *::before, *::after { box-sizing: border-box; }
   .theme :where(button, input, textarea, select) { font: inherit; }
   .theme :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
-    outline: 3px solid var(--ring, currentColor);
-    outline-offset: 3px;
+    outline: var(--focus-width) solid var(--ring, currentColor);
+    outline-offset: var(--focus-offset);
   }
   .theme :where(button, input, select, textarea, a, summary) { -webkit-tap-highlight-color: transparent; }
-  .theme :where(button, input, select, textarea) { transition: border-color var(--motion-duration), background-color var(--motion-duration), box-shadow var(--motion-duration); }
+  .theme :where(button, input, select, textarea) { transition: border-color var(--motion-duration) var(--motion-easing), background-color var(--motion-duration) var(--motion-easing), box-shadow var(--motion-duration) var(--motion-easing); }
   .theme :where(input:not([type=checkbox], [type=radio], [type=range], [type=hidden]), select, textarea) {
     display: block;
     width: 100%;
@@ -21,7 +21,7 @@
     border-radius: var(--radius-control);
     background: var(--background);
     color: var(--foreground);
-    padding: .65rem .75rem;
+    padding: .375rem .75rem;
     line-height: 1.5;
     accent-color: var(--primary);
   }
@@ -50,7 +50,7 @@
     gap: .5rem;
     min-height: var(--control-height);
     max-width: 100%;
-    padding: .65rem .9rem;
+    padding: .375rem .75rem;
     border: 1px solid var(--input);
     border-radius: var(--radius-control);
     color: var(--foreground);
@@ -65,9 +65,9 @@
   .theme :where(button:not([data-slot=button])):hover:not(:disabled) { background: var(--accent-surface); }
   .theme :where(button:not([data-slot=button])):disabled { opacity: .6; }
   .theme :where(table) { width: 100%; border-collapse: collapse; color: var(--foreground); font-size: .875rem; line-height: 1.6; }
-  .theme :where(caption) { text-align: start; font-weight: 650; margin-block-end: .75rem; }
-  .theme :where(th, td) { padding: .85rem .75rem; border-block-end: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; }
-  .theme :where(thead th) { background: var(--muted); font-weight: 650; }
+  .theme :where(caption) { text-align: start; font-weight: var(--weight-emphasis); margin-block-end: .75rem; }
+  .theme :where(th, td) { padding: var(--row-padding) var(--space-3); border-block-end: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; }
+  .theme :where(thead th) { background: var(--muted); font-weight: var(--weight-emphasis); }
   .theme :where(tbody tr):focus-within { background: var(--accent-surface); }
   .theme :where(summary) { cursor: pointer; min-height: 2.75rem; align-content: center; }
   .theme :where(summary)::marker { color: var(--primary); }
@@ -99,7 +99,7 @@
   .menu-item[data-disabled] { color: var(--muted-foreground); cursor: not-allowed; }
   .table-scroll { border: 1px solid var(--border); border-radius: var(--radius-card); scrollbar-color: var(--input) var(--background); }
   .header nav a { border-radius: .25rem; padding-block: .5rem; }
-  .header nav a[aria-current=page] { font-weight: 650; text-decoration: underline; text-decoration-thickness: 2px; }
+  .header nav a[aria-current=page] { font-weight: var(--weight-emphasis); text-decoration: underline; text-decoration-thickness: 2px; }
   .primary-link { align-items: center; justify-content: center; min-height: var(--control-height); border: 1px solid transparent; font-weight: 600; line-height: 1.5; }
   .primary-link:hover { text-decoration: underline; }
   .tabs { row-gap: .25rem; }

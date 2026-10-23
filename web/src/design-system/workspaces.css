@@ -15,7 +15,7 @@ nav { display: flex; gap: 24px; align-items: center; font-size: 14px; }
 main { min-height: 76vh; outline: none; }
 .welcome { max-width: 920px; padding: 80px 5vw 100px; margin: auto; }
 .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; font-weight: 700; margin-bottom: 24px; }
-h1 { font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 600; letter-spacing: -.06em; line-height: 1.05; margin: 0 0 28px; }
+h1 { font-size: var(--text-page); font-weight: var(--weight-emphasis); letter-spacing: -.02em; line-height: var(--line-heading); margin: 0 0 28px; }
 .welcome > p:not(.eyebrow):not(.muted) { max-width: 520px; font-size: 19px; line-height: 1.7; margin-bottom: 30px; }
 .primary-link { background: var(--primary); color: var(--primary-foreground); padding: 16px 22px; display: inline-flex; gap: 28px; border-radius: var(--radius-control); margin-bottom: 20px; }
 .event-form { display: grid; gap: 12px; max-width: 420px; }
@@ -31,8 +31,8 @@ footer { padding: 24px 5vw; border-top: 1px solid var(--border); font-size: 13px
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 .workspace { max-width: 1240px; margin: auto; padding: 36px 5vw 80px; }
-.workspace h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); letter-spacing: -.045em; margin-bottom: 18px; }
-.workspace h2 { font-size: 1.35rem; font-weight: 650; margin: 0 0 16px; }
+.workspace h1 { font-size: var(--text-page); letter-spacing: -.02em; margin-bottom: 18px; }
+.workspace h2 { font-size: var(--text-section); font-weight: var(--weight-emphasis); margin: 0 0 16px; }
 .workspace h3 { font-size: 1.05rem; font-weight: 650; margin: 24px 0 12px; }
 .workspace p { line-height: 1.65; margin-bottom: 14px; }
 .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 32px; margin: 40px 0 32px; }

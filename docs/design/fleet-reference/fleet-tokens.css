@@ -1,0 +1,30 @@
+@import "tailwindcss/theme.css" prefix(hf);
+@import "tailwindcss/utilities.css" prefix(hf);
+@theme inline {
+  --color-ink: var(--hf-ink);
+  --color-muted: var(--hf-muted);
+  --color-surface: var(--hf-surface);
+  --color-line: var(--hf-line);
+  --color-action: var(--hf-action);
+  --color-action-foreground: var(--hf-action-text);
+  --color-action-hover: var(--hf-action-hover);
+  --radius-control: 4px;
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+@layer components {
+  #hf-v2 .hf-button {
+    @apply hf:inline-flex hf:items-center hf:justify-center hf:gap-2 hf:rounded-control hf:text-sm hf:font-semibold hf:disabled:cursor-not-allowed;
+  }
+  #hf-v2 .hf-button-primary {
+    @apply hf:bg-action hf:text-action-foreground hf:hover:bg-action-hover;
+  }
+  #hf-v2 .hf-toolbar {
+    @apply hf:flex hf:flex-wrap hf:items-center hf:justify-between hf:gap-3;
+  }
+  #hf-v2 .hf-top-tools {
+    @apply hf:flex hf:items-center hf:gap-2;
+  }
+  #hf-v2 .hf-icon-button {
+    @apply hf:inline-flex hf:items-center hf:justify-center hf:rounded-control hf:text-muted;
+  }
+}

@@ -23,7 +23,7 @@ test('branding previews before save, rejects unreadable palettes and stays scope
   await page.getByRole('link', { name: 'Switch event' }).click()
   await page.locator(`a[href="/events/${secondID}"]`).click()
   await expect(page.getByRole('heading', { name: 'Southern Lights Hack' })).toBeVisible()
-  await expect(page.locator('.theme .theme').first()).toHaveCSS('--primary', '#173a35')
+  await expect(page.locator('.theme .theme').first()).toHaveCSS('--primary', '#007e67')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
 })
 

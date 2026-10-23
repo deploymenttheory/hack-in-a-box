@@ -1,11 +1,31 @@
-/* Brand inputs → semantic roles → Tailwind utilities. Event inputs remain scoped
-   to Theme; inline references resolve at each consumer, including portals. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Fleet reference: docs/design/fleet-reference. Brand → semantic → component.
+   Keep semantic aliases during migration; UI-12 removes obsolete presentation. */
+@font-face {
+  font-family: Inter;
+  src: url('./fonts/InterVariable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@custom-variant dark (&:where(.dark, .dark *, [data-theme=dark], [data-theme=dark] *));
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text-caption: .75rem;
+  --text-body: .875rem;
+  --text-section: 1rem;
+  --text-page: 1.5rem;
+  --radius-sm: .25rem;
+  --radius-md: .25rem;
+  --radius-lg: .375rem;
+  --radius-xl: .5rem;
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-link: var(--link);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent-surface);
@@ -24,76 +44,119 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --radius-sm: .375rem;
-  --radius-md: .5rem;
-  --radius-lg: .75rem;
-  --radius-xl: 1rem;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-control: var(--control-radius);
 }
 @layer base {
   :root {
-    --brand-forest: #173a35;
-    --brand-cream: #f8f9f5;
-    --brand-copper: #d17c32;
-    --radius-control: .5rem;
-    --radius-card: .75rem;
-    --space-panel: 1.5rem;
-    --control-height: 2.75rem;
-    --motion-duration: 140ms;
-    --shadow-card: 0 1px 2px var(--shadow-color);
+    --brand-ink: #192147;
+    --brand-canvas: #ffffff;
+    --brand-action: #007e67;
+    --brand-link: #4745b4;
+    --space-1: .25rem;
+    --space-2: .5rem;
+    --space-3: .75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --weight-body: 400;
+    --weight-emphasis: 600;
+    --line-body: 1.5;
+    --line-heading: 1.25;
+    --duration-fast: 100ms;
+    --duration-normal: 160ms;
+    --motion-easing: ease-out;
+    --focus-width: 2px;
+    --focus-offset: 3px;
+    --icon-size: 1rem;
+    --icon-stroke: 1.75;
+    --control-radius: .25rem;
+    --radius-control: var(--control-radius);
+    --radius-card: 0;
+    --space-panel: var(--space-6);
+    --control-height: 2.25rem;
+    --row-padding: var(--space-4);
+    --page-padding: var(--space-8);
+    --motion-duration: var(--duration-fast);
+    --shadow-card: none;
   }
   .theme, .room-display {
-    --primary: var(--brand-forest);
-    --primary-foreground: #fff;
-    --background: var(--brand-cream);
-    --foreground: var(--brand-forest);
-    --accent: var(--brand-copper);
-    --card: color-mix(in srgb, var(--background) 96%, var(--foreground));
+    color-scheme: light;
+    --primary: var(--brand-action);
+    --primary-foreground: #ffffff;
+    --primary-hover: #006852;
+    --background: var(--brand-canvas);
+    --foreground: var(--brand-ink);
+    --link: var(--brand-link);
+    --accent: var(--brand-action);
+    --muted: #f9fafc;
+    --muted-foreground: #515774;
+    --border: #e2e4ea;
+    --input: #80869e;
+    --ring: var(--link);
+    --destructive: #a33049;
+    --destructive-foreground: #ffffff;
+    --warning: #885900;
+    --success: #147250;
+    --card: var(--background);
     --card-foreground: var(--foreground);
-    --muted: color-mix(in srgb, var(--background) 91%, var(--foreground));
-    --muted-foreground: color-mix(in srgb, var(--foreground) 85%, var(--background));
     --secondary: var(--muted);
     --secondary-foreground: var(--foreground);
-    --accent-surface: color-mix(in srgb, var(--background) 85%, var(--primary));
+    --accent-surface: color-mix(in srgb, var(--background) 94%, var(--primary));
     --popover: var(--background);
-    --border: color-mix(in srgb, var(--foreground) 25%, var(--background));
-    --input: color-mix(in srgb, var(--foreground) 65%, var(--background));
-    --ring: var(--primary);
-    --destructive: #a32632;
-    --destructive-foreground: #fff;
-    --destructive-surface: color-mix(in srgb, var(--background) 94%, var(--destructive));
-    --warning: #8b4817;
-    --warning-surface: color-mix(in srgb, var(--background) 94%, var(--warning));
-    --success: #25603d;
-    --shadow-color: color-mix(in srgb, var(--foreground) 8%, transparent);
-    color-scheme: light;
+    --destructive-surface: color-mix(in srgb, var(--background) 96%, var(--destructive));
+    --warning-surface: color-mix(in srgb, var(--background) 96%, var(--warning));
+    --success-surface: color-mix(in srgb, var(--background) 96%, var(--success));
+    --shadow-color: color-mix(in srgb, var(--foreground) 12%, transparent);
+    --shadow-overlay: 0 8px 24px var(--shadow-color);
     font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: var(--weight-body);
+    line-height: var(--line-body);
+    font-optical-sizing: auto;
     background: var(--background);
     color: var(--foreground);
   }
   .theme { min-height: 100vh; }
   @media (prefers-color-scheme: dark) {
-    .theme, .room-display {
-      --primary: #b7dfce;
-      --primary-foreground: #173a35;
-      --background: #142923;
-      --foreground: #edf3eb;
-      --destructive: #ffb4b5;
-      --destructive-foreground: #48151c;
-      --warning: #f5c392;
-      --success: #a4dab4;
+    .theme:not([data-theme=light]), .room-display:not([data-theme=light]) {
+      --primary: #71dbc0;
+      --primary-foreground: #122c25;
+      --primary-hover: #9de9d7;
+      --background: #1a1c21;
+      --foreground: #e2e4ea;
+      --link: #b1b1ff;
+      --muted: #23262e;
+      --muted-foreground: #bfc3d0;
+      --border: #414652;
+      --input: #858c9e;
+      --destructive: #ffadc0;
+      --destructive-foreground: #3c1220;
+      --warning: #f2cf83;
+      --success: #78d7b1;
       color-scheme: dark;
     }
   }
-  .theme.dark, .dark .theme {
-    --primary: #b7dfce;
-    --primary-foreground: #173a35;
-    --background: #142923;
-    --foreground: #edf3eb;
-    --destructive: #ffb4b5;
-    --destructive-foreground: #48151c;
-    --warning: #f5c392;
-    --success: #a4dab4;
+  .theme.dark, .dark .theme:not([data-theme=light]), .theme[data-theme=dark], .room-display[data-theme=dark] {
+    --primary: #71dbc0;
+    --primary-foreground: #122c25;
+    --primary-hover: #9de9d7;
+    --background: #1a1c21;
+    --foreground: #e2e4ea;
+    --link: #b1b1ff;
+    --muted: #23262e;
+    --muted-foreground: #bfc3d0;
+    --border: #414652;
+    --input: #858c9e;
+    --destructive: #ffadc0;
+    --destructive-foreground: #3c1220;
+    --warning: #f2cf83;
+    --success: #78d7b1;
     color-scheme: dark;
+  }
+  .theme[data-density=compact] { --row-padding: var(--space-3); }
+  @media (max-width: 640px) { .theme { --page-padding: var(--space-4); } }
+  @media (pointer: coarse) { .theme { --control-height: 2.75rem; } }
+  @media (prefers-reduced-motion: reduce) {
+    :root { --duration-fast: 0ms; --duration-normal: 0ms; --motion-duration: 0ms; }
   }
 }
