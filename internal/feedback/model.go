@@ -121,14 +121,15 @@ type (
 		TeamMember bool      `json:"team_member"`
 	}
 	Page struct {
-		CommandVersion   *int64            `json:"command_version"`
-		CurrentVersion   int64             `json:"current_version"`
-		Published        *Document         `json:"published"`
-		Draft            *Document         `json:"draft"`
-		CanManage        bool              `json:"can_manage"`
-		CanAcknowledge   bool              `json:"can_acknowledge"`
-		Acknowledgements []Acknowledgement `json:"acknowledgements"`
-		Escalations      []Escalation      `json:"escalations"`
+		canReadUnreleased bool
+		CommandVersion    *int64            `json:"command_version"`
+		CurrentVersion    int64             `json:"current_version"`
+		Published         *Document         `json:"published"`
+		Draft             *Document         `json:"draft"`
+		CanManage         bool              `json:"can_manage"`
+		CanAcknowledge    bool              `json:"can_acknowledge"`
+		Acknowledgements  []Acknowledgement `json:"acknowledgements"`
+		Escalations       []Escalation      `json:"escalations"`
 	}
 	List struct {
 		Items      []Page     `json:"items"`

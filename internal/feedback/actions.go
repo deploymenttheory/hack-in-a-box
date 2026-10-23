@@ -60,11 +60,12 @@ func (s Service) actionView(
 	if !h.PublishedVersion.Valid {
 		return out, access.ErrNotFound
 	}
-	if authority.Organiser {
+	switch {
+	case authority.Organiser:
 		out.writeAs = "organiser"
-	} else if authority.Helper {
+	case authority.Helper:
 		out.writeAs = "helper"
-	} else if authority.TeamMember && actor == a.OwnerID {
+	case authority.TeamMember && actor == a.OwnerID:
 		out.writeAs = "team_owner"
 	}
 	manager := authority.Organiser || authority.Helper

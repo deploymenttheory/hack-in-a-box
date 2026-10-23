@@ -106,3 +106,13 @@ category recipient deduplication, zero-campaign runtime notifications, current
 revocation, strict authenticated HTTP and ordered upgrade/rollback. Browser
 fixtures use fresh local builds and actual reader/inbox links on desktop/mobile;
 no real provider messages are sent.
+
+Final composition is based on actual merged schema35 (`8ac6a9c`). Current native
+PostgreSQL/race suites passed for feedback (14.753s), the real shared runtime
+(2.944s), and authenticated HTTP (3.962s), including populated35→36 and guarded
+rollback. Fresh participant/browser composition passed106 cases (1.7m); isolated
+admin reader/inbox/Q&A composition passed46 cases (33.2s). Both builds, web lint,
+full Go lint and generated-contract parity passed. Desktop/mobile captures were
+inspected for safe literal text, keyboard focus, wrapped identifiers and overflow.
+Archived write hints are false without removing authorised retained reads; a
+source-hidden draft does not expose its newer private revision counter.

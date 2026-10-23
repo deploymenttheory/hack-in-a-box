@@ -271,7 +271,8 @@ func TestFeedbackActualRuntimePrivateQuestionReviewInboxAndZeroCampaignOverdueMa
 		t.Fatal(err)
 	}
 	helper, err := runtime.Feedback.Read(ctx, mentor.ID, eventID, feedbackID)
-	if err != nil || helper.Draft != nil || helper.Published == nil {
+	if err != nil || helper.Draft != nil || helper.Published == nil ||
+		helper.CurrentVersion != helper.Published.Version {
 		t.Fatal("source-derived draft authority", err)
 	}
 	history, err := runtime.Feedback.History(ctx, mentor.ID, eventID, feedbackID, 0, 50)

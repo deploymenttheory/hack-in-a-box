@@ -411,8 +411,9 @@ func TestReviewedSupportActionsOwnTeamStatusOwnersVersionRaceAndSeparateHistory(
 		t.Fatal("operational task altered score/help state")
 	}
 	f.exec("UPDATE events SET writes_allowed=false,stage='archived' WHERE id=$1", f.event)
-	if _, err = f.s.Read(t.Context(), f.member.ID, f.event, id); err != nil {
-		t.Fatal("archive lost published read", err)
+	archived, err := f.s.Read(t.Context(), f.owner.ID, f.event, id)
+	if err != nil || archived.CanManage || archived.CanAcknowledge {
+		t.Fatal("archive write hints or retained read", err)
 	}
 	_, err = f.s.ChangeAction(
 		t.Context(),

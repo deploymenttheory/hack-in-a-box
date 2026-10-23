@@ -73,9 +73,10 @@ func (s Service) project(
 	if err = s.gate(row, h.Category); err != nil {
 		return out, err
 	}
-	out.CanManage = a.Organiser || a.Helper
+	out.canReadUnreleased = a.Organiser || a.Helper
+	out.CanManage = out.canReadUnreleased && row.WritesAllowed
 	out.CanAcknowledge = a.TeamMember && row.WritesAllowed && h.PublishedVersion.Valid
-	if out.CanManage {
+	if out.canReadUnreleased {
 		d, err := document(ctx, q, row.ID, h.ID, h.CurrentVersion)
 		if err != nil {
 			return out, err
@@ -99,9 +100,9 @@ func (s Service) project(
 		if d.State != "published" {
 			return out, access.ErrNotFound
 		}
-		d = s.projectDocument(ctx, tx, actor, row.ID, d, out.CanManage)
+		d = s.projectDocument(ctx, tx, actor, row.ID, d, out.canReadUnreleased)
 		out.Published = &d
-		if !out.CanManage {
+		if out.Draft == nil {
 			out.CurrentVersion = d.Version
 		}
 		rows, err := q.FeedbackAcknowledgements(
@@ -280,7 +281,7 @@ func (s Service) History(
 				}
 				before = d.Version
 				if d.State != "published" {
-					if !p.CanManage {
+					if !p.canReadUnreleased {
 						continue
 					}
 					if sourceErr := s.sourceAuthority(
@@ -305,7 +306,7 @@ func (s Service) History(
 				}
 				out.Items = append(
 					out.Items,
-					s.projectDocument(ctx, tx, actor, eventID, d, p.CanManage),
+					s.projectDocument(ctx, tx, actor, eventID, d, p.canReadUnreleased),
 				)
 			}
 			if len(rows) < 100 {
