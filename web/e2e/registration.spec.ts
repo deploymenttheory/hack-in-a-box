@@ -6,19 +6,20 @@ import type { components } from '../src/api/schema.gen'
 import { registrationEvent, questionID, attendeeForm, fixtureRegistration, mockApplicantWorkspace } from './registration-fixtures'
 test('attendee discovery and retry preserve one application identity', async ({ page }) => {
   await mockApplicantWorkspace(page)
-  let registrations: components['schemas']['Registration'][] = [], attempts = 0, firstRequest = ''
+  let registrations: components['schemas']['Registration'][] = [], attempts = 0, firstRequest = '', firstBody = ''
   await page.route('**/api/v1/registration/events**', route => route.fulfill({ json: new URL(route.request().url()).pathname.endsWith(firstID) ? { event: registrationEvent, branding: defaultBranding, forms: [attendeeForm], registrations } : { items: [registrationEvent], next_cursor: null } }))
   await page.route(`**/events/${firstID}/registrations`, async route => {
-    const body = route.request().postDataJSON(); attempts++
-    if (attempts === 1) { firstRequest = body.id; return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Retry', request_id: 'synthetic' } } }) }
-    expect(body.id).toBe(firstRequest); expect(body.team_preference).toBe('captain'); expect(body.answers[questionID]).toBe('Collaboration')
+    const body = route.request().postDataJSON(); attempts++; expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    if (attempts === 1) { firstRequest = body.id; firstBody = route.request().postData()!; return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Retry', request_id: 'synthetic' } } }) }
+    expect(route.request().postData()).toBe(firstBody); expect(body.id).toBe(firstRequest); expect(body.team_preference).toBe('captain'); expect(body.answers[questionID]).toBe('Collaboration')
     registrations = [{ ...fixtureRegistration(), id: body.id }]; return route.fulfill({ json: registrations[0] })
   })
   await page.goto('/register'); await page.getByRole('link', { name: 'Open Hack', exact: true }).click()
   await page.getByLabel('What would you like to learn? (required)').fill('Collaboration')
   await page.getByLabel('Team preference', { exact: true }).selectOption('captain')
-  await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('alert')).toBeVisible()
-  await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('region', { name: 'attendee application status' }).getByRole('status')).toHaveText('Your competitor place is confirmed.')
+  if (await page.getByRole('button', { name: 'Review application', exact: true }).isVisible()) await page.getByRole('button', { name: 'Review application', exact: true }).click(); await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByLabel('Application type')).toBeDisabled(); await expect(page.getByLabel('What would you like to learn? (required)')).toBeDisabled(); await expect(page.getByRole('status').filter({ hasText: 'Application outcome unknown' })).toBeVisible(); expect(attempts).toBe(1)
+  if (await page.getByRole('button', { name: 'Review application', exact: true }).isVisible()) await page.getByRole('button', { name: 'Review application', exact: true }).click(); await page.getByRole('button', { name: 'Submit application' }).click(); await expect(page.getByRole('region', { name: 'attendee application status' }).getByRole('status')).toHaveText('Your competitor place is confirmed.')
   expect(attempts).toBe(2); await expect(page.getByRole('button', { name: 'Submit application' })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
 })
@@ -45,7 +46,7 @@ test('facilitator application records fallback preference without enrolling a co
   await page.goto(`/register/${firstID}`)
   await page.getByLabel('What would you like to learn? (required)').fill('Support new teams')
   await page.getByLabel(/If I am not selected, invite me/).check()
-  await page.getByRole('button', { name: 'Submit application' }).click()
+  if (await page.getByRole('button', { name: 'Review application', exact: true }).isVisible()) await page.getByRole('button', { name: 'Review application', exact: true }).click(); await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(page.getByText('Your facilitator application has been received for review.')).toBeVisible()
   await expect(page.getByText('Your competitor place is confirmed.')).toHaveCount(0)
   expect(registrations).toHaveLength(1)
@@ -61,8 +62,8 @@ test('ordinary applicant branches stay conditional and permanent ineligibility h
   await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [form], registrations: [] } }))
   let attempts = 0
   await page.route(`**/events/${firstID}/registrations`, route => {
-    const body = route.request().postDataJSON(); attempts++
-    expect(body.form_version).toBe(1); expect(body.answers[choice]).toBe(false)
+    const body = route.request().postDataJSON(); attempts++; expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    expect(body.form_version).toBe(1); expect(body.answers[choice]).toBe(false); expect(body.answers[details]).toBeUndefined()
     return route.fulfill({ status: 409, json: { error: { code: 'competition_ineligible', message: 'Safe fixture', request_id: 'synthetic' } } })
   })
   await page.goto(`/register/${firstID}`)
@@ -71,7 +72,7 @@ test('ordinary applicant branches stay conditional and permanent ineligibility h
   await page.getByLabel('Equipment details (required)').fill('Synthetic branch answer')
   await page.getByLabel('Need equipment? (required)').selectOption('false')
   await expect(page.getByLabel('Equipment details (required)')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Submit application' }).click()
+  if (await page.getByRole('button', { name: 'Review application', exact: true }).isVisible()) await page.getByRole('button', { name: 'Review application', exact: true }).click(); await page.getByRole('button', { name: 'Submit application' }).click()
   await expect(page.getByRole('alert')).toContainText('Previous organiser or early brief access permanently prevents competition in this event.')
   await expect(page.getByText('Your competitor place is confirmed.')).toHaveCount(0)
   await expect(page.getByLabel('Need equipment? (required)')).toHaveValue('false')

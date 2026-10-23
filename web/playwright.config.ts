@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: ['event-planning-public.spec.ts', 'fleet-patterns.spec.ts', 'public-portal.spec.ts', 'participant-teams.spec.ts', 'participant-deliverables.spec.ts', 'registration.spec.ts', 'offers.spec.ts', 'room-display.spec.ts', 'team-access.spec.ts', 'participant-guidance.spec.ts', 'help-reader.spec.ts'],
+  testIgnore: ['event-planning-public.spec.ts', 'registration-evidence.spec.ts', 'fleet-patterns.spec.ts', 'public-portal.spec.ts', 'participant-teams.spec.ts', 'participant-deliverables.spec.ts', 'registration.spec.ts', 'offers.spec.ts', 'room-display.spec.ts', 'team-access.spec.ts', 'participant-guidance.spec.ts', 'help-reader.spec.ts'],
   use: { baseURL: 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },

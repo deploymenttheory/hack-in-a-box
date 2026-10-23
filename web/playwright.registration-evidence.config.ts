@@ -1,0 +1,3 @@
+import { defineConfig, devices } from '@playwright/test'
+const cwd = process.env.REGISTRATION_EVIDENCE_CHECKOUT
+export default defineConfig({ testDir: './e2e', testMatch: 'registration-evidence.spec.ts', outputDir: 'test-results-registration-evidence', workers: 1, use: { trace: 'retain-on-failure' }, projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'] } }, { name: 'mobile', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } }], webServer: [{ command: 'npm run preview -- --port 4370', cwd, port: 4370, reuseExistingServer: false }, { command: 'npm run preview:admin -- --port 4371', cwd, port: 4371, reuseExistingServer: false }] })
