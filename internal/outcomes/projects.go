@@ -1,11 +1,13 @@
 package outcomes
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 )
@@ -14,22 +16,26 @@ import (
 // review. Restricted Evidence, author identity, owner and private history cannot
 // enter it by accidental whole-resource serialisation.
 type PublicationFields struct {
-	Problem        string        `json:"problem"`
-	Solution       string        `json:"solution"`
-	Links          []ProjectLink `json:"links"`
-	Audience       string        `json:"audience"`
-	ShareEventName bool          `json:"share_event_name"`
-	ShareTeamName  bool          `json:"share_team_name"`
+	Problem        string           `json:"problem"`
+	Solution       string           `json:"solution"`
+	Links          []ProjectLink    `json:"links"`
+	Media          []MediaReference `json:"media"`
+	Audience       string           `json:"audience"`
+	ShareEventName bool             `json:"share_event_name"`
+	ShareTeamName  bool             `json:"share_team_name"`
 }
 type ProjectLink struct {
-	ID             uuid.UUID `json:"id"`
-	Label          string    `json:"label"`
-	URL            string    `json:"url"`
-	Media          bool      `json:"media"`
-	ContainsPeople bool      `json:"contains_people"`
-	// Consent metadata belongs only to the private review record. PublicLink has
-	// no person IDs. Current consent is checked again on each projection read.
-	People []uuid.UUID `json:"people"`
+	ID    uuid.UUID `json:"id"`
+	Label string    `json:"label"`
+	URL   string    `json:"url"`
+}
+
+// Media references are resolved through the actual owning domain for the
+// current viewer; recording URLs, person tags and storage IDs are never copied.
+type MediaReference struct {
+	EventID uuid.UUID `json:"event_id"`
+	ID      uuid.UUID `json:"id"`
+	Version int64     `json:"version"`
 }
 type PublicLink struct {
 	Label string `json:"label"`
@@ -81,19 +87,20 @@ func (p PublicationFields) Validate() error {
 	for _, link := range p.Links {
 		if link.ID == uuid.Nil || seen[link.ID] || !required(link.Label, 240) ||
 			strings.TrimSpace(link.URL) == "" ||
-			!referenceURL(link.URL) ||
-			len(link.People) > 100 ||
-			!link.Media && len(link.People) > 0 {
+			!referenceURL(link.URL) {
 			return access.ErrInvalid
 		}
 		seen[link.ID] = true
-		people := map[uuid.UUID]bool{}
-		for _, person := range link.People {
-			if person == uuid.Nil || people[person] {
-				return access.ErrInvalid
-			}
-			people[person] = true
+	}
+	if len(p.Media) > 30 {
+		return access.ErrInvalid
+	}
+	media := map[uuid.UUID]bool{}
+	for _, ref := range p.Media {
+		if ref.EventID == uuid.Nil || ref.ID == uuid.Nil || ref.Version < 1 || media[ref.ID] {
+			return access.ErrInvalid
 		}
+		media[ref.ID] = true
 	}
 	return nil
 }
@@ -113,4 +120,20 @@ func (c PublicationCommand) Validate() error {
 		return access.ErrInvalid
 	}
 	return nil
+}
+
+// MediaReferences is supplied only by the real current publication/consent owner.
+// A nil owner cannot approve a reference or manufacture public media metadata.
+type MediaReferences interface {
+	ResolveReferenceInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		MediaReference,
+	) (PublicLink, error)
+}
+type PublicationView struct {
+	PublicationVersion
+	CurrentVersion   int64  `json:"current_version"`
+	PublishedVersion *int64 `json:"published_version"`
 }

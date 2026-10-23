@@ -21,6 +21,7 @@ type ReviewSchedule struct {
 	Channels  []string `json:"channels"`
 }
 type ReviewPlan struct {
+	Message       ReviewMessage  `json:"message"`
 	ID            uuid.UUID      `json:"id"`
 	OutcomeID     uuid.UUID      `json:"outcome_id"`
 	Version       int64          `json:"version"`
@@ -35,6 +36,7 @@ type ReviewPlan struct {
 	At            time.Time      `json:"at"`
 }
 type PlanCommand struct {
+	Message       *ReviewMessage  `json:"message"`
 	ID            uuid.UUID       `json:"id"`
 	Action        string          `json:"action"`
 	Reason        string          `json:"reason"`
@@ -70,12 +72,12 @@ func (c PlanCommand) Validate() error {
 		return access.ErrInvalid
 	}
 	if c.Action == "save" {
-		if c.Schedule == nil {
+		if c.Schedule == nil || c.Message == nil || !c.Message.valid() {
 			return access.ErrInvalid
 		}
 		return c.Schedule.Validate()
 	}
-	if c.Schedule != nil {
+	if c.Schedule != nil || c.Message != nil {
 		return access.ErrInvalid
 	}
 	return nil

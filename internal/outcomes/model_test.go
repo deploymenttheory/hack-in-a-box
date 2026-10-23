@@ -102,30 +102,28 @@ func TestReviewScheduleKeepsCalendarTimeExplicitAndNeverBroadcasts(t *testing.T)
 	}
 }
 
-func TestPublishedFieldsCannotCarryRestrictedEvidenceOrImplicitPersonMedia(t *testing.T) {
+func TestPublicationRequiresExplicitSafeLinksAndExactOwnedMediaReferences(t *testing.T) {
 	fields := PublicationFields{
 		Problem:  "Reviewed public problem",
 		Solution: "Reviewed public solution",
 		Audience: "organisation",
 		Links: []ProjectLink{
-			{
-				ID:             uuid.New(),
-				Label:          "Demonstration",
-				URL:            "https://example.test/demo",
-				Media:          true,
-				ContainsPeople: true,
-			},
+			{ID: uuid.New(), Label: "Demonstration", URL: "https://example.test/demo"},
 		},
 	}
-	if fields.Validate() == nil {
-		t.Fatal("identifiable media accepted without explicit consent subjects")
+	if err := fields.Validate(); err != nil {
+		t.Fatal(err)
 	}
-	fields.Links[0].People = []uuid.UUID{uuid.New()}
+	fields.Media = []MediaReference{{ID: uuid.New(), EventID: uuid.New(), Version: 0}}
+	if fields.Validate() == nil {
+		t.Fatal("unversioned native media accepted")
+	}
+	fields.Media[0].Version = 1
 	if err := fields.Validate(); err != nil {
 		t.Fatal(err)
 	}
 	fields.Links[0].URL = "javascript:alert(1)"
 	if fields.Validate() == nil {
-		t.Fatal("unsafe media reference accepted")
+		t.Fatal("unsafe public reference accepted")
 	}
 }

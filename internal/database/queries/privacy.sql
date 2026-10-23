@@ -20,8 +20,9 @@ SELECT COALESCE(p.retention_days,90)::integer AS retention_days,COALESCE(p.draft
 FROM events e LEFT JOIN event_privacy p ON p.event_id=e.id WHERE e.id=$1;
 
 -- name: SetPrivacyPolicy :exec
-INSERT INTO event_privacy(event_id,retention_days,draft_days) VALUES($1,$2,$3)
-ON CONFLICT(event_id) DO UPDATE SET retention_days=EXCLUDED.retention_days,draft_days=EXCLUDED.draft_days;
+INSERT INTO event_privacy(event_id,retention_days,draft_days,revision) VALUES($1,$2,$3,CASE WHEN $2=90 AND $3=7 THEN 0 ELSE 1 END)
+ON CONFLICT(event_id) DO UPDATE SET retention_days=EXCLUDED.retention_days,draft_days=EXCLUDED.draft_days,
+revision=CASE WHEN event_privacy.retention_days IS DISTINCT FROM EXCLUDED.retention_days OR event_privacy.draft_days IS DISTINCT FROM EXCLUDED.draft_days THEN event_privacy.revision+1 ELSE event_privacy.revision END;
 
 -- name: ExpiredProfiles :many
 SELECT p.id,p.event_id,p.person_id FROM operational_profiles p JOIN events e ON e.id=p.event_id LEFT JOIN event_privacy policy ON policy.event_id=e.id

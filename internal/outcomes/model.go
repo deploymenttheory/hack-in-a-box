@@ -14,12 +14,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 )
 
 type Service struct {
-	Pool *pgxpool.Pool
-	Now  func() time.Time
+	Composer *communications.Service
+
+	Media MediaReferences
+	Pool  *pgxpool.Pool
+	Now   func() time.Time
 }
 
 func (s Service) now() time.Time {
@@ -45,32 +49,33 @@ type Provenance struct {
 	TeamID  *uuid.UUID `json:"team_id"`
 }
 type Version struct {
-	ID         uuid.UUID                     `json:"id"`
-	Version    int64                         `json:"version"`
-	CommandID  uuid.UUID                     `json:"command_id"`
-	AuthorID   uuid.UUID                     `json:"author_id"`
-	ActorID    uuid.UUID                     `json:"actor_id"`
-	At         time.Time                     `json:"at"`
-	Reason     string                        `json:"reason"`
-	Definition Definition                    `json:"definition"`
-	Provenance Provenance                    `json:"provenance"`
-	Status     string                        `json:"status"`
-	OwnerID    *uuid.UUID                    `json:"owner_id"`
-	ReviewAt   *time.Time                    `json:"review_at"`
-	Measures   []objectives.MeasureReference `json:"measures"`
-	Evidence   []Evidence                    `json:"evidence"`
+	ID              uuid.UUID                     `json:"id"`
+	Version         int64                         `json:"version"`
+	CommandID       uuid.UUID                     `json:"command_id"`
+	AuthorID        uuid.UUID                     `json:"author_id"`
+	ActorID         uuid.UUID                     `json:"actor_id"`
+	At              time.Time                     `json:"at"`
+	Reason          string                        `json:"reason"`
+	Definition      Definition                    `json:"definition"`
+	Provenance      Provenance                    `json:"provenance"`
+	Status          string                        `json:"status"`
+	OwnerID         *uuid.UUID                    `json:"owner_id"`
+	ReviewAt        *time.Time                    `json:"review_at"`
+	Measures        []objectives.MeasureReference `json:"measures"`
+	EvidenceAddedID *uuid.UUID                    `json:"evidence_added_id"`
 }
 
 // Evidence is always restricted. A separately reviewed project is constructed
 // from PublicFields, never by serialising or subtracting fields from this type.
 type Evidence struct {
-	ID         uuid.UUID                     `json:"id"`
-	Basis      string                        `json:"basis"`
-	Claim      string                        `json:"claim"`
-	Value      *string                       `json:"value"`
-	Source     string                        `json:"source"`
-	ObservedAt *time.Time                    `json:"observed_at"`
-	Measures   []objectives.MeasureReference `json:"measures"`
+	ID          uuid.UUID                     `json:"id"`
+	Basis       string                        `json:"basis"`
+	Claim       string                        `json:"claim"`
+	Value       *string                       `json:"value"`
+	Denominator *string                       `json:"denominator"`
+	Source      string                        `json:"source"`
+	ObservedAt  *time.Time                    `json:"observed_at"`
+	Measures    []objectives.MeasureReference `json:"measures"`
 }
 type Command struct {
 	ID         uuid.UUID                     `json:"id"`
@@ -155,6 +160,11 @@ func validRefs(refs []objectives.MeasureReference) bool {
 }
 
 func (e Evidence) Validate() error {
+	if e.Denominator != nil &&
+		(!decimal.MatchString(*e.Denominator) || strings.HasPrefix(*e.Denominator, "-")) ||
+		e.Value != nil && len(e.Measures) > 1 {
+		return access.ErrInvalid
+	}
 	if e.ID == uuid.Nil ||
 		!slices.Contains([]string{"estimate", "self_report", "demonstrated_adoption"}, e.Basis) ||
 		!required(e.Claim, 10000) ||
@@ -178,10 +188,25 @@ func (p Provenance) Validate() error {
 	return nil
 }
 
+func (c Command) validateFields() error {
+	if c.Action != "propose" && c.Action != "revise" && c.Definition != nil ||
+		c.Action != "propose" && c.Action != "adopt" && c.Provenance != nil ||
+		c.Action != "moderate" && c.Action != "progress" && c.Status != "" ||
+		c.Action != "assign" && (c.OwnerID != nil || c.ReviewAt != nil) ||
+		c.Action != "moderate" && len(c.Measures) > 0 ||
+		c.Action != "evidence" && c.Evidence != nil {
+		return access.ErrInvalid
+	}
+	return nil
+}
+
 func (c Command) Validate() error {
+	if err := c.validateFields(); err != nil {
+		return err
+	}
 	if c.ID == uuid.Nil || !required(c.Reason, 2000) ||
 		!slices.Contains(
-			[]string{"propose", "revise", "adopt", "moderate", "assign", "evidence"},
+			[]string{"propose", "revise", "adopt", "moderate", "progress", "assign", "evidence"},
 			c.Action,
 		) ||
 		c.OwnerID != nil && *c.OwnerID == uuid.Nil ||
@@ -198,6 +223,10 @@ func (c Command) Validate() error {
 		}
 	case "adopt":
 		if c.Provenance == nil || c.Provenance.EventID == nil {
+			return access.ErrInvalid
+		}
+	case "progress":
+		if !slices.Contains([]string{"in_progress", "closed"}, c.Status) {
 			return access.ErrInvalid
 		}
 	case "moderate":
@@ -219,4 +248,24 @@ func (c Command) Validate() error {
 		return c.Provenance.Validate()
 	}
 	return nil
+}
+
+type OwnerCandidate struct {
+	ID          uuid.UUID `json:"id"`
+	DisplayName string    `json:"display_name"`
+}
+type OwnerPage struct {
+	Items      []OwnerCandidate `json:"items"`
+	NextCursor *uuid.UUID       `json:"next_cursor"`
+}
+
+type EvidenceRecord struct {
+	Evidence
+	OutcomeVersion int64     `json:"outcome_version"`
+	ActorID        uuid.UUID `json:"actor_id"`
+	At             time.Time `json:"at"`
+}
+type EvidencePage struct {
+	Items      []EvidenceRecord `json:"items"`
+	NextCursor *uuid.UUID       `json:"next_cursor"`
 }
