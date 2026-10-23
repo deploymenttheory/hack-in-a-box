@@ -98,7 +98,13 @@ npm run build
 npm run test:e2e:styleguide
 ```
 
-The guide browser suite starts only its static Go host, has no API/DB service,
+To run the same suite against the opt-in Docker publication instead:
+
+```sh
+STYLEGUIDE_TEST_ORIGIN=http://127.0.0.1:8082 npx playwright test --config playwright.styleguide.config.ts
+```
+
+The guide browser suite normally starts only its static Go host, has no API/DB service,
 checks real narrow viewports and keyboard focus, and makes cookie/private-store
 access fail. Existing portal journeys and full repository CI still apply. Capture
 synthetic desktop/mobile visual evidence and compare it with the accepted Fleet

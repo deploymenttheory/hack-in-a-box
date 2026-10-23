@@ -18,7 +18,7 @@ the production system rather than restyling a copy of the old portal.
   request, runtime error or console error, including nested example documents.
 - Journeys exercise actual 360px/narrow viewport rendering, labelled controls,
   field focus, dialog Escape/return focus, all mode/palette combinations with a
-  portalled dialog, reset versus retained appearance state, all100 guidelines,
+  portalled dialog, reset versus retained appearance state, all 100 guidelines,
   exact receipt success/unknown/latest-only reconciliation with no write replay,
   definite failure, empty/no-match, stale review, paused authority, account/portal
   replacement and a late response after revocation.
@@ -40,7 +40,7 @@ were captured again from that output.
 
 ## Visual artifacts
 
-The PNGs in this directory show actual standalone-host output at1440×1000 and
+The PNGs in this directory show actual standalone-host output at 1440×1000 and
 390×844: production component examples, collection and selected review. Compare
 compact aligned records, text-labelled icon actions and the flat task canvas with
 the accepted reference. These are new guide views, not claims that later portal
@@ -48,4 +48,20 @@ screen migrations are finished. Example previews are real nested viewports with
 independent scrolling; a full-page outer screenshot need not reveal all example
 content below the frame's scroll position.
 
-Docker runtime verification and CI artifact download remain pending in this draft.
+## Independent Docker runtime
+
+The opt-in Compose build completed and started healthy on 127.0.0.1:8082.
+Image `sha256:df187afb5ac73d334690dc0410ff3eb705bce0aca05222ff4b4f7872ae8659e8`
+contains the guide source from 32fd13b. Inspect verified UID/GID 10001:10001,
+read-only root filesystem and a dedicated `hackbox-styleguide_default` network
+containing only this service (no app/API, worker or PostgreSQL). The same full 18
+browser journeys passed against the container on this origin, with cookie/store,
+API and console guards active. Other projects' containers were left running.
+
+The new CI styleguide job also passed for 32fd13b, building and testing the actual
+Go-served guide. The versioned artifact `styleguide-32fd13b47d7e8dda74874f6f160dc6c664f634e9`
+was downloaded from workflow 39974179264, extracted and served through the
+independent Go host on 127.0.0.1:4187. It contained all three entries, production
+assets/font and license, displayed source version 32fd13b47d7e, and passed the
+same 18 browser journeys. Full repository CI, independent review and final
+dependency rebase remain required in this draft.
