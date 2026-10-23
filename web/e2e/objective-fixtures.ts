@@ -13,6 +13,7 @@ export function objectiveVersion(id: string, version: number, definition: Defini
 function nativeOrder<T>(value: T): T { if (Array.isArray(value)) return value.map(nativeOrder) as T; if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, nativeOrder(item)])) as T; return value }
 export async function mockObjectives(page: Page, initial = false) {
   const workspace = await mockWorkspace(page)
+  const gates: { current?: () => Promise<void>; retained?: () => Promise<void>; accepted?: () => Promise<void> } = {}
   const state = { workspace, records: new Map<string, View[]>(), requests: [] as { event: string; id: string; expected: string; command: Command }[], deny: false, readFail: false, mode: '' as '' | 'before' | 'after' | 'validation', planningReads: 0 }
   const key = (event: string, id: string) => event + '/' + id
   function advance(event: string, id: string, definition: Definition, reason = 'A newer explicit version', retired = false) { const rows = state.records.get(key(event, id)) ?? []; const next = objectiveVersion(id, rows.length + 1, definition, reason, retired); rows.push(next); state.records.set(key(event, id), rows); return next }
@@ -30,6 +31,7 @@ export async function mockObjectives(page: Page, initial = false) {
       if (segments[7] === 'history') return route.fulfill({ json: { items: [...versions].reverse(), next_cursor: null } })
       const selected = url.searchParams.has('version') ? versions.find(v => v.reference.version === Number(url.searchParams.get('version'))) : current
       if (!selected) return fail(404)
+      await (url.searchParams.has('version') ? gates.retained?.() : gates.current?.())
       return route.fulfill({ json: nativeOrder({ ...selected, current_version: current.current_version, can_manage: state.workspace.events.find(e => e.id === event)?.can_edit ?? false }) })
     }
     const command = req.postDataJSON() as Command, expected = req.headers()['if-match']
@@ -40,7 +42,8 @@ export async function mockObjectives(page: Page, initial = false) {
     if (state.mode === 'before') { state.mode = ''; return route.abort() }
     const next = advance(event, id, command.definition ?? current!.definition, command.reason, command.action === 'retire')
     if (state.mode === 'after') { state.mode = ''; return route.abort() }
+    await gates.accepted?.()
     return route.fulfill({ json: nativeOrder(next) })
   })
-  return { state, advance, key }
+  return { state, advance, key, gates }
 }

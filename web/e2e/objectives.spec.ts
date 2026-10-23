@@ -74,3 +74,44 @@ test('navigation warnings keep safe unsent planning on explicit cancel', async (
 test('owner remains an optional current-organiser selection rather than a directory or lifecycle gate', async ({ page }) => {
   const { state } = await mockObjectives(page); await enter(page); await create(page); await page.getByLabel('Objective owner (optional)').selectOption(person.id); await page.getByRole('button', { name: 'Save definition version', exact: true }).click(); await expect(page.getByRole('status', { name: 'Objective save state' })).toContainText('Definition version 1 saved'); expect(state.requests[0].command.definition!.owner_id).toBe(person.id)
 })
+
+for (const phase of ['preflight', 'accepted', 'outcome'] as const) {
+  for (const leave of ['event', 'session'] as const) {
+    test(`in-flight ${phase} cannot continue private editor work after ${leave} departure`, async ({ page }) => {
+      const { state, gates } = await mockObjectives(page, true)
+      await enter(page); await page.getByRole('button', { name: 'Open objective', exact: true }).click()
+      await page.getByLabel('Objective description', { exact: true }).fill('PRIVATE DEPARTED OBJECTIVE')
+      await page.getByLabel('Reason for this definition version').fill('Explicit in-flight change')
+      let release!: () => void, entered!: () => void
+      const held = new Promise<void>(resolve => { release = resolve }), reached = new Promise<void>(resolve => { entered = resolve })
+      const gate = async () => { entered(); await held }
+      if (phase === 'preflight') gates.current = gate
+      if (phase === 'accepted') gates.accepted = gate
+      if (phase === 'outcome') state.mode = 'after'
+      await page.getByRole('button', { name: 'Save definition version', exact: true }).click()
+      if (phase === 'outcome') {
+        await expect(page.getByRole('status', { name: 'Objective save state' })).toContainText('unconfirmed')
+        gates.retained = gate
+        await page.getByRole('button', { name: 'Check exact save outcome' }).click()
+      }
+      await reached
+      page.on('dialog', dialog => dialog.accept())
+      if (leave === 'event') {
+        await page.getByRole('link', { name: '← Switch event' }).click()
+        await page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Southern Lights Hack' }) }).click()
+        await expect(page.getByRole('heading', { name: 'Southern Lights Hack' })).toBeVisible()
+      } else {
+        await page.evaluate(() => window.dispatchEvent(new Event('session-expired')))
+        await expect(page.getByLabel('Objective description', { exact: true })).toHaveCount(0)
+      }
+      release()
+      // Allow the held response and its continuation to settle without routing
+      // or issuing any new user command in the departed scope.
+      await page.waitForTimeout(150)
+      expect(state.requests).toHaveLength(phase === 'preflight' ? 0 : 1)
+      await expect(page.getByLabel('Objective description', { exact: true })).toHaveCount(0)
+      await expect(page.getByText('PRIVATE DEPARTED OBJECTIVE', { exact: true })).toHaveCount(0)
+      expect(await page.evaluate(() => [...Object.values(localStorage), ...Object.values(sessionStorage)].some(value => value.includes('PRIVATE DEPARTED OBJECTIVE')))).toBe(false)
+    })
+  }
+}
