@@ -367,3 +367,14 @@ select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3p
 .outcome-prose { white-space: pre-wrap; }
 .outcome-link { border-top: 1px solid var(--border); padding: 1rem 0; }
 @media (max-width: 40rem) { .outcome-workspace .actions { align-items: stretch; flex-direction: column; } .outcome-workspace .actions button { width: 100%; } }
+.survey-workspace :is(article, section, form, dl, fieldset) { min-width: 0; overflow-wrap: anywhere; }
+.survey-workspace :is(select, input, textarea) { max-width: 100%; min-width: 0; }
+.survey-workspace table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 16px 0; }
+.survey-workspace :is(th, td) { border-bottom: 1px solid var(--border); padding: 12px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.survey-workspace caption { font-weight: 600; text-align: left; margin-bottom: 8px; }
+.survey-workspace .tabs button { white-space: normal; }
+.survey-bars { display: grid; gap: 12px; margin: 16px 0; }
+.survey-bar { display: block; max-width: 100%; height: 12px; border-radius: 6px; margin-top: 4px; background: var(--primary); }
+@media print { .survey-private { display: none !important; } }
+
+.survey-network-scope { border: 0; padding: 0; margin: 0; min-width: 0; }

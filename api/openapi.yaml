@@ -5510,6 +5510,10 @@ paths:
         ]
       }
     }
+  /api/v1/events/{event_id}/surveys/{survey_id}/dashboard:
+    {"parameters": [{"$ref": "#/components/parameters/EventID"}, {"name": "survey_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "get": {"operationId": "getSurveyDashboard", "responses": {"200": {"description": "Current organiser-only participation and completion counts, never a wider report or evidenced outcome.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SurveyDashboard"}}}}, "default": {"$ref": "#/components/responses/Error"}}}}
+  /api/v1/events/{event_id}/surveys/{survey_id}/responses/export.csv:
+    {"parameters": [{"$ref": "#/components/parameters/EventID"}, {"name": "survey_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "get": {"operationId": "exportSurveyResponses", "responses": {"200": {"description": "Audited current-organiser private authored response CSV; never a published report.", "headers": {"Content-Disposition": {"schema": {"type": "string"}}}, "content": {"text/csv": {"schema": {"type": "string"}}}}, "default": {"$ref": "#/components/responses/Error"}}}}
 components:
   securitySchemes:
     display:
@@ -13769,3 +13773,5 @@ components:
           }
         }
       }
+    SurveyDashboard:
+      {"type": "object", "additionalProperties": false, "required": ["configuration", "can_manage", "retained_invitations", "current_eligible_invitations", "submitted_responses", "current_eligible_responses", "observed_at", "response_visibility", "can_review_report", "event_revision", "timezone"], "properties": {"configuration": {"$ref": "#/components/schemas/SurveyConfiguration"}, "can_manage": {"type": "boolean"}, "retained_invitations": {"type": "integer"}, "current_eligible_invitations": {"type": "integer"}, "submitted_responses": {"type": "integer"}, "current_eligible_responses": {"type": "integer"}, "observed_at": {"type": "string", "format": "date-time"}, "response_visibility": {"type": "string"}, "can_review_report": {"type": "boolean"}, "event_revision": {"type": "integer", "format": "int64"}, "timezone": {"type": "string"}}}

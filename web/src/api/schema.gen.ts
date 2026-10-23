@@ -3279,6 +3279,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSurveyDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/surveys/{survey_id}/responses/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["exportSurveyResponses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7042,6 +7080,21 @@ export interface components {
         OutcomeObservationPage: {
             items: components["schemas"]["OutcomeObservation"][];
             next_cursor: string | null;
+        };
+        SurveyDashboard: {
+            configuration: components["schemas"]["SurveyConfiguration"];
+            can_manage: boolean;
+            retained_invitations: number;
+            current_eligible_invitations: number;
+            submitted_responses: number;
+            current_eligible_responses: number;
+            /** Format: date-time */
+            observed_at: string;
+            response_visibility: string;
+            can_review_report: boolean;
+            /** Format: int64 */
+            event_revision: number;
+            timezone: string;
         };
     };
     responses: {
@@ -13144,6 +13197,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OutcomeObservationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSurveyDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser-only participation and completion counts, never a wider report or evidenced outcome. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SurveyDashboard"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportSurveyResponses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                survey_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audited current-organiser private authored response CSV; never a published report. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
             default: components["responses"]["Error"];

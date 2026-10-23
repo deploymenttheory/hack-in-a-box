@@ -76,3 +76,7 @@ SELECT DISTINCT e.id FROM events e JOIN survey_invitations i ON i.event_id=e.id 
 SELECT DISTINCT person_id FROM survey_invitations WHERE event_id=$1 AND person_id>sqlc.arg(after_person) ORDER BY person_id LIMIT 100;
 -- name: SurveyOpenSourcesPage :many
 SELECT p.survey_id,p.version,v.document FROM survey_publications p JOIN survey_heads h ON h.event_id=p.event_id AND h.id=p.survey_id AND h.published_version=p.version JOIN survey_versions v ON v.event_id=p.event_id AND v.survey_id=p.survey_id AND v.version=p.version WHERE p.event_id=$1 AND NOT h.cancelled AND (sqlc.narg(source_id)::uuid IS NULL OR p.survey_id=sqlc.narg(source_id)) AND p.survey_id>sqlc.arg(after_id) AND (v.document->>'opens_at')::timestamptz<=sqlc.arg(at_time)::timestamptz AND (v.document->>'closes_at')::timestamptz>sqlc.arg(at_time) ORDER BY p.survey_id LIMIT sqlc.arg(page_size);
+
+-- name: SurveyResponseAuthorNames :many
+SELECT p.id,p.display_name FROM survey_response_heads h JOIN people p ON p.id=h.person_id
+WHERE h.event_id=$1 AND h.survey_id=$2 ORDER BY p.id LIMIT 10001;
