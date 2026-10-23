@@ -87,3 +87,21 @@ restore them. Owners retain dirty/uncertain navigation guards and return focus
 when their inspector closes. Set data-record-focus to the row key on the primary
 local action when it must preserve focus across a responsive breakpoint. The
 interactive guide includes the actual production composition and keyboard example.
+
+
+## Team and mentor planning
+
+Team/mentor collections use complete authorised projections. Search and counts apply
+only to that projection; published coverage never implies access to other teams or
+private assessments. Use a concise named detail beside the roster; allocation,
+placement, profile editing and publication reviews need the full canvas. Keep the
+reviewed revision, exact affected teams/slots/windows and recorded reason visible.
+
+`coverage-command.tsx` is the bounded adapter for the native team/coverage page-response
+APIs. Their responses contain no durable command receipt. Successful explicit responses
+are labelled server responses; an interrupted/timeout/5xx write retains its local
+diagnostic intent and permits current-state reads only. A later revision cannot settle
+that original intent. Read-only back navigation does not release the write barrier.
+`coverage-detail.tsx` uses a real local Back button and focuses its heading; the owner
+restores the initiating record/action focus when it closes. The interactive guide's
+roster example imports these production components with synthetic in-memory state.

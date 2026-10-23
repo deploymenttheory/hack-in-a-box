@@ -229,3 +229,17 @@ test('local records use actual action buttons and preserve detail return focus',
   await expect(local.getByRole('region', { name: 'Synthetic local draft', exact: true })).toHaveCount(0)
   await expect(open).toBeVisible()
 })
+
+test('roster example keeps unknown intent after a synthetic current read and returns keyboard focus', async ({ page }) => {
+  const frame = await examples(page, 'Task patterns')
+  const example = frame.getByRole('region', { name: 'Roster planning and uncertain responses', exact: true })
+  await example.getByRole('button', { name: 'Review synthetic roster', exact: true }).click()
+  await expect(example.getByRole('heading', { name: 'Review synthetic allocation', exact: true })).toBeFocused()
+  await example.getByRole('button', { name: 'Simulate lost response', exact: true }).click()
+  await example.getByRole('button', { name: 'Read current roster', exact: true }).click()
+  await expect(example.getByText('Current roster revision 12. Original outcome remains unconfirmed.')).toBeVisible()
+  await expect(example.getByRole('button', { name: 'Simulate lost response', exact: true })).toBeDisabled()
+  await example.getByRole('button', { name: 'Back to roster', exact: true }).click()
+  await expect(example.getByRole('button', { name: 'Review synthetic roster', exact: true })).toBeFocused()
+  await expect(example.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+})

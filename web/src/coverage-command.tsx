@@ -47,7 +47,8 @@ export function useCoveragePage<T extends { revision: number }>(eventID: string,
       if (!ticket.current()) return false
       if (error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408) {
         const revoked = [401, 403, 404].includes(error.status)
-        setCommand({ kind: revoked ? 'denied' : error.status === 409 ? 'stale' : 'rejected', message: error.message })
+        const message = error.code === 'teams_unready' ? 'Publication rejected: resolve teams below three, select a draft-member captain and respect hard capacity. Existing published assignments were not changed. Freeze also requires every confirmed competitor to be assigned.' : error.message
+        setCommand({ kind: revoked ? 'denied' : error.status === 409 ? 'stale' : 'rejected', message })
         if (revoked) { terminal.current = true; scope.invalidate(); cache.removeQueries({ queryKey: key }) }
         else void query.refetch()
       } else { terminal.current = true; setCommand({ kind: 'unknown', intent, message: 'The response was interrupted. This change may have completed. Read the current roster; this API has no exact command-status receipt. Do not resend the original change.' }) }

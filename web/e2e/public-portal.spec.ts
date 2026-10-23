@@ -1,4 +1,4 @@
-import { openEventSection, expectEventSection } from './event-navigation-fixture'
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { mockMentors } from './mentor-fixtures'
 import { firstID, mockWorkspace } from './fixtures'
@@ -12,10 +12,10 @@ test('participant build omits organiser navigation even for an organiser identit
   await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Find events', exact: true })).toBeVisible()
   await page.getByRole('link', { name: /North Star Hack/ }).click()
   await expect(page.getByRole('heading', { name: 'North Star Hack' })).toBeVisible()
-  await expectEventSection(page,'Resources')
-  await expectEventSection(page,'Deliverables')
+  await expect(page.getByRole('button', { name: 'Resources', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Deliverables', exact: true })).toBeVisible()
   for (const name of ['Setup', 'Staff', 'Applicants', 'Teams', 'Content', 'Advance to registration']) {
-    await expectEventSection(page,name,false)
+    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0)
   }
   for (const path of ['/events/new', '/templates']) {
     await page.goto(path)
@@ -31,8 +31,9 @@ test('public mentor roster stays read only even when the identity can administer
   page.on('request', request => { if (new URL(request.url()).pathname.endsWith('/teams')) teamRequests++ })
   await page.goto(`/events/${firstID}`)
   await openEventSection(page, 'Mentors')
-  await expect(page.getByRole('region', { name: 'Published mentor roster' })).toContainText('Primary mentor: Morgan Design')
-  await expect(page.getByRole('table')).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Published mentor roster' })).toContainText('Morgan Design')
+  await expect(page.getByRole('table', { name: 'Draft mentor coverage' })).toHaveCount(0)
+  await expect(page.getByRole('list', { name: 'Draft mentor coverage' })).toHaveCount(0)
   await expect(page.getByLabel('Mentor decision reason')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Change mentor slot', exact: true })).toHaveCount(0)
   expect(teamRequests).toBe(0)
