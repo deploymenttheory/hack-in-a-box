@@ -21,7 +21,7 @@ export function brandingErrors(b: Branding) {
 // Shared, bounded render inputs for web pages and future email/display adapters.
 export function brandStyle(b: Branding): CSSProperties {
   const safe = brandingErrors(b).length ? defaultBranding : b
-  return { '--primary': safe.primary, '--primary-foreground': contrast('#ffffff', safe.primary) >= 4.5 ? '#ffffff' : '#000000', '--accent': safe.accent, '--background': safe.background, '--foreground': safe.foreground, '--border': safe.foreground, '--muted': safe.background } as CSSProperties
+  return { '--primary': safe.primary, '--primary-foreground': contrast('#ffffff', safe.primary) >= 4.5 ? '#ffffff' : '#000000', '--accent': safe.accent, '--background': safe.background, '--foreground': safe.foreground, '--muted-foreground': safe.foreground, '--input': safe.foreground, '--destructive': contrast('#a32632', safe.background) >= 4.5 ? '#a32632' : contrast('#ffb4b5', safe.background) >= 4.5 ? '#ffb4b5' : safe.foreground, '--warning': safe.foreground, '--success': safe.foreground, colorScheme: luminance(safe.background) < .18 ? 'dark' : 'light' } as CSSProperties
 }
 export function brandAsset(b: Branding, kind: 'logo' | 'icon' | 'hero') {
   const a = b.assets.find(asset => asset.kind === kind)

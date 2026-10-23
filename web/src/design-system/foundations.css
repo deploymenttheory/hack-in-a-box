@@ -1,0 +1,116 @@
+/* Native controls and semantic aliases are the shared component system. Keeping
+   native elements preserves labels, names, form submission and keyboard behavior. */
+@layer base {
+  html { font-family: var(--font-sans); scroll-padding-block: 1rem; }
+  body { margin: 0; }
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(button, input, textarea, select) { font: inherit; }
+  :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--ring, currentColor);
+    outline-offset: 3px;
+  }
+  :where(button, input, select, textarea, a, summary) { -webkit-tap-highlight-color: transparent; }
+  :where(button, input, select, textarea) { transition: border-color var(--motion-duration), background-color var(--motion-duration), box-shadow var(--motion-duration); }
+  :where(input:not([type=checkbox], [type=radio], [type=range], [type=hidden]), select, textarea) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: var(--control-height);
+    border: 1px solid var(--input);
+    border-radius: var(--radius-control);
+    background: var(--background);
+    color: var(--foreground);
+    padding: .65rem .75rem;
+    line-height: 1.5;
+    accent-color: var(--primary);
+  }
+  :where(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
+  :where(input, select, textarea)[readonly] { background: var(--muted); }
+  :where(input, select, textarea)[aria-invalid=true] { border: 2px solid var(--destructive); }
+  :where(input, select, textarea)[aria-invalid=true]:focus-visible { outline-color: var(--destructive); }
+  :where(input, select, textarea, button):disabled { cursor: not-allowed; }
+  :where(input, select, textarea):disabled { background: var(--muted); color: var(--muted-foreground); border-style: dashed; }
+  :where(input[type=checkbox], input[type=radio]) {
+    appearance: auto;
+    accent-color: var(--primary);
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    flex: 0 0 1.125rem;
+    vertical-align: middle;
+  }
+  :where(input[type=file]) { overflow: hidden; }
+  ::file-selector-button { margin-inline-end: .75rem; border: 0; border-radius: .25rem; padding: .25rem .5rem; background: var(--secondary); color: var(--foreground); font: inherit; }
+  :where(textarea) { resize: vertical; min-height: 6rem; }
+  :where(select, option) { color-scheme: inherit; }
+  :where(button:not([data-slot=button])) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: var(--control-height);
+    max-width: 100%;
+    padding: .65rem .9rem;
+    border: 1px solid var(--input);
+    border-radius: var(--radius-control);
+    color: var(--foreground);
+    background: var(--secondary);
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  :where(button:not([data-slot=button])):hover:not(:disabled) { background: var(--accent-surface); }
+  :where(button:not([data-slot=button])):disabled { opacity: .6; }
+  :where(table) { width: 100%; border-collapse: collapse; color: var(--foreground); font-size: .875rem; line-height: 1.6; }
+  :where(caption) { text-align: start; font-weight: 650; margin-block-end: .75rem; }
+  :where(th, td) { padding: .85rem .75rem; border-block-end: 1px solid var(--border); vertical-align: top; text-align: start; overflow-wrap: anywhere; }
+  :where(thead th) { background: var(--muted); font-weight: 650; }
+  :where(tbody tr):focus-within { background: var(--accent-surface); }
+  :where(summary) { cursor: pointer; min-height: 2.75rem; align-content: center; }
+  :where(summary)::marker { color: var(--primary); }
+  :where(code, pre) { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  :where(a) { text-underline-offset: .2em; }
+  :where(p, li, dt, dd, h1, h2, h3, h4, h5, h6) { overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+  @media (forced-colors: active) {
+    :where(button, input, select, textarea, a):focus-visible { outline-color: Highlight; }
+    :where(button, input, select, textarea) { border-color: ButtonText; }
+  }
+}
+@layer components {
+  .ui-card { padding: var(--space-panel); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-card); }
+  .ui-badge, .badge { display: inline-flex; align-items: center; gap: .35rem; max-width: 100%; border: 1px solid var(--border); border-radius: 100vmax; padding: .25rem .6rem; color: var(--foreground); background: var(--muted); font-size: .75rem; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+  .ui-alert, .notice { border: 1px solid var(--border); border-inline-start: 3px solid var(--primary); border-radius: var(--radius-control); padding: .875rem 1rem; background: var(--muted); color: var(--foreground); }
+  .ui-alert[data-tone=destructive], .state[role=alert] { border-inline-start: 3px solid var(--destructive); background: var(--destructive-surface); }
+  .ui-alert[data-tone=warning], .blockers li { color: var(--foreground); border-inline-start-color: var(--warning); background: var(--warning-surface); }
+  .ui-alert[data-tone=success] { border-inline-start-color: var(--success); }
+  .ui-field-description { color: var(--muted-foreground); font-size: .875rem; line-height: 1.6; }
+  .ui-field-error, .field-error { color: var(--destructive); font-size: .875rem; line-height: 1.6; }
+  .ui-field { display: grid; gap: .5rem; min-width: 0; }
+  .ui-label { display: block; font-size: .875rem; font-weight: 600; line-height: 1.5; }
+  .menu { background: var(--popover); color: var(--foreground); border: 1px solid var(--input); }
+  .menu-item { min-height: var(--control-height); display: flex; align-items: center; }
+  .menu-item[data-highlighted] { background: var(--accent-surface); box-shadow: inset 0 0 0 2px var(--ring); }
+  .menu-item[data-disabled] { color: var(--muted-foreground); cursor: not-allowed; }
+  .table-scroll { border: 1px solid var(--border); border-radius: var(--radius-card); scrollbar-color: var(--input) var(--background); }
+  .header nav a { border-radius: .25rem; padding-block: .5rem; }
+  .header nav a[aria-current=page] { font-weight: 650; text-decoration: underline; text-decoration-thickness: 2px; }
+  .primary-link { align-items: center; justify-content: center; min-height: var(--control-height); border: 1px solid transparent; font-weight: 600; line-height: 1.5; }
+  .primary-link:hover { text-decoration: underline; }
+  .tabs { row-gap: .25rem; }
+  .tabs button:hover { color: var(--foreground); background: var(--accent-surface); }
+  .state { border-radius: var(--radius-card); }
+  .theme :where(.workspace, .welcome, .help-reader, .state) a:not(.primary-link, .event-card, .brand) { text-decoration: underline; }
+  .theme :where(.workspace, .welcome, .help-reader, .state) a:hover { text-decoration-thickness: 2px; }
+  @media (max-width: 640px) {
+    :root { --space-panel: 1.125rem; }
+    .header .brand { white-space: normal; }
+    .header nav { flex-wrap: wrap; }
+    .header > div { max-width: 100%; }
+  }
+}

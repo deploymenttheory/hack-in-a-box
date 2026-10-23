@@ -1,0 +1,99 @@
+/* Brand inputs → semantic roles → Tailwind utilities. Event inputs remain scoped
+   to Theme; inline references resolve at each consumer, including portals. */
+@custom-variant dark (&:where(.dark, .dark *));
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent-surface);
+  --color-accent-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset: var(--background);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: .375rem;
+  --radius-md: .5rem;
+  --radius-lg: .75rem;
+  --radius-xl: 1rem;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+@layer base {
+  :root {
+    --brand-forest: #173a35;
+    --brand-cream: #f8f9f5;
+    --brand-copper: #d17c32;
+    --radius-control: .5rem;
+    --radius-card: .75rem;
+    --space-panel: 1.5rem;
+    --control-height: 2.75rem;
+    --motion-duration: 140ms;
+    --shadow-card: 0 1px 2px var(--shadow-color);
+  }
+  .theme, .room-display {
+    --primary: var(--brand-forest);
+    --primary-foreground: #fff;
+    --background: var(--brand-cream);
+    --foreground: var(--brand-forest);
+    --accent: var(--brand-copper);
+    --card: color-mix(in srgb, var(--background) 96%, var(--foreground));
+    --card-foreground: var(--foreground);
+    --muted: color-mix(in srgb, var(--background) 91%, var(--foreground));
+    --muted-foreground: color-mix(in srgb, var(--foreground) 85%, var(--background));
+    --secondary: var(--muted);
+    --secondary-foreground: var(--foreground);
+    --accent-surface: color-mix(in srgb, var(--background) 85%, var(--primary));
+    --popover: var(--background);
+    --border: color-mix(in srgb, var(--foreground) 25%, var(--background));
+    --input: color-mix(in srgb, var(--foreground) 65%, var(--background));
+    --ring: var(--primary);
+    --destructive: #a32632;
+    --destructive-foreground: #fff;
+    --destructive-surface: color-mix(in srgb, var(--background) 94%, var(--destructive));
+    --warning: #8b4817;
+    --warning-surface: color-mix(in srgb, var(--background) 94%, var(--warning));
+    --success: #25603d;
+    --shadow-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+    color-scheme: light;
+    font-family: var(--font-sans);
+    background: var(--background);
+    color: var(--foreground);
+  }
+  .theme { min-height: 100vh; }
+  @media (prefers-color-scheme: dark) {
+    .theme, .room-display {
+      --primary: #b7dfce;
+      --primary-foreground: #173a35;
+      --background: #142923;
+      --foreground: #edf3eb;
+      --destructive: #ffb4b5;
+      --destructive-foreground: #48151c;
+      --warning: #f5c392;
+      --success: #a4dab4;
+      color-scheme: dark;
+    }
+  }
+  .theme.dark, .dark .theme {
+    --primary: #b7dfce;
+    --primary-foreground: #173a35;
+    --background: #142923;
+    --foreground: #edf3eb;
+    --destructive: #ffb4b5;
+    --destructive-foreground: #48151c;
+    --warning: #f5c392;
+    --success: #a4dab4;
+    color-scheme: dark;
+  }
+}
