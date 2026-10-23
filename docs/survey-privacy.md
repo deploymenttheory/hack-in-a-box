@@ -107,3 +107,15 @@ generation is stable. Reader browser verification passes eight desktop/mobile ca
 including an event timezone differing from the browser timezone and a configured
 viewport overflow assertion. Final actual-main composition and exact-head CI
 remain merge requirements.
+
+Composition onto actual merged #216/main ef606407 (schema39) retains both native
+survey and dashboard runtime services, routes, public test entries and generated
+contracts. Every pre-existing API path is unchanged. The only existing model
+changes are the additive survey inbox destination in InboxDestination/InboxDetail
+and the survey.open trigger in AutomationDefinition. Survey native source, SQL,
+reader and regression files compare unchanged against the reviewed checkpoint.
+Combined survey/dashboard/objective reader desktop/mobile checks pass 30 cases in
+each portal (admin18.1s, participant19.0s), and both surfaces build. Actual
+composed HTTP authority passes8.676s, app runtime4.736s and populated39→40 native
+preservation3.538s. Later actual-main restacks still require explicit composition
+review and fresh CI before merge.

@@ -191,7 +191,8 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
-		Surveys: questionnaires, ReviewDashboard: &reviewdashboard.Service{
+		Surveys: questionnaires,
+		ReviewDashboard: &reviewdashboard.Service{
 			Pool:       pool,
 			Help:       helpProvider,
 			Feedback:   shared,
