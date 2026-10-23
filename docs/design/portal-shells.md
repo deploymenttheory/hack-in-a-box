@@ -20,7 +20,7 @@ The organiser-only `can_read_staff` fact does not gate mentor discovery. This is
 permission to open the owning service, not proof of service availability or access
 to every team's private records; roster/content/configuration checks remain in
 that service. Navigation does not fetch or index assessment records. The new
-projection changes no role, policy, schema or grant.
+projection changes no role, policy, database schema or grant.
 
 The event switcher loads the existing bounded cursor API only when opened. It
 rechecks cached choices and hides them during the current read or on failure;

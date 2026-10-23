@@ -30,6 +30,7 @@ The complete Today/readiness product remains #88.
 
 ## Verification
 
+- Full Go lint and canonical SQLC/OpenAPI/TypeScript generation parity pass.
 - ESLint clean; 106 unit/component tests; TypeScript and both production builds.
 - Focused production browser runs: 68 admin and 62 participant cases, covering
   desktop/mobile:
