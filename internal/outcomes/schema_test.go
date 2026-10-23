@@ -33,11 +33,11 @@ func outcomeMigrator(t *testing.T, pool *pgxpool.Pool) *goose.Provider {
 	return m
 }
 
-func retained41(t *testing.T, pool *pgxpool.Pool) map[string]string {
+func retained42(t *testing.T, pool *pgxpool.Pool) map[string]string {
 	t.Helper()
 	out := map[string]string{}
 	// Fixed predecessor-owner tables, never caller-supplied SQL identifiers.
-	for _, table := range []string{"event_media", "media_versions", "media_commands", "media_files", "operational_profiles", "survey_heads", "survey_versions", "survey_approvals", "survey_publications", "survey_invitations", "survey_commands", "survey_responses", "survey_response_heads", "objective_versions", "audit_events"} {
+	for _, table := range []string{"event_media", "media_versions", "media_commands", "media_files", "operational_profiles", "survey_heads", "survey_versions", "survey_approvals", "survey_publications", "survey_invitations", "survey_commands", "survey_responses", "survey_response_heads", "objective_versions", "audit_events", "github_app_integrations", "github_app_install_attempts"} {
 		var rows string
 		query := fmt.Sprintf(
 			`SELECT COALESCE(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text),'[]'::jsonb)::text FROM %s t`,
@@ -51,10 +51,10 @@ func retained41(t *testing.T, pool *pgxpool.Pool) map[string]string {
 	return out
 }
 
-func TestOutcomes42Actual41UpgradePreservesNativeMediaSurveyAndGuardedHistory(t *testing.T) {
+func TestOutcomes43Actual42UpgradePreservesNativeMediaSurveyAndGuardedHistory(t *testing.T) {
 	pool := testdb.New(t, false)
 	ctx := t.Context()
-	if err := database.Migrate(ctx, pool, 41); err != nil {
+	if err := database.Migrate(ctx, pool, 42); err != nil {
 		t.Fatal(err)
 	}
 	org, subject := testdb.Person(t, pool), testdb.Person(t, pool)
@@ -85,7 +85,7 @@ func TestOutcomes42Actual41UpgradePreservesNativeMediaSurveyAndGuardedHistory(t 
 			Action:    "save",
 			Version:   0,
 			CommandID: uuid.New(),
-			Reason:    "Preserve actual native41 history",
+			Reason:    "Preserve actual native42 history",
 			Metadata: &media.Metadata{
 				Kind:         "recording",
 				Title:        "Predecessor reviewed source",
@@ -124,20 +124,20 @@ func TestOutcomes42Actual41UpgradePreservesNativeMediaSurveyAndGuardedHistory(t 
 	); err != nil {
 		t.Fatal(err)
 	}
-	before := retained41(t, pool)
-	if err = database.Migrate(ctx, pool, 42); err != nil {
+	before := retained42(t, pool)
+	if err = database.Migrate(ctx, pool, 43); err != nil {
 		t.Fatal(err)
 	}
-	if after := retained41(t, pool); !reflect.DeepEqual(before, after) {
-		t.Fatal("42 upgrade changed native41 history", before, after)
+	if after := retained42(t, pool); !reflect.DeepEqual(before, after) {
+		t.Fatal("43 upgrade changed native42 history", before, after)
 	}
 	// Empty-owned rollback must preserve preceding media/consent/survey data.
 	migrator := outcomeMigrator(t, pool)
-	if _, err = migrator.DownTo(ctx, 41); err != nil {
+	if _, err = migrator.DownTo(ctx, 42); err != nil {
 		t.Fatal(err)
 	}
-	if after := retained41(t, pool); !reflect.DeepEqual(before, after) {
-		t.Fatal("empty42 rollback changed predecessors")
+	if after := retained42(t, pool); !reflect.DeepEqual(before, after) {
+		t.Fatal("empty43 rollback changed predecessors")
 	}
 	if _, err = (media.Service{Pool: pool, Privacy: privacyService}).Read(
 		ctx,
@@ -145,9 +145,9 @@ func TestOutcomes42Actual41UpgradePreservesNativeMediaSurveyAndGuardedHistory(t 
 		eventID,
 		item.ID,
 	); err != nil {
-		t.Fatal("native41 reader lost", err)
+		t.Fatal("native42 reader lost", err)
 	}
-	if err = database.Migrate(ctx, pool, 42); err != nil {
+	if err = database.Migrate(ctx, pool, 43); err != nil {
 		t.Fatal(err)
 	}
 	author := testdb.Person(t, pool)
@@ -162,13 +162,13 @@ func TestOutcomes42Actual41UpgradePreservesNativeMediaSurveyAndGuardedHistory(t 
 	}
 	if _, err = migrator.DownTo(
 		ctx,
-		41,
+		42,
 	); err == nil ||
 		!strings.Contains(err.Error(), "Outcome, publication or approved review history") {
-		t.Fatal("populated42 rollback discarded outcome history", err)
+		t.Fatal("populated43 rollback discarded outcome history", err)
 	}
-	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 42 {
-		t.Fatal("guard lost concrete42", version, e)
+	if version, e := migrator.GetDBVersion(ctx); e != nil || version != 43 {
+		t.Fatal("guard lost concrete43", version, e)
 	}
 	// Future migrations may have rolled down before this concrete guard blocked;
 	// restore the full current chain before subsequent owner/query checks.

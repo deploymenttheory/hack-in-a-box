@@ -1,3 +1,7 @@
+Current rebase: actual main e72e522 contains GitHub App41 and merged media42.
+Outcomes is now43, with a42→43 preservation/rollback fixture. Recorded execution
+results below predate this rebase; the updated composition requires fresh CI.
+
 # Outcome follow-through verification
 
 Issue117 owns the native resource and usable ideas/project/review routes. This

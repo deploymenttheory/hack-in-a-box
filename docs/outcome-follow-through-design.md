@@ -121,3 +121,14 @@ Replacement approval checks the existing provider's durable pending/unknown
 barrier for the same checkpoint, including when the selected channel changes.
 A new approval/date does not dispose of an earlier unknown effect. No generic
 archived recovery guard is widened.
+
+## Current-main rebase
+
+PR219 is now merged as e72e522 on top of GitHub App41, with media migration42.
+Only the seven outcomes commits are replayed onto that actual main; outcomes is
+normal migration43. The upgrade/rollback fixture now targets42→43 and snapshots
+the native media/survey history and GitHub App tables. Main's App and media runtime
+services, audit actions, routes and generated contracts are preserved. Earlier
+41→42 execution results above are historical; fresh exact-head CI must validate
+the rebased composition. Local PostgreSQL integration execution is unavailable
+without Docker, so no new database pass is claimed for this rebase.
