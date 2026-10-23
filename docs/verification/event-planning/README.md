@@ -46,3 +46,18 @@ now uses a native labelled select from the same permitted registry as desktop;
 local steps explicitly precede their retained panels. Browser tests use a shared
 helper that activates the actual visible responsive control. No API or domain
 assertion is removed to accommodate the new composition.
+
+The compact-navigation affected admin matrix then passed 154/154 including native
+content, released-guidance and publication assertions. The participant run passed
+9/10; its remaining obsolete visible-button capability assertion was replaced
+with an assertion against the actual native select option on narrow screens,
+preserving absence checks for every unauthorised destination. Fresh participant
+verification passes 10/10 (6.4s).
+
+The coordinated #236 additive optional-destination collection seam is consumed:
+local records use plain names and labelled action buttons, not invented detail
+URLs. Owners retain dirty/unknown guards, breakpoint action identity and explicit
+return focus. All 28 new native planning journeys pass (11.5s), including late
+rules write responses after event/account departure, attendance exception and
+schedule approvals, and branding unknown/read-failure/denial states. Final full
+portal browser suites remain pending; these scoped results do not imply them.

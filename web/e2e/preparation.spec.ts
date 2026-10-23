@@ -70,7 +70,7 @@ test('assigns a task, edits checklist and links, filters attention and shows a l
   await page.getByLabel('Needs attention').selectOption(''); await page.getByLabel('Filter by owner').selectOption(mentor)
   await page.getByRole('button', { name: 'List', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Edit Check AV' })).toHaveCount(0)
-  await page.getByRole('link',{name:'Back to preparation tasks',exact:true}).click()
+  await page.getByRole('link',{name:'Back to preparation tasks',exact:true}).click();await expect(page.getByRole('button',{name:'Edit Book venue',exact:true})).toBeFocused()
   await page.getByRole('button', { name: 'Run sheet', exact: true }).click()
   const run = page.getByRole('region', { name: 'Run sheet', exact: true })
   await expect(run).toContainText('19 Jun 2027, 09:00'); await expect(run).toContainText('Morgan Mentor')

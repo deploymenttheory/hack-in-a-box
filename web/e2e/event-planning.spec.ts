@@ -27,6 +27,7 @@ test('focused setup keeps mounted edits and reviews the exact expected revision 
  expect(writes).toHaveLength(0)
  await review.getByRole('button',{name:'Confirm save event',exact:true}).click()
  await expect(page.getByRole('status')).toContainText('Event saved. Revision 2.')
+ await expect(page.getByRole('button',{name:'Review event readiness',exact:true})).toBeVisible()
  expect(writes).toHaveLength(1);expect(writes[0]).toMatchObject({revision:'"1"',body:{name:'Reviewed event plan',configuration:{minimum_attendance:35,calendar:{excluded_dates:['2027-06-18']}}}})
  expect(await page.evaluate(()=>JSON.stringify([localStorage,sessionStorage]))).not.toContain('Private planning draft')
 })
@@ -130,6 +131,7 @@ test('rules planning honestly pages authorised content and keeps exact save revi
  await page.getByRole('button',{name:'Save new draft',exact:true}).click();await expect(page.getByRole('status')).toContainText('Draft version 2 saved');expect(rules.released_version).toBe(1)
  await page.getByRole('button',{name:'Mark ready for review',exact:true}).click();await page.getByRole('button',{name:'Approve version 2',exact:true}).click();await expect(page.getByRole('status')).toContainText('Version approved')
  await page.getByRole('button',{name:'Release approved version',exact:true}).click();await expect(page.getByRole('status')).toContainText('Version released to its audience.')
+ await page.getByRole('button',{name:'Close editor',exact:true}).click();await expect(page.getByRole('button',{name:'Plan Competition rules',exact:true})).toBeFocused();await expect(page.getByRole('link',{name:'Competition rules',exact:true})).toHaveCount(0)
  expect(rules.released_version).toBe(2);expect(rules.document.require_acknowledgement).toBe(true);expect(state.writes.map(write=>write.revision)).toEqual(['"3"','"4"','"5"','"6"'])
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
 })
@@ -163,4 +165,50 @@ for(const leave of ['event','account'] as const)test(`late rules save response a
  const response=page.waitForResponse(response=>response.request().method()==='PUT'&&new URL(response.url()).pathname.endsWith('/content/'+rulesID));release();await response
  await expect(page.getByLabel('Markdown',{exact:true})).toHaveCount(0);await expect(page.getByText('Private late response marker',{exact:true})).toHaveCount(0)
  expect(state.writes).toHaveLength(1);expect(await page.evaluate(()=>JSON.stringify([localStorage,sessionStorage]))).not.toContain('Private late response marker')
+})
+
+test('confirmed-attendance shortfall remains a native go gate and post-publication exception is deliberate',async({page})=>{
+ const {events}=await mockWorkspace(page),decisions:unknown[]=[];Object.assign(events[0],{stage:'preparation',published_at:'2027-06-13T09:00:00Z',confirmed_attendees:28})
+ await page.route(`**/events/${firstID}/transition`,route=>{
+  const request=route.request(),body=request.postDataJSON();expect(request.headers()['if-match']).toBe('"1"');expect(request.headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters');decisions.push(body)
+  if(!body.attendance_exception)return route.fulfill({status:409,json:{error:{code:'event_blocked',blockers:[{field:'minimum_attendance',code:'attendance_shortfall',message:'Only confirmed competitors count. Two more are required.'}]}}})
+  Object.assign(events[0],{stage:'live',revision:2});return route.fulfill({json:events[0]})
+ })
+ await page.goto('/events/'+firstID);await expect(page.getByText('Only confirmed competitors count toward the minimum.',{exact:false})).toBeVisible()
+ await page.getByRole('button',{name:'Advance to live',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Two more are required')
+ await page.getByLabel('Approve proceeding below minimum attendance after post-publication withdrawals',{exact:true}).check();await page.getByLabel('Reason for an exception, cancellation or reopening',{exact:true}).fill('Approved after recorded withdrawals')
+ await page.getByRole('button',{name:'Advance to live',exact:true}).click();await expect(page.getByRole('button',{name:'Advance to assessment',exact:true})).toBeVisible()
+ expect(decisions).toEqual([{stage:'live',reason:'',attendance_exception:false},{stage:'live',reason:'Approved after recorded withdrawals',attendance_exception:true}])
+})
+
+test('schedule approval shows native event-local times and retains a separate approved state',async({page})=>{
+ await mockWorkspace(page);const id='56666666-6666-4666-8666-666666666666';let approved=false,writes=0
+ await page.route(`**/events/${firstID}/schedule**`,route=>{
+  const request=route.request();if(request.method()==='POST'){writes++;expect(request.headers()['if-match']).toBe('"1"');expect(request.headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters');approved=true}
+  return route.fulfill({json:{items:[{item:{id,title:'Venue walkthrough',audience:['logistics'],anchor:'live_start',days:-1,minutes:0,business_days:false},due_at:'2027-06-19T09:00:00Z',status:approved?'approved':'draft',revision:approved?2:1}]}})
+ })
+ await page.goto('/events/'+firstID);await openEventSection(page,'Schedule');await expect(page.getByText('19 Jun 2027, 10:00 · draft',{exact:true})).toBeVisible();expect(writes).toBe(0)
+ await page.getByRole('button',{name:'Approve Venue walkthrough',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByText('19 Jun 2027, 10:00 · approved',{exact:true})).toBeVisible()
+ expect(writes).toBe(1);await expect(page.getByRole('button',{name:'Approve Venue walkthrough',exact:true})).toHaveCount(0)
+})
+
+test('branding unknown write keeps the unsent palette separate from current native state and never replays',async({page})=>{
+ await mockWorkspace(page);let writes=0,primary='#007e67',revision=1
+ await page.route(`**/events/${firstID}/branding`,route=>{
+  if(route.request().method()==='PUT'){writes++;expect(route.request().headers()['if-match']).toBe('"1"');primary=route.request().postDataJSON().primary;revision=4;return route.fulfill({status:503,json:{error:{code:'unavailable'}}})}
+  return route.fulfill({json:{revision,branding:{primary,background:'#ffffff',foreground:'#192147',accent:'#007e67',assets:[]}}})
+ })
+ await page.goto('/events/'+firstID);await openEventSection(page,'Branding');await page.getByLabel('Primary colour',{exact:true}).fill('#233c78');await page.getByRole('button',{name:'Save branding',exact:true}).click()
+ await expect(page.getByRole('status')).toContainText('outcome is unconfirmed');await expect(page.getByRole('button',{name:'Save branding',exact:true})).toBeDisabled()
+ await page.getByRole('button',{name:'Read current branding for review',exact:true}).click();await expect(page.getByText(/Current native revision 4/)).toBeVisible();await expect(page.getByLabel('Primary colour',{exact:true})).toHaveValue('#233c78');expect(writes).toBe(1)
+ await expect(page.getByText(/Latest native state is not an exact receipt/)).toBeVisible()
+})
+
+test('branding transient read failure retains mounted fields while definite denial removes them',async({page})=>{
+ await mockWorkspace(page);let outcome:'ready'|'failed'|'denied'='ready'
+ await page.route(`**/events/${firstID}/branding`,route=>outcome==='ready'?route.fallback():route.fulfill({status:outcome==='failed'?503:403,json:{error:{code:outcome==='failed'?'unavailable':'forbidden'}}}))
+ await page.goto('/events/'+firstID);await openEventSection(page,'Branding');await page.getByLabel('Primary colour',{exact:true}).fill('#233c78')
+ outcome='failed';await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));const check=page.getByRole('button',{name:'Check event branding access',exact:true});await expect(check).toBeVisible()
+ await expect(page.getByLabel('Primary colour',{exact:true})).toHaveValue('#233c78');await expect(page.getByRole('button',{name:'Save branding',exact:true})).toBeDisabled()
+ outcome='denied';await check.click();await expect(page.getByLabel('Primary colour',{exact:true})).toHaveCount(0)
 })

@@ -97,7 +97,7 @@ test('uses keyboard check-in on each day and keeps admission, staff and catering
   const search = page.getByLabel('Search confirmed competitors')
   await search.focus(); await page.keyboard.type('Alex')
   await expect(row(page, 'Blair Builder')).toHaveCount(0)
-  await page.keyboard.press('Tab');await expect(page.getByRole('link',{name:'Alex Arrival',exact:true})).toBeFocused();await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Check in Alex Arrival' })).toBeFocused()
+  await expect(row(page,'Alex Arrival').getByRole('link')).toHaveCount(0);await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Check in Alex Arrival' })).toBeFocused()
   await page.keyboard.press('Enter'); await expect(row(page, 'Alex Arrival')).toContainText('Checked in')
   await expect(metric(page, 'Checked in on this day').locator('dd')).toHaveText('1')
   await page.getByLabel('Hack day').selectOption(days[1]); await expect(metric(page, 'Checked in on this day').locator('dd')).toHaveText('0')

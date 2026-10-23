@@ -44,3 +44,8 @@ export function firstPlanningError(errors: unknown, path = ''): string {
   for (const [key,value] of Object.entries(errors)) { const name=firstPlanningError(value,path?path+'.'+key:key); if(name)return name }
   return ''
 }
+
+export function usePlanningActionFocus() {
+ const actions=useRef<Record<string,HTMLButtonElement|null>>({})
+ return { bind:(id:string)=>(element:HTMLButtonElement|null)=>{actions.current[id]=element}, restore:(id:string|undefined)=>requestAnimationFrame(()=>{if(id)actions.current[id]?.focus()}) }
+}
