@@ -1196,6 +1196,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/repositories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Organisers see provisioning and recovery per team. Current team members see only their own repository after challenge publication, including before live start. This does not accept a submission. */
+        get: operations["listTeamRepositories"];
+        put?: never;
+        /** @description Queue actual published teams, or reconcile one uncertain result without issuing another create. Requires current organiser authority. */
+        post: operations["provisionTeamRepositories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/github-app": {
         parameters: {
             query?: never;
@@ -3940,6 +3960,18 @@ export interface components {
             organization_id: number;
             organization: string;
             template_repository: string;
+        };
+        TeamRepository: {
+            /** Format: uuid */
+            team_id: string;
+            name: string;
+            organization: string;
+            /** Format: int64 */
+            github_repository_id: number | null;
+            /** @enum {string} */
+            state: "pending" | "ready" | "review" | "ambiguous";
+            diagnostic: string;
+            unused: boolean;
         };
         GitHubAppCommand: {
             /** @enum {string} */
@@ -9266,6 +9298,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AllocationSuggestion"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTeamRepositories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised private repository mappings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamRepository"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    provisionTeamRepositories: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    action: "queue" | "reconcile";
+                    /** Format: uuid */
+                    team_id?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Per-team current state; ready teams remain ready if another team fails. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamRepository"][];
                 };
             };
             default: components["responses"]["Error"];

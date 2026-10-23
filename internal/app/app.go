@@ -111,6 +111,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries}
 	deps := httpapi.Dependencies{
+		Repositories: *communicationRuntime.Repositories,
 		Media: media.Service{
 			Pool:    pool,
 			Privacy: privacy.Service{Pool: pool},
@@ -229,6 +230,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		return nil
 	}
 	worker.Maintenance = func(ctx context.Context) error {
+		if err := communicationRuntime.Repositories.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain repository intents: %w", err)
+		}
 		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain submission outcomes: %w", err)
 		}

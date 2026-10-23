@@ -46,6 +46,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -59,6 +60,7 @@ import (
 )
 
 type Dependencies struct {
+	Repositories    repositories.Service
 	Media           media.Service
 	GitHubApp       githubapp.Service
 	Outcomes        *outcomes.Service

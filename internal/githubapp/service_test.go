@@ -13,9 +13,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -344,5 +346,80 @@ func TestAppHealthRemainsReadableWhenEventWritesAreDisabled(t *testing.T) {
 		access.ErrForbidden,
 	) {
 		t.Fatalf("read-only event allowed configuration: %v", err)
+	}
+}
+
+type repositoryOwnerProvider struct{ mockProvider }
+
+func (p *repositoryOwnerProvider) LookupRepository(
+	_ context.Context,
+	_ Configuration,
+	key []byte,
+	_ int64,
+	name string,
+) (Repository, error) {
+	if string(key) != "SYNTHETIC-APP-KEY" {
+		return Repository{}, ErrIntegration
+	}
+	return Repository{ID: 700, OrganizationID: 99, Name: name}, nil
+}
+
+func (p *repositoryOwnerProvider) CreateRepository(
+	ctx context.Context,
+	c Configuration,
+	key []byte,
+	id int64,
+	name, marker string,
+) (Repository, error) {
+	return p.LookupRepository(ctx, c, key, id, name)
+}
+
+func TestAppRepositoryOwnerUsesCallerTransaction(t *testing.T) {
+	f := setupApp(t)
+	provider := &repositoryOwnerProvider{mockProvider: mockProvider{code: "healthy"}}
+	f.s.Provider = provider
+	command := Command{
+		Action: "configure",
+		Configuration: Configuration{
+			AppID:              42,
+			AppSlug:            "synthetic-app",
+			OrganizationID:     99,
+			Organization:       "synthetic-org",
+			TemplateRepository: "template",
+		},
+		PrivateKey: "SYNTHETIC-APP-KEY",
+	}
+	if err := f.s.Configure(t.Context(), f.owner.ID, f.event, f.revision(), command); err != nil {
+		t.Fatal(err)
+	}
+	f.exec("UPDATE github_app_integrations SET installation_id=55 WHERE event_id=$1", f.event)
+	cfg := f.pool.Config()
+	cfg.MaxConns = 1
+	limited, err := pgxpool.NewWithConfig(t.Context(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(limited.Close)
+	f.s.Pool = limited
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
+	defer cancel()
+	err = database.Within(ctx, limited, func(_ pgx.Tx, q *dbgen.Queries) error {
+		if _, err := q.LockEvent(ctx, f.event); err != nil {
+			return err
+		}
+		_, err := f.s.LookupRepository(
+			ctx,
+			q,
+			f.event,
+			RepositoryRequest{
+				Configuration:  command.Configuration,
+				InstallationID: 55,
+				Name:           "template",
+			},
+		)
+		return err
+	})
+	if err != nil {
+		t.Fatalf("App repository operation needed another pool connection: %v", err)
 	}
 }

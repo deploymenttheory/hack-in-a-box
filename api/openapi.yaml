@@ -1552,6 +1552,47 @@ paths:
                 $ref: '#/components/schemas/AllocationSuggestion'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/events/{event_id}/repositories:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    get:
+      operationId: listTeamRepositories
+      description: Organisers see provisioning and recovery per team. Current team members see only their own repository after challenge publication, including before live start. This does not accept a submission.
+      responses:
+        '200':
+          description: Current authorised private repository mappings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TeamRepository' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: provisionTeamRepositories
+      description: Queue actual published teams, or reconcile one uncertain result without issuing another create. Requires current organiser authority.
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action]
+              properties:
+                action: { type: string, enum: [queue, reconcile] }
+                team_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Per-team current state; ready teams remain ready if another team fails.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TeamRepository' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/github-app:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -7212,6 +7253,18 @@ components:
         organization_id: { type: integer, format: int64, minimum: 1 }
         organization: { type: string, maxLength: 100 }
         template_repository: { type: string, maxLength: 100 }
+    TeamRepository:
+      type: object
+      additionalProperties: false
+      required: [team_id, name, organization, github_repository_id, state, diagnostic, unused]
+      properties:
+        team_id: { type: string, format: uuid }
+        name: { type: string }
+        organization: { type: string }
+        github_repository_id: { type: integer, format: int64, nullable: true }
+        state: { type: string, enum: [pending, ready, review, ambiguous] }
+        diagnostic: { type: string }
+        unused: { type: boolean }
     GitHubAppCommand:
       type: object
       additionalProperties: false
