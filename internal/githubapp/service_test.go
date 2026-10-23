@@ -423,3 +423,85 @@ func TestAppRepositoryOwnerUsesCallerTransaction(t *testing.T) {
 		t.Fatalf("App repository operation needed another pool connection: %v", err)
 	}
 }
+
+type collaboratorOwnerProvider struct {
+	mockProvider
+	accessCalls int
+}
+
+func (p *collaboratorOwnerProvider) InspectCollaborators(
+	context.Context,
+	Configuration,
+	[]byte,
+	int64,
+	AccessRequest,
+) (AccessSnapshot, error) {
+	p.accessCalls++
+	return AccessSnapshot{
+		Collaborators: []Collaborator{{ID: 101, Permission: "write"}},
+		Invitations:   []Invitation{},
+	}, nil
+}
+
+func (p *collaboratorOwnerProvider) ChangeCollaborator(
+	context.Context,
+	Configuration,
+	[]byte,
+	int64,
+	AccessRequest,
+	AccessChange,
+) (AccessResult, error) {
+	p.accessCalls++
+	return AccessResult{}, nil
+}
+
+func TestCollaboratorOwnerDoesNotRequireUnrelatedTemplateHealth(t *testing.T) {
+	f := setupApp(t)
+	f.configure()
+	f.exec("UPDATE github_app_integrations SET installation_id=55 WHERE event_id=$1", f.event)
+	provider := &collaboratorOwnerProvider{
+		mockProvider: mockProvider{code: "template_inaccessible"},
+	}
+	f.s.Provider = provider
+	request := AccessRequest{
+		RepositoryRequest: RepositoryRequest{
+			Configuration:  f.configuration().Configuration,
+			InstallationID: 55,
+			Name:           "native-owned-repository",
+			Marker:         "native-provenance",
+		},
+		RepositoryID: 800,
+	}
+	q := dbgen.New(f.pool)
+	if _, err := f.s.InspectCollaborators(t.Context(), q, f.event, request); err != nil {
+		t.Fatal("unrelated template prevented current access observation", err)
+	}
+	if _, err := f.s.ChangeCollaborator(
+		t.Context(),
+		q,
+		f.event,
+		request,
+		AccessChange{AccountID: 101, Remove: true},
+	); err != nil {
+		t.Fatal("unrelated template prevented revocation", err)
+	}
+	if provider.calls.Load() != 0 || provider.accessCalls != 2 {
+		t.Fatal("collaborator access used broad provisioning health")
+	}
+	f.exec("UPDATE github_app_integrations SET installation_id=0 WHERE event_id=$1", f.event)
+	if _, err := f.s.ChangeCollaborator(
+		t.Context(),
+		q,
+		f.event,
+		request,
+		AccessChange{AccountID: 101, Remove: true},
+	); !errors.Is(
+		err,
+		ErrAccessNotSent,
+	) {
+		t.Fatal("disconnected native installation permitted dispatch", err)
+	}
+	if provider.accessCalls != 2 {
+		t.Fatal("disconnected request reached provider")
+	}
+}

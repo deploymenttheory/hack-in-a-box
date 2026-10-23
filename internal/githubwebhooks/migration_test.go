@@ -89,6 +89,11 @@ func TestOrderedWebhookUpgradePreservesHistoricalNativeRecords(t *testing.T) {
 			err,
 		)
 	}
+	// The historical 45→46 assertion above remains fixed. A running current
+	// application must then apply any later normal migrations as well.
+	if err := database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err := database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}

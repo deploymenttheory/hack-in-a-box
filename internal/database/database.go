@@ -24,7 +24,7 @@ import (
 var migrations embed.FS
 
 const (
-	SchemaVersion int64 = 46
+	SchemaVersion int64 = 47
 	migrationLock int64 = 7261938401
 )
 

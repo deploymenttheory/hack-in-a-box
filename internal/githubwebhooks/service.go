@@ -30,10 +30,27 @@ const (
 
 var ErrCapacity = errors.New("webhook work queue is full")
 
+// MembershipHints receives only authenticated, current-source member evidence.
+// The owning service must reconcile through current provider reads; action and
+// receipt time cannot establish occurrence order or invitation acceptance.
+type MembershipHints interface {
+	MemberChangedInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		uuid.UUID,
+		int64,
+		int64,
+		string,
+		time.Time,
+	) error
+}
+
 type Service struct {
-	Pool *pgxpool.Pool
-	Keys *secretbox.Keyring
-	Jobs *jobs.Service
+	Membership MembershipHints
+	Pool       *pgxpool.Pool
+	Keys       *secretbox.Keyring
+	Jobs       *jobs.Service
 }
 
 type Headers struct{ DeliveryID, Event, Signature string }
@@ -346,7 +363,7 @@ func currentDeliverySource(
 }
 
 func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		event, err := q.LockEvent(ctx, d.EventID)
 		if err != nil {
 			return database.ErrDatabase
@@ -387,6 +404,20 @@ func (s Service) Deliver(ctx context.Context, d jobs.Delivery) jobs.Outcome {
 		}
 		if changed == 0 || !current {
 			return nil
+		}
+		if row.Kind == "member" && s.Membership != nil {
+			if err := s.Membership.MemberChangedInTransaction(
+				ctx,
+				tx,
+				row.EventID,
+				row.TeamID,
+				row.RepositoryID,
+				row.MemberID,
+				row.Action,
+				row.ReceivedAt,
+			); err != nil {
+				return fmt.Errorf("queue current repository member reconciliation: %w", err)
+			}
 		}
 		var pushes, invitations int64
 		if row.Kind == "push" {

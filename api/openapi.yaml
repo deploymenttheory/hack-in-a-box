@@ -1635,6 +1635,52 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/TeamRepository' }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/repositories/{team_id}/access:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - { name: team_id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getRepositoryAccess
+      description: Current organiser-only reviewed access plan, durable effect history and provider observations. Unknown access is flagged rather than adopted.
+      responses:
+        '200':
+          description: Current access review.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RepositoryAccessView' }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      operationId: changeRepositoryAccess
+      description: Review, approve the exact plan version, or refresh provider observations. New grants require actual frozen published teams and challenge publication. This never changes assignments.
+      parameters:
+        - { $ref: '#/components/parameters/CSRF' }
+        - { $ref: '#/components/parameters/Revision' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RepositoryAccessCommand' }
+      responses:
+        '200':
+          description: Exact command receipt separately from current review state.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RepositoryAccessResult' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/repositories/{team_id}/invitations:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - { name: team_id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getOwnRepositoryInvitations
+      description: Current confirmed member or current published mentor sees only their own identity and grant history after actual challenge publication. No other collaborator identities or organiser plan are disclosed.
+      responses:
+        '200':
+          description: Current person's private invitation state.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OwnRepositoryInvitations' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/github-app:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -7326,6 +7372,121 @@ components:
               attempts: { type: integer }
               approved: { type: boolean }
               cancelled: { type: boolean }
+    RepositoryAccessMember:
+      type: object
+      additionalProperties: false
+      required: [coverage_start, coverage_end, person_id, github_id, link_revision, permission, role]
+      properties:
+        coverage_start: { type: string, format: date-time, nullable: true }
+        coverage_end: { type: string, format: date-time, nullable: true }
+        person_id: { type: string, format: uuid }
+        github_id: { type: integer, format: int64 }
+        link_revision: { type: integer, format: int64 }
+        permission: { type: string, enum: [push, pull] }
+        role: { type: string, enum: [competitor, mentor] }
+    RepositoryAccessFlag:
+      type: object
+      additionalProperties: false
+      required: [code, person_id, github_id]
+      properties:
+        code: { type: string }
+        person_id: { type: string, format: uuid, nullable: true }
+        github_id: { type: integer, format: int64, nullable: true }
+    RepositoryAccessAction:
+      type: object
+      additionalProperties: false
+      required: [id, kind, member, grant_id, previous_state]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [invite, remove] }
+        member: { $ref: '#/components/schemas/RepositoryAccessMember' }
+        grant_id: { type: string, format: uuid, nullable: true }
+        previous_state: { type: string }
+    RepositoryAccessPlan:
+      type: object
+      additionalProperties: false
+      required: [id, version, event_id, team_id, repository_id, fingerprint, reason, approval_reason, members, actions, flags, created_at, approved_at, approved_by]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer, format: int64 }
+        event_id: { type: string, format: uuid }
+        team_id: { type: string, format: uuid }
+        repository_id: { type: integer, format: int64 }
+        fingerprint: { type: string }
+        reason: { type: string }
+        approval_reason: { type: string }
+        members: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessMember' } }
+        actions: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessAction' } }
+        flags: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessFlag' } }
+        created_at: { type: string, format: date-time }
+        approved_at: { type: string, format: date-time, nullable: true }
+        approved_by: { type: string, format: uuid, nullable: true }
+    RepositoryAccessGrant:
+      type: object
+      additionalProperties: false
+      required: [id, member, app_managed, effect_uncertain, state, invitation_id, diagnostic, observed_at]
+      properties:
+        id: { type: string, format: uuid }
+        member: { $ref: '#/components/schemas/RepositoryAccessMember' }
+        app_managed: { type: boolean }
+        effect_uncertain: { type: boolean }
+        state: { type: string, enum: [ambiguous, pending, accepted, expired, failed, revoked] }
+        invitation_id: { type: integer, format: int64, nullable: true }
+        diagnostic: { type: string }
+        observed_at: { type: string, format: date-time, nullable: true }
+    RepositoryAccessExecution:
+      type: object
+      additionalProperties: false
+      required: [action_id, state, diagnostic, attempted, updated_at]
+      properties:
+        action_id: { type: string, format: uuid }
+        state: { type: string, enum: [planned, ambiguous, delivered, failed, cancelled] }
+        diagnostic: { type: string }
+        attempted: { type: boolean }
+        updated_at: { type: string, format: date-time }
+    RepositoryAccessView:
+      type: object
+      additionalProperties: false
+      required: [revision, team_id, plan, grants, execution, can_manage, grants_open, flags, observed_at]
+      properties:
+        revision: { type: integer, format: int64 }
+        team_id: { type: string, format: uuid }
+        plan: { allOf: [{ $ref: '#/components/schemas/RepositoryAccessPlan' }], nullable: true }
+        grants: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessGrant' } }
+        execution: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessExecution' } }
+        can_manage: { type: boolean }
+        grants_open: { type: boolean }
+        flags: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessFlag' } }
+        observed_at: { type: string, format: date-time, nullable: true }
+    RepositoryAccessCommand:
+      type: object
+      additionalProperties: false
+      required: [action, reason]
+      properties:
+        action: { type: string, enum: [review, approve, refresh] }
+        plan_id: { type: string, format: uuid }
+        plan_version: { type: integer, format: int64, minimum: 0 }
+        reason: { type: string, minLength: 1, maxLength: 2000 }
+    RepositoryAccessResult:
+      type: object
+      additionalProperties: false
+      required: [receipt, current]
+      properties:
+        receipt: { allOf: [{ $ref: '#/components/schemas/RepositoryAccessPlan' }], nullable: true }
+        current: { $ref: '#/components/schemas/RepositoryAccessView' }
+    OwnRepositoryInvitations:
+      type: object
+      additionalProperties: false
+      required: [team_id, repository_id, current_github_id, link_revision, grants, observed_at, diagnostic]
+      properties:
+        team_id: { type: string, format: uuid }
+        repository_id: { type: integer, format: int64 }
+        current_github_id: { type: integer, format: int64, nullable: true }
+        link_revision: { type: integer, format: int64 }
+        grants: { type: array, items: { $ref: '#/components/schemas/RepositoryAccessGrant' } }
+        observed_at: { type: string, format: date-time, nullable: true }
+        diagnostic: { type: string }
+
     TeamRepository:
       type: object
       additionalProperties: false
