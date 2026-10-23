@@ -225,6 +225,9 @@ func (p EventPolicy) file(
 	if err != nil {
 		return fmt.Errorf("check file scope: %w", err)
 	}
+	if err = RequireOrdinaryFile(ctx, p.Queries, event, target); err != nil {
+		return err
+	}
 	if file.TeamID != nil {
 		return p.teamFileRead(ctx, actor, row, file)
 	}
@@ -261,4 +264,22 @@ func (p EventPolicy) now() time.Time {
 // Callers must also verify a current active person and load current event roles.
 func HasPresentationAuthority(roles []string) bool {
 	return slices.Contains(roles, "organiser") || slices.Contains(roles, "mc")
+}
+
+// RequireOrdinaryFile prevents generic content/submission/file routes from
+// bypassing a native media owner's current consent policy. Media bytes are only
+// served through that owner's protected original/thumbnail routes, even for an
+// organiser; this is a denial boundary, never an alternative media ACL.
+func RequireOrdinaryFile(ctx context.Context, q *dbgen.Queries, eventID, fileID uuid.UUID) error {
+	protected, err := q.IsProtectedMediaFile(
+		ctx,
+		dbgen.IsProtectedMediaFileParams{EventID: eventID, FileID: fileID},
+	)
+	if err != nil {
+		return fmt.Errorf("check native media file boundary: %w", err)
+	}
+	if protected {
+		return ErrForbidden
+	}
+	return nil
 }

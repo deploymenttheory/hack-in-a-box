@@ -86,6 +86,12 @@ func checkReferences(
 		if err != nil || file.TeamID != nil {
 			return blocked("invalid_attachment", "Choose an organiser attachment from this event.")
 		}
+		if access.RequireOrdinaryFile(ctx, q, eventID, fileID) != nil {
+			return blocked(
+				"invalid_attachment",
+				"Use the reviewed media gallery for consent-dependent photographs.",
+			)
+		}
 		refs, err := q.ContentFileItems(
 			ctx,
 			dbgen.ContentFileItemsParams{EventID: eventID, FileID: fileID},

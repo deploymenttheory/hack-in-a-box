@@ -35,6 +35,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
+	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
@@ -57,6 +58,7 @@ import (
 )
 
 type Dependencies struct {
+	Media           media.Service
 	GitHubApp       githubapp.Service
 	Surveys         *surveys.Service
 	Objectives      objectives.Service

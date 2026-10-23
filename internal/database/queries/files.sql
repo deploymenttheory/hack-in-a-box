@@ -16,3 +16,6 @@ SELECT COALESCE(sum(size_bytes), 0)::bigint FROM files WHERE event_id = $1;
 
 -- name: ObjectExists :one
 SELECT EXISTS(SELECT 1 FROM files WHERE object_key = $1);
+
+-- name: IsProtectedMediaFile :one
+SELECT EXISTS(SELECT 1 FROM media_files WHERE event_id=$1 AND file_id=$2);

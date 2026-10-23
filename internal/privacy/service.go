@@ -223,6 +223,19 @@ func (s Service) Correct(
 		if err != nil {
 			return fmt.Errorf("save corrected profile: %w", err)
 		}
+		if previous.PhotoConsent != saved.PhotoConsent {
+			if err = auditPhotoConsent(
+				ctx,
+				q,
+				actor,
+				event,
+				saved.ID,
+				saved.PhotoConsent,
+				saved.PhotoConsentRevision,
+			); err != nil {
+				return err
+			}
+		}
 		return audit.Append(
 			ctx,
 			q,

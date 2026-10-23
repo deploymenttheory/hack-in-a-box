@@ -5,7 +5,7 @@ SELECT p.*,person.display_name FROM operational_profiles p JOIN people person ON
 INSERT INTO operational_profiles(event_id,person_id,contact_email,contact_phone,dietary,accessibility,photo_consent,travel_details,social_attendance)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
 ON CONFLICT(event_id,person_id) DO UPDATE SET contact_email=EXCLUDED.contact_email,contact_phone=EXCLUDED.contact_phone,
-dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
+dietary=EXCLUDED.dietary,accessibility=EXCLUDED.accessibility,photo_consent_revision=CASE WHEN operational_profiles.photo_consent IS DISTINCT FROM EXCLUDED.photo_consent THEN operational_profiles.photo_consent_revision+1 ELSE operational_profiles.photo_consent_revision END,photo_consent=EXCLUDED.photo_consent,travel_details=EXCLUDED.travel_details,social_attendance=EXCLUDED.social_attendance,revision=operational_profiles.revision+1,updated_at=now()
 RETURNING *;
 
 -- name: ListOperationalProfiles :many
@@ -42,3 +42,22 @@ DELETE FROM private_drafts WHERE event_id=$1 AND person_id=$2;
 INSERT INTO private_drafts(id,event_id,person_id,body,expires_at) VALUES($1,$2,$3,$4,$5)
 ON CONFLICT(id) DO UPDATE SET body=EXCLUDED.body,expires_at=EXCLUDED.expires_at
 WHERE private_drafts.event_id=EXCLUDED.event_id AND private_drafts.person_id=EXCLUDED.person_id;
+
+-- name: PhotoConsentSubject :one
+SELECT p.id,p.display_name,p.active,profile.id AS profile_id,COALESCE(profile.photo_consent,'unknown')::text AS photo_consent,COALESCE(profile.photo_consent_revision,0)::bigint AS consent_revision,
+ (EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=sqlc.arg(event_id)::uuid AND c.person_id=p.id AND c.state='confirmed') OR EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=sqlc.arg(event_id)::uuid AND m.person_id=p.id AND m.active AND m.role!='early_brief_access'))::boolean AS eligible
+FROM people p LEFT JOIN operational_profiles profile ON profile.event_id=sqlc.arg(event_id)::uuid AND profile.person_id=p.id
+WHERE p.id=sqlc.arg(person_id)::uuid;
+
+-- name: PhotoConsentRoster :many
+SELECT p.id FROM people p WHERE p.active AND p.id>sqlc.arg(cursor)::uuid AND (
+ EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=sqlc.arg(event_id)::uuid AND c.person_id=p.id AND c.state='confirmed') OR
+ EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=sqlc.arg(event_id)::uuid AND m.person_id=p.id AND m.active AND m.role!='early_brief_access'))
+ORDER BY p.id LIMIT sqlc.arg(page_size);
+
+-- name: SetOwnPhotoConsent :one
+INSERT INTO operational_profiles(event_id,person_id,photo_consent) VALUES($1,$2,$3)
+ON CONFLICT(event_id,person_id) DO UPDATE SET
+ photo_consent_revision=CASE WHEN operational_profiles.photo_consent IS DISTINCT FROM EXCLUDED.photo_consent THEN operational_profiles.photo_consent_revision+1 ELSE operational_profiles.photo_consent_revision END,
+ photo_consent=EXCLUDED.photo_consent,revision=operational_profiles.revision+1,updated_at=now()
+RETURNING *;

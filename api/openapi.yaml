@@ -4655,6 +4655,219 @@ paths:
     {"parameters": [{"$ref": "#/components/parameters/EventID"}, {"name": "survey_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "get": {"operationId": "getPublishedSurveyReport", "responses": {"200": {"description": "Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SurveyReport"}}}}, "default": {"$ref": "#/components/responses/Error"}}}}
   /api/v1/events/{event_id}/surveys/{survey_id}/report/review:
     {"parameters": [{"$ref": "#/components/parameters/EventID"}, {"name": "survey_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}], "get": {"operationId": "getSurveyReportReview", "responses": {"200": {"description": "Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SurveyReviewedReport"}}}}, "default": {"$ref": "#/components/responses/Error"}}}, "put": {"operationId": "changeSurveyReport", "responses": {"200": {"description": "Current native survey authority. Authored responses are private to their author and current organisers. Suppressed values are unknown, never zero.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SurveyReviewedReport"}}}}, "default": {"$ref": "#/components/responses/Error"}}, "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SurveyReportCommand"}}}}, "parameters": [{"$ref": "#/components/parameters/CSRF"}, {"$ref": "#/components/parameters/ProfileRevision"}]}}
+  /api/v1/events/{event_id}/media:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+    get:
+      operationId: "listMedia"
+      parameters:
+        -
+          name: "after"
+          in: "query"
+          schema:
+            type: "string"
+            format: "uuid"
+        -
+          $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaPage"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/events/{event_id}/media/upload:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+    post:
+      operationId: "uploadMediaPhoto"
+      parameters:
+        -
+          $ref: "#/components/parameters/CSRF"
+        -
+          $ref: "#/components/parameters/Revision"
+        -
+          $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaItem"
+        default:
+          $ref: "#/components/responses/Error"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaPhotoUpload"
+  /api/v1/events/{event_id}/media/consent-guidance:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+    get:
+      operationId: "getMediaConsentGuidance"
+      parameters:
+        -
+          name: "after"
+          in: "query"
+          schema:
+            type: "string"
+            format: "uuid"
+        -
+          $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaConsentGuidance"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/events/{event_id}/photo-consent:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+    get:
+      operationId: "getOwnPhotoConsent"
+      parameters: []
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnPhotoConsent"
+        default:
+          $ref: "#/components/responses/Error"
+    put:
+      operationId: "setOwnPhotoConsent"
+      parameters:
+        -
+          $ref: "#/components/parameters/CSRF"
+        -
+          $ref: "#/components/parameters/ProfileRevision"
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OwnPhotoConsent"
+        default:
+          $ref: "#/components/responses/Error"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoConsentChoice"
+  /api/v1/events/{event_id}/media/{media_id}:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+      -
+        name: "media_id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+    get:
+      operationId: "getMedia"
+      parameters: []
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaItem"
+        default:
+          $ref: "#/components/responses/Error"
+    put:
+      operationId: "changeMedia"
+      parameters:
+        -
+          $ref: "#/components/parameters/CSRF"
+        -
+          $ref: "#/components/parameters/Revision"
+      responses:
+        200:
+          description: "Current authorised native result."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaItem"
+        default:
+          $ref: "#/components/responses/Error"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaCommand"
+  /api/v1/events/{event_id}/media/{media_id}/original:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+      -
+        name: "media_id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+    get:
+      operationId: "getMediaOriginal"
+      responses:
+        200:
+          description: "Current-policy protected image bytes; no public static asset URL."
+          headers:
+            Content-Disposition:
+              schema:
+                type: "string"
+          content:
+            application/octet-stream:
+              schema:
+                type: "string"
+                format: "binary"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/v1/events/{event_id}/media/{media_id}/thumbnail:
+    parameters:
+      -
+        $ref: "#/components/parameters/EventID"
+      -
+        name: "media_id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+          format: "uuid"
+    get:
+      operationId: "getMediaThumbnail"
+      responses:
+        200:
+          description: "Current-policy protected image bytes; no public static asset URL."
+          headers:
+            Content-Disposition:
+              schema:
+                type: "string"
+          content:
+            application/octet-stream:
+              schema:
+                type: "string"
+                format: "binary"
+        default:
+          $ref: "#/components/responses/Error"
 components:
   securitySchemes:
     display:
@@ -11379,3 +11592,312 @@ components:
       {"type": "object", "additionalProperties": false, "required": ["review_id", "version", "report", "reviewer_id", "reviewed_at", "approved_at", "published_at"], "properties": {"review_id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "format": "int64"}, "report": {"$ref": "#/components/schemas/SurveyReport"}, "reviewer_id": {"type": "string", "format": "uuid"}, "reviewed_at": {"type": "string", "format": "date-time"}, "approved_at": {"type": "string", "format": "date-time", "nullable": true}, "published_at": {"type": "string", "format": "date-time", "nullable": true}}}
     SurveyReportCommand:
       {"type": "object", "additionalProperties": false, "required": ["action", "review_id", "summary", "reviewed_text"], "properties": {"action": {"type": "string", "enum": ["review_text", "approve", "publish"]}, "review_id": {"type": "string", "format": "uuid"}, "summary": {"type": "string", "maxLength": 20000}, "reviewed_text": {"type": "boolean"}}}
+
+    MediaMetadata:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "kind"
+        - "title"
+        - "caption"
+        - "captured_at"
+        - "recording_url"
+        - "people"
+        - "challenge_related"
+      properties:
+        kind:
+          type: "string"
+          enum:
+            - "photo"
+            - "recording"
+        title:
+          type: "string"
+          minLength: 1
+          maxLength: 200
+        caption:
+          type: "string"
+          maxLength: 4000
+        captured_at:
+          type: "string"
+          format: "date-time"
+          nullable: true
+        recording_url:
+          type: "string"
+          maxLength: 2048
+        people:
+          type: "array"
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: "string"
+            format: "uuid"
+        challenge_related:
+          type: "boolean"
+    MediaReview:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "identification_reviewed"
+        - "no_identifiable_people"
+        - "content_reviewed"
+      properties:
+        identification_reviewed:
+          type: "boolean"
+        no_identifiable_people:
+          type: "boolean"
+        content_reviewed:
+          type: "boolean"
+    MediaPersonIndicator:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "id"
+        - "name"
+        - "consent"
+        - "eligible"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        consent:
+          type: "string"
+          enum:
+            - "unknown"
+            - "yes"
+            - "no"
+        eligible:
+          type: "boolean"
+    MediaItem:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "id"
+        - "version"
+        - "kind"
+        - "title"
+        - "caption"
+        - "captured_at"
+        - "state"
+        - "consent_state"
+        - "recording_url"
+        - "can_read_original"
+        - "can_edit"
+        - "can_review"
+        - "can_publish"
+        - "can_withdraw"
+        - "people"
+        - "challenge_related"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        version:
+          type: "integer"
+          format: "int64"
+          minimum: 0
+        kind:
+          type: "string"
+          enum:
+            - "photo"
+            - "recording"
+        title:
+          type: "string"
+        caption:
+          type: "string"
+        captured_at:
+          type: "string"
+          format: "date-time"
+          nullable: true
+        state:
+          type: "string"
+          enum:
+            - "draft"
+            - "reviewed"
+            - "released"
+            - "withdrawn"
+        consent_state:
+          type: "string"
+          enum:
+            - "not_reviewed"
+            - "reviewed"
+        recording_url:
+          type: "string"
+        can_read_original:
+          type: "boolean"
+        can_edit:
+          type: "boolean"
+        can_review:
+          type: "boolean"
+        can_publish:
+          type: "boolean"
+        can_withdraw:
+          type: "boolean"
+        people:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/MediaPersonIndicator"
+        challenge_related:
+          type: "boolean"
+    MediaPage:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "revision"
+        - "can_collect"
+        - "can_review"
+        - "items"
+        - "next_cursor"
+      properties:
+        revision:
+          type: "integer"
+          format: "int64"
+          minimum: 0
+        can_collect:
+          type: "boolean"
+        can_review:
+          type: "boolean"
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/MediaItem"
+        next_cursor:
+          type: "string"
+          format: "uuid"
+          nullable: true
+    MediaCommand:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "action"
+        - "version"
+        - "command_id"
+        - "reason"
+      properties:
+        action:
+          type: "string"
+          enum:
+            - "save"
+            - "review"
+            - "publish"
+            - "withdraw"
+        version:
+          type: "integer"
+          format: "int64"
+          minimum: 0
+        command_id:
+          type: "string"
+          format: "uuid"
+        metadata:
+          $ref: "#/components/schemas/MediaMetadata"
+        review:
+          $ref: "#/components/schemas/MediaReview"
+        reason:
+          type: "string"
+          minLength: 1
+          maxLength: 2000
+    MediaPhotoUpload:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "id"
+        - "metadata"
+        - "reason"
+        - "filename"
+        - "media_type"
+        - "content"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        metadata:
+          $ref: "#/components/schemas/MediaMetadata"
+        reason:
+          type: "string"
+          minLength: 1
+          maxLength: 2000
+        filename:
+          type: "string"
+          minLength: 1
+          maxLength: 160
+        media_type:
+          type: "string"
+          enum:
+            - "image/png"
+            - "image/jpeg"
+        content:
+          type: "string"
+          format: "byte"
+    OwnPhotoConsent:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "choice"
+        - "revision"
+        - "can_opt_in"
+        - "can_revoke"
+      properties:
+        choice:
+          type: "string"
+          enum:
+            - "unknown"
+            - "yes"
+            - "no"
+        revision:
+          type: "integer"
+          format: "int64"
+          minimum: 0
+        can_opt_in:
+          type: "boolean"
+        can_revoke:
+          type: "boolean"
+    PhotoConsentChoice:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "choice"
+      properties:
+        choice:
+          type: "string"
+          enum:
+            - "unknown"
+            - "yes"
+            - "no"
+    MediaConsentSubject:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "person_id"
+        - "display_name"
+        - "choice"
+        - "eligible"
+      properties:
+        person_id:
+          type: "string"
+          format: "uuid"
+        display_name:
+          type: "string"
+        choice:
+          type: "string"
+          enum:
+            - "unknown"
+            - "yes"
+            - "no"
+        eligible:
+          type: "boolean"
+    MediaConsentGuidance:
+      type: "object"
+      additionalProperties: false
+      required:
+        - "items"
+        - "next_cursor"
+      properties:
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/MediaConsentSubject"
+        next_cursor:
+          type: "string"
+          format: "uuid"
+          nullable: true

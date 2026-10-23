@@ -424,6 +424,15 @@ type EventGateFact struct {
 	SettledSubmissions int32
 }
 
+type EventMedium struct {
+	EventID         uuid.UUID
+	ID              uuid.UUID
+	OwnerID         uuid.UUID
+	Version         int64
+	State           string
+	ReleasedVersion pgtype.Int8
+}
+
 type EventMembership struct {
 	EventID   uuid.UUID
 	PersonID  uuid.UUID
@@ -736,6 +745,32 @@ type LoginAttempt struct {
 	ReturnTo    string
 }
 
+type MediaCommand struct {
+	EventID     uuid.UUID
+	ID          uuid.UUID
+	ActorID     uuid.UUID
+	CommandID   uuid.UUID
+	Fingerprint string
+	Version     int64
+}
+
+type MediaFile struct {
+	EventID uuid.UUID
+	MediaID uuid.UUID
+	FileID  uuid.UUID
+}
+
+type MediaVersion struct {
+	EventID   uuid.UUID
+	ID        uuid.UUID
+	Version   int64
+	Document  []byte
+	ActorID   uuid.UUID
+	Action    string
+	Reason    string
+	CreatedAt time.Time
+}
+
 type MentorAssignment struct {
 	EventID  uuid.UUID
 	TeamID   uuid.UUID
@@ -904,18 +939,19 @@ type Operation struct {
 }
 
 type OperationalProfile struct {
-	ID               uuid.UUID
-	EventID          uuid.UUID
-	PersonID         uuid.UUID
-	ContactEmail     string
-	ContactPhone     string
-	Dietary          string
-	Accessibility    string
-	PhotoConsent     string
-	Revision         int64
-	UpdatedAt        time.Time
-	TravelDetails    string
-	SocialAttendance string
+	ID                   uuid.UUID
+	EventID              uuid.UUID
+	PersonID             uuid.UUID
+	ContactEmail         string
+	ContactPhone         string
+	Dietary              string
+	Accessibility        string
+	PhotoConsent         string
+	Revision             int64
+	UpdatedAt            time.Time
+	TravelDetails        string
+	SocialAttendance     string
+	PhotoConsentRevision int64
 }
 
 type Person struct {

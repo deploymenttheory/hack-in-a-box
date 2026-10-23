@@ -2937,6 +2937,135 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["listMedia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/media/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadMediaPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/media/consent-guidance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getMediaConsentGuidance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/photo-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getOwnPhotoConsent"];
+        put: operations["setOwnPhotoConsent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getMedia"];
+        put: operations["changeMedia"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/media/{media_id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getMediaOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/media/{media_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getMediaThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6280,6 +6409,110 @@ export interface components {
             review_id: string;
             summary: string;
             reviewed_text: boolean;
+        };
+        MediaMetadata: {
+            /** @enum {string} */
+            kind: "photo" | "recording";
+            title: string;
+            caption: string;
+            /** Format: date-time */
+            captured_at: string | null;
+            recording_url: string;
+            people: string[];
+            challenge_related: boolean;
+        };
+        MediaReview: {
+            identification_reviewed: boolean;
+            no_identifiable_people: boolean;
+            content_reviewed: boolean;
+        };
+        MediaPersonIndicator: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            consent: "unknown" | "yes" | "no";
+            eligible: boolean;
+        };
+        MediaItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            kind: "photo" | "recording";
+            title: string;
+            caption: string;
+            /** Format: date-time */
+            captured_at: string | null;
+            /** @enum {string} */
+            state: "draft" | "reviewed" | "released" | "withdrawn";
+            /** @enum {string} */
+            consent_state: "not_reviewed" | "reviewed";
+            recording_url: string;
+            can_read_original: boolean;
+            can_edit: boolean;
+            can_review: boolean;
+            can_publish: boolean;
+            can_withdraw: boolean;
+            people: components["schemas"]["MediaPersonIndicator"][];
+            challenge_related: boolean;
+        };
+        MediaPage: {
+            /** Format: int64 */
+            revision: number;
+            can_collect: boolean;
+            can_review: boolean;
+            items: components["schemas"]["MediaItem"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        MediaCommand: {
+            /** @enum {string} */
+            action: "save" | "review" | "publish" | "withdraw";
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            command_id: string;
+            metadata?: components["schemas"]["MediaMetadata"];
+            review?: components["schemas"]["MediaReview"];
+            reason: string;
+        };
+        MediaPhotoUpload: {
+            /** Format: uuid */
+            id: string;
+            metadata: components["schemas"]["MediaMetadata"];
+            reason: string;
+            filename: string;
+            /** @enum {string} */
+            media_type: "image/png" | "image/jpeg";
+            /** Format: byte */
+            content: string;
+        };
+        OwnPhotoConsent: {
+            /** @enum {string} */
+            choice: "unknown" | "yes" | "no";
+            /** Format: int64 */
+            revision: number;
+            can_opt_in: boolean;
+            can_revoke: boolean;
+        };
+        PhotoConsentChoice: {
+            /** @enum {string} */
+            choice: "unknown" | "yes" | "no";
+        };
+        MediaConsentSubject: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            /** @enum {string} */
+            choice: "unknown" | "yes" | "no";
+            eligible: boolean;
+        };
+        MediaConsentGuidance: {
+            items: components["schemas"]["MediaConsentSubject"][];
+            /** Format: uuid */
+            next_cursor: string | null;
         };
     };
     responses: {
@@ -11769,6 +12002,250 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SurveyReviewedReport"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMedia: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    uploadMediaPhoto: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MediaPhotoUpload"];
+            };
+        };
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaItem"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMediaConsentGuidance: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaConsentGuidance"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnPhotoConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnPhotoConsent"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setOwnPhotoConsent: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted profile revision. Use "0" to create a missing profile; existing profiles require their current revision. */
+                "If-Match": components["parameters"]["ProfileRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoConsentChoice"];
+            };
+        };
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnPhotoConsent"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaItem"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeMedia: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted event revision, for example "1". */
+                "If-Match": components["parameters"]["Revision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MediaCommand"];
+            };
+        };
+        responses: {
+            /** @description Current authorised native result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaItem"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMediaOriginal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-policy protected image bytes; no public static asset URL. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMediaThumbnail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-policy protected image bytes; no public static asset URL. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
                 };
             };
             default: components["responses"]["Error"];
