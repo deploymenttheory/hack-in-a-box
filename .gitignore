@@ -74,3 +74,4 @@ web/test-results-shell-*/
 web/test-results-planning/
 web/node_modules
 web/test-results-planning-public/
+web/test-results-planning-full-*/

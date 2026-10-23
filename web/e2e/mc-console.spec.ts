@@ -76,7 +76,7 @@ test('rehearses and saves without changing live cues, then explicitly activates 
   expect(data.requests.at(-1)?.body).toMatchObject({ action: 'activate', from_draft: true, index: 1 })
   expect(await page.evaluate(() => (window as unknown as { __injected?: boolean }).__injected)).toBeUndefined()
   await expect(page.locator('.mc-console img')).toHaveCount(0)
-  await expect(page.getByRole('combobox')).toHaveCount(0)
+  await expect(page.locator('.mc-console').getByRole('combobox')).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await page.screenshot({ path: info.outputPath('mc-rehearsal-activated.png'), fullPage: true })
 })

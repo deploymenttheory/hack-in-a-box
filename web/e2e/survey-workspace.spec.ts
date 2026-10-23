@@ -1,4 +1,3 @@
-import { openEventSection } from './event-navigation-fixture'
 import { expect, test } from '@playwright/test'
 import type { components } from '../src/api/schema.gen'
 import { firstID } from './fixtures'
@@ -74,9 +73,9 @@ test('dirty question tab switch requires explicit consent and clears only acknow
  await page.goto(managePath);await page.getByRole('button',{name:'Questions',exact:true}).click()
  await page.getByLabel('Form name',{exact:true}).fill(privateText)
  await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
- let dialog=page.waitForEvent('dialog'),switching=openEventSection(page, 'Overview');await(await dialog).dismiss();await switching
+ let dialog=page.waitForEvent('dialog'),switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).dismiss();await switching
  await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
- dialog=page.waitForEvent('dialog');switching=openEventSection(page, 'Overview');await(await dialog).accept();await switching
+ dialog=page.waitForEvent('dialog');switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).accept();await switching
  await expect(page.getByRole('heading',{name:'Restricted participation and completion'})).toBeVisible()
  await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue('Post-event learning')
  expect(f.configurationWrites).toHaveLength(0)
@@ -101,7 +100,7 @@ test('uncertain reviewed summary keeps its exact command across a refused local 
  const f=await surveyFixture(page,true);f.state.dropReport=1;await page.goto(managePath)
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await page.getByLabel('Redacted summary for wider release').fill('Reviewed summary with retained identity.')
  await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
- const dialog=page.waitForEvent('dialog'),switching=openEventSection(page, 'Overview');await(await dialog).dismiss();await switching
+ const dialog=page.waitForEvent('dialog'),switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).dismiss();await switching
  await expect(page.getByLabel('Redacted summary for wider release')).toHaveValue('Reviewed summary with retained identity.')
  await page.getByRole('button',{name:'Retry the same report command'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published')
  expect(f.reportWrites).toHaveLength(2);expect(f.reportWrites[0]).toEqual(f.reportWrites[1]);expect(f.state.review?.version).toBe(1)

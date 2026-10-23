@@ -82,6 +82,7 @@ function ArrivalEditor({ initial, eventID, day, timezone, canEdit, refresh, onDi
     } catch (error) { setFailure(error); setLatest(undefined); setReviewed(false); if (error instanceof APIError && error.status === 403) await refresh().catch(setFailure) }
   }
   async function review() {
+    setLatest(undefined);setReviewed(false)
     try { const page = await refresh(); const p = page.items.find(p => p.person_id === initial.person_id); if (!p) throw new APIError(403, 'forbidden'); setLatest(p); setReviewed(false) } catch (error) { setFailure(error) }
   }
   return <form ref={editor} tabIndex={-1} className="fleet-planning-section" aria-label="Arrival correction" onSubmit={event => void form.handleSubmit(save)(event)}><h3>Correct {initial.display_name} · {dateLabel(day)}</h3><fieldset disabled={!canEdit || form.formState.isSubmitting}><Label htmlFor="correct-present">Arrival status</Label><Select id="correct-present" {...form.register('present')}><option value="yes">Checked in</option><option value="no">Not checked in</option></Select><Label htmlFor="arrival-reason">Correction reason</Label><Textarea id="arrival-reason" maxLength={500} {...form.register('reason')} />{form.formState.errors.reason && <p role="alert" className="field-error">{form.formState.errors.reason.message}</p>}</fieldset>

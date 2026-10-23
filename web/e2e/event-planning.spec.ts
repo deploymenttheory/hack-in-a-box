@@ -1,6 +1,6 @@
 import { openEventSection } from './event-navigation-fixture'
 import { expect, test } from '@playwright/test'
-import { firstID, mockWorkspace, person } from './fixtures'
+import { firstID, mockWorkspace } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 
 test('focused setup keeps mounted edits and reviews the exact expected revision before a deliberate save',async({page})=>{
@@ -146,12 +146,20 @@ test('unknown rules write exposes current-source review without replay or latest
  expect(state.writes).toHaveLength(1)
 })
 
-test('staff grant conflicts leave lasting restrictions and input explicit for active and waitlisted people',async({page})=>{
- await mockWorkspace(page);const roles:string[]=[]
- await page.route(`**/events/${firstID}/staff`,route=>{if(route.request().method()!=='PUT')return route.fallback();roles.push(route.request().postDataJSON().role);return route.fulfill({status:409,json:{error:{code:'event_blocked',request_id:'synthetic',blockers:[{field:'person_id',code:'competition_conflict',message:'Active or waitlisted competitors must withdraw before this grant.'}]}}})})
- await page.goto('/events/'+firstID);await openEventSection(page, 'Staff');await page.getByLabel('Person account ID').fill(person.id)
- for(const role of ['organiser','early_brief_access']){await page.getByLabel('Role',{exact:true}).selectOption(role);await page.getByLabel(/Acknowledge the lasting competition restriction/).check();await page.getByRole('button',{name:'Assign role',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Active or waitlisted competitors must withdraw');await expect(page.getByLabel('Person account ID')).toHaveValue(person.id)}
- expect(roles).toEqual(['organiser','early_brief_access'])
+test('staff grant conflicts leave active and waitlisted claims unchanged and require explicit withdrawal',async({page})=>{
+ await mockWorkspace(page)
+ const claims=[{personID:'58888888-8888-4888-8888-888888888881',state:'confirmed'},{personID:'58888888-8888-4888-8888-888888888882',state:'waitlisted'}] as const
+ const requests:{person_id:string;role:string;active:boolean;acknowledge_competition_restriction:boolean}[]=[]
+ await page.route(`**/events/${firstID}/staff`,route=>{if(route.request().method()!=='PUT')return route.fallback();const body=route.request().postDataJSON();requests.push(body);expect(claims.some(claim=>claim.personID===body.person_id)).toBe(true);return route.fulfill({status:409,json:{error:{code:'withdrawal_required',request_id:'synthetic'}}})})
+ await page.goto('/events/'+firstID);await openEventSection(page,'Staff')
+ for(const claim of claims)for(const role of ['organiser','early_brief_access']){
+  await page.getByLabel('Person account ID').fill(claim.personID);await page.getByLabel('Role',{exact:true}).selectOption(role)
+  await page.getByLabel(/Acknowledge the lasting competition restriction/).check();await page.getByRole('button',{name:'Assign role',exact:true}).click()
+  await expect(page.getByRole('alert')).toContainText('explicitly withdraw their active or waitlisted attendee registration')
+  await expect(page.getByLabel('Person account ID')).toHaveValue(claim.personID)
+ }
+ expect(requests.map(request=>[request.person_id,request.role,request.active,request.acknowledge_competition_restriction])).toEqual(claims.flatMap(claim=>['organiser','early_brief_access'].map(role=>[claim.personID,role,true,true])))
+ expect(claims.map(claim=>claim.state)).toEqual(['confirmed','waitlisted'])
 })
 
 for(const leave of ['event','account'] as const)test(`late rules save response after ${leave} departure cannot refill private inputs or continue another command`,async({page})=>{
@@ -211,4 +219,27 @@ test('branding transient read failure retains mounted fields while definite deni
  outcome='failed';await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));const check=page.getByRole('button',{name:'Check event branding access',exact:true});await expect(check).toBeVisible()
  await expect(page.getByLabel('Primary colour',{exact:true})).toHaveValue('#233c78');await expect(page.getByRole('button',{name:'Save branding',exact:true})).toBeDisabled()
  outcome='denied';await check.click();await expect(page.getByLabel('Primary colour',{exact:true})).toHaveCount(0)
+})
+
+test('review coverage navigation consumes its current native capability without inferring staff access',async({page})=>{
+ const {events}=await mockWorkspace(page);Object.assign(events[0],{can_read_staff:false,can_read_review_coverage:true,can_edit:false,can_manage_owner:false,can_transition:false})
+ await page.goto('/events/'+firstID);await openEventSection(page,'Review coverage')
+ await expect(page.getByRole('link',{name:'Open current support and assessment dashboard',exact:true})).toHaveAttribute('href',`/events/${firstID}/review`)
+ const select=page.getByRole('combobox',{name:'Event section',exact:true})
+ if(await select.isVisible())await expect(select.locator('option[value="staff"]')).toHaveCount(0)
+ else await expect(page.getByRole('navigation',{name:'Event sections',exact:true}).getByRole('button',{name:'Staff',exact:true})).toHaveCount(0)
+})
+
+test('native setup preview pauses editor input and a subsequent edit invalidates the reviewed snapshot',async({page})=>{
+ await mockWorkspace(page);let release!:()=>void,started!:()=>void,writes=0
+ const waiting=new Promise<void>(resolve=>{release=resolve}),sending=new Promise<void>(resolve=>{started=resolve})
+ await page.route('**/api/v1/event-preview',async route=>{started();await waiting;return route.fallback()})
+ await page.route(`**/events/${firstID}`,route=>{if(route.request().method()==='PUT')writes++;return route.fallback()})
+ await page.goto('/events/'+firstID);await openEventSection(page,'Setup');await page.getByLabel('Event name',{exact:true}).fill('First reviewed name')
+ await page.getByRole('button',{name:'Save event',exact:true}).click();await sending
+ await expect(page.getByLabel('Event name',{exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'Save event',exact:true})).toBeDisabled();expect(writes).toBe(0)
+ release();await expect(page.getByRole('region',{name:'Review event configuration',exact:true})).toContainText('First reviewed name')
+ await page.getByLabel('Event name',{exact:true}).fill('New unsent name')
+ await expect(page.getByRole('region',{name:'Review event configuration',exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Event preview',exact:true})).toHaveCount(0)
+ await expect(page.getByLabel('Event name',{exact:true})).toHaveValue('New unsent name');expect(writes).toBe(0)
 })

@@ -69,7 +69,7 @@ function TemplateEditor({ parentScope, initial, available, onDeny }: { parentSco
   useEffect(() => { if (published.error instanceof APIError && [401, 403, 404].includes(published.error.status)) onDeny(published.error) }, [published.error, onDeny])
   async function reviewCurrent() {
     const ticket = scope.capture(); if (!ticket.current()) return
-    setPending(true); setFailure(undefined)
+    setLatest(undefined);setPending(true); setFailure(undefined)
     try { const current = unwrap(await api.GET('/api/v1/templates/{template_id}', { signal: ticket.signal, params: { path: { template_id: saved.id } } })); ticket.assert(); cache.setQueryData(privateKey(identity.person.id, saved.id, 'template'), current); setLatest(current) } catch (error) { if (ticket.current()) { setFailure(error); if (error instanceof APIError && [401, 403, 404].includes(error.status)) onDeny(error) } } finally { if (ticket.current()) setPending(false) }
   }
   async function mutate(publish: boolean) {

@@ -46,7 +46,7 @@ export function TaskEditor({ event, initial, revision, page, owners, onDirty, cl
   useEffect(() => { onDirty(dirty || uploading); return () => onDirty(false) }, [dirty, uploading, onDirty])
   useBlocker({ shouldBlockFn: () => (dirty || uploading) && !window.confirm('Leave this task with unsaved changes?'), enableBeforeUnload: dirty || uploading })
   async function reviewLatest() {
-    setReviewing(true)
+    setLatest(undefined);setAck(false);setReviewing(true)
     try {
       const fresh = unwrap(await api.GET('/api/v1/events/{event_id}/preparation/tasks', { params: { path: { event_id: event.id } } }))
       cache.setQueryData(privateKey(identity.person.id, event.id, 'preparation'), fresh)

@@ -38,7 +38,7 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
   const scope=usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${id}:setup`)
   const [expectedRevision,setExpectedRevision]=useState(event?.revision??0),[current,setCurrent]=useState<EventRecord>(),[reading,setReading]=useState(false),[unconfirmed,setUnconfirmed]=useState(false),[blocked,setBlocked]=useState(false)
   const root = useRef<HTMLFormElement>(null)
-  const [reviewed, setReviewed] = useState<Values>()
+  const [reviewed, setReviewed] = useState<Values>(),[reviewNotice,setReviewNotice]=useState('')
   const [savedRevision, setSavedRevision] = useState<number>()
   const [failure, setFailure] = useState<unknown>(); const [saved, setSaved] = useState(false)
   const [preview, setPreview] = useState<components['schemas']['EventPreview']>()
@@ -53,7 +53,7 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
   useEffect(() => { onDirty?.(dirty); return () => onDirty?.(false) }, [dirty, onDirty])
   useEffect(() => {
     return form.subscribe({ formState: { values: true }, callback: ({ values }) => {
-      setReviewed(undefined)
+      setReviewed(undefined);setPreview(undefined);setReviewNotice('')
       const safe = { name: values.name, slug: values.slug, timezone: values.timezone, capacity: values.capacity, minimum_attendance: values.minimum_attendance, live_start: values.live_start, live_end: values.live_end, admission_cutoff: values.admission_cutoff, team_freeze: values.team_freeze, submission_cutoff: values.submission_cutoff }
       sessionStorage.setItem(draftKey, JSON.stringify({ revision: event?.revision ?? 0, values: safe }))
     } })
@@ -73,6 +73,7 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
   }
   async function submit(values: Values, previewOnly = false, confirmed = false) {
     if(unconfirmed || blocked)return
+    if(confirmed){const current=schema.safeParse(form.getValues());if(!current.success||JSON.stringify(current.data)!==JSON.stringify(values)){setReviewed(undefined);setReviewNotice('Fields changed. Preview and review the current configuration before saving.');return}}
     const ticket=scope.capture();if(!ticket.current())return
     let sent=false
     setFailure(undefined); setSaved(false)
@@ -94,15 +95,15 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
   }
   async function readCurrent() {
     const ticket=scope.capture();if(!ticket.current())return
-    setReading(true)
-    try {const latest=unwrap(await api.GET('/api/v1/events/{event_id}',{signal:ticket.signal,params:{path:{event_id:id}}}));ticket.assert();setCurrent(latest);cache.setQueryData(privateKey(identity.person.id,id,'event'),latest)}catch(error){if(ticket.current())setFailure(error)}finally{if(ticket.current())setReading(false)}
+    setCurrent(undefined);setReading(true)
+    try {const latest=unwrap(await api.GET('/api/v1/events/{event_id}',{signal:ticket.signal,params:{path:{event_id:id}}}));ticket.assert();setCurrent(latest);cache.setQueryData(privateKey(identity.person.id,id,'event'),latest)}catch(error){if(ticket.current()){setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();sessionStorage.removeItem(draftKey);form.reset(defaults());setReviewed(undefined);setBlocked(true)}}}finally{if(ticket.current())setReading(false)}
   }
   const errorProps = (name: keyof Values) => ({ 'aria-invalid': !!form.formState.errors[name] || undefined, 'aria-describedby': form.formState.errors[name] ? `${name}-error` : undefined })
   const fieldError = (name: keyof Values) => form.formState.errors[name]?.message && <p className="field-error" role="alert" id={`${name}-error`}>{form.formState.errors[name]?.message}</p>
   const invalid = (errors: typeof form.formState.errors) => revealPlanningField(root.current, Object.keys(errors)[0])
   if(blocked)return <Failure error={failure}/>
   return <form ref={root} className="fleet-planning-form" onSubmit={event => void form.handleSubmit(values => submit(values), invalid)(event)}>
-    <PlanningEditorSections label="Event setup sections">
+    <fieldset className="fleet-planning-authority" disabled={form.formState.isSubmitting||unconfirmed}><PlanningEditorSections label="Event setup sections">
     <PlanningStep title="Event details"><fieldset><legend>1. Event details</legend><div className="form-grid">
       <div><Label htmlFor="name">Event name</Label><Input id="name" {...form.register('name', { onChange: event => { if (!form.getFieldState('slug').isDirty) form.setValue('slug', String(event.target.value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) } })} {...errorProps('name')} />{fieldError('name')}</div>
       <div><Label htmlFor="slug">Event slug</Label><Input id="slug" {...form.register('slug')} {...errorProps('slug')} />{fieldError('slug')}</div>
@@ -123,6 +124,7 @@ export function EventForm({ event, onDirty, onReadiness }: { event?: EventRecord
     <div className="actions"><Button type="button" icon="search" variant="outline" pending={form.formState.isSubmitting} disabled={unconfirmed||blocked} onClick={event => void form.handleSubmit(values => submit(values, true), invalid)(event)}>Preview dates and blockers</Button><Button type="submit" icon="save" pending={form.formState.isSubmitting} disabled={unconfirmed||blocked}>{event ? 'Save event' : 'Save draft event'}</Button></div>
     {preview && <section className="fleet-planning-section" aria-label="Event preview"><h2>Before you proceed</h2><p>Challenge publication: <strong>{preview.challenge_publication ? new Intl.DateTimeFormat('en-GB', { timeZone: form.getValues('timezone'), dateStyle: 'full', timeStyle: 'short' }).format(new Date(preview.challenge_publication)) : 'Set a valid live start'}</strong></p>{preview.blockers.length ? <ul className="blockers">{preview.blockers.map((item, index) => <li key={index}><a href={`#${item.field}`}>{item.message}</a></li>)}</ul> : <p>The date configuration is ready.</p>}</section>}
     {reviewed && <section className="fleet-planning-section" aria-label="Review event configuration"><h2>Review before saving</h2><dl className="dates"><div><dt>Event</dt><dd>{reviewed.name}</dd></div><div><dt>Timezone</dt><dd>{reviewed.timezone}</dd></div><div><dt>Attendance gate</dt><dd>{reviewed.minimum_attendance} confirmed competitors · Capacity {reviewed.capacity}</dd></div><div><dt>Expected revision</dt><dd>{event?expectedRevision:'New draft'}</dd></div></dl><p>Saving retains a draft configuration. Opening registration and the go decision remain separate organiser actions.</p><Button type="button" icon="save" pending={form.formState.isSubmitting} disabled={unconfirmed||blocked} onClick={event=>void form.handleSubmit(()=>submit(reviewed,false,true),invalid)(event)}>Confirm {event ? 'save event' : 'save draft event'}</Button><Button type="button" variant="ghost" onClick={() => setReviewed(undefined)}>Continue editing</Button></section>}
+    </fieldset>{reviewNotice&&<p role="status">{reviewNotice}</p>}
     {(unconfirmed || failure instanceof APIError && failure.status===409) && <section className="fleet-planning-section" aria-label="Review current event revision"><h2>{unconfirmed?'Save outcome unconfirmed':'Event revision changed'}</h2><p>Your unsent fields remain. No write is replayed automatically. Current native state is not an exact receipt for the attempted save.</p><Button type="button" icon="refresh" variant="outline" pending={reading} onClick={()=>void readCurrent()}>Read current event for review</Button>{current&&<><p>Current native revision {current.revision} · {current.name} · {current.configuration.timezone}</p>{event?<Button type="button" disabled={!current.can_edit} onClick={()=>{setExpectedRevision(current.revision);setUnconfirmed(false);setReviewed(undefined);setFailure(undefined);setCurrent(undefined)}}>Use current event revision and keep my edits</Button>:<Button type="button" onClick={()=>void navigate({to:'/events/$eventId',params:{eventId:id},ignoreBlocker:true})}>Open current native event for review</Button>}</>}</section>}
     {saved && <p role="status" className="notice">Event saved. Revision {savedRevision}.</p>}{saved&&!dirty&&onReadiness&&<Button type="button" icon="check" variant="outline" onClick={onReadiness}>Review event readiness</Button>}{!!failure && <Failure error={failure} />}
   </form>

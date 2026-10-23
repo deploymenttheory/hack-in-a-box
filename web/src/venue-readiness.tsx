@@ -46,7 +46,7 @@ function ChecklistProgress({ event, initial, revision, page, onDirty }: { event:
     cache.setQueryData(privateKey(identity.person.id, event.id, 'preparation'), fresh)
     return fresh
   }
-  async function review() { try { const fresh = await refresh(), task = fresh.items.find(t => t.definition.id === initial.definition.id); if (!task) throw new APIError(403, 'forbidden'); setLatest({ task, revision: fresh.revision }); setAck(false) } catch (error) { setFailure(error) } }
+  async function review() { setLatest(undefined);setAck(false);try { const fresh = await refresh(), task = fresh.items.find(t => t.definition.id === initial.definition.id); if (!task) throw new APIError(403, 'forbidden'); setLatest({ task, revision: fresh.revision }); setAck(false) } catch (error) { setFailure(error) } }
   async function save(v: Progress) {
     if (!canEdit || !configured || (conflict && (!latest || !ack))) return
     setNotice('')

@@ -68,7 +68,7 @@ export function ContentEditor({ initial, event, teams, readiness, onDirty, close
   }
   async function loadLatest() {
     const ticket=scope.capture();if(!ticket.current())return
-    setPending(true)
+    setLatest(undefined);setReviewed(false);setPending(true)
     try { const latest=unwrap(await api.GET('/api/v1/events/{event_id}/content/{content_id}', { params: { path: { event_id: event.id, content_id: saved.id }, query: { preview: true } } }));ticket.assert();setLatest(latest) } catch (error) { if(ticket.current())failed(error) } finally { if(ticket.current())setPending(false) }
   }
   const previewDocument = { ...document, scheduled_at: fixedChallenge ? event.challenge_publication : mode === 'manual' ? null : document.scheduled_at }
