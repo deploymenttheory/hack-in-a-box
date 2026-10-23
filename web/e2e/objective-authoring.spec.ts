@@ -89,7 +89,7 @@ test('content author deliberately selects immutable objective/measure references
   expect(state.writes[0].markdown).toBe('Approved guidance text')
   expect(JSON.stringify(state.writes[0])).not.toContain('98765')
   await page.screenshot({ path: info.outputPath('objective-disclosure-authoring.png'), fullPage: true })
-  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
 })
 
 test('retained disclosure stays on its immutable version until explicitly removed and reselected', async ({ page }) => {

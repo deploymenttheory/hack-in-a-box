@@ -19,7 +19,7 @@ test('attendee released resource resolves only its exact public reference withou
   const state = await releasedObjective(page); await page.goto(`/events/${firstID}/resources/${resourceID}`)
   await expect(page.getByRole('heading', { name: 'Event objective · Definition version 1' })).toBeVisible(); await expect(page.getByText('0 working example', { exact: true })).toBeVisible(); await expect(page.getByText('A target is not an achieved result.', { exact: false })).toBeVisible()
   await expect(page.getByLabel('Objective owner (optional)')).toHaveCount(0); await expect(page.getByLabel('Objective description', { exact: true })).toHaveCount(0); expect(state.planningReads).toBe(0); expect(await page.evaluate(() => 'disclosureLeak' in window)).toBe(false)
-  await page.screenshot({ path: info.outputPath('released-objective-attendee.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await page.screenshot({ path: info.outputPath('released-objective-attendee.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
 })
 
 test('a missing disclosed target is unknown rather than a demonstrated zero', async ({ page }) => {

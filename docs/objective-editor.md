@@ -56,3 +56,10 @@ objective editor makes its nine regression cases fail. Both frontend builds and
 web lint pass. Mobile planning, authoring and participant captures were visually
 inspected: private script-like text stays inert, labels/history wrap, and no
 horizontal overflow occurs. Final exact-head CI and source review remain required.
+
+Independent review passed the fifteen mounted-editor/cache regressions in 1.11 s,
+the full sixty-six admin browser cases in 33.5 s and all six participant disclosure
+cases in 17.8 s. Planning, authoring and attendee mobile captures were inspected.
+Their viewport assertions now compare document width with Playwright's configured
+viewport; comparing a mobile browser's expanding innerWidth can mask overflow.
+All three current screens satisfy the stronger assertion without layout changes.

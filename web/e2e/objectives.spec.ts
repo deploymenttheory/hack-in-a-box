@@ -15,7 +15,7 @@ test('keyboard/mobile optional planning saves explicit zero separately from unkn
   await page.getByRole('button', { name: 'Show definition history' }).click(); await expect(page.getByRole('region', { name: 'Objective definition history' })).toContainText('target 0 working example; baseline Unknown')
   expect(await page.evaluate(() => [...Object.values(sessionStorage), ...Object.values(localStorage)].join('').includes('PRIVATE SAFE OBJECTIVE'))).toBe(false)
   expect(await page.evaluate(() => 'objectiveLeak' in window)).toBe(false)
-  await page.screenshot({ path: info.outputPath('objectives-private-planning.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await page.screenshot({ path: info.outputPath('objectives-private-planning.png'), fullPage: true }); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
 })
 
 test('stale unit/definition change keeps unsent edits and requires explicit current-base review before saving', async ({ page }) => {
