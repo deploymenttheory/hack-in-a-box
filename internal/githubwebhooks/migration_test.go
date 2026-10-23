@@ -2,6 +2,7 @@ package githubwebhooks
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -59,13 +60,34 @@ func TestOrderedWebhookUpgradePreservesHistoricalNativeRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	exec(
-		"INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,github_repository_id,state,requested_by) VALUES($1,$2,99,'synthetic-org','historical-repo',42,7,'synthetic-template',123,'ready',$3)",
+		"INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,github_repository_id,state,requested_by,attempted,template_repository_id) VALUES($1,$2,99,'synthetic-org','historical-repo',42,7,'synthetic-template',123,'ready',$3,true,700)",
 		eventID,
 		teamID,
 		owner.ID,
 	)
+	beforeRepository, err := dbgen.New(pool).
+		TeamRepository(ctx, dbgen.TeamRepositoryParams{EventID: eventID, TeamID: teamID})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := database.Migrate(ctx, pool, 45); err != nil {
 		t.Fatal(err)
+	}
+	before46, err := dbgen.New(pool).
+		TeamRepository(ctx, dbgen.TeamRepositoryParams{EventID: eventID, TeamID: teamID})
+	if err != nil || !reflect.DeepEqual(beforeRepository, before46) {
+		t.Fatalf("released44→actual45 changed retained repository provenance: %v", err)
+	}
+	if err := database.Migrate(ctx, pool, 46); err != nil {
+		t.Fatal(err)
+	}
+	afterRepository, err := dbgen.New(pool).
+		TeamRepository(ctx, dbgen.TeamRepositoryParams{EventID: eventID, TeamID: teamID})
+	if err != nil || !reflect.DeepEqual(before46, afterRepository) {
+		t.Fatalf(
+			"actual45→webhook46 changed retained repository provenance: %v",
+			err,
+		)
 	}
 	if err := database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)

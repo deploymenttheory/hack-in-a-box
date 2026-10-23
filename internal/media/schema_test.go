@@ -130,7 +130,7 @@ func TestMedia42Populated41UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	}
 	// This fixture intentionally runs schema41. Seed its exact historical columns
 	// and authenticated encryption purpose instead of invoking the current App
-	// service, whose configuration lifecycle also owns schema45 webhook secrets.
+	// service, whose configuration lifecycle also owns schema46 webhook secrets.
 	appPEM := pem.EncodeToMemory(&pem.Block{
 		Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(rsaKey),
 	})
