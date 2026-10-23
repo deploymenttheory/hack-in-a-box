@@ -38,6 +38,11 @@ func TestRepositoryHTTPCurrentAuthorityContractAndPreliveAccess(t *testing.T) {
 	)
 	exec("INSERT INTO competition_entries(event_id,team_id) VALUES($1,$2)", eventID, team)
 	exec(
+		"INSERT INTO competition_claims(event_id,person_id,state) VALUES($1,$2,'confirmed')",
+		eventID,
+		member.ID,
+	)
+	exec(
 		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",
 		eventID,
 		team,
@@ -141,6 +146,12 @@ func TestRepositoryHTTPCurrentAuthorityContractAndPreliveAccess(t *testing.T) {
 	if !strings.Contains(w.Body.String(), team.String()) {
 		t.Fatal("current prelive member cannot read own repo")
 	}
+	exec(
+		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
+		eventID,
+		member.ID,
+	)
+	check(request(member, "GET", nil, false, e.Revision), 403)
 	check(request(other, "GET", nil, false, e.Revision), 403)
 	check(request(member, "POST", body, true, e.Revision), 403)
 	check(request(owner, "POST", map[string]any{"action": "reconcile"}, true, e.Revision), 400)

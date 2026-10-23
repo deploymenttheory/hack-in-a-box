@@ -247,10 +247,6 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) ([]View, er
 			if !e.PublishedAt.Valid || e.PublishedAt.Time.After(time.Now()) {
 				return access.ErrForbidden
 			}
-			person, err := q.Person(ctx, actor)
-			if err != nil || !person.Active {
-				return access.ErrForbidden
-			}
 			assignment, err := q.TeamAssignment(
 				ctx,
 				dbgen.TeamAssignmentParams{
@@ -260,6 +256,10 @@ func (s Service) List(ctx context.Context, actor, eventID uuid.UUID) ([]View, er
 				},
 			)
 			if err != nil {
+				return access.ErrForbidden
+			}
+			authority, err := access.TeamPermissions(ctx, q, actor, eventID, assignment.TeamID)
+			if err != nil || !authority.Member || !authority.Active {
 				return access.ErrForbidden
 			}
 			own = assignment.TeamID
