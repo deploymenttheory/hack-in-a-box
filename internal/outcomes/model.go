@@ -127,7 +127,7 @@ func referenceURL(value string) bool {
 	if value == "" {
 		return true
 	}
-	if !text(value, 2048) || strings.ContainsAny(value, "\r\n\t") {
+	if !text(value, 2000) || strings.ContainsAny(value, "\r\n\t") {
 		return false
 	}
 	parsed, err := url.Parse(value)
@@ -148,7 +148,7 @@ func (d Definition) Validate() error {
 }
 
 func validRefs(refs []objectives.MeasureReference) bool {
-	if len(refs) > 100 {
+	if len(refs) > 50 {
 		return false
 	}
 	seen := map[objectives.MeasureReference]bool{}

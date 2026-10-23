@@ -468,7 +468,8 @@ func (s Service) Plans(ctx context.Context, actor, outcomeID uuid.UUID) (PlanPag
 		if err != nil {
 			return wrap("read plan resource", err)
 		}
-		if _, err = capabilities(ctx, q, actor, head, s.now()); err != nil {
+		cap, err := capabilities(ctx, q, actor, head, s.now())
+		if err != nil {
 			return err
 		}
 		if head.EventID == nil {
@@ -498,7 +499,7 @@ func (s Service) Plans(ctx context.Context, actor, outcomeID uuid.UUID) (PlanPag
 			if e != nil {
 				return e
 			}
-			out.Items = append(out.Items, view)
+			out.Items = append(out.Items, planReaderProjection(view, cap.CanModerate))
 		}
 		return nil
 	})
@@ -548,7 +549,19 @@ func (s Service) Review(ctx context.Context, actor, id uuid.UUID, version int64)
 			return wrap("read review eligibility event", err)
 		}
 		out, err = s.planView(ctx, tx, q, event, rh, v)
+		if err == nil {
+			out = planReaderProjection(out, cap.CanModerate)
+		}
 		return err
 	})
 	return out, wrap("review resource", err)
+}
+
+func planReaderProjection(view PlanView, organiser bool) PlanView {
+	if !organiser {
+		view.Message = ReviewMessage{}
+		view.Reason = ""
+		view.ActorID = uuid.Nil
+	}
+	return view
 }

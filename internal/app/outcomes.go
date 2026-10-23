@@ -25,7 +25,10 @@ func (o outcomeInboxOwner) AuthorizeNotification(
 	}
 	err := o.Service.AuthorizeReviewNotification(ctx, tx, actor, eventID, source.ID, source.Version)
 	if err != nil {
-		return inbox.Destination{}, fmt.Errorf("authorize current outcome-review destination: %w", err)
+		return inbox.Destination{}, fmt.Errorf(
+			"authorize current outcome-review destination: %w",
+			err,
+		)
 	}
 	return inbox.Destination{Kind: "outcome_review", ResourceID: source.ID}, nil
 }

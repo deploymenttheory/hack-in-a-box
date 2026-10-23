@@ -4137,7 +4137,7 @@ export interface components {
         };
         InboxDestination: {
             /** @enum {string} */
-            kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey";
+            kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey" | "outcome_review";
             /** Format: uuid */
             resource_id: string;
         };
@@ -4149,7 +4149,7 @@ export interface components {
             format: "text" | "markdown" | "html";
             destination: {
                 /** @enum {string} */
-                kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey";
+                kind: "content" | "help" | "clarification" | "feedback" | "feedback_followup" | "survey" | "outcome_review";
                 /** Format: uuid */
                 resource_id: string;
             } | null;

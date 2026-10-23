@@ -83,3 +83,27 @@ submission, own history, deliberate adoption, reviewed projects and approved
 reminders. Desktop/mobile keyboard, current active-page revocation, stale edits,
 validation, unknown writes and zero automatic replay need actual UI evidence.
 No acceptance claim is made by this design document alone.
+
+## Current implementation checkpoint
+
+The native resource, private paged evidence, separately reviewed project projection,
+exact command receipts and the existing durable automation/jobs/in-app path are
+implemented. An actual archived organiser approval delivers to an active native
+owner without event membership, without granting EventRead or disclosing a draft
+event name. Historical inbox reads remain independent of later completion or
+approval cancellation, while current resource ownership/retention still applies.
+Owner-facing review projections contain schedule/status metadata, not organiser
+message drafts or review reasons. Generic campaign approval remains separate.
+
+The usable participant entry and owner forms have 18 desktop/mobile interaction
+checks, including no-event-role submission, private storage exclusion, exact
+response-lost receipts, explicit same-command retry, native rejection, active
+revocation, transient read preservation and in-flight departure. Both app bundles
+build. These checks are partial evidence, not completion of issue 117.
+
+Remaining before readiness: actual current media-owner composition and ordered
+predecessor migration preservation; organiser publication/reminder browser paths;
+production-factory and SMTP ambiguous/fault proofs; final affected checks and
+independent acceptance review. Media takes schema 41 first; outcomes will be
+renumbered to 42 on the concrete media base. No results/awards capability is
+claimed and no real external messages have been sent.

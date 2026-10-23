@@ -145,6 +145,9 @@ func (s Service) ReviewReceipt(
 			return wrap("read review receipt event", err)
 		}
 		out, err = s.planView(ctx, tx, q, event, rh, v)
+		if err == nil {
+			out = planReaderProjection(out, cap.CanModerate)
+		}
 		return err
 	})
 	return out, wrap("review receipt", err)

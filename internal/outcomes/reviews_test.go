@@ -142,6 +142,11 @@ func TestNativeReviewApprovalBindsOwnerPolicyProviderAndExactCommand(t *testing.
 	if err != nil || len(own.Items) != 1 || own.Items[0].EffectiveState != "approved" {
 		t.Fatal("no event role owner plan", own, err)
 	}
+	if own.Items[0].Message.Subject != "" || own.Items[0].Message.Body != "" ||
+		own.Items[0].Reason != "" ||
+		own.Items[0].ActorID != uuid.Nil {
+		t.Fatal("organiser reminder configuration leaked through owner metadata", own)
+	}
 	policy := privacy.Service{Pool: pool}
 	configure := func(days int) {
 		t.Helper()

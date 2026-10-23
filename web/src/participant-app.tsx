@@ -1,3 +1,4 @@
+import { OutcomeWorkspace, OutcomePage, OutcomeReviewPage, PublishedProjects, PublishedProjectPage } from './outcome-workspace'
 import { MediaWorkspacePage, OwnPhotoConsentPage } from './media-workspace'
 import { ReviewDashboard, TeamReviewPage, JudgeSummaryPreview } from './review-dashboard'
 import { SurveyReader } from './survey-reader'
@@ -18,6 +19,11 @@ import { RegistrationDirectory, RegistrationPage } from './registration'
 import { EventDirectory, EventWorkspace } from './participant-events'
 
 const root = createRootRoute({ component: Shell, notFoundComponent: NotFound, errorComponent: ({ error, reset }) => <Failure error={error} retry={reset} /> })
+const ideas = createRoute({ getParentRoute: () => root, path: '/ideas', validateSearch: (s: Record<string, unknown>): { event?: string } => ({ event: typeof s.event === 'string' && /^[a-f0-9-]{36}$/i.test(s.event) ? s.event : undefined }), component: OutcomeWorkspace })
+const idea = createRoute({ getParentRoute: () => root, path: '/ideas/$outcomeId', component: OutcomePage })
+const outcomeReview = createRoute({ getParentRoute: () => root, path: '/ideas/reviews/$reviewId', component: OutcomeReviewPage })
+const projects = createRoute({ getParentRoute: () => root, path: '/projects', component: PublishedProjects })
+const project = createRoute({ getParentRoute: () => root, path: '/projects/$outcomeId', component: PublishedProjectPage })
 const inbox = createRoute({ getParentRoute: () => root, path: '/inbox', component: InboxPage })
 const resource = createRoute({ getParentRoute: () => root, path: '/events/$eventId/resources/$resourceId', component: ResourcePage })
 const deliveryHistory = createRoute({ getParentRoute: () => root, path: '/events/$eventId/communications/deliveries', component: DeliveryHistoryPage })
@@ -44,5 +50,5 @@ const help = createRoute({ getParentRoute: () => root, path: '/events/$eventId/h
 const registration = createRoute({ getParentRoute: () => root, path: '/register/$eventId', component: RegistrationPage })
 const registrations = createRoute({ getParentRoute: () => root, path: '/register', component: RegistrationDirectory })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([ideas, idea, outcomeReview, projects, project, ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }
