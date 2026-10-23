@@ -129,3 +129,11 @@ pattern, preserving JSON null in both generated clients. The expanded actual
 HTTP journey passes4.070s, including an empty own response and deliberately
 published suppressed report with null measure provenance/counts. Both portals
 still build. No missing response or measure is presented as a real zero value.
+
+Final actual-main composition onto merged #217 dcbdaa6a retains all survey native,
+HTTP, API, migration and UI source unchanged by that ancestry-only rebase. The
+public test list retains both survey and mentor-support journeys. Final combined
+survey/dashboard/mentor-support/objective reader checks pass32 desktop/mobile
+cases per portal (admin19.8s, participant22.6s). Both builds, Go/web lint and
+canonical generated parity pass. Exact-current-head CI remains required before
+merge and issue acceptance reconciliation.
