@@ -63,3 +63,6 @@ __pycache__/
 web/test-results-public/
 
 web/test-results-primitives-*/
+
+web/.pattern-dist/
+web/test-results-patterns/
