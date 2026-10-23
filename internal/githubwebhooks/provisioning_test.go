@@ -59,11 +59,10 @@ func (p *nativeProvider) CreateRepository(
 }
 
 func TestNativePublishedRepositoryProvisioningFeedsSignedActivity(t *testing.T) {
-	f := setup(t)
+	f := setupFixture(t, false)
 	ctx := t.Context()
 	// Replace only fixture setup with the real92 queue/worker/App credential
 	// path. The only mock is deterministic provider transport; no live GitHub call.
-	f.exec("DELETE FROM team_repositories WHERE event_id=$1", f.event)
 	member := testdb.Person(t, f.pool)
 	f.exec(
 		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",

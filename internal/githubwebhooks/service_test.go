@@ -52,7 +52,9 @@ type fixture struct {
 	publication time.Time
 }
 
-func setup(t *testing.T) *fixture {
+func setup(t *testing.T) *fixture { return setupFixture(t, true) }
+
+func setupFixture(t *testing.T, seedMapping bool) *fixture {
 	t.Helper()
 	pool := testdb.New(t, true)
 	owner := testdb.Person(t, pool)
@@ -86,14 +88,16 @@ func setup(t *testing.T) *fixture {
 		CreateCompetitionEntry(t.Context(), dbgen.CreateCompetitionEntryParams{EventID: f.event, TeamID: f.team}); err != nil {
 		t.Fatal(err)
 	}
-	// The canonical provisioning owner is seeded with a synthetic proven immutable
-	// provider identity; no parallel mapping or name-based resolution exists.
-	f.exec(
-		"INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,github_repository_id,state,requested_by) VALUES($1,$2,99,'synthetic-org','synthetic-repo',42,7,'synthetic-template',123,'ready',$3)",
-		f.event,
-		f.team,
-		f.owner,
-	)
+	if seedMapping {
+		// The canonical provisioning owner is seeded with a synthetic proven immutable
+		// provider identity; no parallel mapping or name-based resolution exists.
+		f.exec(
+			"INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,github_repository_id,state,requested_by) VALUES($1,$2,99,'synthetic-org','synthetic-repo',42,7,'synthetic-template',123,'ready',$3)",
+			f.event,
+			f.team,
+			f.owner,
+		)
+	}
 	outbox, err := jobs.New(
 		pool,
 		slog.New(slog.NewTextHandler(io.Discard, nil)),

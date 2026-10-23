@@ -1,6 +1,7 @@
 package media_test
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -127,28 +128,27 @@ func TestMedia42Populated41UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	if err != nil {
 		t.Fatal(err)
 	}
-	app := githubapp.Service{Pool: pool, Keys: keys, Provider: githubapp.NewProvider()}
-	beforeApp, err := dbgen.New(pool).Event(ctx, eventID)
+	// This fixture intentionally runs schema41. Seed its exact historical columns
+	// and authenticated encryption purpose instead of invoking the current App
+	// service, whose configuration lifecycle also owns schema45 webhook secrets.
+	appPEM := pem.EncodeToMemory(&pem.Block{
+		Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(rsaKey),
+	})
+	defer clear(appPEM)
+	legacyAppBinding := []byte(fmt.Sprintf(
+		"hackbox:github-app-private-key:v1:%s:%d:%d", eventID, 123, 1,
+	))
+	appKeyID, appEncrypted, err := keys.Seal(appPEM, legacyAppBinding)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("encrypt actual predecessor41 App state", err)
 	}
-	if err = app.Configure(ctx, owner.ID, eventID, beforeApp.Revision, githubapp.Command{
-		Action: "configure",
-		Configuration: githubapp.Configuration{
-			AppID:              123,
-			AppSlug:            "synthetic-app",
-			OrganizationID:     456,
-			Organization:       "synthetic-org",
-			TemplateRepository: "synthetic-template",
-		},
-		PrivateKey: string(
-			pem.EncodeToMemory(
-				&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(rsaKey)},
-			),
-		),
-	}); err != nil {
-		t.Fatal("configure actual predecessor41 encrypted App state", err)
-	}
+	exec(
+		`INSERT INTO github_app_integrations(event_id,app_id,app_slug,organization_id,organization,template_repository,credential_version,key_id,private_key_encrypted,installation_id)
+	 VALUES($1,123,'synthetic-app',456,'synthetic-org','synthetic-template',1,$2,$3,0)`,
+		eventID,
+		appKeyID,
+		appEncrypted,
+	)
 	objective, err := (objectives.Service{Pool: pool}).Change(
 		ctx,
 		owner.ID,
@@ -358,6 +358,46 @@ func TestMedia42Populated41UpgradePreservesNativeSurveyHistoryAndPrivacyErasure(
 	if err = database.Migrate(ctx, pool, 0); err != nil {
 		t.Fatal(err)
 	}
+	// The historical ciphertext must remain byte-for-byte intact, decrypt with
+	// its actual41 AAD, and support the current App key-rotation lifecycle after
+	// all migrations. This catches fixtures that merely seed arbitrary bytes.
+	appRow, err := dbgen.New(pool).GitHubAppIntegration(ctx, eventID)
+	if err != nil || !bytes.Equal(appRow.PrivateKeyEncrypted, appEncrypted) ||
+		appRow.CredentialVersion != 1 || appRow.KeyID != appKeyID {
+		t.Fatal("upgrade changed predecessor41 encrypted App state", err)
+	}
+	appPlain, err := keys.Open(appRow.KeyID, appRow.PrivateKeyEncrypted, legacyAppBinding)
+	if err != nil || !bytes.Equal(appPlain, appPEM) {
+		t.Fatal("predecessor41 App ciphertext no longer decrypts", err)
+	}
+	clear(appPlain)
+	currentApp := githubapp.Service{Pool: pool, Keys: keys, Provider: githubapp.NewProvider()}
+	currentEvent, err := dbgen.New(pool).Event(ctx, eventID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = currentApp.Configure(
+		ctx,
+		owner.ID,
+		eventID,
+		currentEvent.Revision,
+		githubapp.Command{Action: "rotate"},
+	); err != nil {
+		t.Fatal("current App owner cannot rotate predecessor41 ciphertext", err)
+	}
+	rotatedApp, err := dbgen.New(pool).GitHubAppIntegration(ctx, eventID)
+	if err != nil || rotatedApp.CredentialVersion != 2 ||
+		bytes.Equal(rotatedApp.PrivateKeyEncrypted, appEncrypted) {
+		t.Fatal("current rotation did not replace predecessor41 ciphertext", err)
+	}
+	rotatedBinding := []byte(fmt.Sprintf(
+		"hackbox:github-app-private-key:v1:%s:%d:%d", eventID, 123, 2,
+	))
+	appPlain, err = keys.Open(rotatedApp.KeyID, rotatedApp.PrivateKeyEncrypted, rotatedBinding)
+	if err != nil || !bytes.Equal(appPlain, appPEM) {
+		t.Fatal("current rotation changed predecessor41 App key", err)
+	}
+	clear(appPlain)
 	// The concrete115 native privacy callback must still erase invitations,
 	// private authored revisions and command receipts, preserving the frozen report.
 	privacyService := privacy.Service{Pool: pool, Clock: func() time.Time { return now }}

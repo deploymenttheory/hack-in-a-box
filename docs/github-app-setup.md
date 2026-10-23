@@ -62,10 +62,21 @@ App private keys use the same deployment keyring utility as supplied team creden
 
 Configure the GitHub App's single webhook URL as
 `https://<workspace-origin>/api/v1/integrations/github/webhook`, with JSON payloads
-and a high entropy webhook secret. Subscribe to `push` and `member` events using
-the App's required permissions. The `member` event with action `added` records
-acceptance of a repository invitation; this is selected operational evidence,
-not the invitation management state owned by #93.
+and a high entropy webhook secret. The `push` subscription requires repository
+Contents read access (already covered by the base App's Contents write scope).
+The optional `member` subscription additionally requires organisation Members
+read access. This extra permission belongs to the webhook subscription; the
+base repository collaborator API does not require organisation Members access.
+See GitHub's [push](https://docs.github.com/en/webhooks/webhook-events-and-payloads#push)
+and [member](https://docs.github.com/en/webhooks/webhook-events-and-payloads#member)
+subscription requirements.
+
+The `member` event with action `added` records acceptance of a repository
+invitation; this is selected operational evidence, not the invitation management
+state owned by #93. Without the optional Members permission/subscription, no
+member deliveries are expected and the webhook acceptance count is incomplete.
+Use #93's invitation/collaborator polling path for acceptance reconciliation
+instead. This implementation does not change external App permissions.
 
 Supply the same App webhook secret as the write-only `webhook_secret` field on
 an authorised `configure` command to the event's existing GitHub App endpoint.
