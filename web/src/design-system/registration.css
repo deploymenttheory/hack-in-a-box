@@ -15,7 +15,8 @@
  .fleet-admission-fields legend { font-size: var(--text-section); font-weight: var(--weight-emphasis); padding: 0 0 var(--space-3); }
  .fleet-admission-fields > div, .fleet-admission-fields > label { margin-block: var(--space-3); }
  .fleet-admission-fields fieldset { border: 0; border-radius: 0; padding: var(--space-3) 0; background: transparent; }
- .fleet-admission-fields label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; line-height: var(--line-body); }
+ .fleet-admission-form label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; line-height: var(--line-body); }
+ .fleet-applicant-workspace .fleet-collection-table th, .fleet-applicant-workspace .fleet-status { white-space: nowrap; overflow-wrap: normal; }
  .fleet-admission-check { display: flex; align-items: start; gap: var(--space-3); }
  .fleet-admission-check input { flex: 0 0 auto; }
  .fleet-admission-review { border-block: 1px solid var(--border); padding-block: var(--space-4); }
@@ -34,6 +35,11 @@
  .fleet-admission-filter > div { min-width: min(100%, 14rem); }
  .fleet-admission-preview { border-top: 1px solid var(--border); padding-top: var(--space-4); margin-top: var(--space-4); }
  .fleet-form-workspace .fleet-detail-workspace { grid-template-columns: minmax(0, 1fr) minmax(24rem, 2fr); }
+ @media (max-width: 72rem) {
+  .fleet-applicant-workspace .fleet-detail-workspace[data-detail-open] { grid-template-columns: minmax(0, 1fr); }
+  .fleet-applicant-workspace .fleet-detail-workspace[data-detail-open] .fleet-detail-collection { display: none; }
+  .fleet-applicant-workspace .fleet-detail-workspace[data-detail-open] .fleet-detail-region { border-inline-start: 0; padding-inline: 0; }
+ }
  @media (max-width: 48rem) {
   .fleet-admission-facts { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .fleet-admission-heading { align-items: start; }

@@ -42,7 +42,7 @@ test('applicant search explicitly covers loaded records and local review returns
     pages++; const after = new URL(route.request().url()).searchParams.get('after')
     return route.fulfill({ json: { items: [{ registration: after === '0' ? r : { ...r, id: '00000000-0000-4000-8000-000000000010' }, display_name: after === '0' ? 'First Mentor' : 'Later Mentor' }], next_cursor: after === '0' ? 1 : null } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Applicants', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Applicants')
   await page.getByLabel('Find in loaded applicants').fill('Later')
   await expect(page.getByText('0 matching in 1 loaded applicants. Load more to inspect later records.')).toBeVisible(); expect(pages).toBe(1)
   await page.getByRole('button', { name: 'More records' }).click()
@@ -64,7 +64,7 @@ test('offer policy reviews captured FIFO settings and saves the native revision 
     }
     return route.fulfill({ json: { items: [], next_cursor: null } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Applicants', exact: true }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Applicants')
   await page.getByText('Waitlist automation and offer policy', { exact: true }).click()
   await page.getByLabel('Working days to respond').fill('4'); await page.getByLabel('Approve automatic FIFO offers').check(); await page.getByRole('button', { name: 'Review offer policy' }).click()
   const dialog = page.getByRole('alertdialog'); await expect(dialog).toContainText('4 working days'); expect(writes).toBe(0)
@@ -83,7 +83,7 @@ for (const denial of ['write', 'read'] as const) test(`explicit offer policy ${d
     }
     return route.fulfill({ json: { items: [], next_cursor: null } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Applicants', exact: true }).click(); await page.getByText('Waitlist automation and offer policy', { exact: true }).click(); await page.getByLabel('Working days to respond').fill('17'); await page.getByLabel('Approve automatic FIFO offers').check(); await page.getByRole('button', { name: 'Review offer policy' }).click(); await page.getByRole('button', { name: 'Save offer policy' }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Applicants'); await page.getByText('Waitlist automation and offer policy', { exact: true }).click(); await page.getByLabel('Working days to respond').fill('17'); await page.getByLabel('Approve automatic FIFO offers').check(); await page.getByRole('button', { name: 'Review offer policy' }).click(); await page.getByRole('button', { name: 'Save offer policy' }).click()
   if (denial === 'read') { await expect(page.getByRole('alertdialog')).toContainText('Outcome unknown'); await page.getByRole('alertdialog').getByRole('button', { name: 'Check current status' }).click() }
   await expect(page.getByRole('alert')).toContainText('do not have access'); await expect(page.getByLabel('Working days to respond')).toHaveCount(0); await expect(page.getByRole('alertdialog')).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review offer policy' })).toHaveCount(0); expect(writes).toBe(1)
 })

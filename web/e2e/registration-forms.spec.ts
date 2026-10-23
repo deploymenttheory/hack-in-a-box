@@ -51,7 +51,7 @@ test('unknown form save retains its draft and exact version context while read-o
     if (route.request().method() === 'PUT') { writes++; expect(route.request().headers()['if-match']).toBe('"1"'); expect(route.request().postDataJSON().name).toBe('Retained private draft'); return route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } }) }
     reads++; return route.fulfill({ json: { items: [{ ...form, revision: reads > 1 ? 2 : 1 }] } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click(); await page.getByRole('button', { name: 'Synthetic draft · Draft' }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Synthetic draft · Draft' }).click()
   await page.getByLabel('Form name', { exact: true }).fill('Retained private draft'); await page.getByRole('button', { name: 'Save form draft' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Outcome unknown' })).toContainText('Expected revision 1')
   await expect(page.getByRole('button', { name: 'Back to forms' })).toBeDisabled(); await expect(page.getByRole('button', { name: 'New registration form' })).toBeDisabled()
@@ -71,7 +71,7 @@ test('an explicit loss of form access clears the mounted private draft', async (
     if (denied) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
     return route.fulfill({ json: { items: [form] } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click(); await page.getByRole('button', { name: 'Restricted draft · Draft' }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Restricted draft · Draft' }).click()
   await page.getByLabel('Form name', { exact: true }).fill('Private unsent wording'); await page.getByRole('button', { name: 'Save form draft' }).click()
   await expect(page.getByRole('alert')).toContainText('do not have access')
   await expect(page.getByLabel('Form name', { exact: true })).toHaveCount(0)
@@ -94,7 +94,7 @@ test('a second admin changing the form forces fresh definition review and acknow
     }
     return route.fulfill({ json: { items: [form] } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click(); await page.getByRole('button', { name: 'Reviewed version one · Draft' }).click()
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Reviewed version one · Draft' }).click()
   const acknowledgement = page.getByLabel('I acknowledge the effect on existing and new responses.')
   await acknowledgement.check(); await page.getByRole('button', { name: 'Publish form version 1' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Current version needed' })).toBeVisible()
@@ -116,7 +116,7 @@ for (const denial of ['preview', 'read'] as const) test(`explicit form ${denial}
     if (requested) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
     return route.fulfill({ json: { items: [form] } })
   })
-  await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click(); await page.getByRole('button', { name: 'Private form definition · Draft' }).click(); await page.getByLabel('Form name', { exact: true }).fill('Private edited definition'); await page.getByLabel('Private preview question', { exact: true }).fill('Private preview answer')
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Private form definition · Draft' }).click(); await page.getByLabel('Form name', { exact: true }).fill('Private edited definition'); await page.getByLabel('Private preview question', { exact: true }).fill('Private preview answer')
   if (denial === 'preview') await page.getByRole('button', { name: 'Validate preview answers' }).click()
   else { await page.getByRole('button', { name: 'Save form draft' }).click(); await expect(page.getByRole('status').filter({ hasText: 'Outcome unknown' })).toBeVisible(); await page.getByRole('button', { name: 'Check current status' }).click() }
   await expect(page.getByRole('alert')).toContainText('do not have access'); await expect(page.getByLabel('Form name', { exact: true })).toHaveCount(0); await expect(page.getByLabel('Private preview question', { exact: true })).toHaveCount(0); await expect(page.getByText('Private edited definition', { exact: true })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Validate preview answers' })).toHaveCount(0)
