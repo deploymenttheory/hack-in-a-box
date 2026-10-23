@@ -18,6 +18,24 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
+		case "/app":
+			fmt.Fprint(w, `{"id":42,"slug":"synthetic-app"}`)
+		case "/app/installations/55":
+			// No contents permission or template visibility is required for an
+			// existing native repository's collaborator cleanup.
+			organizationID, suspended := 99, "null"
+			if mode == "installation-mismatch" {
+				organizationID = 100
+			}
+			if mode == "suspended" {
+				suspended = `"2026-10-23T12:00:00Z"`
+			}
+			fmt.Fprintf(
+				w,
+				`{"id":55,"app_id":42,"account":{"id":%d,"login":"synthetic-org","type":"Organization"},"suspended_at":%s,"permissions":{"metadata":"read","administration":"write"}}`,
+				organizationID,
+				suspended,
+			)
 		case "/app/installations/55/access_tokens":
 			tokens++
 			var input struct {
@@ -107,6 +125,7 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 	provider := &RESTProvider{transport: server.Client().Transport, baseURL: server.URL + "/"}
 	configuration := Configuration{
 		AppID:              42,
+		AppSlug:            "synthetic-app",
 		OrganizationID:     99,
 		Organization:       "synthetic-org",
 		TemplateRepository: "template",
@@ -160,6 +179,26 @@ func TestCollaboratorTransportUsesScopedTokensAndCurrentNumericIdentity(t *testi
 	); !errors.Is(err, ErrAccessRejected) ||
 		strings.Contains(err.Error(), "PRIVATE") {
 		t.Fatal("unsafe policy diagnostics", err)
+	}
+	beforeWrites := writes
+	for _, invalid := range []string{"installation-mismatch", "suspended"} {
+		mode = invalid
+		if _, err = provider.ChangeCollaborator(
+			t.Context(),
+			configuration,
+			key,
+			55,
+			request,
+			change,
+		); !errors.Is(
+			err,
+			ErrAccessNotSent,
+		) {
+			t.Fatal("stale installation reached dispatch", invalid, err)
+		}
+	}
+	if writes != beforeWrites {
+		t.Fatal("invalid current installation mutated access")
 	}
 	mode = "remove"
 	change.Remove = true

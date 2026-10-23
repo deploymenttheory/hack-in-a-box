@@ -119,6 +119,14 @@ func TestWebhook46EmptyRollbackPreservesActual45History(t *testing.T) {
 	if err := database.Migrate(ctx, pool, 46); err != nil {
 		t.Fatal(err)
 	}
+	// Restoring historical 46 is separate from becoming compatible with the
+	// current binary, whose later migrations must preserve this same history.
+	if err := database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(before, rollbackSnapshot(t, pool, tables)) {
+		t.Fatal("current upgrade changed retained45 history")
+	}
 	if err := database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
@@ -211,6 +219,12 @@ func TestWebhook46PopulatedRollbackRetainsDedupSecretsAndWork(t *testing.T) {
 				t.Fatal(
 					"blocked rollback changed GUID/hash/provenance, secrets, activity, durable work or audit",
 				)
+			}
+			if err := database.Migrate(ctx, f.pool, 0); err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(before, rollbackSnapshot(t, f.pool, tables)) {
+				t.Fatal("current upgrade changed protected46 history")
 			}
 			if err := database.CheckSchema(ctx, f.pool); err != nil {
 				t.Fatal(err)

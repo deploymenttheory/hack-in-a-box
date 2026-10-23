@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/v89/github"
 	"github.com/google/uuid"
 
@@ -99,9 +101,6 @@ func (s Service) accessOwner(
 	if !ok {
 		return failed()
 	}
-	if s.Provider.Inspect(ctx, request.Configuration, key, row.InstallationID).Code != "healthy" {
-		return failed()
-	}
 	if change != nil {
 		result, err := provider.ChangeCollaborator(
 			ctx,
@@ -156,6 +155,45 @@ func (s Service) ChangeCollaborator(
 	return result, err
 }
 
+// accessInstallation verifies the current App/install owner without depending on
+// the provisioning template or contents permission. The following scoped token
+// request proves the exact Administration permission needed by this operation.
+func (p *RESTProvider) accessInstallation(
+	ctx context.Context,
+	c Configuration,
+	key []byte,
+	id int64,
+) error {
+	transport, err := ghinstallation.NewAppsTransport(p.transport, c.AppID, key)
+	if err != nil {
+		return ErrIntegration
+	}
+	transport.BaseURL = strings.TrimRight(p.baseURL, "/")
+	client, err := p.client(transport)
+	if err != nil {
+		return ErrIntegration
+	}
+	app, _, err := client.Apps.Get(ctx, "")
+	if err != nil || app.GetID() != c.AppID || app.GetSlug() != c.AppSlug {
+		return ErrIntegration
+	}
+	request, err := client.NewRequest(ctx, "GET", fmt.Sprintf("app/installations/%d", id), nil)
+	if err != nil {
+		return ErrIntegration
+	}
+	var record installation
+	if _, err = client.Do(request, &record); err != nil {
+		return ErrIntegration
+	}
+	if record.ID != id || record.AppID != c.AppID || record.Account.ID != c.OrganizationID ||
+		record.Account.Type != "Organization" ||
+		!strings.EqualFold(record.Account.Login, c.Organization) ||
+		record.SuspendedAt != nil {
+		return ErrIntegration
+	}
+	return nil
+}
+
 func (p *RESTProvider) accessClient(
 	ctx context.Context,
 	c Configuration,
@@ -164,6 +202,9 @@ func (p *RESTProvider) accessClient(
 	request AccessRequest,
 	write bool,
 ) (*github.Client, error) {
+	if err := p.accessInstallation(ctx, c, key, installation); err != nil {
+		return nil, err
+	}
 	operation := "access_read"
 	if write {
 		operation = "invite"

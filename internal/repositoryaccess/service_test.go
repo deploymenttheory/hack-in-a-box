@@ -404,6 +404,15 @@ func TestReviewedRepositoryAccessRealPostgres(t *testing.T) {
 			) {
 				t.Fatal("withdrawn own reader", err)
 			}
+			if err = f.service.Maintain(t.Context()); err != nil {
+				t.Fatal(err)
+			}
+			automatic := f.view().Plan
+			if automatic == nil || automatic.ApprovedAt != nil || len(automatic.Actions) != 1 ||
+				automatic.Actions[0].Kind != "remove" ||
+				f.provider.writes != 1 {
+				t.Fatal("native roster change did not create an unapproved review plan", automatic)
+			}
 			removal := f.review()
 			if len(removal.Actions) != 1 || removal.Actions[0].Kind != "remove" {
 				t.Fatal("withdrawal did not propose owned removal", removal)

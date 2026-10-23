@@ -28,7 +28,9 @@ after actual publication. Organiser plans and other collaborators are excluded.
 
 The App uses short-lived installation tokens scoped to the one repository:
 Metadata read and Administration read for observations, Administration write for
-invitation or removal. It resolves the current login from the numeric GitHub ID
+invitation or removal. Every access operation verifies the current App,
+installation, organisation and suspension status independently of provisioning
+template health; unrelated template removal cannot block legitimate cleanup. It resolves the current login from the numeric GitHub ID
 immediately before the username-addressed mutation and validates returned IDs.
 GitHub's collaborator endpoint addresses a login rather than supporting an atomic
 numeric-ID precondition, so provider identity conflicts remain uncertain instead
