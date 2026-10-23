@@ -71,7 +71,7 @@ test('select, checkbox and multiline controls retain native names and recovery i
 })
 
 test('explicit invalid focus ignores hidden and disabled controls', () => {
- const { container } = render(<form><div hidden><Input aria-invalid="true" aria-label="Hidden" /></div><fieldset disabled><Input aria-invalid="true" aria-label="Disabled descendant" /></fieldset><fieldset aria-invalid="true"><Input aria-label="Valid child" /></fieldset><div aria-invalid="true"><span>Not a control</span></div><Input aria-invalid="true" aria-label="Current" /></form>)
+ const { container } = render(<form><div hidden><Input aria-invalid="true" aria-label="Hidden" /></div><fieldset disabled><Input aria-invalid="true" aria-label="Disabled descendant" /></fieldset><fieldset aria-invalid="true"><Input aria-label="Valid child" /></fieldset><div aria-invalid="true"><span>Not a control</span></div><div aria-invalid="true" tabIndex={-2}>Not a tab stop</div><Input aria-invalid="true" aria-label="Current" /></form>)
  focusFirstInvalid(container.querySelector('form')!); expect(screen.getByLabelText('Current')).toHaveFocus()
 })
 
@@ -154,3 +154,11 @@ test('toast feedback remains in its owning theme and clears on scope replacement
  await user.keyboard('{Escape}');await waitFor(()=>expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());expect(trigger).toHaveFocus()
  await user.click(trigger);await user.click(await screen.findByRole('button',{name:'Cancel'}));await waitFor(()=>expect(trigger).toHaveFocus())
  })
+
+test('native ARIA state is retained when no pending action overrides it',()=>{render(themed(<Button aria-busy="true" aria-describedby="work-help">Review status</Button>));expect(screen.getByRole('button',{name:'Review status'})).toHaveAttribute('aria-busy','true')})
+
+test('iconless pending exposes the same reserved indicator slot without replacing its label',()=>{
+ const {rerender}=render(themed(<Button pending={false}>Validate answers</Button>));const button=screen.getByRole('button',{name:'Validate answers'}),slot=button.querySelector('.fleet-icon-slot')
+ expect(slot).not.toBeNull();expect(slot?.querySelector('svg')).toBeNull()
+ rerender(themed(<Button pending>Validate answers</Button>));expect(button.querySelector('.fleet-icon-slot')).toBe(slot);expect(slot?.querySelector('.fleet-spinner')).not.toBeNull();expect(button).toHaveTextContent('Validate answers');expect(button).toBeDisabled()
+})

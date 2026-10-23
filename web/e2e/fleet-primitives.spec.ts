@@ -5,7 +5,7 @@ import { attendeeForm, registrationEvent } from './registration-fixtures'
 import { defaultBranding } from '../src/branding'
 import { contrastOf } from './design-system-contrast'
 
-test('confirmation traps focus in its actual theme and returns to its controlled opener', async ({ page }, info) => {
+test('confirmation traps focus in its actual theme and returns to its controlled opener', { tag: '@admin' }, async ({ page }, info) => {
  const { requests } = await setupTeams(page)
  const opener = page.getByRole('button', { name: 'Queue shared-channel TEST', exact: true })
  await opener.click()
@@ -20,11 +20,11 @@ test('confirmation traps focus in its actual theme and returns to its controlled
  await page.keyboard.press('Tab'); await expect(close).toBeFocused()
  await page.keyboard.press('Shift+Tab'); await expect(confirm).toBeFocused()
  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
- await page.screenshot({ path: info.outputPath('fleet-confirmation.png'), fullPage: true })
+ await page.screenshot({ path: info.outputPath('fleet-confirmation.png'), fullPage: false })
  await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0); await expect(opener).toBeFocused(); expect(requests).toHaveLength(0)
 })
 
-test('pending confirmation retains dimensions and exact intent, then restores the caller after a definite failure', async ({ page }) => {
+test('pending confirmation retains dimensions and exact intent, then restores the caller after a definite failure', { tag: '@admin' }, async ({ page }) => {
  await setupTeams(page)
  let complete: () => void = () => {}, attempts = 0
  const requests: { request_id: string }[] = []
@@ -51,7 +51,7 @@ test('pending confirmation retains dimensions and exact intent, then restores th
  expect(attempts).toBe(1)
 })
 
-test('an uncertain transport result never replays the confirmed write during reconnect or authoritative refresh', async ({ page }) => {
+test('an uncertain transport result never replays the confirmed write during reconnect or authoritative refresh', { tag: '@admin' }, async ({ page }) => {
  await setupTeams(page)
  let attempts = 0
  await page.route(`**/events/${firstID}/teams-workflow/test`, route => { attempts++; return route.abort('failed') })
@@ -85,4 +85,31 @@ test('native Enter submits registration once and server errors keep current fiel
  await button.hover(); expect(await contrastOf(button)).toBeGreaterThanOrEqual(4.5)
  await page.screenshot({ path: info.outputPath('fleet-form-error.png'), fullPage: true })
  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('Recoverable synthetic draft')
+})
+
+test('iconless pending preview has a visible indicator with stable geometry and recoverable answers', { tag: '@admin' }, async ({ page }) => {
+ await mockWorkspace(page)
+ const definition = structuredClone(attendeeForm.definition)
+ definition.fields = [definition.fields[0]]
+ const saved = { revision: 0, version: 0, published_version: null, definition }
+ let release: () => void = () => {}, previews = 0
+ const pending = new Promise<void>(resolve => { release = resolve })
+ await page.route(`**/events/${firstID}/registration/forms**`, async route => {
+  if (new URL(route.request().url()).pathname.endsWith('/preview')) {
+   previews++; const body = route.request().postDataJSON(); await pending
+   return route.fulfill({ json: { answers: body.answers, visible: [definition.fields[0].id], issues: [] } })
+  }
+  return route.fulfill({ json: { items: [saved] } })
+ })
+ await page.goto(`/events/${firstID}`); await page.getByRole('button', { name: 'Forms', exact: true }).click()
+ await page.getByRole('button', { name: `${definition.name} · Draft` }).click()
+ const answer = page.getByLabel('What would you like to learn? (required)'), action = page.getByRole('button', { name: 'Validate preview answers' })
+ await answer.fill('Recoverable preview answer')
+ const before = (await action.boundingBox())!
+ expect(await action.locator('.fleet-icon-slot').count()).toBe(1); expect(await action.locator('svg').count()).toBe(0)
+ await action.click(); await expect(action).toHaveAttribute('aria-busy', 'true'); await expect(action.locator('.fleet-spinner')).toBeVisible()
+ const during = (await action.boundingBox())!
+ expect(during.width).toBe(before.width); expect(during.height).toBe(before.height); await expect(action).toHaveText('Validate preview answers')
+ await page.keyboard.press('Enter'); expect(previews).toBe(1)
+ release(); await expect(action).toBeEnabled(); await expect(answer).toHaveValue('Recoverable preview answer')
 })

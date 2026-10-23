@@ -35,6 +35,6 @@ export function FieldError({ className, ...props }: ComponentProps<'p'>) { retur
 // Call after the owning validator has rendered its current errors. Native/RHF
 // validation still owns submission; async visual validation cannot authorise it.
 export function focusFirstInvalid(form: HTMLElement) {
-  const control = [...form.querySelectorAll<HTMLElement>('[aria-invalid="true"], :invalid')].find(element => element.matches('input:not([type=hidden]), select, textarea, button, [tabindex]:not([tabindex="-1"])') && !element.matches(':disabled') && !element.closest('[hidden], [inert]'))
+  const control = [...form.querySelectorAll<HTMLElement>('[aria-invalid="true"], :invalid')].find(element => (element.matches('input:not([type=hidden]), select, textarea, button') || (element.hasAttribute('tabindex') && element.tabIndex >= 0)) && !element.matches(':disabled') && !element.closest('[hidden], [inert]'))
   control?.focus()
 }
