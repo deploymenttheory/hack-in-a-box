@@ -62,3 +62,71 @@ shared media task behaviour is introduced. Full lint/unit/both builds, appropria
 dependent consumer checks, independent Standards/Spec reviews and full exact-head
 CI remain required before ready/merge. #245 broader parity/release audit remains
 separate; this first checkpoint is not a claim that broad gates passed.
+
+## Authorised current-owner metadata history follow-up
+
+The missing reader is now implemented as narrowly authorised supporting read work
+for #243. `GET /media/{id}/history` returns only immutable **version, action and
+changed_at**, paginated by `before_version`/limit. It omits actor identity, document
+contents, caption, subject tags, file identifiers, recording destinations, consent
+tokens, raw reasons and all old byte URLs. Canonical SQL selects only these three
+columns; Go/OpenAPI/generated frontend contracts expose only the allowlisted DTO.
+
+The native current event guard (read mode), current document and existing owned
+predicate authorize each page inside the same transaction. Ordinary gallery readers
+and a photographer who does not own the item receive no history. A current organiser
+or photographer-owner can read metadata on an archive without gaining write access;
+`can_read_history` is separate from `can_edit`. Consent revocation does not expose old
+bytes or reinstate an approval. History GET creates no media revision, command,
+audit intent or queue effect, and retains the existing no-store HTTP middleware.
+Legacy `acknowledged_version`/safe-current projection semantics are unchanged.
+
+The production reader loads only after an explicit action and after its own current
+native GET on every opening. It uses an actor/draft/event/item/per-mount scope,
+abort/late-read fence, removed-on-unmount query cache and labelled cursor records.
+It is independently available outside edit controls and excluded from print.
+It explicitly does not equate decision metadata with an original command receipt.
+
+Meaningful bounded proof is terminal green:
+
+- Real PostgreSQL with `HACKBOX_INTEGRATION=1`, race detector and bounded package/
+  test parallelism: two new native history tests and the extended authenticated
+  HTTP contract test pass. Coverage includes metadata field allowlist, version
+  pagination, organiser/owner/nonowner/wrong-event, read-only archive, revoked bytes,
+  role loss, no domain side effects, no-store HTTP and a contending role-change lock.
+- Both production portal builds and focused frontend ESLint pass. Existing media
+  assertions are preserved; their shared native fixture is extracted without tests
+  importing another spec. The new reader cases cover archived read-only metadata,
+  ordinary reader exclusion, paging/keyboard/print and held-denied fresh reads.
+- Participant browser 26/26 and independent administrator browser 26/26 desktop/mobile
+  cases pass, including the 20 existing media scenarios per portal and 6 new history
+  scenarios. Configured bounded native Go lint passes after required formatting.
+
+This is an early **Refs #243** slice, not completion of UI-10. The full upload/editor/
+review/approval/release/correction/withdrawal/own-consent lifecycle, enhanced parent
+projection and unknown-intent fences, private image/detail/navigation, consent
+re-incarnation browser counterproofs, actual matching visuals/guide and final full
+checks/reviews/CI above remain in progress. No new roles, write policy, PostgreSQL
+schema, real providers or real media/person data are introduced.
+
+### PR263 review correction: production history presentation and guide
+
+The native history contract is unchanged. `MediaHistoryDisclosure` and
+`MediaHistoryContent` are pure production presentation used by the native adapter
+and the independently hosted guide. The synthetic example exercises fresh loading,
+metadata-only paging, failure/retry, denial row suppression, keyboard close/return,
+reopen without cached rows and print hiding. It has no API, authentication, storage,
+media bytes or command receipt. Usage, accessibility and anti-pattern guidance live
+alongside the interactive example and in `docs/design/styleguide.md`.
+
+Correction verification (terminal, source `036802a`): `npx tsc -b` and focused
+ESLint passed; `npm run build:styleguide` and `npm run build` passed. The new
+independent guide journey passed **2/2** desktop/mobile with the guide's existing
+API/cookie/storage guards. `media-history.spec.ts` passed **6/6 participant** and
+**6/6 administrator**, including the production close/return-focus assertion.
+Browser commands: `npx playwright test --config playwright.styleguide.config.ts
+--workers=1 --grep 'media decision history uses'`; the corresponding native spec
+ran with the isolated public/admin media configs at ports 4304/4305. These are
+bounded correction checks; exact-head repository CI and independent delta review
+remain separate gates. The earlier native PostgreSQL/race proof applies to the
+unchanged history API; this correction does not complete the remaining #243 scope.

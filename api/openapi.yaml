@@ -4920,6 +4920,29 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/PhotoConsentChoice"
+  /api/v1/events/{event_id}/media/{media_id}/history:
+    parameters:
+      - $ref: "#/components/parameters/EventID"
+      - name: media_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getMediaHistory
+      summary: Current organiser or photographer-owner decision metadata only; historical content and bytes are never returned.
+      parameters:
+        - name: before_version
+          in: query
+          schema: {type: integer, format: int64, minimum: 1}
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        200:
+          description: Current-owned immutable media decision metadata. No historical content, identities or byte grants.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MediaHistoryPage"}
+        default:
+          $ref: "#/components/responses/Error"
   /api/v1/events/{event_id}/media/{media_id}:
     parameters:
       -
@@ -12673,6 +12696,23 @@ components:
             - "no"
         eligible:
           type: "boolean"
+    MediaHistoryEntry:
+      type: object
+      additionalProperties: false
+      required: [version, action, changed_at]
+      properties:
+        version: {type: integer, format: int64, minimum: 1}
+        action: {type: string}
+        changed_at: {type: string, format: date-time}
+    MediaHistoryPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_before_version]
+      properties:
+        items:
+          type: array
+          items: {$ref: "#/components/schemas/MediaHistoryEntry"}
+        next_before_version: {type: integer, format: int64, minimum: 1, nullable: true}
     MediaItem:
       type: "object"
       additionalProperties: false
@@ -12687,6 +12727,7 @@ components:
         - "consent_state"
         - "recording_url"
         - "can_read_original"
+        - "can_read_history"
         - "can_edit"
         - "can_review"
         - "can_publish"
@@ -12728,6 +12769,9 @@ components:
             - "reviewed"
         recording_url:
           type: "string"
+        can_read_history:
+          type: boolean
+          description: Current native owner may read decision metadata, including read-only archives; grants no historical content or byte access.
         can_read_original:
           type: "boolean"
         can_edit:

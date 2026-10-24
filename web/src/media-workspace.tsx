@@ -7,6 +7,7 @@ import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
 import { Button } from './components/ui/button'
 import { CollectionHeading, CollectionPagination, ContextLink } from './components/patterns'
+import { MediaDecisionHistory } from './media-history'
 import { MediaGallery } from './media-gallery'
 import { MediaCollector, MediaEditor } from './media-editor'
 
@@ -69,7 +70,7 @@ function PhotoConsent({ eventID, refresh, deny }: { eventID: string; refresh: ()
   return <section className="panel media-consent"><h2>Your photo consent</h2><p>Current choice: <strong>{query.data.choice}</strong>. This changes only your event photo consent, without editing other registration details.</p><div className="actions"><Button disabled={pending || uncertain || !query.data.can_opt_in} onClick={() => void choose('yes')}>Allow identifiable event media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('no')}>Do not allow identifiable media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('unknown')}>Withdraw my consent choice</Button></div>{uncertain && <p role="status">The save outcome is uncertain. Your current choice was refreshed above. Check it before making another explicit choice. <Button variant="outline" onClick={() => { setUncertain(false); setFailure(undefined) }}>I have checked my current choice</Button></p>}{!!failure && <Failure error={failure} />}</section>
 }
 function MediaContent({item,context}:{item:Item;context:MediaContext}) {
- return <>{item.kind==='photo'&&item.can_read_original&&<ProtectedPhoto key={context.authorityCurrent?'current':'paused'} item={item} context={context}/ >}{item.recording_url&&<p><a href={item.recording_url} target="_blank" rel="noopener noreferrer">Open reviewed external recording</a> · Hosted elsewhere; this app does not host or recall third-party copies.</p>}{item.can_edit&&<MediaEditor item={item} context={context}/>}</>
+ return <>{item.kind==='photo'&&item.can_read_original&&<ProtectedPhoto key={context.authorityCurrent?'current':'paused'} item={item} context={context}/ >}{item.recording_url&&<p><a href={item.recording_url} target="_blank" rel="noopener noreferrer">Open reviewed external recording</a> · Hosted elsewhere; this app does not host or recall third-party copies.</p>}{item.can_edit&&<MediaEditor item={item} context={context}/>} {item.can_read_history&&<MediaDecisionHistory eventID={context.eventID} mediaID={item.id}/>}</>
 }
 function ProtectedPhoto({ item, context }: { item: Item; context: MediaContext }) {
   const [url, setURL] = useState(''), [error, setError] = useState<unknown>(), [pending, setPending] = useState(false), epoch = useRef(0), controller = useRef<AbortController | null>(null)

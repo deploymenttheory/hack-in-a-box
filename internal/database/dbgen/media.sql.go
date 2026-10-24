@@ -135,6 +135,50 @@ func (q *Queries) MediaHead(ctx context.Context, arg MediaHeadParams) (EventMedi
 	return i, err
 }
 
+const mediaHistoryMetadata = `-- name: MediaHistoryMetadata :many
+SELECT version,action,created_at FROM media_versions
+WHERE event_id=$1 AND id=$2 AND version<$3::bigint
+ORDER BY version DESC LIMIT $4
+`
+
+type MediaHistoryMetadataParams struct {
+	EventID       uuid.UUID
+	ID            uuid.UUID
+	BeforeVersion int64
+	PageSize      int32
+}
+
+type MediaHistoryMetadataRow struct {
+	Version   int64
+	Action    string
+	CreatedAt time.Time
+}
+
+func (q *Queries) MediaHistoryMetadata(ctx context.Context, arg MediaHistoryMetadataParams) ([]MediaHistoryMetadataRow, error) {
+	rows, err := q.db.Query(ctx, mediaHistoryMetadata,
+		arg.EventID,
+		arg.ID,
+		arg.BeforeVersion,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MediaHistoryMetadataRow{}
+	for rows.Next() {
+		var i MediaHistoryMetadataRow
+		if err := rows.Scan(&i.Version, &i.Action, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const mediaMaintenanceEvents = `-- name: MediaMaintenanceEvents :many
 SELECT DISTINCT event_id FROM event_media WHERE event_id>$1::uuid AND state IN('reviewed','released') ORDER BY event_id LIMIT $2
 `

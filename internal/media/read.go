@@ -79,6 +79,7 @@ func (s Service) project(
 	if currentConsent && d.State != "withdrawn" && (staff || valid) {
 		out.RecordingURL = d.Metadata.RecordingURL
 	}
+	out.CanReadHistory = staff
 	out.CanEdit = staff && sc.event.WritesAllowed
 	out.CanReview = sc.organiser && sc.event.WritesAllowed && d.State != "withdrawn" &&
 		currentConsent

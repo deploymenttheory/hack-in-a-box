@@ -92,6 +92,7 @@ type Item struct {
 	State               string            `json:"state"`
 	ConsentState        string            `json:"consent_state"`
 	RecordingURL        string            `json:"recording_url"`
+	CanReadHistory      bool              `json:"can_read_history"`
 	CanReadOriginal     bool              `json:"can_read_original"`
 	CanEdit             bool              `json:"can_edit"`
 	CanReview           bool              `json:"can_review"`
