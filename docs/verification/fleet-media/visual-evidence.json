@@ -1,7 +1,7 @@
 {
   "baseline_commit": "6e8ab511f00f3c3e8b63c91200a52637bee65119",
   "baseline_tree": "a85ecd138e0a211e7aecdda3cedc6853001ab3f6",
-  "after_source_commit": "3672bf89aa9410a0bdd86d2dcaca4076f46a6751",
+  "after_source_commit": "70ecb6d402313b2a8197cb2fe841fe59202e6eb4",
   "scenario": "Current organiser, one synthetic draft photograph, no identifiable people, same caption/reason/attestations, ready for approval. Before is the prior inline action; after is exact review before confirmation. No write or upload performed.",
   "images": [
     {
@@ -92,5 +92,11 @@
       "full_page": true,
       "sha256": "4e1396df6102885923fa2e2d3bdf00a2b357146e204cb0b2c9c32f7dbfe8eb6d"
     }
-  ]
+  ],
+  "prior_after_source_commit": "3672bf89aa9410a0bdd86d2dcaca4076f46a6751",
+  "validation_correction_recheck": {
+    "source_commit": "70ecb6d402313b2a8197cb2fe841fe59202e6eb4",
+    "all_four_after_sha256_unchanged": true,
+    "meaning": "Invalid submissions now associate errors and focus fields; the approved valid-review state is pixel-identical."
+  }
 }

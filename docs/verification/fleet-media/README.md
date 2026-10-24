@@ -38,7 +38,9 @@ API/cookie/storage guards apply; callbacks fabricate no native receipt or byte g
 
 ## Meaningful verification
 
-All data/providers are synthetic and deterministic. No real upload, people,
+The full-scope proof below was recorded at source `3672bf8`; the bounded
+Standards correction and its affected proof at `70ecb6d` are recorded separately
+below. All data/providers are synthetic and deterministic. No real upload, people,
 provider credential or browser private persistence is used.
 
 | Check | Completed local evidence |
@@ -66,7 +68,8 @@ and explains access/consent checks without exposing internal mechanisms.
 ## Matched visual evidence
 
 Actual baseline `6e8ab511` (tree `a85ecd13`, identical to reviewed #263 source)
-versus production source `3672bf8`. Each pair uses the same synthetic organiser,
+versus production source `70ecb6d` (valid-review images remain pixel-identical to
+the approved source `3672bf8`). Each pair uses the same synthetic organiser,
 event, one private draft photograph, caption, reason and checked identification /
 no-person / content attestations. The baseline shows the prior inline approval
 control; the new UI shows the explicit exact-source review before confirmation.
@@ -87,7 +90,7 @@ visually inspected for removed legacy form boxes, clear distinct approval action
 readable exact-source preview and responsive controls without clipping. Artifact
 source, viewport and SHA-256 values are in [visual-evidence.json](visual-evidence.json).
 
-At the final source checkpoint `3672bf8`, the full 25-file unit suite passes
+At the pre-correction source checkpoint `3672bf8`, the full 25-file unit suite passes
 **153/153** (not only the scoped 13), repository lint/builds pass, and the combined
 native suite passes **44/44 in each portal**. The independent guide passes **4/4**.
 Root independently inspected all eight original paired screenshots and all four
@@ -95,3 +98,29 @@ refreshed AFTER images: action-specific approval heading, plain access/current-
 consent explanation, flat dividers, labelled icons, responsive wrapping and separate
 approval/release are verified. This visual inspection is separate from the pending
 independent Standards/Spec reviews and exact-head CI merge gates.
+
+## Standards P2 correction — field validation and focus
+
+Source `70ecb6d` resolves the reviewed field-validation finding without changing
+native APIs, authority, scope fences, consent policy or write recovery. The pure
+validator returns field-keyed errors. Submission and metadata correction pass them
+to production `Field.error`; the owner hook calls `focusFirstInvalid` after invalid
+errors render. Error editing does not steal focus, and local errors remain separate
+from transport feedback and inside the current private editor. The production guide
+uses the same helper and publishes its usage/accessibility guidance and snippet.
+
+The existing unsafe-file/UTF-8 lifecycle case now asserts focus, `aria-invalid` and
+associated descriptions for invalid file/title/reason/HTTPS destination and for the
+metadata-correction title/reason path; both no-write assertions remain. No redundant
+case matrix was added. Affected proof is terminal: **6/6 participant + 6/6
+administrator**, including the existing keyboard correction/discard and valid
+organiser-approval/print journeys; **2/2** independent guide journeys with API,
+cookie and storage guards; TypeScript, full repository ESLint, both portal builds
+and the independent guide build pass. The earlier full 153-unit/44-per-portal proof
+is historical; exact-head repository CI and the independent delta review remain
+required before readiness.
+
+All four AFTER images were recaptured from the correction source and their SHA-256
+values are identical to the approved valid-review images. No visual layout changed;
+the manifest records both source versions and this recheck. Invalid-state behaviour
+is proven by the actual field/focus/accessibility assertions above.
