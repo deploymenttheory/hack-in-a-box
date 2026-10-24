@@ -240,3 +240,19 @@ only safe original metadata above private editor lifetimes, erase private option
 and credentials on authority loss, and validate CSRF/IfMatch/native receipts.
 No secret-bearing App command is automatically resent. Disbanded repositories
 remain unused and unscored; repository recovery cannot reopen frozen teams.
+## Role-specific Today
+
+`TodayView` and `TodayLifecycle` are controlled production exports. The independent
+guide provides a backend-free synthetic read owner for context switching, current
+read versus temporary failure/denial, explicit owner navigation and focus return,
+and separate preparation/release/submission/cutoff observations. A changed clock
+is not permission to publish, submit, review or reopen a frozen roster.
+
+Owners derive action rows from current authorised APIs; Today owns no parallel
+task/notification store or writes. Only currently held role contexts are offered.
+A definite denial clears private summaries and cancels/fences late reads above
+disposed children. Temporary failure keeps the last observations but pauses
+actions. Native deep links and guarded local navigation preserve existing
+pending/unknown command owners; current observations do not confirm an earlier
+command. Labels communicate urgency without colour; role controls retain native
+keyboard semantics. Private Today projections are excluded from print.

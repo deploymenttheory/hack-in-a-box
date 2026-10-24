@@ -1,4 +1,5 @@
 import { RepositoryWorkspace } from './repository-workspace'
+import { EventToday } from './today'
 import { PlanningOperations, planningDepartureAllowed } from './planning-operations'
 import { PlanningHeader, PlanningNavigation, eventPlanningDestinations } from './planning-layout'
 import { EventDirectoryView } from './event-directory-view'
@@ -12,7 +13,6 @@ import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
 import { EventBrand } from './branding'
 import { localDate } from './event-time'
-import { EventGuidance } from './event-guidance'
 import { ResourceLibrary } from './resource-library'
 import { TeamAccess } from './team-access'
 import { TeamDeliverables } from './team-deliverables'
@@ -42,6 +42,6 @@ function EventContent({ eventID }: { eventID: string }) {
     <details className="fleet-planning-section"><summary>Related event workspaces</summary><div className="fleet-pattern-actions"><Link to="/events/$eventId/surveys" params={{ eventId: event.id }}>Surveys and feedback</Link><Link to="/ideas" search={{ event: eventID }}>Propose an idea or record current team follow-through</Link><Link to="/events/$eventId/media" params={{ eventId: event.id }}>Event media</Link><Link to="/events/$eventId/photo-consent" params={{ eventId: event.id }}>Your photo consent</Link><Link to="/events/$eventId/help" params={{ eventId: eventID }}>Ask for help or open the helper queue</Link></div></details>
     <div className="fleet-planning-layout"><PlanningNavigation items={eventPlanningDestinations(['overview','today','resources','deliverables','mentors','team access','repositories'])} current={tab} choose={name=>{if(planningDepartureAllowed() && (!unsaved || window.confirm('Leave this section with unsaved changes?')))setTab(name)}} /><div className="fleet-planning-canvas">
 
-    {tab === 'today' ? <section><p className="eyebrow">Your event</p><h2>Today</h2><EventGuidance event={event} /></section> : tab === 'repositories' ? <RepositoryWorkspace event={event} onDirty={setUnsaved} /> : tab === 'team access' ? <TeamAccess event={event} /> : tab === 'mentors' ? <MentorRoster event={event} /> : tab === 'resources' ? <ResourceLibrary event={event} /> : tab === 'deliverables' ? <TeamDeliverables event={event} onDirty={setUnsaved} /> : <section className="fleet-planning-section"><h2>Event dates</h2><ExportDownloads eventID={event.id} audience="participant" /><dl className="dates">{[['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></section>}
+    {tab === 'today' ? <EventToday event={event} openSection={setTab} /> : tab === 'repositories' ? <RepositoryWorkspace event={event} onDirty={setUnsaved} /> : tab === 'team access' ? <TeamAccess event={event} /> : tab === 'mentors' ? <MentorRoster event={event} /> : tab === 'resources' ? <ResourceLibrary event={event} /> : tab === 'deliverables' ? <TeamDeliverables event={event} onDirty={setUnsaved} /> : <section className="fleet-planning-section"><h2>Event dates</h2><ExportDownloads eventID={event.id} audience="participant" /><dl className="dates">{[['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></section>}
   </div></div></section>
 }

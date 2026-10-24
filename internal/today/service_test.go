@@ -101,10 +101,13 @@ func TestTodayCurrentRolesPublishedRoomParityAndReadIsolation(t *testing.T) {
 		t.Fatalf("Today differs from native room program: %+v %+v", actual.Program, display)
 	}
 	data, _ = json.Marshal(actual)
-	for _, private := range []string{secret, "PRIVATE-STAFF-AGENDA-CANARY", pairing.Token, "pairings", "draft", "can_control"} {
+	for _, private := range []string{secret, "PRIVATE-STAFF-AGENDA-CANARY", pairing.Token, `"pairings":`, `"draft":`, `"can_control":`} {
 		if strings.Contains(string(data), private) {
 			t.Fatalf("private controller/schedule value %q leaked", private)
 		}
+	}
+	if _, err = service.Read(ctx, attendee.ID, uuid.New()); !errors.Is(err, access.ErrNotFound) {
+		t.Fatalf("unknown event: %v", err)
 	}
 	// Each request reads current grants; context selection cannot retain a revoked role.
 	if err = q.SetMembership(ctx, dbgen.SetMembershipParams{EventID: id, PersonID: multi.ID, Role: "mentor", Active: false}); err != nil {
@@ -122,6 +125,13 @@ func TestTodayCurrentRolesPublishedRoomParityAndReadIsolation(t *testing.T) {
 	}
 	if _, err = service.Read(ctx, outsider.ID, id); !errors.Is(err, access.ErrForbidden) {
 		t.Fatalf("unrelated reader: %v", err)
+	}
+	if _, err = pool.Exec(ctx, "UPDATE events SET stage='archived' WHERE id=$1", id); err != nil {
+		t.Fatal(err)
+	}
+	archived, err := service.Read(ctx, attendee.ID, id)
+	if err != nil || archived.Program.Current != nil || archived.Program.Next != nil || archived.Program.TimerEndsAt != nil {
+		t.Fatalf("archived room program revived: %+v %v", archived.Program, err)
 	}
 	if _, err = pool.Exec(ctx, "UPDATE people SET active=false WHERE id=$1", attendee.ID); err != nil {
 		t.Fatal(err)

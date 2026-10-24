@@ -41,6 +41,12 @@ func (s Service) ReadProgramIn(ctx context.Context, tx pgx.Tx, actor, eventID uu
 	if err != nil {
 		return Program{}, fmt.Errorf("read program event: %w", err)
 	}
+	// An archived/cancelled event no longer has an active room projection,
+	// matching the display owner's existing writes-allowed boundary. Historical
+	// event-reader access does not revive operational presentation state.
+	if !e.WritesAllowed {
+		return Program{ServerNow: s.now(), Mode: "held"}, nil
+	}
 	row, err := q.PresentationState(ctx, eventID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Program{ServerNow: s.now(), Mode: "held"}, nil

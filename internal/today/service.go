@@ -4,6 +4,7 @@ package today
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -32,6 +33,9 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 	var result Page
 	err := database.Within(ctx, s.Events.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if _, err := q.LockEvent(ctx, eventID); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return access.ErrNotFound
+			}
 			return fmt.Errorf("lock Today event: %w", err)
 		}
 		if err := (access.EventPolicy{Queries: q}).Authorize(ctx, actor, eventID, eventID, access.EventRead); err != nil {
