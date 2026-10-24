@@ -2,7 +2,7 @@ import { usePrivateRequestScope, type PrivateRequestScope } from './private-requ
 import { repositoryAppExplanation } from './repository-diagnostics'
 import { useRepositoryDeparture, useRepositoryDraft } from './repository-drafts'
 import { RepositoryActionReview } from './repository-review'
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { api, unwrap, type EventRecord } from './api/client'
 import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
@@ -19,16 +19,17 @@ export function RepositorySetup({ event }: { event: EventRecord }) {
   return <section className="fleet-repository-section"><h2>Organisation and template setup</h2><p>The organisation-installed App provisions private team repositories. People verify their own GitHub account separately.</p><Button icon="repository" variant="outline" onClick={() => { if (!open || leave()) setOpen(!open) }}>{open ? 'Hide' : 'Open'} App setup</Button>{open && <SetupReader key={String(event.can_edit)} event={event} />}</section>
 }
 function SetupReader({ event }: { event: EventRecord }) {
-  const identity = useIdentity(), lastRevision = useRef<number | undefined>(undefined)
+  const identity = useIdentity(), lastRevision = useRef<number | undefined>(undefined), configurationCommands = useRef<PrivateRequestScope | null>(null)
   const owner = useRepositoryRead(event.id, 'app', async signal => {
     const value = unwrap(await api.GET('/api/v1/events/{event_id}/github-app', { signal, cache: 'no-store', params: { path: { event_id: event.id } } }))
     // A fresh configuration revision fences an old installation continuation
     // synchronously; unsent form values remain local for explicit correction.
-    if (lastRevision.current !== undefined && lastRevision.current !== value.revision) commandScope.renew()
+    if (lastRevision.current !== undefined && lastRevision.current !== value.revision) configurationCommands.current?.renew()
     lastRevision.current = value.revision
     return value
   })
   const commandScope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:repository-app-command`, owner.scope)
+  useLayoutEffect(() => { configurationCommands.current = commandScope; return () => { configurationCommands.current = null } }, [commandScope])
   return owner.denied ? <><Failure error={owner.denied} /><Button icon="refresh" onClick={owner.check}>Check current App setup access</Button></> : owner.query.isPending ? <Loading /> : owner.query.error && !owner.query.data ? <Failure error={owner.query.error} retry={() => void owner.query.refetch()} /> : <>{owner.query.error ? <Failure error={owner.query.error} retry={() => void owner.query.refetch()} /> : null}<SetupEditor {...{ event, owner, commandScope }} value={owner.query.data!} /></>
 }
 function SetupEditor({ event, owner, commandScope, value }: { event: EventRecord; commandScope: PrivateRequestScope; owner: ReturnType<typeof useRepositoryRead<S['GitHubAppStatus']>>; value: S['GitHubAppStatus'] }) {
