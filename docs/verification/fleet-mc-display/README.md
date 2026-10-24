@@ -24,11 +24,31 @@ editor. It is not completion of issue 244 or verification of its final criteria.
 - Display loss explicitly labels retained room content as last-known; visible QR call to action.
 - Pure display palette imports now bypass the private branding editor module.
 
+## Full workflow source checkpoint (in progress)
+
+The MC now has flat live/rehearsal/urgent/display tasks and production
+`PresentationReview` for each captured action/reason/revision. A fresh local
+reader replaces the former retained query snapshot. Definite denial or an
+operating-state downgrade expires child scopes and removes private editors.
+The native write owner checks current session and console immediately before
+POST; only allowlisted action/revision metadata survives routes in the existing
+authenticated safety capsule. Direct responses can settle that safe metadata
+after private teardown; current GET cannot. Pairing keys remain local and are
+removed for print, hiding and departure. No replay/status API is invented.
+
+Lint and portal builds pass for this source checkpoint. The adapted existing
+MC suite passes 12/12; its custom session fixture now includes the native
+required draft scope instead of invalidating every fresh session preflight.
+Operation/stream units pass 8/8, including late direct ACK after teardown,
+408/current-read non-replay and held preflight expiry. Additional actual SPA,
+keyboard, held projection and independent guide cases are being run before
+readiness; initial checkpoint counts above remain historical.
+
 ## Remaining before readiness
 
-1. Full greenfield MC task composition and exact captured review of every existing save/control/override/return/pair/revoke action.
-2. Fresh private reader/authority lifetime, post-await fences, stale/transient distinctions, nested drafts and actual opener focus.
-3. Root metadata-only pending/unknown barriers, non-replay reconciliation and once-only pairing secret cleanup.
+1. Finish meaningful keyboard/SPA/held/session/role/print and current-source proof of the full composed native MC tasks.
+2. Complete field/current-source and nested draft/focus proof; preserve transient unsent work while fencing denied private lifetimes.
+3. Verify actual route-lifetime pending/unknown barriers and once-only pairing cleanup; direct native ACK and current state remain distinct.
 4. Final interactive review/unknown guide owners and meaningful native browser/keyboard/held/private-source proof; preserve original QR/clock/PG contracts.
 5. Matched real-build MC and display visual evidence, final bounded checks and independent two-axis review/exact-head CI.
 

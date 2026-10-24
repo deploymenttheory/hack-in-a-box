@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { consumeFrames, parseSnapshot, type Snapshot } from './room-stream'
 import { RoomCanvas } from './room-canvas'
 import { Theme } from './components/theme'
@@ -50,8 +50,9 @@ function ConnectedRoom({ eventID, token, onEnd }: { eventID: string; token: stri
 }
 function RoomAssets({ eventID,token,assets,onRevoked }: { eventID: string; token: string; assets: Snapshot['assets']; onRevoked: () => void }) {
   const assetKey = JSON.stringify(assets)
-  const [images,setImages] = useState<{kind:string;url:string}[]>([])
-  useEffect(() => {
+  const [loaded,setLoaded] = useState<{source:string;images:{kind:string;url:string}[]}>({source:'',images:[]})
+  const images=useMemo(()=>loaded.source===assetKey?loaded.images:[],[assetKey,loaded])
+  useLayoutEffect(() => {
     const controller = new AbortController(), urls: string[] = []
     void Promise.all((JSON.parse(assetKey) as Snapshot['assets']).map(async asset => {
       try {
@@ -64,7 +65,7 @@ function RoomAssets({ eventID,token,assets,onRevoked }: { eventID: string; token
         if (controller.signal.aborted || digest !== asset.digest) return undefined
         const url=URL.createObjectURL(blob); urls.push(url); return {kind:asset.kind,url}
       } catch { return undefined }
-    })).then(values => { if (!controller.signal.aborted) setImages(values.filter(v=>v!==undefined)) })
+    })).then(values => { if (!controller.signal.aborted) setLoaded({source:assetKey,images:values.filter(v=>v!==undefined)}) })
     return () => { controller.abort(); urls.forEach(url=>URL.revokeObjectURL(url)) }
   },[eventID,token,assetKey,onRevoked])
   useEffect(() => { const icon=images.find(i=>i.kind==='icon'); if (!icon) return; const link=document.createElement('link');link.rel='icon';link.href=icon.url;document.head.append(link);return ()=>link.remove() },[images])

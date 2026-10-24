@@ -130,3 +130,20 @@ for (const palette of [
  expect(await contrastOf(control, 'outline-color')).toBeGreaterThanOrEqual(3)
  await page.screenshot({ path: info.outputPath('room-control-theme.png'), fullPage: true })
 })
+
+test('a held authorised asset cannot create a URL after equal-sequence asset withdrawal',async({page})=>{
+ const state=await room(page)
+ let started=false,release!:()=>void
+ const held=new Promise<void>(resolve=>{release=resolve})
+ await page.evaluate(()=>{const original=URL.createObjectURL;Object.assign(window,{displayCreatedURLs:0});URL.createObjectURL=function(blob){(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs++;return original(blob)}})
+ await page.route('**/display/assets/*',async route=>{started=true;await held;return route.fulfill({contentType:'image/png',body:raster})})
+ try{
+  state.snapshot={...state.snapshot,assets:[{id:assetID,kind:'logo',media_type:'image/png',digest:createHash('sha256').update(raster).digest('hex')}]}
+  await page.clock.runFor(1_100);await expect.poll(()=>started).toBe(true)
+  state.snapshot={...state.snapshot,assets:[]}
+  await page.clock.runFor(1_100)
+  release();await page.clock.runFor(100)
+  await expect(page.getByAltText('Event logo')).toHaveCount(0)
+  expect(await page.evaluate(()=>(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs)).toBe(0)
+ }finally{release()}
+})

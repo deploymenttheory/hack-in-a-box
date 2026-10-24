@@ -14,7 +14,7 @@ function fixture() {
 async function prepare(page: Page, data = fixture(), pausePolling = false) {
   const workspace = await mockWorkspace(page), event = workspace.events[0]
   event.can_present = true; event.can_edit = false; event.can_read_staff = false; event.can_manage_owner = false; event.can_transition = false
-  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
+  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, draft_scope:'22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
   const original = structuredClone(data.page)
   await page.route(`**/events/${firstID}/presentation**`, async route => {
     const req = route.request(), path = new URL(req.url()).pathname
@@ -56,6 +56,7 @@ const live = (page: Page) => page.getByRole('region', { name: 'Live room control
 test('rehearses and saves without changing live cues, then explicitly activates the saved program', async ({ page }, info) => {
   const data = await prepare(page)
   await expectEventSection(page,'Setup',false)
+  await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
   await page.getByRole('button', { name: 'Rehearse 2: Planned building', exact: true }).click()
   await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
   const hostile = '<img src=x onerror="window.__injected=true"> Synthetic rehearsal'
@@ -67,11 +68,13 @@ test('rehearses and saves without changing live cues, then explicitly activates 
   expect(data.requests).toHaveLength(0)
   await expect(page.getByRole('button', { name: 'Activate saved rehearsal' })).toBeDisabled()
   await page.getByRole('button', { name: 'Save rehearsal', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm rehearsal save',exact:true}).click()
   await expect(page.getByRole('status')).toContainText('The room display is unchanged.')
   expect(data.requests[0].body.action).toBe('save')
   expect(data.page.published[0].title).toBe('Planned opening')
   await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Activate saved rehearsal' }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: hostile, exact: true })).toBeVisible()
   expect(data.requests.at(-1)?.body).toMatchObject({ action: 'activate', from_draft: true, index: 1 })
   expect(await page.evaluate(() => (window as unknown as { __injected?: boolean }).__injected)).toBeUndefined()
@@ -84,24 +87,35 @@ test('rehearses and saves without changing live cues, then explicitly activates 
 test('holds, resumes, adjusts and overrides the countdown while preserving an explicit return to schedule', async ({ page }, info) => {
   const data = await prepare(page)
   await page.getByRole('button', { name: 'Hold countdown' }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page)).toContainText('Countdown held')
   await page.getByLabel('Set remaining seconds').fill('65')
   await page.getByRole('button', { name: 'Set countdown', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(page.getByRole('timer')).toHaveText('01:05')
   await page.getByRole('button', { name: 'Resume countdown' }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page)).toContainText('Countdown running')
   await page.getByRole('button', { name: 'Advance', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: 'Planned building' })).toBeVisible()
   await page.getByRole('button', { name: 'Back', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
+  await page.getByRole('button',{name:'Prepare urgent announcement',exact:true}).click()
   await page.getByLabel('Urgent title').fill('Urgent room update')
   await page.getByLabel('Urgent room text').fill('Synthetic announcement only')
   await page.getByRole('button', { name: 'Activate urgent announcement' }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: 'Urgent room update' })).toBeVisible()
   await expect(live(page).getByRole('heading', { name: 'Planned opening' })).toBeVisible()
+  await page.getByRole('button',{name:'Live controls',exact:true}).click()
   await expect(page.getByRole('button', { name: 'Advance', exact: true })).toBeDisabled()
+  await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
   await expect(page.getByRole('button', { name: 'Activate saved rehearsal' })).toBeDisabled()
+  await page.getByRole('button',{name:'Live controls',exact:true}).click()
   await page.screenshot({ path: info.outputPath('mc-urgent-return.png'), fullPage: true })
   await page.getByRole('button', { name: 'Return to schedule', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Return to schedule', exact: true })).toHaveCount(0)
   expect(data.page.current_index).toBe(0); expect(data.page.published).toEqual([opening, building]); expect(data.page.remaining_seconds).toBe(65)
@@ -110,10 +124,14 @@ test('holds, resumes, adjusts and overrides the countdown while preserving an ex
 test('two consoles preserve a rejected rehearsal and require review before another mutation', async ({ page, context }, info) => {
   const data = await prepare(page), other = await context.newPage()
   await prepare(other, data, true)
+  await other.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
   await other.getByLabel('Cue title', { exact: true }).fill('Preserved competing rehearsal')
   await page.getByRole('button', { name: 'Hold countdown' }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await other.getByRole('button', { name: 'Save rehearsal', exact: true }).click()
+  await other.getByRole('button', {name:'Confirm rehearsal save',exact:true}).click()
   await expect(other.getByRole('heading', { name: 'Another console changed the program' })).toBeVisible()
+  await other.getByRole('button',{name:'Correct details',exact:true}).click()
   await expect(other.getByLabel('Cue title', { exact: true })).toHaveValue('Preserved competing rehearsal')
   await expect(other.getByRole('button', { name: 'Save rehearsal', exact: true })).toBeDisabled()
   const before = data.requests.length
@@ -121,6 +139,7 @@ test('two consoles preserve a rejected rehearsal and require review before anoth
   expect(data.requests).toHaveLength(before)
   await other.getByRole('button', { name: 'Use latest revision and keep my rehearsal' }).click()
   await other.getByRole('button', { name: 'Save rehearsal', exact: true }).click()
+  await other.getByRole('button', {name:'Confirm rehearsal save',exact:true}).click()
   await expect(other.getByRole('status')).toContainText('Rehearsal saved')
   expect(data.requests.map(r => r.revision)).toEqual(['"0"', '"0"', '"1"'])
   expect(data.page.draft[0].title).toBe('Preserved competing rehearsal')
@@ -130,8 +149,10 @@ test('two consoles preserve a rejected rehearsal and require review before anoth
 test('shows factual display contact, returns a secret once without putting it in URLs or browser storage, and revokes it', async ({ page }, info) => {
   const data = await prepare(page), urls: string[] = []
   page.on('request', request => urls.push(request.url()))
+  await page.getByRole('button',{name:'Manage displays',exact:true}).click()
   await page.getByLabel('Display label', { exact: true }).fill('Synthetic front room')
   await page.getByRole('button', { name: 'Pair display', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm display pairing',exact:true}).click()
   const secret = 'SyntheticDisplayOnlySecretNeverUseOutsideTests123456789'
   await expect(page.getByRole('textbox', { name: 'New display secret', exact: true })).toHaveValue(secret)
   await expect(page.getByRole('region', { name: 'Display sessions' })).toContainText('No contact yet')
@@ -143,18 +164,27 @@ test('shows factual display contact, returns a secret once without putting it in
   await expect(page.getByRole('region', { name: 'Display sessions' })).toContainText('Contact stale')
   await page.screenshot({ path: info.outputPath('mc-display-contact.png'), fullPage: true })
   await page.getByRole('button', { name: 'Revoke Synthetic front room' }).click()
+  await page.getByRole('button', {name:'Confirm display revocation',exact:true}).click()
   await expect(page.getByRole('region', { name: 'Display sessions' })).toContainText('Revoked')
   expect(data.page.pairings[0].revoked_at).toBeTruthy()
 })
 
-test('retains the rehearsal but disables controls when current MC access is revoked', async ({ page }) => {
+test('clears private rehearsals on current MC denial and cannot revive them through a partial restoration', async ({ page }) => {
   const data = await prepare(page)
-  await page.getByLabel('Cue title', { exact: true }).fill('Draft retained after revocation')
+  await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+  await page.getByLabel('Cue title', { exact: true }).fill('PRIVATE denied rehearsal')
   data.authorized = false
-  await expect(page.getByText('The latest console snapshot could not be verified.', { exact: false })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Save rehearsal', exact: true })).toBeDisabled()
-  await expect(page.getByRole('button', { name: 'Hold countdown' })).toBeDisabled()
-  await expect(page.getByLabel('Cue title', { exact: true })).toHaveValue('Draft retained after revocation')
+  await expect(page.getByText('Current console access could not be verified.', { exact: false })).toBeVisible()
+  await expect(page.getByLabel('Cue title', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('PRIVATE denied rehearsal',{exact:true})).toHaveCount(0)
+  expect(data.requests).toHaveLength(0)
+  data.page.can_control=false;data.authorized=true
+  await expect(page.getByText('Room changes are unavailable in the current operating state.',{exact:false})).toBeVisible()
+  await expect(page.getByLabel('Cue title', { exact: true })).toHaveCount(0)
+  data.page.can_control=true;data.page.draft=[]
+  await expect(page.getByRole('button',{name:'Edit rehearsal',exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+  await expect(page.getByLabel('Cue title', { exact: true })).toHaveCount(0)
   expect(data.requests).toHaveLength(0)
 })
 
@@ -163,9 +193,132 @@ test('jumps only to approved cues and finishes the planned program explicitly', 
   const data = await prepare(page)
   await page.getByText('Approved cue list', { exact: true }).click()
   await page.getByRole('button', { name: 'Activate approved cue 2', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: 'Planned building', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Finish program', exact: true }).click()
+  await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(page.getByRole('button', { name: 'Advance', exact: true })).toBeDisabled()
   expect(data.requests.map(request => request.body.action)).toEqual(['activate', 'advance'])
   expect(data.page.current_index).toBe(2)
+})
+
+test('keyboard correction preserves nested input and route discard can be cancelled deliberately',async({page})=>{
+ const data=await prepare(page)
+ await page.getByLabel('Reason for room changes').fill('')
+ await page.getByRole('button',{name:'Hold countdown',exact:true}).click()
+ await expect(page.getByLabel('Reason for room changes')).toBeFocused()
+ await expect(page.getByLabel('Reason for room changes')).toHaveAttribute('aria-invalid','true')
+ await expect(page.getByLabel('Reason for room changes')).toHaveAccessibleDescription(/Record a reason within 2000 UTF-8 bytes/)
+ expect(data.requests).toHaveLength(0)
+ await page.getByLabel('Reason for room changes').fill('Keyboard operation')
+ await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+ await page.getByLabel('Cue title',{exact:true}).fill('Synthetic unsent keyboard cue')
+ const opener=page.getByRole('button',{name:'Save rehearsal',exact:true})
+ await opener.focus();await page.keyboard.press('Enter')
+ await expect(page.getByRole('heading',{name:'Review rehearsal save',exact:true})).toBeFocused()
+ await page.getByRole('button',{name:'Correct details',exact:true}).click()
+ await expect(opener).toBeFocused();await expect(page.getByLabel('Cue title',{exact:true})).toHaveValue('Synthetic unsent keyboard cue')
+ await page.getByRole('button',{name:'Prepare urgent announcement',exact:true}).click()
+ await page.getByLabel('Urgent title').fill('Synthetic unsent urgent cue')
+ await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+ await expect(page.getByLabel('Cue title',{exact:true})).toHaveValue('Synthetic unsent keyboard cue')
+ page.once('dialog',dialog=>dialog.dismiss())
+ await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+ await expect(page.getByRole('heading',{name:'MC console',exact:true})).toBeVisible()
+ await expect(page.getByLabel('Cue title',{exact:true})).toHaveValue('Synthetic unsent keyboard cue')
+ page.once('dialog',dialog=>dialog.accept())
+ await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+ await expect(page.getByRole('heading',{name:'MC console',exact:true})).toHaveCount(0)
+ expect(data.requests).toHaveLength(0)
+})
+
+test('an unknown room change survives actual SPA task departure; current reads cannot settle or replay it',async({page})=>{
+ const data=await prepare(page)
+ let posts=0
+ await page.route(`**/events/${firstID}/presentation`,async route=>{
+  if(route.request().method()!=='POST')return route.fallback()
+  posts++;data.page.revision++;data.page.mode='held'
+  return route.fulfill({status:503,json:{error:{code:'unavailable',message:'Synthetic lost response',request_id:'synthetic'}}})
+ })
+ await page.getByRole('button',{name:'Hold countdown',exact:true}).click()
+ await page.getByRole('button',{name:'Confirm room change',exact:true}).click()
+ await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed')
+ await page.getByRole('button',{name:'Read current room state',exact:true}).click()
+ await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed')
+ page.once('dialog',dialog=>dialog.accept())
+ await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+ await expect(page.getByRole('heading',{name:'MC console',exact:true})).toHaveCount(0)
+ await page.goBack()
+ await openEventSection(page,'MC console')
+ await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed')
+ await expect(page.getByRole('button',{name:'Hold countdown',exact:true})).toBeDisabled()
+ await page.getByRole('button',{name:'Read current room state',exact:true}).click()
+ expect(posts).toBe(1)
+ page.once('dialog',dialog=>dialog.accept())
+ await page.getByRole('button',{name:'Review current state as a new starting point',exact:true}).click()
+ await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed')
+ await page.getByLabel('Reason for room changes').fill('A different reviewed action after current read')
+ await expect(page.getByRole('button',{name:'Resume countdown',exact:true})).toBeEnabled()
+ expect(posts).toBe(1)
+})
+
+for(const outcome of ['acknowledged','lost'] as const){
+ test(`held original ${outcome} after private teardown keeps only safe state across SPA return`,async({page})=>{
+  const data=await prepare(page)
+  let release!:()=>void,started=false,posts=0
+  const held=new Promise<void>(resolve=>{release=resolve})
+  await page.route(`**/events/${firstID}/presentation`,async route=>{
+   if(route.request().method()!=='POST')return route.fallback()
+   posts++;started=true;data.page.revision++;data.page.mode='held'
+   const response=structuredClone(data.page)
+   await held
+   return outcome==='acknowledged'?route.fulfill({json:response}):route.fulfill({status:503,json:{error:{code:'unavailable',message:'Synthetic response lost',request_id:'synthetic'}}})
+  })
+  try{
+   await page.getByLabel('Reason for room changes').fill('PRIVATE HELD REASON CANARY')
+   await page.getByRole('button',{name:'Hold countdown',exact:true}).click()
+   await page.getByRole('button',{name:'Confirm room change',exact:true}).click()
+   await expect.poll(()=>started).toBe(true)
+   data.page.can_control=false
+   await expect(page.getByText('Room changes are unavailable in the current operating state.',{exact:false})).toBeVisible()
+   await expect(page.getByText('PRIVATE HELD REASON CANARY',{exact:true})).toHaveCount(0)
+   await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+   await expect(page.getByRole('heading',{name:'MC console',exact:true})).toHaveCount(0)
+   data.page.can_control=true
+   await page.goBack();await openEventSection(page,'MC console')
+   await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Awaiting original acknowledgement')
+   await expect(page.getByRole('button',{name:'Resume countdown',exact:true})).toBeDisabled()
+   release()
+   if(outcome==='acknowledged'){
+    await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toHaveCount(0)
+    await expect(page.getByRole('button',{name:'Resume countdown',exact:true})).toBeEnabled()
+   }else{
+    await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed')
+    await page.getByRole('button',{name:'Read current room state',exact:true}).click()
+    await expect(page.getByRole('button',{name:'Resume countdown',exact:true})).toBeDisabled()
+   }
+   await expect(page.getByLabel('Reason for room changes')).toHaveValue('')
+   expect(posts).toBe(1)
+  }finally{release()}
+ })
+}
+
+test('a fresh permission downgrade fences a held old console preflight before any POST',async({page})=>{
+ const data=await prepare(page)
+ let release!:()=>void,started=false,holdNext=true
+ const held=new Promise<void>(resolve=>{release=resolve}),old=structuredClone(data.page)
+ await page.route(`**/events/${firstID}/presentation`,async route=>{
+  if(route.request().method()!=='GET'||!holdNext)return route.fallback()
+  holdNext=false;started=true;await held;return route.fulfill({json:old})
+ })
+ try{
+  await page.getByRole('button',{name:'Hold countdown',exact:true}).click()
+  await page.getByRole('button',{name:'Confirm room change',exact:true}).click()
+  await expect.poll(()=>started).toBe(true)
+  data.page.can_control=false
+  await expect(page.getByText('Room changes are unavailable in the current operating state.',{exact:false})).toBeVisible()
+  release()
+  await expect(page.getByRole('button',{name:'Check current room access',exact:true})).toBeVisible()
+  expect(data.requests).toHaveLength(0)
+ }finally{release()}
 })
