@@ -198,3 +198,32 @@ retain their captured payload and original command metadata when print media
 changes. Printing never dismisses, confirms, cancels or retries a native command.
 The interactive production survey examples demonstrate print → screen while open
 and pending, preserving focus/dismissal and explicit owner callback behavior.
+
+## MC and independent room presentation
+
+The presentation example imports production `CuePreview` and `RoomCanvas` with a
+synthetic complete projection and fixed server clock. Use private cues only in the
+MC preview. The public canvas receives the allowlisted current/next projection,
+clock, connection state and already-authorised asset slot; it never loads an
+account or credential. A held timer stays fixed, zero never advances a cue and
+reconnection labels retained state as last-known. Keep the QR and visible canonical
+HTTPS destination identical, distance-readable type, explicit keyboard actions and
+print exclusion. The interactive snippet shows the production boundary. Do not
+substitute contact metadata for confirmed rendering or a current read for an
+original command acknowledgement. The decision example below shares the actual
+production review and deliberately retains an unknown original outcome.
+
+`PresentationReview` is also imported by the synthetic decision owner. Capture
+an immutable action, source revision, target cue/countdown or display, and reason
+before opening it. Correction/cancellation restore the initiating control and
+unchanged inputs. Native adapters check the current session and console before
+sending; their endpoints offer no idempotent replay or original-command lookup.
+Keep only action/revision metadata above route lifetimes, never cue text, reasons,
+labels or one-time pairing keys. A direct matching response may settle that safe
+metadata after private teardown; current reads and later commands never settle
+an earlier lost response. The guide demonstrates unknown and changed-source
+barriers without calling an API or inventing a receipt. Use a deliberate fresh
+starting point for a different reviewed action. Current denial clears private
+snapshots and held continuations; temporary reads retain unsent work with writes
+paused. Pairing keys are shown once in local memory and scrubbed on departure,
+hiding, print and session end; contact records never prove rendering.

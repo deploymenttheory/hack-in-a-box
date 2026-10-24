@@ -109,6 +109,14 @@ test('renders a maximum legal Go-escaped current and next snapshot without recon
  await expect(page.locator('.room-instructions')).toHaveText('<'.repeat(4000))
  await expect(page.locator('.room-display footer strong')).toHaveText('<'.repeat(200))
  await expect(page.locator('.room-countdown')).toHaveText('02:00')
+ // Also exercise a native-legal next title without punctuation/word breaks;
+ // the Go escaped '<' boundary above primarily proves transport framing.
+ const payload=JSON.parse(state.frameOverride.match(/^data: (.*)$/m)![1])
+ payload.next.title='W'.repeat(200)
+ state.frameOverride=`id: ${payload.sequence}\nevent: snapshot\ndata: ${JSON.stringify(payload)}\n\n`
+ await page.clock.runFor(1_100)
+ await expect(page.locator('.room-display footer strong')).toHaveText('W'.repeat(200))
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
 })
 
 for (const palette of [
@@ -129,4 +137,24 @@ for (const palette of [
  await expect(control).toHaveCSS('outline-style', 'solid'); await expect(control).toHaveCSS('outline-width', '2px')
  expect(await contrastOf(control, 'outline-color')).toBeGreaterThanOrEqual(3)
  await page.screenshot({ path: info.outputPath('room-control-theme.png'), fullPage: true })
+})
+
+test('a held authorised asset cannot create a URL after equal-sequence asset withdrawal',async({page})=>{
+ const state=await room(page)
+ let started=false,finished=false,release!:()=>void
+ const held=new Promise<void>(resolve=>{release=resolve})
+ await page.evaluate(()=>{const original=URL.createObjectURL;Object.assign(window,{displayCreatedURLs:0});URL.createObjectURL=function(blob){(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs++;return original(blob)}})
+ await page.route('**/display/assets/*',async route=>{started=true;await held;try{await route.fulfill({contentType:'image/png',body:raster})}catch{/* The current projection cancelled this obsolete asset read. */}finally{finished=true}})
+ try{
+  state.snapshot={...state.snapshot,assets:[{id:assetID,kind:'logo',media_type:'image/png',digest:createHash('sha256').update(raster).digest('hex')}]}
+  await page.clock.runFor(1_100);await expect.poll(()=>started).toBe(true)
+  state.snapshot={...state.snapshot,assets:[],server_now:'2030-06-14T09:00:02Z'}
+  await page.clock.runFor(1_100)
+  // Observe that the complete equal-sequence withdrawal was accepted BEFORE
+  // releasing the obsolete response; advancing fake time alone is not a read.
+  await expect(page.getByRole('status')).toContainText('10:00:02')
+  release();await expect.poll(()=>finished).toBe(true)
+  await expect(page.getByAltText('Event logo')).toHaveCount(0)
+  expect(await page.evaluate(()=>(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs)).toBe(0)
+ }finally{release()}
 })
