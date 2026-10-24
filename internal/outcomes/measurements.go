@@ -18,15 +18,17 @@ import (
 
 type (
 	ObservationMeasure struct {
-		Reference  objectives.MeasureReference `json:"reference"`
-		Definition objectives.Measure          `json:"definition"`
+		ObjectiveDescription string                      `json:"objective_description"`
+		Reference            objectives.MeasureReference `json:"reference"`
+		Definition           objectives.Measure          `json:"definition"`
 	}
 	Observation struct {
-		OutcomeID      uuid.UUID            `json:"outcome_id"`
-		OutcomeVersion int64                `json:"outcome_version"`
-		Evidence       Evidence             `json:"evidence"`
-		RecordedAt     time.Time            `json:"recorded_at"`
-		Measures       []ObservationMeasure `json:"measures"`
+		CurrentFollowUpStatus string               `json:"current_follow_up_status"`
+		OutcomeID             uuid.UUID            `json:"outcome_id"`
+		OutcomeVersion        int64                `json:"outcome_version"`
+		Evidence              Evidence             `json:"evidence"`
+		RecordedAt            time.Time            `json:"recorded_at"`
+		Measures              []ObservationMeasure `json:"measures"`
 	}
 )
 
@@ -130,13 +132,24 @@ func (s Service) ObservationsInTransaction(ctx context.Context,
 				return access.ErrConflict
 			}
 			item := Observation{
-				OutcomeID:      row.OutcomeID,
-				OutcomeVersion: row.OutcomeVersion,
-				Evidence:       evidence,
-				RecordedAt:     row.CreatedAt,
-				Measures:       []ObservationMeasure{},
+				CurrentFollowUpStatus: row.CurrentFollowUpStatus,
+				OutcomeID:             row.OutcomeID,
+				OutcomeVersion:        row.OutcomeVersion,
+				Evidence:              evidence,
+				RecordedAt:            row.CreatedAt,
+				Measures:              []ObservationMeasure{},
 			}
 			for _, ref := range evidence.Measures {
+				objective, e := objectives.ResolveDefinitionInTransaction(
+					ctx,
+					tx,
+					actor,
+					eventID,
+					ref.Objective,
+				)
+				if e != nil {
+					return wrap("resolve exact objective definition", e)
+				}
 				definition, e := objectives.ResolveMeasureInTransaction(
 					ctx,
 					tx,
@@ -149,7 +162,11 @@ func (s Service) ObservationsInTransaction(ctx context.Context,
 				}
 				item.Measures = append(
 					item.Measures,
-					ObservationMeasure{Reference: ref, Definition: definition},
+					ObservationMeasure{
+						ObjectiveDescription: objective.Description,
+						Reference:            ref,
+						Definition:           definition,
+					},
 				)
 			}
 			out.Items = append(out.Items, item)

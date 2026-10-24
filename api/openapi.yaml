@@ -5838,10 +5838,11 @@ components:
     ArchiveExport:
       type: object
       additionalProperties: false
-      required: [event_id, event_revision, source]
+      required: [event_id, event_revision, source, source_state]
       properties:
         event_id: { type: string, format: uuid }
         event_revision: { type: integer, format: int64 }
+        source_state: { type: string, enum: [available, unavailable, retention_expired] }
         source: { type: string, enum: [roster, deliverables, assessments, published-outcomes, feedback, objective-evidence] }
         resource_id: { type: string, format: uuid }
         roster: { $ref: '#/components/schemas/LogisticsPage' }
@@ -14266,12 +14267,14 @@ components:
         "additionalProperties": false,
         "required": [
           "outcome_id",
+          "current_follow_up_status",
           "outcome_version",
           "evidence",
           "recorded_at",
           "measures"
         ],
         "properties": {
+          "current_follow_up_status": {"type":"string", "enum":["proposed","reviewing","accepted","in_progress","closed"]},
           "outcome_id": {
             "type": "string",
             "format": "uuid"
@@ -14295,9 +14298,11 @@ components:
               "additionalProperties": false,
               "required": [
                 "reference",
+                "objective_description",
                 "definition"
               ],
               "properties": {
+                "objective_description": {"type":"string"},
                 "reference": {
                   "$ref": "#/components/schemas/OutcomeMeasureReference"
                 },

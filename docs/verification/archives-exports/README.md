@@ -1,72 +1,98 @@
-# Issue119 archive/export implementation record
+# Issue #119: archives, exports and cross-event reporting
 
-Base: main `18b23f4e3201f9ab0d10ef3875628585f0ffd74f`.
-This is an early native backend checkpoint, not completion of issue119.
+Draft PR #268 is based on main `18b23f4e3201f9ab0d10ef3875628585f0ffd74f`.
+The full issue remains in progress; this document distinguishes implemented source
+from executed proof and outstanding acceptance checks.
 
-## First coherent slice
+## Implemented source
 
-- Current-authority archived-event metadata directory and detail.
-- Current-organiser per-event participation summary and cursor-based cross-event comparison, with independent registration records/people, confirmed attendees, recorded attendance and native frozen-entry counts.
-- Explicit source/units/denominators; no global population, inferred performance, score, rank, award or return-on-investment calculation. Disbanded/inactive entries are unused/unscored, not transferred or counted as completed.
-- Deliberate audited formula-safe summary CSV using the existing CSVCell owner, no credentials/person fields and the existing no-store API middleware.
-- Canonical SQL queries, OpenAPI, generated Go/TypeScript boundaries, HTTP adapters and actual runtime dependency wiring.
-- Missing final-judging108/published-results113 are explicit unavailable sources, never zero/empty fabricated results.
+- Current-authority archived-event directory/detail; current organisers receive
+  independent per-event cohort summaries and cursor-based cross-event comparison.
+  Platform administration alone grants no private metrics/export access.
+- Registration records, registered people, confirmed competitors, recorded
+  attendance, entry/frozen-submission/unused/withdrawn/not-submitted records remain
+  distinct. Recorded attendance has no unrelated registration denominator; zero
+  recorded presence never establishes zero physical attendance. Physical census
+  coverage and missing final judging/results are explicitly unavailable.
+- Missing native formal outcomes are explicitly incomplete, never inferred open
+  or not submitted. The real preparation → cancelled → archived path preserves
+  the exact event/fact/outcome snapshot through later maintenance and reads.
+  Existing assessment settlement and immutable submission ownership are retained.
+- Audited no-store, formula-neutralised summary CSV includes source availability.
+  Bounded JSON source exports compose logistics roster fields, explicit-audience
+  formal submission evidence, own currently authorised assessment cards,
+  separately published projects, published suppressed feedback and restricted
+  objective/evidence observations inside the archive event transaction.
+- Source owners retain current actor/resource/field/retention/publication policy:
+  archive access does not confer logistics fields, another author's assessment,
+  raw survey responses, unpublished outcomes or media byte access.
+- Reporting retains exact objective description/version and measure
+  baseline/target/unit/method/source/horizon, original evidence basis/date/source,
+  nullable value/denominator and explicitly current follow-up status. Continued
+  projects count native in-progress records; dated adoption observations count
+  source-labelled evidence records, never unique adopted systems, ROI or awards.
+- One native privacy retention helper evaluates the locked event/current policy
+  using existing calendar-day deadlines. Native logistics, operational export,
+  own/authorised profile reads and archive composition enforce expiry before
+  deletion maintenance. No duration, role or archive competition-write exception
+  was introduced; safe audit/history metadata is preserved.
+- Canonical SQL, OpenAPI and generated Go/TypeScript contracts, HTTP adapters and
+  runtime dependencies are maintained. No migration or real provider effect.
 
-Generation completed. Bounded compile of archives/httpapi/app completed successfully; this is compile proof only, not a claimed PostgreSQL test pass. First real PostgreSQL role/cohort/paging/export-audit tests are authored and pending execution. No real provider effect or new schema migration is part of this initial slice.
+## Executed bounded proof
 
-## Full remaining scope (issue stays open)
+All PostgreSQL checks below used isolated native PostgreSQL containers with
+`HACKBOX_INTEGRATION=1`, `GOMAXPROCS=2`, `GOFLAGS=-p=1`.
 
-1. Compose authorised roster, deliverable/submission and assessment exports through their actual field/resource owners. Current organiser status does not grant independent private scorecards or logistics/profile fields.
-2. Export current published outcome/showcase projections only with underlying evidence/media/retention authorization; include exact objective version/measure/baseline/target/unit and dated/source-labelled observations and follow-up status. Distinguish continued work from demonstrated-adoption evidence and from estimates/self reports.
-3. Integrate native suppressed feedback/report aggregates without respondent/raw-answer leakage or false denominators; current approved snapshots and privacy erasure remain authoritative.
-4. Prove archived competition is read-only through real reachable archive transitions, ordinary reads/history and worker maintenance, including a cancelled/never-held event; fix only actual native owner mutations. Preserve the Submissions owner and explicit117 post-event follow-up, with no alternate outcome store or new grace/eligibility rule.
-5. Prove event-locked archive cancellation of unintended jobs and preservation/current eligibility of explicitly retained approved review reminders; test actual queue execution and safe decision history.
-6. Real PostgreSQL/race, HTTP/current-role/no-store/CSV allowlist and retention/concurrency proof; generated parity, appropriate bounded lint/compile and final independent reviews/every exact-head CI.
+- Real reachable archive boundary RED: late maintenance created two
+  `not_submitted` states/changes and altered gate facts after archival. GREEN:
+  submissions 2.107s and archives 4.441s. Reads/history leave missing source absent.
+- Native-source role/field/pagination/loss and safe-audit proof: archive package
+  5.974s, including exclusion of photographer consent from logistics fields.
+- Exact objective/evidence provenance: 2.357s. A later objective revision cannot
+  retarget v1 description/unit/baseline/target; explicit zero differs from nil;
+  self-report/estimate differ from dated sourced adoption evidence. Dedicated
+  native archived follow-up leaves competition revision/write flags unchanged.
+- Retention RED: expired native logistics fields remained readable. GREEN:
+  3.092s, before/at the exact deadline for current 90-day and legitimately shortened
+  one-day policies; expired rows physically remain, and no worker was invoked.
+  Native logistics/export/profile reads deny, archive reports retention expiry.
+- Real HTTP/OpenAPI response proof: 4.020s. Authentication/current role loss,
+  metadata restriction, source scopes, no-store, download headers, source
+  availability and hostile-cell CSV neutralisation are checked.
+- Changed-owner native Go lint completed with `0 issues` before the latest
+  retention source delta; a final lint/generation check remains required.
 
-No smaller checkpoint is treated as satisfying the full issue. No new judging,
-results, awards or financial-return owner is invented for absent dependencies.
+Historical local logs are under `/private/tmp/hackbox119-*`; they are development
+receipts, not published independent-review or final-head CI claims.
 
-## Archive boundary and recorded attendance checkpoint
+## Remaining acceptance work
 
-The real native preparation → cancelled → archived path was exercised with no
-formal submission states. Before the fix, advancing the clock and maintaining
-submissions created two `not_submitted` outcomes and changed gate facts inside the
-archive. The regression now preserves the exact event/fact/outcome snapshot;
-ordinary missing archived submission reads/history return not found instead of
-initialising an `open` outcome. Existing pre-archive assessment settlement remains
-in the native submission owner.
+1. Finish positive archive source composition proof for formal audience/assessment
+   authorship, released project event/cursor/media/privacy behaviour and actual
+   frozen suppressed feedback; preserve existing owner tests rather than adding
+   another score/result definition.
+2. Complete the running capped PostgreSQL/race campaign, including held-event
+   lock role loss, native lifecycle cancellation, worker execution eligibility
+   and explicitly retained #117 reminder history. Record only terminal results.
+3. Check exact generated parity, changed-owner lint and compile after final
+   source changes, reconcile the PR description, then freeze for independent
+   Standards/Spec review and every exact-head required CI check.
 
-The reporting metric is `recorded_attendance_people`, with no registration
-population denominator: recorded people may include people without an attendee
-registration. Missing records and explicit absence both produce zero recorded
-presence, while physical attendance coverage remains explicitly unavailable.
+Native final judging (#108/#109) and published results (#113) do not exist yet.
+Their absence is represented as unavailable; this issue cannot invent those
+owners, a rank/award/result, transferred disbanded work or code-based performance.
 
-Executed with real isolated PostgreSQL, `GOMAXPROCS=2 GOFLAGS=-p=1
-HACKBOX_INTEGRATION=1 go test ./internal/submissions ./internal/archives -run
-'TestNeverHeldArchiveDoesNotInventSubmissionOutcomes|TestArchive' -count=1`:
-passed (submissions 2.107s; archives 4.441s). The initial red proof is retained in
-`/private/tmp/hackbox119-archive-boundary-red.log`; green log is
-`/private/tmp/hackbox119-archive-first-pg.log`. This is bounded proof, not the full
-remaining export/worker/race/HTTP acceptance gate.
+### Terminal native race campaign
 
-## Selected native-source export checkpoint
-
-A second source slice adds bounded, audited no-store JSON exports for logistics
-rosters, explicitly scoped/audience-selected formal deliverables, own authorised
-assessment cards, published projects, published suppressed feedback, and exact
-objective-evidence observations. Each composes the owning service inside one
-archive event transaction. Current archive membership does not confer logistics
-fields, another author's card, raw survey responses or unpublished projects.
-The summary identifies missing native formal outcomes as unavailable; its CSV
-also includes explicit source-availability rows.
-
-Meaningful real PostgreSQL archive tests passed (`go test ./internal/archives
--count=1`, integration enabled and capped at two CPUs): 5.974s. This covers native
-logistics role/field projection, pagination and role loss; explicit required
-resource scope; empty published-source projections and safe audit. It does not
-claim the remaining dated objective/outcome, full assessment/publication,
-retention-worker lag, concurrency, HTTP and archive-job acceptance proof.
-
-Changed-owner Go lint passed: `golangci-lint run` over archives, attendance,
-scorecards, outcomes, surveys, submissions and HTTP adapters (`0 issues`).
-Native export adapter compile and OpenAPI/TypeScript generation are complete.
+The selected native PostgreSQL/race campaign completed successfully in all ten
+packages: archives 14.986s; privacy 4.642s; attendance 2.893s; submissions 2.952s;
+scorecards 6.987s; outcomes 7.477s; surveys 3.087s; event 3.020s; jobs 2.919s;
+HTTP adapters 4.792s. It includes actual event-lock blocking before role-loss
+commit, native lifecycle/archive cancellation, current permission checks, exact
+frozen scorecard evidence, published-project positive projection/withdrawal,
+frozen suppressed aggregate correction, current queued-operation eligibility and
+explicit archived follow-up delivery with retained history. Only deterministic
+local/in-app test providers were used. Full command/regex is retained in the local
+`/private/tmp/hackbox119-native-acceptance-race.log` campaign invocation; this is
+selected acceptance proof, not a claim that every repository Go test ran.

@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
@@ -24,6 +25,7 @@ import (
 type Export struct {
 	EventID       uuid.UUID                   `json:"event_id"`
 	EventRevision int64                       `json:"event_revision"`
+	SourceState   string                      `json:"source_state"`
 	Source        string                      `json:"source"`
 	ResourceID    *uuid.UUID                  `json:"resource_id,omitempty"`
 	Roster        *attendance.OperationalPage `json:"roster,omitempty"`
@@ -47,7 +49,7 @@ func (s Service) Export(
 	actor, eventID uuid.UUID,
 	r ExportRequest,
 ) (Export, error) {
-	out := Export{EventID: eventID, Source: r.Source}
+	out := Export{EventID: eventID, Source: r.Source, SourceState: "available"}
 	if r.Limit < 1 || r.Limit > 100 {
 		return out, access.ErrInvalid
 	}
@@ -68,6 +70,23 @@ func (s Service) Export(
 		count := 0
 		switch r.Source {
 		case "roster":
+			if err := (access.EventPolicy{Queries: q}).Authorize(
+				ctx,
+				actor,
+				eventID,
+				eventID,
+				access.ProfileExport,
+			); err != nil {
+				return wrap("authorize retained roster", err)
+			}
+			state, err := privacy.OperationalFieldsStateInTransaction(ctx, tx, e, s.now())
+			if err != nil {
+				return wrap("check operational retention", err)
+			}
+			out.SourceState = state
+			if state != "available" {
+				break
+			}
 			v, err := (attendance.Service{Pool: s.Pool, Now: s.Clock}).LogisticsInTransaction(
 				ctx,
 				tx,

@@ -149,3 +149,24 @@ func ResolveMeasureInTransaction(
 	}
 	return out, access.ErrNotFound
 }
+
+// ResolveDefinitionInTransaction reads the exact retained objective version
+// under the same current private-objective policy as measure resolution.
+func ResolveDefinitionInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	ref Reference,
+) (Definition, error) {
+	if ref.ID == uuid.Nil || ref.Version < 1 {
+		return Definition{}, access.ErrInvalid
+	}
+	if _, err := authorize(ctx, tx, actor, eventID, false); err != nil {
+		return Definition{}, err
+	}
+	v, err := load(ctx, dbgen.New(tx), eventID, ref)
+	if err != nil {
+		return Definition{}, err
+	}
+	return v.Definition, nil
+}

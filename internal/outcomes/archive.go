@@ -57,3 +57,38 @@ func (s Service) PublishedEventProjectsInTransaction(
 	}
 	return out, nil
 }
+
+// ArchiveReportingFacts counts retained readable records, not inferred business
+// value, participant performance, or a declaration that an adopted system works.
+type ArchiveReportingFacts struct {
+	ContinuedProjects         int64
+	DatedAdoptionObservations int64
+}
+
+func (s Service) ArchiveReportingFactsInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+) (ArchiveReportingFacts, error) {
+	q := dbgen.New(tx)
+	if err := (access.EventPolicy{Queries: q}).Authorize(
+		ctx,
+		actor,
+		eventID,
+		eventID,
+		access.StaffRead,
+	); err != nil {
+		return ArchiveReportingFacts{}, wrap("authorize archive reporting facts", err)
+	}
+	v, err := q.OutcomeArchiveReportingFacts(
+		ctx,
+		dbgen.OutcomeArchiveReportingFactsParams{EventID: eventID, ActorID: actor, AtTime: s.now()},
+	)
+	if err != nil {
+		return ArchiveReportingFacts{}, wrap("read retained outcome reporting facts", err)
+	}
+	return ArchiveReportingFacts{
+		ContinuedProjects:         v.ContinuedProjects,
+		DatedAdoptionObservations: v.DatedAdoptionObservations,
+	}, nil
+}

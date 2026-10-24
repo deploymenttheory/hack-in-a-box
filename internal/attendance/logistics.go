@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 )
 
 func (s Service) Logistics(
@@ -47,8 +48,16 @@ func (s Service) LogisticsInTransaction(ctx context.Context,
 	}
 	q := dbgen.New(tx)
 	err := func() error {
-		if _, err := lock(ctx, q, actor, eventID, access.ProfileExport); err != nil {
+		row, err := lock(ctx, q, actor, eventID, access.ProfileExport)
+		if err != nil {
 			return err
+		}
+		state, err := privacy.OperationalFieldsStateInTransaction(ctx, tx, row, s.now())
+		if err != nil {
+			return fmt.Errorf("check current logistics retention: %w", err)
+		}
+		if state != "available" {
+			return access.ErrNotFound
 		}
 		roster, err := q.AttendanceRoster(
 			ctx,

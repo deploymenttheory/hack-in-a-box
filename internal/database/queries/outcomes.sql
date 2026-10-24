@@ -112,7 +112,7 @@ SELECT * FROM outcome_review_heads WHERE event_id=$1 AND id>sqlc.arg(after_id) O
 SELECT outcome_review_sendable(sqlc.arg(event_id)::uuid,sqlc.arg(review_id)::uuid,sqlc.arg(version)::bigint,sqlc.arg(at_time)::timestamptz)::boolean AS allowed;
 
 -- name: OutcomeObservationsPage :many
-SELECT oe.* FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
+SELECT oe.*,oh.status AS current_follow_up_status FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
 WHERE oh.event_id=sqlc.arg(event_id)::uuid
 AND outcome_readable(oh.id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
 AND (oe.outcome_id,oe.id)>(sqlc.arg(after_outcome_id)::uuid,sqlc.arg(after_evidence_id)::uuid)
@@ -124,3 +124,12 @@ JOIN outcome_heads oh ON oh.id=ph.outcome_id
 WHERE oh.event_id=sqlc.arg(event_id)::uuid AND ph.outcome_id>sqlc.arg(after_id)
 AND outcome_project_readable(ph.outcome_id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
 ORDER BY ph.outcome_id LIMIT sqlc.arg(page_size);
+
+
+-- name: OutcomeArchiveReportingFacts :one
+SELECT
+ (SELECT count(*) FROM outcome_heads h WHERE h.event_id=sqlc.arg(event_id)::uuid AND h.status='in_progress' AND outcome_readable(h.id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)) AS continued_projects,
+ (SELECT count(*) FROM outcome_evidence e JOIN outcome_heads h ON h.id=e.outcome_id
+ WHERE h.event_id=sqlc.arg(event_id)::uuid AND outcome_readable(h.id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
+ AND e.document->>'basis'='demonstrated_adoption' AND e.document->>'observed_at' IS NOT NULL
+ AND length(trim(COALESCE(e.document->>'source','')))>0) AS dated_adoption_observations;

@@ -3555,6 +3555,8 @@ export interface components {
             /** Format: int64 */
             event_revision: number;
             /** @enum {string} */
+            source_state: "available" | "unavailable" | "retention_expired";
+            /** @enum {string} */
             source: "roster" | "deliverables" | "assessments" | "published-outcomes" | "feedback" | "objective-evidence";
             /** Format: uuid */
             resource_id?: string;
@@ -7586,6 +7588,8 @@ export interface components {
             message?: components["schemas"]["OutcomeReviewMessage"];
         };
         OutcomeObservation: {
+            /** @enum {string} */
+            current_follow_up_status: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
             /** Format: uuid */
             outcome_id: string;
             /** Format: int64 */
@@ -7594,6 +7598,7 @@ export interface components {
             /** Format: date-time */
             recorded_at: string;
             measures: {
+                objective_description: string;
                 reference: components["schemas"]["OutcomeMeasureReference"];
                 definition: components["schemas"]["ObjectiveMeasure"];
             }[];

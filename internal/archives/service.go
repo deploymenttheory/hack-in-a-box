@@ -56,7 +56,13 @@ func archived(
 	return e, nil
 }
 
-func (s Service) summary(ctx context.Context, q *dbgen.Queries, e dbgen.Event) (Summary, error) {
+func (s Service) summary(
+	ctx context.Context,
+	tx pgx.Tx,
+	q *dbgen.Queries,
+	e dbgen.Event,
+	actor uuid.UUID,
+) (Summary, error) {
 	out := Summary{
 		EventID:       e.ID,
 		EventName:     e.Name,
@@ -93,7 +99,25 @@ func (s Service) summary(ctx context.Context, q *dbgen.Queries, e dbgen.Event) (
 		out.Sources,
 		SourceAvailability{Source: "formal_submissions", State: state, Reason: reason},
 	)
+	facts, err := s.outcomesOwner().ArchiveReportingFactsInTransaction(ctx, tx, actor, e.ID)
+	if err != nil {
+		return out, wrap("read outcome record counts", err)
+	}
 	out.Metrics = []Metric{
+		{
+			Key:        "continued_projects",
+			Value:      facts.ContinuedProjects,
+			Unit:       "outcome_records",
+			Source:     "currently readable native outcome records with status=in_progress",
+			Definition: "Explicit current in-progress follow-up records, not code activity, completed entries, successful delivery or adoption.",
+		},
+		{
+			Key:        "evidenced_adoption_observations",
+			Value:      facts.DatedAdoptionObservations,
+			Unit:       "evidence_records",
+			Source:     "currently readable native demonstrated_adoption evidence with an observation date and source",
+			Definition: "Dated sourced evidence records, not unique adopted projects or a verified quantity. Read exact evidence, nullable value/denominator, measure version and current follow-up status separately; estimates and self-reports are excluded.",
+		},
 		{
 			Key:        "registrations",
 			Value:      c.RegistrationRecords,
@@ -180,6 +204,7 @@ func (s Service) summary(ctx context.Context, q *dbgen.Queries, e dbgen.Event) (
 
 func (s Service) view(
 	ctx context.Context,
+	tx pgx.Tx,
 	q *dbgen.Queries,
 	e dbgen.Event,
 	actor uuid.UUID,
@@ -201,7 +226,7 @@ func (s Service) view(
 	if err != nil {
 		return out, wrap("read summary", err)
 	}
-	value, err := s.summary(ctx, q, e)
+	value, err := s.summary(ctx, tx, q, e, actor)
 	if err != nil {
 		return out, wrap("read summary", err)
 	}
@@ -212,12 +237,12 @@ func (s Service) view(
 
 func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (View, error) {
 	var out View
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		e, err := archived(ctx, q, actor, eventID, access.EventRead)
 		if err != nil {
 			return wrap("read native source", err)
 		}
-		out, err = s.view(ctx, q, e, actor)
+		out, err = s.view(ctx, tx, q, e, actor)
 		return wrap("read native source", err)
 	})
 	return out, wrap("read", err)
@@ -228,7 +253,7 @@ func (s Service) List(ctx context.Context, actor, after uuid.UUID, limit int32) 
 	if limit < 1 || limit > 100 {
 		return out, access.ErrInvalid
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if err := active(ctx, q, actor); err != nil {
 			return wrap("read native source", err)
 		}
@@ -252,7 +277,7 @@ func (s Service) List(ctx context.Context, actor, after uuid.UUID, limit int32) 
 			if err != nil {
 				return wrap("read native source", err)
 			}
-			item, err := s.view(ctx, q, e, actor)
+			item, err := s.view(ctx, tx, q, e, actor)
 			if err != nil {
 				return wrap("read native source", err)
 			}
@@ -279,7 +304,7 @@ func (s Service) Reports(
 	if limit < 1 || limit > 100 {
 		return out, access.ErrInvalid
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if err := active(ctx, q, actor); err != nil {
 			return wrap("read native source", err)
 		}
@@ -303,7 +328,7 @@ func (s Service) Reports(
 			if err != nil {
 				return wrap("read native source", err)
 			}
-			item, err := s.summary(ctx, q, e)
+			item, err := s.summary(ctx, tx, q, e, actor)
 			if err != nil {
 				return wrap("read native source", err)
 			}
@@ -320,12 +345,12 @@ func (s Service) Reports(
 
 func (s Service) ExportSummary(ctx context.Context, actor, eventID uuid.UUID) (Summary, error) {
 	var out Summary
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		e, err := archived(ctx, q, actor, eventID, access.StaffRead)
 		if err != nil {
 			return wrap("read native source", err)
 		}
-		out, err = s.summary(ctx, q, e)
+		out, err = s.summary(ctx, tx, q, e, actor)
 		if err != nil {
 			return wrap("read native source", err)
 		}
