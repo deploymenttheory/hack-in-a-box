@@ -1,0 +1,43 @@
+.mc-console > .panel { margin-block: 20px; }
+.mc-console .mc-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.mc-console fieldset { margin: 20px 0; min-width: 0; }
+.cue-preview { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-card); min-width: 0; overflow-wrap: anywhere; }
+.cue-text { white-space: pre-wrap; }
+.cue-url { overflow-wrap: anywhere; font-size: .9rem; }
+.mc-countdown { font-size: clamp(2.5rem, 9vw, 4.5rem); font-variant-numeric: tabular-nums; margin: 18px 0; }
+.cue-list { padding-left: 24px; }
+.cue-list li { margin: 10px 0; overflow-wrap: anywhere; }
+.cue-list button { height: auto; min-height: 40px; white-space: normal; text-align: left; }
+.mc-console .actions { flex-wrap: wrap; }
+.mc-console input, .mc-console textarea { max-width: 100%; }
+@media (max-width: 650px) { .mc-console .mc-previews { grid-template-columns: 1fr; } }
+.display-pairing { max-width: 42rem; margin: 10vh auto; padding: 2rem; }
+.display-pairing form { display: grid; gap: 1rem; }
+.room-display { min-height: 100dvh; background: var(--room-background); color: var(--room-foreground); padding: 2.5vw 4vw; display: flex; flex-direction: column; gap: 1.5vh; }
+.room-display header { display: flex; align-items: center; gap: 2vw; min-height: 7vh; position: relative; }
+.room-event { font-size: clamp(1.4rem, 2.5vw, 3rem); font-weight: 700; flex: 1; }
+.room-logo { max-width: 18vw; max-height: 9vh; object-fit: contain; }
+.room-hero { position: absolute; right: 0; top: 0; width: 14vw; height: 7vh; object-fit: cover; opacity: .15; pointer-events: none; }
+.room-controls { display: flex; gap: .5rem; position: relative; z-index: 1; }
+.room-live-status { font-size: clamp(1rem, 1.35vw, 1.5rem); border-block: 1px solid currentColor; padding: .6vh 0; }
+.room-current { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 30%); gap: 4vw; align-items: start; flex: 1; }
+.room-kicker { text-transform: uppercase; letter-spacing: .12em; font-weight: 700; font-size: clamp(1.2rem, 2vw, 2.5rem); color: var(--room-primary); }
+.room-copy h1 { font-size: clamp(2.5rem, 5vw, 6rem); line-height: 1.08; margin: 1vh 0 2vh; overflow-wrap: anywhere; }
+.room-instructions { font-size: clamp(1.5rem, 2.5vw, 3.2rem); line-height: 1.3; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 36vh; overflow-y: auto; }
+.room-content { font-size: clamp(1.2rem, 1.8vw, 2.5rem); font-weight: 700; margin-top: 1vh; }
+.room-current aside { text-align: center; }
+.room-countdown { font-size: clamp(3rem, 6vw, 7rem); font-variant-numeric: tabular-nums; font-weight: 800; line-height: 1; }
+.room-current aside > p { font-size: clamp(1.2rem, 1.8vw, 2rem); margin: 1vh 0; }
+.room-qr { display: grid; justify-items: center; gap: 1vh; }
+.room-qr svg { width: min(22vw, 34vh); height: auto; background: white; }
+.room-qr a { max-width: 100%; color: var(--room-primary); font-size: clamp(1.2rem, 1.7vw, 2rem); font-weight: 700; overflow-wrap: anywhere; }
+.room-display footer { display: flex; gap: 2vw; border-top: 2px solid currentColor; padding: 1vh 0 0; color: var(--room-foreground); font-size: clamp(1.4rem, 2.3vw, 2.8rem); }
+@media (max-width: 700px) { .room-display { padding: 1rem; } .room-controls { flex-direction: column; } .room-current { grid-template-columns: 1fr; } .room-instructions { max-height: none; } .room-qr svg { width: min(60vw, 20rem); } .room-logo { max-width: 25vw; } }
+@media print { .room-display { display: none !important; } }
+/* UI-11: flat cue workspace; room canvas keeps distance typography. */
+.fleet-cue-preview { min-width: 0; overflow-wrap: anywhere; padding-block: var(--space-4); border-top: 1px solid var(--border); }
+.fleet-cue-preview h3 { font-size: 1.25rem; margin-block: var(--space-2); }
+.mc-rehearsal .cue-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.mc-rehearsal .cue-list li { margin: 0; }
+.mc-rehearsal fieldset { display: grid; gap: var(--space-4); border: 0; padding: 0; }
+.room-call-to-action { font-size: clamp(1rem, 1.5vw, 1.5rem); margin: 0; }

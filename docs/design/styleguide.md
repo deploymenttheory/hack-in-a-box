@@ -198,3 +198,17 @@ retain their captured payload and original command metadata when print media
 changes. Printing never dismisses, confirms, cancels or retries a native command.
 The interactive production survey examples demonstrate print → screen while open
 and pending, preserving focus/dismissal and explicit owner callback behavior.
+
+## MC and independent room presentation
+
+The presentation example imports production `CuePreview` and `RoomCanvas` with a
+synthetic complete projection and fixed server clock. Use private cues only in the
+MC preview. The public canvas receives the allowlisted current/next projection,
+clock, connection state and already-authorised asset slot; it never loads an
+account or credential. A held timer stays fixed, zero never advances a cue and
+reconnection labels retained state as last-known. Keep the QR and visible canonical
+HTTPS destination identical, distance-readable type, explicit keyboard actions and
+print exclusion. The interactive snippet shows the production boundary. Do not
+substitute contact metadata for confirmed rendering or a current read for an
+original command acknowledgement. MC decision/unknown lifecycle examples are being
+completed in UI-11 before the draft is ready.

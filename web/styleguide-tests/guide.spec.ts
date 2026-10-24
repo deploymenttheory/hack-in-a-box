@@ -432,3 +432,18 @@ for (const kind of ['response', 'authoring', 'report'] as const) test(`productio
   expect(await frame.locator('html').evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await example.screenshot({ path: info.outputPath(`survey-${kind}-guide.png`) })
 })
+
+test('MC and room pure presentation retain last-known state without loading private authority', async ({ page }) => {
+  const frame = await examples(page, 'Task patterns')
+  const section = frame.getByRole('region', {name:'MC and room presentation examples'})
+  await expect(section.getByRole('heading',{name:'Synthetic build session',exact:true})).toHaveCount(2)
+  await expect(section.locator('.room-countdown')).toHaveText('02:00')
+  await expect(section.locator('.room-qr a')).toHaveAttribute('href','https://example.org/hack')
+  await expect(section.locator('.room-qr svg')).toBeVisible()
+  await section.getByRole('button',{name:'Toggle synthetic connection loss'}).click()
+  await expect(section.getByRole('status')).toContainText('showing last-known room state')
+  await expect(section.locator('.room-countdown')).toHaveText('02:00')
+  await section.getByRole('button',{name:'Disconnect',exact:true}).click()
+  await expect(section.locator('.room-display')).toHaveCount(0)
+  await expect(section.getByRole('status')).toHaveText('Synthetic display disconnected; its projection is removed.')
+})
