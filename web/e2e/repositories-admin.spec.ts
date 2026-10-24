@@ -4,7 +4,7 @@ import { openEventSection } from './event-navigation-fixture'
 import { repositoryFixture, repositoryTeam, uncertainTeam } from './repository-fixtures'
 async function open(page: Page) { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Repositories'); await expect(page.getByRole('heading', { name: 'Repositories', exact: true })).toBeVisible() }
 async function inspect(page: Page, index = 0) { await page.getByRole('button', { name: 'Inspect repository', exact: true }).nth(index).click(); return page.getByRole('region', { name: index === 0 ? 'synthetic-org/synthetic-repository' : index === 1 ? 'synthetic-org/uncertain-repository' : 'synthetic-org/disbanded-repository', exact: true }) }
-async function reviewMembership(page: Page, reason = 'Explicit synthetic membership review') { await page.getByLabel('Reason for repository access change', { exact: true }).fill(reason); await page.getByRole('button', { name: 'Review current membership reconciliation', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Review repository access change', exact: true })).toBeFocused() }
+async function reviewMembership(page: Page, reason = 'Explicit synthetic membership review') { await page.getByLabel('Reason for repository access change', { exact: true }).fill(reason); await page.getByRole('button', { name: 'Review current membership reconciliation', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Review repository access change', exact: true })).toBeFocused(); const review = page.getByRole('region', { name: 'Review repository access change', exact: true }); await expect(review).toContainText('North Star Hack · Synthetic team · synthetic-org/synthetic-repository'); await expect(review).toContainText(repositoryTeam); await expect(review).toContainText('123456') }
 
 test('exact reconciliation and approval review retains people and permissions, corrective focus and queued-versus-provider receipt distinction', async ({ page }) => {
   const state = await repositoryFixture(page); await open(page); const panel = await inspect(page)
@@ -124,4 +124,15 @@ test('known configuration change suppresses a held old installation URL while re
 test('acknowledging the installation clears only its own leave barrier and preserves another owner’s unsent draft warning', async ({ page }) => {
   const state = await repositoryFixture(page); await page.route('https://github.com/**', route => route.fulfill({ contentType: 'text/plain', body: 'Synthetic provider only' })); await open(page); await inspect(page); await page.getByLabel('Reason for repository access change', { exact: true }).fill('PRIVATE-OTHER-OWNER-DRAFT'); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByRole('button', { name: 'Review organisation installation', exact: true }).click()
   let settled!: (kind: string) => void; const prompt = new Promise<string>(resolve => { settled = resolve }); page.once('dialog', async dialog => { const kind = dialog.type(); await dialog.dismiss(); settled(kind) }); await page.getByRole('button', { name: 'Continue to GitHub installation', exact: true }).click(); expect(await prompt).toBe('beforeunload'); await expect(page).toHaveURL(`/events/${firstID}`); await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveValue('PRIVATE-OTHER-OWNER-DRAFT'); expect(state.writes).toHaveLength(1)
+})
+
+test('prepared access labels stay with the captured original identity when current authorized labels change', async ({ page }) => {
+  const state = await repositoryFixture(page); await open(page); await inspect(page); await reviewMembership(page)
+  state.event.name = 'Renamed current event'; state.teamNames[0] = 'Renamed current team'; state.rows[0].organization = 'renamed-org'; state.rows[0].name = 'renamed-repository'
+  await page.getByRole('button', { name: 'Refresh current repository facts', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'renamed-org/renamed-repository', exact: true })).toBeVisible()
+  const review = page.getByRole('region', { name: 'Review repository access change', exact: true })
+  await expect(review).toContainText('North Star Hack · Synthetic team · synthetic-org/synthetic-repository')
+  await expect(review).not.toContainText('Renamed current'); await expect(review).not.toContainText('renamed-org/renamed-repository')
+  await expect(review).toContainText(repositoryTeam); await expect(review).toContainText('123456'); expect(state.writes).toHaveLength(0)
 })

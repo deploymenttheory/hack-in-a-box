@@ -1,23 +1,27 @@
 # Repository readiness administration: native ownership and verification
 
-Issue #94. Initial implementation checkpoint, based on main
-`bc350d8c3145e8cb1787a840568a8f7b42cf349f`. This draft is incomplete and does not
-claim acceptance, provider setup or the separately open live sandbox work #91.
+Issue #94. Repository administration and own-team readiness are implemented on
+merged MC main `18b23f4e3201f9ab0d10ef3875628585f0ffd74f`. The draft retains
+Refs #94 until final frozen reviews and all actual CI complete. Live GitHub App
+sandbox verification #91 is separate and remains open; this work uses synthetic
+providers only.
 
 ## Complete native surface inventory
 
-| Surface | Owning contract and constraints | UI checkpoint / remaining work |
+| Surface | Native contract and constraints | Final owner |
 | --- | --- | --- |
-| Repository collection | GET `/events/{event_id}/repositories`, generated `TeamRepository[]`; native `internal/repositories/service.go List` returns staff array or only current active member's published team after challenge publication. No pagination, search or total contract. | Actual Fleet collection in both portals; no inferred URLs/ownership. Current mapping count only. |
-| Selected repository | Mapping identifies event/team/organisation/name/numeric provider ID; `unused` derives disbanded state. | Actual responsive Inspector; selected row uses current collection; own fresh read gate on every mount. Return to initiating control. |
-| App organisation/template | GET and POST `/github-app`, generated `GitHubAppStatus`/`GitHubAppCommand`; StaffRead metadata, EventEdit revision-guarded configure/rotate/disconnect. Only private local editor may contain private_key/webhook_secret. No safe GET exposes them. | Remaining: current diagnostics, configuration forms, reviewed intent, secret erasure and unknown barrier. |
-| Installation | POST `/github-app/authorize`; existing native URL uses session/event/organiser-bound single-use state. Configuration/linking is separate from participant OAuth. | Remaining: explicit installation review and safe native redirect. No real installation during tests. |
-| Provisioning | POST `/repositories` action queue has NO team_id; queues all actual published teams idempotently, retains successes and provenance. Omitted team IDs cannot become selected retries. | Remaining: explicit event-wide initial queue review showing exact visible published teams; no fake selected retry. |
-| Unknown repository create | POST `/repositories` action reconcile REQUIRES selected team_id; `Recover` is lookup-only under current organiser/revision authority, missing result never grants another create. | Remaining: selected uncertain/failed repository recovery, original unknown command retained separately from current mapping reads. |
-| Access planning | GET `/repositories/{team_id}/access` returns plan/grants/execution/can_manage/grants_open/flags/observed_at. StaffRead only; numeric ready repository required. | First current readonly inspector projection; remaining complete exact action/member/flags/diagnostic composition. |
-| Access change | POST access `review`, `approve`, `refresh`; EventEdit/CSRF/IfMatch. review uses original plan_id+reason; repeat returns exact retained review receipt. approve binds current plan ID/version/fingerprint+reason; worker rechecks current identity/membership. `RepositoryAccessResult.receipt` is distinct from current. | Remaining: deliberate prepared/reviewed exact operations, original receipt checks/unknown barrier/exact retry only proven safe; no GET-as-receipt. |
-| Own invitations | GET `/repositories/{team_id}/invitations`, generated OwnRepositoryInvitations, current person's verified GitHub ID/link revision and private grants. | Remaining: participant own invitation/readiness inspector; never staff people/grants cache. |
-| Session lifetime | Existing authenticated CommunicationSafety root stores whitelisted metadata only. PrivateRequestScope fences late callbacks. | Remaining: original pending/unknown metadata above selected detail/tab/current-authority lifetimes; no raw reason/people/key/webhook/config command in shared state or storage. |
+| Repository collection | GET `/events/{event_id}/repositories` returns a complete authorized array, without cursor/search/total. Staff sees current mapped teams; regular UI additionally proves published own membership and native own-invitation authority. | `repository-workspace.tsx`: named Fleet collection, readiness, diagnostics, unused state, current mapping count and responsive selected inspector. |
+| Selected repository | Current event/team/organisation/name/numeric repository binding. No inferred grant, acceptance, publication or score. | Fresh private inspector, visible current-read action, confirmed native GitHub link; keyboard return to actual opener. Current denial clears selection before partial restoration. |
+| Organisation/template | GET/POST `/github-app`, `GitHubAppStatus`/`GitHubAppCommand`; current StaffRead, guarded EventEdit/CSRF/IfMatch. Native rotate re-encrypts the stored key, without a new private key or GitHub key rotation. | `repository-setup.tsx`: current permission/provider diagnostics; configure/re-encrypt/disconnect review. PEM/webhook remain local and never enter review summaries, history or storage. |
+| Installation | POST `/github-app/installation-authorizations` returns native actor/session/event/revision-bound single-use GitHub URL. Does not bump event revision. | Review actual saved App/organisation, validate exact GitHub App destination; acknowledge only own draft before intentional navigation. Parent/config/session loss fences held redirects. |
+| Initial provisioning | POST `/repositories` queue is event-wide, has no team_id and retains successes/provenance idempotently. | `repository-provision.tsx`: explicit published-team initial batch, exact template/org/team review and acknowledgment separate from provider completion. |
+| Unknown create | POST reconcile requires selected team_id; recovery is lookup-only. Missing never authorizes another create. | Deliberate selected uncertain mapping review; no fake selected queue/retry, no automatic resend. |
+| Access planning/change | GET access current plan/grants/execution/authority; POST review/approve/refresh retain original IDs/version/reason/revision. Approved action is not delivered/accepted access. | `repository-access.tsx`: exact members/actions/coverage/flags/numeric repo, current observation, immutable reviewed intent, actual response matching and retained original tuple retry only. |
+| Original receipt recovery | Authorized read-only historical receipt GET by plan/action, current organizer, immutable event/team/numeric repo and original actor. Absence proves nothing. | Native `receipt.go`, HTTP/OpenAPI/client and shared deterministic command fingerprint; current GET flags never settle original unknown. Writes-disabled current organizers retain read-only original recovery. |
+| Own invitations | Native current person’s verified GitHub ID/link revision and own grants only. | `repository-invitations.tsx`: pending/accepted/ambiguous effects, earlier identity warning and account verification link. No fake accept/invite/transfer command. |
+| Private ownership | Per-opening fresh native reads and inherited cancellation; no cache-as-authority. | `repository-read.ts`, local command/config fences; synchronous parent denial invalidates child continuations before teardown. Transient failures keep local unsent fields and pause commands. |
+| Original command safety | Authenticated actor/session/event/resource safe metadata above private owners. | `repository-command.tsx` plus whitelisted opaque intentFingerprint only. No raw key/webhook/reason/body/people in shared state, logs or storage. Actual original receipt only; no revised IfMatch recovery. |
+| Published guidance | Actual production Review/Plan controls, no API/auth/provider traffic in guide. | `styleguide/repositories.tsx`, usage snippet and accessibility documentation; synthetic pending/unknown/stale/correction/focus examples. |
 
 ## Domain constraints
 
@@ -35,22 +39,18 @@ restoring a parent alone cannot reuse an old access projection. No report/export
 capability is invented. No private keys or installation tokens are previewed,
 reported, cached globally or persisted in the browser.
 
-## Remaining before completion
+## Final verification gate
 
-All command/configuration/installation/own-invitation work above; actual independent
-production guide examples, copyable usage/accessibility/unknown-recovery guidance;
-meaningful both-portal desktop/mobile keyboard, freeze/disbanded, exact original
-receipt/unknown, partial provisioning, identity/permission/provider distinction,
-current denial/partial restoration/held reads and late writes. Capture matched
-synthetic before/after evidence. Run lint, units, both production builds, focused
-native integrations and complete final CI, followed by independent frozen review.
-No real provider effects or real credentials are used in verification.
+Owner acceptance is complete at runtime source
+`bea455107aab4b90f915b349cdc9105942c3e817`; evidence and tests are included in the
+final candidate. Historical checkpoint sections below remain attributed to their
+executed source. The remaining merge gates are frozen independent Standards/Spec
+reviews and all actual final-head CI; live provider sandbox #91 stays separate.
 
-Native PostgreSQL/race coverage already exists in
-`internal/repositories/service_test.go TestDurableProvisioningPostgres`,
-`internal/repositoryaccess/service_test.go TestReviewedRepositoryAccessRealPostgres`
-and `internal/httpapi/repositoryaccess_test.go` current-authority/privacy/exact-review
-journeys. Those are contracts to retain, not unexecuted proof for this draft.
+Native PostgreSQL/race contracts remain in `internal/repositories/service_test.go`,
+`internal/repositoryaccess/{service,receipt}_test.go` and
+`internal/httpapi/repositoryaccess_test.go`. They preserve external-effect
+boundaries, current authority and exact immutable historical receipts.
 
 ## Executed first checkpoint proof
 
@@ -196,3 +196,49 @@ native receipt assertions (including readonly access/digest), actual before/afte
 visuals and documentation; obtain exact-head checks and paired independent review.
 All owned processes at this scheduling checkpoint are terminal. No claim of
 readiness, completed issue acceptance or merge is made.
+
+## Final owner acceptance
+
+- Runtime source `871fed83aeffa3a226cd227bf1191db411377405`: full lint and both
+  portal production builds PASS (`/private/tmp/hackbox94-final-{lint,build}.log`).
+  Exact regular denial/held-read/partial-restoration proof **2/2 PASS**
+  (`/private/tmp/hackbox94-final-restoration.log`). Complete scoped administrator
+  journeys **38 PASS / 6 regular-only skips**, regular journeys **10/10 PASS**
+  (`/private/tmp/hackbox94-final-{admin,public}.log`). No assertions, native
+  original tuples, unknown barriers or provider/acceptance distinctions weakened.
+- Runtime source `bea455107aab4b90f915b349cdc9105942c3e817`: bounded review labels
+  are copied from current authorized event/team/repository context into the
+  private original review snapshot before asynchronous hashing. Readable labels
+  lead, immutable IDs/revision remain supporting evidence. Native body/hash and
+  global safe metadata are unchanged. Targeted lint and both builds PASS
+  (`/private/tmp/hackbox94-label-{lint,build}.log`). Final added proof lint/types
+  PASS; **10/10** desktop/mobile focused journeys PASS, including original labels
+  surviving current rename, exact approval/correction focus, unknown original
+  receipts, capability loss and held outdated installation suppression
+  (`/private/tmp/hackbox94-label-{proof-lint,proof-types,browser}.log`).
+- Actual published `75137fe` native Go CI completed SUCCESS, run40141029157,
+  job121012621092. This includes the real PostgreSQL/race and HTTP immutable
+  original-receipt/current-actor/current-role/no-effects proofs. Native code has
+  not changed afterward. Actual `871fed8` quality CI (full lint + units), full
+  independent styleguide, image, Go lint and patterns completed SUCCESS.
+  These executed checkpoints do not replace required final-head CI.
+- The unrelated existing mobile campaign CI failure at `75137fe` was inspected
+  from actual artifact12578374453, run40141029178. Save intentionally opens
+  Review & TEST; adding a manual test navigation would mask that contract.
+  The unchanged exact case passed **1/1 + 10/10** locally, logs
+  `/private/tmp/hackbox94-campaign-{exact-red,repeat}.log` (the first log's filename
+  does not imply failure). No campaign code, assertion, timeout or retry changed.
+  Any recurrence must be diagnosed from its new actual artifact.
+- Sixteen real synthetic before/after PNGs were captured and inspected, with
+  zero domain POST and no real providers. The baseline had no repository page;
+  its adjacent task context is explicitly labeled. Source identity, methods,
+  terminal capture results and artifact hashes are in
+  [visual-evidence.md](visual-evidence.md). The independently published guide
+  imports actual production review/plan controls with usage/accessibility notes.
+
+No repository action changes allocation, reopens freeze, accepts an entry or
+scores a repository. Queued, accepted, pending, delivered and ambiguous effects
+remain distinct from original command acknowledgement. No App key, webhook,
+raw private reason, people projection or exact command body enters shared safe
+history or browser persistence. Live App installation/provisioning #91 was not
+performed or claimed complete.
