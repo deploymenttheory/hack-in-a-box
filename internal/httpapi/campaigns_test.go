@@ -21,6 +21,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
+	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -36,6 +37,18 @@ func (campaignHTTPProvider) Readiness(
 		ConfigRevision:    "synthetic-v1",
 		SelfTestAvailable: true,
 	}, nil
+}
+
+func (campaignHTTPProvider) ProjectSelfTest(
+	ctx context.Context,
+	q *dbgen.Queries,
+	message communications.TestMessage,
+) (communications.TestPresentation, error) {
+	return (smtpintegration.Service{Origin: "https://hack.example.test"}).ProjectSelfTest(
+		ctx,
+		q,
+		message,
+	)
 }
 
 func TestCampaignHTTPContractsCurrentAuthorityAndOrganiserOnlyTestIntent(t *testing.T) {
@@ -203,8 +216,13 @@ func TestCampaignHTTPContractsCurrentAuthorityAndOrganiserOnlyTestIntent(t *test
 		attempt.Definition = &invalid
 		before := revision()
 		response := request(owner, "POST", path, attempt, before, true)
-		if response.Code != 409 || !strings.Contains(response.Body.String(), "campaign_timing_invalid") {
-			t.Fatalf("DST timing must be a reviewed validation failure: %d %s", response.Code, response.Body)
+		if response.Code != 409 ||
+			!strings.Contains(response.Body.String(), "campaign_timing_invalid") {
+			t.Fatalf(
+				"DST timing must be a reviewed validation failure: %d %s",
+				response.Code,
+				response.Body,
+			)
 		}
 		if revision() != before {
 			t.Fatal("rejected DST timing changed event revision")
@@ -220,6 +238,67 @@ func TestCampaignHTTPContractsCurrentAuthorityAndOrganiserOnlyTestIntent(t *test
 	var detail communications.CampaignDetail
 	if err = json.Unmarshal(w.Body.Bytes(), &detail); err != nil {
 		t.Fatal(err)
+	}
+	// The exact requesting-organiser review is a no-store read with no intent,
+	// recipient/address input or event revision mutation.
+	if _, err = pool.Exec(
+		ctx,
+		"INSERT INTO person_email_contacts(person_id,mailbox,provenance) VALUES($1,'http-review@synthetic.invalid','code_confirmed')",
+		owner.ID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	reviewPath := path + "/self-test-preview?channel=smtp"
+	reviewedRevision := revision()
+	for _, viewer := range []dbgen.Person{{}, outsider, competitor} {
+		want := http.StatusForbidden
+		if viewer.ID == uuid.Nil {
+			want = http.StatusUnauthorized
+		}
+		if response := request(viewer, "GET", reviewPath, nil, 0, false); response.Code != want {
+			t.Fatalf("self TEST preview authority: %d %s", response.Code, response.Body)
+		}
+	}
+	reviewResponse := request(owner, "GET", reviewPath, nil, 0, false)
+	if reviewResponse.Code != http.StatusOK ||
+		!strings.Contains(reviewResponse.Header().Get("Cache-Control"), "no-store") {
+		t.Fatalf("self TEST preview read: %d %s", reviewResponse.Code, reviewResponse.Body)
+	}
+	var ownReview communications.SelfTestPreview
+	if err = json.Unmarshal(reviewResponse.Body.Bytes(), &ownReview); err != nil {
+		t.Fatal(err)
+	}
+	if ownReview.ActorID != owner.ID ||
+		ownReview.CampaignVersion != detail.Campaign.Campaign.Version ||
+		!strings.HasPrefix(ownReview.Subject, "[TEST] ") ||
+		strings.Contains(reviewResponse.Body.String(), "http-review@") ||
+		revision() != reviewedRevision {
+		t.Fatal("preview changed state or exposed another target/mailbox")
+	}
+	if response := request(
+		owner,
+		"GET",
+		path+"/self-test-preview?channel=teams",
+		nil,
+		0,
+		false,
+	); response.Code != http.StatusBadRequest {
+		t.Fatalf("broadcast-only preview accepted: %d", response.Code)
+	}
+	if response := request(
+		owner,
+		"POST",
+		path,
+		map[string]any{
+			"action":                    "preview",
+			"version":                   detail.Campaign.Campaign.Version,
+			"reason":                    "Synthetic invalid review binding",
+			"reviewed_test_fingerprint": strings.Repeat("a", 64),
+		},
+		revision(),
+		true,
+	); response.Code != http.StatusBadRequest {
+		t.Fatalf("review binding on non-test: %d", response.Code)
 	}
 	stale := detail.Revision - 1
 	w = request(

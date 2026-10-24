@@ -195,7 +195,7 @@ test('unknown invitation operation reconciles durable binding without automatic 
  const f=await surveyFixture(page,true);f.state.dropAutomation=1;await page.goto(managePath);await page.getByRole('button',{name:'Invitations',exact:true}).click()
  await page.getByLabel('Approved invitation campaign and exact version').selectOption(f.campaign.campaign.definition.id);await page.getByLabel('Reason for this invitation decision').fill('Explicit invitation review')
  await page.getByRole('button',{name:'Save exact survey invitation binding'}).click();await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('outcome is unknown')
- await page.getByRole('button',{name:'Check exact invitation operation'}).click();await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('No second operation was sent')
+ await page.getByRole('button',{name:'Read current invitation facts'}).click();await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('original outcome remains unknown')
  expect(f.automationWrites).toHaveLength(1);expect(f.automation.bindings).toHaveLength(1);expect(f.automation.bindings[0].approved_at).toBeNull()
 })
 
@@ -257,6 +257,6 @@ test('a confirmed invitation operation stays confirmed when its later refresh fa
  await page.route('**/communications/automation',async route=>route.request().method()==='GET'&&f.automationWrites.length?route.fulfill({status:503,json:{error:{code:'unavailable',message:'Temporary native read failure.',request_id:'synthetic'}}}):route.fallback())
  await page.goto(managePath);await page.getByRole('button',{name:'Invitations',exact:true}).click();await page.getByLabel('Approved invitation campaign and exact version').selectOption(f.campaign.campaign.definition.id)
  await page.getByLabel('Reason for this invitation decision').fill('Reviewed native invitation');await page.getByRole('button',{name:'Save exact survey invitation binding'}).click()
- await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('operation save recorded');await expect(page.getByRole('button',{name:'Check exact invitation operation'})).toHaveCount(0)
+ await expect(page.getByRole('status',{name:'Survey invitation status'})).toContainText('operation save recorded');await expect(page.getByRole('button',{name:'Read current invitation facts'})).toHaveCount(0)
  expect(f.automationWrites).toHaveLength(1);expect(f.automation.bindings).toHaveLength(1)
 })

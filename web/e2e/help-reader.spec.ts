@@ -7,7 +7,8 @@ async function setup(page: Page) {
   await mockWorkspace(page)
   let denied = false
   const writes: string[] = []
-  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
+  const session: components['schemas']['Session'] = { person: { ...person, platform_admin: false }, draft_scope: '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false }
+  await page.route('**/api/v1/session', route => route.fulfill({ json: session }))
   const data: components['schemas']['HelpPage'] = {
     event_name: 'North Star Hack', timezone: 'Europe/London', assignee_name: 'Current helper', transfer_targets: [],
     request: { id: requestID, event_id: firstID, team_id: '29bd53a6-91a9-4328-9eec-e17bfc14d29f', requester_id: person.id, revision: 2, category: 'competition_output', description: 'SYNTHETIC-PRIVATE-PROBLEM\n<script>window.untrustedHelp=true</script>\n' + 'unbroken-context-'.repeat(70), location: 'Synthetic help desk', meeting_url: 'https://meet.example.test/approved-room', status: 'claimed', assignee_id: helperID, waiting_cycle: 1, requested_at: '2027-06-20T09:00:00Z', waiting_since: '2027-06-20T09:00:00Z', first_claimed_at: '2027-06-20T09:02:00Z', claimed_at: '2027-06-20T09:02:00Z', resolved_at: null, updated_at: '2027-06-20T09:02:00Z' },
@@ -63,7 +64,7 @@ test('safe inbox update opens the actual help resource without copying private q
   await page.route('**/api/v1/inbox**', route => route.fulfill({ json: new URL(route.request().url()).pathname.endsWith('/inbox') ? { items: [item], next_cursor: null, unread: 1 } : { item, subject: 'Help-request update', body: '', format: 'text', destination: { kind: 'help', resource_id: requestID } } }))
   await page.goto('/inbox')
   await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Help-request update Unread' }).click()
+  await page.getByRole('button', { name: 'Open Help-request update', exact: true }).click()
   await expect(page.getByText('SYNTHETIC-PRIVATE-PROBLEM', { exact: false })).toHaveCount(0)
   await page.getByRole('link', { name: 'Open help request', exact: true }).click()
   await expect(page).toHaveURL(`/events/${firstID}/help/${requestID}`)

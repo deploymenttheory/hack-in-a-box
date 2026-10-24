@@ -14,7 +14,7 @@ async function prepare(page: Page) {
   return { revoke: () => { allowed = false }, close: () => { open = false } }
 }
 test('approved invitation opens own private reader by keyboard', async ({ page }) => {
-  await prepare(page); await page.goto('/inbox'); await page.getByRole('button', { name: 'Event announcement Unread' }).click()
+  await prepare(page); await page.goto('/inbox'); await page.getByRole('button', { name: 'Open Event announcement', exact: true }).click()
   await expect(page.getByText('Approved invitation body remains unchanged.')).toBeVisible()
   const link = page.getByRole('link', { name: 'Open your survey' }); await link.focus(); await page.keyboard.press('Enter')
   await expect(page).toHaveURL(path); await expect(page.getByRole('heading', { name: 'Learning after the hack' })).toBeVisible()

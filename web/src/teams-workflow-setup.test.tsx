@@ -1,3 +1,4 @@
+import { CommunicationSafety } from './communication-tests'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -13,7 +14,7 @@ afterEach(() => vi.restoreAllMocks())
 function mount(data = safe) {
   vi.spyOn(api, 'GET').mockResolvedValue(success(data) as never)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } }), changed = vi.fn()
-  const view = render(<Theme><QueryClientProvider client={client}><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></QueryClientProvider></Theme>)
+  const view = render(<Theme><QueryClientProvider client={client}><CommunicationSafety><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></CommunicationSafety></QueryClientProvider></Theme>)
   return { client, changed, ...view }
 }
 test('write-only endpoint clears before a pending save and never enters shared caches or storage', async () => {
@@ -53,13 +54,24 @@ test('unavailable encryption disables endpoint writes and test dispatch', async 
   expect(screen.getByRole('button', { name: 'Queue shared-channel TEST' })).toBeDisabled()
   expect(screen.getByRole('alert')).toHaveTextContent('encryption is unavailable')
 })
-test('session expiry clears the unsaved endpoint and a failed save does not echo raw provider errors', async () => {
+test('session expiry removes the editor and forbids later secret writes', async () => {
+  const post = vi.spyOn(api, 'POST').mockRejectedValue(new Error('sig=SECRET-PROVIDER-ERROR'))
+  const { client } = mount(); const input = await screen.findByLabelText('New secret workflow endpoint')
+  fireEvent.change(input, { target: { value: 'SECRET-UNSAVED' } })
+  fireEvent(window, new Event('session-expired'))
+  await waitFor(() => expect(screen.queryByLabelText('New secret workflow endpoint')).not.toBeInTheDocument())
+  expect(screen.getByRole('alert')).toHaveTextContent('Private connection edits have been cleared')
+  expect(post).not.toHaveBeenCalled()
+  expect(document.body).not.toHaveTextContent('SECRET-UNSAVED')
+  expect(JSON.stringify(client.getQueryCache().getAll().map(query => query.state.data))).not.toContain('SECRET-UNSAVED')
+})
+test('failed secret save clears its input and never echoes raw provider errors', async () => {
   vi.spyOn(api, 'POST').mockRejectedValue(new Error('sig=SECRET-PROVIDER-ERROR'))
   mount(); const input = await screen.findByLabelText('New secret workflow endpoint')
   fireEvent.change(input, { target: { value: 'SECRET-UNSAVED' } })
-  fireEvent(window, new Event('session-expired')); expect(input).toHaveValue('')
-  fireEvent.change(input, { target: { value: 'SECRET-UNSAVED' } })
   fireEvent.click(screen.getByRole('button', { name: 'Save Teams connection' }))
-  await screen.findByRole('alert'); expect(input).toHaveValue('')
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Teams connection' })).toBeDisabled())
+  expect(input).toHaveValue('')
   expect(document.body).not.toHaveTextContent('SECRET-PROVIDER-ERROR')
+  expect(document.body).toHaveTextContent('Outcome unknown')
 })

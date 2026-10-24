@@ -185,6 +185,22 @@ func (q *Queries) LockMailPerson(ctx context.Context, id uuid.UUID) (LockMailPer
 	return i, err
 }
 
+const lockPersonEmailContact = `-- name: LockPersonEmailContact :one
+SELECT person_id, mailbox, provenance, verified_at FROM person_email_contacts WHERE person_id=$1 FOR UPDATE
+`
+
+func (q *Queries) LockPersonEmailContact(ctx context.Context, personID uuid.UUID) (PersonEmailContact, error) {
+	row := q.db.QueryRow(ctx, lockPersonEmailContact, personID)
+	var i PersonEmailContact
+	err := row.Scan(
+		&i.PersonID,
+		&i.Mailbox,
+		&i.Provenance,
+		&i.VerifiedAt,
+	)
+	return i, err
+}
+
 const personEmailContact = `-- name: PersonEmailContact :one
 SELECT person_id, mailbox, provenance, verified_at FROM person_email_contacts WHERE person_id=$1
 `

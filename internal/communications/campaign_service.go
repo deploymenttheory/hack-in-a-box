@@ -175,7 +175,8 @@ func (s Service) ChangeCampaign(
 			input.Action,
 		) ||
 		(input.Action == "save") != (input.Definition != nil) ||
-		(input.Action == "test_self") != (input.Channel != "") {
+		(input.Action == "test_self") != (input.Channel != "") ||
+		(input.ReviewedTestFingerprint != "" && (input.Action != "test_self" || !validReviewFingerprint(input.ReviewedTestFingerprint))) {
 		return result, access.ErrInvalid
 	}
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {

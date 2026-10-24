@@ -28,7 +28,7 @@ async function prepare(page: Page) {
 test('safe native inbox reference opens canonical answer and explicit published history', async ({ page }) => {
   await prepare(page)
   await page.goto('/inbox')
-  await page.getByRole('button', { name: 'Reviewed common clarification Unread' }).click()
+  await page.getByRole('button', { name: 'Open Reviewed common clarification', exact: true }).click()
   const link = page.getByRole('link', { name: 'Open reviewed common answer' })
   await link.focus(); await page.keyboard.press('Enter')
   await expect(page).toHaveURL(answerPath)

@@ -1,19 +1,25 @@
+import { firstID } from './fixtures'
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { setupTeams as setup } from './teams-workflow-fixtures'
 
 test('write-only connection replacement preserves composer edits and requires current review', async ({ page }, info) => {
   const { requests } = await setup(page)
+  await page.getByRole('tab', { name: 'Schedule', exact: true }).click()
   await page.getByLabel('Campaign name', { exact: true }).fill('Unsaved organiser draft')
+  await page.getByRole('tab', { name: 'Channels', exact: true }).click()
   const endpoint = 'https://synthetic.environment.api.powerplatform.com/?sig=SECRET-BROWSER-CANARY'
   await page.getByLabel('New secret workflow endpoint').fill(endpoint)
   await page.getByRole('button', { name: 'Save Teams connection' }).click()
   await expect(page.getByLabel('New secret workflow endpoint')).toHaveValue('')
   await expect(page.getByRole('heading', { name: 'Review changed campaign facts' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Schedule', exact: true }).click()
   await expect(page.getByLabel('Campaign name', { exact: true })).toHaveValue('Unsaved organiser draft')
   expect(requests[0].body.endpoint).toBe(endpoint)
   expect(await page.locator('body').innerText()).not.toContain('SECRET-BROWSER-CANARY')
   expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } }))).not.toContain('SECRET-BROWSER-CANARY')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await page.getByRole('tab', { name: 'Channels', exact: true }).click()
   await page.getByRole('heading', { name: 'Teams workflow connection' }).scrollIntoViewIfNeeded()
   await page.getByRole('region', { name: 'Teams workflow connection' }).screenshot({ path: info.outputPath('teams-setup.png') })
 })
@@ -34,4 +40,30 @@ test('missing encryption keys fail closed in setup', async ({ page }) => {
   await expect(page.getByLabel('New secret workflow endpoint')).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Queue shared-channel TEST' })).toBeDisabled()
   await expect(page.getByText('Endpoint encryption is unavailable.', { exact: false })).toBeVisible()
+})
+
+
+test('rejected exact TEST acknowledgement retry retains its original unknown capsule after editor teardown', async ({ page }) => {
+  await setup(page)
+  const attempts: { id: string; revision: string }[] = []
+  await page.route(`**/events/${firstID}/teams-workflow/test`, route => {
+    attempts.push({ id: route.request().postDataJSON().request_id, revision: route.request().headers()['if-match'] })
+    return attempts.length === 1 ? route.abort('failed') : route.fulfill({ status: 409, json: { error: { code: 'revision_conflict', message: 'Current native version changed', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Queue shared-channel TEST', exact: true }).click()
+  await page.getByRole('button', { name: 'Queue TEST message', exact: true }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Outcome unknown for the shared-channel TEST' })).toBeVisible()
+  await page.getByRole('button', { name: 'Retry same TEST acknowledgement', exact: true }).click()
+  await expect(page.getByText('This has changed. Refresh and try again.', { exact: true })).toBeVisible()
+  await openEventSection(page, 'Overview')
+  await openEventSection(page, 'Campaigns')
+  await page.getByRole('button', { name: 'Channel setup', exact: true }).click()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Teams test · Expected revision 1')
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  await expect(page.getByRole('button', { name: 'Queue shared-channel TEST', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Refresh Teams receipts', exact: true }).click()
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  expect(attempts).toHaveLength(2)
+  expect(attempts[0]).toEqual(attempts[1])
 })

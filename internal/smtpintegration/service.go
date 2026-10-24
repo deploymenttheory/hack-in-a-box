@@ -196,7 +196,7 @@ func (s Service) calendar(
 	return s.calendarFor(ctx, q, request.EventID, true)
 }
 
-func (s Service) calendarFor(
+func (s Service) calendarProjection(
 	ctx context.Context,
 	q *dbgen.Queries,
 	eventID uuid.UUID,
@@ -222,12 +222,26 @@ func (s Service) calendarFor(
 	if test {
 		calendar.Summary = "[TEST] " + calendar.Summary
 	}
+	return calendar, nil
+}
+
+// calendarFor alone retains a sequence at the immutable preparation barrier.
+func (s Service) calendarFor(
+	ctx context.Context,
+	q *dbgen.Queries,
+	eventID uuid.UUID,
+	test bool,
+) (*maildelivery.Calendar, error) {
+	calendar, err := s.calendarProjection(ctx, q, eventID, test)
+	if err != nil {
+		return nil, err
+	}
 	data, _ := json.Marshal(calendar)
 	fingerprint := sha256.Sum256(data)
 	sequence, err := q.NextEmailCalendarSequence(
 		ctx,
 		dbgen.NextEmailCalendarSequenceParams{
-			EventID:     row.ID,
+			EventID:     eventID,
 			Test:        test,
 			Fingerprint: fingerprint[:],
 		},
@@ -268,12 +282,12 @@ func (s Service) newMessageFor(
 		if err != nil {
 			return maildelivery.Message{}, err
 		}
-		details, err := maildelivery.DateDetails(*calendar)
-		if err != nil {
-			return maildelivery.Message{}, fmt.Errorf("render approved dates: %w", err)
-		}
-		body += "\n\n" + details + "\n" + calendar.WorkspaceURL
 	}
+	body, err = bodyWithCalendar(body, calendar)
+	if err != nil {
+		return maildelivery.Message{}, err
+	}
+
 	return maildelivery.Message{
 		ID:        d.ID,
 		Recipient: mailbox,

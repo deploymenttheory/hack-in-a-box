@@ -1,0 +1,33 @@
+.fleet-inbox { min-width: 0; }
+.fleet-inbox-filter { display: grid; gap: var(--space-2); max-width: 28rem; }
+.fleet-inbox-filter select { width: 100%; min-width: 0; }
+.fleet-inbox-filter p { margin: 0; }
+
+.fleet-communication-step { display: grid; grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-8); border-top: 1px solid var(--color-border); }
+.fleet-communication-step > header { display: grid; align-content: start; grid-template-columns: 1.25rem 1fr; gap: var(--space-2); }
+.fleet-communication-step > header h3 { margin: 0; }
+.fleet-communication-step > header p { grid-column: 2; margin: 0; color: var(--color-muted-foreground); }
+.fleet-communication-fields { min-width: 0; display: grid; align-content: start; gap: var(--space-3); }
+.fleet-communication-fields fieldset { min-width: 0; display: grid; gap: var(--space-3); border: 0; padding: 0; margin: 0; }
+.fleet-communication-fields fieldset fieldset { padding-block: var(--space-3); }
+.fleet-communication-fields .fleet-label:not(.check) { margin-top: var(--space-2); }
+.fleet-communication-fields .check { display: flex; align-items: start; gap: var(--space-2); }
+.fleet-communication-fields .check input { flex: 0 0 auto; width: 1rem; height: 1rem; margin-top: .2rem; }
+.fleet-communication-fields > .fleet-button { justify-self: start; }
+.fleet-communication-fields p { margin-block: 0; }
+.fleet-communication-nav { display: flex; flex-wrap: wrap; gap: var(--space-4); border-bottom: 1px solid var(--color-border); padding-block: var(--space-4); }
+.fleet-communication-nav a { display: inline-flex; align-items: center; gap: var(--space-2); }
+.fleet-communication-reading { max-width: 70ch; overflow-wrap: anywhere; white-space: pre-wrap; }
+@media (max-width: 48rem) { .fleet-communication-step { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); } }
+
+.fleet-inbox-message { max-width: 70ch; min-width: 0; display: grid; gap: var(--space-4); padding-block: var(--space-6); overflow-wrap: anywhere; }
+.fleet-inbox-message h2, .fleet-inbox-message p { margin: 0; }
+.fleet-inbox-message .inbox-body { white-space: pre-wrap; }
+.fleet-delivery-filters { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.fleet-delivery-filters > div { display: grid; gap: var(--space-2); min-width: min(100%, 14rem); }
+
+.fleet-communication-tabs { flex-wrap: wrap; margin-block: var(--space-4); }
+.fleet-communication-tabs .fleet-tab { gap: var(--space-2); }
+.fleet-communication-tabs + .fleet-label { margin-top: var(--space-4); }
+.fleet-campaign-collection { margin-block: var(--space-6); }
+.fleet-delivery-identity { padding-block: var(--space-6); }

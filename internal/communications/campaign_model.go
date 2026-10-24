@@ -91,27 +91,30 @@ type CampaignDetail struct {
 }
 
 type CampaignCommand struct {
-	Action     string              `json:"action"`
-	Version    int64               `json:"version"`
-	Definition *CampaignDefinition `json:"definition,omitempty"`
-	Channel    string              `json:"channel,omitempty"`
-	Reason     string              `json:"reason"`
+	ReviewedTestFingerprint string              `json:"reviewed_test_fingerprint,omitempty"`
+	Action                  string              `json:"action"`
+	Version                 int64               `json:"version"`
+	Definition              *CampaignDefinition `json:"definition,omitempty"`
+	Channel                 string              `json:"channel,omitempty"`
+	Reason                  string              `json:"reason"`
 }
 
 // TestMessage is resolved only for the requesting current organiser. PlainText
 // is literal interpolated text. Providers must escape it for branded HTML and
 // resolve the fixed actor's verified delivery destination privately.
 type TestMessage struct {
-	ID               uuid.UUID `json:"id"`
-	EventID          uuid.UUID `json:"event_id"`
-	ActorID          uuid.UUID `json:"actor_id"`
-	Channel          string    `json:"channel"`
-	Purpose          string    `json:"purpose"`
-	Format           string    `json:"format"`
-	Subject          string    `json:"subject"`
-	PlainText        string    `json:"plain_text"`
-	IncludeCalendar  bool      `json:"include_calendar"`
-	ProviderRevision string    `json:"provider_revision"`
+	// Optional private binding for a reviewed organiser-only TEST; never an address.
+	ReviewedTestBinding string    `json:"reviewed_test_binding,omitempty"`
+	ID                  uuid.UUID `json:"id"`
+	EventID             uuid.UUID `json:"event_id"`
+	ActorID             uuid.UUID `json:"actor_id"`
+	Channel             string    `json:"channel"`
+	Purpose             string    `json:"purpose"`
+	Format              string    `json:"format"`
+	Subject             string    `json:"subject"`
+	PlainText           string    `json:"plain_text"`
+	IncludeCalendar     bool      `json:"include_calendar"`
+	ProviderRevision    string    `json:"provider_revision"`
 }
 
 // ApprovedCampaign is the transaction-bound execution seam for #82. Resolving
