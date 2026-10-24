@@ -123,3 +123,5 @@ action no longer exists. Keep nested editors mounted hidden/inert during correct
 review, or lift their drafts. Report actual nested inputs and review separately from
 pending/unknown commands; `useCoverageDraftGuard` confirms deliberate local/route
 discard without unlocking an uncertain write. A rejected discard retains exact input.
+
+For a definite collection-wide denial, the collection owner must clear its private selection and affected cached projections and invalidate pending read lifetimes above any child that it disposes. Restoration requires fresh native authority; never reopen a cached child merely because its parent list is readable again. Keep event/session unknown-command metadata and barriers separate from private payload: `usePlanningUnknownRedaction` must match an exact owned actor/draft/event/resource namespace, redact private titles/commands, retain original unknown revisions/comparison requirements and leave unrelated histories untouched. Redaction is neither a receipt nor permission to replay.

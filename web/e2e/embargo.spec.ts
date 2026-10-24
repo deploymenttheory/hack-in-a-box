@@ -12,6 +12,7 @@ function resource(actor: typeof actorA): Content { return { id: resourceID, kind
 async function setup(page: Page) {
   const workspace = await mockWorkspace(page), event = workspace.events[0]
   event.can_edit = false; event.can_read_staff = false; event.can_manage_owner = false; event.can_transition = false; event.stage = 'preparation'
+  let denyReader = false, holdDenied = false
   let actor = actorA, released = true, withdrawn = false, authorised = true, hold = false, oldRead: Promise<void> | undefined, finish: (() => void) | undefined, entered: (() => void) | undefined
   const requests: string[] = [], readerArrived = new Promise<void>(resolve => { entered = resolve })
   const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }
@@ -19,7 +20,10 @@ async function setup(page: Page) {
   await page.route(`**/events/${firstID}/content**`, async route => {
     const r = route.request(), url = new URL(r.url()), path = url.pathname; requests.push(r.url())
     const fail = (status: number, code: string) => route.fulfill({ status, headers, json: { error: { code, message: 'Synthetic denial', request_id: 'synthetic' } } })
-    if (!authorised) return fail(403, 'forbidden')
+    if (!authorised || (denyReader && !path.endsWith('/content'))) {
+      if (!path.endsWith('/content') && holdDenied) { entered?.(); await oldRead }
+      return fail(403, 'forbidden')
+    }
     if (path.endsWith('/content')) { const item = resource(actor), q = url.searchParams.get('q')?.toLowerCase() ?? ''; return route.fulfill({ headers, json: { items: released && !withdrawn && `${item.document.title} ${item.document.markdown}`.toLowerCase().includes(q) ? [item] : [], next_cursor: null } }) }
     if (!released || withdrawn) return fail(404, 'not_found')
     const snapshot = resource(actor)
@@ -28,7 +32,7 @@ async function setup(page: Page) {
   })
   await page.route(`**/events/${firstID}/files/${fileID}`, route => route.fulfill(!authorised || !released || withdrawn ? { status: 403, headers, json: { error: { code: 'forbidden', message: 'Synthetic denial', request_id: 'synthetic' } } } : { headers: { ...headers, 'Content-Disposition': 'attachment; filename=private-brief.txt' }, contentType: 'text/plain', body: actor.id === actorA.id ? canaryA : canaryB }))
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Resources')
-  return { requests, revoke: () => { authorised = false }, withdraw: () => { withdrawn = true }, embargo: () => { released = false }, release: () => { released = true }, switchAccount: () => { actor = actorB }, holdRead: () => { hold = true; oldRead = new Promise<void>(resolve => { finish = resolve }); return readerArrived }, finishRead: () => finish?.() }
+  return { blockDenied: () => { holdDenied = true; oldRead = new Promise<void>(resolve => { finish = resolve }) }, restoreOnlyLibrary: () => { authorised = true; withdrawn = true; denyReader = true }, requests, revoke: () => { authorised = false }, withdraw: () => { withdrawn = true }, embargo: () => { released = false }, release: () => { released = true }, switchAccount: () => { actor = actorB }, holdRead: () => { hold = true; oldRead = new Promise<void>(resolve => { finish = resolve }); return readerArrived }, finishRead: () => finish?.() }
 }
 async function copiedDownload(page: Page) { return page.evaluate(async url => { const r = await fetch(url); return { status: r.status, body: await r.text() } }, `/api/v1/events/${firstID}/files/${fileID}`) }
 
@@ -90,4 +94,32 @@ test('an embargoed resource stays out of warm navigation and search until releas
   await page.getByRole('button', { name: 'Read Team A brief' }).click()
   await expect(page.getByText(canaryA, { exact: true })).toBeVisible()
   expect(state.requests.every(url => !url.includes('preview=true'))).toBe(true)
+})
+
+
+for (const elapsed of [0, 16_000]) test(`global library denial scrubs cached reading before partial restoration after ${elapsed}ms`, async ({ page }) => {
+  await page.clock.install()
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Read Team A brief', exact: true }).click()
+  await expect(page.getByText(canaryA, { exact: true })).toBeVisible()
+  state.blockDenied(); state.revoke()
+  try {
+    await page.getByRole('button', { name: 'Refresh resources', exact: true }).click()
+    await expect(page.getByRole('alert')).toContainText('You do not have access to this resource library.')
+    await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+    if (elapsed) await page.clock.runFor(elapsed)
+    state.restoreOnlyLibrary()
+    await page.getByRole('button', { name: 'Refresh resources', exact: true }).click()
+    await expect(page.getByText('No released resources are available to you yet.', { exact: true })).toBeVisible()
+    await expect(page.getByText(canaryA, { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Team A brief', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'private-brief.txt', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'I have read version 1', exact: true })).toHaveCount(0)
+    state.finishRead()
+    await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+    await expect(page.getByText('No released resources are available to you yet.', { exact: true })).toBeVisible()
+    const download = await copiedDownload(page)
+    expect(download.status).toBe(403); expect(download.body).not.toContain(canaryA)
+    expect(state.requests.every(url => !url.includes('preview=true'))).toBe(true)
+  } finally { state.finishRead() }
 })
