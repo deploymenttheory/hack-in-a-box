@@ -1,0 +1,102 @@
+{
+  "baseline_commit": "6e8ab511f00f3c3e8b63c91200a52637bee65119",
+  "baseline_tree": "a85ecd138e0a211e7aecdda3cedc6853001ab3f6",
+  "after_source_commit": "70ecb6d402313b2a8197cb2fe841fe59202e6eb4",
+  "scenario": "Current organiser, one synthetic draft photograph, no identifiable people, same caption/reason/attestations, ready for approval. Before is the prior inline action; after is exact review before confirmation. No write or upload performed.",
+  "images": [
+    {
+      "path": "after-administrator-desktop.png",
+      "phase": "after",
+      "portal": "administrator",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "full_page": true,
+      "sha256": "681d44ab89c7f2de83ca41477d1f5df8e35d302dc04d3afee3dac6cc0eba9624"
+    },
+    {
+      "path": "after-administrator-mobile.png",
+      "phase": "after",
+      "portal": "administrator",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "full_page": true,
+      "sha256": "4e0bbcfca4987a2e325987b2e0a1f41484d71dabf5f435d6819bb6f4b4a01ff2"
+    },
+    {
+      "path": "after-participant-desktop.png",
+      "phase": "after",
+      "portal": "participant",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "full_page": true,
+      "sha256": "bfe968a684856bec0dc87c5a9f2941fc61e99dfbd423bb17ba65b8bde756f3b4"
+    },
+    {
+      "path": "after-participant-mobile.png",
+      "phase": "after",
+      "portal": "participant",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "full_page": true,
+      "sha256": "0eedd8ab6f42539ee6a40912d390ce64b25ec8e8af81e6cbe4851ea6edb41fb6"
+    },
+    {
+      "path": "before-administrator-desktop.png",
+      "phase": "before",
+      "portal": "administrator",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "full_page": true,
+      "sha256": "1c888a6b038ea6f0f57deb5c6597922cce86e79985a5cfb1d95df0c240822270"
+    },
+    {
+      "path": "before-administrator-mobile.png",
+      "phase": "before",
+      "portal": "administrator",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "full_page": true,
+      "sha256": "859e3722092ae65ababe95f286af33a1f30800a9e466efc84bc5af8df720e387"
+    },
+    {
+      "path": "before-participant-desktop.png",
+      "phase": "before",
+      "portal": "participant",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "full_page": true,
+      "sha256": "0d0327c0445964be2a4d0bc6115f37c876d23bfd7e94a5173203a8cc5b70f68f"
+    },
+    {
+      "path": "before-participant-mobile.png",
+      "phase": "before",
+      "portal": "participant",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "full_page": true,
+      "sha256": "4e1396df6102885923fa2e2d3bdf00a2b357146e204cb0b2c9c32f7dbfe8eb6d"
+    }
+  ],
+  "prior_after_source_commit": "3672bf89aa9410a0bdd86d2dcaca4076f46a6751",
+  "validation_correction_recheck": {
+    "source_commit": "70ecb6d402313b2a8197cb2fe841fe59202e6eb4",
+    "all_four_after_sha256_unchanged": true,
+    "meaning": "Invalid submissions now associate errors and focus fields; the approved valid-review state is pixel-identical."
+  }
+}

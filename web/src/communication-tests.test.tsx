@@ -58,3 +58,10 @@ test('pending and unknown original acknowledgements retain only whitelisted meta
   act(() => complete())
   expect(view.container).not.toHaveTextContent('original-local-intent')
 })
+
+test('media resource metadata accepts only UUIDs and positive safe integer versions and drops private extra fields',()=>{
+ function Owner(){const history=useCommunicationCommands('actor:session:media:event:collector');return <><pre>{JSON.stringify(history.attempts)}</pre><button onClick={()=>history.begin({operation:'Media upload',revision:7,command:{intentID:'local-intent',action:'upload',resourceID:'44444444-4444-4444-8444-444444444444',expectedVersion:1,caption:'SECRET-CAPTION',file:{content:'SECRET-BYTES'}} as never})}>Safe media metadata</button><button onClick={()=>history.begin({operation:'Media upload',revision:7,command:{action:'upload',resourceID:'SECRET-URL-OR-TEXT',expectedVersion:Infinity}})}>Invalid media metadata</button></>}
+ const view=render(<CommunicationSafety><Owner/></CommunicationSafety>)
+ fireEvent.click(screen.getByText('Safe media metadata'));expect(view.container).toHaveTextContent('44444444-4444-4444-8444-444444444444');expect(view.container).toHaveTextContent('"expectedVersion":1')
+ fireEvent.click(screen.getByText('Invalid media metadata'));expect(view.container).not.toHaveTextContent('SECRET-');expect(view.container).not.toHaveTextContent('Infinity')
+})
