@@ -115,3 +115,39 @@ and restored-checkpoint/denied-old-card canaries checked again after 20 seconds.
 Successful list restoration now requires an explicit current record action; it
 never silently revives the previously selected private task. A confirmation
 preflight failure also stays not-sent rather than inventing an uncertain write.
+
+## Private questions and common-answer checkpoint
+
+Common answers now use a real server-search/cursor collection; private questions
+use a separate attention queue. Private question creation captures source, exact
+body/attachments and its native command ID for review before sending. Uploads
+recheck current team/ask authority after file reading and after event reads; a
+failed preflight is not reported as an uncertain upload. Staff triage has a reviewed
+question revision and checks the actor/action/revision in immutable history before
+settling an uncertain decision. A current question GET alone cannot clear it.
+
+Common-answer authoring, approval and publication each have a focused exact review
+of answer version/revision, common source, document and native audience preview.
+Publication rechecks a changed preview before sending. Unknown recovery requires
+matching document/source/version plus its immutable actor/action/revision transition;
+current approved/published flags alone are not an original receipt. The deterministic
+fixture now retains those actual native history transitions. Capability loss clears
+private descendants and current owners; archive keeps still-authorised read-only
+text and original reconciliation input while freezing further writes. A confirmed
+write remains visibly confirmed and its fresh-read action remains usable if only
+the follow-up read fails.
+
+Both production builds and targeted lint pass. Native clarification workspace and
+canonical-reader journeys complete 40/40 desktop/mobile cases. Existing privacy,
+UTF-8 bounds, separate approval/publication/correction, live byte gate, archive,
+role/session loss and no-replay assertions remain, with explicit review steps and
+shared search selectors adapted. The scoped history API resolves only a matching
+local intent. Its older acknowledged unresolved metadata remains visible, without
+silently clearing it or re-blocking an already deliberate new base. Existing history
+immutability and pending-owner tests are retained; the focused shared history,
+coverage-command and private-lifecycle unit selection completes 15/15 tests.
+
+Still outstanding: dedicated capability-only / held-continuation clarification
+regressions, huddle/moderation/second-review and review-dashboard/factual compositions,
+evidence picker/preview completion, actual guide and before/after captures, all
+remaining dependent-consumer/native checks, independent reviews and full exact-head CI.

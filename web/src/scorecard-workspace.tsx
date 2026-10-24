@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { APIError, privateKey } from './api/client'
@@ -35,8 +35,9 @@ function ScorecardTeam({ eventID, teamID }: { eventID: string; teamID: string })
   </CollectionFrame>{denied && <Button icon="refresh" variant="outline" onClick={() => void query.refetch()}>Read current checkpoints</Button>}</section>
 }
 function CardLoader({ eventID, teamID, checkpoint, onRisk }: { eventID: string; teamID: string; checkpoint: Checkpoint; onRisk: (risk: ScorecardRisk) => void }) {
-  const identity = useIdentity(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${teamID}:${checkpoint.definition.id}:${checkpoint.version}:${checkpoint.definition.run_id}`)
+  const identity = useIdentity(), cache = useQueryClient(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${teamID}:${checkpoint.definition.id}:${checkpoint.version}:${checkpoint.definition.run_id}`)
   const query = useQuery({ queryKey: [...privateKey(identity.person.id, eventID, 'scorecard-current'), teamID, checkpoint.definition.id, checkpoint.version], gcTime: 0, refetchOnMount: 'always', queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = await currentCard(eventID, teamID, checkpoint, identity.person.id, signal); ticket.assert(); return value }, refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
+  useEffect(() => { if (invalidatesEditor(query.error)) scrubMentorPrivateQueries(cache, identity.person.id, eventID, teamID, 'scorecards') }, [query.error, cache, identity.person.id, eventID, teamID])
   if (query.isPending || !query.isFetchedAfterMount) return <Loading />
   if (query.error && (!query.data || invalidatesEditor(query.error))) return <><p>Entry is unavailable until current authority and the assessment source are confirmed. Final qualification requires actual post-cutoff frozen formal output.</p><Failure error={query.error} retry={() => void query.refetch()} /></>
   return <>{query.error && <><p>Current card/source read is unavailable. Unsent input remains in memory; saved evidence and entry are hidden until a fresh read succeeds.</p><Failure error={query.error} retry={() => void query.refetch()} /></>}<div hidden={!!query.error} inert={!!query.error}><CardEditor eventID={eventID} teamID={teamID} checkpoint={checkpoint} initial={query.data!} refresh={() => query.refetch()} onRisk={onRisk} /></div></>

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
@@ -56,4 +56,18 @@ test('resource scope denial redacts only exact acknowledgement owners while reta
   expect(screen.getByLabelText('Unconfirmed command history')).toHaveTextContent('Expected revision 7 · Original outcome remains unconfirmed')
   owners.slice(1).forEach((_, index) => expect(screen.getByLabelText('Attempt ' + (index + 1)).textContent).toBe(unaffected[index]))
   view.unmount()
+})
+
+test('an exact later receipt resolves only that intent and retains an acknowledged older unknown outcome', () => {
+  const { result } = renderHook(() => usePlanningUnknownCommands('native-task-owner'))
+  act(() => { result.current.record({ operation: 'Earlier assessment', revision: 10, command: { intentID: 'earlier' } }) })
+  expect(result.current.unconfirmed).toBe(true)
+  act(() => { result.current.selectNewBase() })
+  expect(result.current.unconfirmed).toBe(false)
+  act(() => { result.current.record({ operation: 'Different later assessment', revision: 11, command: { intentID: 'later' } }) })
+  expect(result.current.unconfirmed).toBe(true)
+  act(() => { result.current.resolve('later') })
+  expect(result.current.attempts).toHaveLength(1)
+  expect(result.current.attempts[0]).toMatchObject({ operation: 'Earlier assessment', revision: 10, command: { intentID: 'earlier' } })
+  expect(result.current.unconfirmed).toBe(false)
 })
