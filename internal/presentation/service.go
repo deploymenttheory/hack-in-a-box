@@ -432,70 +432,9 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		if err != nil {
 			return err
 		}
-		_, published, err := decode(row)
+		result, err = s.programSnapshot(ctx, q, e, row)
 		if err != nil {
 			return err
-		}
-		c := event.DefaultConfiguration()
-		if err = json.Unmarshal(e.Configuration, &c); err != nil {
-			return fmt.Errorf("decode display timezone: %w", err)
-		}
-		result = Snapshot{
-			EventID:          eventID,
-			EventName:        e.Name,
-			Timezone:         c.Timezone,
-			Sequence:         row.Revision,
-			ServerNow:        s.now(),
-			Mode:             row.Mode,
-			RemainingSeconds: int(remaining(row, s.now())),
-			PrimaryColour:    "#173a35",
-			BackgroundColour: "#f8f9f5",
-			ForegroundColour: "#173a35",
-		}
-		if row.TimerEndsAt.Valid {
-			result.TimerEndsAt = &row.TimerEndsAt.Time
-		}
-		if row.CurrentIndex >= 0 && int(row.CurrentIndex) < len(published) {
-			cue, visible, projectErr := s.project(ctx, q, e, published[row.CurrentIndex])
-			if projectErr != nil {
-				return projectErr
-			}
-			if visible {
-				result.Current = &cue
-			}
-		}
-		if int(row.CurrentIndex)+1 < len(published) {
-			cue, visible, projectErr := s.project(ctx, q, e, published[row.CurrentIndex+1])
-			if projectErr != nil {
-				return projectErr
-			}
-			if visible {
-				result.Next = &cue
-			}
-		}
-		override, overridden, overrideErr := decodeOverride(row)
-		if overrideErr != nil {
-			return overrideErr
-		}
-		if overridden {
-			result.OverrideActive = true
-			result.Mode = row.OverrideMode
-			result.RemainingSeconds = int(overrideRemaining(row, s.now()))
-			result.TimerEndsAt = nil
-			if row.OverrideTimerEndsAt.Valid {
-				result.TimerEndsAt = &row.OverrideTimerEndsAt.Time
-			}
-			if row.CurrentIndex >= 0 {
-				result.Next = result.Current
-			}
-			result.Current = nil
-			cue, visible, projectErr := s.project(ctx, q, e, override)
-			if projectErr != nil {
-				return projectErr
-			}
-			if visible {
-				result.Current = &cue
-			}
 		}
 		if err = displayBranding(ctx, q, eventID, &result); err != nil {
 			return err

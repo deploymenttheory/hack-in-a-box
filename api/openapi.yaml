@@ -462,6 +462,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/EventInput'
+  /api/v1/events/{event_id}/today:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+    get:
+      operationId: getToday
+      responses:
+        '200':
+          description: Current event-reader context and allowlisted published room program. No controller page, unreleased schedule or task store.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TodayPage'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/transition:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -7184,6 +7196,37 @@ components:
           type: string
         message:
           type: string
+    TodayPage:
+      type: object
+      additionalProperties: false
+      required: [event, roles, participation_state, program]
+      properties:
+        event: {$ref: '#/components/schemas/Event'}
+        roles:
+          type: array
+          description: Only the current actor's active event grants; switching UI context grants no authority.
+          items: {$ref: '#/components/schemas/StaffRole'}
+        participation_state:
+          type: string
+          description: Existing native competition claim state, or empty when none. An offer is not a confirmed competitor.
+        program: {$ref: '#/components/schemas/TodayProgram'}
+    TodayProgram:
+      type: object
+      additionalProperties: false
+      required: [sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, override_active]
+      properties:
+        sequence: {type: integer, format: int64}
+        server_now: {type: string, format: date-time}
+        current:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/DisplayCue'}]
+        next:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/DisplayCue'}]
+        mode: {type: string, enum: [held, running]}
+        remaining_seconds: {type: integer, minimum: 0}
+        timer_ends_at: {type: string, format: date-time, nullable: true}
+        override_active: {type: boolean}
     Event:
       type: object
       additionalProperties: false
