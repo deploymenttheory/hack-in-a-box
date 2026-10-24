@@ -31,7 +31,7 @@ export function scores(values: Entry[]): Score[] {
 export function canonicalScores(values: Score[]) {
   return JSON.stringify([...values].sort((a, b) => a.category_id.localeCompare(b.category_id)).map(s => ({ category_id: s.category_id, pending: s.pending, value: s.value, evidence: s.evidence.map(e => ({ kind: e.kind, id: e.id ?? null, version: e.version ?? null, note: e.note })) })))
 }
-export type Intent = { revision: number; command: Command; authorID: string; teamID: string; checkpoint: Checkpoint; expectedVersion: number; frozenRevision: number | null }
+export type Intent = { intentID?: string; revision: number; command: Command; authorID: string; teamID: string; checkpoint: Checkpoint; expectedVersion: number; frozenRevision: number | null }
 export function matchesReceipt(card: Card, intent: Intent) {
   return card.revision === intent.revision + 1 && card.author_id === intent.authorID && card.team_id === intent.teamID && card.checkpoint_id === intent.command.checkpoint_id && card.checkpoint_version === intent.command.checkpoint_version && card.reference.version === intent.expectedVersion && card.run_id === intent.checkpoint.definition.run_id && card.rubric.id === intent.checkpoint.rubric.id && card.rubric.version === intent.checkpoint.rubric.version && card.rubric.digest === intent.checkpoint.rubric.digest && card.purpose === intent.checkpoint.purpose && card.submission_revision === intent.frozenRevision && card.state === (intent.command.action === 'submit' ? 'submitted' : 'draft') && canonicalScores(card.scores) === canonicalScores(intent.command.scores)
 }

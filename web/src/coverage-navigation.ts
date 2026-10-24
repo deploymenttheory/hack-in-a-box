@@ -14,8 +14,12 @@ export function useCoverageFocus(root: RefObject<HTMLElement | null>) {
     }
     if (active instanceof HTMLButtonElement) return { button: active.getAttribute('aria-label') ?? active.textContent?.trim().replace(/\s+/g, ' ') ?? '' }
   }
-  function restore(target: CoverageFocusTarget | undefined) {
+  function restore(target: CoverageFocusTarget | undefined, unlessFocusMoved = false) {
+    const originalActive = document.activeElement
     requestAnimationFrame(() => {
+      // An asynchronous success may remove its confirming button. Restore only
+      // while focus is still there/body; a subsequent deliberate focus wins.
+      if (unlessFocusMoved && document.activeElement !== originalActive && document.activeElement !== document.body && document.activeElement?.isConnected) return
       const controls = root.current?.querySelectorAll<HTMLElement>('button,input,textarea,select,a,[tabindex]') ?? []
       const matches = [...controls].filter(element => element.getClientRects().length > 0 && !element.matches(':disabled') && (target && 'attribute' in target ? element.getAttribute(target.attribute) === target.value : target && element instanceof HTMLButtonElement && (element.getAttribute('aria-label') ?? element.textContent?.trim().replace(/\s+/g, ' ') ?? '') === target.button))
       const source = matches.length === 1 ? matches[0] : undefined

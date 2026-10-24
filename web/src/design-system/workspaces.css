@@ -330,7 +330,7 @@ textarea { min-height: 88px; resize: vertical; }
 .private-review textarea,.private-review input { max-width: 100%; width: 100%; }
 .private-review .actions { flex-wrap: wrap; }
 .review-team-page button { white-space: normal; height: auto; min-height: 2rem; max-width: 100%; overflow-wrap: anywhere; }
-@media print { .private-review,.review-dashboard,.review-team-page { display: none !important; } }
+@media print { [data-private-review], .private-review,.review-dashboard,.review-team-page { display: none !important; } }
 
 .media-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,24rem),1fr)); gap: 1rem; }
 .media-card { min-width: 0; overflow-wrap: anywhere; }

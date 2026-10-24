@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useLayoutEffect, useState, type
 
 // Event-lifetime, memory-only evidence of an uncertain attempt. A subsequent
 // GET or successful different command never proves the original result.
-type Attempt = { operation: string; revision: number; command: unknown }
+type Attempt = { operation: string; revision: number; command: unknown; acknowledged?: true }
 type History = Record<string, { requiresReview: boolean; attempts: Attempt[] }>
 type Redact = (owns: (owner: string) => boolean, redact: (attempt: Attempt) => Attempt) => void
 const Operations = createContext<{ history: History; update: (owner: string, change: (value: History[string]) => History[string]) => void; redact: Redact } | null>(null)
@@ -29,9 +29,10 @@ export function usePlanningUnknownCommands(owner: string) {
   return { unconfirmed: value.requiresReview, attempts: value.attempts,
     record: (attempt: Attempt) => update(previous => ({ requiresReview: true, attempts: [...previous.attempts, structuredClone(attempt)] })),
     redactCommands: (redact: (command: unknown) => unknown) => update(previous => ({ ...previous, attempts: previous.attempts.map(attempt => ({ ...attempt, command: redact(attempt.command) })) })),
+    resolve: (intentID: string) => update(previous => { const attempts = previous.attempts.filter(attempt => !(attempt.command && typeof attempt.command === 'object' && 'intentID' in attempt.command && attempt.command.intentID === intentID)); return { requiresReview: attempts.some(attempt => !attempt.acknowledged), attempts } }),
     clear: () => update(() => ({ requiresReview: false, attempts: [] })),
     // A deliberate new base permits a different command; the old capsule stays.
-    selectNewBase: () => update(previous => ({ ...previous, requiresReview: false })) }
+    selectNewBase: () => update(previous => ({ ...previous, requiresReview: false, attempts: previous.attempts.map(attempt => ({ ...attempt, acknowledged: true })) })) }
 }
 export function planningDepartureAllowed() { return window.dispatchEvent(new Event('planning-departure', { cancelable: true })) }
 export function usePlanningDepartureBarrier(blocked: boolean) {

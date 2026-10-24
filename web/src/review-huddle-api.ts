@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { api, APIError, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
+import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
+import { usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
 export type Huddle = components['schemas']['ModerationHuddle']
 export type HuddleCommand = components['schemas']['ModerationCommand']
-export type HuddleIntent = { id: string; revision: number; command: HuddleCommand; actor: string; expected: number }
+export type HuddleIntent = { id: string; teamID: string; revision: number; command: HuddleCommand; actor: string; expected: number; intentID?: string }
 const canonical = (v: unknown): string => JSON.stringify(v, (_, item: unknown) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item)
 export function exactHuddleReceipt(h: Huddle, i: HuddleIntent) {
  const c=i.command
- if(h.definition.id!==i.id||h.version!==i.expected||h.actor_id!==i.actor||h.action!==c.action||h.reason!==c.reason)return false
+ if(h.team_id!==i.teamID||h.definition.id!==i.id||h.version!==i.expected||h.actor_id!==i.actor||h.action!==c.action||h.reason!==c.reason)return false
  switch(c.action){
   case 'configure':return canonical(h.definition)===canonical(c.definition)
   case 'add_gap':return h.gaps.some(g=>g.id===c.gap_id&&g.action_id===c.action_id&&g.action_version===c.action_version&&g.reason===c.reason)
@@ -22,33 +24,49 @@ export function exactHuddleReceipt(h: Huddle, i: HuddleIntent) {
  }
 }
 export async function readHuddle(eventID:string,teamID:string,id:string,signal?:AbortSignal){return unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}',{signal,params:{path:{event_id:eventID,team_id:teamID,huddle_id:id}}}))}
-export function useHuddleWrite(eventID:string,teamID:string,refresh:()=>Promise<unknown>,confirmed:()=>void){
- const identity=useIdentity(),[busy,setBusy]=useState(false),[failure,setFailure]=useState<unknown>(),[uncertain,setUncertain]=useState<HuddleIntent>(),[notice,setNotice]=useState('No decision sent.'),generation=useRef(0)
- useEffect(()=>()=>{generation.current++},[])
+export function useHuddleWrite(eventID:string,teamID:string,refresh:()=>Promise<unknown>,confirmed:()=>void,parentScope?:PrivateRequestScope){
+ const identity=useIdentity(),[busy,setBusy]=useState(false),[denied,setDenied]=useState(false),[failure,setFailure]=useState<unknown>(),[uncertain,setUncertain]=useState<HuddleIntent>(),[notice,setNotice]=useState('No decision sent.'),lock=useRef(false),hardUnknown=useRef(false)
+ const scope=usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${teamID}:huddle-command`,parentScope),history=usePlanningUnknownCommands(`huddle:${teamID}`)
+ const blocked=!!uncertain||(!busy&&history.unconfirmed)
+ usePlanningDepartureBarrier(busy)
  async function send(id:string,command:HuddleCommand,reviewedRevision?:number){
-  if(busy||uncertain)return
-  const ticket=generation.current;setBusy(true);setFailure(undefined)
-  let intent:HuddleIntent|undefined
+  if(lock.current||hardUnknown.current||blocked)return
+  const ticket=scope.capture();if(!ticket.current())return
+  lock.current=true;setBusy(true);setFailure(undefined)
+  const captured=structuredClone(command);let intent:HuddleIntent|undefined,attempted=false
   try{
-   const page=unwrap(await api.GET('/api/v1/events/{event_id}/review-coverage',{params:{path:{event_id:eventID},query:{team_id:teamID,limit:1}}}))
-   if(ticket!==generation.current)return
+   const page=unwrap(await api.GET('/api/v1/events/{event_id}/review-coverage',{signal:ticket.signal,params:{path:{event_id:eventID},query:{team_id:teamID,limit:1}}}));ticket.assert()
    if(reviewedRevision!=null&&page.revision!==reviewedRevision)throw new APIError(409,'review_required')
-   intent={id,revision:page.revision,command:structuredClone(command),actor:identity.person.id,expected:command.version+1}
-   const result=unwrap(await api.PUT('/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}',{params:{path:{event_id:eventID,team_id:teamID,huddle_id:id},header:{'If-Match':`"${intent.revision}"`,'X-CSRF-Token':identity.csrf_token}},body:intent.command}))
-   if(ticket!==generation.current)return
+   if(!page.teams.some(t=>t.id===teamID))throw new APIError(403,'forbidden')
+   if(captured.action==='configure'&&!page.organiser)throw new APIError(403,'forbidden')
+   if(captured.action!=='configure'||captured.version>0){
+    let cursor:string|undefined,summary:components['schemas']['ReviewHuddleSummary']|undefined
+    do{const agenda=unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/review-agenda',{signal:ticket.signal,params:{path:{event_id:eventID,team_id:teamID},query:{cursor,limit:100}}}));ticket.assert();summary=agenda.agenda.items.find(item=>item.id===id);cursor=agenda.agenda.next_cursor??undefined;if(summary)break}while(cursor)
+    if(!summary||summary.version!==captured.version)throw new APIError(409,'review_required')
+    const permitted=captured.action==='configure'?summary.can_reconfigure:summary.can_open&&summary.can_record&&(!['open','add_gap','resolve_gap','accept_change','reject_change','sign_off','cancel'].includes(captured.action)||summary.can_manage)
+    if(!permitted)throw new APIError(403,'forbidden')
+    const h=captured.action==='configure'?undefined:await readHuddle(eventID,teamID,id,ticket.signal);ticket.assert()
+    if(h&&h.version!==captured.version)throw new APIError(409,'review_required')
+    if(captured.action==='complete_second_review'&&h?.second_review.reviewer_id!==identity.person.id)throw new APIError(403,'forbidden')
+   }
+   intent={id,teamID,revision:page.revision,command:captured,actor:identity.person.id,expected:captured.version+1,intentID:crypto.randomUUID()}
+   ticket.assert();history.record({operation:`Huddle ${captured.action.replaceAll('_',' ')}`,revision:intent.revision,command:{intentID:intent.intentID,resource:id,version:captured.version}});attempted=true
+   const result=unwrap(await api.PUT('/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}',{params:{path:{event_id:eventID,team_id:teamID,huddle_id:id},header:{'If-Match':`"${intent.revision}"`,'X-CSRF-Token':identity.csrf_token}},body:captured}));ticket.assert()
    if(!exactHuddleReceipt(result,intent))throw new Error('Unexpected decision receipt')
-   setNotice(`Confirmed ${command.action.replaceAll('_',' ')} version ${result.version}.`);await refresh();if(ticket===generation.current)confirmed()
-  }catch(error){if(ticket===generation.current){setFailure(error);if(intent&&(!(error instanceof APIError)||error.status>=500)){setUncertain(intent);setNotice('Outcome uncertain. No retry was made. Check the exact immutable history before making another decision.')}else{setNotice('No decision confirmed. Review fresh current sources and versions; your request was not replayed.');await refresh()}}}finally{if(ticket===generation.current)setBusy(false)}
+   hardUnknown.current=false;history.resolve(intent.intentID!);setNotice(`Confirmed ${captured.action.replaceAll('_',' ')} version ${result.version}.`);await refresh().catch(error=>{if(ticket.current())setFailure(error)});if(ticket.current())confirmed()
+  }catch(error){if(ticket.current()){setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();setDenied(true);setUncertain(undefined);setNotice('Current authority was denied. Private decision details cleared; no deferred request may continue.');setBusy(false);return}if(attempted&&intent&&(!(error instanceof APIError)||error.status===408||error.status>=500)){hardUnknown.current=true;setUncertain(intent);setNotice('Outcome uncertain. No retry was made. Check the exact immutable history before making another decision.')}else{if(intent?.intentID)history.resolve(intent.intentID);setNotice('No decision confirmed. Review fresh current sources and versions; your request was not replayed.');await refresh()}}}finally{if(ticket.current()){setBusy(false);lock.current=false}}
  }
  async function check(){
-  if(!uncertain||busy)return
-  const ticket=generation.current;setBusy(true);setFailure(undefined)
+  if(!uncertain||lock.current)return
+  const ticket=scope.capture();if(!ticket.current())return
+  lock.current=true;setBusy(true);setFailure(undefined)
+  const captured=uncertain
   try{
    let cursor:number|undefined,found=false
-   do{const page=unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}/history',{params:{path:{event_id:eventID,team_id:teamID,huddle_id:uncertain.id},query:{cursor,limit:50}}}));if(ticket!==generation.current)return;found=page.items.some(h=>exactHuddleReceipt(h,uncertain));cursor=page.next_cursor??undefined;if(found)break}while(cursor!=null)
-   if(found){setUncertain(undefined);setNotice('Exact recorded decision confirmed from immutable history.');await refresh();if(ticket===generation.current)confirmed()}else setNotice('No exact receipt is visible under current authority. No request was replayed. Keep this intent unresolved or explicitly discard it after reviewing current server state.')
-  }catch(error){if(ticket===generation.current)setFailure(error)}finally{if(ticket===generation.current)setBusy(false)}
+   do{const page=unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/moderation-huddles/{huddle_id}/history',{signal:ticket.signal,params:{path:{event_id:eventID,team_id:teamID,huddle_id:captured.id},query:{cursor,limit:50}}}));ticket.assert();found=page.items.some(h=>exactHuddleReceipt(h,captured));cursor=page.next_cursor??undefined;if(found)break}while(cursor!=null)
+   if(found){hardUnknown.current=false;history.resolve(captured.intentID!);setUncertain(undefined);setNotice('Exact recorded decision confirmed from immutable history.');await refresh().catch(error=>{if(ticket.current())setFailure(error)});if(ticket.current())confirmed()}else setNotice('No exact receipt is visible under current authority. No request was replayed. The original intent remains unresolved.')
+  }catch(error){if(ticket.current()){setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();setDenied(true);setUncertain(undefined);setBusy(false)}}}finally{if(ticket.current()){setBusy(false);lock.current=false}}
  }
- const invalidateAuthority=useCallback(()=>{generation.current++;setBusy(false);setUncertain(undefined);setFailure(undefined);setNotice('Current authority was denied. Pending private decision intent was cleared; no deferred request may continue.')},[])
- return {busy,failure,uncertain,notice,send,check,invalidateAuthority,discard(){setUncertain(undefined);setNotice('Uncertain intent explicitly released. Re-open fresh current context before submitting any new decision.');confirmed()}}
+ const invalidateAuthority=useCallback(()=>{scope.invalidate();lock.current=true;hardUnknown.current=true;setDenied(true);setBusy(false);setUncertain(undefined);setFailure(undefined);setNotice('Current authority was denied. Private decision details were cleared; an attempted command remains fenced by minimal metadata.')},[scope])
+ return {busy,denied,failure,uncertain,blocked,notice,send,check,invalidateAuthority,discard(){if(busy||!window.confirm('Leave the original decision outcome unconfirmed? Its minimal reference will remain; no request will be replayed.'))return;setUncertain(undefined);confirmed()}}
 }

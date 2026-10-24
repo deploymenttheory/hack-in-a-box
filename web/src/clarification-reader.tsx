@@ -5,6 +5,7 @@ import { api, privateKey, unwrap } from './api/client'
 import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
 import { SafeMarkdown } from './components/safe-markdown'
+import { CollectionHeading, ContextLink } from './components/patterns'
 import { Button } from './components/ui/button'
 
 // This canonical read-only destination belongs to the native publication contract.
@@ -25,8 +26,8 @@ export function ClarificationReader() {
   if (answer.error || older.error) return <Failure error={answer.error || older.error} retry={() => { void answer.refetch(); if (older.isError) void older.refetch() }} />
   const page = answer.data!, current = page.answer
   const history = [...page.history, ...(older.data?.pages.flatMap(page => page.items) ?? [])]
-  return <section className="workspace"><Link to="/inbox">← Your inbox</Link><p><Link to="/events/$eventId/clarifications" params={{ eventId }}>Search common official answers</Link></p><article className="panel">
-    <p className="eyebrow">Reviewed common clarification · version {current.version}</p><h1>{current.document.title}</h1>
+  return <section className="fleet-common-answer-reader"><ContextLink back target={{ label: "Your inbox", href: "/inbox" }} /><p><Link to="/events/$eventId/clarifications" params={{ eventId }}>Search common official answers</Link></p><article className="py-6 border-t border-border">
+    <p className="eyebrow">Reviewed common clarification · version {current.version}</p><CollectionHeading title={current.document.title} scope={{ entity: `Reviewed common clarification · version ${current.version}` }} />
     <p>Published {new Date(current.published_at).toLocaleString()} · Author {current.author_name}</p>
     <p>Challenge version {current.source.challenge_version} · Rubric version {current.source.rubric.version}</p>
     <p><Link to="/events/$eventId/resources/$resourceId" params={{ eventId, resourceId: current.source.challenge_id }}>Read the current owning challenge</Link> · <Link to="/events/$eventId/clarifications" params={{ eventId }} hash="published-rubric">Current published rubric</Link></p>
@@ -34,7 +35,7 @@ export function ClarificationReader() {
     {current.document.kind !== 'clarification' && <p>This answer announces a change already published through the challenge or rubric review process.</p>}
     {page.archived && <p>This event is archived. Published answers remain read-only.</p>}
     <SafeMarkdown>{current.document.body}</SafeMarkdown>
-    {history.length > 1 && <details><summary>Published correction history</summary>{history.filter(item => !item.current).map(item => <article key={item.version}>
+    {history.length > 1 && <details><summary>Published correction history</summary>{history.filter(item => !item.current).map(item => <article className="py-6 border-t border-border" key={item.version}>
       <h2>Superseded answer · version {item.version}</h2><p>{new Date(item.published_at).toLocaleString()} · Challenge version {item.source.challenge_version} · Rubric version {item.source.rubric.version}</p><SafeMarkdown>{item.document.body}</SafeMarkdown>
     </article>)}{page.history_has_more && (!older.data || older.hasNextPage) && <Button variant="outline" disabled={older.isFetching} onClick={() => void older.fetchNextPage()}>More published revisions</Button>}</details>}
   </article></section>
