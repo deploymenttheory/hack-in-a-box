@@ -118,3 +118,15 @@ metadata-only paging, failure/retry, denial row suppression, keyboard close/retu
 reopen without cached rows and print hiding. It has no API, authentication, storage,
 media bytes or command receipt. Usage, accessibility and anti-pattern guidance live
 alongside the interactive example and in `docs/design/styleguide.md`.
+
+Correction verification (terminal, source `036802a`): `npx tsc -b` and focused
+ESLint passed; `npm run build:styleguide` and `npm run build` passed. The new
+independent guide journey passed **2/2** desktop/mobile with the guide's existing
+API/cookie/storage guards. `media-history.spec.ts` passed **6/6 participant** and
+**6/6 administrator**, including the production close/return-focus assertion.
+Browser commands: `npx playwright test --config playwright.styleguide.config.ts
+--workers=1 --grep 'media decision history uses'`; the corresponding native spec
+ran with the isolated public/admin media configs at ports 4304/4305. These are
+bounded correction checks; exact-head repository CI and independent delta review
+remain separate gates. The earlier native PostgreSQL/race proof applies to the
+unchanged history API; this correction does not complete the remaining #243 scope.
