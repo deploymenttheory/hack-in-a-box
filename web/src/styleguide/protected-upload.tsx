@@ -1,0 +1,22 @@
+import { useRef, useState } from 'react'
+import { ProtectedUploadControls, type ProtectedUploadControlsProps } from '../protected-upload-controls'
+import { Button } from '../components/ui/button'
+import { Field, Select } from '../components/ui/fields'
+import { Snippet } from './snippet'
+
+type Capture = { key: string; filename: string; media_type: string; size: number; revision: number; team: string; reason: string }
+export function ProtectedUploadExample() {
+  const [file, setFile] = useState<Pick<File, 'name' | 'size' | 'type'>>(), [state, setState] = useState<ProtectedUploadControlsProps['state']>('idle'), [outcome, setOutcome] = useState('unknown'), [attempts, setAttempts] = useState<Capture[]>([]), [notice, setNotice] = useState('')
+  const captured = useRef<Capture>(undefined), input = useRef<HTMLInputElement>(null)
+  function upload() {
+    if (!file || state === 'pending' || state === 'denied') return
+    const intent = captured.current ?? { key: 'synthetic-upload-one', filename: file.name, media_type: file.type, size: file.size, revision: 7, team: 'Synthetic team', reason: 'Synthetic evidence reason' }
+    captured.current = intent
+    setAttempts(previous => [...previous, { ...intent }])
+    setState(outcome === 'unknown' ? 'unknown' : outcome === 'denied' ? 'denied' : 'idle')
+    if (outcome === 'denied') { setAttempts([]); setFile(undefined); captured.current = undefined; if (input.current) input.current.value = '' }
+    if (outcome === 'accepted') { setNotice('Synthetic owner callback received. Nothing was uploaded, attached or submitted.'); setFile(undefined); captured.current = undefined; if (input.current) input.current.value = '' }
+  }
+  function reset() { setFile(undefined); setState('idle'); setAttempts([]); setNotice(''); captured.current = undefined; if (input.current) input.current.value = ''; requestAnimationFrame(() => input.current?.focus()) }
+  return <section className="guide-section" aria-label="Protected upload workflow"><h2>Protected upload and evidence ownership</h2><p>This imports the production controlled upload UI used by content, team evidence and TaskEvidence. Its local callbacks model captured request metadata only: no API, OAuth, FileReader, byte transfer or backend receipt exists here. Choosing a real local file displays metadata only.</p><Field id="synthetic-upload-result" label="Next synthetic callback"><Select value={outcome} onChange={event => setOutcome(event.target.value)}><option value="unknown">Unknown result</option><option value="denied">Current authority denied</option><option value="accepted">Owner callback</option></Select></Field><Button icon="add" variant="outline" disabled={state === 'unknown' || state === 'denied'} onClick={() => setFile({ name: 'synthetic-notes.txt', type: 'text/plain', size: 32 })}>Choose synthetic file metadata</Button><ProtectedUploadControls id="guide-protected-file" inputRef={input} label="Synthetic evidence upload" action="Send synthetic upload callback" file={file} state={state} disabled={false} notice={notice} failure={state === 'denied' ? new Error('Synthetic authority denied; private file metadata cleared.') : undefined} select={value => { setFile(value && { name: value.name, size: value.size, type: value.type }); setNotice('') }} upload={upload} /><p>Callback attempts: {attempts.length}. Unknown requests stay captured; changing the next callback does not replace their metadata. Denial clears the owner’s private file and capture.</p><ol aria-label="Synthetic captured attempts">{attempts.map((attempt, index) => <li key={index}>{JSON.stringify(attempt)}</li>)}</ol><Button icon="refresh" variant="outline" onClick={reset}>Reset upload example</Button><Snippet>{'<ProtectedUploadControls file={metadata} state={uploadState}\n  select={selectPrivateFile} upload={sendCapturedRequest}\n  /* supply id, label, action and disabled */\n/>\n// ProtectedUpload owns native bytes, key/body/revision and scope fences.\n// TaskEvidence attaches the native response only to its unsaved evidence.\n// Never retry on a timer or claim that an upload submitted evidence.'}</Snippet></section>
+}

@@ -31,10 +31,12 @@ for (const delayed of [false, true]) test(`current draft authority loss clears $
   const view = render(<QueryClientProvider client={cache}><IdentityContext.Provider value={{ person, draft_scope: '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic-csrf-token', can_create_events: false }}><TeamDeliverables event={event} onDirty={() => undefined} /></IdentityContext.Provider></QueryClientProvider>)
   if (delayed) await waitFor(() => expect(draftSignal).toBeDefined())
   else expect(await screen.findByLabelText('Evidence label for Repository')).toHaveValue(secret)
-  await act(async () => { cache.setQueryData(privateKey(person.id, event.id, `submission-${teamID}`), { ...page, can_read_draft: false, can_draft: false }) })
+  await act(async () => { cache.setQueryData(privateKey(person.id, event.id, `submission-${teamID}`), { ...page, can_read_draft: false, can_draft: false, can_submit: true }) })
   await waitFor(() => expect(cache.getQueryData(privateKey(person.id, event.id, `submission-draft-${teamID}`))).toBeUndefined())
   if (delayed) { expect(draftSignal?.aborted).toBe(true); await act(async () => { finish(); await deferred }) }
   expect(screen.queryByLabelText('Evidence label for Repository')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Submit formal version' })).toBeDisabled()
+  expect(screen.getByRole('region', { name: 'Team evidence editor' })).toBeVisible()
   expect(document.body.textContent).not.toContain(secret)
   expect(JSON.stringify(cache.getQueryCache().getAll().map(query => query.state.data))).not.toContain(secret)
   view.unmount(); cache.clear()

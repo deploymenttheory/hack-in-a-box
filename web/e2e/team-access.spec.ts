@@ -182,3 +182,17 @@ test('a lost reveal response records only unknown metadata and never repeats an 
   await expect(page.getByRole('region', { name: 'Unconfirmed private access audits' })).toContainText('Original outcome remains unconfirmed')
   await noStoredValue(page)
 })
+
+
+test('keyboard cancellation and Hide restore the current responsive reveal action', async ({ page }, info) => {
+  await accessFixture(page)
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).focus(); await page.keyboard.press('Enter')
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Cancel reveal', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Reveal Team account', exact: true })).toBeFocused()
+  await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Confirm reveal', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('region', { name: 'Temporarily revealed resource', exact: true })).toBeFocused()
+  await page.getByRole('button', { name: 'Hide value', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Reveal Team account', exact: true })).toBeFocused()
+})

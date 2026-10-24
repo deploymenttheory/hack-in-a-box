@@ -255,3 +255,14 @@ test('denied privileged history clears the private editor and its audience previ
   await expect(page.getByRole('region', { name: 'Audience preview' })).toHaveCount(0)
   await expect(page.getByText('SYNTHETIC-PRIVATE-DRAFT-CANARY', { exact: false })).toHaveCount(0)
 })
+
+
+test('closing a new template restores the actual template action for keyboard users', async ({ page }, info) => {
+  await setup(page)
+  await page.getByRole('button', { name: 'Start from template', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(editor(page)).toBeVisible()
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: 'Close editor', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Start from template', exact: true })).toBeFocused()
+})

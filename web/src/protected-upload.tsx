@@ -5,10 +5,7 @@ import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
 import { usePrivateRequestScope } from './private-request-scope'
 import { usePlanningDepartureBarrier } from './planning-operations'
-import { Button } from './components/ui/button'
-import { Input, Label } from './components/ui/fields'
-import { Alert } from './components/ui/surfaces'
-import { Failure } from './components/states'
+import { ProtectedUploadControls } from './protected-upload-controls'
 import { resourceDenied } from './resource-operation'
 
 type UploadBody = { filename: string; media_type: 'application/pdf' | 'image/png' | 'image/jpeg' | 'text/plain'; content: string; team_id?: string; reason?: string }
@@ -60,6 +57,5 @@ function UploadLifetime({ eventID, revision, teamID, reason, id, label, inputLab
       if (resourceDenied(error)) { setDenied(true); setFile(undefined); captured.current = undefined; if (input.current) input.current.value = '' }
     } finally { running.current = false; if (ticket.current()) setPending(false) }
   }
-  if (denied) return <Failure error={failure} />
-  return <section className="fleet-resource-section" aria-label={label}><fieldset className="fleet-resource-fields" disabled={disabled || pending || unknown}><legend>{label}</legend><Label htmlFor={id}>{inputLabel ?? `Choose ${label.toLowerCase()}`}</Label><Input ref={input} id={id} type="file" accept="application/pdf,image/png,image/jpeg,text/plain" onChange={event => { setFile(event.target.files?.[0]); setFailure(undefined); setNotice('') }} />{file && <p>{file.name} · {Math.ceil(file.size / 1024)} KiB · {file.type}</p>}</fieldset>{unknown && <Alert tone="warning" role="status"><h4>Upload outcome unknown</h4><p>The original file may have been stored. A deliberate retry repeats the exact key, bytes, metadata, team and reason. Current authorisation is checked again; no retry is automatic.</p></Alert>}<Button type="button" icon="upload" pending={pending} disabled={disabled || (!file && !unknown)} onClick={() => void upload()}>{action}</Button>{notice && <p role="status">{notice}</p>}{!!failure && <Failure error={failure} />}</section>
+  return <ProtectedUploadControls id={id} label={label} inputLabel={inputLabel} action={action} file={file} state={denied ? 'denied' : pending ? 'pending' : unknown ? 'unknown' : 'idle'} disabled={disabled} inputRef={input} notice={notice} failure={failure} select={selected => { setFile(selected); setFailure(undefined); setNotice('') }} upload={() => void upload()} />
 }

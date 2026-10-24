@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useBlocker } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
@@ -15,7 +15,7 @@ import { DeliverableEditor } from './deliverable-editor'
 import { EvidenceList, OrganiserHelp, SubmissionHistory } from './deliverable-evidence'
 import { words, type SubmissionPage, type Team } from './deliverable-model'
 import { usePrivateRequestScope } from './private-request-scope'
-import { planningDepartureAllowed } from './planning-operations'
+import { planningDepartureAllowed, usePlanningUnknownCommands } from './planning-operations'
 import { resourceDenied, ResourceOperationResult, useResourceOperation } from './resource-operation'
 
 export function TeamDeliverables(props: { event: EventRecord; onDirty: (dirty: boolean) => void }) {
@@ -39,20 +39,24 @@ function TeamSubmission({ event, team, organiser, paused, onDirty }: { event: Ev
   const page = useQuery({ queryKey: privateKey(identity.person.id, event.id, `submission-${team.id}`), retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission', { signal, params: { path: { event_id: event.id, team_id: team.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
   const draftScope = usePrivateRequestScope(`${scope.key}:draft:${page.data?.can_read_draft === true}`)
   const draft = useQuery({ queryKey: privateKey(identity.person.id, event.id, `submission-draft-${team.id}`), enabled: page.data?.can_read_draft === true, retry: false, queryFn: async () => { const ticket = draftScope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission/draft', { signal: ticket.signal, params: { path: { event_id: event.id, team_id: team.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always' })
+  const privateHistory = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${team.id}:evidence:team-draft`), privateCleared = useRef(false)
   const mayReadDraft = page.data?.can_read_draft
   useEffect(() => {
-    if (mayReadDraft !== false && !resourceDenied(draft.error) && !editorDenied && !resourceDenied(page.error)) return
+    if (mayReadDraft !== false && !resourceDenied(draft.error) && !editorDenied && !resourceDenied(page.error)) { privateCleared.current = false; return }
+    if (privateCleared.current) return
+    privateCleared.current = true
+    privateHistory.clear()
     const key = privateKey(identity.person.id, event.id, `submission-draft-${team.id}`)
     void cache.cancelQueries({ queryKey: key })
     cache.removeQueries({ queryKey: key })
-  }, [mayReadDraft, draft.error, editorDenied, page.error, cache, identity.person.id, event.id, team.id])
+  }, [mayReadDraft, draft.error, editorDenied, page.error, cache, identity.person.id, event.id, team.id, privateHistory])
   if (page.isPending) return <Loading />
   if (!page.data || resourceDenied(page.error)) return <Failure error={page.error} retry={() => void page.refetch()} />
   const value = page.data, captain = team.published.find(person => person.id === team.published_captain), editable = value.can_read_draft || value.can_submit
   return <section aria-label="Team submission workspace">{!!page.error && <Failure error={page.error} retry={() => void page.refetch()} />}<CollectionHeading title={team.name} scope={{ entity: 'Competition entry', event: event.name }} description={<>Owner: {team.name}{captain ? ` · Captain ${captain.name}` : ' · Organiser must appoint a captain'}</>} status={<StatusBadge tone={value.outcome === 'frozen' ? 'success' : 'neutral'}>{words(value.outcome)}</StatusBadge>} /><dl className="fleet-resource-facts"><div><dt>Formal submissions and review open</dt><dd>{localDate(value.live_start, event.configuration.timezone)}</dd></div><div><dt>Shared submission cutoff</dt><dd>{localDate(value.cutoff, event.configuration.timezone)}</dd></div><div><dt>Recorded outcome</dt><dd>{words(value.outcome)}{value.frozen_at && ` · Frozen ${localDate(value.frozen_at, event.configuration.timezone)}`}</dd></div></dl>
     {!value.can_submit && value.outcome === 'open' && <p>{value.can_draft ? 'You may prepare and save a private draft. Formal submissions and review open at live start.' : 'Formal submission is unavailable. The challenge must be published and the live submission window must be open.'}</p>}{value.outcome !== 'open' && <p>{value.outcome === 'frozen' ? 'Final evidence is frozen at the cutoff.' : value.outcome === 'not_submitted' ? 'No formal submission was recorded by the cutoff. A private draft does not count as a submission.' : 'This entry is withdrawn and will not be scored.'} Ask an organiser about any exception.</p>}
     <section className="fleet-resource-section" aria-label="Current formal submission"><h3>Current formal evidence</h3>{value.final ? <><p>Formal version {value.final.revision} · Submitted {localDate(value.final.submitted_at, event.configuration.timezone)}{value.final.late ? ' · Late amendment' : ''} · Completion review: {words(value.final.review_status)}</p><EvidenceList eventID={event.id} items={value.final.evidence} /></> : <p>No formal submission accepted.</p>}</section>
-    {editorDenied || resourceDenied(draft.error) ? <Failure error={editorDenied ?? draft.error} /> : editable ? value.can_read_draft && draft.isPending ? <Loading /> : value.can_read_draft && !draft.data ? <Failure error={draft.error} retry={() => void draft.refetch()} /> : <DeliverableEditor event={event} team={team} page={value} initialDraft={value.can_read_draft ? draft.data : undefined} organiser={organiser} paused={paused || !!page.error || (value.can_read_draft && !!draft.error)} onDeny={setEditorDenied} onDirty={setEditorDirty} /> : !organiser && !value.can_read_draft ? <section className="fleet-resource-section"><h3>Competition requirements</h3><p>Competition requirements will appear after the common challenge is published. Your personal preparation remains available above.</p></section> : <section className="fleet-resource-section"><h3>Required and optional work</h3><ul>{value.definitions.map(definition => <li key={definition.id}><strong>{definition.title}</strong> · {definition.required ? 'Required' : 'Optional'} · Due {localDate(definition.due_at, event.configuration.timezone)}<p>{definition.description}</p></li>)}</ul></section>}
+    {editorDenied || resourceDenied(draft.error) ? <Failure error={editorDenied ?? draft.error} /> : editable ? value.can_read_draft && draft.isPending ? <Loading /> : value.can_read_draft && !draft.data ? <Failure error={draft.error} retry={() => void draft.refetch()} /> : <DeliverableEditor key={value.can_read_draft ? 'team-draft' : 'formal-amendment'} event={event} team={team} page={value} initialDraft={value.can_read_draft ? draft.data : undefined} organiser={organiser} paused={paused || !!page.error || (value.can_read_draft && !!draft.error)} onDeny={setEditorDenied} onDirty={setEditorDirty} /> : !organiser && !value.can_read_draft ? <section className="fleet-resource-section"><h3>Competition requirements</h3><p>Competition requirements will appear after the common challenge is published. Your personal preparation remains available above.</p></section> : <section className="fleet-resource-section"><h3>Required and optional work</h3><ul>{value.definitions.map(definition => <li key={definition.id}><strong>{definition.title}</strong> · {definition.required ? 'Required' : 'Optional'} · Due {localDate(definition.due_at, event.configuration.timezone)}<p>{definition.description}</p></li>)}</ul></section>}
     <OrganiserHelp page={value} team={team} event={event} />{value.final && <SubmissionHistory event={event} teamID={team.id} />}{reviewDenied ? <Failure error={reviewDenied} /> : value.can_review && <CompletionReview event={event} teamID={team.id} page={value} paused={paused || !!page.error} onDeny={setReviewDenied} onDirty={setReviewDirty} />}
   </section>
 }

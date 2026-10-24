@@ -19,20 +19,25 @@ export function ResourceReader({ id, event, back }: { id: string; event: EventRe
   const identity = useIdentity(), [denied, setDenied] = useState<unknown>(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:reader`)
   const cache = useQueryClient(), cleared = useRef(false), history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`)
   const key = [...privateKey(identity.person.id, event.id, 'resource-reader'), id]
-  const resource = useQuery({ queryKey: key, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/content/{content_id}', { signal, params: { path: { event_id: event.id, content_id: id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
+  const resource = useQuery({ queryKey: key, enabled: !denied, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/content/{content_id}', { signal, params: { path: { event_id: event.id, content_id: id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
   const revoked = !!denied || resourceDenied(resource.error)
   useEffect(() => {
     if (!revoked || cleared.current) return
     cleared.current = true
+    setDenied(denied ?? resource.error)
     history.clear()
+    scope.invalidate()
+    const affected = [...privateKey(identity.person.id, event.id, 'resource-reader'), id]
+    void cache.cancelQueries({ queryKey: affected, exact: true })
+    cache.removeQueries({ queryKey: affected, exact: true })
     // A per-page denial revokes this page only, not unrelated event resources.
     cache.setQueriesData<InfiniteData<{ items: Page[]; next_cursor: string | null }>>({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }, value => value && ({ ...value, pages: value.pages.map(page => ({ ...page, items: page.items.filter(item => item.id !== id) })) }))
     cache.setQueryData<import('./api/schema.gen').components['schemas']['EventGuidance']>(privateKey(identity.person.id, event.id, 'event-guidance'), value => value && ({ ...value, items: value.items.filter(item => item.id !== id) }))
     void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') })
     void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') })
-  }, [revoked, history, cache, identity.person.id, event.id, id])
+  }, [revoked, denied, resource.error, history, cache, identity.person.id, event.id, id, scope])
   if (revoked) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Failure error={denied ?? resource.error} /></section>
-  if (resource.isPending) return <Loading />
+  if (resource.isPending) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Loading /></section>
   if (!resource.data) return <Failure error={resource.error} retry={() => void resource.refetch()} />
   return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} paused={!!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
 }

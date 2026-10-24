@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { openEventSection } from './event-navigation-fixture'
 import { firstID, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 import { setup, repository, teamID, fileID, otherPerson } from './deliverable-fixtures'
@@ -287,4 +288,35 @@ test('an unknown upload retries its exact captured payload but current denial cl
   await expect(page.getByRole('link', { name: 'Technical notes', exact: true })).toHaveCount(0)
   expect(rejected).toBe(1)
   expect(state.value.final).toBeNull()
+})
+
+for (const pending of [false, true]) test(`losing private-draft authority scrubs the mounted ${pending ? 'pending command' : 'review'} while native live amendment stays available`, async ({ page }) => {
+  await page.clock.install({ time: new Date('2027-06-20T10:00:00Z') })
+  const state = await setup(page)
+  state.draft.revision = 1; state.draft.evidence = [repository('SYNTHETIC-PRIVATE-DRAFT-CANARY', 'https://example.test/private-draft')]
+  await page.reload(); await openEventSection(page, 'Deliverables')
+  await expect(page.getByLabel('Evidence label for Repository', { exact: true })).toHaveValue('SYNTHETIC-PRIVATE-DRAFT-CANARY')
+  await page.getByLabel('Evidence label for Repository', { exact: true }).fill('SYNTHETIC-PRIVATE-UNSAVED-CANARY')
+  await page.getByRole('button', { name: 'Save private draft', exact: true }).click()
+  let held: import('@playwright/test').Route | undefined
+  await page.route(`**/teams/${teamID}/submission/draft`, route => { if (route.request().method() === 'PUT') { held = route; return }; return route.fallback() })
+  if (pending) {
+    await page.getByRole('button', { name: 'Confirm private draft', exact: true }).click()
+    await expect.poll(() => !!held).toBe(true)
+    expect(held!.request().headers()['if-match']).toBe('"1"')
+    expect(held!.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+  }
+  state.value.can_read_draft = false; state.value.can_draft = false; state.value.can_submit = true
+  await page.route(`**/events/${firstID}/teams`, route => route.fulfill({ json: { revision: 2, can_manage: true, can_create: false, frozen: true, freeze_at: state.event.configuration.team_freeze, teams: [state.team], people: [], requests: [] } }))
+  await page.clock.runFor(15_100)
+  await expect(page.getByRole('heading', { name: 'Organiser amendment', exact: true })).toBeVisible()
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Save private draft', exact: true })).toHaveCount(0)
+  await expect(page.getByLabel('Evidence label for Repository', { exact: true })).toHaveCount(0)
+  await expect(page.getByText(/SYNTHETIC-PRIVATE-(?:DRAFT|UNSAVED)-CANARY/)).toHaveCount(0)
+  if (held) await held.fulfill({ json: { ...state.draft, revision: 2, evidence: [repository('SYNTHETIC-PRIVATE-UNSAVED-CANARY', 'https://example.test/private-draft')] } }).catch(() => undefined)
+  await expect(page.getByText('Private draft saved.', { exact: false })).toHaveCount(0)
+  await expect(page.getByText(/SYNTHETIC-PRIVATE-(?:DRAFT|UNSAVED)-CANARY/)).toHaveCount(0)
+  await expect(page.getByLabel('Evidence type for Repository', { exact: true })).toBeEnabled()
+  expect(state.value.can_submit).toBe(true)
 })

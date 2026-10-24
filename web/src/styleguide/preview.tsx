@@ -5,6 +5,7 @@ import { Theme } from '../components/theme'
 import { brandStyle } from '../design-system/palette'
 import { PatternExamples } from '../components/patterns/examples'
 import { TeamCoverageExamples } from './team-coverage'
+import { ProtectedUploadExample } from './protected-upload'
 import { LocalRecordExamples } from './local-records'
 import { PrimitiveExamples } from './primitives'
 import { isPreviewOptions, palettes, type PreviewOptions } from './preferences'
@@ -21,5 +22,6 @@ function Preview() {
   }, [])
   const patterns = location.pathname === '/patterns.html'
   return <Theme mode={options.mode} density={options.density} style={options.palette === 'platform' ? undefined : brandStyle(palettes[options.palette])}><GuideSkipLink target="preview-main">Skip to examples</GuideSkipLink><div id="preview-main" className="guide-frame-content" tabIndex={-1}><h1>{patterns ? 'Task pattern examples' : 'Component examples'}</h1><p>These interactive examples import the production components and use synthetic local state.</p>{patterns ? <><PatternExamples key={`${options.resetKey}:${options.portal}`} portal={options.portal} withinTheme /><LocalRecordExamples key={'local:' + options.resetKey + ':' + options.portal} /><TeamCoverageExamples key={'coverage:' + options.resetKey + ':' + options.portal} /></> : <main><PrimitiveExamples key={options.resetKey} resetKey={options.resetKey} /></main>}</div></Theme>
+  return <Theme mode={options.mode} density={options.density} style={options.palette === 'platform' ? undefined : brandStyle(palettes[options.palette])}><GuideSkipLink target="preview-main">Skip to examples</GuideSkipLink><div id="preview-main" className="guide-frame-content" tabIndex={-1}><h1>{patterns ? 'Task pattern examples' : 'Component examples'}</h1><p>These interactive examples import the production components and use synthetic local state.</p>{patterns ? <><PatternExamples key={`${options.resetKey}:${options.portal}`} portal={options.portal} withinTheme /><LocalRecordExamples key={'local:' + options.resetKey + ':' + options.portal} /><ProtectedUploadExample key={'upload:' + options.resetKey + ':' + options.portal} /></> : <main><PrimitiveExamples key={options.resetKey} resetKey={options.resetKey} /></main>}</div></Theme>
 }
 createRoot(document.getElementById('root')!).render(<StrictMode><Preview /></StrictMode>)

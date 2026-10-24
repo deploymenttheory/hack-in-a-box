@@ -81,3 +81,13 @@ test('organiser readiness warns without a lifecycle gate and starter contacts re
   await expect(page.getByRole('button', { name: 'Save new draft', exact: true })).toBeEnabled()
   await expect(page.getByRole('button', { name: /^Approve version/ })).toHaveCount(0)
 })
+
+
+test('keyboard guidance reader returns to its actual guidance action across widths', async ({ page }, info) => {
+  await setup(page); await openEventSection(page, 'Resources')
+  await page.getByRole('button', { name: 'Read Current event rules', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Current event rules', exact: true })).toBeFocused()
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Read Current event rules', exact: true })).toBeFocused()
+})

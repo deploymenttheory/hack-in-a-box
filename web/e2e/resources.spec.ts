@@ -1,5 +1,5 @@
 import { openEventSection, expectEventSection } from './event-navigation-fixture'
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page, type Route } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 
@@ -142,4 +142,43 @@ test('an unknown acknowledgement keeps its original intent after a current read 
   await page.getByRole('button', { name: 'Use reviewed current state', exact: true }).click()
   expect(attempts).toBe(1)
   await expect(page.getByRole('region', { name: 'Earlier unconfirmed resource commands' })).toContainText('Original outcome remains unconfirmed')
+})
+
+
+test('denied reading clears its exact cached body across Back and reopening while an older GET arrives late', async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Synthetic guidance')
+  const held: Route[] = []
+  await page.route(`**/content/${guideID}**`, async route => {
+    if (route.request().method() === 'POST') return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+    held.push(route)
+  })
+  await page.getByRole('button', { name: 'Refresh resources', exact: true }).click()
+  await expect.poll(() => held.length).toBe(1)
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('You do not have access')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(2)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await held[0].fulfill({ json: state.guide }).catch(() => undefined)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toHaveCount(0)
+  await held[1].fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+  await expect(page.getByRole('alert')).toContainText('You do not have access')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Read Aurora team resource', exact: true })).toBeVisible()
+})
+
+for (const trigger of ['link', 'button'] as const) test(`keyboard ${trigger} reader return keeps the actual opener after a responsive width change`, async ({ page }, info) => {
+  await setup(page)
+  const name = trigger === 'link' ? 'Getting started' : 'Read Getting started'
+  await page.getByRole(trigger, { name, exact: true }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toBeFocused()
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole(trigger, { name, exact: true })).toBeFocused()
 })

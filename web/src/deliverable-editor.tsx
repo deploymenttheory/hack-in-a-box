@@ -20,7 +20,7 @@ export function DeliverableEditor({ event, team, page, initialDraft, organiser, 
   const initialEvidence = initialDraft?.revision ? initialDraft.evidence : page.final?.evidence ?? []
   const [items, setItems] = useState<Evidence[]>(initialEvidence), [saved, setSaved] = useState(initialEvidence), [draftRevision, setDraftRevision] = useState(initialDraft?.revision ?? 0), [formalRevision, setFormalRevision] = useState(page.revision)
   const [reason, setReason] = useState(''), [uploading, setUploading] = useState(false), [latest, setLatest] = useState<Latest>(), [reviewed, setReviewed] = useState(false), [review, setReview] = useState<Review>(), [selected, setSelected] = useState(page.definitions[0]?.id ?? '')
-  const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${team.id}:evidence`, onDeny)
+  const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${team.id}:evidence:${page.can_read_draft ? 'team-draft' : 'formal-amendment'}`, onDeny)
   const dirty = !sameEvidence(items, saved) || !!reason || !!review, busy = operation.pending || uploading
   const locked = paused || operation.blocked || (!page.can_draft && !page.can_submit), problems = evidenceProblems(items), missing = missingRequirements(page.definitions, items)
   const lateChange = page.definitions.some(definition => now >= new Date(definition.due_at).getTime() && JSON.stringify(items.find(item => item.deliverable_id === definition.id)) !== JSON.stringify(page.final?.evidence.find(item => item.deliverable_id === definition.id)))
