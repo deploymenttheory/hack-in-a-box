@@ -17,7 +17,8 @@ export function useCoverageFocus(root: RefObject<HTMLElement | null>) {
   function restore(target: CoverageFocusTarget | undefined) {
     requestAnimationFrame(() => {
       const controls = root.current?.querySelectorAll<HTMLElement>('button,input,textarea,select,a,[tabindex]') ?? []
-      const source = [...controls].find(element => element.getClientRects().length > 0 && !element.matches(':disabled') && (target && 'attribute' in target ? element.getAttribute(target.attribute) === target.value : target && element instanceof HTMLButtonElement && (element.getAttribute('aria-label') ?? element.textContent?.trim().replace(/\s+/g, ' ') ?? '') === target.button))
+      const matches = [...controls].filter(element => element.getClientRects().length > 0 && !element.matches(':disabled') && (target && 'attribute' in target ? element.getAttribute(target.attribute) === target.value : target && element instanceof HTMLButtonElement && (element.getAttribute('aria-label') ?? element.textContent?.trim().replace(/\s+/g, ' ') ?? '') === target.button))
+      const source = matches.length === 1 ? matches[0] : undefined
       ;(source ?? root.current)?.focus()
     })
   }

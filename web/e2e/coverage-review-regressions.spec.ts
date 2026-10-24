@@ -51,7 +51,7 @@ async function setupTeams(page: Page) {
   const team = { id: teamIDs[0], name: 'North Stars', state: 'published' as const, captain: person.id, published_captain: person.id, invitation_code: teamIDs[0], frozen: false, allocation_locked: false, capacity: 8, draft: members, published: members }
   let value: TeamPage = { revision: 2, can_manage: true, can_create: true, frozen: false, freeze_at: '2027-06-12T10:00:00Z', people: members, teams: [team], requests: [] }
   const writes: components['schemas']['TeamCommand'][] = []
-  await page.route(`**/events/${firstID}/teams`, route => { if (route.request().method() === 'POST') { const input = route.request().postDataJSON(); writes.push(input); value = { ...value, revision: value.revision + 1, teams: value.teams.map(t => ({ ...t, allocation_locked: input.action === 'lock' ? true : t.allocation_locked })) } }; return route.fulfill({ json: value }) })
+  await page.route(`**/events/${firstID}/teams`, route => { if (route.request().method() === 'POST') { const input = route.request().postDataJSON(); writes.push(input); value = { ...value, revision: value.revision + 1, teams: value.teams.map(t => ({ ...t, allocation_locked: input.action === 'lock' ? true : input.action === 'unlock' ? false : t.allocation_locked })) } }; return route.fulfill({ json: value }) })
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
   await page.getByRole('button', { name: 'View North Stars', exact: true }).click()
   await page.getByLabel('Allocation decision reason').fill('Reviewed team controls')
@@ -70,11 +70,19 @@ test('nested capacity draft requires deliberate discard and retains its value wh
   await page.getByRole('button', { name: 'Back to roster', exact: true }).click()
   expect(dialogs).toHaveLength(1)
   await expect(page.getByLabel('Hard capacity for North Stars')).toHaveValue('7')
+  await page.getByRole('button', { name: 'Unlock team', exact: true }).click()
+  await page.getByRole('button', { name: 'Cancel change', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Unlock team', exact: true })).toBeFocused()
+  await expect(page.getByLabel('Hard capacity for North Stars')).toHaveValue('7')
+  await page.getByRole('button', { name: 'Unlock team', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm team change', exact: true }).click()
+  await page.getByRole('button', { name: 'View North Stars', exact: true }).click()
+  await expect(page.getByLabel('Hard capacity for North Stars')).toHaveValue('7')
   page.once('dialog', dialog => void dialog.accept())
   await page.getByRole('button', { name: 'Back to roster', exact: true }).click()
   await page.getByRole('button', { name: 'View North Stars', exact: true }).click()
   await expect(page.getByLabel('Hard capacity for North Stars')).toHaveValue('8')
-  expect(writes.map(w => w.action)).toEqual(['lock'])
+  expect(writes.map(w => w.action)).toEqual(['lock', 'unlock'])
 })
 
 test('allocation declarations are retained on cancelled discard and cleared only after accepted local discard', async ({ page }) => {
@@ -161,4 +169,15 @@ test('a held time resolution cannot prepare or send an old profile after project
   await expect(page.getByRole('button', { name: 'Confirm mentor change', exact: true })).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Published mentor roster' })).toBeVisible()
   expect(state.commands).toHaveLength(0)
+})
+
+test('mentor slot cancellation returns to its detail action rather than the identically named header action', async ({ page }) => {
+  await mockMentors(page)
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Mentors')
+  await page.getByLabel('Mentor decision reason').fill('Review this team slot')
+  await page.getByRole('button', { name: 'View North Stars', exact: true }).click()
+  const detailAction = page.getByRole('region', { name: 'North Stars', exact: true }).getByRole('button', { name: 'Change mentor slot', exact: true })
+  await detailAction.focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Cancel mentor edit', exact: true }).click()
+  await expect(detailAction).toBeFocused()
 })

@@ -58,6 +58,7 @@ test('over-capacity previews and known conflicts block manual assignment', async
   await page.getByRole('button', { name: 'Preview mentor change', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('Over capacity')
   await expect(page.getByRole('button', { name: 'Review mentor draft change', exact: true })).toBeDisabled()
+  page.once('dialog', dialog => void dialog.accept())
   await page.getByRole('button', { name: 'Cancel mentor edit', exact: true }).click()
   await page.getByRole('button', { name: /Declared conflicts/ }).click()
   await page.getByLabel('Conflicted mentor').selectOption(mentorIDs[0]); await page.getByLabel('Confirmed competitor in relationship').selectOption('00000000-0000-4000-8000-000000000103')

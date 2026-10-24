@@ -3,7 +3,8 @@
 Issue [#237](https://github.com/deploymenttheory/hack-in-a-box/issues/237), PR
 [#253](https://github.com/deploymenttheory/hack-in-a-box/pull/253). Implementation
 started from main `1c94473edb6e91adc42409bfe50317380e96194f`; the branch was then rebased onto merged planning main
-`ad634ded92f1b4984ed96b8dd00aec889e89810e`, dropping its duplicate shared
+`ad634ded92f1b4984ed96b8dd00aec889e89810e` and then registration main
+`22a42bc5839bb84a408ebcc41ab24735e27175df`, dropping its duplicate shared
 local-record seam and preserving the actual merged parent composition.
 
 ## Scope and boundaries
@@ -62,16 +63,16 @@ No API-less export, bulk apply, total or global search was invented.
 
 - Baseline: 4 desktop/mobile team/mentor publication journeys passed.
 - `npm run lint`: passed.
-- `npm test -- --maxWorkers 2`: 118 tests across 17 files passed.
+- `npm test -- --maxWorkers 2`: 123 tests across 18 files passed.
 - `npm run build`: TypeScript and independent participant/admin builds passed.
 - `npm run build:styleguide`: independent static guide build passed.
 - Focused admin Playwright: teams, mentors and allocation-lifecycle at desktop/mobile;
-  44 journeys passed. Includes exact affected-roster review, cancellation without a
+  62 journeys passed. Includes exact affected-roster review, cancellation without a
   write, locked draft movement, server proposals, publication/freeze blockers,
   post-freeze withdrawal, capacity/conflict checks, availability/DST preservation,
   stale revision, active access revocation, late event response, cutoff crossing,
   interrupted publication and read-only unknown reconciliation without replay.
-- Focused participant Playwright: participant-teams and public-portal; 10 journeys
+- Focused participant Playwright: participant-teams and public-portal; 14 journeys
   passed, preserving confirmed/waitlisted joins, solo placement, no automatic team
   assignment, no private placement pool and read-only published coverage.
 - Independent guide Playwright: 30 journeys passed with cookie/private-storage access
@@ -98,3 +99,44 @@ visible, restore source focus, and distinguish a current projection from a durab
 receipt. Synthetic example state never enters portal consumers. For future changes,
 update the owning composition, its guide example, usage documentation and meaningful
 privacy/timing/recovery checks together.
+
+
+## Independent review fixes, 24 October 2026
+
+The reviewed head `92b09c83a66e50de2dc33bf2d823f296e0798354` is preserved
+as `backup/fleet-team-coverage-92b09c8`. Targeted actual-browser regressions first
+failed on both retained privileged mentor snapshots after a restricted projection,
+the second published slot's return focus, and silent nested-capacity loss. Two
+participant regressions also failed on record focus and unsent join navigation.
+
+The corrected controls are keyed to current owning-domain management capability,
+so fresh restricted coverage immediately unmounts editor/review snapshots without
+waiting for an event-query update. Editor time-resolution tickets end on replacement.
+A live projection generation also fences old parent command closures and late
+privileged POST responses; an interrupted outcome remains unknown rather than
+refilling the permitted roster or manufacturing a receipt. The helper's fifth unit
+regression holds a response over a fresh restricted read and proves both fences.
+
+Capacity drafts are lifted through review/correction and survive another successful
+control change until explicitly saved or discarded. Allocation declarations and
+mentor editor inputs report actual dirty state. Nested mentor editors stay mounted
+hidden/inert during review, preserving typed availability/capacity on correction.
+Local and route discard cancellation retain exact input; accepting discard is the
+only unsaved exit that clears it. Pending and unknown outcomes retain their separate
+barriers; an ordinary draft-discard decision cannot unlock replay.
+
+Source focus uses the actual initiating control's stable record/action key or unique
+native action name, scoped to its workspace. Responsive counterparts are resolved
+when returning. Identically named detail/header actions have explicit distinct keys;
+ambiguous or removed actions fall back to the named workspace, never an arbitrary
+first button. The independently built guide imports this same focus export.
+
+`coverage-review-regressions.spec.ts` now exercises profile/publication downgrades,
+held time resolution, nested capacity and declaration cancel/accept, availability
+correction/discard, successful capacity focus, exact second-slot return across
+viewport changes, and the identically named slot detail/header actions. Participant
+journeys cover actual record/review keyboard return and join-draft route cancel/accept.
+Existing team/mentor policy assertions remain and now explicitly accept deliberate
+discard when their authored journey abandons a typed placement/editor draft.
+
+Final re-review and exact-head full repository CI remain outstanding gates.
