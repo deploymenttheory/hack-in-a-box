@@ -1,3 +1,5 @@
+import { firstID } from './fixtures'
+import { openEventSection } from './event-navigation-fixture'
 import { test, expect } from '@playwright/test'
 import { setupTeams as setup } from './teams-workflow-fixtures'
 
@@ -38,4 +40,30 @@ test('missing encryption keys fail closed in setup', async ({ page }) => {
   await expect(page.getByLabel('New secret workflow endpoint')).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Queue shared-channel TEST' })).toBeDisabled()
   await expect(page.getByText('Endpoint encryption is unavailable.', { exact: false })).toBeVisible()
+})
+
+
+test('rejected exact TEST acknowledgement retry retains its original unknown capsule after editor teardown', async ({ page }) => {
+  await setup(page)
+  const attempts: { id: string; revision: string }[] = []
+  await page.route(`**/events/${firstID}/teams-workflow/test`, route => {
+    attempts.push({ id: route.request().postDataJSON().request_id, revision: route.request().headers()['if-match'] })
+    return attempts.length === 1 ? route.abort('failed') : route.fulfill({ status: 409, json: { error: { code: 'revision_conflict', message: 'Current native version changed', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Queue shared-channel TEST', exact: true }).click()
+  await page.getByRole('button', { name: 'Queue TEST message', exact: true }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Outcome unknown for the shared-channel TEST' })).toBeVisible()
+  await page.getByRole('button', { name: 'Retry same TEST acknowledgement', exact: true }).click()
+  await expect(page.getByText('This has changed. Refresh and try again.', { exact: true })).toBeVisible()
+  await openEventSection(page, 'Overview')
+  await openEventSection(page, 'Campaigns')
+  await page.getByRole('button', { name: 'Channel setup', exact: true }).click()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Teams test · Expected revision 1')
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  await expect(page.getByRole('button', { name: 'Queue shared-channel TEST', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Refresh Teams receipts', exact: true }).click()
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  expect(attempts).toHaveLength(2)
+  expect(attempts[0]).toEqual(attempts[1])
 })

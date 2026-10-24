@@ -35,13 +35,15 @@ export function useCommunicationTests(eventID: string) {
   return { items, blocked: () => items.some(unresolved), observed,
     queued: (test: Omit<QueuedEmailTest, 'state'>) => store.change(value => {
       const previous = value.tests[owner] ?? []
-      return previous.some(item => item.testID === test.testID) ? value : { ...value, tests: { ...value.tests, [owner]: [...previous.filter(unresolved), ...previous.filter(item => !unresolved(item)).slice(-7), test] } }
+      const { testID, campaignID, campaignVersion, providerRevision } = test
+      const metadata = { testID, campaignID, campaignVersion, providerRevision }
+      return previous.some(item => item.testID === testID) ? value : { ...value, tests: { ...value.tests, [owner]: [...previous.filter(unresolved), ...previous.filter(item => !unresolved(item)).slice(-7), metadata] } }
     }) }
 }
 export function useCommunicationCommands(owner: string) {
   const store = useStore(), attempts = store.memory.commands[owner] ?? []
   function update(change: (value: Attempt[]) => Attempt[]) { return store.change(value => ({ ...value, commands: { ...value.commands, [owner]: change(value.commands[owner] ?? []) } })) }
-  return { attempts, unconfirmed: attempts.some(attempt => attempt.blocks || attempt.state === 'pending'), pending: attempts.some(attempt => attempt.state === 'pending'),
+  return { attempts, unconfirmed: attempts.some(attempt => attempt.blocks && attempt.state === 'unknown'), pending: attempts.some(attempt => attempt.state === 'pending'),
     begin: (attempt: { operation: string; revision: number; command: Metadata }, existing?: string) => {
       const id = existing ?? crypto.randomUUID()
       // Whitelist again at the storage boundary: caller objects cannot smuggle

@@ -1,3 +1,4 @@
+import { surveyFixture, managePath } from './survey-workspace-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
@@ -10,8 +11,8 @@ type Provider = components['schemas']['ChannelReadiness']
 const templateID = 'c16fd14c-343f-4f3c-b656-cb065502ce95', audienceID = '1864ae7c-7e78-441b-afbc-6a39b096227b', previewID = '1e9d7260-4c36-4277-8d83-155fe87cc560'
 const attendeeID = '3263f548-bc52-41cf-8d76-3e2a2cb19565', waitlistID = 'fac4ac6a-d95b-4622-93f7-785a0077cb9e'
 const escape = (v: string) => v.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&#34;').replaceAll("'", '&#39;')
-async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted' | 'ambiguous' = 'pending') {
-  await mockWorkspace(page)
+async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted' | 'ambiguous' = 'pending', workspace = true) {
+  if (workspace) await mockWorkspace(page)
   let revision = 1, authorized = true
   const source: Source = { revision, variables: ['event.name', 'person.name', 'event.live_start', 'event.submission_cutoff'], preview: null, templates: [{ id: templateID, version: 1, name: 'Synthetic reminder', purpose: 'reminder', format: 'html', subject: 'Hello {{person.name}}', body: 'Synthetic public message for {{person.name}}', fact_id: null }], audiences: [{ id: audienceID, version: 1, name: 'Confirmed competitors', roles: ['attendee'], registration_states: [], teams: [], outstanding: '', fact_id: null }] }
   const providers: Provider[] = ['in_app', 'smtp', 'teams'].map(channel => ({ channel: channel as Provider['channel'], available: ready && channel === 'smtp', config_revision: ready && channel === 'smtp' ? 'synthetic-v1' : '', supports_self_test: channel !== 'teams', self_test_available: ready && channel === 'smtp', reason: ready && channel === 'smtp' ? 'ready' : 'not_configured', self_test_reason: channel === 'teams' ? 'broadcast_only' : ready && channel === 'smtp' ? 'ready' : 'not_configured', setup_url: '#campaign-provider-setup' }))
@@ -38,6 +39,7 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
   await page.route(`**/events/${firstID}/communications**`, async route => {
     const req = route.request(), path = new URL(req.url()).pathname
     const fail = (status: number, code: string) => route.fulfill({ status, json: { error: { code, message: 'Synthetic reviewed-state rejection', request_id: 'synthetic' } } })
+    if (path.endsWith('/automation')) return route.fallback()
     if (!authorized) return fail(403, 'forbidden')
     if (path.endsWith('/delivery')) return route.fulfill({ json: { state: state.receipt, reason: state.receipt === 'accepted' ? 'relay_accepted' : state.receipt === 'ambiguous' ? 'acceptance_unknown' : 'awaiting_submission', updated_at: '2026-10-22T12:00:00Z' } })
     if (path.endsWith('/self-test-preview')) {
@@ -365,4 +367,116 @@ for (const receipt of ['pending', 'ambiguous'] as const) test(`original ${receip
   await page.getByRole('button', { name: 'Check original TEST', exact: true }).click()
   await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Inbox delivery and reading are unconfirmed')
   await expect(page.getByRole('button', { name: 'Queue Email test to myself', exact: true })).toBeEnabled()
+})
+
+
+for (const receipt of ['pending', 'ambiguous'] as const) test(`original ${receipt} Email TEST survives survey tab, version and capability changes`, async ({ page }) => {
+  const survey = await surveyFixture(page, true)
+  const data = await prepare(page, true, receipt, false)
+  await saveAndPreview(page)
+  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText(receipt === 'pending' ? 'Test queued' : 'Submission is uncertain')
+  // Use actual sibling links and the conditional production survey tab.
+  await page.getByText('Related event workspaces and private downloads', { exact: true }).click()
+  await page.getByRole('link', { name: 'Surveys and feedback', exact: true }).click()
+  await page.locator(`a[href="${managePath}"]:visible`).click()
+  await page.getByRole('button', { name: 'Invitations', exact: true }).click()
+  await page.getByRole('button', { name: 'Compose and approve invitation message', exact: true }).click()
+  await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
+  await page.getByLabel('Reason for campaign changes').fill('Review the original TEST in survey')
+  await expect(page.getByRole('button', { name: 'Queue Email test to myself', exact: true })).toBeDisabled()
+  page.on('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  survey.configuration.version++
+  survey.state.writable = false
+  await page.getByRole('button', { name: 'Refresh survey authority', exact: true }).click()
+  await expect(page.getByText('This event is read-only.', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Invitations', exact: true }).click()
+  await page.getByRole('button', { name: 'Compose and approve invitation message', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText(receipt === 'pending' ? 'Test queued' : 'Submission is uncertain')
+  survey.state.writable = true
+  await page.getByRole('button', { name: 'Refresh survey authority', exact: true }).click()
+  await page.getByRole('button', { name: 'Compose and approve invitation message', exact: true }).click()
+  await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
+  await page.getByLabel('Reason for campaign changes').fill('Review after current authority returns')
+  await expect(page.getByRole('button', { name: 'Queue Email test to myself', exact: true })).toBeDisabled()
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
+  data.state.receipt = 'accepted'
+  await page.getByRole('button', { name: 'Check original TEST', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Inbox delivery and reading are unconfirmed')
+  await expect(page.getByRole('button', { name: 'Queue Email test to myself', exact: true })).toBeEnabled()
+})
+
+test('unknown invitation metadata and original revision survive survey tab version and capability resets', async ({ page }) => {
+  const data = await surveyFixture(page, true)
+  data.state.dropAutomation = 1
+  await page.goto(managePath)
+  await page.getByRole('button', { name: 'Invitations', exact: true }).click()
+  await page.getByLabel('Approved invitation campaign and exact version').selectOption(data.campaign.campaign.definition.id)
+  await page.getByLabel('Reason for this invitation decision').fill('PRIVATE-LIFETIME-REASON-CANARY')
+  await page.getByRole('button', { name: 'Save exact survey invitation binding', exact: true }).click()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Invitation save · Expected revision 7')
+  await expect(history).not.toContainText('PRIVATE-LIFETIME-REASON-CANARY')
+  page.on('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: 'Overview', exact: true }).click()
+  data.configuration.version++
+  data.state.writable = false
+  await page.getByRole('button', { name: 'Refresh survey authority', exact: true }).click()
+  await expect(page.getByText('This event is read-only.', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Invitations', exact: true }).click()
+  await expect(history).toContainText('Expected revision 7')
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  await expect(page.getByLabel('Reason for this invitation decision')).toHaveValue('')
+  data.state.writable = true
+  await page.getByRole('button', { name: 'Refresh survey authority', exact: true }).click()
+  await expect(page.getByLabel('Reason for this invitation decision')).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Save exact survey invitation binding', exact: true })).toBeDisabled()
+  await expect(history).toContainText('Expected revision 7')
+  expect(data.automationWrites).toHaveLength(1)
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-LIFETIME-REASON-CANARY')
+})
+
+for (const outcome of ['acknowledged', 'lost'] as const) test(`pending TEST ${outcome} response after browser navigation retains original effect tracking`, async ({ page }) => {
+  const data = await prepare(page)
+  await page.route(`**/events/${firstID}/communications/deliveries**`, route => route.fulfill({ json: { items: [], next_cursor: null, archived: false, paused: false } }))
+  await saveAndPreview(page)
+  await page.getByRole('link', { name: 'Delivery history and failure review', exact: true }).click()
+  await page.getByRole('link', { name: '← Back to event', exact: true }).click()
+  await openEventSection(page, 'Campaigns')
+  await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
+  await page.getByLabel('Reason for campaign changes').fill('PRIVATE-LATE-ACK-REASON')
+  let release: () => void = () => {}, started = false
+  const held = new Promise<void>(resolve => { release = resolve })
+  await page.route(`**/events/${firstID}/communications/campaigns/*`, async route => {
+    if (route.request().method() === 'POST' && route.request().postDataJSON().action === 'test_self') { started = true; await held }
+    return route.fallback()
+  })
+  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+  await expect.poll(() => started).toBe(true)
+  await page.goBack()
+  await expect(page).toHaveURL(/communications\/deliveries$/)
+  data.state.dropTest = outcome === 'lost'
+  const response = outcome === 'lost'
+    ? page.waitForEvent('requestfailed', { predicate: request => request.url().includes('/communications/campaigns/') })
+    : page.waitForResponse(response => response.url().includes('/communications/campaigns/') && response.request().method() === 'POST')
+  release(); await response
+  await page.goForward()
+  await openEventSection(page, 'Campaigns')
+  if (outcome === 'acknowledged') {
+    await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Test queued')
+    await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
+    await page.getByLabel('Reason for campaign changes').fill('Fresh explicit review')
+    await expect(page.getByRole('button', { name: 'Queue Email test to myself', exact: true })).toBeDisabled()
+    await expect(page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })).toHaveCount(0)
+  } else {
+    const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+    await expect(history).toContainText('Campaign test_self')
+    await expect(history).toContainText('Original outcome remains unconfirmed')
+    await expect(page.getByRole('button', { name: 'New campaign', exact: true })).toBeDisabled()
+  }
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-LATE-ACK-REASON')
 })

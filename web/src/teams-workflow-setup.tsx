@@ -84,7 +84,7 @@ function Setup({ eventID, canEdit, initial, changed, parent, deny, readFresh }: 
       changed()
     } catch (error) {
       const unknown = !(error instanceof APIError) || error.status >= 500 || error.status === 408
-      if (unknown) history.uncertain(operation); else history.complete(operation)
+      if (unknown || retry) history.uncertain(operation); else history.complete(operation)
       if (active.current && ticket.current()) {
         if (error instanceof APIError && [401,403,404].includes(error.status)) { setEndpoint(''); setUnknown(undefined); deny(); return }
         setFailure(error); if (unknown) setUnknown(intent)

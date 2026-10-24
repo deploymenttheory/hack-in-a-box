@@ -80,8 +80,8 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
     return () => { cancelAnimationFrame(focus); cancelAnimationFrame(scroll) }
   }, [step, pending])
   const externalChanged = initialPage.revision > revision
-  const disabled = !readFresh || pending || !!unknownCommand || conflict || externalChanged || !page.can_manage || !event.can_edit, actionDisabled = disabled || !reason.trim()
-  useEffect(() => { onDirty(dirty || !!unknownCommand || pending); return () => onDirty(false) }, [dirty, unknownCommand, pending, onDirty])
+  const disabled = !readFresh || pending || history.pending || !!unknownCommand || conflict || externalChanged || !page.can_manage || !event.can_edit, actionDisabled = disabled || !reason.trim()
+  useEffect(() => { onDirty(dirty || !!unknownCommand || pending || history.pending); return () => onDirty(false) }, [dirty, unknownCommand, pending, history.pending, onDirty])
   const path = { event_id: event.id }, header = { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${revision}"` }
   async function current(id?: string) {
     const ticket = scope.capture(); ticket.assert()
@@ -100,7 +100,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
     setStep(value)
   }
   async function sourceChange(command: Omit<SourceCommand, 'reason'>) {
-    if (writing.current || unknownCommand) return
+    if (writing.current || history.pending || unknownCommand) return
     const ticket = scope.capture(); if (!ticket.current()) return
     writing.current = true
     const operation = history.begin({ operation: `Campaign ${command.action}`, revision, command: { intentID: crypto.randomUUID(), action: command.action } })
@@ -120,7 +120,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
   async function campaignChange(action: CampaignCommand['action'], channel?: Channel, reviewed?: SelfTestPreview) {
     if (action === 'test_self' && channel === 'smtp' && tests.blocked()) return
     if (action === 'test_self' && (!reviewed || reviewed.actor_id !== identity.person.id || reviewed.channel !== channel || reviewed.revision !== revision || reviewed.campaign_version !== detail?.campaign.campaign.version)) return
-    if (writing.current || unknownCommand) return
+    if (writing.current || history.pending || unknownCommand) return
     const ticket = scope.capture(); if (!ticket.current()) return
     writing.current = true
     const operation = history.begin({ operation: `Campaign ${action}`, revision, command: { intentID: crypto.randomUUID(), action } })
@@ -179,7 +179,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
   const currentPreview = preview && preview.template_version === selectedTemplate?.version && preview.audience_version === selectedAudience?.version
   const approvalBlocked = detail?.campaign.blockers.some(code => !['approval_outdated', 'provider_configuration_changed'].includes(code)) ?? true
   return <section ref={frame} id="communications" className="campaign-composer fleet-communications"><h2>Campaign composer</h2><CommunicationCommandHistory attempts={history.attempts} /><p><Link to="/events/$eventId/communications/deliveries" params={{ eventId: event.id }}>Delivery history and failure review</Link></p><p>Review the content, current eligible audience, channels and schedule before explicitly approving. Approval does not publish teams, challenges or results.</p>
-    <section hidden={editing} className="fleet-campaign-collection" aria-label="Saved campaigns"><div className="fleet-pattern-actions"><h3>Campaigns</h3><Button icon="shield" variant="outline" disabled={pending} data-record-focus="channel-setup" onClick={() => { opener.current = 'channel-setup'; entryFocus.current = true; setEditing(true); setStep('channels') }}>Channel setup</Button><Button data-record-focus="new-campaign" icon="add" disabled={pending || !!unknownCommand} onClick={() => void choose()}>New campaign</Button></div><CollectionRecords label="Saved campaigns" rows={page.campaigns} rowKey={row => row.campaign.definition.id} rowLabel={row => row.campaign.definition.name} columns={[{ id: 'status', label: 'State', essential: true, cell: row => <StatusBadge>{row.status.replaceAll('_', ' ')}</StatusBadge> }, { id: 'version', label: 'Version', cell: row => row.campaign.version }, { id: 'channels', label: 'Channels', cell: row => row.campaign.definition.channels.map(channel => channelNames[channel]).join(', ') }]} actions={row => <Button icon="next" variant="ghost" data-record-focus={row.campaign.definition.id} disabled={pending} onClick={() => void choose(row.campaign.definition.id)} aria-label={`Review ${row.campaign.definition.name}`}>Review</Button>} />{!page.campaigns.length && <p>No campaigns saved yet. Choose New campaign to review its message, audience and schedule.</p>}</section>
+    <section hidden={editing} className="fleet-campaign-collection" aria-label="Saved campaigns"><div className="fleet-pattern-actions"><h3>Campaigns</h3><Button icon="shield" variant="outline" disabled={pending} data-record-focus="channel-setup" onClick={() => { opener.current = 'channel-setup'; entryFocus.current = true; setEditing(true); setStep('channels') }}>Channel setup</Button><Button data-record-focus="new-campaign" icon="add" disabled={pending || history.pending || !!unknownCommand} onClick={() => void choose()}>New campaign</Button></div><CollectionRecords label="Saved campaigns" rows={page.campaigns} rowKey={row => row.campaign.definition.id} rowLabel={row => row.campaign.definition.name} columns={[{ id: 'status', label: 'State', essential: true, cell: row => <StatusBadge>{row.status.replaceAll('_', ' ')}</StatusBadge> }, { id: 'version', label: 'Version', cell: row => row.campaign.version }, { id: 'channels', label: 'Channels', cell: row => row.campaign.definition.channels.map(channel => channelNames[channel]).join(', ') }]} actions={row => <Button icon="next" variant="ghost" data-record-focus={row.campaign.definition.id} disabled={pending} onClick={() => void choose(row.campaign.definition.id)} aria-label={`Review ${row.campaign.definition.name}`}>Review</Button>} />{!page.campaigns.length && <p>No campaigns saved yet. Choose New campaign to review its message, audience and schedule.</p>}</section>
     {tests.blocked() && <p role="alert">An earlier Email TEST is pending or its submission remains uncertain. A replacement Email TEST is blocked until the original native request has a confirmed submission outcome. Changing campaigns, templates or delivery setup does not clear this barrier.</p>}
     {page.can_manage && tests.items.map(test => <SMTPTestDelivery key={test.testID} eventID={event.id} testID={test.testID} observed={tests.observed} denied={deny} />)}
     {externalChanged && <p role="alert">Current campaign facts have changed. Refresh and review the current message, audience, channel and schedule before another command.</p>}
