@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { CollectionHeading, CollectionRecords, CollectionPagination } from './components/patterns/collection'
+import { StatusBadge } from './components/ui/feedback'
+import { Icon } from './components/ui/icon'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, APIError, privateKey, unwrap } from './api/client'
 import { useIdentity } from './session'
 import { usePrivateRequestScope } from './private-request-scope'
-import { Button } from './components/ui/button'
+import { Button, buttonVariants } from './components/ui/button'
 import { Failure, Loading } from './components/states'
 import { readOutcome, readReview, type Outcome, type OutcomeDefinition } from './outcome-api'
 import { CommandState, outcomeDenied, useOutcomeCommand, useOutcomeUnsent } from './outcome-command'
@@ -16,14 +19,53 @@ export function OutcomeWorkspace() {
   const identity=useIdentity(),search=useSearch({strict:false}) as {event?:string}
  return <OutcomeDirectory key={`${identity.person.id}:${identity.draft_scope}:${search.event??'general'}`} eventID={search.event}/>
 }
-function OutcomeDirectory({eventID}:{eventID?:string}){
- const identity=useIdentity(),cache=useQueryClient(),scope=usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:ideas:${eventID??'general'}`)
+function OutcomeDirectory({ eventID }: { eventID?: string }) {
+  const identity = useIdentity(), cache = useQueryClient(), navigate = useNavigate()
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:ideas:${eventID ?? 'general'}`)
+  const [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(() => crypto.randomUUID())
   const [mode, setMode] = useState<'own' | 'review'>('own'), [blocked, setBlocked] = useState<unknown>(), [creating, setCreating] = useState(false)
-  const deny=useCallback((error:unknown)=>{scope.invalidate();setBlocked(error);for(const resource of ['outcome-list','outcome-own-team']){const queryKey=privateKey(identity.person.id,eventID??'general',resource);void cache.cancelQueries({queryKey});cache.removeQueries({queryKey})}},[scope,cache,identity.person.id,eventID])
-  const listing = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, eventID ?? 'general', 'outcome-list'), mode], enabled: !blocked, initialPageParam: undefined as string | undefined, queryFn: async ({ pageParam, signal }) => { const ticket = scope.capture(); ticket.assert(); try { const value = unwrap(await api.GET('/api/v1/outcomes', { signal, params: { query: { mode, event_id: mode === 'review' ? eventID : undefined, cursor: pageParam, limit: 25 } } })); ticket.assert(); return value } catch (error) { if (ticket.current() && outcomeDenied(error)) { deny(error) }; throw error } }, getNextPageParam: p => p.next_cursor ?? undefined, refetchInterval: 15_000, refetchOnWindowFocus: 'always', retry: false })
-  return <section className="workspace outcome-workspace"><div className="page-heading"><div><p className="eyebrow">Ideas and evidenced follow-through</p><h1>Ideas</h1><p>Any signed-in organisation member can propose an idea without joining an event. Estimates and self-reports remain distinct from demonstrated adoption.</p></div><Link to="/projects">Browse reviewed projects</Link></div>
-    {import.meta.env.MODE === 'admin' && eventID && <div className="actions"><Button variant="outline" onClick={() => { scope.renew(); setBlocked(undefined); setMode('own') }}>My ideas</Button><Button variant="outline" onClick={() => { scope.renew(); setBlocked(undefined); setMode('review') }}>Organiser review for this event</Button></div>}
-    {blocked ? <Failure error={blocked} /> : <><Button disabled={creating} onClick={() => setCreating(true)}>{creating ? 'New idea form open' : 'Propose an idea'}</Button>{creating && <NewIdea key={`${identity.person.id}:${eventID ?? 'general'}`} eventID={eventID} scope={scope} deny={deny} />}{listing.isPending ? <Loading /> : listing.error ? <Failure error={listing.error} retry={() => void listing.refetch()} /> : <><div className="event-grid">{listing.data.pages.flatMap(p => p.items).map(value => <article key={value.id} className="panel"><span className="badge">{value.status.replaceAll('_', ' ')}</span><h2><Link to="/ideas/$outcomeId" params={{ outcomeId: value.id }}>{value.definition.problem}</Link></h2><p>{value.definition.kind === 'pitch' ? 'Future-theme pitch' : 'Team outcome'} · Version {value.current_version}</p><p>{value.owner_id ? 'A follow-through owner is assigned.' : 'No follow-through owner assigned.'}</p></article>)}</div>{!listing.data.pages[0].items.length && <p>No ideas are available in this view.</p>}{listing.hasNextPage && <Button disabled={listing.isFetchingNextPage} onClick={() => void listing.fetchNextPage()}>More ideas</Button>}</>}</>}
+  const proposal = useRef<HTMLDivElement>(null)
+  const prefix = useMemo(() => [...privateKey(identity.person.id, eventID ?? 'general', 'outcome-list'), identity.draft_scope, mount], [identity.person.id, identity.draft_scope, eventID, mount])
+  const deny = useCallback((error: unknown) => {
+    scope.invalidate(); setBlocked(error)
+    void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix })
+    const teams = privateKey(identity.person.id, eventID ?? 'general', 'outcome-own-team')
+    void cache.cancelQueries({ queryKey: teams }); cache.removeQueries({ queryKey: teams })
+  }, [scope, cache, prefix, identity.person.id, eventID])
+  useEffect(() => () => { void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix }) }, [cache, prefix])
+  useEffect(() => {
+    if (creating) { const heading = proposal.current?.querySelector('h2'); if (heading) { heading.tabIndex = -1; heading.focus() } }
+  }, [creating])
+  const listing = useInfiniteQuery({ queryKey: [...prefix, mode, generation], gcTime: 0, enabled: !blocked, initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      await Promise.resolve()
+      const ticket = scope.capture(); ticket.assert()
+      try {
+        const value = unwrap(await api.GET('/api/v1/outcomes', { signal, params: { query: { mode, event_id: mode === 'review' ? eventID : undefined, cursor: pageParam, limit: 25 } } }))
+        ticket.assert(); return value
+      } catch (error) { if (ticket.current() && outcomeDenied(error)) deny(error); throw error }
+    }, getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 15_000, refetchOnWindowFocus: 'always', retry: false })
+  function chooseMode(next: 'own' | 'review') { scope.renew(); setBlocked(undefined); setMode(next); setGeneration(crypto.randomUUID()) }
+  const records = listing.data?.pages.flatMap(page => page.items) ?? []
+  return <section className="workspace fleet-outcomes fleet-outcomes--private">
+    <CollectionHeading title="Ideas" scope={{ entity: mode === 'review' ? 'Current event organiser review' : 'Your ideas and follow-through' }} description={<><p>Propose an idea, review its current source and follow the evidence. Estimates and self-reports remain distinct from demonstrated adoption.</p><Link className="fleet-outcome-navigation" to="/projects"><Icon name="external" />Browse reviewed projects</Link></>} primary={!blocked ? { label: creating ? 'New idea form open' : 'Propose an idea', icon: 'add', disabled: creating, onSelect: () => setCreating(true) } : undefined} />
+    {import.meta.env.MODE === 'admin' && eventID && <nav className="fleet-pattern-actions fleet-outcome-views" aria-label="Idea directory view"><Button icon="user" variant="ghost" disabled={creating} aria-pressed={mode === 'own'} onClick={() => chooseMode('own')}>My ideas</Button><Button icon="shield" variant="ghost" disabled={creating} aria-pressed={mode === 'review'} onClick={() => chooseMode('review')}>Organiser review for this event</Button></nav>}
+    {blocked ? <Failure error={blocked} /> : <>
+      {creating && <div ref={proposal}><NewIdea key={`${identity.person.id}:${identity.draft_scope}:${eventID ?? 'general'}`} eventID={eventID} scope={scope} deny={deny} /></div>}
+      <div className="fleet-outcome-directory" aria-busy={listing.isFetching || undefined}>
+        <p className="fleet-outcome-evidence-note"><Icon name="info" />A review status records a deliberate decision. It does not establish achieved impact, an award or a published project.</p>
+        {listing.isPending ? <Loading /> : listing.error ? <Failure error={listing.error} retry={() => void listing.refetch()} /> : <>
+          <CollectionRecords label="Ideas and follow-through" rows={records} rowKey={value => value.id} rowLabel={value => value.definition.problem} destination={value => ({ href: `/ideas/${value.id}`, label: value.definition.problem, onNavigate: () => void navigate({ to: '/ideas/$outcomeId', params: { outcomeId: value.id } }) })} columns={[
+            { id: 'status', label: 'Review status', essential: true, cell: value => <StatusBadge>{value.status.replaceAll('_', ' ')}</StatusBadge> },
+            { id: 'source', label: 'Source', cell: value => value.definition.kind === 'pitch' ? 'Future-theme pitch' : 'Team outcome' },
+            { id: 'owner', label: 'Follow-through', cell: value => value.owner_id ? 'Owner assigned' : 'No owner assigned' },
+            { id: 'version', label: 'Current version', cell: value => value.current_version },
+          ]} actions={value => <Link className={buttonVariants({ variant: 'ghost' })} to="/ideas/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.definition.problem}`}><Icon name="next" />Open</Link>} />
+          {!records.length && <p>No ideas are available in this view.</p>}
+          <CollectionPagination source={{ kind: 'cursor', loaded: records.length, busy: listing.isFetchingNextPage, next: listing.hasNextPage ? () => void listing.fetchNextPage() : undefined }} />
+        </>}
+      </div>
+    </>}
   </section>
 }
 
