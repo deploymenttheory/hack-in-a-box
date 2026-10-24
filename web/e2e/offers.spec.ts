@@ -97,6 +97,13 @@ test('a lost offer response retains the original intent and current state checks
   await page.getByRole('button', { name: 'Check current status' }).click()
   expect(writes).toBe(1)
   await expect(page.getByText(/server returned application revision/)).toHaveCount(0)
+  await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toContainText('Expected revision 1')
+  page.once('dialog', dialog => { expect(dialog.message()).toContain('outcomes still unconfirmed'); void dialog.dismiss() })
+  await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Find events', exact: true }).click(); await expect(page).toHaveURL(new RegExp('/register/' + firstID + '$'))
+  await expect(page.getByRole('button', { name: 'Withdraw application' })).toBeDisabled(); expect(writes).toBe(1)
+  page.once('dialog', dialog => { expect(dialog.message()).toContain('outcomes still unconfirmed'); void dialog.accept() })
+  await page.getByRole('navigation', { name: 'Main navigation', exact: true }).getByRole('link', { name: 'Find events', exact: true }).click(); await expect(page).toHaveURL(/\/register$/)
+  await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toHaveCount(0); expect(writes).toBe(1)
 })
 
 test('a stale acceptance reads the latest revision before a separately reviewed request', async ({ page }) => {
