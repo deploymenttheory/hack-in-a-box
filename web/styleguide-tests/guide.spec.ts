@@ -273,5 +273,12 @@ test('production upload controls keep captured retries deliberate, clear denial 
   await expect(upload.getByRole('status').filter({ hasText: 'Synthetic owner callback' })).toBeFocused()
   await expect(upload.getByRole('button', { name: 'Send synthetic upload callback', exact: true })).toBeDisabled()
   expect(await frame.locator('body').evaluate(element => element.scrollWidth > innerWidth)).toBe(false)
-  await upload.screenshot({ path: info.outputPath('protected-upload-guide.png') })
+  // Capture the same production preview entry directly so tall evidence is not
+  // clipped by the guide's deliberately bounded interactive iframe viewport.
+  await page.goto('/patterns.html')
+  const standalone = page.getByRole('region', { name: 'Protected upload workflow', exact: true })
+  await standalone.getByRole('button', { name: 'Choose synthetic file metadata', exact: true }).click()
+  await standalone.getByRole('button', { name: 'Send synthetic upload callback', exact: true }).click()
+  await expect(standalone.getByRole('region', { name: 'Unconfirmed upload', exact: true })).toBeFocused()
+  await page.screenshot({ path: info.outputPath('protected-upload-guide.png'), fullPage: true })
 })
