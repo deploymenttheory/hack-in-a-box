@@ -60,3 +60,14 @@ func (h handlers) GetOwnRepositoryInvitations(
 	}
 	return convertDTO[contract.GetOwnRepositoryInvitations200JSONResponse](result)
 }
+
+func (h handlers) GetRepositoryAccessReceipt(
+	ctx context.Context,
+	r contract.GetRepositoryAccessReceiptRequestObject,
+) (contract.GetRepositoryAccessReceiptResponseObject, error) {
+	result, err := h.repositoryAccess().ReadReceipt(ctx, actor(ctx).ID, r.EventId, r.TeamId, r.PlanId, string(r.Params.Action))
+	if err != nil {
+		return nil, fmt.Errorf("original repository access receipt API: %w", err)
+	}
+	return convertDTO[contract.GetRepositoryAccessReceipt200JSONResponse](result)
+}

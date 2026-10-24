@@ -1364,6 +1364,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/repositories/{team_id}/access/receipts/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Read only the current actor's immutable original review or approval receipt for this event, team and numeric repository. Requires current organiser read authority. Historical plan ID is exact, independent of the latest plan or event revision. No provider call, write, audit intent, job or revision change occurs. A null plan never proves absence of an effect and never permits replay or replacement. */
+        get: operations["getRepositoryAccessReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/repositories/{team_id}/invitations": {
         parameters: {
             query?: never;
@@ -4387,6 +4408,14 @@ export interface components {
         RepositoryAccessResult: {
             receipt: components["schemas"]["RepositoryAccessPlan"] | null;
             current: components["schemas"]["RepositoryAccessView"];
+        };
+        RepositoryAccessReceipt: {
+            /** @enum {string} */
+            action: "review" | "approve";
+            /** Format: uuid */
+            actor_id: string | null;
+            plan: components["schemas"]["RepositoryAccessPlan"] | null;
+            command_fingerprint: string | null;
         };
         OwnRepositoryInvitations: {
             /** Format: uuid */
@@ -10097,6 +10126,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RepositoryAccessResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRepositoryAccessReceipt: {
+        parameters: {
+            query: {
+                action: "review" | "approve";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exact original actor-bound receipt, or null if no matching original receipt can be supplied. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositoryAccessReceipt"];
                 };
             };
             default: components["responses"]["Error"];

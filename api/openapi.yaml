@@ -1748,6 +1748,23 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/RepositoryAccessResult' }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/repositories/{team_id}/access/receipts/{plan_id}:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - { name: team_id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: plan_id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getRepositoryAccessReceipt
+      description: Read only the current actor's immutable original review or approval receipt for this event, team and numeric repository. Requires current organiser read authority. Historical plan ID is exact, independent of the latest plan or event revision. No provider call, write, audit intent, job or revision change occurs. A null plan never proves absence of an effect and never permits replay or replacement.
+      parameters:
+        - { name: action, in: query, required: true, schema: { type: string, enum: [review, approve] } }
+      responses:
+        '200':
+          description: Exact original actor-bound receipt, or null if no matching original receipt can be supplied.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RepositoryAccessReceipt' }
+        default: { $ref: '#/components/responses/Error' }
   /api/v1/events/{event_id}/repositories/{team_id}/invitations:
     parameters:
       - { $ref: '#/components/parameters/EventID' }
@@ -7687,6 +7704,15 @@ components:
       properties:
         receipt: { allOf: [{ $ref: '#/components/schemas/RepositoryAccessPlan' }], nullable: true }
         current: { $ref: '#/components/schemas/RepositoryAccessView' }
+    RepositoryAccessReceipt:
+      type: object
+      additionalProperties: false
+      required: [action, actor_id, plan, command_fingerprint]
+      properties:
+        action: { type: string, enum: [review, approve] }
+        actor_id: { type: string, format: uuid, nullable: true }
+        plan: { allOf: [{ $ref: '#/components/schemas/RepositoryAccessPlan' }], nullable: true }
+        command_fingerprint: { type: string, nullable: true, pattern: '^[0-9a-f]{64}$' }
     OwnRepositoryInvitations:
       type: object
       additionalProperties: false

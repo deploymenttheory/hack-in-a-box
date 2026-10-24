@@ -64,3 +64,52 @@ journeys. Those are contracts to retain, not unexecuted proof for this draft.
   staff access read, no domain/provider writes and no horizontal overflow checked.
 
 This is first-slice proof only. No command/guide/full-acceptance proof is claimed.
+
+## Expanded source checkpoint — not completed UI verification
+
+The draft now contains App setup/rotation/disconnect/installation review,
+event-wide published-team queue and selected-team lookup-only reconciliation,
+exact access review/approval and distinct provider/grant status, own invitations,
+private drafts and safe actor/session/resource metadata above private owners.
+Regular UI projects the current own team and native own-invitation authority;
+organiser flags do not expose administration. Pure production review controls
+are imported by the synthetic independent guide. Expanded UI/guide source still
+needs fresh compile/lint/unit/browser proof; first-slice proof does not cover it.
+
+A bounded authorised native addition closes the original access receipt gap:
+GET `/repositories/{team_id}/access/receipts/{plan_id}?action=review|approve`.
+It requires current organiser StaffRead and original creator/approver, binds the
+immutable numeric repository and returns the requested historical definition or
+approval. It never calls GitHub or writes audit/jobs/revisions. A missing receipt
+never proves no effect. Original write bodies and IfMatch are unchanged. Updating
+IfMatch could derive a different original review, so it is never an exact retry.
+No migration. App/provisioning unknown outcomes retain safe metadata and are not
+blindly resent; their current state reads are not original receipts.
+
+Command body identity is SHA-256 of a versioned UTF-8 byte-length-framed tuple:
+action, original actor/event/team, numeric repository, plan ID, native review
+command version zero or approval plan version, and Unicode-trimmed reason.
+Shared synthetic golden vectors cover Unicode, literal markup and delimiters.
+Optional `intentFingerprint` metadata accepts only 64 lowercase hex characters.
+No raw reason, people, keys or command body enters shared memory/storage. Browser
+capture occurs before POST and exact receipt recovery recomputes the body digest.
+
+Executed native proof: `HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test
+-race -p 1 -parallel 1 ./internal/repositoryaccess ./internal/httpapi -run
+'TestOriginalRepositoryReceiptCurrentAuthorityAndNoEffectsPostgres|TestRepositoryCommandFingerprintBrowserParity|TestRepositoryAccessHTTPPrivacyCurrentAuthorityAndExactReview'
+-count=1` PASS. Real PostgreSQL service/history/privacy/no-effect and Go shared
+fingerprint parity pass (9.447s package); actual HTTP historical receipt,
+committed/lost reply → changed revision → original tuple conflict → exact GET,
+role/member/other-actor privacy and zero event/audit/jobs/provider effects pass
+(7.044s package). Log `/private/tmp/hackbox94-native-receipt-proof.log`.
+Go/TypeScript contract generation PASS: `/private/tmp/hackbox94-generate.log`.
+No SQL definitions changed. Browser-side vector/unit proof remains pending.
+
+An obsolete interim compiler reported nullable-plan accesses now fixed in source;
+no current-source compile is claimed. Its preceding lint passed only at that
+intermediate executed source. The compiler naturally ended with that failure
+before a proposed stop; no running test was abandoned. All proof handles terminal.
+Remaining: fresh serial compile/lint/units, complete command/secret/unknown/current
+role/partial restoration/held-read/late-response browser journeys in both portals,
+independent guide proof and matched actual visuals, full exact-head checks and
+paired review. No readiness, merge or issue closure is claimed.

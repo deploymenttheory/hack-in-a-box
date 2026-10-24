@@ -5,3 +5,7 @@
 .fleet-repository-facts > div { display: grid; gap: var(--space-2); }
 .fleet-repository-facts dd { margin: 0; }
 @media print { .fleet-repositories { display: none !important; } }
+
+.fleet-repository-fields, .fleet-repository-fields > fieldset { display: grid; gap: var(--space-4); }
+.fleet-repositories fieldset { min-width: 0; border: 0; padding: 0; }
+.fleet-repositories .fleet-review-flow :is(p,li), .fleet-repositories .fleet-reference { overflow-wrap: anywhere; }

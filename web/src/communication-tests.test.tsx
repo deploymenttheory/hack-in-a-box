@@ -65,3 +65,19 @@ test('media resource metadata accepts only UUIDs and positive safe integer versi
  fireEvent.click(screen.getByText('Safe media metadata'));expect(view.container).toHaveTextContent('44444444-4444-4444-8444-444444444444');expect(view.container).toHaveTextContent('"expectedVersion":1')
  fireEvent.click(screen.getByText('Invalid media metadata'));expect(view.container).not.toHaveTextContent('SECRET-');expect(view.container).not.toHaveTextContent('Infinity')
 })
+
+test('repository original identity digest survives sibling owners while malformed digest and raw command fields are discarded', () => {
+  function Owner() {
+    const current = useIdentity(), history = useCommunicationCommands(`${current.person.id}:${current.draft_scope}:repository-native-team`)
+    return <><pre>{JSON.stringify(history.attempts)}</pre><button onClick={() => { const id = history.begin({ operation: 'Repository approval', revision: 7, command: { action: 'approve', resourceID: '44444444-4444-4444-8444-444444444444', expectedVersion: 3, intentFingerprint: 'a'.repeat(64), reason: 'RAW-PRIVATE-REASON', private_key: 'RAW-PRIVATE-KEY', members: ['RAW-PRIVATE-PERSON'] } as never }); history.uncertain(id) }}>Keep original repository metadata</button><button onClick={() => history.begin({ operation: 'Repository review', revision: 8, command: { action: 'review', intentFingerprint: 'RAW-PRIVATE-BODY' } })}>Reject malformed repository digest</button></>
+  }
+  function Workspace() { const [open, setOpen] = useState(true); return <CommunicationSafety><IdentityContext.Provider value={identity}><button onClick={() => setOpen(value => !value)}>Switch repository sibling</button>{open && <Owner />}</IdentityContext.Provider></CommunicationSafety> }
+  const view = render(<Workspace />)
+  fireEvent.click(screen.getByText('Keep original repository metadata'))
+  fireEvent.click(screen.getByText('Reject malformed repository digest'))
+  expect(view.container).not.toHaveTextContent('RAW-PRIVATE-')
+  fireEvent.click(screen.getByText('Switch repository sibling')); fireEvent.click(screen.getByText('Switch repository sibling'))
+  expect(view.container).toHaveTextContent('"intentFingerprint":"' + 'a'.repeat(64) + '"')
+  expect(view.container).toHaveTextContent('"state":"unknown"')
+  expect(view.container).not.toHaveTextContent('RAW-PRIVATE-')
+})

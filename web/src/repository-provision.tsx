@@ -1,0 +1,36 @@
+import { useRepositoryDraft } from './repository-drafts'
+import { RepositoryActionReview } from './repository-review'
+import { useRef, useState } from 'react'
+import { api, unwrap, type EventRecord } from './api/client'
+import type { components } from './api/schema.gen'
+import { useIdentity } from './session'
+import { useRepositoryRead } from './repository-read'
+import { RepositoryCommandStatus, useRepositoryCommand } from './repository-command'
+import { Button } from './components/ui/button'
+import { Failure, Loading } from './components/states'
+type Row = components['schemas']['TeamRepository']
+type Intent = { action: 'queue' | 'reconcile'; team_id?: string; revision: number; organisation: string; template: string; teams: { id: string; name: string }[]; repository?: Row }
+export function RepositoryProvision({ event, row, updated }: { event: EventRecord; row?: Row; updated: () => void }) {
+  const identity = useIdentity(), resource = row ? `provision:${row.team_id}` : 'provision:published'
+  const owner = useRepositoryRead(event.id, `${resource}:source`, async signal => {
+    const params = { path: { event_id: event.id } }
+    const [current, teams, app] = await Promise.all([api.GET('/api/v1/events/{event_id}', { signal, cache: 'no-store', params }), api.GET('/api/v1/events/{event_id}/teams', { signal, cache: 'no-store', params }), api.GET('/api/v1/events/{event_id}/github-app', { signal, cache: 'no-store', params })])
+    return { event: unwrap(current), teams: unwrap(teams), app: unwrap(app) }
+  })
+  const operation = useRepositoryCommand(event.id, resource, owner.scope, owner.deny), [review, setReview] = useState<Intent>(), [notice, setNotice] = useState(''), opener = useRef<HTMLElement | null>(null)
+  useRepositoryDraft(!!review || operation.blocked)
+  if (owner.denied) return <><Failure error={owner.denied} /><Button icon="refresh" onClick={owner.check}>Check current provisioning access</Button><RepositoryCommandStatus command={operation} /></>
+  if (owner.query.isPending) return <Loading />
+  if (owner.query.error) return <Failure error={owner.query.error} retry={() => void owner.query.refetch()} />
+  const source = owner.query.data, selectedTeam = row && source.teams.teams.find(team => team.id === row.team_id), teams = source.teams.teams.filter(team => team.state === 'published' && team.published.length > 0), closed = ['cancelled', 'completed', 'archived'].includes(source.event.stage)
+  const allowed = source.event.can_edit && source.teams.can_manage && !closed && (!row || (!row.unused && selectedTeam?.state === 'published'))
+  const stale = !!review && (review.revision !== source.event.revision || review.organisation !== (source.app.configuration?.organization ?? '') || review.template !== (source.app.configuration?.template_repository ?? '') || (!row && JSON.stringify(review.teams.map(team => team.id)) !== JSON.stringify(teams.map(team => team.id))))
+  function prepare(control: HTMLElement) { opener.current = control; setReview({ action: row ? 'reconcile' : 'queue', ...(row ? { team_id: row.team_id, repository: structuredClone(row) } : {}), revision: source.event.revision, organisation: source.app.configuration?.organization ?? '', template: source.app.configuration?.template_repository ?? '', teams: row ? [{ id: row.team_id, name: selectedTeam?.name ?? row.name }] : teams.map(team => ({ id: team.id, name: team.name })) }) }
+  function correct() { setReview(undefined); requestAnimationFrame(() => { if (opener.current?.isConnected) opener.current.focus() }) }
+  async function send() {
+    if (!review || stale || !allowed) return
+    const intent = review
+    await operation.send(intent.action, intent.revision, async () => unwrap(await api.POST('/api/v1/events/{event_id}/repositories', { cache: 'no-store', params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.revision}"` } }, body: { action: intent.action, ...(intent.team_id ? { team_id: intent.team_id } : {}) } })), () => { setReview(undefined); setNotice(intent.action === 'queue' ? 'The published-team provisioning request was acknowledged. Queueing does not confirm creation or access.' : 'The selected-team reconciliation request was acknowledged. Read its current result; no replacement create was authorised.'); updated(); void owner.query.refetch() })
+  }
+  return <section className="fleet-repository-section"><h3>{row ? 'Selected repository recovery' : 'Published-team provisioning'}</h3><p>{row ? 'Reconcile only this team’s uncertain result by checking GitHub. This never grants a second repository creation or changes competitor assignment.' : 'Queue the actual published teams for private repository provisioning from the configured template. Existing successful mappings are retained; this is an event-wide initial queue, not a retry of selected failed operations.'}</p><div hidden={!!review}><Button icon={row ? 'refresh' : 'repository'} disabled={!allowed || operation.blocked || (!row && (!teams.length || !source.app.installation_id)) || (!!row && !['ambiguous', 'review'].includes(row.state))} onClick={e => prepare(e.currentTarget)}>{row ? 'Review selected repository reconciliation' : 'Review published-team provisioning'}</Button></div>{review && <RepositoryActionReview title={row ? 'Review selected repository recovery' : 'Review published-team provisioning'} pending={operation.pending} disabled={stale || !allowed || operation.history.unconfirmed} correct={correct} confirm={() => void send()} confirmLabel={row ? 'Reconcile selected repository only' : 'Queue published teams'}><p>Event {event.name} · {event.id} · Revision {review.revision}</p><p>Organisation {review.organisation || 'Not configured'} · Template {review.template || 'Not configured'}</p><ul>{review.teams.map(team => <li key={team.id}>{team.name} · Team {team.id}</li>)}</ul>{review.repository && <p>Repository {review.repository.organization}/{review.repository.name} · Numeric ID {review.repository.github_repository_id ?? 'not confirmed'} · Original status {review.repository.state}</p>}<p>{row ? 'Provider lookup only. A missing result remains unresolved; do not replace or retry creation.' : 'Repository creation is asynchronous. This does not invite collaborators, confirm their acceptance or submit a competition entry.'}</p>{stale && <p>Current setup or membership changed. Correct details and review current facts.</p>}</RepositoryActionReview>}{!allowed && <p>Current event authority and published team state do not permit this operation. Disbanded repositories remain unused and unscored; team freeze is never reopened here.</p>}{notice && <p role="status">{notice}</p>}<RepositoryCommandStatus command={operation} /></section>
+}

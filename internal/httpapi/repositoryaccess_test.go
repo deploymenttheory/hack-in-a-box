@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/google/uuid"
@@ -22,14 +23,17 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
-type accessHTTPProvider struct{}
+type accessHTTPProvider struct{ reads *atomic.Int64 }
 
-func (accessHTTPProvider) InspectCollaborators(
+func (p accessHTTPProvider) InspectCollaborators(
 	context.Context,
 	*dbgen.Queries,
 	uuid.UUID,
 	githubapp.AccessRequest,
 ) (githubapp.AccessSnapshot, error) {
+	if p.reads != nil {
+		p.reads.Add(1)
+	}
 	return githubapp.AccessSnapshot{
 		Collaborators: []githubapp.Collaborator{
 			{ID: 9999, Login: "OTHER-COLLABORATOR-PRIVATE", Permission: "admin"},
@@ -103,13 +107,14 @@ func TestRepositoryAccessHTTPPrivacyCurrentAuthorityAndExactReview(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
+	providerReads := new(atomic.Int64)
 	router := NewRouter(
 		cfg,
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Dependencies{
 			Pool:             pool,
 			Auth:             auth,
-			RepositoryAccess: repositoryaccess.Service{Pool: pool, App: accessHTTPProvider{}},
+			RepositoryAccess: repositoryaccess.Service{Pool: pool, App: accessHTTPProvider{reads: providerReads}},
 		},
 	)
 	csrf := strings.Repeat("a", 32)
@@ -198,6 +203,62 @@ func TestRepositoryAccessHTTPPrivacyCurrentAuthorityAndExactReview(t *testing.T)
 	if repeated.Receipt.ID != planID || repeated.Current.Plan.ID != secondID {
 		t.Fatal("exact receipt conflated with latest plan", repeated)
 	}
+	t.Run("read only original receipts survive lost reply and later revision without current-plan inference", func(t *testing.T) {
+		path := "/access/receipts/" + planID.String() + "?action=review"
+		counts := func() [4]int64 {
+			t.Helper()
+			var out [4]int64
+			if err := pool.QueryRow(t.Context(), `SELECT revision,(SELECT count(*) FROM audit_events WHERE event_id=$1),(SELECT count(*) FROM operations WHERE event_id=$1) FROM events WHERE id=$1`, eventID).Scan(&out[0], &out[1], &out[2]); err != nil {
+				t.Fatal(err)
+			}
+			out[3] = providerReads.Load()
+			return out
+		}
+		before := counts()
+		original := request(owner, "GET", path, nil, false, event.Revision)
+		check(original, 200)
+		var receipt repositoryaccess.Receipt
+		if err := json.Unmarshal(original.Body.Bytes(), &receipt); err != nil {
+			t.Fatal(err)
+		}
+		if receipt.Plan == nil || receipt.Plan.ID != planID || receipt.Plan.ID == repeated.Current.Plan.ID || receipt.Plan.Reason != "Review current membership" || receipt.ActorID == nil || *receipt.ActorID != owner.ID || receipt.Plan.ApprovedAt != nil {
+			t.Fatalf("historical original receipt missing: %#v", receipt)
+		}
+		if after := counts(); after != before {
+			t.Fatalf("receipt GET changed event/audit/jobs/provider: %v to %v", before, after)
+		}
+		check(request(member, "GET", path, nil, false, event.Revision), 403)
+		check(request(other, "GET", path, nil, false, event.Revision), 403)
+		check(request(owner, "GET", "/access/receipts/"+uuid.NewString()+"?action=review", nil, false, event.Revision), 200)
+		check(request(owner, "GET", "/access/receipts/"+planID.String()+"?action=refresh", nil, false, event.Revision), 400)
+		approval := map[string]any{"action": "approve", "plan_id": secondID, "plan_version": repeated.Current.Plan.Version, "reason": "Explicit original HTTP approval"}
+		committed := request(owner, "POST", "/access", approval, true, event.Revision)
+		check(committed, 200)
+		// Discard that response, then change the event revision before recovery.
+		exec("UPDATE events SET revision=revision+1 WHERE id=$1", eventID)
+		check(request(owner, "POST", "/access", approval, true, event.Revision), 409)
+		before = counts()
+		exact := request(owner, "GET", "/access/receipts/"+secondID.String()+"?action=approve", nil, false, event.Revision)
+		check(exact, 200)
+		if err := json.Unmarshal(exact.Body.Bytes(), &receipt); err != nil {
+			t.Fatal(err)
+		}
+		if receipt.Plan == nil || receipt.Plan.ID != secondID || receipt.Plan.ApprovalReason != "Explicit original HTTP approval" || receipt.Plan.ApprovedBy == nil || *receipt.Plan.ApprovedBy != owner.ID || receipt.ActorID == nil || *receipt.ActorID != owner.ID || receipt.Plan.ApprovedAt == nil {
+			t.Fatalf("committed original approval missing: %#v", receipt)
+		}
+		if after := counts(); after != before {
+			t.Fatalf("recovery GET changed event/audit/jobs/provider: %v to %v", before, after)
+		}
+		exec("INSERT INTO event_memberships(event_id,person_id,role,active)VALUES($1,$2,'organiser',true)", eventID, other.ID)
+		hidden := request(other, "GET", path, nil, false, event.Revision)
+		check(hidden, 200)
+		if strings.Contains(hidden.Body.String(), "Review current membership") || strings.Contains(hidden.Body.String(), planID.String()) {
+			t.Fatal("different organiser obtained original actor body")
+		}
+		exec("UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'", eventID, owner.ID)
+		check(request(owner, "GET", path, nil, false, event.Revision), 403)
+		exec("UPDATE event_memberships SET active=true WHERE event_id=$1 AND person_id=$2 AND role='organiser'", eventID, owner.ID)
+	})
 	body["action"] = "approve"
 	body["plan_version"] = first.Receipt.Version
 	check(request(owner, "POST", "/access", body, true, event.Revision), 409)
