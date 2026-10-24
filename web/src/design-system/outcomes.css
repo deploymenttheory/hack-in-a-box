@@ -1,0 +1,7 @@
+.fleet-outcome-navigation { display: inline-flex; align-items: center; gap: var(--space-2); }
+.fleet-outcomes .fleet-outcome-directory { margin-block-start: var(--space-6); }
+.fleet-outcome-views { padding-block: var(--space-3); border-block-end: 1px solid var(--border); }
+.fleet-outcome-evidence-note { display: flex; align-items: flex-start; gap: var(--space-2); margin-block: var(--space-4); color: var(--muted-foreground); }
+.fleet-outcome-evidence-note .fleet-icon { flex: 0 0 auto; margin-block-start: .125rem; }
+.fleet-outcomes :is(th, td, dd, h2) { overflow-wrap: anywhere; }
+@media print { .fleet-outcomes--private { display: none !important; } }
