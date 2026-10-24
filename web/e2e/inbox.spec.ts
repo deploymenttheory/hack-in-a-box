@@ -78,3 +78,41 @@ test('returning after a viewport change restores the current responsive inbox ac
   await expect(page.getByRole('button', { name: 'Open Released event resource', exact: true })).toBeFocused()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('direct resource event denial stays latched and a remount waits for its own current resource authority', async ({ page }) => {
+  await page.clock.install()
+  const workspace = await mockWorkspace(page)
+  let eventAllowed = true, resourceAllowed = true, hold = false, resourceReads = 0, acknowledgements = 0
+  let release: () => void = () => {}
+  const held = new Promise<void>(resolve => { release = resolve })
+  const resource: components['schemas']['ContentPage'] = { id: resourceID, kind: 'page', revision: 1, version: 1, state: 'released', released_version: 1, released_at: '2027-06-13T09:00:00Z', acknowledged_at: null, can_manage: false, message: '', attachment_details: [], document: { title: 'Private direct inbox resource', markdown: 'PRIVATE-DIRECT-RESOURCE-CANARY', audience: { confirmed: true, roles: [], teams: [] }, attachments: [], scheduled_at: null, require_acknowledgement: true } }
+  const denied = { error: { code: 'forbidden', message: 'Synthetic current access denied', request_id: 'synthetic' } }
+  await page.route(`**/api/v1/events/${firstID}`, route => route.fulfill(eventAllowed ? { json: workspace.events[0] } : { status: 403, json: denied }))
+  await page.route(`**/api/v1/events/${firstID}/content/${resourceID}**`, async route => {
+    if (route.request().method() !== 'GET') { acknowledgements++; return route.fulfill({ status: 403, json: denied }) }
+    resourceReads++
+    if (hold) await held
+    await route.fulfill(resourceAllowed ? { json: resource } : { status: 403, json: denied })
+  })
+  try {
+    await page.goto(`/events/${firstID}/resources/${resourceID}`)
+    await expect(page.getByText('PRIVATE-DIRECT-RESOURCE-CANARY', { exact: true })).toBeVisible()
+    eventAllowed = false; hold = true
+    await page.clock.fastForward(16_000)
+    await expect(page.getByText('PRIVATE-DIRECT-RESOURCE-CANARY', { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('alert')).toBeVisible()
+    const readsAtDenial = resourceReads
+    eventAllowed = true
+    await page.clock.fastForward(31_000)
+    await expect(page.getByText('PRIVATE-DIRECT-RESOURCE-CANARY', { exact: true })).toHaveCount(0)
+    expect(resourceReads).toBe(readsAtDenial)
+    await page.getByRole('button', { name: 'Try again', exact: true }).click()
+    await expect.poll(() => resourceReads).toBeGreaterThan(readsAtDenial)
+    await expect(page.getByText('PRIVATE-DIRECT-RESOURCE-CANARY', { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'I have read version 1', exact: true })).toHaveCount(0)
+    resourceAllowed = false; release()
+    await expect(page.getByRole('alert')).toBeVisible()
+    await expect(page.getByText('PRIVATE-DIRECT-RESOURCE-CANARY', { exact: true })).toHaveCount(0)
+    expect(acknowledgements).toBe(0)
+  } finally { release() }
+})

@@ -1,6 +1,6 @@
 import { communicationRead } from './communication-private'
 import { usePrivateRequestScope } from './private-request-scope'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { APIError, api, privateKey, unwrap } from './api/client'
@@ -79,6 +79,16 @@ function Notification({ id, back, deny }: { id: string; back: () => void; deny: 
 }
 export function ResourcePage() {
   const { eventId, resourceId } = useParams({ from: '/events/$eventId/resources/$resourceId' }), identity = useIdentity()
-  const event = useQuery({ queryKey: privateKey(identity.person.id, eventId, 'event'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}', { params: { path: { event_id: eventId } } })), refetchOnWindowFocus: 'always', retry: false })
-  return <section className="workspace"><Link to="/inbox">← Your inbox</Link>{event.isPending ? <Loading /> : event.error ? <Failure error={event.error} /> : <EventBrand eventID={eventId}><ResourceReader id={resourceId} event={event.data!} back={() => window.history.back()} /></EventBrand>}</section>
+  return <InboxResourceContext key={`${identity.person.id}:${identity.draft_scope}:${eventId}:${resourceId}`} eventID={eventId} resourceID={resourceId} />
+}
+function InboxResourceContext({ eventID, resourceID }: { eventID: string; resourceID: string }) {
+  const identity = useIdentity(), cache = useQueryClient(), [failure, setFailure] = useState<unknown>()
+  const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'inbox-resource-context'), identity.draft_scope, resourceID], [identity.person.id, identity.draft_scope, eventID, resourceID])
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${resourceID}:inbox-resource-context`)
+  const event = useQuery({ queryKey: key, gcTime: 0, enabled: !failure, queryFn: () => communicationRead(scope, async signal => {
+    try { return unwrap(await api.GET('/api/v1/events/{event_id}', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })) }
+    catch (error) { if (scope.capture().current() && error instanceof APIError && [401,403,404].includes(error.status)) { scope.invalidate(); setFailure(error); cache.removeQueries({ queryKey: key }) } throw error }
+  }), refetchInterval: 15_000, refetchOnWindowFocus: 'always', retry: false })
+  useEffect(() => () => { void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key])
+  return <section className="workspace"><Link to="/inbox"><Icon name="back" />Your inbox</Link>{failure ? <Failure error={failure} retry={() => { scope.renew(); setFailure(undefined) }} /> : !event.data ? event.error ? <Failure error={event.error} retry={() => void event.refetch()} /> : <Loading /> : <>{event.error && <Failure error={event.error} retry={() => void event.refetch()} />}<fieldset className="fleet-collection-fieldset" disabled={!!event.error}><EventBrand eventID={eventID}><ResourceReader id={resourceID} event={event.data} back={() => window.history.back()} /></EventBrand></fieldset></>}</section>
 }
