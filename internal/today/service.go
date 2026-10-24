@@ -38,29 +38,43 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 			}
 			return fmt.Errorf("lock Today event: %w", err)
 		}
-		if err := (access.EventPolicy{Queries: q}).Authorize(ctx, actor, eventID, eventID, access.EventRead); err != nil {
-			return err
+		if err := (access.EventPolicy{Queries: q}).Authorize(
+			ctx,
+			actor,
+			eventID,
+			eventID,
+			access.EventRead,
+		); err != nil {
+			return fmt.Errorf("authorize Today event reader: %w", err)
 		}
 		current, err := s.Events.ReadInTransaction(ctx, tx, actor, eventID)
 		if err != nil {
-			return err
+			return fmt.Errorf("read current Today event: %w", err)
 		}
 		roles, err := q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
 		if err != nil {
 			return fmt.Errorf("read current Today roles: %w", err)
 		}
-		participation, err := q.CompetitionState(ctx, dbgen.CompetitionStateParams{EventID: eventID, PersonID: actor})
+		participation, err := q.CompetitionState(
+			ctx,
+			dbgen.CompetitionStateParams{EventID: eventID, PersonID: actor},
+		)
 		if err != nil {
 			return fmt.Errorf("read own participation: %w", err)
 		}
 		program, err := s.Presentation.ReadProgramIn(ctx, tx, actor, eventID)
 		if err != nil {
-			return err
+			return fmt.Errorf("read published Today room program: %w", err)
 		}
 		if roles == nil {
 			roles = []string{}
 		}
-		result = Page{Event: current, Roles: roles, ParticipationState: participation, Program: program}
+		result = Page{
+			Event:              current,
+			Roles:              roles,
+			ParticipationState: participation,
+			Program:            program,
+		}
 		return nil
 	})
 	if err != nil {

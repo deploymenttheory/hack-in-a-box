@@ -32,10 +32,20 @@ type Program struct {
 // ReadProgramIn requires the actual event reader's current authority and uses the
 // same release projection as a room display. It neither creates a display state
 // nor records a display heartbeat. The caller owns its read transaction.
-func (s Service) ReadProgramIn(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID) (Program, error) {
+func (s Service) ReadProgramIn(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+) (Program, error) {
 	q := dbgen.New(tx)
-	if err := (access.EventPolicy{Queries: q}).Authorize(ctx, actor, eventID, eventID, access.EventRead); err != nil {
-		return Program{}, err
+	if err := (access.EventPolicy{Queries: q}).Authorize(
+		ctx,
+		actor,
+		eventID,
+		eventID,
+		access.EventRead,
+	); err != nil {
+		return Program{}, fmt.Errorf("authorize room program reader: %w", err)
 	}
 	e, err := q.Event(ctx, eventID)
 	if err != nil {
@@ -58,12 +68,26 @@ func (s Service) ReadProgramIn(ctx context.Context, tx pgx.Tx, actor, eventID uu
 	if err != nil {
 		return Program{}, err
 	}
-	return Program{Sequence: p.Sequence, ServerNow: p.ServerNow, Current: p.Current, Next: p.Next, Mode: p.Mode, RemainingSeconds: p.RemainingSeconds, TimerEndsAt: p.TimerEndsAt, OverrideActive: p.OverrideActive}, nil
+	return Program{
+		Sequence:         p.Sequence,
+		ServerNow:        p.ServerNow,
+		Current:          p.Current,
+		Next:             p.Next,
+		Mode:             p.Mode,
+		RemainingSeconds: p.RemainingSeconds,
+		TimerEndsAt:      p.TimerEndsAt,
+		OverrideActive:   p.OverrideActive,
+	}, nil
 }
 
 // programSnapshot is shared with Snapshot so Today cannot weaken content release,
 // current/next selection or override/timer semantics through a second projection.
-func (s Service) programSnapshot(ctx context.Context, q *dbgen.Queries, e dbgen.Event, row dbgen.PresentationState) (Snapshot, error) {
+func (s Service) programSnapshot(
+	ctx context.Context,
+	q *dbgen.Queries,
+	e dbgen.Event,
+	row dbgen.PresentationState,
+) (Snapshot, error) {
 	_, published, err := decode(row)
 	if err != nil {
 		return Snapshot{}, err

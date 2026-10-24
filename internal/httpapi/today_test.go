@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
@@ -19,7 +21,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
-	"github.com/google/uuid"
 )
 
 func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) {
@@ -42,19 +43,41 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	owner, reader, offered := testdb.Person(t, pool), testdb.Person(t, pool), testdb.Person(t, pool)
 	id := testdb.Event(t, pool, owner.ID)
 	now := time.Date(2027, 6, 20, 10, 0, 0, 0, time.UTC)
-	if err = q.SetMembership(ctx, dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "mentor", Active: true}); err != nil {
+	if err = q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "mentor", Active: true},
+	); err != nil {
 		t.Fatal(err)
 	}
-	if err = q.SetMembership(ctx, dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "judge", Active: true}); err != nil {
+	if err = q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "judge", Active: true},
+	); err != nil {
 		t.Fatal(err)
 	}
-	if err = q.SetCompetitionState(ctx, dbgen.SetCompetitionStateParams{EventID: id, PersonID: offered.ID, State: "offered"}); err != nil {
+	if err = q.SetCompetitionState(
+		ctx,
+		dbgen.SetCompetitionStateParams{EventID: id, PersonID: offered.ID, State: "offered"},
+	); err != nil {
 		t.Fatal(err)
 	}
-	router := NewRouter(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)), Dependencies{Pool: pool, Auth: auth, Events: event.Service{Pool: pool, Clock: func() time.Time { return now }}, Presentation: presentation.Service{Pool: pool, Clock: func() time.Time { return now }}})
+	router := NewRouter(
+		cfg,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Dependencies{
+			Pool:         pool,
+			Auth:         auth,
+			Events:       event.Service{Pool: pool, Clock: func() time.Time { return now }},
+			Presentation: presentation.Service{Pool: pool, Clock: func() time.Time { return now }},
+		},
+	)
 	request := func(person *dbgen.Person, target uuid.UUID, query string) *httptest.ResponseRecorder {
 		t.Helper()
-		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/events/%s/today%s", target, query), nil)
+		r := httptest.NewRequest(
+			http.MethodGet,
+			fmt.Sprintf("/api/v1/events/%s/today%s", target, query),
+			nil,
+		)
 		if person != nil {
 			session, e := auth.Sessions.Load(ctx, "")
 			if e != nil {
@@ -85,7 +108,13 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	if err = json.Unmarshal(w.Body.Bytes(), &page); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(page.Roles, []contract.StaffRole{contract.StaffRoleJudge, contract.StaffRoleMentor}) || page.Event.CanEdit || page.Event.CanReadStaff || !page.Program.ServerNow.Equal(now) {
+	if !reflect.DeepEqual(
+		page.Roles,
+		[]contract.StaffRole{contract.StaffRoleJudge, contract.StaffRoleMentor},
+	) ||
+		page.Event.CanEdit ||
+		page.Event.CanReadStaff ||
+		!page.Program.ServerNow.Equal(now) {
 		t.Fatalf("context request escalated current roles: %+v", page)
 	}
 	for _, key := range []string{`"draft":`, `"pairings":`, `"token":`, `"can_control":`} {
@@ -102,14 +131,24 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	if w = request(&reader, uuid.New(), ""); w.Code != http.StatusNotFound {
 		t.Fatalf("unknown event: %d %s", w.Code, w.Body.String())
 	}
-	if err = q.SetMembership(ctx, dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "mentor", Active: false}); err != nil {
+	if err = q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "mentor", Active: false},
+	); err != nil {
 		t.Fatal(err)
 	}
 	w = request(&reader, id, "")
-	if err = json.Unmarshal(w.Body.Bytes(), &page); w.Code != http.StatusOK || err != nil || !reflect.DeepEqual(page.Roles, []contract.StaffRole{contract.StaffRoleJudge}) {
+	if err = json.Unmarshal(
+		w.Body.Bytes(),
+		&page,
+	); w.Code != http.StatusOK || err != nil ||
+		!reflect.DeepEqual(page.Roles, []contract.StaffRole{contract.StaffRoleJudge}) {
 		t.Fatalf("revoked role retained over HTTP: %d %s", w.Code, w.Body.String())
 	}
-	if err = q.SetMembership(ctx, dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "judge", Active: false}); err != nil {
+	if err = q.SetMembership(
+		ctx,
+		dbgen.SetMembershipParams{EventID: id, PersonID: reader.ID, Role: "judge", Active: false},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if w = request(&reader, id, ""); w.Code != http.StatusForbidden {

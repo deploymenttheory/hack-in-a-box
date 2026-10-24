@@ -3,15 +3,21 @@ package event
 import (
 	"context"
 	"fmt"
-	"github.com/deploymenttheory/hack-in-a-box/internal/access"
-	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
 // ReadInTransaction retains the native event policy/projection when composing a
 // current-authority read under the caller's event lock; it opens no second pool connection.
-func (s Service) ReadInTransaction(ctx context.Context, tx pgx.Tx, actor, id uuid.UUID) (View, error) {
+func (s Service) ReadInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, id uuid.UUID,
+) (View, error) {
 	return s.read(ctx, dbgen.New(tx), actor, id)
 }
 
