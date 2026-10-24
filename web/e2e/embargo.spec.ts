@@ -42,7 +42,16 @@ for (const change of ['withdrawal', 'revocation'] as const) {
     await page.getByRole('button', { name: 'Refresh resources' }).click()
     await expect(page.getByText(canaryA, { exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'private-brief.txt' })).toHaveCount(0)
-    await page.getByRole('button', { name: 'Back to resources' }).click()
+    if (change === 'withdrawal') {
+      // The page is withdrawn while the library itself remains authorised.
+      await page.getByRole('button', { name: 'Back to resources' }).click()
+    } else {
+      // Native library403 replaces the whole reader with the denied collection.
+      await expect(page.getByRole('alert')).toContainText('You do not have access to this resource library.')
+      await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+      await expect(page.getByRole('heading', { name: 'Team A brief', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Back to resources' })).toHaveCount(0)
+    }
     await expect(page.getByRole('button', { name: 'Read Team A brief' })).toHaveCount(0)
     await openEventSection(page, 'Overview'); await openEventSection(page, 'Resources')
     await expect(page.getByRole('button', { name: 'Read Team A brief' })).toHaveCount(0)
@@ -74,7 +83,7 @@ test('an embargoed resource stays out of warm navigation and search until releas
   const state = await setup(page); state.embargo()
   await page.getByRole('button', { name: 'Refresh resources' }).click()
   await expect(page.getByRole('button', { name: 'Read Team A brief' })).toHaveCount(0)
-  await page.getByLabel('Search resources').fill('Team A'); await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await page.getByRole('searchbox', { name: 'Search resources', exact: true }).fill('Team A'); await page.getByRole('button', { name: 'Search', exact: true }).click()
   await expect(page.getByText('No released resources match your search.')).toBeVisible()
   expect((await copiedDownload(page)).status).toBe(403)
   state.release(); await page.getByRole('button', { name: 'Refresh resources' }).click()
