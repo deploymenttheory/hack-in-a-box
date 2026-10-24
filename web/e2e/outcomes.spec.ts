@@ -93,7 +93,7 @@ test('leaving during an in-flight current-resource preflight cannot issue a late
   const form = page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Restricted evidence record', exact: true }) }); await form.getByLabel('Reason for this change').fill('Deliberate source check')
   let release!: () => void, entered!: () => void; const held = new Promise<void>(resolve => { release = resolve }), reached = new Promise<void>(resolve => { entered = resolve }); gates.preflight = async () => { entered(); await held }
   await form.getByRole('button', { name: 'Save restricted evidence record', exact: true }).click(); await reached
-  page.once('dialog', dialog => dialog.accept()); await page.getByRole('link', { name: 'Check separately published project' }).click(); await expect(page.getByRole('link', { name: '← Reviewed projects' })).toBeVisible(); release(); await page.waitForLoadState('networkidle'); expect(state.requests).toHaveLength(0); await expect(page.getByLabel('Claim or observation')).toHaveCount(0)
+  page.once('dialog', dialog => dialog.accept()); await page.getByRole('link', { name: 'Check separately published project' }).click(); await expect(page.getByRole('link', { name: 'Reviewed projects' })).toBeVisible(); release(); await page.waitForLoadState('networkidle'); expect(state.requests).toHaveLength(0); await expect(page.getByLabel('Claim or observation')).toHaveCount(0)
 })
 test('accepted closure with lost response remains explicitly reconcilable after current state refresh', async ({ page }) => {
   const { state } = await mock(page, true); await page.goto(`/ideas/${outcomeID}`)
@@ -112,16 +112,16 @@ test('published projects search and paginate only positive reviewed fields and h
   if(url.searchParams.get('search')==='private original')return route.fulfill({json:{items:[],next_cursor:null}})
   return route.fulfill({json:{items:[url.searchParams.has('cursor')?{...project,id:next,problem:'Another reviewed project'}:project],next_cursor:url.searchParams.has('cursor')?null:outcomeID}})
  })
- await page.goto('/projects');await expect(page.getByRole('link',{name:'Reviewed adoption project'})).toBeVisible()
- await page.getByRole('button',{name:'More reviewed projects'}).click();await expect(page.getByRole('link',{name:'Another reviewed project'})).toBeVisible()
+ await page.goto('/projects');await expect(page.getByRole('link',{name:'Reviewed adoption project',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'More reviewed projects'}).click();await expect(page.getByRole('link',{name:'Another reviewed project',exact:true})).toBeVisible()
  expect(queries.some(q=>q.includes('cursor='+outcomeID))).toBe(true)
- await page.getByLabel('Search reviewed problem and solution').fill('private original');await page.getByRole('button',{name:'Search projects',exact:true}).click()
+ await page.getByRole('searchbox', { name: 'Search reviewed problem and solution' }).fill('private original');await page.getByRole('button',{name:'Search',exact:true}).click()
  await expect(page.getByText('No permitted reviewed projects match this search.')).toBeVisible()
- await page.goto(`/projects/${outcomeID}`);await expect(page.getByRole('heading',{name:'Reviewed adoption project'})).toBeVisible()
+ await page.goto(`/projects/${outcomeID}`);await expect(page.getByRole('heading',{name:'Reviewed adoption project',exact:true})).toBeVisible()
  await expect(page.getByRole('link',{name:'Approved documentation'})).toHaveAttribute('rel','noopener noreferrer')
  expect(await page.evaluate(()=>'projectLeak'in window)).toBe(false);expect(state.eventReads).toBe(0)
  deny=true
- await expect(page.getByRole('heading',{name:'Reviewed adoption project'})).toHaveCount(0,{timeout:20_000})
+ await expect(page.getByRole('heading',{name:'Reviewed adoption project',exact:true})).toHaveCount(0,{timeout:20_000})
  await expect(page.getByText('You do not have access to this resource.')).toBeVisible()
 })
 test('ordinary no-event-role owner opens a native inbox review destination without triggering a write or event lookup',async({page})=>{
@@ -167,4 +167,67 @@ test('idea directory uses scoped Fleet records and explicit keyboard navigation 
   expect(state.requests).toHaveLength(0)
   expect(state.eventReads).toBe(0)
   expect(await page.evaluate(() => 'outcomeLeak' in window)).toBe(false)
+})
+
+for (const outcome of ['pending', 'unknown'] as const) test(`original ${outcome} effect blocks replacement across project and idea routes until its exact receipt`, async ({ page }) => {
+  const { state, gates } = await mock(page, true)
+  await page.goto(`/ideas/${outcomeID}`)
+  const followThrough = () => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Owner progress', exact: true }) })
+  await page.getByLabel('Follow-through status').selectOption('in_progress')
+  await followThrough().getByLabel('Reason for this change').fill('PRIVATE ORIGINAL FOLLOW-UP REASON')
+  let release = () => {}, reached = () => {}
+  const held = new Promise<void>(resolve => { release = resolve }), entered = new Promise<void>(resolve => { reached = resolve })
+  if (outcome === 'pending') gates.response = async () => { reached(); await held }
+  else state.mode = 'after'
+  await followThrough().getByRole('button', { name: 'Save owner progress' }).click()
+  if (outcome === 'pending') await entered
+  else await expect(followThrough().getByRole('status', { name: 'Outcome save state' })).toContainText('Save outcome is unknown')
+  expect(state.requests).toHaveLength(1)
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('link', { name: 'Check separately published project' }).click()
+  await page.getByRole('link', { name: 'Reviewed projects', exact: true }).click()
+  await page.getByRole('link', { name: 'Your ideas', exact: true }).click()
+  await page.getByRole('link', { name: /^Open PRIVATE idea/ }).click()
+  await expect(followThrough().getByLabel('Reason for this change')).toHaveValue('')
+  await expect(followThrough().getByLabel('Reason for this change')).toBeDisabled()
+  await expect(followThrough().getByRole('button', { name: 'Save owner progress' })).toBeDisabled()
+  await expect(followThrough().getByText(outcome === 'pending' ? 'Awaiting original acknowledgement' : 'Original outcome unknown', { exact: false })).toBeVisible()
+  expect(await page.evaluate(() => [...Object.values(localStorage), ...Object.values(sessionStorage)].join(''))).not.toContain('PRIVATE ORIGINAL FOLLOW-UP REASON')
+  if (outcome === 'pending') {
+    release()
+    await expect(followThrough().getByLabel('Reason for this change')).toBeEnabled()
+  } else {
+    await followThrough().getByRole('button', { name: 'Check earlier exact save receipt' }).click()
+    await expect(followThrough().getByRole('status', { name: 'Outcome save state' })).toContainText('exact earlier command was saved')
+    await expect(followThrough().getByLabel('Reason for this change')).toBeEnabled()
+  }
+  expect(state.requests).toHaveLength(1)
+})
+
+test('private outcome direct remount waits for an actual current read and current denial latches through partial restoration', async ({ page }) => {
+  const { state, gates } = await mock(page, true)
+  await page.goto(`/ideas/${outcomeID}`)
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toBeVisible()
+  await page.getByRole('link', { name: 'Check separately published project' }).click()
+  await page.getByRole('link', { name: 'Reviewed projects', exact: true }).click()
+  await page.getByRole('link', { name: 'Your ideas', exact: true }).click()
+  let release = () => {}, reached = () => {}
+  const held = new Promise<void>(resolve => { release = resolve }), entered = new Promise<void>(resolve => { reached = resolve })
+  gates.preflight = async () => { reached(); await held }
+  await page.getByRole('link', { name: /^Open PRIVATE idea/ }).click()
+  await entered
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toHaveCount(0)
+  release(); gates.preflight = undefined
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toBeVisible()
+  state.deny = true
+  await page.getByRole('button', { name: 'Refresh current outcome' }).click()
+  await expect(page.getByRole('heading', { name: 'Idea unavailable', exact: true })).toBeVisible()
+  state.deny = false
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Check current outcome access' }).click()
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toBeVisible()
+  await page.emulateMedia({ media: 'print' })
+  await expect(page.getByRole('heading', { name: /^PRIVATE idea/ })).toBeHidden()
+  expect(state.requests).toHaveLength(0)
 })

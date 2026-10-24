@@ -1,6 +1,6 @@
 # Ideas and outcome follow-through — #242 / UI-09
 
-This is the first compiling draft checkpoint from main `093791cb7e2511bedf3c74516b43ef167a73c84b`. Only the private ideas directory has been recomposed. Full nested scope below remains owned by #242; this is not ready for merge or a completion claim.
+The draft is rebased onto main `e9d7c4665a582feca6543718861ff56308d82fe9`. Private ideas and reviewed-project discovery, released project detail, owner-review destinations and definition fields now use Fleet production primitives. Full nested forms and final evidence below remain owned by #242; this is not ready for merge or a completion claim.
 
 ## Complete present UI ownership inventory
 
@@ -35,15 +35,15 @@ The private ideas directory now uses production CollectionHeading/CollectionReco
 
 Current terminal local proof: ESLint and both production builds pass. Focused standard admin desktop/mobile checks pass 2/2; focused standard public desktop/mobile checks pass 2/2. These use actual production components and synthetic native API fixtures, assert native keyboard navigation, inert source prose, private print hiding and no write or event-authority escalation. They do not prove the whole outcome surface or native pagination end to end.
 
-## Discovered native integration defect — authorised supporting fix pending
+## Discovered native integration defect — corrected and verified below
 
-`ListOutcomes` currently forwards `(actor, eventID, mode, &cursor, limit)` to a service whose signature is `(actor, cursor, mode, eventID, limit)`. This swaps the cursor and selected event. `OutcomeHeadsPage` confirms separate after-ID and event-filter slots. Existing direct service tests use the correct tuple and therefore do not catch this HTTP defect. Own-mode pagination can repeat the first page; selected-event review can authorise/filter the wrong UUID.
+The original `ListOutcomes` forwarded `(actor, eventID, mode, &cursor, limit)` to a service whose signature is `(actor, cursor, mode, eventID, limit)`. This swaps the cursor and selected event. `OutcomeHeadsPage` confirms separate after-ID and event-filter slots. Existing direct service tests use the correct tuple and therefore do not catch this HTTP defect. Own-mode pagination can repeat the first page; selected-event review can authorise/filter the wrong UUID.
 
-The root has authorised only the bounded forwarding fix and actual HTTP+PostgreSQL regressions: multiple distinct own pages, current selected-event review authorisation/filter/cursor and denied wrong-event/role without private disclosure. Establish red HTTP proof before changing the handler; preserve omitted/nil semantics and generated contracts. No backend edits or native passing results are claimed at this checkpoint.
+The root has authorised only the bounded forwarding fix and actual HTTP+PostgreSQL regressions: multiple distinct own pages, current selected-event review authorisation/filter/cursor and denied wrong-event/role without private disclosure. Establish red HTTP proof before changing the handler; preserve omitted/nil semantics and generated contracts. The bounded fix and actual native red→green proof are recorded below. No other backend changes were introduced.
 
 ## Required remaining #242 scope
 
-1. Implement and prove the bounded native forwarding correction above.
+1. Done: bounded native forwarding correction and real HTTP/PostgreSQL race proof below.
 2. Rebuild proposal, current outcome detail and all nested action/evidence/history forms with explicit prepare → review → result → next action, preserving exact receipts and current source/owner rules.
 3. Lift safe original unknown/pending metadata above private child/route/version/capability lifetimes; retain immutable private retry payload only while authorised, and prove late response/denial/partial restoration without replay or cached resurrection.
 4. Rebuild owner review plans/reminders and positive-field publication, current released-project directory/detail and existing archive projections. Preserve consent/current audience/owner exceptions and explicit publication/correction; no inferred impact/ROI/awards.
@@ -69,3 +69,42 @@ current event review filtering/cursor, unrelated event/role denial without
 private payload, omitted-event validation and the existing private publication
 journey. Red and green logs: `/private/tmp/fleet242-http-red.log` and
 `/private/tmp/fleet242-http-green.log`.
+
+
+## Second compiling consumer and lifetime checkpoint
+
+Reviewed-project discovery uses the native server search and opaque cursor,
+production responsive records and explicit Open links. Source, current released
+project and native owner-review routes require a fresh per-mount current GET.
+Definite denial clears the owned cache and latches above private children; a
+partial restoration requires an explicit current check. All three read views
+are excluded from print. Transient current reads retain only the existing
+same-page draft while hiding saved private detail and disabling writes.
+
+`OutcomeSafety` owns only whitelisted original command kind, resource/review ID,
+command UUID, expected version, native action and pending/unknown state. It sits
+above sibling routes and private editor keys, scoped to the authenticated actor
+and draft session. Current source reads cannot remove this barrier. A late
+original exact response or explicit original-command receipt can settle it;
+replacement writes remain blocked meanwhile. No private command body, reason,
+evidence, field text, rendered projection or browser persistence is introduced.
+Private immutable retry payload stays in its authorised mounted hook. Existing
+CommunicationSafety and other owners' private capsules are unchanged.
+
+Terminal proof at this checkpoint: lint and both production builds pass; new
+metadata boundary/lifetime unit tests pass 2/2. Standard admin outcome journeys
+pass 34 plus the corrected native searchbox/title-target journey 2/2 (the prior
+full run had two obsolete ambiguous selectors, not weakened source assertions).
+Standard participant outcomes pass 32/32. Both desktop/mobile configurations
+cover original pending and unknown writes across source→project→directory→source
+navigation, no replacement POST/private payload restoration, exact original
+settlement, held current read on remount, definite denial→partial restoration,
+print exclusion, existing archived owner/evidence/null-versus-zero/native
+publication and explicit reminder contracts. Synthetic fixtures only.
+
+Remaining: full nested proposal/adoption/moderation/owner/evidence/history,
+publication and reminder composer presentation with explicit review continuity;
+all final capability/owner/source/consent/account/error scenarios; matching
+actual desktop/mobile before/after artifacts and shared guide examples where
+behaviour is added; final complete checks, independent reviews and exact-head
+CI. This checkpoint does not complete #242.
