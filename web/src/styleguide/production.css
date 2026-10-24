@@ -8,5 +8,6 @@
 @import "../design-system/resources.css";
 @import "../design-system/communications.css";
 @import "../design-system/outcomes.css";
+@import "../design-system/surveys.css";
 .skip-link { position: absolute; inset-inline-start: -9999px; }
 .skip-link:focus { position: fixed; inset: 1rem auto auto 1rem; z-index: 100; padding: var(--space-3); background: var(--background); color: var(--foreground); }
