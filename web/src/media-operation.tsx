@@ -16,8 +16,8 @@ export function useMediaOperation(context:MediaContext,scope:PrivateRequestScope
  const identity=useIdentity(),history=useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${context.eventID}:media:${owner}`)
  const attempt=useRef<string|undefined>(undefined)
  const [state,setState]=useState<State>({kind:'idle'}),[retryAvailable,setRetryAvailable]=useState(false),lock=useRef(false),hard=useRef(false),retained=useRef<MediaOperation|undefined>(undefined)
- const remembered=history.unconfirmed||history.pending,stateNow=state.kind==='idle'&&remembered?{kind:'unknown' as const,message:'An earlier media intent is unconfirmed. Its private payload is unavailable in this task. Current reads do not establish its original receipt.'}:state
- usePlanningDepartureBarrier(state.kind==='pending')
+ const remembered=history.unconfirmed||history.pending,stateNow=state.kind==='idle'&&remembered?(history.pending?{kind:'pending' as const,message:'Waiting for the earlier media change to finish. A replacement cannot be started.'}:{kind:'unknown' as const,message:'An earlier media change remains unconfirmed. Its private details were cleared when you left the task. Viewing the gallery or history does not confirm that earlier change.'}):state
+ usePlanningDepartureBarrier(stateNow.kind==='pending')
  function intentOf(op:MediaOperation){return op.kind==='upload'?op.key:op.command.command_id}
  async function send(input?:MediaOperation){
   if(lock.current||(!input&&!retained.current)||(input&&(hard.current||remembered||state.kind==='unknown')))return false
@@ -64,6 +64,6 @@ export function useMediaOperation(context:MediaContext,scope:PrivateRequestScope
    return false
   }finally{lock.current=false;if(!scope.capture().current())retained.current=undefined}
  }
- return {state:stateNow,pending:state.kind==='pending',unknown:stateNow.kind==='unknown',send,
+ return {state:stateNow,pending:stateNow.kind==='pending',unknown:stateNow.kind==='unknown',send,
   feedback:<><CommunicationCommandHistory attempts={history.attempts}/>{stateNow.kind!=='idle'&&<Alert role={stateNow.kind==='rejected'?'alert':'status'} tone={stateNow.kind==='saved'?'success':stateNow.kind==='unknown'?'warning':'neutral'}><p>{stateNow.message}</p>{stateNow.intent&&<p className="fleet-reference">Local intent {stateNow.intent} · diagnostic reference</p>}{stateNow.kind==='unknown'&&<div className="fleet-pattern-actions"><Button icon="refresh" variant="outline" onClick={()=>void context.refresh()}>Check current media</Button>{retryAvailable&&<Button variant="outline" disabled={!context.writable} onClick={()=>void send()}>Retry identical media intent</Button>}</div>}</Alert>}</>}
 }

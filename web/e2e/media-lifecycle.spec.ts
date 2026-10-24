@@ -14,7 +14,7 @@ test('keyboard review/correction and local/route discard preserve exact private 
  const s=state();s.role='photographer';s.items=[];await mockMedia(page,s);await page.goto(gallery)
  const add=page.getByRole('button',{name:'Add media',exact:true});await add.focus();await expect(add).toBeFocused();await page.keyboard.press('Enter')
  await page.getByLabel('Media type',{exact:true}).selectOption('recording');await page.getByLabel('Media title',{exact:true}).fill('Private recording draft');await page.getByLabel('Recording HTTPS link').fill('https://synthetic.example.test/private-recording');await page.getByLabel('Submission reason').fill('PRIVATE-REASON-CANARY')
- const review=page.getByRole('button',{name:'Review private media draft',exact:true});await review.focus();await page.keyboard.press('Enter');await expect(page.getByRole('region',{name:'Review media save'})).toContainText('Private recording draft');expect(s.writes).toHaveLength(0)
+ const review=page.getByRole('button',{name:'Review private media draft',exact:true});await review.focus();await page.keyboard.press('Enter');await expect(page.getByRole('region',{name:'Review private recording submission'})).toContainText('Private recording draft');expect(s.writes).toHaveLength(0)
  await page.getByRole('button',{name:'Correct details',exact:true}).focus();await page.keyboard.press('Enter');await expect(review).toBeFocused();await expect(page.getByLabel('Recording HTTPS link')).toHaveValue('https://synthetic.example.test/private-recording')
  page.once('dialog',dialog=>void dialog.dismiss());await page.getByRole('button',{name:'Cancel media draft',exact:true}).click();await expect(page.getByLabel('Submission reason')).toHaveValue('PRIVATE-REASON-CANARY')
  page.once('dialog',dialog=>void dialog.dismiss());await page.getByRole('link',{name:'Back to event',exact:true}).click();await expect(page).toHaveURL(gallery);await expect(page.getByLabel('Media title',{exact:true})).toHaveValue('Private recording draft')
@@ -34,7 +34,7 @@ for(const response of ['acknowledged','lost'] as const)test(`held upload ${respo
  await page.goto(gallery);await draft(page);await submit(page);await expect.poll(()=>started).toBe(true)
  s.role='attendee';await page.evaluate(()=>window.dispatchEvent(new Event('visibilitychange')));await expect(page.getByRole('heading',{name:'Reviewed gallery',exact:true})).toBeVisible();await expect(page.getByText('PRIVATE-REASON-CANARY',{exact:true})).toHaveCount(0)
  await page.getByRole('link',{name:'Back to event',exact:true}).click();await expect(page).toHaveURL(`/events/${firstID}`);s.role='photographer';await backToMedia(page)
- await expect(page.getByRole('button',{name:'Add media',exact:true})).toBeDisabled();release()
+ await expect(page.getByRole('button',{name:'Add media',exact:true})).toBeDisabled();await expect(page.getByText('Waiting for the earlier media change to finish. A replacement cannot be started.',{exact:true})).toBeVisible();release()
  if(response==='acknowledged'){await expect(page.getByRole('button',{name:'Add media',exact:true})).toBeEnabled();await expect(page.getByText(/Original intent accepted at media version/)).toHaveCount(0)}
  else {await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toContainText('Original outcome remains unconfirmed');await expect(page.getByRole('button',{name:'Add media',exact:true})).toBeDisabled()}
  expect(s.uploads).toHaveLength(1)
