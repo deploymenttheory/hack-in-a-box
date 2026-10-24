@@ -67,3 +67,14 @@ test('released-resource link reaches existing current-authority reader and handl
   await expect(page.getByRole('alert')).toContainText('We could not complete the request.')
   await expect(page.getByText('Synthetic message for you')).toHaveCount(0)
 })
+
+
+test('returning after a viewport change restores the current responsive inbox action', async ({ page }) => {
+  await prepare(page); await page.goto('/inbox')
+  await page.getByRole('button', { name: 'Open Released event resource', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Synthetic message for you' })).toBeFocused()
+  await page.setViewportSize({ width: 360, height: 800 })
+  await page.getByRole('button', { name: 'Back to inbox', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Open Released event resource', exact: true })).toBeFocused()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})

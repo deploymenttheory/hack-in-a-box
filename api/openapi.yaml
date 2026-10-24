@@ -7944,10 +7944,20 @@ components:
           type: array
           items: {$ref: '#/components/schemas/ChannelReadiness'}
         test_request_id: {type: string, format: uuid, nullable: true}
+    CampaignSelfTestCalendar:
+      type: object
+      additionalProperties: false
+      required: [start, end, timezone, summary, workspace_url]
+      properties:
+        start: {type: string, format: date-time}
+        end: {type: string, format: date-time}
+        timezone: {type: string}
+        summary: {type: string}
+        workspace_url: {type: string}
     CampaignSelfTestPreview:
       type: object
       additionalProperties: false
-      required: [revision, campaign_version, actor_id, channel, subject, plain_text, include_calendar, provider_revision, review_fingerprint]
+      required: [revision, campaign_version, actor_id, channel, subject, plain_text, delivery_plain_text, calendar, include_calendar, provider_revision, review_fingerprint]
       properties:
         revision: {type: integer, format: int64}
         campaign_version: {type: integer, format: int64}
@@ -7957,6 +7967,12 @@ components:
         plain_text: {type: string}
         include_calendar: {type: boolean}
         provider_revision: {type: string}
+        delivery_plain_text:
+          type: string
+          description: Exact plain-text part including native adapter date and workspace additions. MIME transport identifiers and HTML styling are generated at effect preparation.
+        calendar:
+          nullable: true
+          allOf: [{$ref: '#/components/schemas/CampaignSelfTestCalendar'}]
         review_fingerprint: {type: string, pattern: '^[a-f0-9]{64}$'}
     CampaignCommand:
       type: object

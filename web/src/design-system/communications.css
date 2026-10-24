@@ -19,3 +19,15 @@
 .fleet-communication-nav a { display: inline-flex; align-items: center; gap: var(--space-2); }
 .fleet-communication-reading { max-width: 70ch; overflow-wrap: anywhere; white-space: pre-wrap; }
 @media (max-width: 48rem) { .fleet-communication-step { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); } }
+
+.fleet-inbox-message { max-width: 70ch; min-width: 0; display: grid; gap: var(--space-4); padding-block: var(--space-6); overflow-wrap: anywhere; }
+.fleet-inbox-message h2, .fleet-inbox-message p { margin: 0; }
+.fleet-inbox-message .inbox-body { white-space: pre-wrap; }
+.fleet-delivery-filters { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.fleet-delivery-filters > div { display: grid; gap: var(--space-2); min-width: min(100%, 14rem); }
+
+.fleet-communication-tabs { flex-wrap: wrap; margin-block: var(--space-4); }
+.fleet-communication-tabs .fleet-tab { gap: var(--space-2); }
+.fleet-communication-tabs + .fleet-label { margin-top: var(--space-4); }
+.fleet-campaign-collection { margin-block: var(--space-6); }
+.fleet-delivery-identity { padding-block: var(--space-6); }

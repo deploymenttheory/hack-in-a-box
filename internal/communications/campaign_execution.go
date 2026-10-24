@@ -99,12 +99,20 @@ func (s Service) queueTestSelf(
 		return nil, blocked("self_test_provider_unavailable")
 	}
 	id := uuid.New()
-	message, fingerprint, sourceBinding, err := s.selfMessage(ctx, q, row, actor, c, id, input.Channel)
+	message, fingerprint, sourceBinding, err := s.selfMessage(
+		ctx,
+		q,
+		row,
+		actor,
+		c,
+		id,
+		input.Channel,
+	)
 	if err != nil {
 		return nil, err
 	}
 	if input.ReviewedTestFingerprint != "" {
-		reviewed, reviewErr := selfTestReviewBinding(ctx, q, c, message, sourceBinding)
+		reviewed, _, reviewErr := s.selfTestReviewBinding(ctx, q, c, message, sourceBinding)
 		if reviewErr != nil {
 			return nil, reviewErr
 		}
@@ -211,7 +219,7 @@ func (s Service) ResolveTestSelfInTransaction(
 		return TestMessage{}, contextError("decode reviewed test", err)
 	}
 	if retained.ReviewedTestBinding != "" {
-		binding, reviewErr := selfTestReviewBinding(ctx, q, c, message, sourceBinding)
+		binding, _, reviewErr := s.selfTestReviewBinding(ctx, q, c, message, sourceBinding)
 		if reviewErr != nil {
 			return TestMessage{}, reviewErr
 		}

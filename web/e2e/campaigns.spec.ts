@@ -15,6 +15,7 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
   let revision = 1, authorized = true
   const source: Source = { revision, variables: ['event.name', 'person.name', 'event.live_start', 'event.submission_cutoff'], preview: null, templates: [{ id: templateID, version: 1, name: 'Synthetic reminder', purpose: 'reminder', format: 'html', subject: 'Hello {{person.name}}', body: 'Synthetic public message for {{person.name}}', fact_id: null }], audiences: [{ id: audienceID, version: 1, name: 'Confirmed competitors', roles: ['attendee'], registration_states: [], teams: [], outstanding: '', fact_id: null }] }
   const providers: Provider[] = ['in_app', 'smtp', 'teams'].map(channel => ({ channel: channel as Provider['channel'], available: ready && channel === 'smtp', config_revision: ready && channel === 'smtp' ? 'synthetic-v1' : '', supports_self_test: channel !== 'teams', self_test_available: ready && channel === 'smtp', reason: ready && channel === 'smtp' ? 'ready' : 'not_configured', self_test_reason: channel === 'teams' ? 'broadcast_only' : ready && channel === 'smtp' ? 'ready' : 'not_configured', setup_url: '#campaign-provider-setup' }))
+  const state = { dropTest: false }
   const records = new Map<string, Detail>(), requests: { path: string; body: Record<string, unknown>; revision: string }[] = []
   function view(detail: Detail) {
     detail.revision = revision; detail.providers = providers; detail.campaign.blockers = []
@@ -29,11 +30,19 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
     return detail
   }
   const index = () => ({ revision, timezone: 'Europe/London', can_manage: true, campaigns: [...records.values()].map(d => view(d).campaign), providers })
+  function selfPreview(campaignID: string): components['schemas']['CampaignSelfTestPreview'] {
+    const saved = records.get(campaignID)!.campaign.campaign, template = source.templates.find(value => value.id === saved.definition.template_id)!
+    const render = (value: string) => value.replaceAll('{{person.name}}', person.display_name).replaceAll('{{event.name}}', 'North Star Hack')
+    return { revision, campaign_version: saved.version, actor_id: person.id, channel: 'smtp', subject: '[TEST] ' + render(template.subject), plain_text: 'This is a test for the requesting organiser only.\n\n' + render(template.body), delivery_plain_text: 'This is a test for the requesting organiser only.\n\n' + render(template.body), calendar: null, include_calendar: saved.definition.include_calendar, provider_revision: 'synthetic-v1', review_fingerprint: 'a'.repeat(64) }
+  }
   await page.route(`**/events/${firstID}/communications**`, async route => {
     const req = route.request(), path = new URL(req.url()).pathname
     const fail = (status: number, code: string) => route.fulfill({ status, json: { error: { code, message: 'Synthetic reviewed-state rejection', request_id: 'synthetic' } } })
     if (!authorized) return fail(403, 'forbidden')
     if (path.endsWith('/delivery')) return route.fulfill({ json: { state: receipt, reason: receipt === 'accepted' ? 'relay_accepted' : receipt === 'ambiguous' ? 'acceptance_unknown' : 'awaiting_submission', updated_at: '2026-10-22T12:00:00Z' } })
+    if (path.endsWith('/self-test-preview')) {
+      return route.fulfill({ json: selfPreview(path.split('/').at(-2)!) })
+    }
     const campaignPath = path.includes('/campaigns'), id = path.split('/').at(-1)!
     if (req.method() === 'GET') return route.fulfill({ json: campaignPath ? id === 'campaigns' ? index() : view(records.get(id)!) : { ...source, revision } })
     const body = req.postDataJSON(), reviewed = req.headers()['if-match']
@@ -65,14 +74,14 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
       } else if (body.action === 'cancel') { c.cancelled = true; c.approval = null; c.version++ }
       else if (body.action === 'test_self') { if (body.channel !== 'smtp' || !ready) return fail(409, 'event_blocked'); detail.test_request_id = 'd4c31a6d-f9d9-4207-b5f9-1594de1ccf32' }
     }
-    revision++; return route.fulfill({ json: view(detail!) })
+    revision++; if (body.action === 'test_self' && state.dropTest) { state.dropTest = false; return route.abort('failed') } return route.fulfill({ json: view(detail!) })
   })
   await page.goto(`/events/${firstID}`)
   await openEventSection(page, 'Campaigns')
   await expect(page.getByRole('heading', { name: 'Campaign composer' })).toBeVisible()
   await page.getByLabel('Reason for campaign changes').fill('Synthetic explicit review')
   await page.getByLabel('Campaign name', { exact: true }).fill('Synthetic event reminder')
-  return { source, providers, records, requests, externalChange: () => { revision++ }, revoke: () => { authorized = false } }
+  return { source, providers, records, requests, state, selfPreview, externalChange: () => { revision++ }, revoke: () => { authorized = false } }
 }
 async function saveAndPreview(page: Page) { await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click(); await expect(page.getByRole('status')).toContainText('Campaign saved as a draft'); await page.getByRole('button', { name: 'Generate audience preview' }).click(); await expect(page.getByRole('status')).toContainText('Retained audience preview generated') }
 
@@ -134,8 +143,8 @@ test('self-tests are explicit own-target intents and cancellation is separate fr
   await expect(page.getByRole('status')).toContainText('requesting organiser only')
   await expect(page.getByRole('status')).toContainText('delivery are not confirmed')
   const request = data.requests.at(-1)!.body
-  expect(request).toMatchObject({ action: 'test_self', channel: 'smtp' })
-  expect(Object.keys(request).sort()).toEqual(['action', 'channel', 'reason', 'version'])
+  expect(request).toMatchObject({ action: 'test_self', channel: 'smtp', reviewed_test_fingerprint: 'a'.repeat(64) })
+  expect(Object.keys(request).sort()).toEqual(['action', 'channel', 'reason', 'reviewed_test_fingerprint', 'version'])
   await page.getByRole('button', { name: 'Cancel campaign', exact: true }).click()
   await expect(page.getByText('Saved state: cancelled')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Queue Email test to myself' })).toBeDisabled()
@@ -190,4 +199,72 @@ for (const state of ['accepted', 'ambiguous'] as const) test(`SMTP test shows ${
   const body = data.requests.find(request => request.body.action === 'test_self')!.body
   expect(body).not.toHaveProperty('email'); expect(body).not.toHaveProperty('recipient_id')
   expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage) + location.href)).not.toContain('@example.test')
+})
+
+
+test('lost organiser TEST retains metadata across event tabs and never enables a replacement send', async ({ page }) => {
+  const data = await prepare(page)
+  await page.getByLabel('Reason for campaign changes').fill('PRIVATE-UNKNOWN-TEST-REASON')
+  await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Campaign saved as a draft')
+  data.state.dropTest = true
+  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+  const review = page.getByRole('alertdialog')
+  await expect(review).toContainText('[TEST] Hello Synthetic Person')
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(0)
+  await review.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+  await expect(page.getByText('The previous campaign operation has an unknown outcome.', { exact: false })).toBeVisible()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history' })
+  await expect(history).toContainText('Campaign test_self')
+  await expect(history).not.toContainText('PRIVATE-UNKNOWN-TEST-REASON')
+  page.on('dialog', dialog => dialog.accept())
+  await openEventSection(page, 'Today'); await openEventSection(page, 'Campaigns')
+  await expect(page.getByRole('button', { name: 'New campaign', exact: true })).toBeDisabled()
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('PRIVATE-UNKNOWN-TEST-REASON')
+})
+
+test('late closed TEST preview cannot overwrite a newer reviewed output or fingerprint', async ({ page }) => {
+  const data = await prepare(page)
+  await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Campaign saved as a draft')
+  const id = [...data.records.keys()][0], first = { ...data.selfPreview(id), subject: '[TEST] OLD PREVIEW', review_fingerprint: 'a'.repeat(64) }, second = { ...data.selfPreview(id), subject: '[TEST] CURRENT PREVIEW', review_fingerprint: 'b'.repeat(64) }
+  let release: () => void = () => {}, calls = 0
+  const held = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/self-test-preview?channel=smtp', async route => { calls++; if (calls === 1) { await held; await route.fulfill({ json: first }) } else await route.fulfill({ json: second }) })
+  try {
+    await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+    await expect(page.getByRole('alertdialog')).toBeVisible()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click()
+    await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+    await expect(page.getByRole('alertdialog')).toContainText('[TEST] CURRENT PREVIEW')
+    release()
+    await expect(page.getByRole('alertdialog')).not.toContainText('[TEST] OLD PREVIEW')
+    await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+    await expect(page.getByRole('status')).toContainText('Test queued for the requesting organiser only')
+    expect(data.requests.at(-1)?.body.reviewed_test_fingerprint).toBe('b'.repeat(64))
+  } finally { release() }
+})
+
+test('current access loss while TEST is pending clears previews and ignores the late private response', async ({ page }) => {
+  await page.clock.install()
+  const data = await prepare(page)
+  await saveAndPreview(page)
+  const id = [...data.records.keys()][0], late = structuredClone(data.records.get(id)!)
+  late.preview!.recipients[0].body = 'PRIVATE-LATE-RESPONSE-CANARY'
+  let release: () => void = () => {}, attempted = false
+  const held = new Promise<void>(resolve => { release = resolve })
+  await page.route(`**/communications/campaigns/${id}`, async route => { if (route.request().method() !== 'POST') return route.fallback(); attempted = true; await held; await route.fulfill({ json: late }) })
+  try {
+    await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+    await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+    await expect.poll(() => attempted).toBe(true)
+    data.revoke(); await page.clock.fastForward(16_000)
+    await expect(page.getByText('Private edits and retained previews have been cleared.', { exact: false })).toBeVisible()
+    release()
+    await expect(page.getByRole('region', { name: 'Personalised campaign preview' })).toHaveCount(0)
+    await expect(page.getByText('PRIVATE-LATE-RESPONSE-CANARY')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Save campaign draft', exact: true })).toHaveCount(0)
+  } finally { release() }
 })

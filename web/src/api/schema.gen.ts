@@ -4576,6 +4576,15 @@ export interface components {
             /** Format: uuid */
             test_request_id: string | null;
         };
+        CampaignSelfTestCalendar: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            timezone: string;
+            summary: string;
+            workspace_url: string;
+        };
         CampaignSelfTestPreview: {
             /** Format: int64 */
             revision: number;
@@ -4589,6 +4598,9 @@ export interface components {
             plain_text: string;
             include_calendar: boolean;
             provider_revision: string;
+            /** @description Exact plain-text part including native adapter date and workspace additions. MIME transport identifiers and HTML styling are generated at effect preparation. */
+            delivery_plain_text: string;
+            calendar: components["schemas"]["CampaignSelfTestCalendar"] | null;
             review_fingerprint: string;
         };
         CampaignCommand: {

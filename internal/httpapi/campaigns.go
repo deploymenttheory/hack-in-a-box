@@ -56,8 +56,17 @@ func (h handlers) ChangeCampaign(
 	return convertDTO[contract.ChangeCampaign200JSONResponse](result)
 }
 
-func (h handlers) GetCampaignSelfTestPreview(ctx context.Context, r contract.GetCampaignSelfTestPreviewRequestObject) (contract.GetCampaignSelfTestPreviewResponseObject, error) {
-	result, err := h.Communications.PreviewSelfTest(ctx, actor(ctx).ID, r.EventId, r.CampaignId, string(r.Params.Channel))
+func (h handlers) GetCampaignSelfTestPreview(
+	ctx context.Context,
+	r contract.GetCampaignSelfTestPreviewRequestObject,
+) (contract.GetCampaignSelfTestPreviewResponseObject, error) {
+	result, err := h.Communications.PreviewSelfTest(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.CampaignId,
+		string(r.Params.Channel),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("read organiser test preview: %w", err)
 	}

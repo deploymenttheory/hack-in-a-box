@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -14,43 +15,77 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 )
 
+// TestPreviewProvider projects adapter additions without preparing an effect.
+type TestPreviewProvider interface {
+	ProjectSelfTest(context.Context, *dbgen.Queries, TestMessage) (TestPresentation, error)
+}
+type TestCalendar struct {
+	Start        time.Time `json:"start"`
+	End          time.Time `json:"end"`
+	Timezone     string    `json:"timezone"`
+	Summary      string    `json:"summary"`
+	WorkspaceURL string    `json:"workspace_url"`
+}
+type TestPresentation struct {
+	PlainText string        `json:"plain_text"`
+	Calendar  *TestCalendar `json:"calendar"`
+}
+
 // SelfTestPreview is an ephemeral current review, never a send acknowledgement.
 // The verified mailbox participates only in the private hash; it is not returned.
 type SelfTestPreview struct {
-	Revision          int64     `json:"revision"`
-	CampaignVersion   int64     `json:"campaign_version"`
-	ActorID           uuid.UUID `json:"actor_id"`
-	Channel           string    `json:"channel"`
-	Subject           string    `json:"subject"`
-	PlainText         string    `json:"plain_text"`
-	IncludeCalendar   bool      `json:"include_calendar"`
-	ProviderRevision  string    `json:"provider_revision"`
-	ReviewFingerprint string    `json:"review_fingerprint"`
+	DeliveryPlainText string        `json:"delivery_plain_text"`
+	Calendar          *TestCalendar `json:"calendar"`
+	Revision          int64         `json:"revision"`
+	CampaignVersion   int64         `json:"campaign_version"`
+	ActorID           uuid.UUID     `json:"actor_id"`
+	Channel           string        `json:"channel"`
+	Subject           string        `json:"subject"`
+	PlainText         string        `json:"plain_text"`
+	IncludeCalendar   bool          `json:"include_calendar"`
+	ProviderRevision  string        `json:"provider_revision"`
+	ReviewFingerprint string        `json:"review_fingerprint"`
 }
 
 func validReviewFingerprint(value string) bool {
 	if len(value) != 64 {
 		return false
 	}
-	_, err := hex.DecodeString(value)
-	return err == nil
+	decoded, err := hex.DecodeString(value)
+	return err == nil && hex.EncodeToString(decoded) == value
 }
 
-func selfTestReviewBinding(ctx context.Context, q *dbgen.Queries, campaign Campaign, message TestMessage, source string) (string, error) {
+func (s Service) selfTestReviewBinding(
+	ctx context.Context,
+	q *dbgen.Queries,
+	campaign Campaign,
+	message TestMessage,
+	source string,
+) (string, TestPresentation, error) {
+	presentation := TestPresentation{PlainText: message.PlainText}
+	if provider, ok := s.Channels[message.Channel].(TestPreviewProvider); ok {
+		var err error
+		presentation, err = provider.ProjectSelfTest(ctx, q, message)
+		if err != nil {
+			return "", presentation, contextError("project reviewed test content", err)
+		}
+	} else if message.IncludeCalendar && message.Channel == "smtp" {
+		return "", presentation, ErrUnresolved
+	}
 	mailbox := ""
 	if message.Channel == "smtp" {
 		// Account/contact writers use this order. Retain the reviewed mailbox
 		// through the worker's immutable SMTP attempt preparation barrier.
 		if _, err := q.LockMailPerson(ctx, message.ActorID); err != nil {
-			return "", contextError("lock reviewed test account", err)
+			return "", presentation, contextError("lock reviewed test account", err)
 		}
 		if _, err := q.LockPersonEmailContact(ctx, message.ActorID); err != nil {
-			return "", contextError("lock reviewed test destination", err)
+			return "", presentation, contextError("lock reviewed test destination", err)
 		}
 		var err error
 		mailbox, err = mailcontact.VerifiedMailboxInTransaction(ctx, q, message.ActorID)
 		if err != nil {
-			return "", contextError("read reviewed test destination", err)
+			return "", presentation, contextError("read reviewed test destination", err)
 		}
 	}
 	// Normalize only the generated operation identity. Render once at enqueue and
@@ -61,12 +96,17 @@ func selfTestReviewBinding(ctx context.Context, q *dbgen.Queries, campaign Campa
 		Campaign        Campaign
 		Message         TestMessage
 		Source, Mailbox string
-	}{campaign, message, source, mailbox}), nil
+		Presentation    TestPresentation
+	}{campaign, message, source, mailbox, presentation}), presentation, nil
 }
 
 // PreviewSelfTest uses the exact organiser-only renderer, with current write
 // authority, without saving a preview, audit row, revision, operation or job.
-func (s Service) PreviewSelfTest(ctx context.Context, actor, eventID, campaignID uuid.UUID, channel string) (SelfTestPreview, error) {
+func (s Service) PreviewSelfTest(
+	ctx context.Context,
+	actor, eventID, campaignID uuid.UUID,
+	channel string,
+) (SelfTestPreview, error) {
 	var result SelfTestPreview
 	if !slices.Contains([]string{"smtp", "in_app"}, channel) {
 		return result, access.ErrInvalid
@@ -84,18 +124,32 @@ func (s Service) PreviewSelfTest(ctx context.Context, actor, eventID, campaignID
 			return access.ErrConflict
 		}
 		ready := s.channelReadiness(ctx, eventID, actor)
-		if slices.IndexFunc(ready, func(value ChannelReadiness) bool { return value.Channel == channel && value.SelfTestAvailable }) < 0 {
+		if slices.IndexFunc(
+			ready,
+			func(value ChannelReadiness) bool { return value.Channel == channel && value.SelfTestAvailable },
+		) < 0 {
 			return ErrUnresolved
 		}
 		message, _, source, err := s.selfMessage(ctx, q, row, actor, campaign, uuid.Nil, channel)
 		if err != nil {
 			return err
 		}
-		binding, err := selfTestReviewBinding(ctx, q, campaign, message, source)
+		binding, presentation, err := s.selfTestReviewBinding(ctx, q, campaign, message, source)
 		if err != nil {
 			return err
 		}
-		result = SelfTestPreview{Revision: row.Revision, CampaignVersion: campaign.Version, ActorID: actor, Channel: channel, Subject: message.Subject, PlainText: message.PlainText, IncludeCalendar: message.IncludeCalendar, ProviderRevision: message.ProviderRevision, ReviewFingerprint: binding}
+		result = SelfTestPreview{
+			DeliveryPlainText: presentation.PlainText, Calendar: presentation.Calendar,
+			Revision:          row.Revision,
+			CampaignVersion:   campaign.Version,
+			ActorID:           actor,
+			Channel:           channel,
+			Subject:           message.Subject,
+			PlainText:         message.PlainText,
+			IncludeCalendar:   message.IncludeCalendar,
+			ProviderRevision:  message.ProviderRevision,
+			ReviewFingerprint: binding,
+		}
 		return nil
 	})
 	return result, contextError("preview organiser test", err)

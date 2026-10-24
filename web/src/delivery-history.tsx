@@ -5,7 +5,7 @@ import { CommunicationStep } from './communication-layout'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, privateKey, unwrap } from './api/client'
+import { APIError, api, privateKey, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
@@ -24,7 +24,7 @@ function Workspace({ eventID, deliveryID }: { eventID: string; deliveryID?: stri
   const identity = useIdentity(), cache = useQueryClient(), [failure, setFailure] = useState<unknown>()
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'delivery-history'), identity.draft_scope, deliveryID ?? 'index'], [identity.person.id, identity.draft_scope, eventID, deliveryID])
   const event = useQuery({ queryKey: [...key, 'event'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 10_000,
-    queryFn: async ({ signal }) => unwrap(await api.GET('/api/v1/events/{event_id}', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })) })
+    queryFn: async ({ signal }) => { const value = unwrap(await api.GET('/api/v1/events/{event_id}', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })); if (value.can_read_staff === false) setFailure(new APIError(403, 'forbidden')); return value } })
   const deny = useCallback((error: unknown) => { if (denied(error)) setFailure(error) }, [])
   useEffect(() => () => { void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key])
   const inaccessible = failure || (denied(event.error) ? event.error : undefined)
