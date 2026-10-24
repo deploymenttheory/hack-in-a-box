@@ -3,6 +3,21 @@ import { mockWorkspace, firstID } from './fixtures'
 import { fixtureRegistration } from './registration-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 
+test('a missing current form clears its private editor and unresolved history', async ({ page }) => {
+  await mockWorkspace(page); let writes = 0
+  const form = { revision: 1, version: 1, published_version: null, definition: { id: '00000000-0000-4000-8000-000000000003', name: 'Missing form draft', audience: 'attendee', fields: [] } }
+  await page.route(`**/events/${firstID}/registration/forms**`, route => {
+    if (route.request().method() === 'PUT') { writes++; return route.fulfill({ status: 503, json: { error: { code: 'unavailable' } } }) }
+    if (writes) return route.fulfill({ status: 404, json: { error: { code: 'not_found' } } })
+    return route.fulfill({ json: { items: [form] } })
+  })
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Missing form draft · Draft' }).click()
+  await page.getByLabel('Form name', { exact: true }).fill('Private missing definition'); await page.getByRole('button', { name: 'Save form draft' }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown' })).toBeVisible(); await page.getByRole('button', { name: 'Check current status' }).click()
+  await expect(page.getByLabel('Form name', { exact: true })).toHaveCount(0); await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toHaveCount(0)
+  expect(writes).toBe(1)
+})
+
 test('unknown form command survives local section replacement without replay or publication', async ({ page }) => {
   await mockWorkspace(page); let writes = 0, reads = 0, release!: () => void
   const gate = new Promise<void>(resolve => { release = resolve })

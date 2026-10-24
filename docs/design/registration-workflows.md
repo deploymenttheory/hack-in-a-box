@@ -17,3 +17,17 @@ Review regressions exercise a second admin changing the form between acknowledge
 Shared-form verification must follow composition changes across both portals. CI at `2735251` passed 618 admin cases but failed 20 shared cases: 18 retained obsolete panel selectors or direct-submission navigation assumptions, and two exposed a real checkbox-label flex regression after removing the legacy workspace wrapper. A changed application journey must run `design-system.spec.ts`, `fleet-primitives.spec.ts` and `fleet-primitives-evidence.spec.ts` in both portal builds alongside its owner journeys. Preserve palette contrast, field/outline contrast, touch geometry, theme portals, native Enter/review/explicit-submit sequencing, native422 field focus/descriptions, pending behaviour and private-cache assertions. Prefer semantic content selectors over retired panel ancestry. Keep checkbox layout scoped to the owned registration fields rather than restoring obsolete wrappers or weakening the assertion.
 
 Keeping the native422 focus assertion exposed an additional timing defect during migration: the error could render while the application fieldset remained pending-disabled during status refresh. The application owner now restores focus after a definite rejection re-enables its fields; uncertain requests stay frozen. Shared verification retains the assertion rather than treating new navigation as permission to drop it.
+
+Admission recovery must use the existing event-session PlanningOperations memory
+boundary in both portals. An interrupted command retains its original operation,
+resource and expected revision across local section replacement; reopening that
+owner remains fenced. Current reads cannot settle that intent. Pending writes
+prevent local and route departure; explicit departure from the whole event session
+acknowledges loss of its in-memory history. Account/event replacement and definite
+401/403/404 denial clear private owners. Apply remains a separate UUID/fingerprint
+contract with only deliberate exact captured-input retry. Never store command
+history or private answers in browser persistence.
+
+Applicant column headings may remain single-line; row names retain shared wrapping.
+The owner synchronizes focus with its 72rem detail-canvas boundary and restores the
+current source row, including after responsive row replacement.

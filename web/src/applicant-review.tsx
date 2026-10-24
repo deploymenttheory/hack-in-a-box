@@ -29,7 +29,7 @@ export function ApplicantReview({ event, openSetup, onDirty }: { event: EventRec
   }, [selected])
   const query = useInfiniteQuery({ queryKey: privateKey(identity.person.id, event.id, 'applicants'), initialPageParam: 0, queryFn: async ({ pageParam, signal }) => unwrap(await api.GET('/api/v1/events/{event_id}/registrations/review', { signal, params: { path: { event_id: event.id }, query: { after: pageParam } } })), getNextPageParam: page => page.next_cursor ?? undefined })
   const rows = query.data?.pages.flatMap(p => p.items) ?? [], visible = rows.filter(a => (filter === 'all' || a.registration.kind === filter) && a.display_name.toLowerCase().includes(search.toLowerCase()))
-  const denied = query.error instanceof APIError && [401, 403].includes(query.error.status)
+  const denied = query.error instanceof APIError && [401, 403, 404].includes(query.error.status)
   return <section ref={workspace} className="fleet-applicant-workspace"><CollectionHeading title="Applicant review" scope={{ entity: 'Registration operations', event: event.name }} description={<>{event.confirmed_attendees} confirmed competitors · capacity {event.configuration.capacity} · minimum {event.configuration.minimum_attendance}. Reserved offers do not count as confirmed competitors.</>} />{event.can_edit && <><Button variant="outline" icon="list" disabled={locked} onClick={openSetup}>Change capacity in event setup</Button><OfferPolicy event={event} onLocked={setPolicyLocked} /></>}
     <DetailWorkspace collection={<><div className="fleet-admission-filter"><div><Label htmlFor="applicant-filter">Applications shown</Label><Select id="applicant-filter" value={filter} disabled={locked} onChange={e => setFilter(e.target.value)}><option value="all">All applicants</option><option value="attendee">Competitors and waitlist</option><option value="facilitator">Facilitator applications</option></Select></div><div><Label htmlFor="applicant-search">Find in loaded applicants</Label><Input id="applicant-search" type="search" value={search} disabled={locked} onChange={e => setSearch(e.target.value)} /></div></div><p>{visible.length} matching in {rows.length} loaded applicants. Load more to inspect later records.</p>{query.isPending ? <Loading /> : denied || !query.data ? <Failure error={query.error} /> : <>{!!query.error && <Failure error={query.error} />}<CollectionRecords label="Applicants" rows={visible} rowKey={a => a.registration.id} rowLabel={a => a.display_name} columns={[{ id: 'audience', label: 'Audience', cell: a => a.registration.audience }, { id: 'state', label: 'Status', cell: a => <StatusBadge tone="neutral">{a.registration.state}</StatusBadge> }, { id: 'position', label: 'Waitlist', cell: a => a.registration.waitlist_position ?? '—' }]} actions={a => <Button icon="search" variant="ghost" data-record-focus={a.registration.id} disabled={locked || !!query.error} onClick={e => { trigger.current = e.currentTarget; setSelected(a.registration.id) }}>Review {a.display_name}</Button>} /><CollectionPagination label="Applicant pages" source={{ kind: 'cursor', loaded: rows.length, busy: query.isFetchingNextPage, next: query.hasNextPage ? () => { void query.fetchNextPage() } : undefined }} /></>}</>} detail={selected && !denied ? <section className="fleet-inspector" aria-label="Applicant details"><Button icon="back" variant="ghost" disabled={locked} onClick={() => { setSelected(undefined); requestAnimationFrame(() => { const current = workspace.current?.querySelector<HTMLButtonElement>(`[data-record-focus="${CSS.escape(selected)}"]`); (current ?? trigger.current)?.focus() }) }}>Back to applicants</Button><ApplicantDetails key={selected} event={event} id={selected} onLocked={setDecisionLocked} /></section> : undefined} />
   </section>
@@ -39,13 +39,13 @@ function OfferPolicy({ event, onLocked }: { event: EventRecord; onLocked: (locke
   const query = useQuery({ queryKey: privateKey(identity.person.id, event.id, 'offer-policy'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}/registrations/offer-policy', { params: { path: { event_id: event.id } } })) })
   if (denied) return <Failure error={denied} />
   if (query.isPending) return <Loading />
-  if (!query.data || (query.error instanceof APIError && [401, 403].includes(query.error.status))) return <Failure error={query.error} />
+  if (!query.data || (query.error instanceof APIError && [401, 403, 404].includes(query.error.status))) return <Failure error={query.error} />
   return <PolicyEditor onDenied={setDenied} event={event} onLocked={onLocked} value={query.data} paused={!!query.error} read={async () => { const result = await query.refetch(); if (result.error) throw result.error }} />
 }
 function PolicyEditor({ event, value, read, paused, onLocked, onDenied }: { onDenied: (error: APIError) => void; onLocked: (locked: boolean) => void; paused: boolean; event: EventRecord; value: components['schemas']['OfferSettings']; read: () => Promise<void> }) {
   const identity = useIdentity(), cache = useQueryClient(), [automated, setAutomated] = useState(value.automated), [days, setDays] = useState(value.working_days), [review, setReview] = useState<{ automated: boolean; working_days: number; revision: number }>()
   const command = useAdmissionCommand(`${identity.person.id}:${identity.draft_scope}:${event.id}:offer-policy`)
-  useEffect(() => { if (command.failure instanceof APIError && [401, 403].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
+  useEffect(() => { if (command.failure instanceof APIError && [401, 403, 404].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
   const dirty = automated !== value.automated || days !== value.working_days
   useEffect(() => { onLocked(command.blocked || !!review || dirty); return () => onLocked(false) }, [command.blocked, review, dirty, onLocked])
   async function save() {
@@ -64,7 +64,7 @@ function ApplicantDetails({ event, id, onLocked }: { event: EventRecord; id: str
   const query = useQuery({ queryKey: privateKey(identity.person.id, event.id, `applicant:${id}`), queryFn: async ({ signal }) => unwrap(await api.GET('/api/v1/events/{event_id}/registrations/{registration_id}/review', { signal, params: { path: { event_id: event.id, registration_id: id } } })) })
   if (denied) return <Failure error={denied} />
   if (query.isPending) return <Loading />
-  if (!query.data || (query.error instanceof APIError && [401, 403].includes(query.error.status))) return <Failure error={query.error} />
+  if (!query.data || (query.error instanceof APIError && [401, 403, 404].includes(query.error.status))) return <Failure error={query.error} />
   return <>{!!query.error && <Failure error={query.error} />}<ApplicantDecision event={event} id={id} data={query.data} paused={!!query.error} onLocked={onLocked} onDenied={setDenied} read={async () => { const result = await query.refetch(); if (result.error) throw result.error }} /></>
 }
 type ReviewDetail = components['schemas']['ApplicantDetail']
@@ -73,7 +73,7 @@ function ApplicantDecision({ event, id, data, paused, onLocked, read, onDenied }
   useEffect(() => { heading.current?.focus() }, [id])
   const identity = useIdentity(), cache = useQueryClient(), [reason, setReason] = useState(''), [ack, setAck] = useState(false)
   const command = useAdmissionCommand(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:decision`)
-  useEffect(() => { if (command.failure instanceof APIError && [401, 403].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
+  useEffect(() => { if (command.failure instanceof APIError && [401, 403, 404].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
   const [review, setReview] = useState<{ action: 'selected' | 'backup' | 'declined' | 'invite' | 'promote'; reason: string; ack: boolean; revision: number }>()
   const { applicant, response, history, fallback_available } = data, r = applicant.registration
   useEffect(() => { onLocked(command.blocked || !!reason.trim()); return () => onLocked(false) }, [command.blocked, reason, onLocked])

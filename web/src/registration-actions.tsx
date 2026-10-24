@@ -65,7 +65,7 @@ function ResponseEditor({ eventID, registrationID, onState }: { eventID: string;
   const query = useQuery({ queryKey: privateKey(identity.person.id, eventID, 'response:' + registrationID), queryFn: async ({ signal }) => unwrap(await api.GET('/api/v1/events/{event_id}/registrations/{registration_id}/response', { params: { path: { event_id: eventID, registration_id: registrationID } }, signal })) })
   if (denied) return <Failure error={denied} />
   if (query.isPending) return <Loading />
-  if (!query.data || (query.error instanceof APIError && [401, 403].includes(query.error.status))) return <Failure error={query.error} retry={() => void query.refetch()} />
+  if (!query.data || (query.error instanceof APIError && [401, 403, 404].includes(query.error.status))) return <Failure error={query.error} retry={() => void query.refetch()} />
   return <AnswerCorrection key={registrationID} eventID={eventID} registrationID={registrationID} response={query.data} paused={!!query.error} onState={onState} onDenied={setDenied} read={async () => { const result = await query.refetch(); if (result.error) throw result.error }} />
 }
 function AnswerCorrection({ eventID, registrationID, response, read, paused, onState, onDenied }: { paused: boolean; onState: (state: AnswerState) => void; onDenied: (error: APIError) => void; eventID: string; registrationID: string; response: components['schemas']['RegistrationResponse']; read: () => Promise<unknown> }) {
@@ -75,7 +75,7 @@ function AnswerCorrection({ eventID, registrationID, response, read, paused, onS
   const dirty = !sameAnswers(answers, response.answers) || review
   useBlocker({ shouldBlockFn: () => command.isBlocked() || (dirty && !window.confirm('Discard your unsaved corrected answers and leave the answer review?')), enableBeforeUnload: dirty || command.blocked })
   useEffect(() => { onState({ locked: command.blocked, dirty }); return () => onState({ locked: false, dirty: false }) }, [command.blocked, dirty, onState])
-  useEffect(() => { if (command.failure instanceof APIError && [401, 403].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
+  useEffect(() => { if (command.failure instanceof APIError && [401, 403, 404].includes(command.failure.status)) onDenied(command.failure) }, [command.failure, onDenied])
   async function save() {
     if (!review || command.blocked || paused) return
     const ticket = ownership.capture(); if (!ticket.current()) return
