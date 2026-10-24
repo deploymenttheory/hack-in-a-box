@@ -1,0 +1,81 @@
+{
+  "baseline_revision": "bc350d8c3145e8cb1787a840568a8f7b42cf349f",
+  "mc_candidate_revision": "e1f3981ec1003a209b682afdc90ed71b02d36811",
+  "room_candidate_revision": "9fc084e5bff3e61b3acd6f02d4334c59275789d0",
+  "synthetic_only": true,
+  "domain_writes": 0,
+  "account_requests_in_room": 0,
+  "executed_capture_results": {
+    "baseline": {
+      "passed": 4,
+      "session": 88614
+    },
+    "initial_candidate": {
+      "passed": 4,
+      "session": 21632
+    },
+    "final_mc_refresh": {
+      "passed": 2,
+      "session": 92302
+    }
+  },
+  "capture_fixture_sha256": "90cc060e6975124b99c967fee528284ad50dd2497b0cf8fde0f4af9d9746dc78",
+  "images": [
+    {
+      "file": "after-mc-desktop.png",
+      "source_revision": "e1f3981ec1003a209b682afdc90ed71b02d36811",
+      "sha256": "6b79f2934b7a9db68f9a29e94b1a339139f339d919e7e7487b9ee82b7d995f84",
+      "pixel_width": 1280,
+      "pixel_height": 1369
+    },
+    {
+      "file": "after-mc-mobile.png",
+      "source_revision": "e1f3981ec1003a209b682afdc90ed71b02d36811",
+      "sha256": "6cf095e4d0bdb000d0867340eaf314922f7dfc385e8751f2efd1892993313183",
+      "pixel_width": 1170,
+      "pixel_height": 5433
+    },
+    {
+      "file": "after-room-desktop.png",
+      "source_revision": "9fc084e5bff3e61b3acd6f02d4334c59275789d0",
+      "sha256": "1b93440706192e131eaf483dd334501df4d5d0a4dfde5fd19531c4bd4a33166e",
+      "pixel_width": 1280,
+      "pixel_height": 720
+    },
+    {
+      "file": "after-room-mobile.png",
+      "source_revision": "9fc084e5bff3e61b3acd6f02d4334c59275789d0",
+      "sha256": "09602e86365b22029a4f2a9e9d41f56c63938c1f08ef28f65afc5e8822dcae0e",
+      "pixel_width": 1170,
+      "pixel_height": 2856
+    },
+    {
+      "file": "before-mc-desktop.png",
+      "source_revision": "bc350d8c3145e8cb1787a840568a8f7b42cf349f",
+      "sha256": "007e1136204367fa13dfc0d826f6e70ce65a8d67f06e824d522f18acd593d79b",
+      "pixel_width": 1280,
+      "pixel_height": 3103
+    },
+    {
+      "file": "before-mc-mobile.png",
+      "source_revision": "bc350d8c3145e8cb1787a840568a8f7b42cf349f",
+      "sha256": "1ead1ef5efbe066395369d1a301a958318f31288819418203d0f543e33cdae7a",
+      "pixel_width": 1170,
+      "pixel_height": 11493
+    },
+    {
+      "file": "before-room-desktop.png",
+      "source_revision": "bc350d8c3145e8cb1787a840568a8f7b42cf349f",
+      "sha256": "35655c3dcf5a24a9334802afd8ae698115b1ee87ee717636473deb7c7931c18e",
+      "pixel_width": 1280,
+      "pixel_height": 720
+    },
+    {
+      "file": "before-room-mobile.png",
+      "source_revision": "bc350d8c3145e8cb1787a840568a8f7b42cf349f",
+      "sha256": "dd1d337ac04b5e52f18dd2e90fe6a2dbfca2136228c0d5f53c2718d4d1394532",
+      "pixel_width": 1170,
+      "pixel_height": 2691
+    }
+  ]
+}
