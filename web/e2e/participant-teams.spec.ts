@@ -130,3 +130,39 @@ test('participant typed join draft requires deliberate route discard and never s
   await expect(page).toHaveURL(/\/register$/)
   expect(state.writes()).toBe(0)
 })
+
+test('unknown participant team change survives local return and cancelled exit; acknowledged exit starts a fresh session without a receipt or replay', async ({ page }) => {
+  await existingParticipantTeam(page)
+  let writes = 0
+  const member = { id: person.id, name: person.display_name }
+  const current: TeamPage = { revision: 3, can_manage: false, can_create: true, frozen: false, freeze_at: registrationEvent.team_freeze, people: [], requests: [], teams: [{ id: invitation, name: 'Synthetic attendee team', state: 'published', captain: person.id, published_captain: person.id, invitation_code: invitation, frozen: false, draft: [member], published: [member] }] }
+  await page.route(`**/events/${firstID}/teams`, route => {
+    if (route.request().method() === 'POST') { writes++; return route.fulfill({ status: 503, json: { error: { code: 'unavailable' } } }) }
+    return route.fulfill({ json: { ...current, revision: writes ? 3 : 2 } })
+  })
+  await page.getByRole('button', { name: 'Request to join', exact: true }).click()
+  await page.getByLabel('Captain’s invitation code').fill(invitation)
+  await page.getByRole('button', { name: 'Review join request', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm team change', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history' })
+  await expect(history).toContainText('Expected revision 2')
+  await page.getByRole('button', { name: 'Read current roster', exact: true }).click()
+  await expect(page.getByText('Current roster revision 3. Original outcome remains unconfirmed.')).toBeVisible()
+  await page.getByRole('button', { name: 'Cancel change', exact: true }).click()
+  await page.getByRole('button', { name: 'Back to roster', exact: true }).click()
+  await expect(history).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Request to join', exact: true })).toBeDisabled()
+  page.once('dialog', dialog => { expect(dialog.type()).toBe('beforeunload'); void dialog.dismiss() })
+  await page.getByRole('main').getByRole('link', { name: 'Find events', exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/register/${firstID}$`))
+  await expect(history).toBeVisible()
+  page.once('dialog', dialog => void dialog.accept())
+  await page.getByRole('main').getByRole('link', { name: 'Find events', exact: true }).click()
+  await expect(page).toHaveURL(/\/register$/)
+  await page.goto(`/register/${firstID}`)
+  await expect(page.getByRole('heading', { name: 'Your team', exact: true })).toBeVisible()
+  await expect(history).toHaveCount(0)
+  await expect(page.getByText(/Server response received at roster revision/)).toHaveCount(0)
+  expect(writes).toBe(1)
+})

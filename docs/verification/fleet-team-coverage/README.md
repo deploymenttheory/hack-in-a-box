@@ -140,3 +140,30 @@ Existing team/mentor policy assertions remain and now explicitly accept delibera
 discard when their authored journey abandons a typed placement/editor draft.
 
 Final re-review and exact-head full repository CI remain outstanding gates.
+
+
+## Final privacy-history and registration integration, 24 October 2026
+
+After the second review, four helper regressions first failed for an earlier 503
+that retained an organiser profile payload followed by either a restricted roster
+or a definite 401, 403 or 404 read. Privileged capsules now carry their provenance;
+those boundaries redact the payload while keeping the operation, original revision,
+local intent reference and unresolved write barrier. Initial nonmanager participant
+join capsules retain their ordinary intent. This updates the event-lifetime history
+above the keyed controls, rather than merely hiding a replaced editor.
+
+The branch is rebased onto merged registration recovery main
+`01958dd01660482b7f8964c4da0349612021aba7`, using its real participant
+`PlanningOperations` provider. The new desktop/mobile participant journey exercises
+503, current GET at a later revision, cancelled review and local return, rejected
+then accepted native Find events navigation, and fresh event-session entry. Native
+navigation invokes the browser before-unload confirmation; it supplies no custom
+message. A cancelled exit retains history and the write barrier; deliberate accepted
+exit clears event-session memory. A later GET never produces a command receipt and
+no original write is replayed.
+
+Post-rebase checks: both portal production builds, repository web lint, all 130 unit
+tests, 62 affected admin browser journeys and 16 participant/public browser journeys
+pass. Earlier independent guide proof remains 30 passing journeys; its composition
+and focus helper were not changed by this final history fix. Final independent
+re-review and full exact-head CI remain required before readiness or merge.

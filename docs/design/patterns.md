@@ -37,6 +37,10 @@ focus. The owning adapter retains generated API calls, CSRF, revision checks,
 current authorization, payload/receipt matching and private data lifecycle. Use
 `PrivateRequestScope` or the existing owning-domain fence for asynchronous work.
 Frame keys do not authorize a request or clear state stored above that frame.
+When current roster capability is lost, redact privileged unknown-command payloads
+from event-lifetime history while retaining minimal intent metadata, original revision
+and the unresolved write barrier. An initial participant projection must not erase
+ordinary unknown join/create intent merely because it has no management capability.
 
 ## Capability examples
 
