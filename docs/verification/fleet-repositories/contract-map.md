@@ -113,3 +113,41 @@ Remaining: fresh serial compile/lint/units, complete command/secret/unknown/curr
 role/partial restoration/held-read/late-response browser journeys in both portals,
 independent guide proof and matched actual visuals, full exact-head checks and
 paired review. No readiness, merge or issue closure is claimed.
+
+## Current boundary/guide checkpoint on merged MC base
+
+Rebased onto `18b23f4e3201f9ab0d10ef3875628585f0ffd74f`, preserving MC production
+styles, guide examples and tests. Actual draft CI exposed only Go formatter
+issues and a shared fingerprint-vector file outside Docker's web COPY context;
+those are corrected without native behavior changes. Golden vectors now live in
+`web/src/repository-access-fingerprint-vectors.json`, shared with the native test.
+
+The repository root now supplies synchronous parent authority to every nested
+private read/write/install continuation. Enclosing event-cache denial is also
+fenced before React teardown. Transient reads with retained data keep private
+editors mounted and pause changes. Current native team names identify mappings;
+raw team/numeric repository references remain in the inspector and exact review.
+Disbanded mapped repositories retain read-only original receipt recovery, with
+all new approval/retry/assignment controls unavailable.
+
+Executed: both production builds pass after the parent-boundary changes and
+rebase. Actual original receipt/browser recovery **6/6 pass** on desktop/mobile,
+including lost committed reply and later revision, wrong/absent receipt refusing
+to settle, immutable original retry, capability loss, receipt denial and held
+fresh restoration (`/private/tmp/hackbox94-receipt-recovery-green.log`).
+The actual parent-event QueryCache denial unit checks a child ticket before React
+unmount while safe original metadata survives. Removing only parent scope
+inheritance reproduced its precise red; source was restored and **6/6 focused
+units pass** (`/private/tmp/hackbox94-parent-mutant-red.log`, mutant diff and
+`/private/tmp/hackbox94-boundary-units.log`).
+
+Actual guide CI ambiguity was reproduced **2/2 red** locally: workflow and snippet
+copy status both matched an unnamed status selector. Naming the actual workflow
+status keeps the snippet status separate; the original corrective focus and
+unknown/current-read assertions now **2/2 pass** with no timeout/assertion
+weakening (`/private/tmp/hackbox94-guide-focused-{red,green}.log`). Full guide build
+passes. An initial local green attempt used the wrong working directory for the
+standalone host; corrected web-directory execution produced the passing result.
+
+Expanded full native browser/guide/privacy/freeze/visual proof and final checks
+are still being completed. No readiness or issue closure is claimed.
