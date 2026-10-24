@@ -1,0 +1,5 @@
+@layer components {
+  .fleet-survey-workspace { min-width: 0; }
+  .fleet-survey-section { border-top: 1px solid var(--border); padding-block: var(--space-6); }
+  .fleet-survey-workspace > h2 { margin-block: var(--space-6) var(--space-3); font-size: var(--text-section); font-weight: var(--weight-emphasis); }
+}
