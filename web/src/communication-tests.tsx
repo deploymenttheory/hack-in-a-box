@@ -4,7 +4,7 @@ import { useIdentity } from './session'
 
 type State = components['schemas']['SMTPTestDeliveryStatus']['state']
 export type QueuedEmailTest = { testID: string; campaignID: string; campaignVersion: number; providerRevision: string; state?: State }
-type Metadata = { intentID?: string; action: string; revision?: number; requestID?: string }
+type Metadata = { intentID?: string; action: string; revision?: number; requestID?: string; resourceID?: string; expectedVersion?: number }
 type Attempt = { id: string; operation: string; revision: number; command: Metadata; state: 'pending' | 'unknown'; blocks: boolean }
 type Memory = { tests: Record<string, QueuedEmailTest[]>; commands: Record<string, Attempt[]> }
 type Store = { memory: Memory; change: (update: (value: Memory) => Memory) => boolean }
@@ -49,7 +49,9 @@ export function useCommunicationCommands(owner: string) {
       // Whitelist again at the storage boundary: caller objects cannot smuggle
       // private text or secret-bearing command payloads into session memory.
       const { intentID, action, revision, requestID } = attempt.command
-      update(previous => existing ? previous.map(item => item.id === existing ? { ...item, state: 'pending', blocks: true } : item) : [...previous, { id, operation: attempt.operation, revision: attempt.revision, command: { intentID, action, revision, requestID }, state: 'pending', blocks: true }])
+      const resourceID = typeof attempt.command.resourceID === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.command.resourceID) && attempt.command.resourceID !== '00000000-0000-0000-0000-000000000000' ? attempt.command.resourceID : undefined
+      const expectedVersion = typeof attempt.command.expectedVersion === 'number' && Number.isSafeInteger(attempt.command.expectedVersion) && attempt.command.expectedVersion > 0 ? attempt.command.expectedVersion : undefined
+      update(previous => existing ? previous.map(item => item.id === existing ? { ...item, state: 'pending', blocks: true } : item) : [...previous, { id, operation: attempt.operation, revision: attempt.revision, command: { intentID, action, revision, requestID, resourceID, expectedVersion }, state: 'pending', blocks: true }])
       return id
     },
     complete: (id: string) => update(previous => previous.filter(attempt => attempt.id !== id)),

@@ -130,3 +130,34 @@ ran with the isolated public/admin media configs at ports 4304/4305. These are
 bounded correction checks; exact-head repository CI and independent delta review
 remain separate gates. The earlier native PostgreSQL/race proof applies to the
 unchanged history API; this correction does not complete the remaining #243 scope.
+
+### Full lifecycle follow-up: first real operation checkpoint
+
+The local follow-up to merged #263 replaces collection and decision tasks with a
+flat Fleet composition: Add media, native metadata/consent guidance, exact private
+file/recording review, then deliberate confirmation. Metadata correction, organiser
+approval, explicit gallery release and withdrawal each capture their own exact
+native source, action, reason and command ID. Approval remains the native reviewed
+state; no additional backend state or policy is introduced.
+
+`MediaLifetime` fences private continuations when fresh capability/URL/byte
+projections lose disclosure, before React updates the editor. `useMediaOperation`
+uses the existing signed-in `CommunicationSafety` capsule under an exact media
+namespace. Only allowlisted intent/action/resource IDs, event/source/expected
+versions reach that root store; resource IDs and expected versions have runtime
+UUID/positive-safe-integer validation. Full metadata, reason, URL, people and file
+bytes stay in the mounted private task. Current GETs do not establish receipts.
+The native `acknowledged_version` settles the original matching intent independently
+of the current projection version; a late exact ACK may settle safe metadata while
+private UI remains fenced. A lost response stays unknown across private teardown.
+
+Bounded checkpoint proof: TypeScript and focused ESLint passed; **9/9** owner/shared
+safety tests passed (held session/current projection loss, 408 and stale closure,
+original ACK versus later current version, identical publish retry after publication,
+late ACK versus held lost response, and safe metadata validation/privacy). This is
+an early draft, not a final acceptance claim. Existing browser journeys still need
+adaptation to the explicit review actions while retaining their native assertions.
+Own-consent review/recovery, protected image and URL lifetimes, full route/denial/
+partial-restoration and unsafe-file browser proof, production interactive lifecycle
+examples, matching visual evidence, independent reviews and full exact-head CI all
+remain before readiness. Issue #243 stays open.
