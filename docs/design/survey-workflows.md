@@ -112,3 +112,16 @@ answer until an operator deliberately adopts current response facts. Dialog
 final-focus callbacks remain owner-controlled; the action-bar fallback must not
 override a validator-selected destination. Current survey sections retain both
 semantic `aria-current` and visible selection.
+
+## Portalled private review print boundary
+
+A private page ancestor does not cover Theme's sibling portal host. Review found
+raw answers/unpublished prose printable while their response/report confirmation
+was open or pending; all eight responsive native cases reproduced the disclosure.
+`ConfirmationDialog.printExcluded` now explicitly hides an opted-in actual portal
+viewport and backdrop. Survey decision controls and CSV review opt in; other
+dialog defaults and all command/session/receipt behavior remain unchanged. Print
+media never cancels, confirms or retries an intent. Native tests return to screen,
+retain the same captured payload/revision/CSRF, preserve the pending Escape/cancel
+barrier and accept only the original native acknowledgement. The production guide
+exercises open/pending private reviews plus an unchanged default confirmation.

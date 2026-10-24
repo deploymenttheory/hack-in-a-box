@@ -189,3 +189,12 @@ current reads do not prove original effects. Only native response UUID and exact
 reviewed-text identity contracts permit captured retry. Configuration and report
 approval/publication unknowns are current-read-only. The guide makes no API,
 authentication, storage or real provider calls and never fabricates backend receipts.
+
+Private survey reviews opt into `ConfirmationDialog.printExcluded` through the
+actual production `SurveyDecisionControls`. The optional prop hides the themed
+portal viewport and backdrop during print; a private page ancestor does not cover
+its sibling portal. Other dialog defaults are unchanged. Open and pending reviews
+retain their captured payload and original command metadata when print media
+changes. Printing never dismisses, confirms, cancels or retries a native command.
+The interactive production survey examples demonstrate print → screen while open
+and pending, preserving focus/dismissal and explicit owner callback behavior.

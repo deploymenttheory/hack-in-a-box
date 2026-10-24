@@ -126,3 +126,31 @@ test('print excludes the identifiable response owner while the separately publis
   await page.goto(surveyPath + '/results'); await expect(page.getByText('Explicitly reviewed common themes.', { exact: true })).toBeVisible(); await expect(page.getByText(privateText, { exact: true })).toHaveCount(0)
   expect(f.puts).toHaveLength(0)
 })
+
+for (const kind of ['response', 'report'] as const) for (const phase of ['open', 'pending'] as const) test(`portalled private ${kind} ${phase} review is excluded from print without losing its original intent`, async ({ page }) => {
+  const f = await surveyFixture(page, kind === 'report'), canary = `SYNTHETIC-UNPUBLISHED-PRINT-${kind}`
+  let release!: () => void, issued = 0, captured: { body: Record<string, unknown>; revision: string; csrf: string } | undefined
+  const held = new Promise<void>(resolve => { release = resolve })
+  await page.route(kind === 'response' ? '**/surveys/*/response' : '**/surveys/*/report/review', async route => {
+    if (route.request().method() !== 'PUT') return route.fallback()
+    issued++; const request = route.request(); captured = { body: request.postDataJSON(), revision: request.headers()['if-match'], csrf: request.headers()['x-csrf-token'] }
+    await held; await route.fallback().catch(() => {})
+  })
+  await page.goto(kind === 'response' ? surveyPath : managePath)
+  if (kind === 'response') { await page.getByLabel('Did you learn something? (required)').selectOption('yes'); await page.getByLabel('Private explanation (optional)').fill(canary); await page.getByRole('button', { name: 'Review response', exact: true }).click() }
+  else { await page.getByRole('button', { name: 'Reviewed report', exact: true }).click(); await page.getByLabel('Redacted summary for wider release').fill(canary); await page.getByLabel('I reviewed and redacted this wording', { exact: false }).check(); await page.getByRole('button', { name: 'Review frozen cohort and summary', exact: true }).click() }
+  const review = page.getByRole('alertdialog', { name: kind === 'response' ? 'Review your private response' : 'Review exact report action', exact: true, includeHidden: true }), payload = review.getByText(canary, { exact: true })
+  await expect(payload).toBeVisible(); expect(issued).toBe(0)
+  if (phase === 'pending') { await review.getByRole('button', { name: kind === 'response' ? 'Save response' : 'Freeze cohort and save reviewed summary', exact: true }).click(); await expect.poll(() => issued).toBe(1) }
+  const original = structuredClone(captured)
+  await page.emulateMedia({ media: 'print' }); await expect(payload).toBeHidden(); await expect(review).toBeHidden()
+  // Printing changes presentation only: the same private owner/command remains.
+  await expect(review).toHaveCount(1); await page.emulateMedia({ media: 'screen' }); await expect(payload).toBeVisible()
+  expect(issued).toBe(phase === 'pending' ? 1 : 0); expect(captured).toEqual(original)
+  if (phase === 'pending') {
+    await review.press('Escape'); await expect(review).toBeVisible(); await expect(review.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled()
+    release(); await expect(page.getByRole('status', { name: kind === 'response' ? 'Survey response status' : 'Survey report status' })).toContainText(kind === 'response' ? 'Response command confirmed at revision 1' : 'not yet published')
+    expect(kind === 'response' ? f.puts : f.reportWrites).toHaveLength(1); expect(captured?.revision).toBe('"0"'); expect(captured?.csrf).toBe('synthetic-csrf-token-32-characters'); expect(captured?.body[kind === 'response' ? 'answers' : 'summary']).toEqual(kind === 'response' ? { [questionID]: 'yes', [textID]: canary } : canary)
+  } else { await review.getByRole('button', { name: 'Cancel', exact: true }).click(); await expect(page.getByLabel(kind === 'response' ? 'Private explanation (optional)' : 'Redacted summary for wider release')).toHaveValue(canary); expect(issued).toBe(0); release() }
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain(canary)
+})
