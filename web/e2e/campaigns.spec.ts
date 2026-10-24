@@ -380,7 +380,9 @@ for (const receipt of ['pending', 'ambiguous'] as const) test(`original ${receip
   // Use actual sibling links and the conditional production survey tab.
   await page.getByText('Related event workspaces and private downloads', { exact: true }).click()
   await page.getByRole('link', { name: 'Surveys and feedback', exact: true }).click()
-  await page.locator(`a[href="${managePath}"]:visible`).click()
+  const manage = page.getByRole('link', { name: 'Manage survey and restricted results', exact: true })
+  await expect(manage).toHaveAttribute('href', managePath)
+  await manage.click()
   await page.getByRole('button', { name: 'Invitations', exact: true }).click()
   await page.getByRole('button', { name: 'Compose and approve invitation message', exact: true }).click()
   await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
