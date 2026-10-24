@@ -3,14 +3,15 @@ import { firstID, secondID } from './fixtures'
 import { helper, secondHelper, organiser, helpState, mockHelp, requestID, otherRequest } from './help-workspace-fixtures'
 const queue = `/events/${firstID}/help`, detail = queue + '/' + requestID
 async function describe(page: import('@playwright/test').Page, text: string) { await page.getByLabel('What do you need help with?').fill(text); await page.getByLabel('Location (or an approved meeting route required)', { exact: true }).fill('Synthetic team desk') }
-async function activate(page: import('@playwright/test').Page, name: string) { await page.getByRole('button', { name, exact: true }).focus(); await page.keyboard.press('Enter') }
+async function activate(page: import('@playwright/test').Page, name: string) { const source = page.getByRole('button', { name, exact: true }); await source.focus(); await expect(source).toBeFocused(); await source.press('Enter'); await page.getByRole('button', { name: 'Confirm reviewed change', exact: true }).click() }
 const saveState = (page: import('@playwright/test').Page) => page.getByRole('status', { name: 'Help request save state' })
 
 test('team keyboard/mobile request is private, unsent until confirmed, cancellable and reopenable', async ({ page }, info) => {
   const state = helpState(); await mockHelp(page, state); await page.goto(queue)
   await describe(page, 'SYNTHETIC PRIVATE NEW REQUEST <script>')
   await expect(saveState(page)).toContainText('Nothing in this form is saved yet')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Review help request', exact: true }).focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
   await expect(saveState(page)).toContainText('saved on the server')
   await page.getByRole('link', { name: 'Open saved help request' }).click()
   await expect(page.getByRole('heading', { name: 'Waiting', exact: true })).toBeVisible()
@@ -34,7 +35,7 @@ test('helper mobile claim, release, transfer and resolution use only current nat
   await activate(page, 'Claim request')
   await page.getByLabel('Transfer to a currently eligible helper').selectOption(secondHelper.id)
   await page.screenshot({ path: info.outputPath('mobile-helper-transfer.png'), fullPage: true })
-  await page.getByRole('button', { name: 'Transfer request', exact: true }).focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Transfer request', exact: true }).focus(); await page.keyboard.press('Enter'); await page.getByRole('button', { name: 'Confirm reviewed change', exact: true }).click()
   await expect(page.getByText('Current helper: Second Helper', { exact: true })).toBeVisible()
   const peer = await context.newPage(); await mockHelp(peer, state, secondHelper); await peer.goto(detail)
   await activate(peer, 'Resolve request')
@@ -70,7 +71,7 @@ test('organiser filters only authorised summaries and never copies private reque
 test('accepted create with lost response is confirmed by exact identity without automatic duplicate requests', async ({ page }) => {
   const state = helpState(); state.lostCreate = true; await mockHelp(page, state); await page.goto(queue)
   await describe(page, 'UNCERTAIN CREATE PRIVATE BODY')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
+  await page.getByRole('button', { name: 'Review help request', exact: true }).click(); await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
   await expect(saveState(page)).toContainText('creation outcome is unconfirmed')
   expect(state.records).toHaveLength(3); expect(state.commands).toHaveLength(1)
   await page.getByRole('button', { name: 'Check whether request was created' }).click()
@@ -80,7 +81,7 @@ test('accepted create with lost response is confirmed by exact identity without 
 test('interrupted uncommitted create preserves exact intent and deliberate retry uses its original idempotency key', async ({ page }) => {
   const state = helpState(); state.failCreate = true; await mockHelp(page, state); await page.goto(queue)
   await describe(page, 'STILL UNSENT')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).click(); await expect(saveState(page)).toContainText('unconfirmed')
+  await page.getByRole('button', { name: 'Review help request', exact: true }).click(); await page.getByRole('button', { name: 'Submit help request', exact: true }).click(); await expect(saveState(page)).toContainText('unconfirmed')
   await page.getByRole('button', { name: 'Check whether request was created' }).click(); await expect(saveState(page)).toContainText('not proof it was never created')
   state.failCreate = false
   await page.getByRole('button', { name: 'Retry the same request deliberately' }).click(); await expect(saveState(page)).toContainText('saved on the server')
@@ -90,9 +91,9 @@ test('interrupted uncommitted create preserves exact intent and deliberate retry
 test('setup remains usable before live start while competition-output creation is rejected without a saved claim', async ({ page }) => {
   const state = helpState(); state.open = false; await mockHelp(page, state); await page.goto(queue)
   await page.getByLabel('Support category').selectOption('competition_output'); await describe(page, 'PRE-LIVE OUTPUT')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
+  await page.getByRole('button', { name: 'Review help request', exact: true }).click(); await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
   await expect(saveState(page)).toContainText('server rejected this request'); expect(state.records).toHaveLength(2)
-  await page.getByLabel('Support category').selectOption('setup'); await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
+  await page.getByLabel('Support category').selectOption('setup'); await page.getByRole('button', { name: 'Review help request', exact: true }).click(); await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
   await expect(saveState(page)).toContainText('saved on the server'); expect(state.records).toHaveLength(3)
 })
 
@@ -119,11 +120,11 @@ test('account, event and expired session changes clear private in-memory request
 test('location or an approved meeting route is explained and validated before keyboard submission', async ({ page }) => {
   const state = helpState(); await mockHelp(page, state); await page.goto(queue)
   await page.getByLabel('What do you need help with?').fill('Need setup support')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Review help request', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole('alert')).toContainText('Add a location or an approved HTTPS meeting route')
   await expect(page.getByLabel('Location (or an approved meeting route required)', { exact: true })).toBeFocused(); expect(state.commands).toHaveLength(0)
   await page.getByLabel('Location (or an approved meeting route required)', { exact: true }).fill('Synthetic desk')
-  await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
+  await page.getByRole('button', { name: 'Review help request', exact: true }).click(); await page.getByRole('button', { name: 'Submit help request', exact: true }).click()
   await expect(saveState(page)).toContainText('saved on the server'); expect(state.commands).toHaveLength(1)
 })
 test('cached two-event same-request UUID navigation clears old uncertain action and transfer intent', async ({ page }) => {
@@ -134,10 +135,10 @@ test('cached two-event same-request UUID navigation clears old uncertain action 
   await expect(page.getByText('PRIVATE HELP', { exact: false })).toBeVisible()
   await activate(page, 'Claim request')
   await page.getByLabel('Transfer to a currently eligible helper').selectOption(secondHelper.id); state.lostAction = true
-  await page.getByRole('button', { name: 'Transfer request', exact: true }).click()
+  await page.getByRole('button', { name: 'Transfer request', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reviewed change', exact: true }).click()
   await expect(page.getByRole('status', { name: 'Help action state' })).toContainText('outcome is unconfirmed')
   expect(state.commands).toHaveLength(2); state.lostAction = false
-  await page.evaluate(url => { history.pushState({}, '', url); window.dispatchEvent(new PopStateEvent('popstate')) }, other)
+  page.once('dialog', dialog => void dialog.accept()); await page.evaluate(url => { history.pushState({}, '', url); window.dispatchEvent(new PopStateEvent('popstate')) }, other)
   await expect(page.getByText('SECOND EVENT PROBLEM', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Retry the same action deliberately' })).toHaveCount(0)
   await expect(page.getByRole('status', { name: 'Help action state' })).toHaveCount(0)

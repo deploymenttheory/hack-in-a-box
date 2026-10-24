@@ -43,3 +43,30 @@ First-checkpoint proof: TypeScript and both production portal builds pass; targe
 ESLint for the changed source passes. Existing organiser authorised-summary filter
 and private-prose isolation journey passes on desktop and mobile (2/2). These are
 bounded checkpoint checks, not full issue acceptance or release certification.
+
+## Focused help and mentor checkpoint
+
+Help creation and current-request actions now have separate prepare/review/confirm
+steps with exact request identity, expected revision, helper and operational effect.
+Native idempotency keys are retained only for deliberate original-command retries.
+Unknown metadata above private controls is minimal; a current GET does not establish
+an ownership-action receipt. Capability replacement ends child continuations. Draft
+navigation and actual keyboard source capture are explicit. Deferred successful
+focus restoration now yields to a later deliberate focus instead of stealing it.
+The additive shared focus option defaults to previous behaviour for #237 consumers.
+
+The assigned mentor surface now uses authorised collection records, scoped evidence
+inspection and focused observation/check-in review tasks. Existing allowlisted
+30-minute local recovery remains the observation owner's contract. Unknown private
+observation reconciliation binds the original immutable expected note version,
+author and captured content. Check-in history remains independent from scores.
+These new mentor tasks still need their updated browser proof and final review.
+
+Checkpoint verification: both portal production builds and targeted help/mentor
+ESLint pass. `npx playwright test --config playwright.mentor-operations.config.ts
+help-workspace.spec.ts help-reader.spec.ts --workers 1 --max-failures 1` completes
+30/30 desktop/mobile journeys. The local config changes only server port (4298) and
+worker count; native assertions about privacy, authority, request idempotency,
+claim races and timing are retained with explicit review actions added. The older
+help-reader fixture now supplies the native session draft scope required by private
+continuation fences. The remaining issue scope above is still outstanding.
