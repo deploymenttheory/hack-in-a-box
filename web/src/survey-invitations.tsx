@@ -1,3 +1,4 @@
+import { CommunicationTests } from './communication-tests'
 import { PlanningOperations, usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
 import { CommunicationStep } from './communication-layout'
 import { CollectionRecords } from './components/patterns/collection'
@@ -22,7 +23,7 @@ type Intent = { command: Command; eventRevision: number; previousReview?: number
 type InvitationProps = { event: EventRecord; configuration: SurveyConfiguration; writable: boolean; onDirty: (value: boolean) => void; deny: (error: unknown) => void }
 export function SurveyInvitations(props: InvitationProps) {
   const identity = useIdentity()
-  return <PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}:${props.configuration.id}:${props.configuration.version}:${props.writable}`}><InvitationWorkspace {...props} /></PlanningOperations>
+  return <CommunicationTests key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}`}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}:${props.configuration.id}:${props.configuration.version}:${props.writable}`}><InvitationWorkspace {...props} /></PlanningOperations></CommunicationTests>
 }
 function InvitationWorkspace({ event, configuration, writable, onDirty, deny }: InvitationProps) {
   const identity = useIdentity(), cache = useQueryClient(), active = useActivePage()

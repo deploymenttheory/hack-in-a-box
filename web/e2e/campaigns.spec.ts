@@ -15,7 +15,7 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
   let revision = 1, authorized = true
   const source: Source = { revision, variables: ['event.name', 'person.name', 'event.live_start', 'event.submission_cutoff'], preview: null, templates: [{ id: templateID, version: 1, name: 'Synthetic reminder', purpose: 'reminder', format: 'html', subject: 'Hello {{person.name}}', body: 'Synthetic public message for {{person.name}}', fact_id: null }], audiences: [{ id: audienceID, version: 1, name: 'Confirmed competitors', roles: ['attendee'], registration_states: [], teams: [], outstanding: '', fact_id: null }] }
   const providers: Provider[] = ['in_app', 'smtp', 'teams'].map(channel => ({ channel: channel as Provider['channel'], available: ready && channel === 'smtp', config_revision: ready && channel === 'smtp' ? 'synthetic-v1' : '', supports_self_test: channel !== 'teams', self_test_available: ready && channel === 'smtp', reason: ready && channel === 'smtp' ? 'ready' : 'not_configured', self_test_reason: channel === 'teams' ? 'broadcast_only' : ready && channel === 'smtp' ? 'ready' : 'not_configured', setup_url: '#campaign-provider-setup' }))
-  const state = { dropTest: false }
+  const state = { dropTest: false, receipt: receipt as components['schemas']['SMTPTestDeliveryStatus']['state'] }
   const records = new Map<string, Detail>(), requests: { path: string; body: Record<string, unknown>; revision: string }[] = []
   function view(detail: Detail) {
     detail.revision = revision; detail.providers = providers; detail.campaign.blockers = []
@@ -39,7 +39,7 @@ async function prepare(page: Page, ready = true, receipt: 'pending' | 'accepted'
     const req = route.request(), path = new URL(req.url()).pathname
     const fail = (status: number, code: string) => route.fulfill({ status, json: { error: { code, message: 'Synthetic reviewed-state rejection', request_id: 'synthetic' } } })
     if (!authorized) return fail(403, 'forbidden')
-    if (path.endsWith('/delivery')) return route.fulfill({ json: { state: receipt, reason: receipt === 'accepted' ? 'relay_accepted' : receipt === 'ambiguous' ? 'acceptance_unknown' : 'awaiting_submission', updated_at: '2026-10-22T12:00:00Z' } })
+    if (path.endsWith('/delivery')) return route.fulfill({ json: { state: state.receipt, reason: state.receipt === 'accepted' ? 'relay_accepted' : state.receipt === 'ambiguous' ? 'acceptance_unknown' : 'awaiting_submission', updated_at: '2026-10-22T12:00:00Z' } })
     if (path.endsWith('/self-test-preview')) {
       return route.fulfill({ json: selfPreview(path.split('/').at(-2)!) })
     }
@@ -281,4 +281,39 @@ test('current access loss while TEST is pending clears previews and ignores the 
     await expect(page.getByText('PRIVATE-LATE-RESPONSE-CANARY')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Save campaign draft', exact: true })).toHaveCount(0)
   } finally { release() }
+})
+
+
+test('retains the original queued Email TEST barrier through navigation and setup changes until exact native settlement', async ({ page }) => {
+  const data = await prepare(page)
+  await saveAndPreview(page)
+  const queue = page.getByRole('button', { name: 'Queue Email test to myself', exact: true })
+  await queue.click()
+  await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
+  await expect(queue).toBeDisabled()
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Test queued')
+  // Known acknowledgement survives the actual event section unmount, independently
+  // of PlanningOperations' unknown-command capsules and all campaign editor keys.
+  await openEventSection(page, 'Overview')
+  data.providers.find(provider => provider.channel === 'smtp')!.config_revision = 'synthetic-v2'
+  data.state.receipt = 'retryable'
+  await openEventSection(page, 'Campaigns')
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('bounded retry is scheduled')
+  await page.getByRole('button', { name: 'Review Synthetic event reminder', exact: true }).click()
+  await page.getByLabel('Reason for campaign changes').fill('Synthetic next review')
+  await expect(queue).toBeDisabled()
+  data.state.receipt = 'ambiguous'
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Submission is uncertain')
+  await campaignStep(page, 'Channels')
+  await campaignStep(page, 'Review & TEST')
+  await expect(queue).toBeDisabled()
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
+  await expect(page.getByRole('heading', { name: 'Unconfirmed earlier commands', exact: true })).toHaveCount(0)
+  // Re-read this same acknowledged native TEST. A different campaign GET or
+  // provider configuration never settles its provider effect.
+  data.state.receipt = 'accepted'
+  await page.getByRole('button', { name: 'Check original TEST', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'SMTP test submission' })).toContainText('Inbox delivery and reading are unconfirmed')
+  await expect(queue).toBeEnabled()
+  expect(data.requests.filter(request => request.body.action === 'test_self')).toHaveLength(1)
 })
