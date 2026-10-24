@@ -1,4 +1,5 @@
 @layer components {
+  .fleet-survey-workspace [hidden] { display: none !important; }
   .fleet-survey-workspace { min-width: 0; }
   .fleet-survey-section { border-top: 1px solid var(--border); padding-block: var(--space-6); }
   .fleet-survey-workspace > h2 { margin-block: var(--space-6) var(--space-3); font-size: var(--text-section); font-weight: var(--weight-emphasis); }
@@ -13,5 +14,16 @@
   .fleet-survey-facts { display: flex; flex-wrap: wrap; gap: var(--space-6); }
   .fleet-survey-facts dd { margin: var(--space-1) 0 0; overflow-wrap: anywhere; }
   @media (max-width: 48rem) { .fleet-survey-answer-review > div { grid-template-columns: 1fr; gap: var(--space-2); } }
+  .fleet-survey-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); border-bottom: 1px solid var(--border); padding-block: var(--space-3); margin-block: var(--space-4); }
+  .fleet-survey-history { list-style: none; padding: 0; }
+  .fleet-survey-history > li { border-bottom: 1px solid var(--border); padding-block: var(--space-3); }
+  .fleet-survey-history summary { cursor: pointer; padding-block: var(--space-2); }
+  .fleet-survey-inspector { margin-block: var(--space-4); }
+  .fleet-survey-reviewed-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .fleet-survey-table { max-width: 100%; overflow-x: auto; }
+  .fleet-survey-workspace table { width: 100%; border-collapse: collapse; }
+  .fleet-survey-workspace th, .fleet-survey-workspace td { text-align: start; vertical-align: top; border-bottom: 1px solid var(--border); padding: var(--space-3); overflow-wrap: anywhere; }
+  .fleet-survey-workspace caption { text-align: start; font-weight: var(--weight-emphasis); padding-block: var(--space-3); }
+  .fleet-survey-workspace .check { display: flex; gap: var(--space-3); align-items: flex-start; }
   @media print { .survey-private { display: none !important; } }
 }

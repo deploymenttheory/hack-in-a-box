@@ -72,27 +72,27 @@ test('restricted staff text is absent from participant entry points',async({page
 
 test('dirty question tab switch requires explicit consent and clears only acknowledged unsent state',async({page})=>{
  const f=await surveyFixture(page,true);f.configuration.published_at=null;f.configuration.approved_at=null
- await page.goto(managePath);await page.getByRole('button',{name:'Questions',exact:true}).click()
+ await page.goto(managePath);await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click()
  await page.getByLabel('Form name',{exact:true}).fill(privateText)
- await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
+ await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
  let dialog=page.waitForEvent('dialog'),switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).dismiss();await switching
  await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
  dialog=page.waitForEvent('dialog');switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).accept();await switching
  await expect(page.getByRole('heading',{name:'Restricted participation and completion'})).toBeVisible()
- await page.getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue('Post-event learning')
+ await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue('Post-event learning')
  expect(f.configurationWrites).toHaveLength(0)
 })
 test('organisers explicitly review authored text, export privately and publish only reviewed prose',async({page},info)=>{
  const f=await surveyFixture(page,true);await page.goto(managePath)
- await page.getByRole('button',{name:'Restricted responses',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toBeVisible()
- const download=page.waitForEvent('download');await page.getByRole('link',{name:'Download restricted responses CSV'}).click();expect((await download).suggestedFilename()).toBe('restricted-survey-responses.csv')
+ await page.getByRole('button',{name:'Restricted responses',exact:true}).click();await page.getByRole('button',{name:'Review response from Synthetic respondent',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'Review restricted CSV export',exact:true}).click();const download=page.waitForEvent('download');await page.getByRole('button',{name:'Download restricted responses CSV',exact:true}).click();expect((await download).suggestedFilename()).toBe('restricted-survey-responses.csv')
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toHaveCount(0)
  await page.getByLabel('Redacted summary for wider release').fill('Reviewed public learning themes.')
  await page.getByLabel('I reviewed and redacted this wording', {exact:false}).check()
- await page.getByRole('button',{name:'Freeze cohort and save reviewed summary'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published')
+ await page.getByRole('button',{name:'Review frozen cohort and summary',exact:true}).click();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary',exact:true}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published')
  expect(f.state.publishedReport).toBeNull()
- await page.getByRole('button',{name:'Approve exact reviewed summary'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('approved, not yet published')
- await page.getByRole('button',{name:'Publish reviewed report'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('published')
+ await page.getByRole('button',{name:'Review exact summary approval',exact:true}).click();await page.getByRole('button',{name:'Approve exact reviewed summary',exact:true}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('approved, not yet published')
+ await page.getByRole('button',{name:'Review report publication',exact:true}).click();await page.getByRole('button',{name:'Publish reviewed report',exact:true}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('published')
  expect(f.reportWrites.map(command=>command.action)).toEqual(['review_text','approve','publish']);expect(JSON.stringify(f.reportWrites)).not.toContain(privateText)
  await page.goto(surveyPath+'/results');await expect(page.getByText('Reviewed public learning themes.',{exact:true})).toBeVisible();await expect(page.getByRole('table')).toHaveCount(1)
  await expect(page.getByText(privateText,{exact:true})).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
@@ -101,27 +101,27 @@ test('organisers explicitly review authored text, export privately and publish o
 test('uncertain reviewed summary keeps its exact command across a refused local tab leave',async({page})=>{
  const f=await surveyFixture(page,true);f.state.dropReport=1;await page.goto(managePath)
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await page.getByLabel('Redacted summary for wider release').fill('Reviewed summary with retained identity.')
- await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
+ await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Review frozen cohort and summary',exact:true}).click();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary',exact:true}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
  const dialog=page.waitForEvent('dialog'),switching=page.getByRole('button',{name:'Overview',exact:true}).click();await(await dialog).dismiss();await switching
  await expect(page.getByLabel('Redacted summary for wider release')).toHaveValue('Reviewed summary with retained identity.')
- await page.getByRole('button',{name:'Retry the same report command'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published')
+ await page.getByRole('button',{name:'Retry the same report text command'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published')
  expect(f.reportWrites).toHaveLength(2);expect(f.reportWrites[0]).toEqual(f.reportWrites[1]);expect(f.state.review?.version).toBe(1)
 })
 test('archive clears an uncertain uncommitted summary and disables all report mutations',async({page})=>{
  const f=await surveyFixture(page,true);f.state.dropReport=1;f.state.commitDroppedReport=false;await page.clock.install();await page.goto(managePath)
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await page.getByLabel('Redacted summary for wider release').fill(privateText)
- await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary'}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
+ await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Review frozen cohort and summary',exact:true}).click();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary',exact:true}).click();await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
  f.state.writable=false;await page.clock.fastForward(16_000)
  await expect(page.getByLabel('Redacted summary for wider release')).toHaveValue('');await expect(page.getByLabel('Redacted summary for wider release')).toBeDisabled()
- await expect(page.getByRole('button',{name:'Retry the same report command'})).toHaveCount(0);expect(f.reportWrites).toHaveLength(1)
+ await expect(page.getByRole('button',{name:'Retry the same report text command'})).toHaveCount(0);expect(f.reportWrites).toHaveLength(1)
  expect(await page.evaluate(()=>JSON.stringify(localStorage)+JSON.stringify(sessionStorage))).not.toContain(privateText)
 })
 test('current organiser loss clears private response and review surfaces',async({page})=>{
  const f=await surveyFixture(page,true);await page.clock.install();await page.goto(managePath)
- await page.getByRole('button',{name:'Restricted responses',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'Restricted responses',exact:true}).click();await page.getByRole('button',{name:'Review response from Synthetic respondent',exact:true}).click();await expect(page.getByText(privateText,{exact:true})).toBeVisible()
  f.state.allowed=false;await page.clock.fastForward(16_000)
  await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByText(privateText,{exact:true})).toHaveCount(0)
- await expect(page.getByRole('link',{name:'Download restricted responses CSV'})).toHaveCount(0)
+ await expect(page.getByRole('button',{name:'Review restricted CSV export',exact:true})).toHaveCount(0)
 })
 for(const changed of[false,true])test(`edition comparison ${changed?'blocks changed':'shows equivalent'} definitions at separate retained versions`,async({page})=>{
  const f=await surveyFixture(page,true);f.state.otherChanged=changed;f.state.otherVersion=changed?3:2
@@ -148,39 +148,41 @@ test('transient response read failure preserves uncertain command until fresh au
 })
 test('transient organiser authority failure retains dirty text and resumes only after native refresh',async({page})=>{
  const f=await surveyFixture(page,true);f.configuration.published_at=null;f.configuration.approved_at=null;await page.clock.install();await page.goto(managePath)
- await page.getByRole('button',{name:'Questions',exact:true}).click();await page.getByLabel('Form name',{exact:true}).fill(privateText)
+ await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click();await page.getByLabel('Form name',{exact:true}).fill(privateText)
  f.state.readFailure=true;await page.clock.fastForward(16_000)
  await expect(page.getByText('Current survey authority could not be refreshed.',{exact:false})).toBeVisible();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
- await expect(page.getByRole('button',{name:'Save question version',exact:true})).toBeDisabled();expect(f.configurationWrites).toHaveLength(0)
+ await expect(page.getByRole('button',{name:'Review draft changes',exact:true})).toBeDisabled();expect(f.configurationWrites).toHaveLength(0)
  f.state.readFailure=false;await page.getByRole('button',{name:'Refresh survey authority'}).click();await expect(page.getByLabel('Form name',{exact:true})).toBeEnabled();await expect(page.getByLabel('Form name',{exact:true})).toHaveValue(privateText)
 })
 test('transient report read failure retains unknown exact review without another write',async({page})=>{
  const f=await surveyFixture(page,true);f.state.dropReport=1;f.state.commitDroppedReport=false;await page.clock.install();await page.goto(managePath)
  await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await page.getByLabel('Redacted summary for wider release').fill('Reviewed bounded themes.')
- await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary'}).click()
+ await page.getByLabel('I reviewed and redacted this wording',{exact:false}).check();await page.getByRole('button',{name:'Review frozen cohort and summary',exact:true}).click();await page.getByRole('button',{name:'Freeze cohort and save reviewed summary',exact:true}).click()
  await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('outcome is unknown')
  f.state.readFailure=true;await page.clock.fastForward(16_000)
- await expect(page.getByLabel('Redacted summary for wider release')).toHaveValue('Reviewed bounded themes.');await expect(page.getByRole('button',{name:'Retry the same report command'})).toBeDisabled();expect(f.reportWrites).toHaveLength(1)
- f.state.readFailure=false;await page.getByRole('button',{name:'Refresh survey authority'}).click();await page.getByRole('button',{name:'Check exact report operation'}).click()
- await expect(page.getByRole('button',{name:'Retry the same report command'})).toBeEnabled();await page.getByRole('button',{name:'Retry the same report command'}).click()
+ await expect(page.getByLabel('Redacted summary for wider release')).toHaveValue('Reviewed bounded themes.');await expect(page.getByRole('button',{name:'Retry the same report text command'})).toBeDisabled();expect(f.reportWrites).toHaveLength(1)
+ f.state.readFailure=false;await page.getByRole('button',{name:'Refresh survey authority'}).click();await page.getByRole('button',{name:'Read current report facts'}).click()
+ await expect(page.getByRole('button',{name:'Retry the same report text command'})).toBeEnabled();await page.getByRole('button',{name:'Retry the same report text command'}).click()
  await expect(page.getByRole('status',{name:'Survey report status'})).toContainText('not yet published');expect(f.reportWrites).toHaveLength(2);expect(f.reportWrites[1]).toEqual(f.reportWrites[0])
 })
 
 
-test('uncertain question save reconciles exact native version before separate approval and publication',async({page})=>{
+test('unknown question save remains unconfirmed after current read before separately reviewed approval and publication',async({page})=>{
  const f=await surveyFixture(page,true);f.configuration.published_at=null;f.configuration.approved_at=null;f.state.dropConfiguration=1
- await page.goto(managePath);await page.getByRole('button',{name:'Questions',exact:true}).click();await page.getByLabel('Form name',{exact:true}).fill('Reviewed learning questions')
- await page.getByRole('button',{name:'Save question version'}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('outcome is unknown');expect(f.configurationWrites).toHaveLength(1)
- await page.getByRole('button',{name:'Check exact saved operation'}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('No second write was sent');expect(f.configurationWrites).toHaveLength(1)
- await page.getByRole('button',{name:'Approve exact question version'}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('not yet published');expect(f.configuration.published_at).toBeNull()
- await page.getByRole('button',{name:'Publish fixed invitations'}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('No message has been sent')
+ await page.goto(managePath);await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click();await page.getByLabel('Form name',{exact:true}).fill('Reviewed learning questions')
+ await page.getByRole('button',{name:'Review draft changes',exact:true}).click();await page.getByRole('button',{name:'Save survey draft',exact:true}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('outcome is unknown');expect(f.configurationWrites).toHaveLength(1)
+ await page.getByRole('button',{name:'Read current survey configuration',exact:true}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('does not confirm the original operation');expect(f.configurationWrites).toHaveLength(1)
+ const history=page.getByRole('complementary',{name:'Unconfirmed command history',exact:true});await expect(history).toContainText('Survey configuration save · Expected revision 1 · Original outcome remains unconfirmed')
+ page.on('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Load current saved configuration',exact:true}).click();await expect(history).toContainText('Original outcome remains unconfirmed')
+ await page.getByRole('button',{name:'Review question approval',exact:true}).click();await page.getByRole('button',{name:'Approve exact question version',exact:true}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('not yet published');expect(f.configuration.published_at).toBeNull()
+ await page.getByRole('button',{name:'Review survey publication',exact:true}).click();await page.getByRole('button',{name:'Publish fixed survey',exact:true}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('No message has been sent')
  expect(f.configurationWrites.map(c=>(c as {action:string}).action)).toEqual(['save','approve','publish']);expect(f.automationWrites).toHaveLength(0)
 })
 test('native wall-time resolution uses event timezone before saving exact approved dates',async({page})=>{
  const f=await surveyFixture(page,true);f.configuration.published_at=null;f.configuration.approved_at=null;const resolves:unknown[]=[]
  await page.route('**/api/v1/time/resolve',async route=>{const body=route.request().postDataJSON();resolves.push(body);return route.fulfill({json:{instant:new Date(new Date(body.wall_time+'Z').getTime()-12*3_600_000).toISOString()}})})
- await page.goto(managePath);await page.getByRole('button',{name:'Questions',exact:true}).click();await page.getByLabel('Opens in Pacific/Auckland',{exact:true}).fill('2027-06-22T21:00')
- await page.getByRole('button',{name:'Save question version'}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('Saved question version 2')
+ await page.goto(managePath);await page.getByRole('navigation',{name:'Survey sections',exact:true}).getByRole('button',{name:'Questions',exact:true}).click();await page.getByRole('navigation',{name:'Survey definition sections',exact:true}).getByRole('button',{name:'Schedule',exact:true}).click();await page.getByLabel('Opens in Pacific/Auckland',{exact:true}).fill('2027-06-22T21:00')
+ await page.getByRole('button',{name:'Review draft changes',exact:true}).click();await page.getByRole('button',{name:'Save survey draft',exact:true}).click();await expect(page.getByRole('status',{name:'Survey configuration status'})).toContainText('Saved question version 2')
  expect(resolves).toHaveLength(2);expect(resolves).toEqual(expect.arrayContaining([expect.objectContaining({timezone:'Pacific/Auckland',wall_time:'2027-06-22T21:00:00'})]))
  expect(f.configuration.definition.opens_at).toBe('2027-06-22T09:00:00.000Z')
 })
@@ -233,7 +235,7 @@ test('pending follow-through has no fabricated zero and native resource loss cle
 test('archived organiser dashboard retains only native-authorised historical follow-through',async({page})=>{
  const f=await surveyFixture(page,true);f.state.writable=false;f.state.observationPages=[[observation('demonstrated_adoption',1,'2')]]
  await page.goto(managePath);await expect(page.getByText('This event is read-only.',{exact:false})).toBeVisible();await expect(page.getByRole('region',{name:'Demonstrated adoption records',exact:true})).toBeVisible()
- await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await expect(page.getByRole('button',{name:'Freeze cohort and save reviewed summary'})).toBeDisabled()
+ await page.getByRole('button',{name:'Reviewed report',exact:true}).click();await expect(page.getByRole('button',{name:'Review frozen cohort and summary',exact:true})).toBeDisabled()
  expect(f.reportWrites).toHaveLength(0)
 })
 

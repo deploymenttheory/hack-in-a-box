@@ -1,0 +1,43 @@
+import { useRef, useState } from 'react'
+import { SurveyAnswerSummary, SurveyDecisionControls, SurveyDefinitionReview } from '../survey-decision'
+import { Button } from '../components/ui/button'
+import { Field, Input, Select } from '../components/ui/fields'
+import { Snippet } from './snippet'
+
+type Kind = 'response' | 'authoring' | 'report'
+type Capture = { id: string; revision: number; value: string }
+export function SurveyWorkflowExamples() {
+  return <section className="guide-section" aria-label="Survey decision workflows"><h2>Survey review and private ownership</h2><p>These import the controlled production decision bar and exact definition/answer summaries used by real survey response, authoring and report adapters. Three synthetic mounted owners supply callbacks only. No API, authentication, response storage, server receipt or database exists here.</p>{(['response', 'authoring', 'report'] as const).map(kind => <SyntheticSurveyDecision key={kind} kind={kind} />)}<Snippet>{'<SurveyDecisionControls status={ownerStatus}\n  actions={ownerPermittedActions}\n  review={{ open, pending, finalFocus: actualOpener,\n    onOpenChange: cancelReview, onConfirm: confirmCapturedIntent,\n    title, description, confirmLabel, children: exactReviewedSnapshot }} />'}</Snippet><p>Owners must freeze the reviewed payload, guard pending work synchronously and retain current actor/session/resource authority. Current reads are not original receipts. Response UUID and reviewed-text identity retries require proven native idempotency; configuration/approve/publication unknowns receive current reads only. Keep raw answers and prose in their mounted owner; a denial clears them while preserving only safe original metadata. Pending confirmation blocks Escape/cancel; correction returns to the actual opener or current enabled action if that opener disappeared.</p></section>
+}
+function SyntheticSurveyDecision({ kind }: { kind: Kind }) {
+  const [value, setValue] = useState(`Synthetic ${kind} wording`), [outcome, setOutcome] = useState('known'), [phase, setPhase] = useState<'edit' | 'pending' | 'unknown' | 'current' | 'known' | 'denied'>('edit'), [review, setReview] = useState(false), [revision, setRevision] = useState(3), [attempts, setAttempts] = useState<Capture[]>([]), [unknown, setUnknown] = useState<{ id: string; revision: number }[]>([]), [intent, setIntent] = useState<Capture>()
+  const capture = useRef<Capture>(undefined), opener = useRef<HTMLButtonElement>(null)
+  const blocked = ['pending', 'unknown', 'current', 'denied'].includes(phase)
+  function finish(result: string) {
+    setReview(false)
+    if (result === 'denied') { setPhase('denied'); setValue(''); capture.current = undefined; setIntent(undefined); setAttempts(previous => previous.map(attempt => ({ ...attempt, value: '[cleared on denial]' }))); return }
+    if (result === 'unknown') { setPhase('unknown'); const intent = capture.current!; setUnknown(previous => previous.some(item => item.id === intent.id) ? previous : [...previous, { id: intent.id, revision: intent.revision }]); return }
+    const capturedID = capture.current?.id; setPhase('known'); setUnknown(previous => previous.filter(item => item.id !== capturedID)); setRevision(previous => previous + 1); capture.current = undefined; setIntent(undefined)
+  }
+  function send() {
+    if (!capture.current || phase === 'pending') return
+    const captured = capture.current
+    setAttempts(previous => [...previous, { ...captured }])
+    if (outcome === 'pending') { setReview(true); setPhase('pending'); return }
+    finish(outcome)
+  }
+  function prepare(button: HTMLButtonElement) { opener.current = button; const captured = { id: `synthetic-${kind}-${attempts.length + 1}`, revision, value }; capture.current = captured; setIntent(captured); setReview(true) }
+  const message = phase === 'pending' ? 'Synthetic owner is awaiting its original callback. No second attempt can begin.' : phase === 'unknown' ? 'Synthetic outcome unknown. Nothing retries automatically; the original identity and revision stay captured.' : phase === 'current' ? 'Synthetic current facts read. They do not confirm the original operation.' : phase === 'known' ? 'Synthetic owner callback received. This example has no backend receipt or real saved survey.' : phase === 'denied' ? 'Synthetic authority denied. Private wording and rendered review are cleared; safe unknown metadata remains.' : unknown.length ? 'A reviewed new base is editable; the earlier original outcome remains unconfirmed.' : 'Synthetic local wording only. Review sends nothing.'
+  return <section className="fleet-survey-workspace fleet-survey-section" aria-label={`Synthetic survey ${kind}`}><h3>Synthetic {kind}</h3><Field label={`Synthetic ${kind} text`}><Input value={value} disabled={blocked || review} onChange={event => setValue(event.target.value)} /></Field><Field label={`Synthetic ${kind} outcome`}><Select value={outcome} disabled={phase === 'pending'} onChange={event => setOutcome(event.target.value)}><option value="known">Known local callback</option><option value="unknown">Lost/unknown local callback</option><option value="pending">Hold local callback pending</option><option value="denied">Definite local denial</option></Select></Field>
+    <SurveyDecisionControls status={{ label: `Synthetic ${kind} status`, message }} actions={[
+      { label: `Review synthetic ${kind}`, icon: 'check', disabled: blocked || !value, onSelect: prepare },
+      ...(phase === 'unknown' && kind !== 'authoring' ? [{ label: `Retry captured ${kind}`, icon: 'refresh' as const, disabled: false, onSelect: send }] : []),
+      ...(phase === 'unknown' ? [{ label: `Read synthetic ${kind} current state`, icon: 'refresh' as const, variant: 'outline' as const, onSelect: () => { setPhase('current'); setRevision(previous => previous + 1) } }] : []),
+      ...(phase === 'current' ? [{ label: `Use reviewed ${kind} base`, icon: 'check' as const, variant: 'outline' as const, onSelect: () => { setPhase('edit'); capture.current = undefined; setIntent(undefined); setValue(`Current synthetic ${kind} wording`) } }] : []),
+      ...(phase !== 'denied' && phase !== 'pending' ? [{ label: `Revoke synthetic ${kind} access`, icon: 'shield' as const, variant: 'outline' as const, onSelect: () => finish('denied') }] : []),
+      { label: `Reset synthetic ${kind}`, variant: 'ghost', disabled: phase === 'pending', onSelect: () => { setPhase('edit'); setReview(false); setAttempts([]); setUnknown([]); setRevision(3); setValue(`Synthetic ${kind} wording`); capture.current = undefined; setIntent(undefined) } },
+    ]} review={{ open: review, onOpenChange: open => { if (phase !== 'pending') setReview(open) }, title: `Review synthetic ${kind}`, description: 'This is the actual production controlled review. The synthetic owner captures its wording and revision; cancelling sends nothing.', confirmLabel: `Confirm synthetic ${kind}`, pending: phase === 'pending', disabled: false, finalFocus: opener, onConfirm: send, children: <><p>Captured identity {intent?.id} · Original revision {intent?.revision}</p>{kind === 'authoring' ? <SurveyDefinitionReview timezone="UTC" definition={{ form: { id: 'synthetic-form', name: intent?.value ?? value, audience: 'attendee', fields: [{ id: 'synthetic-question', label: 'Synthetic learning question', type: 'single', required: true, help: 'Synthetic answers only.', choices: ['yes', 'no'] }] }, opens_at: '2027-06-21T09:00:00Z', closes_at: '2027-06-28T09:00:00Z', minimum_cohort: 5, measures: [] }} /> : <SurveyAnswerSummary items={[{ id: `synthetic-${kind}`, label: kind === 'report' ? 'Explicitly reviewed wider prose' : 'Your private answer', value: intent?.value ?? value }]} />}{phase === 'pending' && <Button variant="outline" onClick={() => finish('unknown')}>Resolve synthetic {kind} as unknown</Button>}</> }}>
+      <output aria-label={`Synthetic ${kind} attempts`}>{attempts.length} local attempts</output><ul aria-label={`Synthetic ${kind} captured attempts`}>{attempts.map((attempt, index) => <li key={index}>{attempt.id} · Original revision {attempt.revision} · {attempt.value}</li>)}</ul>{unknown.length > 0 && <p>Earlier synthetic outcomes unconfirmed: {unknown.map(item => `${item.id} revision ${item.revision}`).join('; ')}</p>}
+    </SurveyDecisionControls>
+  </section>
+}

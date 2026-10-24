@@ -5,8 +5,7 @@ import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
 import { localDate } from './event-time'
-import { Button } from './components/ui/button'
-import { ConfirmationDialog } from './components/ui/dialog'
+import { SurveyDecisionControls, SurveyAnswerSummary } from './survey-decision'
 import { CollectionHeading } from './components/patterns'
 import { FormQuestions, visibleFields, type Answers } from './form-questions'
 import { usePrivateRequestScope } from './private-request-scope'
@@ -56,6 +55,7 @@ function ResponseForm({ page, owner, eventId, surveyId, refresh, networkBlocked,
     lock.current = true; setPending(true); setFailure(undefined); setReceipt(undefined)
     const ticket = scope.capture(); let metadataID: string | undefined, issued = false
     try {
+      ticket.assert()
       if (retry) { const current = await refresh(); ticket.assert(); if (!current.can_respond || current.version !== intent.command.form_version) return }
       metadataID = history.begin({ operation: 'Survey response', revision: intent.revision, command: { action: 'respond', requestID: intent.command.command_id, revision: intent.revision } }, intent.metadataID)
       issued = true
@@ -87,14 +87,15 @@ function ResponseForm({ page, owner, eventId, surveyId, refresh, networkBlocked,
   useEffect(() => { if (failure instanceof APIError && failure.status === 422) opener.current?.form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus() }, [failure])
   return <form className="fleet-survey-form" onSubmit={event => { event.preventDefault(); if (!blocked && dirty) setReview({ command: { command_id: crypto.randomUUID(), form_version: page.version, answers: structuredClone(currentAnswers()) }, revision: saved?.revision ?? 0 }) }}>
     <fieldset className="fleet-survey-fields" disabled={blocked || !!review}><legend>{saved ? 'Edit your response' : 'Your response'}</legend><FormQuestions definition={page.form} answers={answers} change={setAnswers} showOptional issues={failure instanceof APIError ? failure.blockers : []} /></fieldset>
-    <p role="status" aria-label="Survey response status">{receipt ? `Response command confirmed at revision ${receipt.response.revision}. Current saved response is read separately; the original command returned this exact retained revision.` : uncertain || history.unconfirmed ? 'The outcome is unknown. No new command will be sent automatically. You may explicitly retry the captured same command while the survey remains open, or review current state.' : dirty ? 'Unsent changes, kept only in this page.' : 'No unsent changes.'}</p>
-    {receipt && <dl className="fleet-survey-facts"><div><dt>Confirmed response command</dt><dd>{receipt.commandID}</dd></div><div><dt>Exact returned response revision</dt><dd>{receipt.response.revision}</dd></div></dl>}
-    {!!failure && <Failure error={failure} />}{(conflict || changedElsewhere) && <p role="alert">The saved response changed. Review the current saved response above before replacing your local draft.</p>}
-    <div className="fleet-pattern-actions">{uncertain ? <Button type="button" icon="refresh" disabled={pending || history.pending || networkBlocked} onClick={() => void send(uncertain, true)}>Retry the same survey response</Button> : <Button ref={opener} type="submit" icon="check" disabled={blocked || !dirty}>Review response</Button>}<Button type="button" icon="refresh" variant="outline" disabled={pending || history.pending} onClick={() => void checkCurrent()}>Check saved response</Button>{(dirty || uncertain || conflict || changedElsewhere || history.unconfirmed) && <Button type="button" variant="outline" disabled={pending || history.pending || networkBlocked || (history.unconfirmed || !!uncertain || conflict) && !currentRead} onClick={loadCurrent}>Load current saved response</Button>}</div>
-    {currentRead && (uncertain || history.unconfirmed) && <p>The displayed saved response is current state. It does not confirm the original command. Selecting it as a new base keeps the earlier outcome unconfirmed.</p>}
-    <ConfirmationDialog open={!!review} onOpenChange={open => { if (!open && !pending) setReview(undefined) }} title="Review your private response" description="Only you and current organisers can read these answers. This is not an anonymous response. Confirming sends exactly the visible answers below for this fixed question version." confirmLabel="Save response" pending={pending} disabled={networkBlocked || history.pending || history.unconfirmed} finalFocus={opener} onConfirm={() => { if (review) void send(review) }}><p>Question version {review?.command.form_version} · Expected response revision {review?.revision}</p>{review && <AnswerReview page={page} answers={review.command.answers} />}</ConfirmationDialog>
+    <SurveyDecisionControls status={{ label: 'Survey response status', message: receipt ? `Response command confirmed at revision ${receipt.response.revision}. Current saved response is read separately; the original command returned this exact retained revision.` : uncertain || history.unconfirmed ? 'The outcome is unknown. No new command will be sent automatically. You may explicitly retry the captured same command while the survey remains open, or review current state.' : dirty ? 'Unsent changes, kept only in this page.' : 'No unsent changes.' }} actions={[
+      uncertain ? { label: 'Retry the same survey response', icon: 'refresh', disabled: pending || history.pending || networkBlocked, onSelect: () => { void send(uncertain, true) } } : { label: 'Review response', icon: 'check', ref: opener, submit: true, disabled: blocked || !dirty },
+      { label: 'Check saved response', icon: 'refresh', variant: 'outline', disabled: pending || history.pending, onSelect: () => { void checkCurrent() } },
+      ...(dirty || uncertain || conflict || changedElsewhere || history.unconfirmed ? [{ label: 'Load current saved response', variant: 'outline' as const, disabled: pending || history.pending || networkBlocked || (history.unconfirmed || !!uncertain || conflict) && !currentRead, onSelect: loadCurrent }] : []),
+    ]} review={{ open: !!review, onOpenChange: open => { if (!open && !pending) setReview(undefined) }, title: 'Review your private response', description: 'Only you and current organisers can read these answers. This is not an anonymous response. Confirming sends exactly the visible answers below for this fixed question version.', confirmLabel: 'Save response', pending, disabled: networkBlocked || history.pending || history.unconfirmed, finalFocus: opener, onConfirm: () => { if (review) void send(review) }, children: <><p>Question version {review?.command.form_version} · Expected response revision {review?.revision}</p>{review && <AnswerReview page={page} answers={review.command.answers} />}</> }}>
+      {receipt && <dl className="fleet-survey-facts"><div><dt>Confirmed response command</dt><dd>{receipt.commandID}</dd></div><div><dt>Exact returned response revision</dt><dd>{receipt.response.revision}</dd></div></dl>}{!!failure && <Failure error={failure} />}{(conflict || changedElsewhere) && <p role="alert">The saved response changed. Review the current saved response above before replacing your local draft.</p>}{currentRead && (uncertain || history.unconfirmed) && <p>The displayed saved response is current state. It does not confirm the original command. Selecting it as a new base keeps the earlier outcome unconfirmed.</p>}
+    </SurveyDecisionControls>
   </form>
 }
 function AnswerReview({ page, answers }: { page: ParticipantSurvey; answers: Answers }) {
-  return <dl className="fleet-survey-answer-review">{visibleFields(page.form, answers).map(field => <div key={field.id}><dt>{field.label}</dt><dd>{answerText(answers[field.id])}</dd></div>)}</dl>
+  return <SurveyAnswerSummary items={visibleFields(page.form, answers).map(field => ({ id: field.id, label: field.label, value: answerText(answers[field.id]) }))} />
 }

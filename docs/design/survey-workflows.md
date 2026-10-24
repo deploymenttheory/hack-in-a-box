@@ -1,6 +1,39 @@
 # Survey rebuild inventory and delivery boundary
 
-Issue #241 / UI-08, base c91c52e3503f21077b519c9eae306d4dd0bd5ca9.
+Issue #241 / UI-08. Initial directory base c91c52e3503f21077b519c9eae306d4dd0bd5ca9;
+current continuation rebased onto 6e8ab511f00f3c3e8b63c91200a52637bee65119.
+
+## Continuing implementation checkpoint
+
+The response, authoring and report adapters now use controlled production decision
+bars and explicit exact-snapshot review. Private answers/review prose, restricted
+response/history pages and current report projections are owned by fenced mounted
+React pages, never ordinary QueryClient or browser storage. Current reads cannot
+settle configuration/approve/publication unknowns. Captured response UUID and exact
+reviewed-text identity retries retain their original payload/revision while native
+current authority and clock remain authoritative. Only safe generic operation,
+original revision and UUID metadata enters the existing session safety provider.
+
+Management/create authority, published results, comparisons and objective/observation
+reads are scoped and no-store. CSV export reviews the private download, inherits
+its response owner's authority lifetime and rejects a held blob after synchronous
+parent denial or a same-mounted disabled permission. Object URLs are revoked;
+printing/page departure cancels a pending export. Native formula protection and
+auditing remain server-owned. The independently published guide imports the actual
+production decision controls and definition/answer summaries with synthetic,
+backend-free response/authoring/report owners and accessibility/usage guidance.
+
+Current checkpoint proof: 54 native administrator owner journeys; 14 focused
+privacy/export/equivalence unit cases; six independent guide keyboard/narrow
+journeys. Both portal builds, guide build, full lint and diff-check pass. These are
+bounded checkpoint checks, not full-acceptance or exact-head CI certification.
+
+Remaining before #241 completion: broader both-portal/shared verification; additional
+session/retention/version/unknown-approval and held read/write/download browser
+regressions; objective/observation inspector refinements and source paging proof;
+actual synthetic before/after evidence; full repository checks and independent
+Standards/Spec reviews at the completed head. Keep #241 open and the PR a draft.
+
 
 Owned: survey-directory.tsx; survey-reader.tsx re-export; survey-response.tsx;
 survey-context.ts; survey-workspace.tsx (management and creation);
@@ -32,7 +65,7 @@ GET cannot settle original unknown intent. Configuration/report current flags
 also cannot be original command receipts. Raw responses/answers/report-review
 text must move out of ordinary QueryClient/local caches into fenced page owners.
 
-Full remaining implementation after the first real directory checkpoint:
+Original complete implementation inventory (do not drop nested scope):
 - private own response editor/review/exact result/captured retry/current read;
 - versioned authoring, schedules, cancellation and read-only archive states;
 - restricted response inspector/history and exact scoped export/print lifecycle;

@@ -172,3 +172,20 @@ while reviewing. Pass the clicked button (`event.currentTarget`) or native
 `SubmitEvent.submitter` into `setReviewed`; correction then returns focus to that
 same control. Current authority loss still unmounts and scrubs the entire private
 editor. An unrelated new control with matching text is not the original opener.
+## Survey decision ownership
+
+`SurveyDecisionControls`, `SurveyDefinitionReview` and `SurveyAnswerSummary` are
+controlled production presentation used by response, versioned authoring and
+report adapters. The interactive guide imports those exports with three synthetic
+backend-free owners. Keyboard users can review/correct/cancel, hold a callback
+pending, explicitly retry a captured response/text identity, read current facts,
+select a separately reviewed base and revoke private wording. Pending blocks
+Escape/cancel. A removed/disabled opener falls back to the current enabled action.
+
+The native owner supplies current actor/session/event/resource authority, exact
+payload/revision matching and scope fences. Raw answers/review prose must remain
+in that mounted owner. Store only safe original command metadata across routes;
+current reads do not prove original effects. Only native response UUID and exact
+reviewed-text identity contracts permit captured retry. Configuration and report
+approval/publication unknowns are current-read-only. The guide makes no API,
+authentication, storage or real provider calls and never fabricates backend receipts.
