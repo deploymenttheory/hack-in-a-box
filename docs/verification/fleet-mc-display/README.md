@@ -33,6 +33,16 @@ editor. It is not completion of issue 244 or verification of its final criteria.
 5. Matched real-build MC and display visual evidence, final bounded checks and independent two-axis review/exact-head CI.
 
 First-checkpoint lint, TypeScript/both portal builds, independent guide build and
-room-stream unit tests (5/5) passed. Native MC/display and guide browser checks
-are still running; their outcomes are not yet claimed. Broad
+room-stream unit tests (5/5) passed. Existing native MC browser journeys passed
+12/12 and independent room display journeys passed 16/16 (desktop/mobile, one
+worker), retaining QR decode, clock skew, equal-sequence withdrawal, no account
+requests/private canaries and 720p/1080p assertions. The new independent guide
+journey passed 2/2 with API/cookie/storage guards. Its initial status locator
+also selected the snippet-copy status; scoping to the actual display corrected
+that test without changing product code or weakening assertions.
+
+Logs: `/private/tmp/hackbox244-initial-mc.log`,
+`/private/tmp/hackbox244-initial-room.log` and
+`/private/tmp/hackbox244-initial-guide-corrected.log`. The first-checkpoint
+source and proof do not establish the unfinished acceptance criteria above. Broad
 whole-route/security/accessibility release audits remain issue 245.
