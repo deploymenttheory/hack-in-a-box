@@ -70,3 +70,31 @@ worker count; native assertions about privacy, authority, request idempotency,
 claim races and timing are retained with explicit review actions added. The older
 help-reader fixture now supplies the native session draft scope required by private
 continuation fences. The remaining issue scope above is still outstanding.
+
+## Independent assessment checkpoint
+
+The scorecard surface is rebuilt as a published checkpoint collection followed by a
+focused private task. Save/submit first captures an exact review of author, team,
+checkpoint/rubric/run, frozen submission (where applicable), expected event/card
+versions and every pending/explicit score and evidence reference. Confirmation reads
+current native sources again before POST. Correcting preserves actual input; no
+numeric value is inferred for an unobserved category. Existing immutable receipt
+matching and history remain native. Unknown commands retain only diagnostic metadata
+above the private task; a later different successful assessment cannot erase the
+older unresolved attempt. A deliberately selected new base does not prove its result.
+
+Both production portal builds and targeted mentor/scorecard lint pass. The bounded
+command `npx playwright test --config playwright.mentor-operations.config.ts
+mentor-workspace.spec.ts scorecard-workspace.spec.ts --workers 1 --max-failures 2`
+completed 62/62 desktop/mobile journeys. It retains actual typed recovery/session
+and author isolation, native byte rejection, concurrent note/check-in versions,
+checkpoint/frozen-output gates, exact lost-response history, private transient-read
+retention, and no offline score storage/replay. Existing journeys now explicitly
+acknowledge deliberate private-task departure and confirm the new review stage.
+A new journey proves a later different success keeps earlier unresolved metadata.
+
+Current remaining work includes partial authority restoration/private-cache boundary
+regressions (in addition to current denial coverage), clarifications and attachment /
+common-answer review, moderation/huddles/second reviews and factual preview, actual
+guide examples/guidance and before/after evidence, full dependent-consumer suites,
+independent two-axis review and exact-head CI. This checkpoint is still a draft.
