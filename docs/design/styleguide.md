@@ -148,3 +148,11 @@ unknown navigation, source comparison, private print/URL lifetimes, signed-in
 metadata-only root capsules and the distinction between original acknowledged
 version and newer current safe projection. It makes no API, file, storage or
 session request and does not fabricate receipt, consent or protected-byte grants.
+
+Media submission and metadata correction use the same field-specific validator and
+`useMediaValidation` owner hook. Pass each result to production `Field.error`;
+invalid submission focuses the first usable invalid control after error markup is
+rendered. Errors remain local to that private editor. No per-keystroke alert or
+transport failure is used as a field error. The interactive media lifecycle example
+uses these actual helpers and demonstrates an over-byte-limit title, its associated
+accessible description and corrective focus before the existing review flow.

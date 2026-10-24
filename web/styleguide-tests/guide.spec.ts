@@ -342,6 +342,7 @@ test('media decision history uses fresh metadata states, denial scrub, paging an
 
 test('media lifecycle production reviews keep exact captured source, corrective focus and unknown outcomes distinct from current reads',async({page})=>{
  const frame=await examples(page,'Task patterns'),example=frame.getByRole('region',{name:'Media lifecycle task examples'})
+ await example.getByLabel('Synthetic media title',{exact:true}).fill('😀'.repeat(60));await example.getByRole('button',{name:'Review synthetic media decision',exact:true}).click();await expect(example.getByLabel('Synthetic media title',{exact:true})).toBeFocused();await expect(example.getByLabel('Synthetic media title',{exact:true})).toHaveAttribute('aria-invalid','true');await expect(example.getByLabel('Synthetic media title',{exact:true})).toHaveAccessibleDescription(/Provide a media title up to 200 UTF-8 bytes/)
  await example.getByLabel('Synthetic media title',{exact:true}).fill('Synthetic corrected title');await example.getByLabel('Synthetic media action',{exact:true}).selectOption('publish')
  const opener=example.getByRole('button',{name:'Review synthetic media decision',exact:true});await opener.focus();await page.keyboard.press('Enter')
  const review=example.getByRole('region',{name:'Review gallery release',exact:true});await expect(review).toContainText('Synthetic corrected title');await expect(review).toContainText('Event revision 7 · Media version 1');await expect(review.getByRole('heading',{name:'Review gallery release',exact:true})).toBeFocused()
