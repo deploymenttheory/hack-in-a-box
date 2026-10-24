@@ -22,6 +22,8 @@ export async function setupTeams(page: Page, available = true) {
   })
   await page.goto(`/events/${firstID}`)
   await openEventSection(page, 'Campaigns')
+  await page.getByRole('button', { name: 'New campaign', exact: true }).click()
+  await page.getByRole('tab', { name: 'Channels', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Teams workflow connection' })).toBeVisible()
   return { requests }
 }

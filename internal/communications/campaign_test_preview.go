@@ -47,6 +47,15 @@ type SelfTestPreview struct {
 	ReviewFingerprint string        `json:"review_fingerprint"`
 }
 
+// Newly reviewed intents cannot be accepted by a worker that only understands
+// the legacy core hash. Omitted-binding requests retain their original bytes.
+func reviewedTestDurableFingerprint(legacy, review string) string {
+	return digest(struct {
+		LegacyFingerprint   string `json:"legacy_fingerprint"`
+		ReviewedTestBinding string `json:"reviewed_test_binding"`
+	}{legacy, review})
+}
+
 func validReviewFingerprint(value string) bool {
 	if len(value) != 64 {
 		return false

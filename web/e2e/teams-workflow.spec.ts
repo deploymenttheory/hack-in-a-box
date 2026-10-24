@@ -3,17 +3,21 @@ import { setupTeams as setup } from './teams-workflow-fixtures'
 
 test('write-only connection replacement preserves composer edits and requires current review', async ({ page }, info) => {
   const { requests } = await setup(page)
+  await page.getByRole('tab', { name: 'Schedule', exact: true }).click()
   await page.getByLabel('Campaign name', { exact: true }).fill('Unsaved organiser draft')
+  await page.getByRole('tab', { name: 'Channels', exact: true }).click()
   const endpoint = 'https://synthetic.environment.api.powerplatform.com/?sig=SECRET-BROWSER-CANARY'
   await page.getByLabel('New secret workflow endpoint').fill(endpoint)
   await page.getByRole('button', { name: 'Save Teams connection' }).click()
   await expect(page.getByLabel('New secret workflow endpoint')).toHaveValue('')
   await expect(page.getByRole('heading', { name: 'Review changed campaign facts' })).toBeVisible()
+  await page.getByRole('tab', { name: 'Schedule', exact: true }).click()
   await expect(page.getByLabel('Campaign name', { exact: true })).toHaveValue('Unsaved organiser draft')
   expect(requests[0].body.endpoint).toBe(endpoint)
   expect(await page.locator('body').innerText()).not.toContain('SECRET-BROWSER-CANARY')
   expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } }))).not.toContain('SECRET-BROWSER-CANARY')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await page.getByRole('tab', { name: 'Channels', exact: true }).click()
   await page.getByRole('heading', { name: 'Teams workflow connection' }).scrollIntoViewIfNeeded()
   await page.getByRole('region', { name: 'Teams workflow connection' }).screenshot({ path: info.outputPath('teams-setup.png') })
 })

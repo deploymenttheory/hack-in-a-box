@@ -208,6 +208,41 @@ func TestSelfTestReviewedMailboxAndSourceStayBoundThroughWorker(t *testing.T) {
 		message.ReviewedTestBinding != preview.ReviewFingerprint {
 		t.Fatalf("persisted output differs from reviewed output: %v", err)
 	}
+	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+		row, e := q.Event(t.Context(), f.eventID)
+		if e != nil {
+			return e
+		}
+		_, legacy, _, e := f.s.selfMessage(
+			t.Context(),
+			q,
+			row,
+			f.owner.ID,
+			c,
+			*queued.TestRequestID,
+			"smtp",
+		)
+		if e != nil {
+			return e
+		}
+		retained, e := q.CommunicationTestRequest(
+			t.Context(),
+			dbgen.CommunicationTestRequestParams{EventID: f.eventID, ID: *queued.TestRequestID},
+		)
+		if e != nil {
+			return e
+		}
+		if retained.Fingerprint == legacy ||
+			retained.Fingerprint != reviewedTestDurableFingerprint(
+				legacy,
+				preview.ReviewFingerprint,
+			) {
+			t.Fatal("old core-only worker can accept the newly reviewed request")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
 	// The worker resolves this before preparing its first immutable SMTP attempt.
 	f.exec(
 		t,

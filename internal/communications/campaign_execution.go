@@ -120,6 +120,7 @@ func (s Service) queueTestSelf(
 			return nil, access.ErrConflict
 		}
 		message.ReviewedTestBinding = reviewed
+		fingerprint = reviewedTestDurableFingerprint(fingerprint, reviewed)
 	}
 	raw, err := json.Marshal(message)
 	if err != nil {
@@ -211,14 +212,12 @@ func (s Service) ResolveTestSelfInTransaction(
 	if err != nil {
 		return TestMessage{}, err
 	}
-	if fingerprint != request.Fingerprint {
-		return TestMessage{}, ErrUnresolved
-	}
 	var retained TestMessage
 	if err = json.Unmarshal(request.Snapshot, &retained); err != nil {
 		return TestMessage{}, contextError("decode reviewed test", err)
 	}
 	if retained.ReviewedTestBinding != "" {
+		fingerprint = reviewedTestDurableFingerprint(fingerprint, retained.ReviewedTestBinding)
 		binding, _, reviewErr := s.selfTestReviewBinding(ctx, q, c, message, sourceBinding)
 		if reviewErr != nil {
 			return TestMessage{}, reviewErr
@@ -227,6 +226,9 @@ func (s Service) ResolveTestSelfInTransaction(
 			return TestMessage{}, ErrUnresolved
 		}
 		message.ReviewedTestBinding = binding
+	}
+	if fingerprint != request.Fingerprint {
+		return TestMessage{}, ErrUnresolved
 	}
 	return message, nil
 }
