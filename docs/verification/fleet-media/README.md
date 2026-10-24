@@ -161,3 +161,25 @@ Own-consent review/recovery, protected image and URL lifetimes, full route/denia
 partial-restoration and unsafe-file browser proof, production interactive lifecycle
 examples, matching visual evidence, independent reviews and full exact-head CI all
 remain before readiness. Issue #243 stays open.
+
+#### Lifecycle consent/bytes and native browser checkpoint
+
+Own photo consent now uses the production `PhotoConsentReview`: review a captured
+self-only revision and choice before PUT. Unknown responses cannot be retried or
+settled by GET; a deliberate new-base acknowledgement retains the older unresolved
+metadata. Archived revocation remains independent of gallery access. The direct
+successful PUT is acknowledged separately from its current projection body.
+Protected photos have per-mount child scopes inherited from current record scope,
+with immediate URL revocation on hide, blur, print, session end and teardown. History
+reads now inherit the current record scope too. Global collection loss drops earlier
+private record snapshots even when absent from the new ordinary-reader page.
+
+Both portal builds passed. All existing affected media/history journeys now use
+explicit Add/review/confirm steps and still check native preflight/no-POST,
+identical intent retries, private print suppression, protected bytes, archive and
+transient-read recovery: **26/26 participant, 26/26 administrator**. The synthetic
+provider now models actual `acknowledged_version` and immutable command dedup.
+Scoped unit proof is **13/13**, including denial→partial restoration and ordinary
+source advancement preserving stale draft comparison. Focused source/spec ESLint
+passed. Expanded route/held-response/consent-incarnation/unsafe-file journeys,
+interactive lifecycle guide, matching screenshots and final review/CI remain.

@@ -60,7 +60,7 @@ export function useMediaOperation(context:MediaContext,scope:PrivateRequestScope
    if(!ticket.current())return false
    context.deny(error)
    if(!sent||definite){if(!retry){hard.current=false;if(attempt.current)history.complete(attempt.current)};retained.current=retry?op:undefined;setRetryAvailable(retry);setState(retry?{kind:'unknown',intent,message:'The original attempt remains unconfirmed. This retry did not establish its receipt.'}:{kind:'rejected',message:error instanceof APIError?error.message:'The intent was not sent. Review the current source before continuing.'})}
-   else setState({kind:'unknown',intent,message:'The response was lost. The native command may have completed. Read current media, then deliberately retry this identical intent only while current ownership permits it. Nothing is replayed automatically.'})
+   else {void context.refresh();setState({kind:'unknown',intent,message:'The response was lost. The native command may have completed. Read current media, then deliberately retry this identical intent only while current ownership permits it. Nothing is replayed automatically.'})}
    return false
   }finally{lock.current=false;if(!scope.capture().current())retained.current=undefined}
  }
