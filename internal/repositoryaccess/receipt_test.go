@@ -43,14 +43,14 @@ func TestOriginalRepositoryReceiptCurrentAuthorityAndNoEffectsPostgres(t *testin
 		if err != nil {
 			t.Fatal(err)
 		}
-		if review.ActorID == nil || *review.ActorID != f.owner || review.Plan == nil || !reflect.DeepEqual(*review.Plan, first) || review.Plan.ID == latest.ID || review.Plan.ApprovedAt != nil {
+		if review.CommandFingerprint == nil || *review.CommandFingerprint != commandFingerprint("review", f.owner, first) || review.ActorID == nil || *review.ActorID != f.owner || review.Plan == nil || !reflect.DeepEqual(*review.Plan, first) || review.Plan.ID == latest.ID || review.Plan.ApprovedAt != nil {
 			t.Fatalf("original review not immutable: %#v", review)
 		}
 		approved, err := reader.ReadReceipt(t.Context(), f.owner, f.event, f.team, first.ID, "approve")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if approved.Plan == nil || approved.Plan.ID != first.ID || approved.Plan.Version != first.Version || approved.Plan.ApprovedBy == nil || *approved.Plan.ApprovedBy != f.owner || approved.Plan.ApprovalReason != "Approve exact reviewed access" || approved.Plan.ApprovedAt == nil || approved.ActorID == nil || *approved.ActorID != f.owner {
+		if approved.CommandFingerprint == nil || approved.Plan == nil || *approved.CommandFingerprint != commandFingerprint("approve", f.owner, *approved.Plan) || approved.Plan.ID != first.ID || approved.Plan.Version != first.Version || approved.Plan.ApprovedBy == nil || *approved.Plan.ApprovedBy != f.owner || approved.Plan.ApprovalReason != "Approve exact reviewed access" || approved.Plan.ApprovedAt == nil || approved.ActorID == nil || *approved.ActorID != f.owner {
 			t.Fatalf("original approval not independently read: %#v", approved)
 		}
 	}

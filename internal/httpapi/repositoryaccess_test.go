@@ -221,7 +221,7 @@ func TestRepositoryAccessHTTPPrivacyCurrentAuthorityAndExactReview(t *testing.T)
 		if err := json.Unmarshal(original.Body.Bytes(), &receipt); err != nil {
 			t.Fatal(err)
 		}
-		if receipt.Plan == nil || receipt.Plan.ID != planID || receipt.Plan.ID == repeated.Current.Plan.ID || receipt.Plan.Reason != "Review current membership" || receipt.ActorID == nil || *receipt.ActorID != owner.ID || receipt.Plan.ApprovedAt != nil {
+		if receipt.CommandFingerprint == nil || len(*receipt.CommandFingerprint) != 64 || receipt.Plan == nil || receipt.Plan.ID != planID || receipt.Plan.ID == repeated.Current.Plan.ID || receipt.Plan.Reason != "Review current membership" || receipt.ActorID == nil || *receipt.ActorID != owner.ID || receipt.Plan.ApprovedAt != nil {
 			t.Fatalf("historical original receipt missing: %#v", receipt)
 		}
 		if after := counts(); after != before {
@@ -282,4 +282,5 @@ func TestRepositoryAccessHTTPPrivacyCurrentAuthorityAndExactReview(t *testing.T)
 	body["action"] = "review"
 	check(request(owner, "POST", "/access", body, true, event.Revision), 403)
 	check(request(owner, "GET", "/access", nil, false, event.Revision), 200)
+	check(request(owner, "GET", "/access/receipts/"+planID.String()+"?action=review", nil, false, event.Revision), 200)
 }

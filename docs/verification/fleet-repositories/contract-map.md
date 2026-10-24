@@ -151,3 +151,48 @@ standalone host; corrected web-directory execution produced the passing result.
 
 Expanded full native browser/guide/privacy/freeze/visual proof and final checks
 are still being completed. No readiness or issue closure is claimed.
+
+## Verification checkpoint before archive review scheduling
+
+The native App rotate adapter now follows the existing at-rest re-encryption
+contract: no replacement private key is sent and installation is retained.
+Actual stale source disables confirmation while leaving correction available;
+source/permission/provider guidance remains distinct. Current readonly authority
+also fences in-flight writes independently of retained read authority. Exact saved
+App identity/revision is captured for installation; a known configuration change
+fences old navigation without losing local drafts. Acknowledging an installation
+settles only its own synchronous leave bit, preserving warnings for another owner.
+The successful/other-owner cases use a synthetic intercepted GitHub destination;
+no real provider request occurs.
+
+Fresh full administrator/common browser campaign: **31 pass, 3 fail, 6 regular-only
+skips** (`/private/tmp/hackbox94-complete-admin.log`). The three failures identified
+mobile collection-toolbar use while the inspector is selected, and a duplicate
+beforeunload prompt caused by an acknowledged request's stale own pending bit.
+The visible inspector read and synchronous owner-only settlement fix those actual
+paths. Focused desktop/mobile parent denial, disbanded historical recovery,
+readonly authority, successful handoff, changed configuration and other-owner draft
+protection: **12/12 PASS** (`/private/tmp/hackbox94-handoff-mobile-green.log`).
+Fresh portal builds pass (`/private/tmp/hackbox94-handoff-build.log`).
+
+Regular parent-denial focused proof: **1 desktop pass, 1 mobile fail**
+(`/private/tmp/hackbox94-regular-denial-green.log`). The held fresh authority and
+old-invitation absence assertions pass. Mobile then automatically reopens the
+previously selected inspector after fresh restoration, so the collection's
+Inspect action remains hidden. Selection is now explicitly cleared on current
+parent denial; this last source correction is preserved but NOT yet rerun or
+compiled. No hidden-control force click or weaker privacy assertion was used.
+
+A separate pure fixture support commit `74978274e9d7be4098dc191819af6e45c2f25b10`
+pins scorecard migration time to an ordinary fixed instant. Actual PostgreSQL/race
+at the London fallback instant reproduced the original ambiguity red; the same
+unchanged migration/guarded-rollback assertions pass at the fixed ordinary date
+(`/private/tmp/hackbox94-scorecard-{fold-red,fixed-green}.log`). Production DST
+validation is unchanged. This support is shared with the other active lanes.
+
+Remaining before full #94 acceptance/freeze: verify the final selection-reset
+correction; run final full repository browser/units/lint/guide evidence, final
+native receipt assertions (including readonly access/digest), actual before/after
+visuals and documentation; obtain exact-head checks and paired independent review.
+All owned processes at this scheduling checkpoint are terminal. No claim of
+readiness, completed issue acceptance or merge is made.

@@ -9,3 +9,5 @@
 .fleet-repository-fields, .fleet-repository-fields > fieldset { display: grid; gap: var(--space-4); }
 .fleet-repositories fieldset { min-width: 0; border: 0; padding: 0; }
 .fleet-repositories .fleet-review-flow :is(p,li), .fleet-repositories .fleet-reference { overflow-wrap: anywhere; }
+
+.fleet-repositories .fleet-repository-inspect { white-space: nowrap; overflow-wrap: normal; min-width: max-content; flex-shrink: 0; }

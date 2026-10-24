@@ -1,18 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useId, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from '@tanstack/react-router'
-const Context = createContext<{ dirty: boolean; record: (id: string, dirty: boolean) => void } | null>(null)
+const Context = createContext<{ dirty: boolean; record: (id: string, dirty: boolean) => void; isDirty: () => boolean } | null>(null)
 export function RepositoryDrafts({ children, onDirty }: { children: ReactNode; onDirty?: (dirty: boolean) => void }) {
-  const [owners, setOwners] = useState<Record<string, boolean>>({}), dirty = Object.values(owners).some(Boolean)
-  const record = useCallback((id: string, value: boolean) => setOwners(previous => previous[id] === value ? previous : { ...previous, [id]: value }), [])
+  const [owners, setOwners] = useState<Record<string, boolean>>({}), current = useRef(owners), dirty = Object.values(owners).some(Boolean)
+  const isDirty = useCallback(() => Object.values(current.current).some(Boolean), [])
+  const record = useCallback((id: string, value: boolean) => { if (current.current[id] === value) return; current.current = { ...current.current, [id]: value }; setOwners(current.current) }, [])
   useEffect(() => { onDirty?.(dirty); return () => onDirty?.(false) }, [dirty, onDirty])
-  useBlocker({ shouldBlockFn: () => dirty && !window.confirm('Leave repository work with unsent or unconfirmed changes? Private drafts will be discarded; original unconfirmed command metadata remains for this signed-in session.'), enableBeforeUnload: dirty })
-  return <Context.Provider value={{ dirty, record }}>{children}</Context.Provider>
+  useBlocker({ shouldBlockFn: () => isDirty() && !window.confirm('Leave repository work with unsent or unconfirmed changes? Private drafts will be discarded; original unconfirmed command metadata remains for this signed-in session.'), enableBeforeUnload: isDirty })
+  return <Context.Provider value={{ dirty, record, isDirty }}>{children}</Context.Provider>
 }
 export function useRepositoryDraft(dirty: boolean) {
   const id = useId(), record = useContext(Context)?.record
   useEffect(() => { record?.(id, dirty); return () => record?.(id, false) }, [id, dirty, record])
+  return () => record?.(id, false)
 }
 export function useRepositoryDeparture() {
-  const dirty = useContext(Context)?.dirty
-  return () => !dirty || window.confirm('Discard private repository drafts and leave this review? Original unconfirmed command metadata stays blocked for this signed-in session.')
+  const owner = useContext(Context)
+  return () => !owner?.isDirty() || window.confirm('Discard private repository drafts and leave this review? Original unconfirmed command metadata stays blocked for this signed-in session.')
 }

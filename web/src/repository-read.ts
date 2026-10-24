@@ -3,17 +3,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { APIError, privateKey } from './api/client'
 import { useIdentity } from './session'
 import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
-export const RepositoryReadAuthority = createContext<{ scope: PrivateRequestScope; paused: boolean } | null>(null)
+export const RepositoryReadAuthority = createContext<{ scope: PrivateRequestScope; paused: boolean; writeScope?: PrivateRequestScope; writable?: boolean } | null>(null)
 export class RepositoryProjectionMismatch extends Error {}
 export function repositoryDenied(error: unknown) { return error instanceof RepositoryProjectionMismatch || (error instanceof APIError && [401, 403, 404].includes(error.status)) }
 // Every opening obtains its own current authorisation. Cached projections are
 // never permission to reopen a private repository or access review.
-export function useRepositoryRead<T>(eventID: string, resource: string, read: (signal: AbortSignal) => Promise<T>) {
+export function useRepositoryRead<T>(eventID: string, resource: string, read: (signal: AbortSignal) => Promise<T>, onDenied?: () => void) {
   const identity = useIdentity(), cache = useQueryClient(), parent = useContext(RepositoryReadAuthority)
   const [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(0), [denied, setDenied] = useState<unknown>()
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:repositories:${resource}:${mount}`, parent?.scope)
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'repository-admin'), identity.draft_scope, resource, mount], [identity.person.id, identity.draft_scope, eventID, resource, mount])
-  const deny = useCallback((error: unknown) => { scope.invalidate(); setDenied(error); void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key, scope])
+  const deny = useCallback((error: unknown) => { scope.invalidate(); onDenied?.(); setDenied(error); void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key, scope, onDenied])
   // The enclosing event reader is outside this domain. Its current denial
   // must fence repository continuations in the same cache notification, before
   // React has a chance to tear down the selected private editor.
