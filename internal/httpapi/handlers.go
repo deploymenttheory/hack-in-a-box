@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/archives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
@@ -62,6 +63,7 @@ import (
 )
 
 type Dependencies struct {
+	Archives         archives.Service
 	GitHubWebhooks   *githubwebhooks.Service
 	RepositoryAccess repositoryaccess.Service
 	Repositories     repositories.Service

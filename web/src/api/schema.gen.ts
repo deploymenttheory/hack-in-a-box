@@ -4,6 +4,77 @@
  */
 
 export interface paths {
+    "/api/v1/archives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Current-authority archived event metadata. Restricted summaries are absent rather than inferred empty. */
+        get: operations["listArchivedEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/archives/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Per-event native metrics for current organisers only. Counts retain separate cohorts and imply no global or unique cross-event population. */
+        get: operations["listArchiveReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getEventArchive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/archive/summary.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Deliberate audited current-organiser no-store CSV; all cells are formula-neutralised and no person or credential fields are included. */
+        get: operations["exportArchiveSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -3458,6 +3529,58 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ArchiveMetric: {
+            key: string;
+            /** Format: int64 */
+            value: number;
+            unit: string;
+            /** Format: int64 */
+            denominator: number | null;
+            denominator_source: string;
+            source: string;
+            definition: string;
+        };
+        ArchiveSourceAvailability: {
+            source: string;
+            /** @enum {string} */
+            state: "available" | "unavailable" | "restricted" | "retention_expired";
+            reason: string;
+        };
+        ArchiveSummary: {
+            /** Format: uuid */
+            event_id: string;
+            event_name: string;
+            /** Format: int64 */
+            event_revision: number;
+            /** Format: date-time */
+            observed_at: string;
+            metrics: components["schemas"]["ArchiveMetric"][];
+            sources: components["schemas"]["ArchiveSourceAvailability"][];
+        };
+        EventArchive: {
+            /** Format: uuid */
+            event_id: string;
+            event_name: string;
+            /** Format: int64 */
+            event_revision: number;
+            /** Format: date-time */
+            completed_at: string | null;
+            read_only: boolean;
+            /** @enum {string} */
+            summary_state: "available" | "restricted";
+            summary: components["schemas"]["ArchiveSummary"] | null;
+        };
+        ArchivePage: {
+            items: components["schemas"]["EventArchive"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
+        ArchiveReportPage: {
+            items: components["schemas"]["ArchiveSummary"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+            cohort: string;
+        };
         FeedbackSource: {
             /** @enum {string} */
             kind: "observation" | "question" | "help";
@@ -7496,6 +7619,101 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listArchivedEvents: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One cursor page of currently visible archived events. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listArchiveReports: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorised archived event report page. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchiveReportPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getEventArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority read-only event archive. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventArchive"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportArchiveSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Native participation metrics with explicit units, sources and denominators. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getHealth: {
         parameters: {
             query?: never;
