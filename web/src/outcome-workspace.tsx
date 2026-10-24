@@ -1,3 +1,4 @@
+import { OutcomeDecision, useOutcomeReview } from './outcome-decision'
 import { useOutcomeRead } from './outcome-read'
 import { CollectionToolbar } from './components/patterns/collection'
 import { Field, Textarea, Input, Checkbox } from './components/ui/fields'
@@ -13,7 +14,7 @@ import { usePrivateRequestScope } from './private-request-scope'
 import { Button, buttonVariants } from './components/ui/button'
 import { Failure, Loading } from './components/states'
 import { readOutcome, readReview, type Outcome, type OutcomeDefinition } from './outcome-api'
-import { CommandState, outcomeDenied, useOutcomeCommand, useOutcomeUnsent } from './outcome-command'
+import { OutcomeRecovery, CommandState, outcomeDenied, useOutcomeCommand, useOutcomeUnsent } from './outcome-command'
 import { OutcomeControls, OutcomeEvidence, OutcomeHistory, OutcomeReviews } from './outcome-controls'
 import { OutcomePublication } from './outcome-publication'
 
@@ -27,7 +28,7 @@ function OutcomeDirectory({ eventID }: { eventID?: string }) {
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:ideas:${eventID ?? 'general'}`)
   const [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(() => crypto.randomUUID())
   const [mode, setMode] = useState<'own' | 'review'>('own'), [blocked, setBlocked] = useState<unknown>(), [creating, setCreating] = useState(false)
-  const proposal = useRef<HTMLDivElement>(null)
+  const proposal = useRef<HTMLDivElement>(null), proposalOpener = useRef<HTMLElement | null>(null)
   const prefix = useMemo(() => [...privateKey(identity.person.id, eventID ?? 'general', 'outcome-list'), identity.draft_scope, mount], [identity.person.id, identity.draft_scope, eventID, mount])
   const deny = useCallback((error: unknown) => {
     scope.invalidate(); setBlocked(error)
@@ -51,10 +52,11 @@ function OutcomeDirectory({ eventID }: { eventID?: string }) {
   function chooseMode(next: 'own' | 'review') { scope.renew(); setBlocked(undefined); setMode(next); setGeneration(crypto.randomUUID()) }
   const records = listing.data?.pages.flatMap(page => page.items) ?? []
   return <section className="workspace fleet-outcomes fleet-outcomes--private">
-    <CollectionHeading title="Ideas" scope={{ entity: mode === 'review' ? 'Current event organiser review' : 'Your ideas and follow-through' }} description={<><p>Propose an idea, review its current source and follow the evidence. Estimates and self-reports remain distinct from demonstrated adoption.</p><Link className="fleet-outcome-navigation" to="/projects"><Icon name="external" />Browse reviewed projects</Link></>} primary={!blocked ? { label: creating ? 'New idea form open' : 'Propose an idea', icon: 'add', disabled: creating, onSelect: () => setCreating(true) } : undefined} />
+    <CollectionHeading title="Ideas" scope={{ entity: mode === 'review' ? 'Current event organiser review' : 'Your ideas and follow-through' }} description={<><p>Propose an idea, review its current source and follow the evidence. Estimates and self-reports remain distinct from demonstrated adoption.</p><Link className="fleet-outcome-navigation" to="/projects"><Icon name="external" />Browse reviewed projects</Link></>} primary={!blocked ? { label: creating ? 'New idea form open' : 'Propose an idea', icon: 'add', disabled: creating, onSelect: () => { proposalOpener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setCreating(true) } } : undefined} />
     {import.meta.env.MODE === 'admin' && eventID && <nav className="fleet-pattern-actions fleet-outcome-views" aria-label="Idea directory view"><Button icon="user" variant="ghost" disabled={creating} aria-pressed={mode === 'own'} onClick={() => chooseMode('own')}>My ideas</Button><Button icon="shield" variant="ghost" disabled={creating} aria-pressed={mode === 'review'} onClick={() => chooseMode('review')}>Organiser review for this event</Button></nav>}
     {blocked ? <Failure error={blocked} /> : <>
-      {creating && <div ref={proposal}><NewIdea key={`${identity.person.id}:${identity.draft_scope}:${eventID ?? 'general'}`} eventID={eventID} scope={scope} deny={deny} /></div>}
+      <OutcomeRecovery resource={{ kind: 'proposal', eventID }} scope={scope} deny={deny} />
+      {creating && <div ref={proposal}><NewIdea key={`${identity.person.id}:${identity.draft_scope}:${eventID ?? 'general'}`} eventID={eventID} scope={scope} deny={deny} close={() => { setCreating(false); requestAnimationFrame(() => { if (proposalOpener.current?.isConnected) proposalOpener.current.focus() }) }} /></div>}
       <div className="fleet-outcome-directory" aria-busy={listing.isFetching || undefined}>
         <p className="fleet-outcome-evidence-note"><Icon name="info" />A review status records a deliberate decision. It does not establish achieved impact, an award or a published project.</p>
         {listing.isPending ? <Loading /> : listing.error ? <Failure error={listing.error} retry={() => void listing.refetch()} /> : <>
@@ -72,18 +74,19 @@ function OutcomeDirectory({ eventID }: { eventID?: string }) {
   </section>
 }
 
-function NewIdea({ eventID, scope, deny }: { eventID?: string; scope: ReturnType<typeof usePrivateRequestScope>; deny: (e: unknown) => void }) {
+function NewIdea({ eventID, scope, deny, close }: { close: () => void; eventID?: string; scope: ReturnType<typeof usePrivateRequestScope>; deny: (e: unknown) => void }) {
   const identity = useIdentity(), navigate = useNavigate(), [id] = useState(() => crypto.randomUUID()), [definition, setDefinition] = useState(emptyDefinition), [reason, setReason] = useState(''), [team, setTeam] = useState(''), [created, setCreated] = useState<string>()
+  const { reviewed, setReviewed, correctReview } = useOutcomeReview()
   const teams = useQuery({ queryKey: privateKey(identity.person.id, eventID ?? 'general', 'outcome-own-team'), enabled: !!eventID, queryFn: async ({ signal }) => {const ticket=scope.capture();ticket.assert();try{const value=unwrap(await api.GET('/api/v1/events/{event_id}/teams',{signal,params:{path:{event_id:eventID!}}}));ticket.assert();return value}catch(error){if(ticket.current()&&outcomeDenied(error))deny(error);throw error}}, retry: false, refetchInterval: 15_000 })
   const command = useOutcomeCommand(`${identity.person.id}:${identity.draft_scope}:new:${id}`, { kind: 'proposal', eventID }, scope, async (intent, ticket) => { try { ticket.assert(); await readOutcome(id, ticket.signal); ticket.assert(); throw new APIError(409, 'conflict') } catch (error) { if (!(error instanceof APIError && error.status === 404)) throw error; ticket.assert() }; if(intent.kind==='outcome'&&intent.command.provenance?.event_id&&intent.command.provenance.team_id){const eventID=intent.command.provenance.event_id; ticket.assert();const teams=unwrap(await api.GET('/api/v1/events/{event_id}/teams',{signal:ticket.signal,params:{path:{event_id:eventID}}}));ticket.assert();if(!teams.teams.some(t=>t.state==='published'&&t.id===intent.command.provenance!.team_id))throw new APIError(403,'forbidden');const event=unwrap(await api.GET('/api/v1/events/{event_id}',{signal:ticket.signal,params:{path:{event_id:eventID}}}));ticket.assert();if(!event.published_at||Date.now()<Date.parse(event.configuration.live_start)||Date.now()<Date.parse(event.published_at))throw new APIError(409,'event_blocked')} }, value => { setCreated('id' in value ? value.id : id) }, deny)
   const dirty = !created && (!!definition.problem || !!definition.audience || !!definition.proposed_value || !!definition.solution || !!definition.backlog_url || !!reason || !!command.intent)
   useOutcomeUnsent(dirty)
   useEffect(() => { if (created) void navigate({ to: '/ideas/$outcomeId', params: { outcomeId: created } }) }, [created, navigate])
   function change(name: keyof OutcomeDefinition, value: string | boolean) { setDefinition({ ...definition, [name]: value }); command.clearNotice() }
-  return <section className="panel"><h2>Propose an idea</h2><p>Private to you, your current source team where applicable, and authorised organisers. This does not publish a project or claim an achieved result.</p><p>Unsent input stays only in memory in this tab. It is not recovered after leaving, reloading or signing out.</p><form onSubmit={e => { e.preventDefault(); void command.write({ kind: 'outcome', outcomeID: id, expected: 0, command: { id: crypto.randomUUID(), action: 'propose', reason, definition: { ...definition, kind: team ? 'team_outcome' : 'pitch' }, provenance: team && eventID ? { event_id: eventID, team_id: team } : undefined } }) }}><fieldset disabled={command.busy || command.blocked}>
+  return <section className="fleet-outcome-section fleet-outcome-proposal"><h2>Propose an idea</h2><p>Private to you, your current source team where applicable, and authorised organisers. This does not publish a project or claim an achieved result.</p><p>Unsent input stays only in memory in this tab. It is not recovered after leaving, reloading or signing out.</p>{reviewed ? <OutcomeDecision intent={reviewed} title="Proposed idea" confirmLabel="Submit idea for review" pending={command.busy} blocked={command.blocked} correct={correctReview} confirm={() => void command.write(reviewed)} /> : <form onSubmit={e => { e.preventDefault(); setReviewed({ kind: 'outcome', outcomeID: id, expected: 0, command: { id: crypto.randomUUID(), action: 'propose', reason, definition: { ...definition, kind: team ? 'team_outcome' : 'pitch' }, provenance: team && eventID ? { event_id: eventID, team_id: team } : undefined } }) }}><fieldset disabled={command.busy || command.blocked}>
     {eventID && teams.data && <><label htmlFor="idea-team">Source</label><select id="idea-team" value={team} onChange={e => setTeam(e.target.value)}><option value="">General organisation idea (no event association)</option>{teams.data.teams.filter(t => t.state === 'published').map(t => <option key={t.id} value={t.id}>Team outcome: {t.name}</option>)}</select><p>Team competition output can only be captured after the actual common release and scheduled live start. General pitches remain available independently.</p></>}
     {teams.error && <p role="status">Team context is unavailable. You can still submit a general organisation idea.</p>}
-    <DefinitionFields value={definition} change={change} prefix="new-idea" /><label htmlFor="idea-submit-reason">Why submit this idea?</label><textarea id="idea-submit-reason" required maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} /><Button type="submit" disabled={!navigator.onLine || !definition.problem.trim() || !definition.audience.trim() || !definition.proposed_value.trim() || !reason.trim()}>Submit idea for review</Button></fieldset></form><CommandState value={command} /></section>
+    <DefinitionFields value={definition} change={change} prefix="new-idea" /><label htmlFor="idea-submit-reason">Why submit this idea?</label><textarea id="idea-submit-reason" required maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} /><Button type="submit" icon="next" disabled={!navigator.onLine || !definition.problem.trim() || !definition.audience.trim() || !definition.proposed_value.trim() || !reason.trim()}>Review proposed idea</Button></fieldset></form>}<CommandState value={command} /><Button icon="close" type="button" variant="ghost" disabled={command.busy} onClick={() => { if (!dirty || window.confirm('Close this private proposal editor? Unsent input is cleared; any original unknown command remains tracked.')) close() }}>Close idea proposal</Button></section>
 }
 
 export function DefinitionFields({ value, change, prefix }: { value: OutcomeDefinition; change: (name: keyof OutcomeDefinition, value: string | boolean) => void; prefix: string }) {
@@ -111,6 +114,7 @@ function OutcomeReader({id}:{id:string}) {
     <CollectionHeading title="Idea and follow-through" scope={{ entity: value.capability.archived ? 'Archived event: outcome updates only' : 'Restricted current source' }} description={<p>Reasoned status: {value.status.replaceAll('_', ' ')} · Version {value.current_version}. Review evidence independently of proposed value.</p>} primary={{ label: 'Refresh current outcome', icon: 'refresh', onSelect: refresh }} />
     <Link className="fleet-outcome-navigation" to="/projects/$outcomeId" params={{ outcomeId: id }}><Icon name="external" />Check separately published project</Link>
     {current.error && <p role="status">Current authority could not be refreshed. Private saved evidence is hidden and saving is disabled; unsent input remains in this tab until access is checked.</p>}
+    <OutcomeRecovery resource={{ kind: 'existing', id }} scope={scope} deny={deny} refreshed={refresh} />
     {!current.error && <OutcomeSummary value={value} />}
     <OutcomeControls key={`${identity.person.id}:${identity.draft_scope}:${id}`} value={value} scope={scope} deny={deny} available={!current.error} refresh={refresh} />
     <OutcomeEvidence value={value} scope={scope} deny={deny} available={!current.error} refresh={refresh} />
@@ -119,7 +123,7 @@ function OutcomeReader({id}:{id:string}) {
     {!current.error && <OutcomeHistory value={value} scope={scope} deny={deny} />}
   </section>
 }
-function OutcomeSummary({ value }: { value: Outcome }) { return <section className="panel"><h2>{value.definition.problem}</h2><dl className="dates"><div><dt>Who benefits?</dt><dd>{value.definition.audience}</dd></div><div><dt>Proposed value</dt><dd>{value.definition.proposed_value}</dd></div><div><dt>Solution</dt><dd>{value.definition.solution || 'Not recorded'}</dd></div><div><dt>Owner</dt><dd className="identifier">{value.owner_id || 'Not assigned'}</dd></div><div><dt>Review date</dt><dd>{value.review_at ? new Date(value.review_at).toLocaleString() : 'Not assigned'}</dd></div></dl>{value.definition.backlog_url && <a href={value.definition.backlog_url} rel="noopener noreferrer" target="_blank">External backlog reference</a>}<p>Proposed value and private evidence are not automatically published. Scores, submissions and awards remain unchanged.</p></section> }
+function OutcomeSummary({ value }: { value: Outcome }) { return <section className="fleet-outcome-section"><h2>{value.definition.problem}</h2><dl className="fleet-outcome-facts"><div><dt>Who benefits?</dt><dd>{value.definition.audience}</dd></div><div><dt>Proposed value</dt><dd>{value.definition.proposed_value}</dd></div><div><dt>Solution</dt><dd>{value.definition.solution || 'Not recorded'}</dd></div><div><dt>Owner</dt><dd className="identifier">{value.owner_id || 'Not assigned'}</dd></div><div><dt>Review date</dt><dd>{value.review_at ? new Date(value.review_at).toLocaleString() : 'Not assigned'}</dd></div></dl>{value.definition.backlog_url && <a href={value.definition.backlog_url} rel="noopener noreferrer" target="_blank">External backlog reference</a>}<p>Proposed value and private evidence are not automatically published. Scores, submissions and awards remain unchanged.</p></section> }
 
 export function OutcomeReviewPage() {
   const { reviewId } = useParams({ strict: false }), identity = useIdentity()

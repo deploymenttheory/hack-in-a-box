@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { privateKey } from './api/client'
 import { useIdentity } from './session'
-import { usePrivateRequestScope } from './private-request-scope'
+import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
 import { outcomeDenied } from './outcome-command'
 
 // Cached private data is never a mount's authority. A route must obtain its own
@@ -27,4 +27,13 @@ export function useOutcomeRead<T>(id: string, category: string, read: (signal: A
     }, retry: false, refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
   const checkAccess = () => { scope.renew(); setBlocked(undefined); setGeneration(value => value + 1) }
   return { current, scope, prefix, deny, blocked, checkAccess }
+}
+
+// Each nested private projection also owns its mount. Losing a capability and
+// regaining only the parent must not resurrect its old options or draft view.
+export function useOutcomeProjection(id: string, projection: string, parent: PrivateRequestScope) {
+  const identity = useIdentity(), [mount] = useState(() => crypto.randomUUID())
+  const key = useMemo(() => [...privateKey(identity.person.id, id, 'outcome'), identity.draft_scope, projection, mount], [identity.person.id, identity.draft_scope, id, projection, mount])
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${id}:${projection}:${mount}`, parent)
+  return { key, scope }
 }

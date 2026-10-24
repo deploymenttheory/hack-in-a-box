@@ -108,3 +108,50 @@ all final capability/owner/source/consent/account/error scenarios; matching
 actual desktop/mobile before/after artifacts and shared guide examples where
 behaviour is added; final complete checks, independent reviews and exact-head
 CI. This checkpoint does not complete #242.
+
+
+## Full production workflow implementation checkpoint
+
+All present nested owners now use Fleet native field/action controls and flat
+sections rather than legacy panel/card composition. Proposals, source revision,
+event adoption, deliberate status/measure review, owner/due-date assignment,
+follow-through and immutable evidence use a captured prepare → review → confirm
+step. Separate publication save/publish/withdraw and owner-plan
+save/approve/cancel review the exact retained fields/source/version. The local
+review hook clones private payloads, focuses the review heading and returns
+correction focus to the actual initiating control. Zero and unknown remain
+distinct, all evidence bases/source references remain explicit, publication
+fields are separately authored, and existing native archive/owner/reminder rules
+remain authoritative.
+
+Each nested private projection owns a mount key and child request scope beneath
+the current source scope. A real pre-refactor production browser regression
+reproduced cached private owner choices after moderation capability was removed
+and partially restored (desktop and mobile both fail at the private text
+assertion). The new projection owner requires its own current read and fences
+late responses. Supporting event/media lookups now scrub their owning source on
+current denial; no unscoped option enumeration is left behind.
+
+Original recovery is displayed once above capability-bound editors. Minimal
+metadata includes an opaque live-editor identity, solely to direct recovery to
+the actual current private capsule or expose the read-only original-receipt
+control after that editor is removed. No original absence/current GET is treated
+as confirmation. A rejected retry retains the original unknown barrier; the
+private immutable payload stays local while currently authorised. No provider,
+backend policy, browser persistence or private global payload is introduced.
+
+The independent guide now imports the actual production OutcomeDecision and
+useOutcomeReview controls with a bounded synthetic local owner, copyable usage,
+accessibility/focus and anti-pattern guidance. Evidence/proposed-versus-observed,
+separate publication drafts, exact owner-plan timing/template and pending/unknown
+states are demonstrated without account, API or provider access. Guide feedback
+is explicitly local, never a native receipt.
+
+Current compiling proof: latest lint, both production builds, six focused
+metadata/review unit tests and the independent guide build pass. The earlier
+full prepare/review administrator journey passed 36/36. Expanded current both
+portal journeys (including checkpoint editor replacement, rejected retry,
+current role restoration and matched screenshot captures) are running at this
+checkpoint. Independent guide browser checks and complete final native/web CI,
+matching before/after artifact review and paired frozen-source reviews remain
+required. The full issue remains open, draft and not ready for merge.

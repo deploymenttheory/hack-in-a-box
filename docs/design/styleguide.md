@@ -156,3 +156,13 @@ rendered. Errors remain local to that private editor. No per-keystroke alert or
 transport failure is used as a field error. The interactive media lifecycle example
 uses these actual helpers and demonstrates an over-byte-limit title, its associated
 accessible description and corrective focus before the existing review flow.
+
+
+The outcomes example imports production `OutcomeDecision` and `useOutcomeReview`
+with a bounded synthetic local owner. It demonstrates evidence basis and exact
+zero versus unknown, separate positive-field publication drafts, explicit owner
+review timing/template, captured review focus/correction, pending and unknown
+barriers. Simulated current facts never settle the original outcome. No account,
+API, private payload or provider is involved. The copyable reference documents
+current authority/CSRF/version and exact native receipt ownership; local guide
+feedback is explicitly not a server receipt or publication.

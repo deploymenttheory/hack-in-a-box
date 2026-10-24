@@ -12,3 +12,15 @@
 .fleet-outcome-references li { padding-block: var(--space-3); border-block-end: 1px solid var(--border); }
 .fleet-outcome-references a { display: inline-flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
 .fleet-outcomes .fleet-collection-heading { padding-block-start: var(--space-4); }
+.fleet-outcome-facts { display: grid; gap: var(--space-4); margin-block: var(--space-4); }
+.fleet-outcome-facts > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-4); }
+.fleet-outcome-facts dt { color: var(--muted-foreground); }
+.fleet-outcome-facts dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fleet-outcomes fieldset { min-width: 0; }
+.fleet-outcome-action > h3 { font-size: var(--text-section); margin-block-start: 0; }
+.fleet-outcome-action form > fieldset, .fleet-outcomes [aria-label="Reviewed project publication"] form > fieldset, .fleet-outcome-section form > fieldset { display: grid; gap: var(--space-3); }
+.fleet-outcomes .fleet-review-flow h4 { font-size: var(--text-section); }
+.fleet-outcomes .fleet-review-flow h5 { font-size: var(--text-body); }
+.fleet-outcomes .fleet-review-flow :is(p,li,dd) { overflow-wrap: anywhere; }
+.fleet-outcomes .fleet-outcome-section ol > li { padding-block: var(--space-3); border-block-end: 1px solid var(--border); }
+@media (max-width: 48rem) { .fleet-outcome-facts > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } }
