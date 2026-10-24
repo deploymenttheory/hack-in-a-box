@@ -1,3 +1,4 @@
+import { source as mediaSource, mediaID } from './media-workspace-fixtures'
 import { expect, test, type Page } from '@playwright/test'
 import type { components } from '../src/api/schema.gen'
 import { firstID, person } from './fixtures'
@@ -316,4 +317,50 @@ test('native outcome correction returns keyboard focus to the actual mounted ini
  await progress.getByRole('button',{name:'Correct details',exact:true}).click()
  await expect(opener).toBeFocused()
  expect(state.requests).toHaveLength(0)
+})
+
+test('original unknown outcome survives reviewed project to current native media navigation and return without a document reload or replacement',async({page})=>{
+ const {state}=await mock(page,true)
+ const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Synthetic reviewed project',solution:'Only approved positive fields',links:[{label:'Current authorised recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ await page.route(`**/api/v1/projects/${outcomeID}`,route=>route.fulfill({json:project}))
+ const item:components['schemas']['MediaItem']={...mediaSource(),kind:'recording',title:'Synthetic current recording',recording_url:'https://recordings.example.test/synthetic-reviewed',can_read_original:false}
+ await page.route(`**/api/v1/events/${firstID}/media**`,route=>{expect(route.request().method()).toBe('GET');const path=new URL(route.request().url()).pathname;return route.fulfill({json:path.endsWith(`/${mediaID}`)?item:{items:[item],revision:1,can_collect:false,can_review:false,next_cursor:null}})})
+ await page.route(`**/api/v1/events/${firstID}/photo-consent`,route=>{expect(route.request().method()).toBe('GET');return route.fulfill({json:{choice:'yes',revision:1,can_opt_in:true,can_revoke:true}})})
+ await page.goto(`/ideas/${outcomeID}`)
+ const progress=()=>page.locator('section.fleet-outcome-action').filter({has:page.getByRole('heading',{name:'Owner progress',exact:true})})
+ await progress().getByLabel('Reason for this change').fill('PRIVATE ORIGINAL BEFORE CURRENT MEDIA')
+ await progress().getByRole('button',{name:'Review owner progress',exact:true}).click()
+ state.mode='after'
+ await progress().getByRole('button',{name:'Save owner progress',exact:true}).click()
+ await expect(progress().getByRole('status',{name:'Outcome save state'})).toContainText('Save outcome is unknown')
+ const original=structuredClone(state.requests[0])
+ const documentID=await page.evaluate(()=>{const id=crypto.randomUUID();Reflect.set(window,'syntheticOutcomeDocument',id);return id})
+ page.once('dialog',dialog=>dialog.accept())
+ await page.getByRole('link',{name:'Check separately published project',exact:true}).click()
+ await page.getByRole('link',{name:'Current authorised recording (current authorised media)',exact:true}).click()
+ await expect(page.getByRole('heading',{name:'Event media',exact:true})).toBeVisible()
+ expect.soft(await page.evaluate(()=>Reflect.get(window,'syntheticOutcomeDocument'))).toBe(documentID)
+ await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+ await page.getByRole('link',{name:/^Open PRIVATE idea/}).click()
+ await expect(progress().getByLabel('Reason for this change')).toBeDisabled()
+ await expect(page.getByRole('complementary',{name:'Original outcome recovery'})).toContainText('Original outcome unknown')
+ expect(state.requests).toHaveLength(1);expect(state.requests[0]).toEqual(original)
+ await page.getByRole('button',{name:'Check earlier exact save receipt',exact:true}).click()
+ await expect(page.getByRole('status',{name:'Earlier command recovery state'})).toContainText('exact earlier command was saved')
+ expect(state.requests).toHaveLength(1)
+})
+
+test('current released project removes a media reference omitted by the native consent projection without changing approved publication facts',async({page})=>{
+ const {state}=await mock(page,true)
+ let revoked=false,reads=0
+ const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Synthetic reviewed project with current media',solution:'Approved positive solution',links:[{label:'Current reviewed recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ await page.route(`**/api/v1/projects/${outcomeID}`,route=>{reads++;return route.fulfill({json:{...project,links:revoked?[]:project.links}})})
+ await page.goto(`/projects/${outcomeID}`)
+ await expect(page.getByRole('link',{name:'Current reviewed recording (current authorised media)',exact:true})).toBeVisible()
+ revoked=true
+ await expect(page.getByRole('link',{name:'Current reviewed recording (current authorised media)',exact:true})).toHaveCount(0,{timeout:20_000})
+ expect(reads).toBeGreaterThanOrEqual(2)
+ await expect(page.getByRole('heading',{name:project.problem,exact:true})).toBeVisible()
+ await expect(page.getByText('Separately reviewed publication · Version 2',{exact:true})).toBeVisible()
+ expect(state.requests).toHaveLength(0);expect(state.eventReads).toBe(0)
 })

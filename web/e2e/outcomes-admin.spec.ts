@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page, type Locator } from '@playwright/test'
 import type { components } from '../src/api/schema.gen'
 import { firstID, mockWorkspace, person } from './fixtures'
 const id='71111111-1111-4111-8111-111111111111'
@@ -159,5 +159,48 @@ test('each publication opening waits for its own authorised read and clears prio
  await page.getByRole('button',{name:'Open publication review',exact:true}).click()
  await expect(page.getByRole('heading',{name:'Idea unavailable',exact:true})).toBeVisible()
  await expect(page.getByLabel('Reviewed public problem')).toHaveCount(0)
+ expect(state.publications).toHaveLength(0);expect(state.plans).toHaveLength(0)
+})
+
+test('publication correction remains a separate draft until its new positive fields are explicitly released',async({page})=>{
+ const state=await setup(page)
+ state.publication={outcome_id:id,version:2,current_version:2,source_version:4,command_id:crypto.randomUUID(),fields:{problem:'Previously approved public problem',solution:'Previously approved public solution',audience:'organisation',share_event_name:false,share_team_name:false,links:[],media:[]},state:'published',published_version:2,reason:'Earlier deliberate publication',actor_id:person.id,at:'2026-10-01T12:00:00Z'}
+ await page.goto(`/ideas/${id}`);await page.getByRole('button',{name:'Open publication review',exact:true}).click()
+ await page.getByLabel('Reviewed public problem').fill('Corrected reviewed public problem')
+ await page.getByLabel('Reason for this separate publication decision').fill('Prepare a separate positive-field correction')
+ await page.getByRole('button',{name:'Review publication draft',exact:true}).click()
+ await page.getByRole('button',{name:'Save publication draft',exact:true}).click()
+ await expect.poll(()=>state.publication?.state).toBe('draft')
+ expect(state.publication?.published_version).toBe(2)
+ expect(state.publications.map(command=>command.action)).toEqual(['save'])
+ await expect(page.getByText('Current review: draft · Published version: 2',{exact:true})).toBeVisible()
+ expect(JSON.stringify(state.publications[0])).not.toContain('PRIVATE original')
+ await page.getByLabel('Reason for this separate publication decision').fill('Explicitly release the corrected positive fields')
+ await page.getByRole('button',{name:'Review publication release',exact:true}).click()
+ await expect(page.getByRole('region',{name:'Review project publication'}).getByText('Corrected reviewed public problem',{exact:true})).toBeVisible()
+ expect(state.publications).toHaveLength(1)
+ await page.getByRole('button',{name:'Publish exactly reviewed fields',exact:true}).click()
+ await expect.poll(()=>state.publication?.published_version).toBe(4)
+ expect(state.publications.map(command=>command.action)).toEqual(['save','publish'])
+ expect(state.publications.every(command=>command.source_version===4)).toBe(true)
+})
+
+test('matched synthetic publication and owner-plan preparation screenshots',async({page},info)=>{
+ const state=await setup(page)
+ const capture=async(region:Locator,name:string)=>{const viewport=page.viewportSize()!,box=await region.boundingBox();expect(box).not.toBeNull();await page.setViewportSize({width:viewport.width,height:viewport.height+Math.ceil(box!.height)});await region.scrollIntoViewIfNeeded();await region.screenshot({path:info.outputPath(name)});await page.setViewportSize(viewport)}
+ await page.goto(`/ideas/${id}`);await page.getByRole('button',{name:'Open publication review',exact:true}).click()
+ await page.getByLabel('Reviewed public problem').fill('Synthetic reviewed problem')
+ await page.getByLabel('Reviewed public solution').fill('Synthetic reviewed positive solution')
+ await page.getByLabel('Reason for this separate publication decision').fill('Synthetic publication review')
+ await page.getByLabel('Reason for this separate publication decision').evaluate(input=>(input as HTMLTextAreaElement).blur())
+ await capture(page.getByRole('region',{name:'Reviewed project publication',exact:true}),'outcome-publication-prepare.png')
+ await page.getByRole('button',{name:'Configure optional 30-day checkpoint'}).click()
+ await page.getByLabel('Review timezone (IANA)').fill('Europe/London')
+ await page.getByLabel('Actual local review date and time').fill('2026-12-01T12:00')
+ await page.getByLabel('Reviewed message subject').fill('Synthetic owner checkpoint')
+ await page.getByLabel('Reviewed plain-text message').fill('Please review {{outcome.url}} on {{review.date}}.')
+ await page.getByLabel('Reason for this explicit review decision').fill('Explicit synthetic owner review')
+ await page.getByLabel('Reason for this explicit review decision').evaluate(input=>(input as HTMLTextAreaElement).blur())
+ await capture(page.getByRole('heading',{name:'Configure 30-day checkpoint',exact:true}).locator('..'),'outcome-owner-plan-prepare.png')
  expect(state.publications).toHaveLength(0);expect(state.plans).toHaveLength(0)
 })

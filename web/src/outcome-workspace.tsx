@@ -1,7 +1,8 @@
+import type { components } from './api/schema.gen'
 import { OutcomeDecision, useOutcomeReview } from './outcome-decision'
 import { useOutcomeRead, useOutcomeProjection } from './outcome-read'
 import { CollectionToolbar } from './components/patterns/collection'
-import { Field, Textarea, Input, Checkbox } from './components/ui/fields'
+import { Field, Textarea, Input, Checkbox, Select } from './components/ui/fields'
 import { CollectionHeading, CollectionRecords, CollectionPagination } from './components/patterns/collection'
 import { StatusBadge } from './components/ui/feedback'
 import { Icon } from './components/ui/icon'
@@ -85,7 +86,7 @@ function NewIdea({ eventID, scope, deny, close }: { close: () => void; eventID?:
   useEffect(() => { if (created) void navigate({ to: '/ideas/$outcomeId', params: { outcomeId: created } }) }, [created, navigate])
   function change(name: keyof OutcomeDefinition, value: string | boolean) { setDefinition({ ...definition, [name]: value }); command.clearNotice() }
   return <section className="fleet-outcome-section fleet-outcome-proposal"><h2>Propose an idea</h2><p>Private to you, your current source team where applicable, and authorised organisers. This does not publish a project or claim an achieved result.</p><p>Unsent input stays only in memory in this tab. It is not recovered after leaving, reloading or signing out.</p>{reviewed && <OutcomeDecision intent={reviewed} title="Proposed idea" confirmLabel="Submit idea for review" pending={command.busy} blocked={command.blocked} correct={correctReview} confirm={() => void command.write(reviewed)} />}<form hidden={!!reviewed} onSubmit={e => { e.preventDefault(); setReviewed({ kind: 'outcome', outcomeID: id, expected: 0, command: { id: crypto.randomUUID(), action: 'propose', reason, definition: { ...definition, kind: team ? 'team_outcome' : 'pitch' }, provenance: team && eventID ? { event_id: eventID, team_id: team } : undefined } }, (e.nativeEvent as SubmitEvent).submitter) }}><fieldset disabled={command.busy || command.blocked}>
-    {eventID && teams.data && <><label htmlFor="idea-team">Source</label><select id="idea-team" value={team} onChange={e => setTeam(e.target.value)}><option value="">General organisation idea (no event association)</option>{teams.data.teams.filter(t => t.state === 'published').map(t => <option key={t.id} value={t.id}>Team outcome: {t.name}</option>)}</select><p>Team competition output can only be captured after the actual common release and scheduled live start. General pitches remain available independently.</p></>}
+    {eventID && teams.data && <><label htmlFor="idea-team">Source</label><Select id="idea-team" value={team} onChange={e => setTeam(e.target.value)}><option value="">General organisation idea (no event association)</option>{teams.data.teams.filter(t => t.state === 'published').map(t => <option key={t.id} value={t.id}>Team outcome: {t.name}</option>)}</Select><p>Team competition output can only be captured after the actual common release and scheduled live start. General pitches remain available independently.</p></>}
     {teams.error && <p role="status">Team context is unavailable. You can still submit a general organisation idea.</p>}
     <DefinitionFields value={definition} change={change} prefix="new-idea" /><label htmlFor="idea-submit-reason">Why submit this idea?</label><textarea id="idea-submit-reason" required maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} /><Button type="submit" icon="next" disabled={!navigator.onLine || !definition.problem.trim() || !definition.audience.trim() || !definition.proposed_value.trim() || !reason.trim()}>Review proposed idea</Button></fieldset></form><CommandState value={command} /><Button icon="close" type="button" variant="ghost" disabled={command.busy} onClick={() => { if (!dirty || window.confirm('Close this private proposal editor? Unsent input is cleared; any original unknown command remains tracked.')) close() }}>Close idea proposal</Button></section>
 }
@@ -182,7 +183,18 @@ function ProjectReader({ id }: { id: string }) {
       <CollectionHeading title={project.data.problem} scope={{ entity: `Separately reviewed publication · Version ${project.data.version}` }} description={<p>Published {new Date(project.data.published_at).toLocaleString()}. Private evidence, estimates and original assessment records are excluded.</p>} />
       <section className="fleet-outcome-section"><h2>Solution</h2><p className="outcome-prose">{project.data.solution}</p></section>
       <section className="fleet-outcome-section"><h2>Reviewed follow-through</h2><StatusBadge>{project.data.follow_up_status.replaceAll('_', ' ')}</StatusBadge><p>This is the status reviewed for this publication; later private updates do not silently republish it.</p>{project.data.event_name && <p>Source event: {project.data.event_name}</p>}{project.data.team_name && <p>Source team: {project.data.team_name}</p>}</section>
-      <section className="fleet-outcome-section"><h2>Reviewed references</h2>{project.data.links.length ? <ul className="fleet-outcome-references">{project.data.links.map((link, i) => <li key={`${link.url}:${i}`}><a href={link.url} rel="noopener noreferrer" target={link.media ? undefined : '_blank'}><Icon name={link.media ? 'book' : 'external'} />{link.label}{link.media ? ' (current authorised media)' : ''}</a></li>)}</ul> : <p>No reviewed reference is published.</p>}<p>Media links reflect the current owning audience and consent check. This project grants no additional access.</p></section>
+      <section className="fleet-outcome-section"><h2>Reviewed references</h2>{project.data.links.length ? <ul className="fleet-outcome-references">{project.data.links.map((link, i) => <li key={`${link.url}:${i}`}><ProjectReference link={link} /></li>)}</ul> : <p>No reviewed reference is published.</p>}<p>Media links reflect the current owning audience and consent check. This project grants no additional access.</p></section>
     </article>}
   </section>
+}
+
+const nativeUUIDPattern = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+const nativeMediaDestination = new RegExp(`^/events/(${nativeUUIDPattern})/media/(${nativeUUIDPattern})$`, 'i')
+function ProjectReference({ link }: { link: components['schemas']['OutcomeProject']['links'][number] }) {
+  if (!link.media) return <a href={link.url} rel="noopener noreferrer" target="_blank"><Icon name="external" />{link.label}</a>
+  const destination = nativeMediaDestination.exec(link.url)
+  if (!destination) return <span><Icon name="warning" />{link.label} (current media destination unavailable)</span>
+  // Only the owning native resolver supplies this destination. SPA navigation
+  // preserves original session intent metadata; the media owner rechecks access.
+  return <Link to="/events/$eventId/media/$mediaId" params={{ eventId: destination[1], mediaId: destination[2] }}><Icon name="book" />{link.label} (current authorised media)</Link>
 }

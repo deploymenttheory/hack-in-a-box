@@ -16,7 +16,10 @@
 .fleet-outcome-facts > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-4); }
 .fleet-outcome-facts dt { color: var(--muted-foreground); }
 .fleet-outcome-facts dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.fleet-outcomes fieldset { min-width: 0; }
+.fleet-outcomes fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.fleet-outcomes fieldset fieldset { border-block-start: 1px solid var(--border); padding-block: var(--space-4); }
+.fleet-outcomes legend { padding: 0; font-weight: var(--weight-emphasis); overflow-wrap: anywhere; }
+.fleet-outcomes .checkbox-row { display: flex; align-items: flex-start; gap: var(--space-2); min-height: var(--control-height); }
 .fleet-outcome-action > h3 { font-size: var(--text-section); margin-block-start: 0; }
 .fleet-outcome-action form > fieldset, .fleet-outcomes [aria-label="Reviewed project publication"] form > fieldset, .fleet-outcome-section form > fieldset { display: grid; gap: var(--space-3); }
 .fleet-outcomes .fleet-review-flow h4 { font-size: var(--text-section); }
