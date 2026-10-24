@@ -16,6 +16,9 @@ export function SurveyDecisionControls({ status, actions, review, children }: Su
     if (!closed) return
     const frame = requestAnimationFrame(() => {
       const finalFocus = review?.finalFocus
+      // Callback owners can deliberately return an invalid field after a native
+      // rejection. The dialog owns that destination; do not race it with fallback.
+      if (typeof finalFocus === 'function') return
       const target = finalFocus && typeof finalFocus === 'object' && 'current' in finalFocus ? finalFocus.current : undefined
       if (target instanceof HTMLElement && target.isConnected && !target.matches(':disabled, [aria-disabled="true"]')) return
       root.current?.querySelector<HTMLElement>('button:not(:disabled), a[href]')?.focus()

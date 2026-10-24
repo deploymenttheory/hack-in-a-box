@@ -42,3 +42,17 @@ test('a held older private GET cannot restore body or fields after the current o
   await act(async () => { release(success('PRIVATE-NATIVE-ANSWER-CANARY')) })
   expect(screen.queryByText('PRIVATE-NATIVE-ANSWER-CANARY')).not.toBeInTheDocument(); expect(screen.queryByLabelText('Private answer (optional)')).not.toBeInTheDocument(); expect(transport.put).not.toHaveBeenCalled()
 })
+
+test('changing the actual actor and draft owner starts empty while its fresh read is held', async () => {
+  let release!: (value: ReturnType<typeof success>) => void
+  const held = new Promise<ReturnType<typeof success>>(resolve => { release = resolve })
+  transport.get.mockResolvedValueOnce(success('FIRST-ACTOR-PRIVATE-CANARY')).mockReturnValueOnce(held)
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } }); caches.push(cache)
+  function View({ other = false }: { other?: boolean }) { return <QueryClientProvider client={cache}><CommunicationSafety><IdentityContext.Provider value={{ person: other ? { ...person, id: 'de2fbe8b-d593-4b6c-9af2-73fb9ee8b55f' } : person, csrf_token: 'synthetic-csrf', draft_scope: other ? 'second-private-session' : 'first-private-session', can_create_events: false }}><Theme><SurveyResponsePage /></Theme></IdentityContext.Provider></CommunicationSafety></QueryClientProvider> }
+  const view = render(<View />); await screen.findByText('FIRST-ACTOR-PRIVATE-CANARY')
+  view.rerender(<View other />); await waitFor(() => expect(transport.get).toHaveBeenCalledTimes(2))
+  expect(screen.queryByText('FIRST-ACTOR-PRIVATE-CANARY')).not.toBeInTheDocument(); expect(screen.queryByLabelText('Private answer (optional)')).not.toBeInTheDocument()
+  await act(async () => { release(success('SECOND-ACTOR-PRIVATE-CANARY')) })
+  await screen.findByText('SECOND-ACTOR-PRIVATE-CANARY'); expect(screen.queryByText('FIRST-ACTOR-PRIVATE-CANARY')).not.toBeInTheDocument()
+  expect(JSON.stringify(cache.getQueryCache().getAll().map(query => query.state.data))).not.toContain('PRIVATE-CANARY'); expect(transport.put).not.toHaveBeenCalled()
+})

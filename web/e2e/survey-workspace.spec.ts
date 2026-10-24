@@ -13,6 +13,7 @@ test('mobile and keyboard completion explains visibility and saves only visible 
  expect(f.puts).toHaveLength(0);await expect(page.getByRole('alertdialog',{name:'Review your private response'})).toBeVisible()
  await page.getByRole('button',{name:'Save response',exact:true}).focus();await page.keyboard.press('Enter')
  await expect(page.getByRole('status',{name:'Survey response status'})).toContainText('Response command confirmed at revision 1')
+ await expect(page.getByRole('button',{name:'Check saved response',exact:true})).toBeFocused()
  expect(f.puts).toHaveLength(1);expect(f.puts[0].answers).toEqual({[questionID]:'no'})
  await expect(page.getByText(privateText,{exact:true})).toHaveCount(0)
  expect(await page.evaluate(()=>JSON.stringify(localStorage)+JSON.stringify(sessionStorage))).not.toContain(privateText)

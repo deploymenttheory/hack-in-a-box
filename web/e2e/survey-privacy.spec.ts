@@ -73,10 +73,11 @@ test('lost report approval stays unknown when a current read already shows appro
 
 for (const change of ['close', 'question version'] as const) test(`held original response cannot repopulate the disposed editor after ${change}`, async ({ page }) => {
   const f = await surveyFixture(page)
+  let writeCount = 0
   let release!: () => void, attempted: { body: Record<string, unknown>; revision: string; csrf: string } | undefined, settled = false
   const held = new Promise<void>(resolve => { release = resolve })
   await page.route('**/surveys/*/response', async route => {
-    const request = route.request(); attempted = { body: request.postDataJSON(), revision: request.headers()['if-match'], csrf: request.headers()['x-csrf-token'] }
+    writeCount++; const request = route.request(); attempted = { body: request.postDataJSON(), revision: request.headers()['if-match'], csrf: request.headers()['x-csrf-token'] }
     await held; await route.fulfill({ json: { revision: 1, form_version: 1, answers: attempted.body.answers, submitted_at: '2027-06-22T09:00:00Z' } }).catch(() => {}); settled = true
   })
   await page.goto(surveyPath); await page.getByLabel('Did you learn something? (required)').selectOption('yes'); await page.getByLabel('Private explanation (optional)').fill(privateText)
@@ -91,6 +92,37 @@ for (const change of ['close', 'question version'] as const) test(`held original
   release(); await expect.poll(() => settled).toBe(true)
   await expect(page.getByText(privateText, { exact: true })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Your saved response: revision 1', exact: false })).toHaveCount(0)
-  expect(attempted).toEqual(captured); expect(captured?.revision).toBe('"0"'); expect(captured?.csrf).toBe('synthetic-csrf-token-32-characters'); expect(captured?.body.command_id).toMatch(/^[a-f0-9-]{36}$/)
+  expect(writeCount).toBe(1); expect(attempted).toEqual(captured); expect(captured?.revision).toBe('"0"'); expect(captured?.csrf).toBe('synthetic-csrf-token-32-characters'); expect(captured?.body.command_id).toMatch(/^[a-f0-9-]{36}$/)
   expect(f.puts).toHaveLength(0); expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain(privateText)
+})
+
+test('native response field rejection restores invalid-field focus and preserves the exact editable answer', async ({ page }) => {
+  const f = await surveyFixture(page); let attempts = 0
+  await page.route('**/surveys/*/response', route => { attempts++; return route.fulfill({ status: 422, json: { error: { code: 'invalid', message: 'Review the answer.', request_id: 'synthetic-field', blockers: [{ field: textID, code: 'invalid', message: 'Explain the learning in your own words.' }] } } }) })
+  await page.goto(surveyPath); await page.getByLabel('Did you learn something? (required)').selectOption('yes'); const answer = page.getByLabel('Private explanation (optional)'); await answer.fill(privateText)
+  await page.getByRole('button', { name: 'Review response', exact: true }).click(); expect(attempts).toBe(0)
+  await page.getByRole('button', { name: 'Save response', exact: true }).click()
+  await expect(answer).toHaveValue(privateText); await expect(answer).toBeEnabled(); await expect(answer).toHaveAttribute('aria-invalid', 'true'); await expect(answer).toBeFocused()
+  await expect(answer).toHaveAccessibleDescription('Only you and current organisers can read this response. Explain the learning in your own words.')
+  expect(attempts).toBe(1); expect(f.puts).toHaveLength(0); expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain(privateText)
+})
+
+test('native stale response revision preserves local draft until a deliberate current-base choice', async ({ page }) => {
+  const f = await surveyFixture(page); let attempts = 0
+  await page.route('**/surveys/*/response', route => { attempts++; f.state.response = { revision: 2, form_version: 1, answers: { [questionID]: 'yes', [textID]: 'A separately saved current answer.' }, submitted_at: '2027-06-22T10:00:00Z' }; return route.fulfill({ status: 409, json: { error: { code: 'conflict', request_id: 'synthetic-stale' } } }) })
+  await page.goto(surveyPath); await page.getByLabel('Did you learn something? (required)').selectOption('yes'); const answer = page.getByLabel('Private explanation (optional)'); await answer.fill(privateText)
+  await page.getByRole('button', { name: 'Review response', exact: true }).click(); await page.getByRole('button', { name: 'Save response', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Your saved response: revision 2', exact: false })).toBeVisible(); await expect(answer).toHaveValue(privateText)
+  await expect(page.getByRole('button', { name: 'Review response', exact: true })).toBeDisabled(); await expect(page.getByRole('button', { name: 'Retry the same survey response', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Check saved response', exact: true }).click()
+  const dialog = page.waitForEvent('dialog'), adopt = page.getByRole('button', { name: 'Load current saved response', exact: true }).click(); await (await dialog).accept(); await adopt
+  await expect(answer).toHaveValue('A separately saved current answer.'); expect(attempts).toBe(1); expect(f.puts).toHaveLength(0)
+})
+
+test('print excludes the identifiable response owner while the separately published report remains readable', async ({ page }) => {
+  const f = await surveyFixture(page); f.state.response = { revision: 1, form_version: 1, answers: { [questionID]: 'yes', [textID]: privateText }, submitted_at: '2027-06-22T09:00:00Z' }
+  await page.goto(surveyPath); await expect(page.getByText(privateText, { exact: true })).toBeVisible()
+  await page.emulateMedia({ media: 'print' }); await expect(page.getByText(privateText, { exact: true })).not.toBeVisible(); await expect(page.getByRole('button', { name: 'Review response', exact: true })).not.toBeVisible()
+  await page.goto(surveyPath + '/results'); await expect(page.getByText('Explicitly reviewed common themes.', { exact: true })).toBeVisible(); await expect(page.getByText(privateText, { exact: true })).toHaveCount(0)
+  expect(f.puts).toHaveLength(0)
 })

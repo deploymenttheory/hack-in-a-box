@@ -16,5 +16,6 @@ for (const surface of ['response', 'authoring'] as const) test(`matched survey $
   }
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.mouse.move(0, 0)
   await page.screenshot({ path: process.env.SURVEY_EVIDENCE_DIR ? `${process.env.SURVEY_EVIDENCE_DIR}/${surface}-${info.project.name}.png` : info.outputPath(`${surface}.png`), fullPage: true, animations: 'disabled' })
 })
