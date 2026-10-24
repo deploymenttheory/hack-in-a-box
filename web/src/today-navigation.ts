@@ -1,7 +1,7 @@
 // Deployment-validated origin only. URL input never grants a capability: the
 // destination portal selects from its own current, permitted section registry.
 export function administrationSectionURL(origin: string | undefined, eventID: string, section: string) {
-  if (!origin) return undefined
+  if (!origin || /[?#]/.test(origin)) return undefined
   try {
     const url = new URL(origin)
     if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) return undefined

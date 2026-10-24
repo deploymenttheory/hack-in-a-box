@@ -1,4 +1,5 @@
 import { RepositoryWorkspace } from './repository-workspace'
+import { TodayActionSafety } from './today-safety'
 import { initialEventSection } from './today-navigation'
 import { EventToday } from './today'
 import { PlanningOperations, planningDepartureAllowed } from './planning-operations'
@@ -29,7 +30,7 @@ export function EventDirectory() {
 export function EventWorkspace() {
   const { eventId } = useParams({ from: '/events/$eventId' })
   const identity = useIdentity()
-  return <EventBrand key={eventId} eventID={eventId}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><EventContent eventID={eventId} /></PlanningOperations></EventBrand>
+  return <EventBrand key={eventId} eventID={eventId}><TodayActionSafety eventID={eventId}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><EventContent eventID={eventId} /></PlanningOperations></TodayActionSafety></EventBrand>
 }
 function EventContent({ eventID }: { eventID: string }) {
   const identity = useIdentity()

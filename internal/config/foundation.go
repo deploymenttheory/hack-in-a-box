@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -56,7 +57,8 @@ func validateEndpoints(cfg *Config) []error {
 	if !validOrigin(cfg.PublicOrigin, cfg.Environment) {
 		problems = append(problems, errOrigin)
 	}
-	if cfg.AdministrationOrigin != "" && !validOrigin(cfg.AdministrationOrigin, cfg.Environment) {
+	if cfg.AdministrationOrigin != "" &&
+		(!validOrigin(cfg.AdministrationOrigin, cfg.Environment) || strings.ContainsAny(cfg.AdministrationOrigin, "?#")) {
 		problems = append(problems, errAdministrationOrigin)
 	}
 	if !validOrigin(cfg.WorkspaceOrigin, cfg.Environment) {

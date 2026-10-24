@@ -109,7 +109,7 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 		validateResponse(t, r, w)
 		return w
 	}
-	w := request(&reader, id, "?role=organiser")
+	w := request(&reader, id, "?role=organiser&administration_origin=https%3A%2F%2Fevil.invalid")
 	if w.Code != http.StatusOK {
 		t.Fatalf("current reader: %d %s", w.Code, w.Body.String())
 	}

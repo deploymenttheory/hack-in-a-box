@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 
 test('ordinary participant reaches released contacts from Today and preparation without admin navigation', async ({ page }, info) => {
-  const { events } = await mockWorkspace(page), event = events[0]
+  const { events, staff } = await mockWorkspace(page), event = events[0]
+  for (const grant of staff) grant.active = false
   event.stage = 'preparation'; event.can_read_staff = false; event.can_edit = false; event.can_present = false
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
   await page.route(`**/events/${firstID}/guidance`, route => route.fulfill({ json: { items: [{ id: '82fe31a6-a289-4a2b-80c2-ce0d677d7871', purpose: 'support', title: 'Support for this event', version: 1, contacts: [{ label: 'Published support route', url: 'https://example.test/support' }], require_acknowledgement: false, acknowledged_at: null, previous_acknowledgement: null }], warnings: [], can_manage: false } }))

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, APIError, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
@@ -6,24 +6,24 @@ import { Button } from './components/ui/button'
 import { Icon } from './components/ui/icon'
 import { StatusBadge } from './components/ui/feedback'
 import { Failure, Loading } from './components/states'
-import { usePrivateRequestScope } from './private-request-scope'
+import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
 import { useResourceReturnFocus } from './resource-focus'
 import { safeContactURL } from './content-model'
 import { localDate } from './event-time'
 import { ResourceReader } from './resource-reader'
 import { usePlanningUnknownRedaction } from './planning-operations'
 
-export function EventGuidance({ event, open, readiness = false }: { event: EventRecord; open?: (id: string, opener?: HTMLElement) => void; readiness?: boolean }) {
+export function EventGuidance({ event, open, readiness = false, parentScope }: { parentScope?: PrivateRequestScope; event: EventRecord; open?: (id: string, opener?: HTMLElement) => void; readiness?: boolean }) {
   const identity = useIdentity()
-  return <GuidanceLifetime key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} event={event} open={open} readiness={readiness} />
+  return <GuidanceLifetime key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} event={event} open={open} readiness={readiness} parentScope={parentScope} />
 }
-function GuidanceLifetime({ event, open, readiness }: { event: EventRecord; open?: (id: string, opener?: HTMLElement) => void; readiness: boolean }) {
-  const identity = useIdentity(), cache = useQueryClient(), [selected, setSelected] = useState<string>(), root = useRef<HTMLElement>(null), focus = useResourceReturnFocus(root)
+function GuidanceLifetime({ event, open, readiness, parentScope }: { parentScope?: PrivateRequestScope; event: EventRecord; open?: (id: string, opener?: HTMLElement) => void; readiness: boolean }) {
+  const identity = useIdentity(), mount = useId(), cache = useQueryClient(), [selected, setSelected] = useState<string>(), root = useRef<HTMLElement>(null), focus = useResourceReturnFocus(root)
   const [generation, setGeneration] = useState(0), [denial, setDenial] = useState<unknown>(), revoked = useRef(false)
-  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:guidance:${generation}`)
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:guidance:${generation}`, parentScope)
   const prefix = `${identity.person.id}:${identity.draft_scope}:${event.id}:`
   const redactAcknowledgements = usePlanningUnknownRedaction(owner => owner.startsWith(prefix) && owner.endsWith(':acknowledgement'))
-  const query = useQuery({ queryKey: [...privateKey(identity.person.id, event.id, 'event-guidance'), generation], enabled: !denial, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/guidance', { signal, params: { path: { event_id: event.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
+  const query = useQuery({ queryKey: [...privateKey(identity.person.id, event.id, 'event-guidance'), generation, ...(parentScope ? [mount] : [])], gcTime: parentScope ? 0 : undefined, enabled: !denial, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/guidance', { signal, params: { path: { event_id: event.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
   const denied = !!denial || (query.error instanceof APIError && [401, 403, 404].includes(query.error.status))
   useLayoutEffect(() => {
     if (!denied) { revoked.current = false; return }
@@ -40,7 +40,7 @@ function GuidanceLifetime({ event, open, readiness }: { event: EventRecord; open
     redactAcknowledgements(attempt => ({ ...attempt, operation: 'Resource acknowledgement', command: { redacted: 'Resource access revoked' } }))
   }, [denied, denial, query.error, scope, cache, identity.person.id, event.id, redactAcknowledgements])
   function retry() { if (denied) { setGeneration(value => value + 1); setDenial(undefined) } else void query.refetch() }
-  if (selected && !denied) return <section ref={root}><ResourceReader key={selected} id={selected} event={event} back={() => { setSelected(undefined); focus.restore() }} /></section>
+  if (selected && !denied) return <section ref={root}><ResourceReader parentScope={parentScope ? scope : undefined} key={selected} id={selected} event={event} back={() => { setSelected(undefined); focus.restore() }} /></section>
   return <section ref={root} className="fleet-resource-section" aria-label={readiness ? 'Guidance readiness' : 'Rules and contacts'}><h3>{readiness ? 'Guidance readiness' : 'Rules and contacts'}</h3>
     {query.isPending ? <Loading /> : denied ? <><p>Released guidance is available after your event access is confirmed.</p><Button icon="refresh" variant="outline" onClick={retry}>Check guidance access</Button></> : !query.data ? <Failure error={query.error} retry={retry} /> : <>
       {!!query.error && <Failure error={query.error} retry={retry} />}

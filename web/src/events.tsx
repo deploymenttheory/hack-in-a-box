@@ -1,4 +1,5 @@
 import { RepositoryWorkspace } from './repository-workspace'
+import { TodayActionSafety } from './today-safety'
 import { initialEventSection } from './today-navigation'
 import { TeamAccess } from './team-access'
 import { EventToday } from './today'
@@ -57,7 +58,7 @@ export function NewEvent() {
 
 export function EventWorkspace() {
   const { eventId } = useParams({ from: '/events/$eventId' })
-  return <EventBrand key={eventId} eventID={eventId}><EventContent eventId={eventId} /></EventBrand>
+  return <EventBrand key={eventId} eventID={eventId}><TodayActionSafety eventID={eventId}><EventContent eventId={eventId} /></TodayActionSafety></EventBrand>
 }
 
 function EventContent({ eventId }: { eventId: string }) {

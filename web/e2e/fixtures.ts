@@ -25,6 +25,10 @@ export async function mockWorkspace(page: Page) {
     }
     const event = events.find(event => path.startsWith('/api/v1/events/' + event.id))
     if (!event) return error(404, 'not_found')
+    if (path.endsWith('/registrations/mine')) return route.fulfill({ json: { items: [] } })
+    if (path.endsWith('/help')) return route.fulfill({ json: { items: [], waiting: 0, claimed: 0, resolved: 0, cancelled: 0, can_manage: event.can_read_staff, can_request: false, request_team: null } satisfies components['schemas']['HelpQueue'] })
+    if (path.endsWith('/content')) return route.fulfill({ json: { items: [], next_cursor: null } satisfies components['schemas']['ContentList'] })
+    if (path.endsWith('/today')) return route.fulfill({ json: { event, roles: staff.filter(member => member.person_id === person.id && member.active).map(member => member.role), participation_state: 'confirmed', program: { sequence: 0, server_now: '2027-06-12T12:00:00Z', current: null, next: null, mode: 'held', remaining_seconds: 0, timer_ends_at: null, override_active: false } } satisfies components['schemas']['TodayPage'] })
     if (path.endsWith('/guidance')) return route.fulfill({ json: { items: [], warnings: [], can_manage: false } })
     if (path.endsWith('/teams-workflow')) return route.fulfill({ json: { revision: event.revision, encryption_ready: true, connection: null, history: [] } })
     if (path.endsWith('/preparation/tasks')) return route.fulfill({ json: { revision: event.revision, timezone: event.configuration.timezone, can_manage: event.can_edit, items: [] } })
