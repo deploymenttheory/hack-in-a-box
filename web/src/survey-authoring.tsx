@@ -9,17 +9,16 @@ import { Failure } from './components/states'
 import { FormDefinitionEditor } from './definition-editor'
 import { FormQuestions, formDefinitionErrors } from './form-questions'
 import { wallTime, localDate } from './event-time'
-import { usePrivateRequestScope } from './private-request-scope'
 import { CommunicationCommandHistory, useCommunicationCommands } from './communication-tests'
 import { usePlanningDepartureBarrier } from './planning-operations'
-import { useSurveyPrivatePages } from './survey-private-read'
+import { useSurveyRequestScope, useSurveyPrivatePages } from './survey-private-read'
 import { same, nativeDenied, unknownOutcome, useSurveyLeaveWarning, type SurveyConfiguration, type SurveyDefinition } from './survey-context'
 
 type SurveyCommand = components['schemas']['SurveyCommand']
 type Intent = { action: SurveyCommand['action']; expected: number; definition?: SurveyDefinition; intentID: string }
 type Props = { nextAction?: { label: string; onSelect: () => void }; creation?: boolean; event: EventRecord; initial: SurveyConfiguration; writable: boolean; onDirty: (dirty: boolean) => void; receive: (value: SurveyConfiguration) => void; deny: (error: unknown) => void }
 export function SurveyAuthoring({ nextAction, creation = false, event, initial, writable, onDirty, receive, deny }: Props) {
-  const identity = useIdentity(), owner = `${identity.person.id}:${identity.draft_scope}:${event.id}:${creation ? 'survey-create' : `${initial.id}:survey-configuration`}`, scope = usePrivateRequestScope(owner), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
+  const identity = useIdentity(), owner = `${identity.person.id}:${identity.draft_scope}:${event.id}:${creation ? 'survey-create' : `${initial.id}:survey-configuration`}`, scope = useSurveyRequestScope(owner), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
   const [saved, setSaved] = useState(initial), [definition, setDefinition] = useState(initial.definition), [section, setSection] = useState('Questions'), [previewAnswers, setPreviewAnswers] = useState<Record<string, unknown>>({})
   const [opens, setOpens] = useState(wallTime(initial.definition.opens_at, event.configuration.timezone)), [closes, setCloses] = useState(wallTime(initial.definition.closes_at, event.configuration.timezone)), [openDST, setOpenDST] = useState(''), [closeDST, setCloseDST] = useState('')
   const [preparing, setPreparing] = useState(false), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [review, setReview] = useState<Intent>(), [uncertain, setUncertain] = useState<Intent>(), [conflict, setConflict] = useState(false), [current, setCurrent] = useState<SurveyConfiguration>()
@@ -31,7 +30,7 @@ export function SurveyAuthoring({ nextAction, creation = false, event, initial, 
   const locked = pending || preparing || history.pending || history.unconfirmed || !!uncertain || conflict || changedElsewhere || !writable
   function adopt(value: SurveyConfiguration) { setSaved(value); setDefinition(value.definition); setOpens(wallTime(value.definition.opens_at, event.configuration.timezone)); setCloses(wallTime(value.definition.closes_at, event.configuration.timezone)); setOpenDST(''); setCloseDST(''); setUncertain(undefined); setConflict(false); setReview(undefined); setCurrent(undefined); setPreviewAnswers({}); receive(value) }
   async function prepare(action: SurveyCommand['action']) {
-    if (lock.current || locked || review) return
+    if (lock.current || locked || review || action === 'save' && cohortError) return
     lock.current = true; setPreparing(true); setFailure(undefined); setNotice('')
     const ticket = scope.capture()
     try {
@@ -72,20 +71,21 @@ export function SurveyAuthoring({ nextAction, creation = false, event, initial, 
     if ((dirty || uncertain || review) && !window.confirm('Discard these local survey edits and private unknown payload, then use the reviewed current configuration? Earlier unknown metadata remains unconfirmed.')) return
     adopt(current ?? initial); history.selectNewBase(); setFailure(undefined); setNotice('Loaded the current saved configuration. Earlier command outcomes remain unconfirmed.')
   }
+  const cohortError = !Number.isInteger(definition.minimum_cohort) || definition.minimum_cohort < 5 || definition.minimum_cohort > 100 ? 'Enter a whole-number report cohort from 5 to 100 people.' : undefined
   const errors = formDefinitionErrors(definition.form), sections = ['Questions', 'Schedule', 'Measures and privacy', 'Preview questions']
   return <section className="fleet-survey-authoring"><h2>Survey questions and publication</h2><p>Draft → review exact version → approve → publish. Publication fixes questions and invitations. Close follows the published native clock; cancellation stops further edits and invitations. Archived events retain only currently authorised history.</p><p>Version {saved.version} · {saved.cancelled ? 'Cancelled' : saved.published_at ? 'Published, fixed questions' : saved.approved_at ? 'Approved, not published' : 'Draft'} · Open {localDate(saved.definition.opens_at, event.configuration.timezone)} · Close {localDate(saved.definition.closes_at, event.configuration.timezone)}</p><CommunicationCommandHistory attempts={history.attempts} />
     {!saved.published_at && !saved.cancelled ? <><nav className="fleet-survey-tabs" aria-label="Survey definition sections">{sections.map(item => <Button key={item} icon={item === 'Questions' ? 'list' : item === 'Schedule' ? 'calendar' : item === 'Preview questions' ? 'book' : 'shield'} variant="ghost" aria-current={section === item ? 'page' : undefined} onClick={() => setSection(item)}>{item}</Button>)}</nav>
       <fieldset className="fleet-survey-fields" disabled={locked || !!review}><legend>Draft definition</legend>
         <div hidden={section !== 'Questions'} inert={section !== 'Questions'}><FormDefinitionEditor value={definition.form} change={form => setDefinition({ ...definition, form, measures: definition.measures.filter(measure => form.fields.some(field => field.id === measure.question_id)) })} /></div>
         <div className="fleet-survey-form" hidden={section !== 'Schedule'} inert={section !== 'Schedule'}><Field label={`Opens in ${event.configuration.timezone}`}><Input type="datetime-local" step={1} value={opens} onChange={event => setOpens(event.target.value)} /></Field><DSTChoice id="survey-open-dst" value={openDST} change={setOpenDST} label="Repeated opening time" /><Field label={`Closes in ${event.configuration.timezone}`}><Input type="datetime-local" step={1} value={closes} onChange={event => setCloses(event.target.value)} /></Field><DSTChoice id="survey-close-dst" value={closeDST} change={setCloseDST} label="Repeated closing time" /><p>Times must be on or after live end. Native resolution rejects nonexistent times; repeated times need an explicit occurrence.</p></div>
-        <div hidden={section !== 'Measures and privacy'} inert={section !== 'Measures and privacy'}><Field label="Minimum report cohort (at least 5)"><Input type="number" min={5} max={100} value={definition.minimum_cohort} onChange={event => setDefinition({ ...definition, minimum_cohort: event.target.valueAsNumber })} /></Field><SurveyMeasureEditor event={event} definition={definition} change={setDefinition} deny={deny} /></div>
+        <div hidden={section !== 'Measures and privacy'} inert={section !== 'Measures and privacy'}><Field label="Minimum report cohort (at least 5)" error={cohortError}><Input type="number" min={5} max={100} value={Number.isFinite(definition.minimum_cohort) ? definition.minimum_cohort : ''} onChange={event => setDefinition({ ...definition, minimum_cohort: event.target.valueAsNumber })} /></Field><SurveyMeasureEditor event={event} definition={definition} change={setDefinition} deny={deny} /></div>
         <div hidden={section !== 'Preview questions'} inert={section !== 'Preview questions'}><p>Local question preview only. No response or new survey version is saved.</p><FormQuestions definition={definition.form} answers={previewAnswers} change={setPreviewAnswers} showOptional /></div>
       </fieldset></> : <section className="fleet-survey-section"><h3>Fixed published questions</h3><ol className="fleet-survey-questions">{saved.definition.form.fields.map(field => <li key={field.id}><h4>{field.label}</h4><p>{field.type} · {field.required ? 'Required' : 'Optional'}</p><p>{field.help}</p></li>)}</ol></section>}
     {!!errors.length && !saved.published_at && <ul>{errors.map(error => <li key={error}>{error}</li>)}</ul>}
     <SurveyDecisionControls status={{ label: 'Survey configuration status', message: notice || (uncertain || history.unconfirmed ? 'The operation outcome is unknown. No write is replayed automatically.' : dirty ? 'Unsent draft edits.' : 'Current saved version.') }} actions={[
       ...(saved.published_at && !saved.cancelled && nextAction ? [{ label: nextAction.label, icon: 'next' as const, onSelect: nextAction.onSelect }] : []),
       ...(!saved.published_at && !saved.cancelled ? [
-        { label: saved.version ? 'Review draft changes' : 'Review new survey', icon: 'save' as const, disabled: locked || !!errors.length || !dirty && saved.version > 0, onSelect: (button: HTMLButtonElement) => { opener.current = button; void prepare('save') } },
+        { label: saved.version ? 'Review draft changes' : 'Review new survey', icon: 'save' as const, disabled: locked || !!errors.length || !!cohortError || !dirty && saved.version > 0, onSelect: (button: HTMLButtonElement) => { opener.current = button; void prepare('save') } },
         { label: 'Review question approval', icon: 'check' as const, variant: 'outline' as const, disabled: locked || dirty || !saved.version || !!saved.approved_at, onSelect: (button: HTMLButtonElement) => { opener.current = button; void prepare('approve') } },
         { label: 'Review survey publication', icon: 'send' as const, variant: 'outline' as const, disabled: locked || dirty || !saved.approved_at, onSelect: (button: HTMLButtonElement) => { opener.current = button; void prepare('publish') } },
       ] : []),

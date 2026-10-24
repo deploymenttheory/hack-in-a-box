@@ -8,9 +8,8 @@ import { localDate } from './event-time'
 import { SurveyDecisionControls, SurveyAnswerSummary } from './survey-decision'
 import { CollectionHeading } from './components/patterns'
 import { FormQuestions, visibleFields, type Answers } from './form-questions'
-import { usePrivateRequestScope } from './private-request-scope'
 import { CommunicationCommandHistory, useCommunicationCommands } from './communication-tests'
-import { useSurveyPrivateRead } from './survey-private-read'
+import { SurveyAuthority, useSurveyRequestScope, useSurveyPrivateRead } from './survey-private-read'
 import { answerText, same, useSurveyLeaveWarning, unknownOutcome, nativeDenied, type ParticipantSurvey } from './survey-context'
 
 export function SurveyResponsePage() {
@@ -36,7 +35,7 @@ function OwnSurvey({ eventId, surveyId }: { eventId: string; surveyId: string })
       {!!survey.error && <p role="alert">Current authority could not be refreshed. Local answers and the exact retry command remain in this page; writes are paused until a successful refresh.</p>}
       <header className="fleet-survey-section"><p className="fleet-scope-label">Fixed question version {page.version}</p><h2>{page.form.name}</h2><p role="note">{page.response_visibility}</p><p>Opens {localDate(page.opens_at, page.timezone)} · Closes {localDate(page.closes_at, page.timezone)} · {page.timezone}</p><p>{page.can_respond ? 'This survey is open. You can update your response until close. Questions marked required must be answered; other questions are optional.' : 'Response editing is currently closed or unavailable.'}</p></header>
       {page.response ? <section className="fleet-survey-section" aria-label="Your saved response"><h3>Your saved response: revision {page.response.revision}, submitted {localDate(page.response.submitted_at, page.timezone)}.</h3><AnswerReview page={page} answers={page.response.answers} /></section> : <p>You have not submitted a response.</p>}
-      {page.can_respond ? <ResponseForm key={`${page.version}:respond`} owner={owner} page={page} refresh={refresh} networkBlocked={!!survey.error || survey.pending} eventId={eventId} surveyId={surveyId} deny={error => { void currentDenial(error) }} /> : <ol className="fleet-survey-questions">{page.form.fields.map(field => <li key={field.id}><h3>{field.label}</h3>{field.help && <p>{field.help}</p>}</li>)}</ol>}
+      {page.can_respond ? <SurveyAuthority value={survey.authority}><ResponseForm key={`${page.version}:respond`} owner={owner} page={page} refresh={refresh} networkBlocked={!!survey.error || survey.pending} eventId={eventId} surveyId={surveyId} deny={error => { void currentDenial(error) }} /></SurveyAuthority> : <ol className="fleet-survey-questions">{page.form.fields.map(field => <li key={field.id}><h3>{field.label}</h3>{field.help && <p>{field.help}</p>}</li>)}</ol>}
       {page.measures.map(measure => <p key={measure.question_id}>Self-reported {measure.construct === 'self_reported_adoption' ? 'adoption' : 'learning'} · objective {measure.measure.objective.id} version {measure.measure.objective.version}. This does not independently evidence adoption.</p>)}
     </>}
   </section>
@@ -45,7 +44,7 @@ type ResponseCommand = components['schemas']['SurveyResponseCommand']
 type Response = components['schemas']['SurveyResponse']
 type Intent = { command: ResponseCommand; revision: number; metadataID?: string }
 function ResponseForm({ page, owner, eventId, surveyId, refresh, networkBlocked, deny }: { page: ParticipantSurvey; owner: string; eventId: string; surveyId: string; refresh: () => Promise<ParticipantSurvey>; networkBlocked: boolean; deny: (error: unknown) => void }) {
-  const identity = useIdentity(), scope = usePrivateRequestScope(`${owner}:editor`), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
+  const identity = useIdentity(), scope = useSurveyRequestScope(`${owner}:editor`), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
   const [saved, setSaved] = useState(page.response), [answers, setAnswers] = useState<Answers>(() => ({ ...page.response?.answers })), [pending, setPending] = useState(false), [uncertain, setUncertain] = useState<Intent>(), [review, setReview] = useState<Intent>(), [failure, setFailure] = useState<unknown>(), [receipt, setReceipt] = useState<{ commandID: string; response: Response }>(), [conflict, setConflict] = useState(false), [currentRead, setCurrentRead] = useState(false)
   const dirty = !same(answers, saved?.answers ?? {}), changedElsewhere = (page.response?.revision ?? 0) !== (saved?.revision ?? 0)
   useSurveyLeaveWarning(dirty || !!review || !!uncertain, pending || history.pending)

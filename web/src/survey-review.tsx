@@ -9,9 +9,8 @@ import { Field, Textarea, Checkbox, Label } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
 import { localDate } from './event-time'
 import { CollectionHeading, CollectionFrame, CollectionRecords, CollectionToolbar, CollectionPagination, type CollectionState } from './components/patterns'
-import { useSurveyPrivatePages, useSurveyPrivateRead } from './survey-private-read'
+import { SurveyAuthority, useSurveyRequestScope, useSurveyPrivatePages, useSurveyPrivateRead } from './survey-private-read'
 import { useResourceReturnFocus } from './resource-focus'
-import { usePrivateRequestScope } from './private-request-scope'
 import { usePlanningDepartureBarrier } from './planning-operations'
 import { CommunicationCommandHistory, useCommunicationCommands } from './communication-tests'
 import { SurveyResponseExport } from './survey-export'
@@ -38,12 +37,12 @@ export function SurveyReportReview({ eventId, configuration, timezone, writable,
     {!!query.error && query.data !== undefined && <p role="alert">Current review authority could not be refreshed. Local text and captured intent remain in this page; writes are paused.</p>}
     {query.data === undefined ? query.error ? <Failure error={query.error} retry={() => { void query.read(true).catch(() => {}) }} /> : <Loading /> : <>
       {latest && <details className="fleet-survey-section"><summary>Inspect the exact retained frozen report and reviewed prose</summary><p>Organiser preview. Wider release exists only after explicit publication.</p><SurveyReportView report={{ ...latest.report, reviewed_text_version: latest.published_at ? latest.version : 0, published_at: latest.published_at }} timezone={timezone} /></details>}
-      <ReportEditor key={`${id}:${writable}`} eventId={eventId} configuration={configuration} initial={latest} writable={writable} networkBlocked={!!query.error || query.pending} receive={value => query.accept(value)} refresh={async () => (await query.read(true)) ?? undefined} onDirty={onDirty} deny={deny} />
+      <SurveyAuthority value={query.authority}><ReportEditor key={`${id}:${writable}`} eventId={eventId} configuration={configuration} initial={latest} writable={writable} networkBlocked={!!query.error || query.pending} receive={value => query.accept(value)} refresh={async () => (await query.read(true)) ?? undefined} onDirty={onDirty} deny={deny} /></SurveyAuthority>
     </>}
   </section>
 }
 function ReportEditor({ eventId, configuration, initial, writable, networkBlocked, receive, refresh, onDirty, deny }: { eventId: string; configuration: SurveyConfiguration; initial?: ReportReview; writable: boolean; networkBlocked: boolean; receive: (value: ReportReview) => void; refresh: () => Promise<ReportReview | undefined>; onDirty: (value: boolean) => void; deny: (error: unknown) => void }) {
-  const identity = useIdentity(), owner = `${identity.person.id}:${identity.draft_scope}:${eventId}:${configuration.id}:report-command`, scope = usePrivateRequestScope(owner), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
+  const identity = useIdentity(), owner = `${identity.person.id}:${identity.draft_scope}:${eventId}:${configuration.id}:report-command`, scope = useSurveyRequestScope(owner), history = useCommunicationCommands(owner), lock = useRef(false), opener = useRef<HTMLButtonElement>(null)
   const [saved, setSaved] = useState(initial), [summary, setSummary] = useState(initial?.report.reviewed_summary ?? ''), [reviewed, setReviewed] = useState(false), [pending, setPending] = useState(false), [reading, setReading] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [review, setReview] = useState<ReportIntent>(), [uncertain, setUncertain] = useState<ReportIntent>(), [conflict, setConflict] = useState(false), [currentRead, setCurrentRead] = useState(false)
   const dirty = summary !== (saved?.report.reviewed_summary ?? ''), changedElsewhere = (initial?.version ?? 0) !== (saved?.version ?? 0) || initial?.review_id !== saved?.review_id
   useEffect(() => { onDirty(dirty || !!review || !!uncertain || pending || history.unconfirmed); return () => onDirty(false) }, [dirty, review, uncertain, pending, history.unconfirmed, onDirty])

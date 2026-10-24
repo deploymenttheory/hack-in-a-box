@@ -78,3 +78,22 @@ Original complete implementation inventory (do not drop nested scope):
 - actual synthetic before/after evidence; independently reviewed final head/CI.
 
 The initial directory checkpoint does not claim these remaining surfaces rebuilt.
+
+Private survey reads now inherit only their mounted resource parent's cancellation
+lifetime through `SurveyAuthority`. A management denial invalidates descendant
+read/write/download tickets synchronously, even while a child read is held and
+before React unmounts its private inputs. This context contains no responses,
+reasons, summaries or durable command facts. Actor/draft/event keys remain local;
+unknown metadata continues to use the existing safe Shell owner exclusively.
+
+Configured objectives and follow-through observations use real cursor-backed
+record directories and one deliberate Review inspector. Back restores the actual
+responsive opener. Planning estimates, retained evidence bases, exact versions,
+units, null values and genuine zero values remain separate native facts.
+
+The additional private-composition inventory is `survey-privacy.spec.ts`, shared
+by both portal CI configurations. It covers held CSV bytes after parent denial,
+session end and print; 401/403/404 with an older held response read; minimum
+cohort field correction; original held writes across close/question-version
+replacement; and lost report approval whose current flags do not settle its
+original command. Private payloads are not written to browser storage.

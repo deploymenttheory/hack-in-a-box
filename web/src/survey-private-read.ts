@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { usePrivateRequestScope } from './private-request-scope'
+import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
 import { nativeDenied } from './survey-context'
+
+// Resource-local authority chains fence descendants synchronously when a parent
+// denies access, before React disposes its private child state. No payload lives
+// in this context; it carries only the mounted owner's cancellation lifetime.
+export const SurveyAuthority = createContext<PrivateRequestScope | undefined>(undefined)
+export function useSurveyRequestScope(key: string) {
+  return usePrivateRequestScope(key, useContext(SurveyAuthority))
+}
 
 type Snapshot<T> = { key: string; data?: T; error?: unknown; pending: boolean; denied: boolean }
 // Raw answers and restricted prose belong to this mounted owner, never QueryClient
 // or browser storage. Each read replaces the previous read lifetime; denial is
 // sticky until a deliberate retry and cannot be undone by an older continuation.
 export function useSurveyPrivateRead<T>(key: string, load: (signal: AbortSignal) => Promise<T>, enabled = true) {
-  const authority = usePrivateRequestScope(`${key}:authority`), scope = usePrivateRequestScope(`${key}:read`, authority), lifetime = useMemo(() => ({ scope, denied: false, ended: false }), [scope])
+  const authority = useSurveyRequestScope(`${key}:authority`), scope = usePrivateRequestScope(`${key}:read`, authority), lifetime = useMemo(() => ({ scope, denied: false, ended: false }), [scope])
   const [snapshot, setSnapshot] = useState<Snapshot<T>>({ key, pending: enabled, denied: false })
   const read = useCallback(async (retry = false) => {
     if (!enabled || lifetime.ended || lifetime.denied && !retry) throw new DOMException('Survey read unavailable', 'AbortError')
