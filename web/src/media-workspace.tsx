@@ -6,6 +6,8 @@ import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
 import { Failure, Loading } from './components/states'
 import { Button } from './components/ui/button'
+import { CollectionHeading, CollectionPagination, ContextLink } from './components/patterns'
+import { MediaGallery } from './media-gallery'
 import { MediaCollector, MediaEditor } from './media-editor'
 
 type Item = components['schemas']['MediaItem']
@@ -35,15 +37,13 @@ function MediaWorkspace({ eventID, mediaID }: { eventID: string; mediaID?: strin
   if (!page || (mediaID && !detail.data)) return readError ? <Failure error={readError} retry={() => void refresh()} /> : <Loading />
   const context: MediaContext = { eventID, revision: page.revision, refresh, deny, writable: page.can_collect && authorityCurrent, authorityCurrent }
   const items = mediaID ? [detail.data!] : query.data!.pages.flatMap(p => p.items)
-  return <section className="workspace media-workspace"><Link to="/events/$eventId" params={{ eventId: eventID }}>← Back to event</Link><h1>Event media</h1>
+  return <section className="fleet-collection"><ContextLink back target={{label:'Back to event',href:`/events/${eventID}`}}/><CollectionHeading title="Event media" scope={{entity:mediaID?'Current media record':'Current authorised gallery'}}/>
     <p>Only explicitly reviewed media enters the gallery. Identified people must currently consent. Revocation blocks future access here; it cannot recall copies someone already downloaded or remove recordings hosted elsewhere.</p>
     {!!readError && <><Failure error={readError} retry={() => void refresh()} /><p role="status">Current access could not be refreshed. Private drafts and uncertain intents remain only in this page. Media is hidden and writes are paused until access is checked again.</p></>}
     <div hidden={!authorityCurrent}><PhotoConsent eventID={eventID} refresh={refresh} deny={deny} /></div>
     {!mediaID && page.can_collect && <div hidden={!authorityCurrent}><MediaCollector context={context} /></div>}
-    <h2>{page.can_review ? 'Organiser review and gallery' : page.can_collect ? 'Your submissions and released gallery' : 'Reviewed gallery'}</h2>
-    {!items.length && <p>No media is available in this view.</p>}
-    <div className="media-grid">{items.map(item => <MediaCard key={item.id} item={item} context={context} />)}</div>
-    {!mediaID && query.hasNextPage && <Button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>More media</Button>}
+    <div hidden={!authorityCurrent}><MediaGallery eventID={eventID} title={page.can_review ? 'Organiser review and gallery' : page.can_collect ? 'Your submissions and released gallery' : 'Reviewed gallery'} items={items} renderContent={item=><MediaContent key={item.id} item={item} context={context}/>}/></div>
+    {!mediaID && <CollectionPagination source={{kind:'cursor',loaded:items.length,busy:query.isFetchingNextPage,next:query.hasNextPage?()=>void query.fetchNextPage():undefined}}/>}
   </section>
 }
 function PhotoConsent({ eventID, refresh, deny }: { eventID: string; refresh: () => Promise<void>; deny: (error: unknown) => void }) {
@@ -68,12 +68,8 @@ function PhotoConsent({ eventID, refresh, deny }: { eventID: string; refresh: ()
   if (!query.data) return <Loading />
   return <section className="panel media-consent"><h2>Your photo consent</h2><p>Current choice: <strong>{query.data.choice}</strong>. This changes only your event photo consent, without editing other registration details.</p><div className="actions"><Button disabled={pending || uncertain || !query.data.can_opt_in} onClick={() => void choose('yes')}>Allow identifiable event media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('no')}>Do not allow identifiable media</Button><Button variant="outline" disabled={pending || uncertain || !query.data.can_revoke} onClick={() => void choose('unknown')}>Withdraw my consent choice</Button></div>{uncertain && <p role="status">The save outcome is uncertain. Your current choice was refreshed above. Check it before making another explicit choice. <Button variant="outline" onClick={() => { setUncertain(false); setFailure(undefined) }}>I have checked my current choice</Button></p>}{!!failure && <Failure error={failure} />}</section>
 }
-function MediaCard({ item, context }: { item: Item; context: MediaContext }) {
-  return <article hidden={!context.authorityCurrent} className={`panel media-card${item.state !== 'released' || item.consent_state !== 'reviewed' ? ' media-private' : ''}`}><p className="eyebrow">{item.kind} · {item.state} · version {item.version}</p><h3><Link to="/events/$eventId/media/$mediaId" params={{ eventId: context.eventID, mediaId: item.id }}>{item.title}</Link></h3><p>{item.caption}</p>{item.captured_at && <p>Captured {new Date(item.captured_at).toLocaleString()}</p>}
-    {item.kind === 'photo' && item.can_read_original && <ProtectedPhoto key={context.authorityCurrent ? 'current' : 'paused'} item={item} context={context} />}
-    {item.recording_url && <p><a href={item.recording_url} target="_blank" rel="noopener noreferrer">Open reviewed external recording</a> · Hosted elsewhere; this app does not host or recall third-party copies.</p>}
-    {item.can_edit && <MediaEditor item={item} context={context} />}
-  </article>
+function MediaContent({item,context}:{item:Item;context:MediaContext}) {
+ return <>{item.kind==='photo'&&item.can_read_original&&<ProtectedPhoto key={context.authorityCurrent?'current':'paused'} item={item} context={context}/ >}{item.recording_url&&<p><a href={item.recording_url} target="_blank" rel="noopener noreferrer">Open reviewed external recording</a> · Hosted elsewhere; this app does not host or recall third-party copies.</p>}{item.can_edit&&<MediaEditor item={item} context={context}/>}</>
 }
 function ProtectedPhoto({ item, context }: { item: Item; context: MediaContext }) {
   const [url, setURL] = useState(''), [error, setError] = useState<unknown>(), [pending, setPending] = useState(false), epoch = useRef(0), controller = useRef<AbortController | null>(null)
