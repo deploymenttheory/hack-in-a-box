@@ -26,7 +26,8 @@ export function EventDirectory() {
 }
 export function EventWorkspace() {
   const { eventId } = useParams({ from: '/events/$eventId' })
-  return <EventBrand key={eventId} eventID={eventId}><PlanningOperations><EventContent eventID={eventId} /></PlanningOperations></EventBrand>
+  const identity = useIdentity()
+  return <EventBrand key={eventId} eventID={eventId}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><EventContent eventID={eventId} /></PlanningOperations></EventBrand>
 }
 function EventContent({ eventID }: { eventID: string }) {
   const identity = useIdentity()

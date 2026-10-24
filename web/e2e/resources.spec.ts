@@ -117,3 +117,28 @@ test('revocation removes the reader and prevents a stale acknowledgement', async
   await expect(page.getByRole('link', { name: 'guide.txt' })).toHaveCount(0)
   expect(state.acknowledgements).toHaveLength(0)
 })
+
+test('an unknown acknowledgement keeps its original intent after a current read and never replays', async ({ page }) => {
+  const state = await setup(page)
+  let attempts = 0
+  await page.route(`**/content/${guideID}/acknowledgements`, async route => {
+    attempts++
+    expect(route.request().headers()['if-match']).toBe('"1"')
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    state.guide.acknowledged_at = '2027-06-13T09:30:00Z'
+    await route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  expect(attempts).toBe(0)
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Back to resources', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Read current state', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Required acknowledgement' })).toContainText('You acknowledged version 1')
+  await expect(page.getByRole('region', { name: 'Earlier unconfirmed resource commands' })).toContainText('Acknowledge Getting started · Expected revision 1')
+  await expect(page.getByText('Acknowledgement recorded for version 1.', { exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Use reviewed current state', exact: true }).click()
+  expect(attempts).toBe(1)
+  await expect(page.getByRole('region', { name: 'Earlier unconfirmed resource commands' })).toContainText('Original outcome remains unconfirmed')
+})

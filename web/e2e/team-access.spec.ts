@@ -138,7 +138,7 @@ for (const copy of [false, true]) test(`a delayed ${copy ? 'copy' : 'reveal'} re
   const { state, secret, firstResource } = await accessFixture(page)
   state.items[0].expires_at = '2027-06-14T09:00:02Z'
   await page.getByRole('button', { name: 'Refresh team access', exact: true }).click()
-  await expect(page.getByText(/Available until/)).toBeVisible()
+  await expect(page.getByText('Available until 14 Jun 2027, 10:00', { exact: false })).toBeVisible()
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { (window as unknown as { clipboardWrites: number }).clipboardWrites++ } } }))
   if (copy) {
     await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
@@ -146,6 +146,7 @@ for (const copy of [false, true]) test(`a delayed ${copy ? 'copy' : 'reveal'} re
   }
   state.hold = true
   await page.getByRole('button', { name: `${copy ? 'Copy' : 'Reveal'} Team account`, exact: true }).click()
+  if (!copy) await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect.poll(() => !!state.delayed).toBe(true)
   await page.evaluate(value => {
     const state = window as unknown as { clipboardWrites: number; expiredValueShown: boolean }
@@ -157,4 +158,27 @@ for (const copy of [false, true]) test(`a delayed ${copy ? 'copy' : 'reveal'} re
   await expect(page.getByRole('button', { name: 'Reveal Team account', exact: true })).toBeEnabled()
   await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
   expect(await page.evaluate(() => ({ shown: (window as unknown as { expiredValueShown: boolean }).expiredValueShown, copied: (window as unknown as { clipboardWrites: number }).clipboardWrites }))).toEqual({ shown: false, copied: 0 })
+})
+
+test('a lost reveal response records only unknown metadata and never repeats an audited request automatically', async ({ page }) => {
+  const { state, secret } = await accessFixture(page)
+  state.status = 503
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).focus()
+  await page.keyboard.press('Enter')
+  expect(state.reveals).toHaveLength(0)
+  await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
+  await expect(page.getByText('Reveal outcome unknown.', { exact: false })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Unconfirmed private access audits' })).toContainText('Reveal private resource Team account · Expected revision 1 · Original outcome remains unconfirmed')
+  await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Refresh team access', exact: true }).click()
+  expect(state.reveals).toHaveLength(1)
+  await noStoredValue(page)
+  state.status = 200
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  expect(state.reveals).toHaveLength(1)
+  await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
+  await expect(page.getByText(secret(), { exact: true })).toBeVisible()
+  expect(state.reveals).toHaveLength(2)
+  await expect(page.getByRole('region', { name: 'Unconfirmed private access audits' })).toContainText('Original outcome remains unconfirmed')
+  await noStoredValue(page)
 })

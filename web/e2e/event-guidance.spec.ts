@@ -74,6 +74,7 @@ test('organiser readiness warns without a lifecycle gate and starter contacts re
   await expect(page.getByRole('region', { name: 'Guidance readiness' })).toContainText('Publish a configured conduct contact')
   await page.getByLabel('Starting template').selectOption('conduct')
   await page.getByRole('button', { name: 'Start from template' }).click()
+  await page.getByRole('navigation', { name: 'Content editor sections' }).getByRole('button', { name: 'Guidance purpose', exact: true }).click()
   await expect(page.getByLabel('Page purpose')).toHaveValue('conduct')
   await expect(page.getByLabel('Contact 1 URL')).toHaveValue('{{Approved contact URL or mailbox}}')
   await expect(page.getByText('Resolve each contact label and approved URL before approval.')).toBeVisible()

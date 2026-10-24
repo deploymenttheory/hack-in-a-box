@@ -17,7 +17,7 @@ export function useResourceOperation(owner: string, deny?: (error: unknown) => v
   const blocked = pending || history.unconfirmed || stale
   usePlanningDepartureBarrier(blocked)
   useBlocker({ shouldBlockFn: () => lock.current || blocked, enableBeforeUnload: blocked || history.attempts.length > 0 })
-  async function run<T>(intent: Intent, write: () => Promise<T>, accept: (value: T, ticket: PrivateRequestTicket) => string | Promise<string>) {
+  async function run<T>(intent: Intent, write: () => Promise<T>, accept: (value: T, ticket: PrivateRequestTicket) => string | Promise<string>, rejected?: (error: APIError, ticket: PrivateRequestTicket) => Promise<void>) {
     if (lock.current || blocked) return false
     const ticket = scope.capture(); if (!ticket.current()) return false
     lock.current = true; setPending(true); setFailure(undefined); setNotice(''); setCurrentRead(false)
@@ -32,7 +32,13 @@ export function useResourceOperation(owner: string, deny?: (error: unknown) => v
       if (resourceDenied(error)) { history.clear(); deny?.(error); lock.current = false }
       else if (!(error instanceof APIError) || error.status >= 500 || error.status === 408) history.record(structuredClone(intent))
       else if (error.code === 'revision_conflict') setStale(true)
-      else lock.current = false
+      else {
+        lock.current = false
+        if (rejected) {
+          try { await rejected(error, ticket); ticket.assert() }
+          catch (readError) { if (ticket.current()) { setFailure(readError); if (resourceDenied(readError)) { history.clear(); deny?.(readError) } } }
+        }
+      }
       return false
     } finally { if (ticket.current()) setPending(false) }
   }

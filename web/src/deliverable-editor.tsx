@@ -48,6 +48,13 @@ export function DeliverableEditor({ event, team, page, initialDraft, organiser, 
       setReview(undefined); setSaved(intent.evidence)
       if (result.kind === 'draft') { setDraftRevision(result.value.revision); cache.setQueryData(privateKey(identity.person.id, event.id, `submission-draft-${team.id}`), result.value); return 'Private draft saved. No formal submission was accepted or reviewed.' }
       setFormalRevision(result.value.revision); setReason(''); cache.setQueryData(privateKey(identity.person.id, event.id, `submission-${team.id}`), result.value); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, `submission-history-${team.id}`) }); current.assert(); return `Formal version ${result.value.final!.revision} submitted. Completion review is pending.`
+    }, async (error, current) => {
+      // A definite window/cutoff rejection permits only a current-state read.
+      // Keep unsaved evidence; never turn that read into a submission receipt.
+      if (error.code !== 'event_blocked') return
+      const fresh = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission', { signal: current.signal, params: { path: { event_id: event.id, team_id: team.id } } }))
+      current.assert()
+      cache.setQueryData(privateKey(identity.person.id, event.id, `submission-${team.id}`), fresh)
     })
     if (ticket.current()) setReview(undefined)
   }

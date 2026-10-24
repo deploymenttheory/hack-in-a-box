@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
+import { usePlanningUnknownCommands } from './planning-operations'
 import { Button } from './components/ui/button'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { CollectionHeading } from './components/patterns'
@@ -16,9 +17,21 @@ import { resourceDenied, ResourceOperationResult, useResourceOperation } from '.
 type Page = import('./content-model').ContentPage
 export function ResourceReader({ id, event, back }: { id: string; event: EventRecord; back: () => void }) {
   const identity = useIdentity(), [denied, setDenied] = useState<unknown>(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:reader`)
+  const cache = useQueryClient(), cleared = useRef(false), history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`)
   const key = [...privateKey(identity.person.id, event.id, 'resource-reader'), id]
   const resource = useQuery({ queryKey: key, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/content/{content_id}', { signal, params: { path: { event_id: event.id, content_id: id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
-  if (denied || resourceDenied(resource.error)) return <Failure error={denied ?? resource.error} />
+  const revoked = !!denied || resourceDenied(resource.error)
+  useEffect(() => {
+    if (!revoked || cleared.current) return
+    cleared.current = true
+    history.clear()
+    // A per-page denial revokes this page only, not unrelated event resources.
+    cache.setQueriesData<InfiniteData<{ items: Page[]; next_cursor: string | null }>>({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }, value => value && ({ ...value, pages: value.pages.map(page => ({ ...page, items: page.items.filter(item => item.id !== id) })) }))
+    cache.setQueryData<import('./api/schema.gen').components['schemas']['EventGuidance']>(privateKey(identity.person.id, event.id, 'event-guidance'), value => value && ({ ...value, items: value.items.filter(item => item.id !== id) }))
+    void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') })
+    void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') })
+  }, [revoked, history, cache, identity.person.id, event.id, id])
+  if (revoked) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Failure error={denied ?? resource.error} /></section>
   if (resource.isPending) return <Loading />
   if (!resource.data) return <Failure error={resource.error} retry={() => void resource.refetch()} />
   return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} paused={!!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
