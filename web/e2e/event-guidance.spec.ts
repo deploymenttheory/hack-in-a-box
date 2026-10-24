@@ -1,5 +1,5 @@
 import { openEventSection } from './event-navigation-fixture'
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page, type Route } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 
@@ -8,14 +8,16 @@ const rulesID = '15c8ac1a-b80f-4c71-a603-5064a7d8eb20'
 async function setup(page: Page) {
   const workspace = await mockWorkspace(page), event = workspace.events[0]
   event.stage = 'preparation'
-  let hidden = false, acknowledged = false
+  let hidden = false, acknowledged = false, guidanceDenied = 0, holdReads = false
+  const heldReads: Route[] = []
   const writes: string[] = []
   const rules: Item = { id: rulesID, purpose: 'rules', title: 'Current event rules', version: 2, contacts: [], require_acknowledgement: true, acknowledged_at: null, previous_acknowledgement: { version: 1, at: '2027-05-31T10:00:00Z' } }
   const support: Item = { ...rules, id: '9778f63a-6000-4c63-8251-cc2bcc53005a', purpose: 'support', title: 'Get event support', contacts: [{ label: 'Support team', url: 'mailto:support@example.test' }], require_acknowledgement: false, previous_acknowledgement: null }
   const conduct: Item = { ...support, id: 'b6de7a67-0404-4140-8715-c6cdbaec7c6f', purpose: 'conduct', title: 'Report a conduct concern', contacts: [{ label: 'Published conduct route', url: 'https://example.test/conduct' }, { label: 'Injected active route', url: 'javascript:alert(1)' }] }
   const resource = (): components['schemas']['ContentPage'] => ({ id: rulesID, kind: 'page', version: 2, revision: 3, state: 'released', released_version: 2, released_at: '2027-06-01T09:00:00Z', attachment_details: [], can_manage: false, message: '', acknowledged_at: acknowledged ? '2027-06-01T11:00:00Z' : null, previous_acknowledgement: rules.previous_acknowledgement, document: { title: rules.title, purpose: 'rules', markdown: '# Corrected rules\n\nRead the updated competition rules.', require_acknowledgement: true, contacts: [], audience: { confirmed: true, roles: [], teams: [] }, attachments: [], scheduled_at: null } })
-  await page.route(`**/events/${firstID}/guidance`, route => route.fulfill({ json: { items: hidden ? [] : [{ ...rules, acknowledged_at: resource().acknowledged_at }, support, conduct], warnings: [{ field: 'content', code: 'missing_conduct_contact', message: 'Publish a configured conduct contact for confirmed competitors.' }], can_manage: true } }))
+  await page.route(`**/events/${firstID}/guidance`, route => guidanceDenied ? route.fulfill({ status: guidanceDenied, json: { error: { code: 'forbidden', request_id: 'synthetic' } } }) : route.fulfill({ json: { items: hidden ? [] : [{ ...rules, acknowledged_at: resource().acknowledged_at }, support, conduct], warnings: [{ field: 'content', code: 'missing_conduct_contact', message: 'Publish a configured conduct contact for confirmed competitors.' }], can_manage: true } }))
   await page.route(`**/events/${firstID}/content/${rulesID}**`, route => {
+    if (holdReads && route.request().method() === 'GET') { heldReads.push(route); return }
     if (hidden) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Current access changed', request_id: 'synthetic' } } })
     if (route.request().method() === 'POST') { writes.push(route.request().url()); expect(route.request().headers()['if-match']).toBe('"2"'); acknowledged = true }
     return route.fulfill({ json: resource() })
@@ -24,7 +26,7 @@ async function setup(page: Page) {
   await page.route(`**/events/${firstID}/configuration-snapshot`, route => route.fulfill({ json: { definitions: { role_briefs: [] } } }))
   await page.route(`**/events/${firstID}/content-readiness`, route => route.fulfill({ json: { published_at: null, blockers: [] } }))
   await page.goto(`/events/${firstID}`)
-  return { writes, hide: () => { hidden = true } }
+  return { writes, heldReads, resource, revokeGuidance: (status: number) => { guidanceDenied = status; holdReads = true }, restoreGuidanceOnly: () => { guidanceDenied = 0; hidden = true }, hide: () => { hidden = true } }
 }
 
 test('Today opens corrected rules and records only the current personal version', async ({ page }, info) => {
@@ -103,4 +105,56 @@ test('a removed guidance opener returns keyboard focus to the current named guid
   await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Read Current event rules', exact: true })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Rules and contacts', exact: true })).toBeFocused()
+})
+
+// These are standalone Today/preparation consumers, not children of the library.
+for (const section of ['Today', 'Deliverables', 'Content']) for (const status of [401, 403, 404]) for (const delay of [0, 16_000]) test(`standalone ${section} guidance ${status} scrubs its reader before partial restoration after ${delay}ms${section === 'Content' ? ' @admin' : ''}`, async ({ page }) => {
+  await page.clock.install()
+  const state = await setup(page); await openEventSection(page, section)
+  await page.getByRole('button', { name: 'Read Current event rules', exact: true }).click()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Read the updated competition rules.')
+  state.revokeGuidance(status); await page.clock.runFor(16_000)
+  if (status === 401) {
+    await expect(page.getByRole('heading', { name: 'Sign in to continue.', exact: true })).toBeVisible()
+    await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'I have read version 2', exact: true })).toHaveCount(0)
+    for (const held of state.heldReads) await held.fulfill({ json: state.resource() }).catch(() => undefined)
+    await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+    expect(state.writes).toHaveLength(0); return
+  }
+  await expect(page.getByText('Released guidance is available after your event access is confirmed.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'I have read version 2', exact: true })).toHaveCount(0)
+  state.restoreGuidanceOnly(); if (delay) await page.clock.runFor(delay)
+  await page.getByRole('button', { name: 'Check guidance access', exact: true }).click()
+  await expect(page.getByText('No rules or contact pages have been released to your current audience yet.', { exact: true })).toBeVisible()
+  for (const held of state.heldReads) await held.fulfill({ json: state.resource() }).catch(() => undefined)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'I have read version 2', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Read Current event rules', exact: true })).toHaveCount(0)
+  expect(state.writes).toHaveLength(0)
+})
+
+test('standalone guidance denial redacts private acknowledgement intent without confirming or replaying it', async ({ page }) => {
+  await page.clock.install(); const state = await setup(page); await openEventSection(page, 'Today')
+  let attempts = 0
+  await page.route(`**/content/${rulesID}/acknowledgements`, route => {
+    attempts++; expect(route.request().headers()['if-match']).toBe('"2"')
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    return route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Read Current event rules', exact: true }).click()
+  await page.getByRole('button', { name: 'I have read version 2', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  state.revokeGuidance(403); await page.clock.runFor(16_000)
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Resource acknowledgement · Expected revision 2 · Original outcome remains unconfirmed')
+  await expect(history).not.toContainText('Current event rules')
+  state.restoreGuidanceOnly(); await page.getByRole('button', { name: 'Check guidance access', exact: true }).click()
+  await expect(page.getByText('No rules or contact pages have been released to your current audience yet.', { exact: true })).toBeVisible()
+  for (const held of state.heldReads) await held.fulfill({ json: state.resource() }).catch(() => undefined)
+  await expect(history).toContainText('Original outcome remains unconfirmed')
+  await expect(page.getByRole('button', { name: 'Confirm acknowledgement', exact: true })).toHaveCount(0)
+  expect(attempts).toBe(1)
 })

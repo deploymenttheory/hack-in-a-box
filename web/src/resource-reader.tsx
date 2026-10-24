@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
-import { usePlanningUnknownCommands } from './planning-operations'
+import { usePlanningUnknownRedaction } from './planning-operations'
 import { Button } from './components/ui/button'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { CollectionHeading } from './components/patterns'
@@ -16,26 +16,37 @@ import { resourceDenied, ResourceOperationResult, useResourceOperation } from '.
 
 type Page = import('./content-model').ContentPage
 export function ResourceReader({ id, event, back }: { id: string; event: EventRecord; back: () => void }) {
-  const identity = useIdentity(), [denied, setDenied] = useState<unknown>(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:reader`)
-  const cache = useQueryClient(), cleared = useRef(false), history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`)
-  const key = [...privateKey(identity.person.id, event.id, 'resource-reader'), id]
+  const identity = useIdentity()
+  return <ReaderLifetime key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} id={id} event={event} back={back} />
+}
+function ReaderLifetime({ id, event, back }: { id: string; event: EventRecord; back: () => void }) {
+  const identity = useIdentity(), mount = useId(), [denied, setDenied] = useState<unknown>(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:reader`)
+  const cache = useQueryClient(), cleared = useRef(false), redactAcknowledgement = usePlanningUnknownRedaction(owner => owner === `${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`)
+  // Cached private content is not authority for a new mount: every parent
+  // path must finish this lifetime's current GET before rendering the document.
+  const key = [...privateKey(identity.person.id, event.id, 'resource-reader'), id, mount]
   const resource = useQuery({ queryKey: key, enabled: !denied, retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/content/{content_id}', { signal, params: { path: { event_id: event.id, content_id: id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
+  useEffect(() => () => {
+    const owned = [...privateKey(identity.person.id, event.id, 'resource-reader'), id, mount]
+    void cache.cancelQueries({ queryKey: owned, exact: true })
+    cache.removeQueries({ queryKey: owned, exact: true })
+  }, [cache, identity.person.id, event.id, id, mount])
   const revoked = !!denied || resourceDenied(resource.error)
   useEffect(() => {
     if (!revoked || cleared.current) return
     cleared.current = true
     setDenied(denied ?? resource.error)
-    history.clear()
+    redactAcknowledgement(attempt => ({ ...attempt, operation: 'Resource acknowledgement', command: { redacted: 'Resource access revoked' } }))
     scope.invalidate()
     const affected = [...privateKey(identity.person.id, event.id, 'resource-reader'), id]
-    void cache.cancelQueries({ queryKey: affected, exact: true })
-    cache.removeQueries({ queryKey: affected, exact: true })
+    void cache.cancelQueries({ queryKey: affected })
+    cache.removeQueries({ queryKey: affected })
     // A per-page denial revokes this page only, not unrelated event resources.
     cache.setQueriesData<InfiniteData<{ items: Page[]; next_cursor: string | null }>>({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }, value => value && ({ ...value, pages: value.pages.map(page => ({ ...page, items: page.items.filter(item => item.id !== id) })) }))
-    cache.setQueryData<import('./api/schema.gen').components['schemas']['EventGuidance']>(privateKey(identity.person.id, event.id, 'event-guidance'), value => value && ({ ...value, items: value.items.filter(item => item.id !== id) }))
+    cache.setQueriesData<import('./api/schema.gen').components['schemas']['EventGuidance']>({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') }, value => value && ({ ...value, items: value.items.filter(item => item.id !== id) }))
     void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') })
     void cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') })
-  }, [revoked, denied, resource.error, history, cache, identity.person.id, event.id, id, scope])
+  }, [revoked, denied, resource.error, redactAcknowledgement, cache, identity.person.id, event.id, id, scope])
   if (revoked) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Failure error={denied ?? resource.error} /></section>
   if (resource.isPending) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Loading /></section>
   if (!resource.data) return <Failure error={resource.error} retry={() => void resource.refetch()} />
@@ -54,7 +65,7 @@ function ReleasedDocument({ event, id, page, paused, onDeny, back, read }: { eve
       const result = unwrap(await api.POST('/api/v1/events/{event_id}/content/{content_id}/acknowledgements', { params: { path: { event_id: event.id, content_id: id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.version}"` } } }))
       if (result.id !== id || result.version !== intent.version || !result.acknowledged_at) throw new Error('Unexpected acknowledgement response')
       return result
-    }, async (result, ticket) => { cache.setQueryData([...privateKey(identity.person.id, event.id, 'resource-reader'), id], result); setReview(undefined); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }); ticket.assert(); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') }); return `Acknowledgement recorded for version ${result.version}.` })
+    }, async (result, ticket) => { cache.setQueriesData({ queryKey: [...privateKey(identity.person.id, event.id, 'resource-reader'), id] }, result); setReview(undefined); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }); ticket.assert(); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') }); return `Acknowledgement recorded for version ${result.version}.` })
     if (ticket.current()) setReview(undefined)
   }
   function readCurrent() { void operation.read(() => read(), () => { setReview(undefined) }) }

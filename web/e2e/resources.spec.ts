@@ -182,3 +182,31 @@ for (const trigger of ['link', 'button'] as const) test(`keyboard ${trigger} rea
   await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole(trigger, { name, exact: true })).toBeFocused()
 })
+
+// A new reader must establish current authority even when no prior denial was
+// delivered. Cached content from a successful older mount is never that proof.
+for (const status of [401, 403, 404]) test(`fresh reader mount hides cached document while current GET is held then ${status}`, async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Synthetic guidance')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  const held: Route[] = []
+  await page.route(`**/content/${guideID}`, route => { held.push(route) })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(1)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'guide.txt', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'I have read version 1', exact: true })).toHaveCount(0)
+  // Dispose this mount while its old successful response is still held.
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(2)
+  await held[0].fulfill({ json: state.guide }).catch(() => undefined)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await held[1].fulfill({ status, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+  if (status === 401) await expect(page.getByRole('heading', { name: 'Sign in to continue.', exact: true })).toBeVisible()
+  else await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'guide.txt', exact: true })).toHaveCount(0)
+  expect(state.acknowledgements).toHaveLength(0)
+})
