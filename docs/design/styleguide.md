@@ -134,3 +134,17 @@ no-store transport and late-response fences. Never pass historical documents,
 consent tokens, captions, reasons or byte URLs. History is neither a byte grant,
 renewed approval nor an original command receipt. The example has no session,
 private persistence or transport. Its copyable snippet documents the owner seam.
+
+The media lifecycle example imports production `MediaIntentReview` and
+`PhotoConsentReview`. Its synthetic local owner captures exact native record,
+event/item source, action, metadata, reason and review attestations before showing
+confirmation. Correct details restores the unchanged editor and actual opener.
+Approval uses the native reviewed state; explicit release and withdrawal remain
+separate actions. Local unknown callbacks are never described as native receipts.
+Reading current synthetic media leaves the original unknown barrier in place.
+Self-consent is separately reviewed and has no idempotent retry contract. Guidance
+covers native current authority/consent incarnation, dirty versus pending versus
+unknown navigation, source comparison, private print/URL lifetimes, signed-in
+metadata-only root capsules and the distinction between original acknowledged
+version and newer current safe projection. It makes no API, file, storage or
+session request and does not fabricate receipt, consent or protected-byte grants.

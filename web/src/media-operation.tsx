@@ -8,9 +8,9 @@ import { Alert } from './components/ui/surfaces'
 import { Button } from './components/ui/button'
 import type { MediaContext } from './media-workspace'
 import type { PrivateRequestScope } from './private-request-scope'
-export type MediaOperation=
+export type MediaOperation=(
  | {kind:'command';id:string;revision:number;command:components['schemas']['MediaCommand']}
- | {kind:'upload';revision:number;key:string;upload:components['schemas']['MediaPhotoUpload']}
+ | {kind:'upload';revision:number;key:string;upload:components['schemas']['MediaPhotoUpload']}) & {source?:components['schemas']['MediaMetadata']}
 type State={kind:'idle'|'pending'|'rejected'|'unknown'|'saved';message?:string;intent?:string}
 export function useMediaOperation(context:MediaContext,scope:PrivateRequestScope,owner:string){
  const identity=useIdentity(),history=useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${context.eventID}:media:${owner}`)

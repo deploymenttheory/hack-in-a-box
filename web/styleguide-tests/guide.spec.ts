@@ -339,3 +339,15 @@ test('media decision history uses fresh metadata states, denial scrub, paging an
  await example.getByRole('button',{name:'Supply synthetic current page'}).click()
  await page.emulateMedia({media:'print'});await expect(example.getByRole('region',{name:'Media decision metadata'})).toBeHidden()
 })
+
+test('media lifecycle production reviews keep exact captured source, corrective focus and unknown outcomes distinct from current reads',async({page})=>{
+ const frame=await examples(page,'Task patterns'),example=frame.getByRole('region',{name:'Media lifecycle task examples'})
+ await example.getByLabel('Synthetic media title',{exact:true}).fill('Synthetic corrected title');await example.getByLabel('Synthetic media action',{exact:true}).selectOption('publish')
+ const opener=example.getByRole('button',{name:'Review synthetic media decision',exact:true});await opener.focus();await page.keyboard.press('Enter')
+ const review=example.getByRole('region',{name:'Review media publish',exact:true});await expect(review).toContainText('Synthetic corrected title');await expect(review).toContainText('Event revision 7 · Media version 1');await expect(review.getByRole('heading',{name:'Review media publish',exact:true})).toBeFocused()
+ await review.getByRole('button',{name:'Correct details',exact:true}).focus();await page.keyboard.press('Enter');await expect(opener).toBeFocused();await expect(example.getByLabel('Synthetic media title',{exact:true})).toHaveValue('Synthetic corrected title')
+ await opener.click();await example.getByRole('button',{name:'Confirm explicit gallery release',exact:true}).click();await example.getByRole('button',{name:'Read synthetic current media',exact:true}).click();await expect(example.getByText(/The original outcome remains unconfirmed; replacement stays blocked/)).toBeVisible();await expect(example.getByRole('button',{name:'Confirm explicit gallery release',exact:true})).toBeDisabled()
+ await example.getByRole('button',{name:'Reset media lifecycle example',exact:true}).click()
+ const own=example.getByRole('button',{name:'Review synthetic own consent',exact:true});await own.focus();await page.keyboard.press('Enter');const consent=example.getByRole('region',{name:'Review your photo consent choice',exact:true});await expect(consent).toContainText('source revision 4');await consent.getByRole('button',{name:'Correct details',exact:true}).click();await expect(own).toBeFocused()
+ await own.click();await example.getByRole('button',{name:'Confirm photo consent choice',exact:true}).click();await expect(example.getByText(/Synthetic consent outcome unknown/)).toBeVisible();await expect(own).toBeDisabled()
+})

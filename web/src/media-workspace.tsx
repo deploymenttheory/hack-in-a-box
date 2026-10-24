@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, APIError, privateKey, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
@@ -27,6 +27,7 @@ export function OwnPhotoConsentPage() {
   return eventId ? <section className="workspace media-workspace" key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><h1>Your event photo consent</h1><p>This self-only choice does not grant gallery access. Withdrawing consent blocks future protected media access; it cannot recall copies already downloaded or recordings hosted elsewhere.</p><PhotoConsent eventID={eventId} refresh={async () => {}} /></section> : <Failure error={new Error('Missing event')} />
 }
 function MediaWorkspace({ eventID, mediaID }: { eventID: string; mediaID?: string }) {
+  const navigate=useNavigate()
   const identity = useIdentity(), cache = useQueryClient(), [denial, setDenial] = useState<unknown>()
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'media'), identity.draft_scope], [identity.person.id, identity.draft_scope, eventID])
   const scope=usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:media-workspace`),readEpoch=useRef(0)
@@ -52,7 +53,7 @@ function MediaWorkspace({ eventID, mediaID }: { eventID: string; mediaID?: strin
   const context: MediaContext = { eventID, revision: page.revision, refresh, deny, writable: page.can_collect && authorityCurrent&&lifetime.canWrite(), authorityCurrent,lifetime }
   const currentCollect=page.can_collect&&lifetime.canWrite()
   const items = (mediaID ? [detail.data!] : query.data!.pages.flatMap(p => p.items)).flatMap(item=>{const current=lifetime.record(item.id);return current?[current.item]:[]})
-  return <section className="fleet-collection"><ContextLink back target={{label:'Back to event',href:`/events/${eventID}`}}/><CollectionHeading title="Event media" scope={{entity:mediaID?'Current media record':'Current authorised gallery'}}/>
+  return <section className="fleet-collection"><ContextLink back target={{label:'Back to event',href:`/events/${eventID}`,onNavigate:()=>void navigate({to:'/events/$eventId',params:{eventId:eventID}})}}/><CollectionHeading title="Event media" scope={{entity:mediaID?'Current media record':'Current authorised gallery'}}/>
     <p>Only explicitly reviewed media enters the gallery. Identified people must currently consent. Revocation blocks future access here; it cannot recall copies someone already downloaded or remove recordings hosted elsewhere.</p>
     {!!readError && <><Failure error={readError} retry={() => void refresh()} /><p role="status">Current access could not be refreshed. Private drafts and uncertain intents remain only in this page. Media is hidden and writes are paused until access is checked again.</p></>}
     <div hidden={!authorityCurrent}><PhotoConsent eventID={eventID} refresh={refresh} /></div>

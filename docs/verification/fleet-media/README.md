@@ -1,185 +1,59 @@
 # Consent-aware media UI — issue #243 / UI-10
 
-Initial base: `093791cb7e2511bedf3c74516b43ef167a73c84b`.
-This is an early compiling draft checkpoint, not full UI-10 acceptance or a
-security/accessibility release certification. It follows the accepted Fleet
-reference, visual contract, production primitives/patterns and Tailwind v4 tokens.
-No backend/schema/policy/provider changes are included.
+The media routes now use the accepted Fleet composition, production controls and
+Tailwind v4 tokens throughout collection, correction, organiser approval, explicit
+release, withdrawal, own consent, gallery/detail and history. This follow-up is
+based on `6e8ab511f00f3c3e8b63c91200a52637bee65119` (merged #263). Backend write,
+consent, ownership, provider and byte policy remain unchanged. #263 separately
+added the authorised metadata-only history read support. This evidence does not
+claim #245's broader release/security/accessibility audit.
 
-## Complete nested ownership and native inventory
+## Current nested ownership and native contracts
 
-| Surface / nested owner | Actual current contract | Intended composition and remaining work |
-| --- | --- | --- |
-| `MediaWorkspacePage` / workspace collection | Actor/draft/event/media route scope; GET media UUID `after` cursor, limit30, native revision/can_collect/can_review; no global search, total or sort. Backend projection gives organiser all, photographer own private plus permitted released records, confirmed readers current released/valid media. | Flat heading and media-first gallery are the first checkpoint. Complete parent projection/denial/partial-restoration fences, deliberate task navigation and cursor integration remain. |
-| Deep-link detail / `MediaContent` | GET exact current media ID, not historical version authority. Native `can_edit`, `can_review`, `can_publish`, `can_withdraw`, `can_read_original` are independent. | Named current-resource inspector, distinct reading versus correction/review/release tasks; preserve real URL and current native access on every new mount. |
-| `MediaCollector` / file selection and preparation | PNG/JPEG up to8MiB browser bound; native decoder further validates dimensions/pixel budget/content; atomic native file upload+protected association+first media version. POST upload has captured UUID, exact metadata/reason/filename/media type/base64 bytes, event revision, CSRF and Idempotency-Key. | Focused selection → validation → exact private submission review → deliberate upload/result. Capture before file awaits, fence held file/session/preflight work; no persistent bytes or unsafe duplicate identities. |
-| `useMediaWrite` | PUT save/review/publish/withdraw carries immutable command_id, expected item version and event revision/CSRF. Identical command fingerprint/native key retry returns acknowledged_version for that accepted intent, while every other response field describes only the CURRENT safe projection. Current GET alone is not a receipt. | Explicit exact review and native acknowledged result. Distinguish preflight not-sent, definite rejection, timeout/unknown and confirmed response; record minimal unresolved metadata before HTTP, keep full captured intent only in its still-authorised private owner. Retain safe deliberate identical native retry, never automatic resend. |
-| `MediaEditor` correction | Save replaces metadata, returns draft and clears all old review/consent/release bindings. Type cannot change after creation. Native UTF-8 byte lengths, source versions and reason remain authoritative. | Separate focused correction/editor with dirty/review/local/route cancellation and actual responsive opener focus; preserve input during transient/stale source comparison. |
-| Organiser review/approval | Native review requires identification+content attestation, explicit no-identifiable-people only when no tags, and current affirmative eligible consent for every identified person. It records state `reviewed`, not `released`. There is no separate backend `approve` action. | Identification/content review → exact approval confirmation uses this existing reviewed-state command. Do not invent an additional native approval state or imply gallery publication. |
-| Explicit release / withdrawal | Native publish requires reviewed state, continuing current organiser reviewer and exact consent bindings; challenge-related content additionally requires actual common challenge publication. Native withdraw is a separate owned command. Archive ordinary writes remain closed. | Separate reviewed gallery-release and withdrawal/correction actions with exact source, current effect and original intent acknowledgement. |
-| `MetadataFields` / consent directory | Consent guidance is a separate UUID-cursor endpoint, names/choice/eligibility only for current organiser/photographer. Unknown/no never grants publication. Current captured-at field is optional; recording metadata requires HTTPS/no credentials and is never fetched/embedded. | Shared labelled fields, minimal consent selection, explicit local-time interpretation, field errors and correction without hidden private-profile data. No client-side global search over a truncated directory. |
-| `PhotoConsent` / `OwnPhotoConsentPage` | Independent self-only GET/PUT, expected operational-profile revision, choice yes/no/unknown and actual can_opt_in/can_revoke. No command/key receipt API. Archived current eligible/profile owners can revoke no/unknown even when ordinary writes/new opt-in close. Choice endpoint edits no other profile fields. | Separate explicit self-choice review, pending/definite/unknown/current-state distinctions; current GET cannot prove an uncertain original write or unlock an automatic replay. Remain reachable after gallery denial. |
-| Native consent incarnation | Review stores internal profile-incarnation+photo-specific revision tokens, not browser-owned consent proofs. Unrelated profile corrections do not break approval. Revoke/re-consent or delete/recreate never revives old approval. Retention is checked synchronously. | Present current native indicators and permission loss; do not expose tokens, fabricate lasting approvals, infer rights from initial membership or change backend consent policy. |
-| `ProtectedPhoto` preview/original | Native original and generated PNG thumbnail endpoints reauthorize current item/audience/consent on every read; generic file and content-attachment downloads deny protected media even to organisers. Blob URLs are transient; current implementation clears on blur/visibility/beforeprint/expiry. | Actual protected thumbnail/detail/download with parent/child/session/version tickets, immediate object-URL revoke and held-response fences; every print path hides image/private controls. Never use file IDs or direct stored URLs as grants. |
-| External recording link | Backend returns recording_url only under its current safe projection. Native metadata validation requires HTTPS/no credentials. This application does not host, fetch, embed or recall external recordings. | Safe named external anchor with current metadata lifetime; no autoplay, unreviewed link, stale URL continuation or claim to recall an external copy. |
-| Decision/history | Internal immutable media_versions and command receipts exist. OpenAPI/generated frontend and existing UI expose current list/detail, uploads/commands/bytes/consent, but NO media-history route. Event-wide audit exists under separate native AuditRead authority, with action/target/actor/revision/reason-code metadata only. | Actual API gap reported to parent before any backend expansion. Do not invent browser history or use current state as immutable version history. A bounded native audit-metadata composition may be considered separately; no new endpoint/policy is silently introduced. |
+| Surface | Production owner and current behaviour |
+| --- | --- |
+| Collection and detail | `MediaWorkspacePage` uses native list UUID cursors and exact current detail GET. Loaded counts describe the loaded page, with no invented total, global search or sort. Native projection supplies current audience and separate edit/review/publish/withdraw/history/byte flags. Internal event/detail links use native SPA navigation. |
+| Private lifetime | `MediaLifetime` observes fresh projection flags synchronously, fences old continuations and replaces private descendants when disclosure is lost. Collection downgrade drops previous private record snapshots; definite denial clears owned detail/guidance/history caches. Only a fresh authorised read can restore current content; a restored parent list cannot resurrect old detail or editor fields. |
+| Collection | `MediaCollector` opens a flat task, validates native field bounds and PNG/JPEG metadata, captures metadata/reason/File/source/IDs before file awaits, then shows `MediaIntentReview` before sending. The backend still validates actual file bytes, dimensions, pixel budget, quotas and atomic protected association. No bytes or drafts enter browser persistence. |
+| Metadata and consent guidance | `MediaMetadataFields` uses production labelled fields and actual paged names/choice/eligibility guidance only. UTF-8 byte limits, HTTPS-without-credentials recording destinations and explicit UTC captured time are checked without inventing private profile data. Recording content is never fetched or embedded. |
+| Command/unknown owner | `useMediaOperation` keeps exact body/key only inside its current private owner. The existing actor/draft root `CommunicationSafety` stores allowlisted intent/action/resource/source metadata before POST, under an exact media namespace. Resource UUID and positive safe expected version are runtime validated. Pending/unknown survives route, version and capability teardown; raw title/caption/reason/tags/URL/file never enters this capsule. |
+| Original acknowledgement | Native upload idempotency and save/review/publish/withdraw command IDs remain authoritative. `acknowledged_version` identifies the original accepted intent independently of current projection `version`. A matching late original ACK may settle safe metadata while its private response remains fenced. Lost responses/408 remain unknown. GET/history cannot settle them. Deliberate identical retry retains the original body/key and current owned/write authority, even after successful original publication makes current `can_publish` false. No automatic resend occurs. |
+| Correction and approval | `MediaEditor` captures exact source/action/reason and immutable current metadata for review. Save returns a draft and clears old consent/review/release bindings. Native `review` is organiser approval (`reviewed`), with identification/content and no-identifiable-people attestations; it never implies release. Dirty fields/review remain across transient reads and explicit stale comparison; local/route discard is deliberate and actual initiating controls regain focus. |
+| Explicit release and withdrawal | Gallery publication is a separate reviewed `publish` command. Current organiser/reviewer, consent incarnation and actual common challenge release remain native gates. Withdrawal is a separate current-owned command. Archives do not reopen ordinary writes. |
+| Own photo consent | `PhotoConsent` and `PhotoConsentReview` capture a self-only revision and proposed yes/no/unknown before PUT. Archived eligible/profile owners retain native no/unknown revocation. The endpoint has no idempotent retry or original command-status receipt: a current GET never settles a lost PUT. Deliberate acknowledgement of a different new base keeps the earlier unresolved metadata. A direct successful PUT is distinct from its current projection body. This route remains reachable after gallery denial. |
+| Consent incarnation | Internal profile-incarnation/photo-specific tokens remain backend-only. Unrelated profile edits do not break approval; revoke/re-consent or delete/recreate cannot revive older approval. The UI consumes current flags and never manufactures token/provenance or lasting consent. Existing PostgreSQL/native tests own these rules. |
+| Protected photo/recording | `ProtectedPhoto` inherits the current record scope and adds a per-mount fence. Every thumbnail/original GET uses current native authorization. Late bytes cannot create URLs after scope loss. Hide/blur/visibility/print/session end/teardown revoke URLs immediately; private controls and images are hidden in print. Generic file URLs remain unavailable. External recordings use only the current projected HTTPS anchor and cannot be recalled by this app. |
+| Decision history | `MediaDecisionHistory` inherits the current record scope and mounts a fresh native reader on every open. `MediaHistoryDisclosure`/`MediaHistoryContent` show only version/action/recorded time, native descending cursor pages and failure/denial suppression. Current owned history permission is separate from edit access, including read-only archives. No historical document, reason, actor, token, file ID or old bytes are exposed, and history never confers approval/access or an original receipt. |
 
-## First meaningful consumer checkpoint
+## Interactive published guidance
 
-`media-gallery.tsx` is the actual current-authorised gallery presentation used by
-`MediaWorkspace`: flat semantic records, native kind/state/consent/version labels,
-current-resource deep links and cursor-scoped loaded counts. It keeps photos as
-media-first records rather than forced table rows. Protected previews/downloads
-still use the real native owner, and private record print exclusion is preserved.
-The legacy upload/editor/consent adapters remain deliberately identifiable work
-for the next checkpoint; this PR does not claim those workflows are rebuilt yet.
+The independent production style guide imports the actual pure
+`MediaIntentReview`, `PhotoConsentReview`, `MediaHistoryDisclosure` and
+`MediaHistoryContent`. Synthetic local owners demonstrate exact source review,
+correction/focus return, separate approval/release/withdrawal actions, unknown
+versus current read, fresh history loading/paging/failure/retry/denial and print.
+Copyable snippets and intended-use, accessibility and anti-pattern notes ship
+with the examples and in `docs/design/styleguide.md`. The guide's existing
+API/cookie/storage guards apply; callbacks fabricate no native receipt or byte grant.
 
-Both independent portal production builds and focused source/test ESLint pass.
-The existing native protected-gallery denial and independent self-consent-after-
-gallery-denial cases pass at desktop/mobile (4/4) with their authorization and
-protected-byte assertions preserved. The old private-record CSS selector is changed
-to its semantic `data-media-record` boundary; its print/privacy assertion remains.
-Temporary local port-only browser config and node_modules symlink are untracked.
+## Meaningful verification
 
-## Full remaining scope and required proof
+All data/providers are synthetic and deterministic. No real upload, people,
+provider credential or browser private persistence is used.
 
-Complete every owner above: upload and exact review/approval/release; correction,
-withdrawal and real authorised history; own archived self-choice; focused gallery
-and direct detail/protected bytes/print; native current projection loss, parent
-collection denial then partial restoration, current source/version changes, held
-file/URL/session/preflight/POST/read continuations, unknown minimal metadata and
-unrelated-owner history preservation. No component key substitutes for clearing
-ancestor caches, selected state, raw private snapshots or held continuations.
+| Check | Completed local evidence |
+| --- | --- |
+| TypeScript / production builds | Both portal builds and independent guide build pass. |
+| Source/spec lint | Focused media, guide and native spec ESLint pass. Full repository lint is the final checkpoint gate. |
+| Native existing media/history | 26/26 participant + 26/26 administrator across desktop/mobile; protected bytes, archive revocation, denial, deferred file/session/preflight no-POST, exact lost-upload retry, transient recovery, current history and print assertions retained. |
+| Added lifecycle composition | 18/18 participant + 18/18 administrator: keyboard local/route discard and actual opener focus; real SPA unknown persistence with same-document marker; held ACK versus lost response across capability teardown/routes; non-idempotent consent unknown; held thumbnail no URL; withheld recording URL at fresh200 while can_edit remains true; parent denial→partial restoration before/after stale time; unsafe-file and UTF-8 preflight. |
+| Scoped units | 13/13 across media operation, lifetime and shared safety: stale/reentrant/408 handling, held preflight, original ACK versus current version, identical native publish retry, late ACK versus loss, privacy/UUID/integer allowlist, lost disclosure and partial restoration without stale private snapshots. |
+| Independent guide | 4/4 desktop/mobile history/lifecycle journeys with no API/cookie/storage access. Exact-source review, corrective focus, unknown not settled by read, consent, fresh history paging/failure/denial/reopen/print. |
+| Native history read support (#263) | Real PostgreSQL/race media and authenticated HTTP tests pass, including current role/owner/wrong-event/contended-lock checks, archive/consent revocation, pagination/strict metadata allowlist/no effects; generated-contract drift and native lint pass. Native implementation is unchanged in this follow-up. |
 
-Meaningful native browser cases must retain existing uploader idempotency/current
-version/consent/privacy expectations, exercise unsafe file/field errors, wrong
-reader/current role, revoke/re-consent, no old approval revival, stale/current read
-failure, definitive denial versus408/5xx, no silent resend, archived self revocation,
-keyboard/narrow layouts and actual gallery/task opener focus in both portals. Use
-synthetic people and deterministic in-memory fixtures only. Add actual matching
-before/after desktop/mobile images and production guide examples/guidance where
-shared media task behaviour is introduced. Full lint/unit/both builds, appropriate
-dependent consumer checks, independent Standards/Spec reviews and full exact-head
-CI remain required before ready/merge. #245 broader parity/release audit remains
-separate; this first checkpoint is not a claim that broad gates passed.
-
-## Authorised current-owner metadata history follow-up
-
-The missing reader is now implemented as narrowly authorised supporting read work
-for #243. `GET /media/{id}/history` returns only immutable **version, action and
-changed_at**, paginated by `before_version`/limit. It omits actor identity, document
-contents, caption, subject tags, file identifiers, recording destinations, consent
-tokens, raw reasons and all old byte URLs. Canonical SQL selects only these three
-columns; Go/OpenAPI/generated frontend contracts expose only the allowlisted DTO.
-
-The native current event guard (read mode), current document and existing owned
-predicate authorize each page inside the same transaction. Ordinary gallery readers
-and a photographer who does not own the item receive no history. A current organiser
-or photographer-owner can read metadata on an archive without gaining write access;
-`can_read_history` is separate from `can_edit`. Consent revocation does not expose old
-bytes or reinstate an approval. History GET creates no media revision, command,
-audit intent or queue effect, and retains the existing no-store HTTP middleware.
-Legacy `acknowledged_version`/safe-current projection semantics are unchanged.
-
-The production reader loads only after an explicit action and after its own current
-native GET on every opening. It uses an actor/draft/event/item/per-mount scope,
-abort/late-read fence, removed-on-unmount query cache and labelled cursor records.
-It is independently available outside edit controls and excluded from print.
-It explicitly does not equate decision metadata with an original command receipt.
-
-Meaningful bounded proof is terminal green:
-
-- Real PostgreSQL with `HACKBOX_INTEGRATION=1`, race detector and bounded package/
-  test parallelism: two new native history tests and the extended authenticated
-  HTTP contract test pass. Coverage includes metadata field allowlist, version
-  pagination, organiser/owner/nonowner/wrong-event, read-only archive, revoked bytes,
-  role loss, no domain side effects, no-store HTTP and a contending role-change lock.
-- Both production portal builds and focused frontend ESLint pass. Existing media
-  assertions are preserved; their shared native fixture is extracted without tests
-  importing another spec. The new reader cases cover archived read-only metadata,
-  ordinary reader exclusion, paging/keyboard/print and held-denied fresh reads.
-- Participant browser 26/26 and independent administrator browser 26/26 desktop/mobile
-  cases pass, including the 20 existing media scenarios per portal and 6 new history
-  scenarios. Configured bounded native Go lint passes after required formatting.
-
-This is an early **Refs #243** slice, not completion of UI-10. The full upload/editor/
-review/approval/release/correction/withdrawal/own-consent lifecycle, enhanced parent
-projection and unknown-intent fences, private image/detail/navigation, consent
-re-incarnation browser counterproofs, actual matching visuals/guide and final full
-checks/reviews/CI above remain in progress. No new roles, write policy, PostgreSQL
-schema, real providers or real media/person data are introduced.
-
-### PR263 review correction: production history presentation and guide
-
-The native history contract is unchanged. `MediaHistoryDisclosure` and
-`MediaHistoryContent` are pure production presentation used by the native adapter
-and the independently hosted guide. The synthetic example exercises fresh loading,
-metadata-only paging, failure/retry, denial row suppression, keyboard close/return,
-reopen without cached rows and print hiding. It has no API, authentication, storage,
-media bytes or command receipt. Usage, accessibility and anti-pattern guidance live
-alongside the interactive example and in `docs/design/styleguide.md`.
-
-Correction verification (terminal, source `036802a`): `npx tsc -b` and focused
-ESLint passed; `npm run build:styleguide` and `npm run build` passed. The new
-independent guide journey passed **2/2** desktop/mobile with the guide's existing
-API/cookie/storage guards. `media-history.spec.ts` passed **6/6 participant** and
-**6/6 administrator**, including the production close/return-focus assertion.
-Browser commands: `npx playwright test --config playwright.styleguide.config.ts
---workers=1 --grep 'media decision history uses'`; the corresponding native spec
-ran with the isolated public/admin media configs at ports 4304/4305. These are
-bounded correction checks; exact-head repository CI and independent delta review
-remain separate gates. The earlier native PostgreSQL/race proof applies to the
-unchanged history API; this correction does not complete the remaining #243 scope.
-
-### Full lifecycle follow-up: first real operation checkpoint
-
-The local follow-up to merged #263 replaces collection and decision tasks with a
-flat Fleet composition: Add media, native metadata/consent guidance, exact private
-file/recording review, then deliberate confirmation. Metadata correction, organiser
-approval, explicit gallery release and withdrawal each capture their own exact
-native source, action, reason and command ID. Approval remains the native reviewed
-state; no additional backend state or policy is introduced.
-
-`MediaLifetime` fences private continuations when fresh capability/URL/byte
-projections lose disclosure, before React updates the editor. `useMediaOperation`
-uses the existing signed-in `CommunicationSafety` capsule under an exact media
-namespace. Only allowlisted intent/action/resource IDs, event/source/expected
-versions reach that root store; resource IDs and expected versions have runtime
-UUID/positive-safe-integer validation. Full metadata, reason, URL, people and file
-bytes stay in the mounted private task. Current GETs do not establish receipts.
-The native `acknowledged_version` settles the original matching intent independently
-of the current projection version; a late exact ACK may settle safe metadata while
-private UI remains fenced. A lost response stays unknown across private teardown.
-
-Bounded checkpoint proof: TypeScript and focused ESLint passed; **9/9** owner/shared
-safety tests passed (held session/current projection loss, 408 and stale closure,
-original ACK versus later current version, identical publish retry after publication,
-late ACK versus held lost response, and safe metadata validation/privacy). This is
-an early draft, not a final acceptance claim. Existing browser journeys still need
-adaptation to the explicit review actions while retaining their native assertions.
-Own-consent review/recovery, protected image and URL lifetimes, full route/denial/
-partial-restoration and unsafe-file browser proof, production interactive lifecycle
-examples, matching visual evidence, independent reviews and full exact-head CI all
-remain before readiness. Issue #243 stays open.
-
-#### Lifecycle consent/bytes and native browser checkpoint
-
-Own photo consent now uses the production `PhotoConsentReview`: review a captured
-self-only revision and choice before PUT. Unknown responses cannot be retried or
-settled by GET; a deliberate new-base acknowledgement retains the older unresolved
-metadata. Archived revocation remains independent of gallery access. The direct
-successful PUT is acknowledged separately from its current projection body.
-Protected photos have per-mount child scopes inherited from current record scope,
-with immediate URL revocation on hide, blur, print, session end and teardown. History
-reads now inherit the current record scope too. Global collection loss drops earlier
-private record snapshots even when absent from the new ordinary-reader page.
-
-Both portal builds passed. All existing affected media/history journeys now use
-explicit Add/review/confirm steps and still check native preflight/no-POST,
-identical intent retries, private print suppression, protected bytes, archive and
-transient-read recovery: **26/26 participant, 26/26 administrator**. The synthetic
-provider now models actual `acknowledged_version` and immutable command dedup.
-Scoped unit proof is **13/13**, including denial→partial restoration and ordinary
-source advancement preserving stale draft comparison. Focused source/spec ESLint
-passed. Expanded route/held-response/consent-incarnation/unsafe-file journeys,
-interactive lifecycle guide, matching screenshots and final review/CI remain.
+Relevant browser files are `media-workspace.spec.ts`, `media-history.spec.ts` and
+`media-lifecycle.spec.ts`; all are registered for both portal CI builds. Local
+port-only configs and node_modules symlink remain untracked. Full exact-head CI
+and independent two-axis reviews remain merge gates; this README's local counts
+are not a substitute for those gates. Matched visual evidence and final full unit/
+lint results are recorded below at the frozen checkpoint.
