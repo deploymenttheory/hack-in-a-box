@@ -3,7 +3,7 @@ import { useIdentity } from './session'
 import type { NativeIntent } from './outcome-api'
 
 export type OutcomeOwner = { kind: 'existing'; id: string; eventID?: string | null } | { kind: 'proposal'; eventID?: string }
-export type OutcomeAttempt = { kind: NativeIntent['kind']; outcomeID: string; reviewID?: string; commandID: string; expected: number; action: string; state: 'pending' | 'unknown' }
+export type OutcomeAttempt = { kind: NativeIntent['kind']; outcomeID: string; reviewID?: string; commandID: string; expected: number; action: string; state: 'pending' | 'unknown'; editorID?: string }
 type Memory = Record<string, OutcomeAttempt[]>
 type Store = { memory: Memory; change: (update: (value: Memory) => Memory) => boolean; current: () => Memory }
 const Context = createContext<Store | null>(null)
@@ -12,6 +12,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
 // Strict metadata-only boundary, above private route/editor lifetimes. Never
 // retain a command body, reason, definition, evidence, links or rendered text.
 export function outcomeMetadata(intent: NativeIntent): OutcomeAttempt {
+  if (!['outcome', 'publication', 'review'].includes(intent.kind)) throw new Error('Invalid outcome command kind')
   const { kind, outcomeID, expected } = intent, commandID = intent.command.id, action = intent.command.action
   const actions = kind === 'outcome' ? ['propose', 'revise', 'adopt', 'moderate', 'assign', 'progress', 'evidence'] : kind === 'publication' ? ['save', 'publish', 'withdraw'] : ['save', 'approve', 'cancel']
   const reviewID = kind === 'review' ? intent.reviewID : undefined
@@ -38,17 +39,21 @@ export function useOutcomeAttempts(resource: OutcomeOwner) {
   if (!store) throw new Error('Outcome commands require authenticated metadata tracking')
   // Existing resource IDs remain the same across event adoption, route changes,
   // source revisions and capability downgrades. Proposal scopes retain event ID.
-  const owner = JSON.stringify([identity.person.id, identity.draft_scope, resource.kind, resource.kind === 'existing' ? resource.id : resource.eventID ?? null])
-  const attempts = store.memory[owner] ?? []
-  return { attempts,
-    begin: (intent: NativeIntent) => {
+  if (!['existing', 'proposal'].includes(resource.kind)) throw new Error('Invalid outcome owner kind')
+  const resourceID = resource.kind === 'existing' ? (uuid.test(resource.id) ? resource.id : 'invalid-resource') : resource.eventID ? (uuid.test(resource.eventID) ? resource.eventID : 'invalid-event') : null
+  const owner = JSON.stringify([identity.person.id, identity.draft_scope, resource.kind, resourceID])
+  const attempts = store.memory[owner] ?? [], change = store.change
+  const detach = useCallback((editorID: string) => change(memory => ({ ...memory, [owner]: (memory[owner] ?? []).map(item => item.editorID === editorID ? { ...item, editorID: undefined } : item) })), [change, owner])
+  return { attempts, detach,
+    begin: (intent: NativeIntent, editorID?: string) => {
+      if (editorID !== undefined && !uuid.test(editorID)) throw new Error('Invalid outcome editor identity')
       const metadata = outcomeMetadata(intent)
       let allowed = false
       store.change(memory => {
         const prior = memory[owner] ?? []
         if (prior.some(item => item.commandID !== metadata.commandID)) return memory
         allowed = true
-        return { ...memory, [owner]: [metadata] }
+        return { ...memory, [owner]: [{ ...metadata, ...(editorID ? { editorID } : {}) }] }
       })
       return allowed
     },

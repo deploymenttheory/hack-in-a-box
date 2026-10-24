@@ -134,3 +134,13 @@ no-store transport and late-response fences. Never pass historical documents,
 consent tokens, captions, reasons or byte URLs. History is neither a byte grant,
 renewed approval nor an original command receipt. The example has no session,
 private persistence or transport. Its copyable snippet documents the owner seam.
+
+
+The outcomes example imports production `OutcomeDecision` and `useOutcomeReview`
+with a bounded synthetic local owner. It demonstrates evidence basis and exact
+zero versus unknown, separate positive-field publication drafts, explicit owner
+review timing/template, captured review focus/correction, pending and unknown
+barriers. Simulated current facts never settle the original outcome. No account,
+API, private payload or provider is involved. The copyable reference documents
+current authority/CSRF/version and exact native receipt ownership; local guide
+feedback is explicitly not a server receipt or publication.
