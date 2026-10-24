@@ -14,6 +14,10 @@ import { EventGuidance } from './event-guidance'
 import { localDate } from './event-time'
 
 export function ResourceLibrary({ event }: { event: EventRecord }) {
+  const identity = useIdentity()
+  return <LibraryLifetime key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} event={event} />
+}
+function LibraryLifetime({ event }: { event: EventRecord }) {
   const identity = useIdentity(), cache = useQueryClient(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:library`)
   const [search, setSearch] = useState(''), [query, setQuery] = useState(''), [selected, setSelected] = useState<string>()
   const focus = usePlanningActionFocus(), key = privateKey(identity.person.id, event.id, 'resource-library')
