@@ -15,19 +15,16 @@ func (h handlers) ListOutcomes(
 	ctx context.Context,
 	r contract.ListOutcomesRequestObject,
 ) (contract.ListOutcomesResponseObject, error) {
-	cursor, eventID := uuid.Nil, uuid.Nil
+	cursor := uuid.Nil
 	mode := "own"
 	if r.Params.Cursor != nil {
 		cursor = *r.Params.Cursor
-	}
-	if r.Params.EventId != nil {
-		eventID = *r.Params.EventId
 	}
 	if r.Params.Mode != nil {
 		mode = string(*r.Params.Mode)
 	}
 	_, limit := page(nil, r.Params.Limit)
-	v, err := h.Outcomes.List(ctx, actor(ctx).ID, eventID, mode, &cursor, limit)
+	v, err := h.Outcomes.List(ctx, actor(ctx).ID, cursor, mode, r.Params.EventId, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list native outcomes: %w", err)
 	}
