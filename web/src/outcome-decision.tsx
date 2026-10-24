@@ -7,8 +7,8 @@ import { StatusBadge } from './components/ui/feedback'
 // to the actual initiating control when correcting; no guessed mobile target.
 export function useOutcomeReview() {
   const [reviewed, review] = useState<NativeIntent>(), opener = useRef<HTMLElement | null>(null)
-  function setReviewed(value?: NativeIntent) {
-    if (value) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  function setReviewed(value?: NativeIntent, initiatingControl?: HTMLElement | null) {
+    if (value) opener.current = initiatingControl ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
     review(value ? structuredClone(value) : undefined)
   }
   const correctReview = () => { review(undefined); requestAnimationFrame(() => { if (opener.current?.isConnected) opener.current.focus() }) }

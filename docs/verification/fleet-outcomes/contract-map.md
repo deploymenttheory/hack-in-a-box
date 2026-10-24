@@ -155,3 +155,36 @@ current role restoration and matched screenshot captures) are running at this
 checkpoint. Independent guide browser checks and complete final native/web CI,
 matching before/after artifact review and paired frozen-source reviews remain
 required. The full issue remains open, draft and not ready for merge.
+
+
+## Per-opening authority and focus correction (after main 6e8ab511)
+
+Private publication, evidence and history readers now mount only while their
+own disclosure is open. Their query and local request lifetime end together on
+close, so reopening cannot render prior private fields before its own current
+GET. Publication existence is only a boolean above that boundary. Proposal
+source-team options also have an opening-specific projection scope. Every child
+projection cancels/removes its exact key on teardown and ignores late responses.
+
+The actual initiating native button/form submitter remains mounted but hidden
+while reviewing; correction returns to that same control. Production and guide
+owners pass the actual control explicitly. This fixes the real desktop/mobile
+CI focus failure; the original focus assertions remain. The copyable guide
+snippet and accessibility reference teach the same ownership requirement.
+
+Latest terminal proof: lint, both production builds and all 148 unit tests pass;
+focused independent guide workflow passes 2/2; full standard administrator
+outcomes pass 56/56, including private publication/evidence/history close→held
+current GET→reopen absence, restored moderation owner choices, unknown recovery
+after every write capability disappears, native opener correction focus and the
+unchanged 20-second source-team denial assertion. The earlier owner-reader read
+count incorrectly forbade an additional harmless current GET; the test retains
+actual fresh held-read/private absence and no-write assertions without imposing
+an unsupported exact GET count. The mobile local failure showed no second GET
+and a 236-second host/trace suspension; the same original assertion passed real
+CI and this current standard run. No timeout or retry threshold was raised.
+
+Current participant run is still active at publication of this checkpoint.
+Complete guide/browser/state/consent/correction evidence and actual matching
+before/after review, paired independent final review and exact-head CI remain.
+The issue and draft remain open.

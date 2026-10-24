@@ -34,6 +34,7 @@ export function useOutcomeRead<T>(id: string, category: string, read: (signal: A
 export function useOutcomeProjection(id: string, projection: string, parent: PrivateRequestScope) {
   const identity = useIdentity(), [mount] = useState(() => crypto.randomUUID())
   const key = useMemo(() => [...privateKey(identity.person.id, id, 'outcome'), identity.draft_scope, projection, mount], [identity.person.id, identity.draft_scope, id, projection, mount])
-  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${id}:${projection}:${mount}`, parent)
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${id}:${projection}:${mount}`, parent), cache = useQueryClient()
+  useEffect(() => () => { void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key])
   return { key, scope }
 }

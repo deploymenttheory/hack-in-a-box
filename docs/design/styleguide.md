@@ -166,3 +166,9 @@ barriers. Simulated current facts never settle the original outcome. No account,
 API, private payload or provider is involved. The copyable reference documents
 current authority/CSRF/version and exact native receipt ownership; local guide
 feedback is explicitly not a server receipt or publication.
+
+Keep the actual initiating control and preparation form mounted with `hidden`
+while reviewing. Pass the clicked button (`event.currentTarget`) or native
+`SubmitEvent.submitter` into `setReviewed`; correction then returns focus to that
+same control. Current authority loss still unmounts and scrubs the entire private
+editor. An unrelated new control with matching text is not the original opener.

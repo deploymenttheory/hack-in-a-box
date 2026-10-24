@@ -8,7 +8,7 @@ function owned(id = outcomeID): View { return { id, version: 1, current_version:
 async function mock(page: Page, initial = false) {
   const state = { records: new Map<string, View[]>(), requests: [] as { id: string; body: components['schemas']['OutcomeCommand']; expected: string }[], mode: '' as '' | 'after' | 'before' | 'validation', deny: false, offlineRead: false, eventReads: 0, evidence: [] as components['schemas']['OutcomeEvidenceRecord'][] }
   if (initial) state.records.set(outcomeID, [owned()])
-  const gates: { preflight?: () => Promise<void>; response?: () => Promise<void>; receipt?: () => Promise<void> } = {}
+  const gates: { preflight?: () => Promise<void>; response?: () => Promise<void>; receipt?: () => Promise<void>; evidence?: () => Promise<void>; history?: () => Promise<void> } = {}
   await page.route('**/api/v1/**', async route => {
     const req = route.request(), url = new URL(req.url()), path = url.pathname
     const fail = (status: number) => route.fulfill({ status, json: { error: { code: status === 403 ? 'forbidden' : status === 409 ? 'revision_conflict' : 'invalid_request', message: 'Synthetic current resource policy', request_id: 'synthetic' } } })
@@ -26,8 +26,8 @@ async function mock(page: Page, initial = false) {
     if (req.method() === 'GET') {
       if (state.offlineRead) return fail(500)
       if (suffix === 'reviews') return route.fulfill({ json: { items: [] } })
-      if (suffix === 'evidence') return route.fulfill({ json: { items: state.evidence, next_cursor: null } })
-      if (suffix === 'history') return route.fulfill({ json: { items: [...rows].reverse(), next_cursor: null } })
+      if (suffix === 'evidence') { await gates.evidence?.(); return route.fulfill({ json: { items: state.evidence, next_cursor: null } }) }
+      if (suffix === 'history') { await gates.history?.(); return route.fulfill({ json: { items: [...rows].reverse(), next_cursor: null } }) }
       const command = url.searchParams.get('command_id')
       if (command) { await gates.receipt?.(); const receipt = rows.find(row => row.command_id === command); return receipt ? route.fulfill({ json: { ...receipt, current_version: current!.version } }) : fail(404) }
       await gates.preflight?.()
@@ -263,4 +263,57 @@ test('matched synthetic outcome directory and source screenshots', async ({ page
  await page.screenshot({path:info.outputPath('outcome-source.png')})
  expect(state.requests).toHaveLength(0)
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
+})
+
+for(const projection of ['evidence','history'] as const)test(`reopening restricted ${projection} cannot restore cached private records while its current read is held`,async({page})=>{
+ const {state,gates}=await mock(page,true)
+ const canary=`PRIVATE ORIGINAL ${projection.toUpperCase()} RECORD`
+ if(projection==='evidence')state.evidence.push({id:crypto.randomUUID(),basis:'self_report',claim:canary,value:'0',denominator:null,source:'Synthetic source',observed_at:null,measures:[],outcome_version:1,actor_id:person.id,at:'2026-10-01T12:00:00Z'})
+ else state.records.get(outcomeID)![0].reason=canary
+ await page.goto(`/ideas/${outcomeID}`)
+ const label=projection==='evidence'?'restricted evidence':'idea history'
+ await page.getByRole('button',{name:`Show ${label}`,exact:true}).click()
+ await expect(page.getByText(canary,{exact:true})).toBeVisible()
+ await page.getByRole('button',{name:`Hide ${label}`,exact:true}).click()
+ let release=()=>{},reached=()=>{}
+ const held=new Promise<void>(resolve=>{release=resolve}),entered=new Promise<void>(resolve=>{reached=resolve})
+ gates[projection]=async()=>{reached();await held}
+ await page.getByRole('button',{name:`Show ${label}`,exact:true}).click();await entered
+ await expect(page.getByText(canary,{exact:true})).toHaveCount(0)
+ release();gates[projection]=undefined
+ await expect(page.getByText(canary,{exact:true})).toBeVisible()
+ expect(state.requests).toHaveLength(0)
+})
+
+test('original unknown outcome recovery remains available after all write capabilities disappear',async({page})=>{
+ const {state}=await mock(page,true)
+ await page.goto(`/ideas/${outcomeID}`)
+ const progress=page.locator('section.fleet-outcome-action').filter({has:page.getByRole('heading',{name:'Owner progress',exact:true})})
+ await progress.getByLabel('Reason for this change').fill('PRIVATE EARLIER OWNER REASON')
+ await progress.getByRole('button',{name:'Review owner progress',exact:true}).click()
+ state.mode='after'
+ await progress.getByRole('button',{name:'Save owner progress',exact:true}).click()
+ await expect(progress.getByRole('status',{name:'Outcome save state'})).toContainText('Save outcome is unknown')
+ const current=state.records.get(outcomeID)!.at(-1)!
+ current.capability={...current.capability,can_follow_up:false,can_revise:false,can_moderate:false,can_adopt:false}
+ await page.getByRole('button',{name:'Refresh current outcome'}).click()
+ await expect(page.getByRole('heading',{name:'Owner progress',exact:true})).toHaveCount(0)
+ await expect(page.getByRole('heading',{name:'Restricted evidence record',exact:true})).toHaveCount(0)
+ await expect(page.getByRole('complementary',{name:'Original outcome recovery'})).toContainText('Original outcome unknown')
+ await page.getByRole('button',{name:'Check earlier exact save receipt',exact:true}).click()
+ await expect(page.getByRole('status',{name:'Earlier command recovery state'})).toContainText('exact earlier command was saved')
+ expect(state.requests).toHaveLength(1)
+})
+
+test('native outcome correction returns keyboard focus to the actual mounted initiating control',async({page})=>{
+ const {state}=await mock(page,true)
+ await page.goto(`/ideas/${outcomeID}`)
+ const progress=page.locator('section.fleet-outcome-action').filter({has:page.getByRole('heading',{name:'Owner progress',exact:true})})
+ await progress.getByLabel('Reason for this change').fill('Synthetic focus review')
+ const opener=progress.getByRole('button',{name:'Review owner progress',exact:true})
+ await opener.focus();await page.keyboard.press('Enter')
+ await expect(progress.getByRole('heading',{name:'Review owner progress',exact:true})).toBeFocused()
+ await progress.getByRole('button',{name:'Correct details',exact:true}).click()
+ await expect(opener).toBeFocused()
+ expect(state.requests).toHaveLength(0)
 })
