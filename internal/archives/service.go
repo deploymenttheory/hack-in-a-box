@@ -45,6 +45,7 @@ func archived(ctx context.Context, q *dbgen.Queries, actor, eventID uuid.UUID, a
 }
 func (s Service) summary(ctx context.Context, q *dbgen.Queries, e dbgen.Event) (Summary, error) {
 	out := Summary{EventID: e.ID, EventName: e.Name, EventRevision: e.Revision, ObservedAt: s.now(), Metrics: []Metric{}, Sources: []SourceAvailability{
+		{Source: "actual_attendance", State: "unavailable", Reason: "Attendance records are observations, not a complete physical attendance census. Missing or absent records do not establish how many people physically attended."},
 		{Source: "final_judging", State: "unavailable", Reason: "Final judging data is unavailable; no assessment result is inferred."},
 		{Source: "published_results", State: "unavailable", Reason: "Published results are unavailable; no rank or award is inferred."},
 	}}
@@ -55,8 +56,8 @@ func (s Service) summary(ctx context.Context, q *dbgen.Queries, e dbgen.Event) (
 	out.Metrics = []Metric{
 		{Key: "registrations", Value: c.RegistrationRecords, Unit: "registration_records", Source: "registrations.kind=attendee", Definition: "All retained attendee application records, including withdrawal/reapplication; not unique people."},
 		{Key: "registered_people", Value: c.RegisteredPeople, Unit: "people", Source: "distinct registrations.person_id where kind=attendee", Definition: "Distinct people with a retained attendee registration record, regardless of current admission state."},
-		{Key: "confirmed_attendees", Value: c.ConfirmedAttendees, Unit: "people", Denominator: &c.RegisteredPeople, DenominatorSource: "registered_people", Source: "competition_claims.state=confirmed", Definition: "Current confirmed competitors; waitlists, offers and staff are excluded."},
-		{Key: "actual_attendance", Value: c.RecordedAttendance, Unit: "people", Denominator: &c.RegisteredPeople, DenominatorSource: "registered_people", Source: "distinct attendance_records.person_id with present=true", Definition: "People with at least one currently recorded present day; not registrations or check-in operations."},
+		{Key: "confirmed_attendees", Value: c.ConfirmedAttendees, Unit: "people", Source: "competition_claims.state=confirmed", Definition: "Current confirmed competitors; waitlists, offers and staff are excluded."},
+		{Key: "recorded_attendance_people", Value: c.RecordedAttendance, Unit: "people", Source: "distinct attendance_records.person_id with present=true", Definition: "Distinct people with at least one currently recorded present day, across all recorded persons in this event. Zero means no recorded presence, not that nobody physically attended. The recorded cohort may include people without an attendee registration; no registration rate is implied."},
 		{Key: "competition_entries", Value: c.EntryRecords, Unit: "entry_records", Source: "competition_entries", Definition: "One native competition entry record per team/event, including withdrawn or unused entries."},
 		{Key: "completed_entries", Value: c.CompletedEntries, Unit: "entry_records", Denominator: &c.EntryRecords, DenominatorSource: "competition_entries", Source: "active non-disbanded entry with native frozen submission outcome", Definition: "A frozen formal submission, not a judged, awarded or adopted project. Unused/disbanded entries are excluded."},
 		{Key: "not_submitted_entries", Value: c.NotSubmittedEntries, Unit: "entry_records", Denominator: &c.EntryRecords, DenominatorSource: "competition_entries", Source: "submission_states.outcome=not_submitted", Definition: "Only explicitly recorded native not-submitted outcomes; missing records are not inferred."},

@@ -25,3 +25,26 @@ Generation completed. Bounded compile of archives/httpapi/app completed successf
 
 No smaller checkpoint is treated as satisfying the full issue. No new judging,
 results, awards or financial-return owner is invented for absent dependencies.
+
+## Archive boundary and recorded attendance checkpoint
+
+The real native preparation → cancelled → archived path was exercised with no
+formal submission states. Before the fix, advancing the clock and maintaining
+submissions created two `not_submitted` outcomes and changed gate facts inside the
+archive. The regression now preserves the exact event/fact/outcome snapshot;
+ordinary missing archived submission reads/history return not found instead of
+initialising an `open` outcome. Existing pre-archive assessment settlement remains
+in the native submission owner.
+
+The reporting metric is `recorded_attendance_people`, with no registration
+population denominator: recorded people may include people without an attendee
+registration. Missing records and explicit absence both produce zero recorded
+presence, while physical attendance coverage remains explicitly unavailable.
+
+Executed with real isolated PostgreSQL, `GOMAXPROCS=2 GOFLAGS=-p=1
+HACKBOX_INTEGRATION=1 go test ./internal/submissions ./internal/archives -run
+'TestNeverHeldArchiveDoesNotInventSubmissionOutcomes|TestArchive' -count=1`:
+passed (submissions 2.107s; archives 4.441s). The initial red proof is retained in
+`/private/tmp/hackbox119-archive-boundary-red.log`; green log is
+`/private/tmp/hackbox119-archive-first-pg.log`. This is bounded proof, not the full
+remaining export/worker/race/HTTP acceptance gate.

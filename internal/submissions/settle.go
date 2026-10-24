@@ -22,6 +22,11 @@ func (s Service) Settle(ctx context.Context, tx pgx.Tx, row dbgen.Event, now tim
 	if err != nil {
 		return fmt.Errorf("lock final outcomes: %w", err)
 	}
+	// Archived competition facts are immutable, including absent outcomes for
+	// never-held events. A late maintenance/read must not invent a result.
+	if locked.Stage == "archived" {
+		return nil
+	}
 	c, err := configuration(locked)
 	if err != nil {
 		return err

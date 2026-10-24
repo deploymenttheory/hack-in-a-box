@@ -136,13 +136,39 @@ func TestArchiveCountsDistinguishApplicationsPeopleAttendanceAndUnusedEntries(t 
 	if err != nil {
 		t.Fatal(err)
 	}
-	for key, want := range map[string]int64{"registrations": 3, "registered_people": 2, "confirmed_attendees": 1, "actual_attendance": 2, "competition_entries": 3, "completed_entries": 1, "unused_entries": 1, "not_submitted_entries": 1} {
+	for key, want := range map[string]int64{"registrations": 3, "registered_people": 2, "confirmed_attendees": 1, "recorded_attendance_people": 2, "competition_entries": 3, "completed_entries": 1, "unused_entries": 1, "not_submitted_entries": 1} {
 		if got := metric(t, report, key); got.Value != want {
 			t.Fatalf("%s=%d want%d", key, got.Value, want)
 		}
 	}
-	if m := metric(t, report, "actual_attendance"); m.Denominator == nil || *m.Denominator != 2 || m.DenominatorSource != "registered_people" {
-		t.Fatal("attendance denominator hidden", m)
+	if m := metric(t, report, "recorded_attendance_people"); m.Denominator != nil || m.DenominatorSource != "" {
+		t.Fatal("recorded attendance implies an unrelated registration rate", m)
+	}
+
+	// Explicit absences and no observations both mean zero recorded presence;
+	// neither supplies a complete physical-attendance census.
+	for _, explicitAbsence := range []bool{true, false} {
+		if explicitAbsence {
+			execute(t, pool, "UPDATE attendance_records SET present=false WHERE event_id=$1", eventID)
+		} else {
+			execute(t, pool, "DELETE FROM attendance_records WHERE event_id=$1", eventID)
+		}
+		current, readErr := service.Read(t.Context(), owner.ID, eventID)
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		if got := metric(t, *current.Summary, "recorded_attendance_people"); got.Value != 0 || got.Denominator != nil {
+			t.Fatal("invented physical attendance/rate", got)
+		}
+		unavailable := false
+		for _, source := range current.Summary.Sources {
+			if source.Source == "actual_attendance" && source.State == "unavailable" {
+				unavailable = true
+			}
+		}
+		if !unavailable {
+			t.Fatal("missing physical-attendance coverage was presented as known")
+		}
 	}
 	data, err := json.Marshal(report)
 	if err != nil {
