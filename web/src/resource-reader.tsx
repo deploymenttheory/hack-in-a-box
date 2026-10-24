@@ -50,11 +50,11 @@ function ReaderLifetime({ id, event, back }: { id: string; event: EventRecord; b
   if (revoked) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Failure error={denied ?? resource.error} /></section>
   if (resource.isPending) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Loading /></section>
   if (!resource.data) return <Failure error={resource.error} retry={() => void resource.refetch()} />
-  return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} paused={!!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
+  return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} acceptPage={page => cache.setQueryData(key, page)} paused={!!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
 }
-function ReleasedDocument({ event, id, page, paused, onDeny, back, read }: { event: EventRecord; id: string; page: Page; paused: boolean; onDeny: (error: unknown) => void; back: () => void; read: () => Promise<Page> }) {
+function ReleasedDocument({ event, id, page, acceptPage, paused, onDeny, back, read }: { event: EventRecord; id: string; page: Page; acceptPage: (page: Page) => void; paused: boolean; onDeny: (error: unknown) => void; back: () => void; read: () => Promise<Page> }) {
   const identity = useIdentity(), cache = useQueryClient(), heading = useRef<HTMLDivElement>(null), opener = useRef<HTMLButtonElement>(null)
-  const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`, onDeny)
+  const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`, onDeny, { preserveUnknownOnDenial: true })
   const [review, setReview] = useState<{ version: number; title: string }>()
   useEffect(() => { const target = heading.current?.querySelector('h1'); if (target) { target.tabIndex = -1; target.focus() } }, [id, page.version])
   async function acknowledge() {
@@ -65,7 +65,7 @@ function ReleasedDocument({ event, id, page, paused, onDeny, back, read }: { eve
       const result = unwrap(await api.POST('/api/v1/events/{event_id}/content/{content_id}/acknowledgements', { params: { path: { event_id: event.id, content_id: id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.version}"` } } }))
       if (result.id !== id || result.version !== intent.version || !result.acknowledged_at) throw new Error('Unexpected acknowledgement response')
       return result
-    }, async (result, ticket) => { cache.setQueriesData({ queryKey: [...privateKey(identity.person.id, event.id, 'resource-reader'), id] }, result); setReview(undefined); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }); ticket.assert(); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') }); return `Acknowledgement recorded for version ${result.version}.` })
+    }, async (result, ticket) => { acceptPage(result); setReview(undefined); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'resource-library') }); ticket.assert(); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, 'event-guidance') }); return `Acknowledgement recorded for version ${result.version}.` })
     if (ticket.current()) setReview(undefined)
   }
   function readCurrent() { void operation.read(() => read(), () => { setReview(undefined) }) }

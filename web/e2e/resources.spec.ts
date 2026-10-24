@@ -210,3 +210,22 @@ for (const status of [401, 403, 404]) test(`fresh reader mount hides cached docu
   await expect(page.getByRole('link', { name: 'guide.txt', exact: true })).toHaveCount(0)
   expect(state.acknowledgements).toHaveLength(0)
 })
+
+test('a denied reconciliation read retains the redacted original acknowledgement barrier', async ({ page }) => {
+  const state = await setup(page); let attempts = 0
+  await page.route(`**/content/${guideID}/acknowledgements`, route => {
+    attempts++; expect(route.request().headers()['if-match']).toBe('"1"')
+    return route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  state.revoke(); await page.getByRole('button', { name: 'Read current state', exact: true }).click()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Resource acknowledgement · Expected revision 1 · Original outcome remains unconfirmed')
+  await expect(history).not.toContainText('Getting started')
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Confirm acknowledgement', exact: true })).toHaveCount(0)
+  expect(attempts).toBe(1)
+})

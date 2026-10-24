@@ -11,7 +11,7 @@ type Intent = { operation: string; revision: number; command: unknown }
 export const resourceDenied = (error: unknown): error is APIError => error instanceof APIError && [401, 403, 404].includes(error.status)
 // Native resources expose versions/history, not client-command receipts. Reads
 // can establish a new reviewed base while the original unknown capsule remains.
-export function useResourceOperation(owner: string, deny?: (error: unknown) => void) {
+export function useResourceOperation(owner: string, deny?: (error: unknown) => void, { preserveUnknownOnDenial = false }: { preserveUnknownOnDenial?: boolean } = {}) {
   const scope = usePrivateRequestScope(owner), history = usePlanningUnknownCommands(owner), lock = useRef(false)
   const [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [stale, setStale] = useState(false), [notice, setNotice] = useState(''), [reading, setReading] = useState(false), [currentRead, setCurrentRead] = useState(false)
   const blocked = pending || history.unconfirmed || stale
@@ -29,14 +29,14 @@ export function useResourceOperation(owner: string, deny?: (error: unknown) => v
     } catch (error) {
       if (!ticket.current()) return false
       setFailure(error)
-      if (resourceDenied(error)) { history.clear(); deny?.(error); lock.current = false }
+      if (resourceDenied(error)) { if (!preserveUnknownOnDenial) history.clear(); deny?.(error); lock.current = false }
       else if (!(error instanceof APIError) || error.status >= 500 || error.status === 408) history.record(structuredClone(intent))
       else if (error.code === 'revision_conflict') setStale(true)
       else {
         lock.current = false
         if (rejected) {
           try { await rejected(error, ticket); ticket.assert() }
-          catch (readError) { if (ticket.current()) { setFailure(readError); if (resourceDenied(readError)) { history.clear(); deny?.(readError) } } }
+          catch (readError) { if (ticket.current()) { setFailure(readError); if (resourceDenied(readError)) { if (!preserveUnknownOnDenial) history.clear(); deny?.(readError) } } }
         }
       }
       return false
@@ -47,7 +47,7 @@ export function useResourceOperation(owner: string, deny?: (error: unknown) => v
     const ticket = scope.capture(); if (!ticket.current()) return
     setReading(true); setFailure(undefined); setCurrentRead(false)
     try { const value = await get(ticket.signal); ticket.assert(); await show(value, ticket); ticket.assert(); setCurrentRead(true) }
-    catch (error) { if (ticket.current()) { setFailure(error); if (resourceDenied(error)) { history.clear(); deny?.(error) } } }
+    catch (error) { if (ticket.current()) { setFailure(error); if (resourceDenied(error)) { if (!preserveUnknownOnDenial) history.clear(); deny?.(error) } } }
     finally { if (ticket.current()) setReading(false) }
   }
   function useCurrent() { if (!currentRead || pending || reading) return; history.selectNewBase(); setStale(false); setCurrentRead(false); setFailure(undefined); lock.current = false }
