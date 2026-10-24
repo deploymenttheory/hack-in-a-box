@@ -1,7 +1,7 @@
 # Repository readiness administration: native ownership and verification
 
 Issue #94. Repository administration and own-team readiness are implemented on
-merged MC main `18b23f4e3201f9ab0d10ef3875628585f0ffd74f`. The draft retains
+merged archive main `c759a42e3d8561326b976db1ecf1966c315599d6`. The draft retains
 Refs #94 until final frozen reviews and all actual CI complete. Live GitHub App
 sandbox verification #91 is separate and remains open; this work uses synthetic
 providers only.
@@ -242,3 +242,16 @@ remain distinct from original command acknowledgement. No App key, webhook,
 raw private reason, people projection or exact command body enters shared safe
 history or browser persistence. Live App installation/provisioning #91 was not
 performed or claimed complete.
+
+## Final rebase preservation
+
+Rebased onto actual main `c759a42e3d8561326b976db1ecf1966c315599d6`.
+The sole conflict was the generated embedded OpenAPI byte blob. Native Go and
+browser contracts were regenerated from merged YAML, preserving archive APIs
+and repository original-receipt APIs. The equivalent scorecard migration-clock
+fixture commit was dropped automatically because it is already on main.
+Runtime `web/src` diff against tested pre-rebase `d2152ab` is empty except erased
+generated API types; no screenshot or runtime UI changes were introduced by the
+rebase. Final Go/TypeScript contract regeneration parity is recorded in
+`/private/tmp/hackbox94-rebase-parity.log`. All required frozen reviews and actual
+final-head CI remain merge gates.

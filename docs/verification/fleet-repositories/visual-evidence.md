@@ -80,3 +80,10 @@ candidate below; a harness alone is not evidence of executed screenshots.
 | [before-admin-mobile-adjacent-task-context.png](images/before-admin-mobile-adjacent-task-context.png) | 1074×2712 | `281388378f66c6d8719d119b02d9dd81c4e55e1480afd14a9aa75477566690fc` |
 | [before-participant-desktop-adjacent-task-context.png](images/before-participant-desktop-adjacent-task-context.png) | 1232×446 | `699e5abab70639140dd43a33d8e5bdb661fcdbfe9e7affb6a34cb08fbc586cea` |
 | [before-participant-mobile-adjacent-task-context.png](images/before-participant-mobile-adjacent-task-context.png) | 1074×1926 | `35450bb5887c70caf60fe24b310703dc725946ddfa641ce8d7b0cc0428ebb272` |
+
+The final candidate was rebased onto main
+`c759a42e3d8561326b976db1ecf1966c315599d6`. Apart from erased generated API
+types, runtime UI source is identical to the tested pre-rebase candidate;
+archive changes did not alter these scenes. The recorded source identities and
+PNG hashes preserve the actual capture provenance rather than claiming a new
+capture after a rebase that left UI runtime source unchanged.
