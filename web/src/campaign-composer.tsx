@@ -1,6 +1,6 @@
-import { useCommunicationTests } from './communication-tests'
+import { useCommunicationTests, useCommunicationCommands, CommunicationCommandHistory } from './communication-tests'
 import { Tabs, TabList, Tab, TabPanel } from './components/ui/tabs'
-import { usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
+import { usePlanningDepartureBarrier } from './planning-operations'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { useCallback, useMemo } from 'react'
 import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
@@ -58,13 +58,13 @@ function CampaignScope({ event, onDirty }: { event: EventRecord; onDirty: (value
 }
 
 function Composer({ event, initialSource, initialPage, teams, onDirty, scope: parentScope, deny, readFresh }: { readFresh: boolean; scope: PrivateRequestScope; deny: () => void; event: EventRecord; initialSource: ComposerPage; initialPage: CampaignPage; teams: { id: string; name: string }[]; onDirty: (value: boolean) => void }) {
-  const scope = usePrivateRequestScope('campaign-editor', parentScope), tests = useCommunicationTests()
+  const scope = usePrivateRequestScope('campaign-editor', parentScope), tests = useCommunicationTests(event.id)
   const identity = useIdentity(), cache = useQueryClient(), [editing, setEditing] = useState(false), [step, setStep] = useState('schedule'), [source, setSource] = useState(initialSource), [page, setPage] = useState(initialPage), [revision, setRevision] = useState(Math.max(initialSource.revision, initialPage.revision)), [message, setMessage] = useState(initialSource.templates[0] ?? blankTemplate), [savedMessage, setSavedMessage] = useState(message), [audience, setAudience] = useState(initialSource.audiences[0] ?? blankAudience), [savedAudience, setSavedAudience] = useState(audience), [definition, setDefinition] = useState(() => blankCampaign(initialSource)), [savedDefinition, setSavedDefinition] = useState(definition), [detail, setDetail] = useState<CampaignDetail>(), [reason, setReason] = useState(''), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [conflict, setConflict] = useState(false), [latest, setLatest] = useState<{ source: ComposerPage; page: CampaignPage; detail?: CampaignDetail }>(), [reviewed, setReviewed] = useState(false)
   const dirtySources = !same(message, savedMessage) || !same(audience, savedAudience), dirtyDefinition = !same(definition, savedDefinition), dirty = dirtySources || dirtyDefinition
   const frame = useRef<HTMLElement>(null), entryFocus = useRef(false), opener = useRef<string | undefined>(undefined), destinationFocus = useRef<{ selector: string; current: () => boolean } | undefined>(undefined)
   const [reviewTest, setReviewTest] = useState<Channel>(), [selfReview, setSelfReview] = useState<SelfTestPreview>(), [reviewPending, setReviewPending] = useState(false), [reviewFailure, setReviewFailure] = useState<unknown>(), testTrigger = useRef<HTMLButtonElement>(null), reviewSequence = useRef(0)
   const writing = useRef(false), [unknownNotice, setUnknownCommand] = useState<string>()
-  const history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:communications`)
+  const history = useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:communications`)
   const unknownCommand = unknownNotice || (history.unconfirmed ? 'An earlier campaign command in this event session remains unconfirmed. Current facts cannot prove its original acknowledgement; no command will be replayed.' : undefined)
   usePlanningDepartureBarrier(pending)
   useEffect(() => {
@@ -89,7 +89,11 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
     ticket.assert(); cache.setQueryData([...privateKey(identity.person.id, event.id, 'communications-workspace'), identity.draft_scope, 'campaigns'], freshPage)
     return { source: freshSource, page: freshPage, detail: freshDetail }
   }
-  async function reject(error: unknown, attempted?: { action: string; revision: number }) { if (!scope.capture().current()) return; if (error instanceof APIError && [401, 403, 404].includes(error.status)) { deny(); return } setFailure(error); if (attempted && (!(error instanceof APIError) || error.status >= 500 || error.status === 408)) { history.record({ operation: `Campaign ${attempted.action}`, revision: attempted.revision, command: { intentID: crypto.randomUUID(), action: attempted.action } }); setUnknownCommand('The previous campaign operation has an unknown outcome. Refresh current facts for review; no operation will be replayed.'); } if (error instanceof APIError && error.status === 403) setPage(page => ({ ...page, can_manage: false })); if (error instanceof APIError && error.status === 409) { setConflict(true); setReviewed(false); try { setLatest(await current(detail?.campaign.campaign.definition.id)) } catch (refreshError) { setFailure(refreshError) } } }
+  async function reject(error: unknown) { if (!scope.capture().current()) return; if (error instanceof APIError && [401, 403, 404].includes(error.status)) { deny(); return } setFailure(error); if (error instanceof APIError && error.status === 409) { setConflict(true); setReviewed(false); try { setLatest(await current(detail?.campaign.campaign.definition.id)) } catch (refreshError) { setFailure(refreshError) } } }
+  function settleFailure(error: unknown, operation: string) {
+    if (!(error instanceof APIError) || error.status >= 500 || error.status === 408) { history.uncertain(operation); if (scope.capture().current()) setUnknownCommand('The previous campaign operation has an unknown outcome. Refresh current facts for review; no operation will be replayed.') }
+    else history.complete(operation)
+  }
   function openStep(value: string, headingSelector: string) {
     const ticket = scope.capture()
     destinationFocus.current = { selector: headingSelector, current: ticket.current }
@@ -99,15 +103,18 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
     if (writing.current || unknownCommand) return
     const ticket = scope.capture(); if (!ticket.current()) return
     writing.current = true
+    const operation = history.begin({ operation: `Campaign ${command.action}`, revision, command: { intentID: crypto.randomUUID(), action: command.action } })
+    let acknowledged = false
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const fresh = unwrap(await api.POST('/api/v1/events/{event_id}/communications', { params: { path, header }, body: { ...command, reason } }))
+      acknowledged = true; history.complete(operation)
       ticket.assert(); setSource(fresh); setRevision(fresh.revision)
       if (command.action === 'save_template') { const saved = fresh.templates.find(t => t.id === message.id)!; setMessage(saved); setSavedMessage(saved) }
       else { const saved = fresh.audiences.find(a => a.id === audience.id)!; setAudience(saved); setSavedAudience(saved) }
       const latest = await current(detail?.campaign.campaign.definition.id); setPage(latest.page); if (latest.detail) setDetail(latest.detail)
       if (latest.page.revision !== fresh.revision) { setLatest(latest); setConflict(true); setReviewed(false) } else setRevision(fresh.revision); setNotice('Source version saved. Review a new campaign preview before approval.')
-    } catch (error) { await reject(error, { action: command.action, revision }) } finally { writing.current = false; setPending(false) }
+    } catch (error) { if (!acknowledged) settleFailure(error, operation); await reject(error) } finally { writing.current = false; setPending(false) }
   }
   function receive(fresh: CampaignDetail, resetDefinition = false) { setDetail(fresh); setRevision(fresh.revision); setPage(page => ({ ...page, revision: fresh.revision, providers: fresh.providers, can_manage: fresh.can_manage, campaigns: page.campaigns.filter(c => c.campaign.definition.id !== fresh.campaign.campaign.definition.id).concat(fresh.campaign) })); if (resetDefinition) { setDefinition(fresh.campaign.campaign.definition); setSavedDefinition(fresh.campaign.campaign.definition) } }
   async function campaignChange(action: CampaignCommand['action'], channel?: Channel, reviewed?: SelfTestPreview) {
@@ -116,12 +123,15 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
     if (writing.current || unknownCommand) return
     const ticket = scope.capture(); if (!ticket.current()) return
     writing.current = true
+    const operation = history.begin({ operation: `Campaign ${action}`, revision, command: { intentID: crypto.randomUUID(), action } })
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const fresh = unwrap(await api.POST('/api/v1/events/{event_id}/communications/campaigns/{campaign_id}', { params: { path: { ...path, campaign_id: definition.id }, header }, body: { action, version: detail?.campaign.campaign.version ?? 0, reason, ...(action === 'save' ? { definition } : {}), ...(channel ? { channel } : {}), ...(reviewed ? { reviewed_test_fingerprint: reviewed.review_fingerprint } : {}) } }))
-      ticket.assert(); receive(fresh, action === 'save'); if (action === 'save' || action === 'preview') openStep('review', '#campaign-preview h3'); if (action === 'test_self' && channel === 'smtp' && fresh.test_request_id && reviewed) tests.queued({ testID: fresh.test_request_id, campaignID: definition.id, campaignVersion: reviewed.campaign_version, providerRevision: reviewed.provider_revision })
+      if (action === 'test_self' && channel === 'smtp' && fresh.test_request_id && reviewed) tests.queued({ testID: fresh.test_request_id, campaignID: definition.id, campaignVersion: reviewed.campaign_version, providerRevision: reviewed.provider_revision })
+      history.complete(operation)
+      ticket.assert(); receive(fresh, action === 'save'); if (action === 'save' || action === 'preview') openStep('review', '#campaign-preview h3')
       setNotice(action === 'test_self' ? 'Test queued for the requesting organiser only. Provider acceptance and delivery are not confirmed.' : action === 'approve' ? 'Campaign definition approved. This is not a delivery receipt.' : action === 'preview' ? 'Retained audience preview generated.' : action === 'cancel' ? 'Campaign cancelled. Obsolete queued self-tests have been cancelled.' : 'Campaign saved as a draft. Approval is required.')
-    } catch (error) { await reject(error, { action, revision }) } finally { writing.current = false; setPending(false) }
+    } catch (error) { settleFailure(error, operation); await reject(error) } finally { writing.current = false; setPending(false) }
   }
   async function reviewSelf(channel: Channel, trigger: HTMLButtonElement) {
     if (actionDisabled || !detail || channel === 'teams' || (channel === 'smtp' && tests.blocked())) return
@@ -168,7 +178,7 @@ function Composer({ event, initialSource, initialPage, teams, onDirty, scope: pa
   const selectedTemplate = source.templates.find(t => t.id === definition.template_id), selectedAudience = source.audiences.find(a => a.id === definition.audience_id)
   const currentPreview = preview && preview.template_version === selectedTemplate?.version && preview.audience_version === selectedAudience?.version
   const approvalBlocked = detail?.campaign.blockers.some(code => !['approval_outdated', 'provider_configuration_changed'].includes(code)) ?? true
-  return <section ref={frame} id="communications" className="campaign-composer fleet-communications"><h2>Campaign composer</h2><p><Link to="/events/$eventId/communications/deliveries" params={{ eventId: event.id }}>Delivery history and failure review</Link></p><p>Review the content, current eligible audience, channels and schedule before explicitly approving. Approval does not publish teams, challenges or results.</p>
+  return <section ref={frame} id="communications" className="campaign-composer fleet-communications"><h2>Campaign composer</h2><CommunicationCommandHistory attempts={history.attempts} /><p><Link to="/events/$eventId/communications/deliveries" params={{ eventId: event.id }}>Delivery history and failure review</Link></p><p>Review the content, current eligible audience, channels and schedule before explicitly approving. Approval does not publish teams, challenges or results.</p>
     <section hidden={editing} className="fleet-campaign-collection" aria-label="Saved campaigns"><div className="fleet-pattern-actions"><h3>Campaigns</h3><Button icon="shield" variant="outline" disabled={pending} data-record-focus="channel-setup" onClick={() => { opener.current = 'channel-setup'; entryFocus.current = true; setEditing(true); setStep('channels') }}>Channel setup</Button><Button data-record-focus="new-campaign" icon="add" disabled={pending || !!unknownCommand} onClick={() => void choose()}>New campaign</Button></div><CollectionRecords label="Saved campaigns" rows={page.campaigns} rowKey={row => row.campaign.definition.id} rowLabel={row => row.campaign.definition.name} columns={[{ id: 'status', label: 'State', essential: true, cell: row => <StatusBadge>{row.status.replaceAll('_', ' ')}</StatusBadge> }, { id: 'version', label: 'Version', cell: row => row.campaign.version }, { id: 'channels', label: 'Channels', cell: row => row.campaign.definition.channels.map(channel => channelNames[channel]).join(', ') }]} actions={row => <Button icon="next" variant="ghost" data-record-focus={row.campaign.definition.id} disabled={pending} onClick={() => void choose(row.campaign.definition.id)} aria-label={`Review ${row.campaign.definition.name}`}>Review</Button>} />{!page.campaigns.length && <p>No campaigns saved yet. Choose New campaign to review its message, audience and schedule.</p>}</section>
     {tests.blocked() && <p role="alert">An earlier Email TEST is pending or its submission remains uncertain. A replacement Email TEST is blocked until the original native request has a confirmed submission outcome. Changing campaigns, templates or delivery setup does not clear this barrier.</p>}
     {page.can_manage && tests.items.map(test => <SMTPTestDelivery key={test.testID} eventID={event.id} testID={test.testID} observed={tests.observed} denied={deny} />)}

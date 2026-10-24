@@ -1,4 +1,3 @@
-import { CommunicationTests } from './communication-tests'
 import { PlanningOperations, planningDepartureAllowed } from './planning-operations'
 import { RulesPlanningWorkspace } from './rules-planning'
 import { PlanningHeader, PlanningNavigation, eventPlanningDestinations } from './planning-layout'
@@ -54,8 +53,8 @@ export function NewEvent() {
 }
 
 export function EventWorkspace() {
-  const { eventId } = useParams({ from: '/events/$eventId' }), identity = useIdentity()
-  return <CommunicationTests key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><EventBrand key={eventId} eventID={eventId}><EventContent eventId={eventId} /></EventBrand></CommunicationTests>
+  const { eventId } = useParams({ from: '/events/$eventId' })
+  return <EventBrand key={eventId} eventID={eventId}><EventContent eventId={eventId} /></EventBrand>
 }
 
 function EventContent({ eventId }: { eventId: string }) {

@@ -1,3 +1,4 @@
+import { CommunicationSafety } from './communication-tests'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -13,7 +14,7 @@ afterEach(() => vi.restoreAllMocks())
 function mount(data = safe) {
   vi.spyOn(api, 'GET').mockResolvedValue(success(data) as never)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } }), changed = vi.fn()
-  const view = render(<Theme><QueryClientProvider client={client}><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></QueryClientProvider></Theme>)
+  const view = render(<Theme><QueryClientProvider client={client}><CommunicationSafety><TeamsWorkflowSetup eventID="event" canEdit changed={changed} /></CommunicationSafety></QueryClientProvider></Theme>)
   return { client, changed, ...view }
 }
 test('write-only endpoint clears before a pending save and never enters shared caches or storage', async () => {

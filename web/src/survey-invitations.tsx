@@ -1,5 +1,5 @@
-import { CommunicationTests } from './communication-tests'
-import { PlanningOperations, usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
+import { useCommunicationCommands, CommunicationCommandHistory } from './communication-tests'
+import { usePlanningDepartureBarrier } from './planning-operations'
 import { CommunicationStep } from './communication-layout'
 import { CollectionRecords } from './components/patterns/collection'
 import { StatusBadge } from './components/ui/feedback'
@@ -23,13 +23,13 @@ type Intent = { command: Command; eventRevision: number; previousReview?: number
 type InvitationProps = { event: EventRecord; configuration: SurveyConfiguration; writable: boolean; onDirty: (value: boolean) => void; deny: (error: unknown) => void }
 export function SurveyInvitations(props: InvitationProps) {
   const identity = useIdentity()
-  return <CommunicationTests key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}`}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}:${props.configuration.id}:${props.configuration.version}:${props.writable}`}><InvitationWorkspace {...props} /></PlanningOperations></CommunicationTests>
+  return <InvitationWorkspace key={`${identity.person.id}:${identity.draft_scope}:${props.event.id}:${props.configuration.id}:${props.configuration.version}:${props.writable}`} {...props} />
 }
 function InvitationWorkspace({ event, configuration, writable, onDirty, deny }: InvitationProps) {
   const identity = useIdentity(), cache = useQueryClient(), active = useActivePage()
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${configuration.id}:${configuration.version}:invitation`), writing = useRef(false)
   const [compose, setCompose] = useState(false), [composeDirty, setComposeDirty] = useState(false), [campaignId, setCampaignId] = useState(''), [bindingId] = useState(() => crypto.randomUUID()), [lateness, setLateness] = useState(60), [reason, setReason] = useState(''), [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [uncertain, setUncertain] = useState<Intent>()
-  const history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${configuration.id}:invitation`), [currentRead, setCurrentRead] = useState(false)
+  const history = useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${configuration.id}:invitation`), [currentRead, setCurrentRead] = useState(false)
   usePlanningDepartureBarrier(pending)
   const key = useMemo(() => [...privateKey(identity.person.id, event.id, 'survey-invitations'), identity.draft_scope, configuration.id], [identity.person.id, identity.draft_scope, event.id, configuration.id])
   const automation = useInfiniteQuery({ queryKey: [...key, 'automation'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 15_000, initialPageParam: {} as { bindings_after?: string; occurrences_after?: string }, queryFn: ({ pageParam }) => communicationRead(scope, async signal => unwrap(await api.GET('/api/v1/events/{event_id}/communications/automation', { signal, params: { path: { event_id: event.id }, query: { ...pageParam, limit: 50 } } }))),
@@ -49,16 +49,19 @@ function InvitationWorkspace({ event, configuration, writable, onDirty, deny }: 
     const ticket = scope.capture(); if (!ticket.current()) return
     writing.current = true
     const intent = { command, eventRevision: page.revision, previousReview }
+    const operation = history.begin({ operation: `Invitation ${command.action}`, revision: intent.eventRevision, command: { intentID: command.definition?.id ?? command.binding_id ?? command.occurrence_id, action: command.action } })
     setPending(true); setFailure(undefined); setNotice('')
     try {
       const value = unwrap(await api.POST('/api/v1/events/{event_id}/communications/automation', { params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.eventRevision}"` } }, body: command }))
+      history.complete(operation)
       if (!active.current || !ticket.current()) return
       setUncertain(undefined); setReason(''); setNotice(`Native invitation operation ${command.action.replaceAll('_', ' ')} recorded. This is not a provider receipt.`)
       cache.setQueryData([...key, 'automation'], { pages: [value.page], pageParams: [{}] }); await refresh().catch(error => { if (nativeDenied(error)) deny(error); else setFailure(error) })
     } catch (error) {
+      if (unknownOutcome(error)) history.uncertain(operation); else history.complete(operation)
       if (!active.current || !ticket.current()) return
       if (nativeDenied(error)) { deny(error); return }
-      setFailure(error); if (unknownOutcome(error)) { setUncertain(intent); setCurrentRead(false); history.record({ operation: `Invitation ${command.action}`, revision: intent.eventRevision, command: { intentID: command.definition?.id ?? command.binding_id ?? command.occurrence_id, action: command.action } }) } else { setUncertain(undefined); try { await refresh() } catch (currentError) { if (nativeDenied(currentError)) deny(currentError) } }
+      setFailure(error); if (unknownOutcome(error)) { setUncertain(intent); setCurrentRead(false) } else { setUncertain(undefined); try { await refresh() } catch (currentError) { if (nativeDenied(currentError)) deny(currentError) } }
     } finally { writing.current = false; if (active.current && ticket.current()) setPending(false) }
   }
   async function reconcile() {
@@ -72,7 +75,7 @@ function InvitationWorkspace({ event, configuration, writable, onDirty, deny }: 
   const approved = campaigns.data?.campaigns.filter(item => item.status === 'approved' && !!item.campaign.approval && !item.campaign.cancelled) ?? [], selected = approved.find(item => item.campaign.definition.id === campaignId)
   const blocked = pending || !!uncertain || history.unconfirmed || !writable || !reason.trim() || !page
   function command(action: Command['action'], binding?: components['schemas']['AutomationBinding'], occurrence?: components['schemas']['AutomationOccurrence']): Command { return { action, reason, binding_id: binding?.definition.id, version: binding?.version ?? 0, occurrence_id: occurrence?.id } }
-  return <section className="fleet-communications"><h2>Approved survey invitations</h2><p>Survey publication does not send a message. Review an approved campaign, then approve a binding for this exact survey version. Eligibility is checked again after answering, close, withdrawal or archive.</p>
+  return <section className="fleet-communications"><h2>Approved survey invitations</h2><CommunicationCommandHistory attempts={history.attempts} /><p>Survey publication does not send a message. Review an approved campaign, then approve a binding for this exact survey version. Eligibility is checked again after answering, close, withdrawal or archive.</p>
     {!configuration.published_at && <p role="status">Publish the fixed survey invitations before creating its native communication binding.</p>}
     <Button variant="outline" onClick={() => { if (!composeDirty || window.confirm('Leave unsaved campaign text? It is kept only in the campaign editor and will be cleared.')) { setCompose(!compose); setComposeDirty(false) } }}>{compose ? 'Close invitation composer' : 'Compose and approve invitation message'}</Button>
     {compose && <CampaignWorkspace key={`${event.id}:${writable}`} event={event} onDirty={setComposeDirty} />}
@@ -86,6 +89,6 @@ function InvitationWorkspace({ event, configuration, writable, onDirty, deny }: 
       <h3>Native invitation occurrences</h3><CollectionRecords label="Native invitation occurrences" rows={occurrences} rowKey={occurrence => occurrence.id} rowLabel={() => 'Survey opening'} columns={[{ id: 'state', label: 'State', essential: true, cell: occurrence => <StatusBadge tone={['missed','blocked','partially_queued'].includes(occurrence.state) ? 'warning' : 'neutral'}>{occurrence.state.replaceAll('_', ' ')}</StatusBadge> }, { id: 'due', label: 'Due', cell: occurrence => localDate(occurrence.due_at, event.configuration.timezone) }, { id: 'review', label: 'Review revision', cell: occurrence => occurrence.review_revision }, { id: 'evidence', label: 'Native channel evidence', cell: occurrence => <><p>{occurrence.reason || 'No failure reason'}</p>{Object.entries(occurrence.channel_reports).map(([channel, report]) => <p key={channel}>{channel}: {report.queued} newly queued intents, {report.local_persisted} local inbox records, {report.unavailable} unavailable recipients. Queued/provider acceptance is not human receipt.</p>)}</> }]} actions={occurrence => <div className="fleet-pattern-actions"><Button icon="shield" variant="outline" disabled={blocked || occurrence.state === 'cancelled' || !['missed', 'blocked', 'partially_queued'].includes(occurrence.state)} onClick={() => void act(command('review_occurrence', undefined, occurrence), occurrence.review_revision)}>Review this invitation occurrence</Button><Button icon="remove" variant="ghost" disabled={blocked || occurrence.state === 'cancelled'} onClick={() => void act(command('cancel_occurrence', undefined, occurrence))}>Cancel this invitation occurrence</Button></div>} />{automation.hasNextPage && <Button variant="outline" disabled={automation.isFetchingNextPage} onClick={() => void automation.fetchNextPage()}>More invitation history</Button>}
       <p><Link to="/events/$eventId/communications/deliveries" params={{ eventId: event.id }}>Review actual provider history and uncertain delivery outcomes</Link></p>
     </>}
-    <p role="status" aria-label="Survey invitation status">{notice || (uncertain || history.unconfirmed ? 'The operation outcome is unknown. Check the native binding/occurrence before another write.' : '')}</p>{!!failure && <Failure error={failure} />}{(uncertain || history.unconfirmed) && <div className="actions"><Button variant="outline" disabled={pending} onClick={() => void reconcile()}>Read current invitation facts</Button><Button variant="outline" disabled={pending || !currentRead} onClick={() => { if (window.confirm('The original outcome remains unconfirmed. Use the current facts as a new base for a different explicitly reviewed command? The original command will not be replayed.')) { history.selectNewBase(); setUncertain(undefined); setReason(''); setCurrentRead(false) } }}>Use current invitation facts as a new base</Button></div>}
+    <p role="status" aria-label="Survey invitation status">{notice || (uncertain || history.unconfirmed ? 'The operation outcome is unknown. Check the native binding/occurrence before another write.' : '')}</p>{!!failure && <Failure error={failure} />}{(uncertain || history.unconfirmed) && <div className="actions"><Button variant="outline" disabled={pending} onClick={() => void reconcile()}>Read current invitation facts</Button><Button variant="outline" disabled={pending || history.pending || !currentRead} onClick={() => { if (window.confirm('The original outcome remains unconfirmed. Use the current facts as a new base for a different explicitly reviewed command? The original command will not be replayed.')) { history.selectNewBase(); setUncertain(undefined); setReason(''); setCurrentRead(false) } }}>Use current invitation facts as a new base</Button></div>}
   </section>
 }
