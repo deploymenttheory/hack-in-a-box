@@ -6,7 +6,7 @@ const notificationID = '019c25e0-15bd-7000-8000-000000000001', resourceID = '7b5
 type Detail = components['schemas']['InboxDetail']
 async function prepare(page: Page) {
   await mockWorkspace(page)
-  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
+  await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, draft_scope: '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic-csrf-token-32-characters', can_create_events: false } }))
   let allowed = true, read = false
   const requests: unknown[] = []
   const detail = (): Detail => ({ item: { id: notificationID, event_id: firstID, event_name: 'Synthetic event', label: 'Released event resource', created_at: '2027-06-19T09:00:00Z', read_at: read ? '2027-06-19T10:00:00Z' : null }, subject: 'Synthetic message for you', body: 'First line<br>\nSecond line<br>\n&lt;script&gt;window.INBOX_PWNED=true&lt;/script&gt;\n' + 'LongHarmlessText'.repeat(80), format: 'html', destination: { kind: 'content', resource_id: resourceID } })

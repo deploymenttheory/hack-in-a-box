@@ -1500,6 +1500,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/communications/campaigns/{campaign_id}/self-test-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current write-authorised organiser-only TEST rendering without saving, queuing or sending. No recipient or address can be supplied. Re-review after any source, account or configuration change. */
+        get: operations["getCampaignSelfTestPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams/{team_id}/mentor-observations": {
         parameters: {
             query?: never;
@@ -4556,6 +4576,21 @@ export interface components {
             /** Format: uuid */
             test_request_id: string | null;
         };
+        CampaignSelfTestPreview: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            campaign_version: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** @enum {string} */
+            channel: "in_app" | "smtp";
+            subject: string;
+            plain_text: string;
+            include_calendar: boolean;
+            provider_revision: string;
+            review_fingerprint: string;
+        };
         CampaignCommand: {
             /** @enum {string} */
             action: "save" | "preview" | "approve" | "cancel" | "test_self";
@@ -4565,6 +4600,8 @@ export interface components {
             definition?: components["schemas"]["CampaignDefinition"];
             /** @enum {string} */
             channel?: "in_app" | "smtp" | "teams";
+            /** @description Optional exact current organiser-TEST review binding. Valid only with test_self. New clients supply it after reading self-test-preview; legacy omission retains existing behaviour. */
+            reviewed_test_fingerprint?: string;
         };
         MentorPage: {
             /** Format: int64 */
@@ -10177,6 +10214,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCampaignSelfTestPreview: {
+        parameters: {
+            query: {
+                channel: "in_app" | "smtp";
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ephemeral exact organiser rendering and opaque review binding; never a command or provider receipt. Mailbox values are excluded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSelfTestPreview"];
                 };
             };
             default: components["responses"]["Error"];

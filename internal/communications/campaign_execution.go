@@ -21,10 +21,10 @@ func (s Service) selfMessage(
 	c Campaign,
 	id uuid.UUID,
 	channel string,
-) (TestMessage, string, error) {
+) (TestMessage, string, string, error) {
 	t, a, err := loadPair(ctx, q, row.ID, c.Definition.TemplateID, c.Definition.AudienceID)
 	if err != nil {
-		return TestMessage{}, "", err
+		return TestMessage{}, "", "", err
 	}
 	purpose, format := t.Purpose, t.Format
 	providerRevision := ""
@@ -46,11 +46,11 @@ func (s Service) selfMessage(
 	}
 	p, err := s.build(ctx, q, row, t, self)
 	if err != nil {
-		return TestMessage{}, "", err
+		return TestMessage{}, "", "", err
 	}
 	index := slices.IndexFunc(p.Recipients, func(r Recipient) bool { return r.PersonID == actor })
 	if index < 0 || len(p.Recipients[index].Unresolved) > 0 {
-		return TestMessage{}, "", blocked("self_test_source_unavailable")
+		return TestMessage{}, "", "", blocked("self_test_source_unavailable")
 	}
 	recipient := p.Recipients[index]
 	message := TestMessage{
@@ -70,7 +70,11 @@ func (s Service) selfMessage(
 		Facts                            string
 		Message                          TestMessage
 	}{t.Version, a.Version, p.Fingerprint, message})
-	return message, fingerprint, nil
+	sourceBinding := digest(struct {
+		TemplateVersion, AudienceVersion int64
+		Facts                            string
+	}{t.Version, a.Version, p.Fingerprint})
+	return message, fingerprint, sourceBinding, nil
 }
 
 func (s Service) queueTestSelf(
@@ -95,9 +99,19 @@ func (s Service) queueTestSelf(
 		return nil, blocked("self_test_provider_unavailable")
 	}
 	id := uuid.New()
-	message, fingerprint, err := s.selfMessage(ctx, q, row, actor, c, id, input.Channel)
+	message, fingerprint, sourceBinding, err := s.selfMessage(ctx, q, row, actor, c, id, input.Channel)
 	if err != nil {
 		return nil, err
+	}
+	if input.ReviewedTestFingerprint != "" {
+		reviewed, reviewErr := selfTestReviewBinding(ctx, q, c, message, sourceBinding)
+		if reviewErr != nil {
+			return nil, reviewErr
+		}
+		if reviewed != input.ReviewedTestFingerprint {
+			return nil, access.ErrConflict
+		}
+		message.ReviewedTestBinding = reviewed
 	}
 	raw, err := json.Marshal(message)
 	if err != nil {
@@ -177,7 +191,7 @@ func (s Service) ResolveTestSelfInTransaction(
 	) < 0 {
 		return TestMessage{}, ErrUnresolved
 	}
-	message, fingerprint, err := s.selfMessage(
+	message, fingerprint, sourceBinding, err := s.selfMessage(
 		ctx,
 		q,
 		row,
@@ -191,6 +205,20 @@ func (s Service) ResolveTestSelfInTransaction(
 	}
 	if fingerprint != request.Fingerprint {
 		return TestMessage{}, ErrUnresolved
+	}
+	var retained TestMessage
+	if err = json.Unmarshal(request.Snapshot, &retained); err != nil {
+		return TestMessage{}, contextError("decode reviewed test", err)
+	}
+	if retained.ReviewedTestBinding != "" {
+		binding, reviewErr := selfTestReviewBinding(ctx, q, c, message, sourceBinding)
+		if reviewErr != nil {
+			return TestMessage{}, reviewErr
+		}
+		if binding != retained.ReviewedTestBinding {
+			return TestMessage{}, ErrUnresolved
+		}
+		message.ReviewedTestBinding = binding
 	}
 	return message, nil
 }

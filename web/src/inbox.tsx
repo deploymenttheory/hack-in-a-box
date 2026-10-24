@@ -1,3 +1,5 @@
+import { communicationRead } from './communication-private'
+import { usePrivateRequestScope } from './private-request-scope'
 import { useEffect, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
@@ -23,8 +25,9 @@ export function InboxPage() {
 }
 function InboxWorkspace() {
   const identity = useIdentity(), [eventID, setEventID] = useState(''), [selected, setSelected] = useState<string>()
-  const events = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-events'), queryFn: async () => unwrap(await api.GET('/api/v1/events', { params: { query: { limit: 100 } } })), retry: false })
-  const notifications = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, 'personal', 'inbox'),eventID], initialPageParam: undefined as string | undefined, queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/inbox', { params: { query: { event_id: eventID || undefined, cursor: pageParam, limit: 30 } } })), getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:inbox`), filterScope = usePrivateRequestScope(eventID, scope)
+  const events = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-events'), queryFn: () => communicationRead(scope, async signal => unwrap(await api.GET('/api/v1/events', { signal, params: { query: { limit: 100 } } }))), retry: false })
+  const notifications = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, 'personal', 'inbox'),eventID], initialPageParam: undefined as string | undefined, queryFn: ({ pageParam }) => communicationRead(filterScope, async signal => unwrap(await api.GET('/api/v1/inbox', { signal, params: { query: { event_id: eventID || undefined, cursor: pageParam, limit: 30 } } }))), getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
   const items = notifications.data?.pages.flatMap(page => page.items) ?? []
   const collection = useRef<HTMLDivElement>(null), opener = useRef<string | undefined>(undefined)
   useEffect(() => {

@@ -1962,6 +1962,28 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/CampaignDetail'}
         default: {$ref: '#/components/responses/Error'}
+  /api/v1/events/{event_id}/communications/campaigns/{campaign_id}/self-test-preview:
+    parameters:
+      - $ref: '#/components/parameters/EventID'
+      - name: campaign_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: getCampaignSelfTestPreview
+      description: Current write-authorised organiser-only TEST rendering without saving, queuing or sending. No recipient or address can be supplied. Re-review after any source, account or configuration change.
+      parameters:
+        - name: channel
+          in: query
+          required: true
+          schema: {type: string, enum: [in_app, smtp]}
+      responses:
+        '200':
+          description: Ephemeral exact organiser rendering and opaque review binding; never a command or provider receipt. Mailbox values are excluded.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CampaignSelfTestPreview'}
+        default: {$ref: '#/components/responses/Error'}
   /api/v1/events/{event_id}/teams/{team_id}/mentor-observations:
     parameters:
       - $ref: '#/components/parameters/EventID'
@@ -7922,6 +7944,20 @@ components:
           type: array
           items: {$ref: '#/components/schemas/ChannelReadiness'}
         test_request_id: {type: string, format: uuid, nullable: true}
+    CampaignSelfTestPreview:
+      type: object
+      additionalProperties: false
+      required: [revision, campaign_version, actor_id, channel, subject, plain_text, include_calendar, provider_revision, review_fingerprint]
+      properties:
+        revision: {type: integer, format: int64}
+        campaign_version: {type: integer, format: int64}
+        actor_id: {type: string, format: uuid}
+        channel: {type: string, enum: [in_app, smtp]}
+        subject: {type: string}
+        plain_text: {type: string}
+        include_calendar: {type: boolean}
+        provider_revision: {type: string}
+        review_fingerprint: {type: string, pattern: '^[a-f0-9]{64}$'}
     CampaignCommand:
       type: object
       additionalProperties: false
@@ -7932,6 +7968,10 @@ components:
         reason: {type: string, minLength: 1, maxLength: 2000}
         definition: {$ref: '#/components/schemas/CampaignDefinition'}
         channel: {type: string, enum: [in_app, smtp, teams]}
+        reviewed_test_fingerprint:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: Optional exact current organiser-TEST review binding. Valid only with test_self. New clients supply it after reading self-test-preview; legacy omission retains existing behaviour.
     MentorPage:
       type: object
       additionalProperties: false

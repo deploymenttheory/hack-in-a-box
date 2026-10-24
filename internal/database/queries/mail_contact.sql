@@ -1,6 +1,9 @@
 -- name: LockMailPerson :one
 SELECT id,active,session_revision FROM people WHERE id=$1 FOR UPDATE;
 
+-- name: LockPersonEmailContact :one
+SELECT * FROM person_email_contacts WHERE person_id=$1 FOR UPDATE;
+
 -- name: PersonEmailContact :one
 SELECT * FROM person_email_contacts WHERE person_id=$1;
 

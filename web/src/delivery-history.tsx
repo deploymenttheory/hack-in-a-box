@@ -1,14 +1,16 @@
+import { CollectionHeading, CollectionPagination, CollectionRecords, CollectionToolbar } from './components/patterns/collection'
+import { StatusBadge } from './components/ui/feedback'
+import { Select, Label } from './components/ui/fields'
+import { CommunicationStep } from './communication-layout'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, privateKey, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
-import { Button } from './components/ui/button'
 import { Failure, Loading } from './components/states'
-import { DeliveryContext, denied, useDelivery, useDeliveryDenial } from './delivery-context'
+import { DeliveryContext, stateName, denied, useDelivery, useDeliveryDenial } from './delivery-context'
 import { DeliveryReview } from './delivery-review'
-import { DeliverySummary } from './delivery-summary'
 
 type Channel = 'smtp' | 'teams' | 'in_app'
 const channelName = { smtp: 'SMTP email', teams: 'Teams shared channel', in_app: 'Private in-app inbox' }
@@ -29,7 +31,7 @@ function Workspace({ eventID, deliveryID }: { eventID: string; deliveryID?: stri
   useEffect(() => { if (inaccessible) cache.removeQueries({ queryKey: key }) }, [inaccessible, cache, key])
   if (inaccessible) return <section className="workspace"><Link to="/events/$eventId" params={{ eventId: eventID }}>← Back to event</Link><h1>Delivery history</h1><Failure error={inaccessible} retry={() => { setFailure(undefined); void event.refetch() }} /></section>
   if (!event.data) return event.error ? <Failure error={event.error} retry={() => void event.refetch()} /> : <Loading />
-  return <DeliveryContext.Provider value={{ event: event.data, key, deny }}><section className="workspace delivery-history"><Link to="/events/$eventId" params={{ eventId: eventID }}>← Back to event</Link><h1>Delivery history and failure review</h1><p>{event.data.name} · Times in {event.data.configuration.timezone}</p><p>Provider acceptance is not confirmed delivery or reading. Cancelling pending work cannot recall an earlier accepted or uncertain send.</p>{deliveryID ? <DeliveryReview id={deliveryID} /> : <HistoryIndex />}</section></DeliveryContext.Provider>
+  return <DeliveryContext.Provider value={{ event: event.data, key, deny }}><section className="workspace delivery-history fleet-communications"><Link to="/events/$eventId" params={{ eventId: eventID }}>← Back to event</Link><CollectionHeading title="Delivery history and failure review" scope={{ event: event.data.name, entity: 'Communications' }} description={`Times in ${event.data.configuration.timezone}`} /><p>Provider acceptance is not confirmed delivery or reading. Cancelling pending work cannot recall an earlier accepted or uncertain send.</p>{deliveryID ? <DeliveryReview id={deliveryID} /> : <HistoryIndex />}</section></DeliveryContext.Provider>
 }
 
 function HistoryIndex() {
@@ -41,9 +43,15 @@ function HistoryIndex() {
   useDeliveryDenial(query.error); useDeliveryDenial(providers.error)
   if (denied(query.error) || denied(providers.error)) return null
   const pages = query.data?.pages, latest = pages?.[0]
-  return <><section className="panel"><h2>Provider health and readiness</h2><p>These are local configuration checks, not live delivery verification. Review retained attempt evidence below; no provider request is sent by opening this page.</p>{providers.isPending ? <Loading /> : providers.error ? <Failure error={providers.error} retry={() => void providers.refetch()} /> : <ul>{providers.data?.providers.map(provider => <li key={provider.channel}><strong>{channelName[provider.channel as Channel]}</strong>: {provider.available ? 'Configured and locally ready' : 'Unavailable'} · {provider.reason.replaceAll('_', ' ')}{provider.channel === 'teams' && <p>Shared-channel receipt must be checked with the workflow owner. A provider acceptance does not confirm channel receipt.</p>}</li>)}</ul>}</section>
+  return <><CommunicationStep title="Provider health and readiness" icon="shield" description="Local configuration checks only. Opening this page makes no provider request and does not prove live delivery.">{providers.isPending ? <Loading /> : providers.error ? <Failure error={providers.error} retry={() => void providers.refetch()} /> : <ul>{providers.data?.providers.map(provider => <li key={provider.channel}><strong>{channelName[provider.channel as Channel]}</strong>: {provider.available ? 'Configured and locally ready' : 'Unavailable'} · {provider.reason.replaceAll('_', ' ')}{provider.channel === 'teams' && <p>Shared-channel receipt must be checked with the workflow owner. A provider acceptance does not confirm channel receipt.</p>}</li>)}</ul>}</CommunicationStep>
     {latest?.paused && <p className="notice">Communication automation is paused. Current recovery checks must permit any later retry or resend; existing outcomes are retained.</p>}{latest?.archived && <p className="notice">This event is read-only. Delivery history remains available; recovery decisions are frozen.</p>}
-    <section className="panel"><h2>Retained recipient selections</h2><p>The selection timestamp records the actual retained intent. It is distinct from each prepared attempt and receipt time. Recipient addresses and message bodies are excluded.</p><label htmlFor="delivery-campaign">Campaign</label><select id="delivery-campaign" value={campaign} onChange={e => setCampaign(e.target.value)}><option value="">All campaigns and provider checks</option>{providers.data?.campaigns.map(c => <option key={c.campaign.definition.id} value={c.campaign.definition.id}>{c.campaign.definition.name}</option>)}</select><label htmlFor="delivery-channel">Channel</label><select id="delivery-channel" value={channel} onChange={e => setChannel(e.target.value)}><option value="">All channels</option>{Object.entries(channelName).map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select>
-    {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <><ul className="item-list">{pages?.flatMap(page => page.items).map(item => <li key={item.id}><div><h3><Link to="/events/$eventId/communications/deliveries/$deliveryId" params={{ eventId: event.id, deliveryId: item.id }}>{item.recipient_name || (item.channel === 'teams' ? 'Shared event channel' : 'Retained recipient')}</Link></h3><DeliverySummary item={item} /></div></li>)}</ul>{!pages?.some(page => page.items.length) && <p className="empty-state">No retained delivery evidence matches these filters. No send is implied.</p>}{query.hasNextPage && <Button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>More retained selections</Button>}</>}</section></>
+    <section aria-label="Retained recipient selections"><h2>Retained recipient selections</h2><p>The selection timestamp records the original intent, separately from prepared attempts and receipts. Recipient addresses and message bodies are excluded.</p>
+      <CollectionToolbar source="cursor" filters={<div className="fleet-delivery-filters"><div><Label htmlFor="delivery-campaign">Campaign</Label><Select id="delivery-campaign" value={campaign} onChange={e => setCampaign(e.target.value)}><option value="">All campaigns and provider checks</option>{providers.data?.campaigns.map(c => <option key={c.campaign.definition.id} value={c.campaign.definition.id}>{c.campaign.definition.name}</option>)}</Select></div><div><Label htmlFor="delivery-channel">Channel</Label><Select id="delivery-channel" value={channel} onChange={e => setChannel(e.target.value)}><option value="">All channels</option>{Object.entries(channelName).map(([value, name]) => <option key={value} value={value}>{name}</option>)}</Select></div></div>} />
+      {query.isPending ? <Loading /> : query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <><CollectionRecords label="Retained delivery selections" rows={pages?.flatMap(page => page.items) ?? []} rowKey={item => item.id} rowLabel={item => item.recipient_name || (item.channel === 'teams' ? 'Shared event channel' : 'Retained recipient')}
+        destination={item => ({ href: `/events/${encodeURIComponent(event.id)}/communications/deliveries/${encodeURIComponent(item.id)}`, label: item.recipient_name || (item.channel === 'teams' ? 'Shared event channel' : 'Retained recipient') })}
+        columns={[{ id: 'channel', label: 'Channel', cell: item => channelName[item.channel] }, { id: 'state', label: 'Outcome', essential: true, cell: item => <StatusBadge tone={item.state === 'ambiguous' ? 'warning' : 'neutral'}>{stateName(item.state)}</StatusBadge> }, { id: 'selected', label: 'Selected', cell: item => new Date(item.selected_at).toLocaleString() }, { id: 'attempts', label: 'Prepared attempts', cell: item => item.attempts }]} />
+        {!pages?.some(page => page.items.length) && <p className="empty-state">No retained delivery evidence matches these filters. No send is implied.</p>}
+        <CollectionPagination label="Retained delivery history pages" source={{ kind: 'cursor', loaded: pages?.reduce((sum, page) => sum + page.items.length, 0) ?? 0, busy: query.isFetchingNextPage, next: query.hasNextPage ? () => void query.fetchNextPage() : undefined }} />
+      </>}
+    </section></>
 }
-

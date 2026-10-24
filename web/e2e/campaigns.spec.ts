@@ -88,7 +88,6 @@ test('approval binds saved content and timing, with edits requiring a new previe
   await expect(page.getByText('Saved state: draft')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Approve campaign', exact: true })).toBeDisabled()
   expect([...data.records.values()][0].campaign.campaign.definition.timing.days).toBe(-2)
-  await page.getByText('Message editing', { exact: true }).click()
   await page.getByLabel('Message body', { exact: true }).fill('Changed approved content {{person.name}}')
   await page.getByRole('button', { name: 'Save message version', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Source version saved')
@@ -96,14 +95,12 @@ test('approval binds saved content and timing, with edits requiring a new previe
   await page.getByRole('button', { name: 'Approve campaign', exact: true }).click()
   await expect(page.getByText('Saved state: approved')).toBeVisible()
   expect([...data.records.values()][0].campaign.campaign.approval?.template_version).toBe(2)
-  await page.getByText('Message editing', { exact: true }).click()
   await page.screenshot({ path: info.outputPath('campaign-approved.png'), fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
 })
 
 test('recipient preview prevents confusing confirmed competitors with waitlisted applicants', async ({ page }) => {
   const data = await prepare(page)
-  await page.getByText('Audience selector editing', { exact: true }).click()
   await page.getByRole('checkbox', { name: 'Confirmed competitors', exact: true }).uncheck()
   await page.getByRole('checkbox', { name: 'waitlisted', exact: true }).check()
   await page.getByRole('button', { name: 'Save audience version' }).click()
@@ -133,7 +130,7 @@ test('retains unavailable selected channels, links working setup and never offer
 test('self-tests are explicit own-target intents and cancellation is separate from provider delivery', async ({ page }) => {
   const data = await prepare(page)
   await saveAndPreview(page)
-  await page.getByRole('button', { name: 'Queue Email test to myself' }).click()
+  await page.getByRole('button', { name: 'Queue Email test to myself' }).click(); await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('requesting organiser only')
   await expect(page.getByRole('status')).toContainText('delivery are not confirmed')
   const request = data.requests.at(-1)!.body
@@ -163,13 +160,11 @@ test('preserves conflicting schedule edits and requires explicit current-fact re
   expect(data.requests.map(r => r.revision)).toEqual(['"1"', '"2"', '"3"'])
 })
 
-test('hostile long message previews remain inert text and access loss preserves the draft', async ({ page }, info) => {
+test('hostile long message previews remain inert text and access loss clears private drafts', async ({ page }, info) => {
   const data = await prepare(page)
-  await page.getByText('Message editing', { exact: true }).click()
   await page.getByLabel('Message body', { exact: true }).fill('<img src="https://example.invalid/secret" onerror="window.__campaignInjected=true">' + 'longsyntheticword'.repeat(80))
   await page.getByRole('button', { name: 'Save message version' }).click()
   await expect(page.getByRole('status')).toContainText('Source version saved')
-  await page.getByText('Message editing', { exact: true }).click()
   await saveAndPreview(page)
   await expect(page.locator('.campaign-message-preview img')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { __campaignInjected?: boolean }).__campaignInjected)).toBeUndefined()
@@ -178,16 +173,16 @@ test('hostile long message previews remain inert text and access loss preserves 
   await page.getByLabel('Campaign name', { exact: true }).fill('Preserved after role loss')
   data.revoke()
   await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click()
-  await expect(page.getByText('This event does not permit campaign changes. Your draft is preserved.', { exact: true })).toBeVisible()
-  await expect(page.getByLabel('Campaign name', { exact: true })).toHaveValue('Preserved after role loss')
-  await expect(page.getByRole('button', { name: 'Save campaign draft', exact: true })).toBeDisabled()
+  await expect(page.getByRole('alert')).toContainText('Private edits and retained previews have been cleared')
+  await expect(page.getByLabel('Campaign name', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Preserved after role loss', { exact: true })).toHaveCount(0)
 })
 
 for (const state of ['accepted', 'ambiguous'] as const) test(`SMTP test shows ${state} honestly without exposing its private envelope`, async ({ page }) => {
   const data = await prepare(page, true, state)
   await page.getByRole('button', { name: 'Save campaign draft', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Campaign saved as a draft')
-  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click()
+  await page.getByRole('button', { name: 'Queue Email test to myself', exact: true }).click(); await page.getByRole('button', { name: 'Confirm organiser-only TEST', exact: true }).click()
   const receipt = page.getByRole('region', { name: 'SMTP test submission' })
   await expect(receipt).toContainText(state === 'accepted' ? 'Inbox delivery and reading are unconfirmed.' : 'Submission is uncertain.')
   if (state === 'ambiguous') await expect(receipt).toContainText('will not be retried automatically')
