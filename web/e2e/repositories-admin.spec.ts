@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { firstID } from './fixtures'
-import { openEventSection } from './event-navigation-fixture'
+import { expectEventSection, openEventSection } from './event-navigation-fixture'
 import { repositoryFixture, repositoryTeam, uncertainTeam } from './repository-fixtures'
 async function open(page: Page) { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Repositories'); await expect(page.getByRole('heading', { name: 'Repositories', exact: true })).toBeVisible() }
 async function inspect(page: Page, index = 0) { await page.getByRole('button', { name: 'Inspect repository', exact: true }).nth(index).click(); return page.getByRole('region', { name: index === 0 ? 'synthetic-org/synthetic-repository' : index === 1 ? 'synthetic-org/uncertain-repository' : 'synthetic-org/disbanded-repository', exact: true }) }
@@ -64,7 +64,7 @@ test('parent collection denial fences a held installation response before redire
 
 test('write-capability loss and exact-receipt denial clear private editors while original safe identity survives fresh held restoration', async ({ page }) => {
   const state = await repositoryFixture(page); await open(page); await inspect(page); await reviewMembership(page, 'PRIVATE-ROLE-LOSS-REASON'); state.mode = 'lost-after'; await page.getByRole('button', { name: 'Create exact reconciliation plan', exact: true }).click(); await expect(page.getByRole('button', { name: 'Read original review receipt', exact: true })).toBeVisible()
-  state.access.can_manage = false; await page.getByRole('button', { name: 'Read current access facts', exact: true }).click(); await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review current membership reconciliation', exact: true })).toHaveCount(0); expect(state.writes).toHaveLength(1)
+  state.access.can_manage = false; state.event.can_edit = false; state.canManage = true; await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange'))); await expectEventSection(page, 'Setup', false); await inspect(page); await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review current membership reconciliation', exact: true })).toHaveCount(0); expect(state.writes).toHaveLength(1)
   state.denyReceipts = true; await page.getByRole('button', { name: 'Read original review receipt', exact: true }).click(); await expect(page.getByRole('button', { name: 'Check current access review', exact: true })).toBeVisible(); await expect(page.getByRole('region', { name: 'Exact repository access plan', exact: true })).toHaveCount(0)
   let release!: () => void; state.holdAccess = new Promise<void>(resolve => { release = resolve }); state.denyReceipts = false; await page.getByRole('button', { name: 'Check current access review', exact: true }).click(); await expect(page.getByRole('button', { name: 'Read original review receipt', exact: true })).toHaveCount(0); await expect(page.getByRole('region', { name: 'Exact repository access plan', exact: true })).toHaveCount(0)
   release(); await page.getByRole('button', { name: 'Read original review receipt', exact: true }).click(); await expect(page.getByRole('region', { name: 'Exact repository access receipt' })).toBeVisible(); await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveCount(0); expect(state.writes).toHaveLength(1)
@@ -99,8 +99,8 @@ test('App permission gaps and provider failure have distinct current guidance an
 test('fresh readonly authority fences a held installation continuation without requiring a forbidden parent read', async ({ page }) => {
   const state = await repositoryFixture(page); await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByRole('button', { name: 'Review organisation installation', exact: true }).click()
   let release!: () => void; state.holdWrites = new Promise<void>(resolve => { release = resolve }); const external: string[] = []; page.on('request', request => { if (new URL(request.url()).hostname === 'github.com') external.push(request.url()) })
-  await page.getByRole('button', { name: 'Continue to GitHub installation', exact: true }).click(); await expect.poll(() => state.writes.length).toBe(1); state.canManage = false; state.event.can_edit = false; await page.getByRole('button', { name: 'Refresh current status', exact: true }).click(); await expect(page.getByRole('button', { name: 'Review organisation installation', exact: true })).toHaveCount(0); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveCount(0)
-  release(); await expect(page.getByRole('heading', { name: 'Current App readiness', exact: true })).toBeVisible(); expect(external).toEqual([]); expect(state.writes).toHaveLength(1); await expect(page.getByRole('button', { name: 'Review published-team provisioning', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Continue to GitHub installation', exact: true }).click(); await expect.poll(() => state.writes.length).toBe(1); state.canManage = true; state.event.can_edit = false; await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange'))); await expectEventSection(page, 'Setup', false); await expect(page.getByRole('button', { name: 'Review organisation installation', exact: true })).toHaveCount(0); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveCount(0)
+  release(); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Current App readiness', exact: true })).toBeVisible(); expect(external).toEqual([]); expect(state.writes).toHaveLength(1); await expect(page.getByRole('button', { name: 'Review published-team provisioning', exact: true })).toHaveCount(0)
 })
 
 test('stored credential re-encryption follows the native rotate contract without sending a private key or resetting installation', async ({ page }) => {
@@ -135,4 +135,19 @@ test('prepared access labels stay with the captured original identity when curre
   await expect(review).toContainText('North Star Hack · Synthetic team · synthetic-org/synthetic-repository')
   await expect(review).not.toContainText('Renamed current'); await expect(review).not.toContainText('renamed-org/renamed-repository')
   await expect(review).toContainText(repositoryTeam); await expect(review).toContainText('123456'); expect(state.writes).toHaveLength(0)
+})
+
+
+test('native readonly EventEdit loss keeps StaffRead setup and historical access without App or provisioning editors', async ({ page }) => {
+  const state = await repositoryFixture(page); state.event.can_edit = false; state.canManage = true; state.access.can_manage = false
+  await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Current App readiness', exact: true })).toBeVisible()
+  await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Review App setup change', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Review organisation installation', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Review published-team provisioning', exact: true })).toHaveCount(0)
+  await inspect(page); await expect(page.getByRole('heading', { name: 'Recorded invitations and access', exact: true })).toBeVisible()
+  await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Review selected repository reconciliation', exact: true })).toHaveCount(0)
+  expect(state.writes).toHaveLength(0)
 })

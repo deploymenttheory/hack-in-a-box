@@ -255,3 +255,47 @@ generated API types; no screenshot or runtime UI changes were introduced by the
 rebase. Final Go/TypeScript contract regeneration parity is recorded in
 `/private/tmp/hackbox94-rebase-parity.log`. All required frozen reviews and actual
 final-head CI remain merge gates.
+
+## Final review correction: native write authority
+
+The final Standards review identified two authority defects in `51a6bef`:
+Teams `can_manage` grants StaffRead even when native Event `can_edit` is false,
+and a successful current parent Event response losing writes did not fence
+held command continuations inside that same cache notification.
+
+The bounded correction requires native EventEdit as well as current Teams
+capability before exposing any write controls. The latest matching cached native
+Event flag is checked after collection awaits and again at rendering; an older
+held collection closure cannot renew writes after a known current write loss.
+A successful matching parent Event response with `can_edit=false` immediately
+invalidates the distinct write scope only. Authorized readonly history and
+original-receipt scopes remain valid, and global original-command metadata is
+not removed. Error/denial fencing and native command bodies remain unchanged.
+
+Executed tight proof, without timeout/retry weakening:
+
+- Before correction: `npx vitest run src/repository-read.test.tsx --maxWorkers=1`
+  gives **1 PASS / 1 FAIL** in 1.37s. The successful-parent case fails exactly
+  `command.current(): expected false, received true` inside the cache notification,
+  while the child is still mounted. Existing 403 behavior passes.
+  Log `/private/tmp/hackbox94-write-loss-red.log`.
+- Before correction: `npx vitest run src/repository-authority.test.tsx --maxWorkers=1`
+  gives **2 FAIL** in 1.72s. Both actual Workspace cases incorrectly retain the
+  App private-key textarea: initial readonly Event with Teams StaffRead, and a
+  held older collection resolving after known current parent write loss.
+  Log `/private/tmp/hackbox94-readonly-promotion-red.log`.
+- After correction: the exact two files give **4/4 PASS**, with additional
+  assertions that the readonly child ticket stays current and original pending
+  metadata/fingerprint stays present. Final log
+  `/private/tmp/hackbox94-write-authority-final-units.log` (3.51s).
+- Targeted lint is recorded in `/private/tmp/hackbox94-write-authority-lint.log`.
+  Updated real-browser fixtures now retain native Teams StaffRead on readonly
+  EventEdit loss, exercise actual successful parent refresh and readonly
+  historical-original recovery, and include initial readonly setup/control
+  assertions. These updated browser cases and full types/builds are deliberately
+  **not claimed as executed locally**; mandatory final-head CI supplies that
+  proof, followed by fresh independent delta Standards/Spec review.
+
+Permitted-state appearance is unchanged, so existing actual visual evidence
+remains attributed to its captured source. No backend, provider policy, broad
+permission store or shared safe-metadata behavior changed in this correction.

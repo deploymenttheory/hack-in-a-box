@@ -8,7 +8,7 @@ export class RepositoryProjectionMismatch extends Error {}
 export function repositoryDenied(error: unknown) { return error instanceof RepositoryProjectionMismatch || (error instanceof APIError && [401, 403, 404].includes(error.status)) }
 // Every opening obtains its own current authorisation. Cached projections are
 // never permission to reopen a private repository or access review.
-export function useRepositoryRead<T>(eventID: string, resource: string, read: (signal: AbortSignal) => Promise<T>, onDenied?: () => void) {
+export function useRepositoryRead<T>(eventID: string, resource: string, read: (signal: AbortSignal) => Promise<T>, onDenied?: () => void, writeScope?: PrivateRequestScope) {
   const identity = useIdentity(), cache = useQueryClient(), parent = useContext(RepositoryReadAuthority)
   const [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(0), [denied, setDenied] = useState<unknown>()
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:repositories:${resource}:${mount}`, parent?.scope)
@@ -22,9 +22,14 @@ export function useRepositoryRead<T>(eventID: string, resource: string, read: (s
     const eventKey = privateKey(identity.person.id, eventID, 'event')
     return cache.getQueryCache().subscribe(event => {
       const query = event.query
-      if (query && query.queryKey.length === eventKey.length && eventKey.every((part, index) => query.queryKey[index] === part) && repositoryDenied(query.state.error)) deny(query.state.error)
+      if (!query || query.queryKey.length !== eventKey.length || !eventKey.every((part, index) => query.queryKey[index] === part)) return
+      if (repositoryDenied(query.state.error)) deny(query.state.error)
+      // A successful current Event read can retain StaffRead while ending
+      // EventEdit. Fence effects in this notification, without ending history
+      // or original-receipt reads that remain authorised.
+      if (event.type === 'updated' && event.action.type === 'success' && (query.state.data as { can_edit?: boolean } | undefined)?.can_edit === false) writeScope?.invalidate()
     })
-  }, [cache, deny, eventID, identity.person.id, resource])
+  }, [cache, deny, eventID, identity.person.id, resource, writeScope])
   useEffect(() => () => { void cache.cancelQueries({ queryKey: key }); cache.removeQueries({ queryKey: key }) }, [cache, key])
   const query = useQuery({ queryKey: [...key, generation], gcTime: 0, enabled: !denied, retry: false, refetchInterval: 15_000, refetchOnWindowFocus: 'always', queryFn: async ({ signal }) => {
     await Promise.resolve(); const ticket = scope.capture(); ticket.assert()

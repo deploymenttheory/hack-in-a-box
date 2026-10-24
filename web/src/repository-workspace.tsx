@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { ActionLink } from './components/ui/button'
 import { usePrivateRequestScope } from './private-request-scope'
 import { repositoryDiagnostic } from './repository-diagnostics'
@@ -7,7 +8,7 @@ import { RepositoryProvision } from './repository-provision'
 import { RepositoryInvitations } from './repository-invitations'
 import { RepositoryAccess } from './repository-access'
 import { useCallback, useRef, useState } from 'react'
-import { api, unwrap, type EventRecord } from './api/client'
+import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import type { components } from './api/schema.gen'
 import { useIdentity } from './session'
 import { RepositoryReadAuthority, RepositoryProjectionMismatch, useRepositoryRead } from './repository-read'
@@ -22,7 +23,7 @@ export function RepositoryWorkspace({ event, onDirty, administration = false }: 
   return <RepositoryDrafts key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} onDirty={onDirty}><RepositoryLifetime key={`${administration}:${event.can_read_staff}`} event={event} administration={administration} /></RepositoryDrafts>
 }
 function RepositoryLifetime({ event, administration }: { event: EventRecord; administration: boolean }) {
-  const identity = useIdentity(), staff = administration && event.can_read_staff
+  const identity = useIdentity(), cache = useQueryClient(), staff = administration && event.can_read_staff
   const writeScope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:repository-write-authority`), wasWritable = useRef(administration && event.can_edit)
   const leave = useRepositoryDeparture()
   const [selected, setSelected] = useState<string>(), opener = useRef<HTMLElement | null>(null)
@@ -32,7 +33,10 @@ function RepositoryLifetime({ event, administration }: { event: EventRecord; adm
     const rows = unwrap(await api.GET('/api/v1/events/{event_id}/repositories', { signal, cache: 'no-store', params }))
     const teams = unwrap(await api.GET('/api/v1/events/{event_id}/teams', { signal, cache: 'no-store', params }))
     const names = new Map(teams.teams.map(team => [team.id, team.name]))
-    const writable = staff && teams.can_manage
+    // Teams.can_manage grants StaffRead, including read-only archive access.
+    // A held older collection must also respect the latest native Event read
+    // before it can renew any write lifetime from an older event closure.
+    const writable = staff && event.can_edit && teams.can_manage && cache.getQueryData<EventRecord>(privateKey(identity.person.id, event.id, 'event'))?.can_edit !== false
     if (!writable) writeScope.invalidate(); else if (!wasWritable.current) writeScope.renew()
     wasWritable.current = writable
     if (staff) return { rows: rows.map(row => ({ ...row, teamName: names.get(row.team_id) })), writable }
@@ -48,12 +52,12 @@ function RepositoryLifetime({ event, administration }: { event: EventRecord; adm
       } else if (!event.can_read_staff) permitted.push({ ...row, teamName: names.get(row.team_id) })
     }
     return { rows: permitted, writable: false }
-  }, clearSelection)
+  }, clearSelection, writeScope)
   const close = () => { if (!leave()) return; setSelected(undefined); requestAnimationFrame(() => { if (opener.current?.isConnected) opener.current.focus() }) }
   if (denied) return <section><Failure error={denied} /><Button icon="refresh" onClick={check}>Check current repository access</Button></section>
   if (query.isPending) return <Loading />
   if (query.error && !query.data) return <Failure error={query.error} retry={() => void query.refetch()} />
-  const writable = query.data!.writable
+  const writable = staff && event.can_edit && query.data!.writable && cache.getQueryData<EventRecord>(privateKey(identity.person.id, event.id, 'event'))?.can_edit !== false
   const row = query.data!.rows.find(item => item.team_id === selected)
   const collection = <><CollectionHeading title="Repositories" scope={{ event: event.name, entity: staff ? 'Published team setup and readiness' : 'Your current team repository' }} description="Review repository setup and access before building. Repository activity never accepts a competition entry or changes its score." secondary={[{ label: 'Refresh current status', icon: 'refresh', onSelect: () => void query.refetch() }]} />
     <CollectionRecords label="Current authorised repositories" rows={query.data!.rows} rowKey={item => item.team_id} rowLabel={item => item.teamName ?? `${item.organization}/${item.name}`} visibleColumns={row ? new Set(['state']) : undefined} columns={[
