@@ -44,10 +44,10 @@ provider credential or browser private persistence is used.
 | Check | Completed local evidence |
 | --- | --- |
 | TypeScript / production builds | Both portal builds and independent guide build pass. |
-| Source/spec lint | Focused media, guide and native spec ESLint pass. Full repository lint is the final checkpoint gate. |
+| Source/spec lint | Full repository ESLint passes (`npm run lint`). |
 | Native existing media/history | 26/26 participant + 26/26 administrator across desktop/mobile; protected bytes, archive revocation, denial, deferred file/session/preflight no-POST, exact lost-upload retry, transient recovery, current history and print assertions retained. |
 | Added lifecycle composition | 18/18 participant + 18/18 administrator: keyboard local/route discard and actual opener focus; real SPA unknown persistence with same-document marker; held ACK versus lost response across capability teardown/routes; non-idempotent consent unknown; held thumbnail no URL; withheld recording URL at fresh200 while can_edit remains true; parent denial→partial restoration before/after stale time; unsafe-file and UTF-8 preflight. |
-| Scoped units | 13/13 across media operation, lifetime and shared safety: stale/reentrant/408 handling, held preflight, original ACK versus current version, identical native publish retry, late ACK versus loss, privacy/UUID/integer allowlist, lost disclosure and partial restoration without stale private snapshots. |
+| Scoped units | All **153/153** tests across 25 files pass with `--maxWorkers=2`, including **13/13** across media operation, lifetime and shared safety: stale/reentrant/408 handling, held preflight, original ACK versus current version, identical native publish retry, late ACK versus loss, privacy/UUID/integer allowlist, lost disclosure and partial restoration without stale private snapshots. |
 | Independent guide | 4/4 desktop/mobile history/lifecycle journeys with no API/cookie/storage access. Exact-source review, corrective focus, unknown not settled by read, consent, fresh history paging/failure/denial/reopen/print. |
 | Native history read support (#263) | Real PostgreSQL/race media and authenticated HTTP tests pass, including current role/owner/wrong-event/contended-lock checks, archive/consent revocation, pagination/strict metadata allowlist/no effects; generated-contract drift and native lint pass. Native implementation is unchanged in this follow-up. |
 
@@ -55,5 +55,43 @@ Relevant browser files are `media-workspace.spec.ts`, `media-history.spec.ts` an
 `media-lifecycle.spec.ts`; all are registered for both portal CI builds. Local
 port-only configs and node_modules symlink remain untracked. Full exact-head CI
 and independent two-axis reviews remain merge gates; this README's local counts
-are not a substitute for those gates. Matched visual evidence and final full unit/
-lint results are recorded below at the frozen checkpoint.
+are not a substitute for those gates. Source `3672bf8` passes the final combined
+**44/44 participant + 44/44 administrator** native media/history/lifecycle gate,
+**4/4** independent guide journeys, full repository lint, TypeScript and both
+portal/guide builds. The final regression keeps pending distinct from unknown
+after route reentry; the existing held-ACK/loss SPA cases prove replacement stays
+blocked until an actual original acknowledgement. Product copy names each action
+and explains access/consent checks without exposing internal mechanisms.
+
+## Matched visual evidence
+
+Actual baseline `6e8ab511` (tree `a85ecd13`, identical to reviewed #263 source)
+versus production source `3672bf8`. Each pair uses the same synthetic organiser,
+event, one private draft photograph, caption, reason and checked identification /
+no-person / content attestations. The baseline shows the prior inline approval
+control; the new UI shows the explicit exact-source review before confirmation.
+No upload or command is performed. These are full-page captures from real portal
+builds at matching browser viewports, without compositing or image editing.
+
+| Portal / viewport | Before | After |
+| --- | --- | --- |
+| Administrator · 1280×900 | [Before](before-administrator-desktop.png) | [After](after-administrator-desktop.png) |
+| Administrator · 390×844 | [Before](before-administrator-mobile.png) | [After](after-administrator-mobile.png) |
+| Participant · 1280×900 | [Before](before-participant-desktop.png) | [After](after-participant-desktop.png) |
+| Participant · 390×844 | [Before](before-participant-mobile.png) | [After](after-participant-mobile.png) |
+
+The initial 8 capture cases pass; after the bounded copy correction, all 4 AFTER
+captures were regenerated and pass against source `3672bf8`.
+Administrator-desktop and participant-mobile pairs were
+visually inspected for removed legacy form boxes, clear distinct approval actions,
+readable exact-source preview and responsive controls without clipping. Artifact
+source, viewport and SHA-256 values are in [visual-evidence.json](visual-evidence.json).
+
+At the final source checkpoint `3672bf8`, the full 25-file unit suite passes
+**153/153** (not only the scoped 13), repository lint/builds pass, and the combined
+native suite passes **44/44 in each portal**. The independent guide passes **4/4**.
+Root independently inspected all eight original paired screenshots and all four
+refreshed AFTER images: action-specific approval heading, plain access/current-
+consent explanation, flat dividers, labelled icons, responsive wrapping and separate
+approval/release are verified. This visual inspection is separate from the pending
+independent Standards/Spec reviews and exact-head CI merge gates.
