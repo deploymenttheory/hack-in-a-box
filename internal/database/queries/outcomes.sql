@@ -117,3 +117,10 @@ WHERE oh.event_id=sqlc.arg(event_id)::uuid
 AND outcome_readable(oh.id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
 AND (oe.outcome_id,oe.id)>(sqlc.arg(after_outcome_id)::uuid,sqlc.arg(after_evidence_id)::uuid)
 ORDER BY oe.outcome_id,oe.id LIMIT sqlc.arg(page_size);
+
+-- name: OutcomePublishedEventProjectsPage :many
+SELECT pv.* FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
+WHERE oh.event_id=sqlc.arg(event_id)::uuid AND ph.outcome_id>sqlc.arg(after_id)
+AND outcome_project_readable(ph.outcome_id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
+ORDER BY ph.outcome_id LIMIT sqlc.arg(page_size);

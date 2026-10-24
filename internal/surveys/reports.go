@@ -304,7 +304,26 @@ func (s Service) PublishedReport(
 	actor, eventID, id uuid.UUID,
 ) (Report, error) {
 	var out Report
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.PublishedReportInTransaction(ctx, tx, actor, eventID, id)
+		return err
+	})
+	if err != nil {
+		return out, fmt.Errorf("read published report transaction: %w", err)
+	}
+	return out, nil
+}
+
+// PublishedReportInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) PublishedReportInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, id uuid.UUID,
+) (Report, error) {
+	var out Report
+	q := dbgen.New(tx)
+	err := func() error {
 		if _, err := q.LockEvent(ctx, eventID); err != nil {
 			return fmt.Errorf("lock published aggregate reader: %w", err)
 		}
@@ -348,7 +367,7 @@ func (s Service) PublishedReport(
 		at := publication.PublishedAt
 		out.PublishedAt = &at
 		return err
-	})
+	}()
 	if err != nil {
 		return out, fmt.Errorf("read published survey report: %w", err)
 	}

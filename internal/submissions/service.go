@@ -110,7 +110,10 @@ func loadScopeState(
 	a := v.authority
 
 	if v.row.Stage != "archived" {
-		if err = q.EnsureSubmissionState(ctx, dbgen.EnsureSubmissionStateParams{EventID: eventID, TeamID: teamID}); err != nil {
+		if err = q.EnsureSubmissionState(
+			ctx,
+			dbgen.EnsureSubmissionStateParams{EventID: eventID, TeamID: teamID},
+		); err != nil {
 			return v, fmt.Errorf("initialize submission state: %w", err)
 		}
 	}

@@ -7,11 +7,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
+	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
+	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 )
 
 type Service struct {
-	Pool  *pgxpool.Pool
-	Clock func() time.Time
+	Outcomes   outcomes.Service
+	Scorecards scorecards.Service
+	Surveys    surveys.Service
+	Pool       *pgxpool.Pool
+	Clock      func() time.Time
 }
 
 func (s Service) now() time.Time {

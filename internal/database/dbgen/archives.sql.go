@@ -22,19 +22,21 @@ SELECT
   WHERE s.event_id=$1::uuid AND s.outcome='frozen' AND s.active_revision IS NOT NULL AND s.frozen_at IS NOT NULL AND e.active AND t.state!='disbanded') AS completed_entries,
  (SELECT count(*) FROM submission_states s WHERE s.event_id=$1::uuid AND s.outcome='not_submitted') AS not_submitted_entries,
  (SELECT count(*) FROM submission_states s WHERE s.event_id=$1::uuid AND s.outcome='withdrawn') AS withdrawn_entries,
- (SELECT count(*) FROM competition_entries e JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id WHERE e.event_id=$1::uuid AND (NOT e.active OR t.state='disbanded')) AS unused_entries
+ (SELECT count(*) FROM competition_entries e JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id WHERE e.event_id=$1::uuid AND (NOT e.active OR t.state='disbanded')) AS unused_entries,
+ (SELECT count(*) FROM competition_entries e LEFT JOIN submission_states s USING(event_id,team_id) WHERE e.event_id=$1::uuid AND s.team_id IS NULL) AS missing_submission_outcomes
 `
 
 type ArchiveParticipationCountsRow struct {
-	RegistrationRecords int64
-	RegisteredPeople    int64
-	ConfirmedAttendees  int64
-	RecordedAttendance  int64
-	EntryRecords        int64
-	CompletedEntries    int64
-	NotSubmittedEntries int64
-	WithdrawnEntries    int64
-	UnusedEntries       int64
+	RegistrationRecords       int64
+	RegisteredPeople          int64
+	ConfirmedAttendees        int64
+	RecordedAttendance        int64
+	EntryRecords              int64
+	CompletedEntries          int64
+	NotSubmittedEntries       int64
+	WithdrawnEntries          int64
+	UnusedEntries             int64
+	MissingSubmissionOutcomes int64
 }
 
 func (q *Queries) ArchiveParticipationCounts(ctx context.Context, eventID uuid.UUID) (ArchiveParticipationCountsRow, error) {
@@ -50,6 +52,7 @@ func (q *Queries) ArchiveParticipationCounts(ctx context.Context, eventID uuid.U
 		&i.NotSubmittedEntries,
 		&i.WithdrawnEntries,
 		&i.UnusedEntries,
+		&i.MissingSubmissionOutcomes,
 	)
 	return i, err
 }

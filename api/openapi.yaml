@@ -68,6 +68,32 @@ paths:
           content:
             text/csv: { schema: { type: string } }
         default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/archive/exports/{source}:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - name: source
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [roster, deliverables, assessments, published-outcomes, feedback, objective-evidence]
+    get:
+      operationId: exportArchiveSource
+      description: Audited no-store JSON page through the source owner's current role, authorship, field, retention and publication policy. Archive access alone grants no private assessment, logistics or survey response access. Deliverables require an explicit audience; missing formal outcomes are unavailable, never invented. Nested pages retain their native exclusive cursor.
+      parameters:
+        - { name: resource_id, in: query, description: Team ID for deliverables or own assessments; survey ID for published feedback., schema: { type: string, format: uuid } }
+        - { name: after, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: audience, in: query, schema: { type: string, enum: [organiser, mentor, participant] } }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Exactly one current-authorised native source projection. JSON is a data export and never a CSV/spreadsheet formula.
+          headers:
+            Content-Disposition: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchiveExport' }
+        default: { $ref: '#/components/responses/Error' }
   /healthz:
     get:
       operationId: getHealth
@@ -5809,6 +5835,21 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    ArchiveExport:
+      type: object
+      additionalProperties: false
+      required: [event_id, event_revision, source]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_revision: { type: integer, format: int64 }
+        source: { type: string, enum: [roster, deliverables, assessments, published-outcomes, feedback, objective-evidence] }
+        resource_id: { type: string, format: uuid }
+        roster: { $ref: '#/components/schemas/LogisticsPage' }
+        submission: { $ref: '#/components/schemas/SubmissionPage' }
+        assessments: { $ref: '#/components/schemas/ScorecardPage' }
+        projects: { $ref: '#/components/schemas/OutcomeProjectPage' }
+        feedback: { $ref: '#/components/schemas/SurveyReport' }
+        observations: { $ref: '#/components/schemas/OutcomeObservationPage' }
     ArchiveMetric:
       type: object
       additionalProperties: false
@@ -5827,7 +5868,7 @@ components:
       required: [source, state, reason]
       properties:
         source: { type: string }
-        state: { type: string, enum: [available, unavailable, restricted, retention_expired] }
+        state: { type: string, enum: [available, incomplete, unavailable, restricted, retention_expired] }
         reason: { type: string }
     ArchiveSummary:
       type: object

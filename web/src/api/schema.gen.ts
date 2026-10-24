@@ -75,6 +75,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/archive/exports/{source}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                source: "roster" | "deliverables" | "assessments" | "published-outcomes" | "feedback" | "objective-evidence";
+            };
+            cookie?: never;
+        };
+        /** @description Audited no-store JSON page through the source owner's current role, authorship, field, retention and publication policy. Archive access alone grants no private assessment, logistics or survey response access. Deliverables require an explicit audience; missing formal outcomes are unavailable, never invented. Nested pages retain their native exclusive cursor. */
+        get: operations["exportArchiveSource"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -3529,6 +3549,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ArchiveExport: {
+            /** Format: uuid */
+            event_id: string;
+            /** Format: int64 */
+            event_revision: number;
+            /** @enum {string} */
+            source: "roster" | "deliverables" | "assessments" | "published-outcomes" | "feedback" | "objective-evidence";
+            /** Format: uuid */
+            resource_id?: string;
+            roster?: components["schemas"]["LogisticsPage"];
+            submission?: components["schemas"]["SubmissionPage"];
+            assessments?: components["schemas"]["ScorecardPage"];
+            projects?: components["schemas"]["OutcomeProjectPage"];
+            feedback?: components["schemas"]["SurveyReport"];
+            observations?: components["schemas"]["OutcomeObservationPage"];
+        };
         ArchiveMetric: {
             key: string;
             /** Format: int64 */
@@ -3543,7 +3579,7 @@ export interface components {
         ArchiveSourceAvailability: {
             source: string;
             /** @enum {string} */
-            state: "available" | "unavailable" | "restricted" | "retention_expired";
+            state: "available" | "incomplete" | "unavailable" | "restricted" | "retention_expired";
             reason: string;
         };
         ArchiveSummary: {
@@ -7709,6 +7745,37 @@ export interface operations {
                 };
                 content: {
                     "text/csv": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    exportArchiveSource: {
+        parameters: {
+            query?: {
+                /** @description Team ID for deliverables or own assessments; survey ID for published feedback. */
+                resource_id?: string;
+                after?: string;
+                audience?: "organiser" | "mentor" | "participant";
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                source: "roster" | "deliverables" | "assessments" | "published-outcomes" | "feedback" | "objective-evidence";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exactly one current-authorised native source projection. JSON is a data export and never a CSV/spreadsheet formula. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchiveExport"];
                 };
             };
             default: components["responses"]["Error"];

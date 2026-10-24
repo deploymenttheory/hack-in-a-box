@@ -67,12 +67,33 @@ func (s Service) Observations(
 	cursor string,
 	limit int32,
 ) (ObservationPage, error) {
+	var out ObservationPage
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.ObservationsInTransaction(ctx, tx, actor, eventID, cursor, limit)
+		return err
+	})
+	if err != nil {
+		return out, wrap("read observations transaction", err)
+	}
+	return out, nil
+}
+
+// ObservationsInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) ObservationsInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	cursor string,
+	limit int32,
+) (ObservationPage, error) {
 	out := ObservationPage{Items: []Observation{}}
 	a, b, err := observationCursor(cursor)
 	if err != nil || limit < 1 || limit > 100 {
 		return out, access.ErrInvalid
 	}
-	err = database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+	q := dbgen.New(tx)
+	err = func() error {
 		if err := (access.EventPolicy{Queries: q}).Authorize(
 			ctx,
 			actor,
@@ -141,6 +162,6 @@ func (s Service) Observations(
 			out.NextCursor = &value
 		}
 		return nil
-	})
+	}()
 	return out, wrap("outcome observations", err)
 }

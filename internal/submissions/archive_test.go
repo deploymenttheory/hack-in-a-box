@@ -16,16 +16,36 @@ func TestNeverHeldArchiveDoesNotInventSubmissionOutcomes(t *testing.T) {
 	pool := testdb.New(t, true)
 	f := newFixture(t, pool)
 	f.now = f.c.LiveStart.Add(-time.Hour)
-	events := event.Service{Pool: pool, Clock: func() time.Time { return f.now }, SettleSubmissions: f.s.Settle}
+	events := event.Service{
+		Pool:              pool,
+		Clock:             func() time.Time { return f.now },
+		SettleSubmissions: f.s.Settle,
+	}
 	row, err := f.q.Event(t.Context(), f.id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cancelled, err := events.Transition(t.Context(), f.owner.ID, f.id, row.Revision, "cancelled", "Synthetic never-held cancellation", false)
+	cancelled, err := events.Transition(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		row.Revision,
+		"cancelled",
+		"Synthetic never-held cancellation",
+		false,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = events.Transition(t.Context(), f.owner.ID, f.id, cancelled.Revision, "archived", "", false)
+	_, err = events.Transition(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		cancelled.Revision,
+		"archived",
+		"",
+		false,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,10 +70,28 @@ func TestNeverHeldArchiveDoesNotInventSubmissionOutcomes(t *testing.T) {
 	if after := snapshot(); after != before {
 		t.Fatalf("maintenance mutated archived competition: before=%s after=%s", before, after)
 	}
-	if _, err = f.s.Read(t.Context(), f.owner.ID, f.id, f.team); !errors.Is(err, access.ErrNotFound) {
+	if _, err = f.s.Read(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		f.team,
+	); !errors.Is(
+		err,
+		access.ErrNotFound,
+	) {
 		t.Fatalf("missing archived outcome must remain unavailable: %v", err)
 	}
-	if _, err = f.s.History(t.Context(), f.owner.ID, f.id, f.team, 0, 10); !errors.Is(err, access.ErrNotFound) {
+	if _, err = f.s.History(
+		t.Context(),
+		f.owner.ID,
+		f.id,
+		f.team,
+		0,
+		10,
+	); !errors.Is(
+		err,
+		access.ErrNotFound,
+	) {
 		t.Fatalf("history invented archived outcome: %v", err)
 	}
 	if after := snapshot(); after != before {

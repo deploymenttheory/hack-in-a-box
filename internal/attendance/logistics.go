@@ -21,11 +21,32 @@ func (s Service) Logistics(
 	limit int32,
 	export bool,
 ) (OperationalPage, error) {
+	var result OperationalPage
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		result, err = s.LogisticsInTransaction(ctx, tx, actor, eventID, cursor, limit, export)
+		return err
+	})
+	if err != nil {
+		return result, fmt.Errorf("read logistics transaction: %w", err)
+	}
+	return result, nil
+}
+
+// LogisticsInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) LogisticsInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, cursor uuid.UUID,
+	limit int32,
+	export bool,
+) (OperationalPage, error) {
 	result := OperationalPage{Items: []OperationalEntry{}}
 	if limit < 1 || limit > 100 {
 		return result, access.ErrInvalid
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	q := dbgen.New(tx)
+	err := func() error {
 		if _, err := lock(ctx, q, actor, eventID, access.ProfileExport); err != nil {
 			return err
 		}
@@ -107,7 +128,7 @@ func (s Service) Logistics(
 			}
 		}
 		return nil
-	})
+	}()
 	if err != nil {
 		return result, fmt.Errorf("read logistics roster: %w", err)
 	}

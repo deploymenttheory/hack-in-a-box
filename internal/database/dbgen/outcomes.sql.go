@@ -611,6 +611,60 @@ func (q *Queries) OutcomeProjectVersion(ctx context.Context, arg OutcomeProjectV
 	return i, err
 }
 
+const outcomePublishedEventProjectsPage = `-- name: OutcomePublishedEventProjectsPage :many
+SELECT pv.outcome_id, pv.version, pv.source_version, pv.command_id, pv.actor_id, pv.expected_version, pv.command, pv.document, pv.state, pv.published_fields, pv.created_at FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
+WHERE oh.event_id=$1::uuid AND ph.outcome_id>$2
+AND outcome_project_readable(ph.outcome_id,$3::uuid,$4::timestamptz)
+ORDER BY ph.outcome_id LIMIT $5
+`
+
+type OutcomePublishedEventProjectsPageParams struct {
+	EventID  uuid.UUID
+	AfterID  uuid.UUID
+	ActorID  uuid.UUID
+	AtTime   time.Time
+	PageSize int32
+}
+
+func (q *Queries) OutcomePublishedEventProjectsPage(ctx context.Context, arg OutcomePublishedEventProjectsPageParams) ([]OutcomeProjectVersion, error) {
+	rows, err := q.db.Query(ctx, outcomePublishedEventProjectsPage,
+		arg.EventID,
+		arg.AfterID,
+		arg.ActorID,
+		arg.AtTime,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OutcomeProjectVersion{}
+	for rows.Next() {
+		var i OutcomeProjectVersion
+		if err := rows.Scan(
+			&i.OutcomeID,
+			&i.Version,
+			&i.SourceVersion,
+			&i.CommandID,
+			&i.ActorID,
+			&i.ExpectedVersion,
+			&i.Command,
+			&i.Document,
+			&i.State,
+			&i.PublishedFields,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const outcomePublishedProject = `-- name: OutcomePublishedProject :one
 SELECT pv.outcome_id, pv.version, pv.source_version, pv.command_id, pv.actor_id, pv.expected_version, pv.command, pv.document, pv.state, pv.published_fields, pv.created_at FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
 WHERE ph.outcome_id=$1 AND outcome_project_readable(ph.outcome_id,$2::uuid,$3::timestamptz)

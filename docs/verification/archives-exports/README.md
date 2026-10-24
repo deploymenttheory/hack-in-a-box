@@ -48,3 +48,25 @@ passed (submissions 2.107s; archives 4.441s). The initial red proof is retained 
 `/private/tmp/hackbox119-archive-boundary-red.log`; green log is
 `/private/tmp/hackbox119-archive-first-pg.log`. This is bounded proof, not the full
 remaining export/worker/race/HTTP acceptance gate.
+
+## Selected native-source export checkpoint
+
+A second source slice adds bounded, audited no-store JSON exports for logistics
+rosters, explicitly scoped/audience-selected formal deliverables, own authorised
+assessment cards, published projects, published suppressed feedback, and exact
+objective-evidence observations. Each composes the owning service inside one
+archive event transaction. Current archive membership does not confer logistics
+fields, another author's card, raw survey responses or unpublished projects.
+The summary identifies missing native formal outcomes as unavailable; its CSV
+also includes explicit source-availability rows.
+
+Meaningful real PostgreSQL archive tests passed (`go test ./internal/archives
+-count=1`, integration enabled and capped at two CPUs): 5.974s. This covers native
+logistics role/field projection, pagination and role loss; explicit required
+resource scope; empty published-source projections and safe audit. It does not
+claim the remaining dated objective/outcome, full assessment/publication,
+retention-worker lag, concurrency, HTTP and archive-job acceptance proof.
+
+Changed-owner Go lint passed: `golangci-lint run` over archives, attendance,
+scorecards, outcomes, surveys, submissions and HTTP adapters (`0 issues`).
+Native export adapter compile and OpenAPI/TypeScript generation are complete.

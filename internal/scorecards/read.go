@@ -21,12 +21,33 @@ func (s Service) Read(
 	after uuid.UUID,
 	count int,
 ) (Page, error) {
+	var out Page
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.ReadInTransaction(ctx, tx, actor, eventID, teamID, after, count)
+		return err
+	})
+	if err != nil {
+		return out, fmt.Errorf("read scorecards transaction: %w", err)
+	}
+	return out, nil
+}
+
+// ReadInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) ReadInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID uuid.UUID,
+	after uuid.UUID,
+	count int,
+) (Page, error) {
 	out := Page{Items: []Card{}}
 	size, err := limit(count)
 	if err != nil {
 		return out, err
 	}
-	err = database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	q := dbgen.New(tx)
+	err = func() error {
 		row, err := s.guard(ctx, q, actor, eventID, teamID)
 		if err != nil {
 			return err
@@ -61,7 +82,7 @@ func (s Service) Read(
 			out.Items = append(out.Items, card)
 		}
 		return nil
-	})
+	}()
 	if err != nil {
 		return Page{}, fmt.Errorf("read own independent cards: %w", err)
 	}
