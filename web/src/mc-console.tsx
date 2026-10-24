@@ -33,7 +33,7 @@ function MCConsole({event,reader,initial,onDirty}:{event:EventRecord;reader:Pres
  const [reasonError,setReasonError]=useState<string>(),[validation,setValidation]=useState(0)
  useLayoutEffect(()=>{if(validation&&root.current)focusFirstInvalid(root.current)},[validation])
  const operation=usePresentationOperation(event.id,reader,scope)
- const dirty=draft!==undefined||!!reason||!!urgent.title||!!urgent.text||!!pairing.label||!!review
+ const dirty=draft!==undefined||!!reason||!!urgent.title||!!urgent.text||urgent.duration_seconds!==120||!!pairing.label||pairing.minutes!==120||seconds!==120||!!review
  const navigation=useMentorTaskNavigation({dirty,pending:operation.pending,unknown:operation.unknown,root})
  const stale=reviewed.revision!==latest.revision,cues=draft??reviewed.draft,permitted=!reader.error&&latest.can_control
  const disabled=operation.pending||operation.unknown||stale||!permitted,reasonValid=!!reason.trim()&&new TextEncoder().encode(reason).length<=2000

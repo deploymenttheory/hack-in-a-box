@@ -109,6 +109,14 @@ test('renders a maximum legal Go-escaped current and next snapshot without recon
  await expect(page.locator('.room-instructions')).toHaveText('<'.repeat(4000))
  await expect(page.locator('.room-display footer strong')).toHaveText('<'.repeat(200))
  await expect(page.locator('.room-countdown')).toHaveText('02:00')
+ // Also exercise a native-legal next title without punctuation/word breaks;
+ // the Go escaped '<' boundary above primarily proves transport framing.
+ const payload=JSON.parse(state.frameOverride.match(/^data: (.*)$/m)![1])
+ payload.next.title='W'.repeat(200)
+ state.frameOverride=`id: ${payload.sequence}\nevent: snapshot\ndata: ${JSON.stringify(payload)}\n\n`
+ await page.clock.runFor(1_100)
+ await expect(page.locator('.room-display footer strong')).toHaveText('W'.repeat(200))
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
 })
 
 for (const palette of [

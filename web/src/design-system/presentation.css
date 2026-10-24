@@ -27,6 +27,7 @@
 .room-qr svg { width: min(22vw, 34vh); height: auto; background: white; }
 .room-qr a { max-width: 100%; color: var(--room-primary); font-size: clamp(1.2rem, 1.7vw, 2rem); font-weight: 700; overflow-wrap: anywhere; }
 .room-display footer { display: flex; gap: 2vw; border-top: 2px solid currentColor; padding: 1vh 0 0; color: var(--room-foreground); font-size: clamp(1.4rem, 2.3vw, 2.8rem); }
+.room-display footer strong { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .room-display { padding: 1rem; } .room-controls { flex-direction: column; } .room-current { grid-template-columns: 1fr; } .room-instructions { max-height: none; } .room-qr svg { width: min(60vw, 20rem); } .room-logo { max-width: 25vw; } }
 @media print { .room-display { display: none !important; } }
 /* UI-11: flat cue workspace; room canvas keeps distance typography. */

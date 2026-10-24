@@ -208,6 +208,21 @@ test('jumps only to approved cues and finishes the planned program explicitly', 
 test('keyboard correction preserves nested input and route discard can be cancelled deliberately',async({page})=>{
  const data=await prepare(page)
  await page.getByLabel('Reason for room changes').fill('')
+ // Each nested scalar is independently unsent work, even before a reason,
+ // title or display label is entered. Reset the other scalars between cases.
+ for(const draft of [
+  {task:'Prepare urgent announcement',field:'Urgent countdown in seconds',value:'65'},
+  {task:'Manage displays',field:'Display lifetime in minutes',value:'90'},
+  {task:'Live controls',field:'Set remaining seconds',value:'65'},
+ ]){
+  await page.getByRole('button',{name:draft.task,exact:true}).click()
+  await page.getByLabel(draft.field,{exact:true}).fill(draft.value)
+  page.once('dialog',dialog=>dialog.dismiss())
+  await page.getByRole('link',{name:'Ideas & projects',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'MC console',exact:true})).toBeVisible()
+  await expect(page.getByLabel(draft.field,{exact:true})).toHaveValue(draft.value)
+  await page.getByLabel(draft.field,{exact:true}).fill('120')
+ }
  await page.getByRole('button',{name:'Hold countdown',exact:true}).click()
  await expect(page.getByLabel('Reason for room changes')).toBeFocused()
  await expect(page.getByLabel('Reason for room changes')).toHaveAttribute('aria-invalid','true')
