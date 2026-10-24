@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import { useBlocker } from '@tanstack/react-router'
+import { usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
 import { APIError } from './api/client'
 import { usePrivateRequestScope } from './private-request-scope'
 import { Button } from './components/ui/button'
@@ -15,10 +17,15 @@ export function uncertainAdmission(error: unknown) {
 // An unknown write remains fenced; checking current state never replays it.
 export function useAdmissionCommand(scopeKey: string) {
   const scope = usePrivateRequestScope(scopeKey), lock = useRef(false)
+  const history = usePlanningUnknownCommands(`admission:${scopeKey}`)
+  const remembered = history.attempts.at(-1)?.command as AdmissionIntent | undefined
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'idle' })
   const [failure, setFailure] = useState<unknown>(), [reading, setReading] = useState(false)
+  const visibleOutcome: Outcome = outcome.kind === 'idle' && history.unconfirmed && remembered ? { kind: 'uncertain', intent: remembered } : outcome
+  usePlanningDepartureBarrier(outcome.kind === 'pending')
+  useBlocker({ shouldBlockFn: () => lock.current && outcome.kind === 'pending', enableBeforeUnload: outcome.kind === 'pending' || history.unconfirmed })
   async function run<T>(intent: AdmissionIntent, write: () => Promise<T>, confirmed: (value: T) => string | Promise<string>) {
-    if (lock.current) return false
+    if (lock.current || history.unconfirmed) return false
     const ticket = scope.capture()
     if (!ticket.current()) return false
     lock.current = true; setFailure(undefined); setOutcome({ kind: 'pending', intent })
@@ -32,9 +39,9 @@ export function useAdmissionCommand(scopeKey: string) {
     } catch (error) {
       if (!ticket.current()) return false
       setFailure(error)
-      if (uncertainAdmission(error)) setOutcome({ kind: 'uncertain', intent })
+      if (uncertainAdmission(error)) { history.record({ operation: intent.label, revision: intent.revision ?? 0, command: intent }); setOutcome({ kind: 'uncertain', intent }) }
       else if (error instanceof APIError && error.status === 409 && error.code === 'revision_conflict') setOutcome({ kind: 'stale', intent })
-      else { setOutcome({ kind: 'rejected', error }); lock.current = false }
+      else { if (error instanceof APIError && [401, 403, 404].includes(error.status)) history.clear(); setOutcome({ kind: 'rejected', error }); lock.current = false }
       return false
     }
   }
@@ -46,10 +53,10 @@ export function useAdmissionCommand(scopeKey: string) {
     try {
       await read()
       if (ticket.current() && outcome.kind === 'stale') { setOutcome({ kind: 'idle' }); lock.current = false }
-    } catch (error) { if (ticket.current()) setFailure(error) }
+    } catch (error) { if (ticket.current()) { if (error instanceof APIError && [401, 403, 404].includes(error.status)) history.clear(); setFailure(error) } }
     finally { if (ticket.current()) setReading(false) }
   }
-  return { outcome, failure, reading, run, readCurrent, isBlocked: () => lock.current, pending: outcome.kind === 'pending', blocked: outcome.kind === 'pending' || outcome.kind === 'uncertain' || outcome.kind === 'stale' }
+  return { outcome: visibleOutcome, failure, reading, run, readCurrent, isBlocked: () => lock.current || history.unconfirmed, pending: outcome.kind === 'pending', blocked: history.unconfirmed || outcome.kind === 'pending' || outcome.kind === 'uncertain' || outcome.kind === 'stale' }
 }
 export function AdmissionFeedback({ command, read }: { command: ReturnType<typeof useAdmissionCommand>; read: () => Promise<unknown> }) {
   const value = command.outcome

@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import { APIError } from './api/client'
 import { useAdmissionCommand } from './registration-command'
+vi.mock('@tanstack/react-router', () => ({ useBlocker: vi.fn() }))
 const intent = { label: 'Accept offer', resource: 'registration-1', revision: 7 }
 
 test('unknown admission write retains original intent and read-only reconciliation never settles or replays it', async () => {
