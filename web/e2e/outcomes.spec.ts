@@ -162,6 +162,14 @@ test('idea directory uses scoped Fleet records and explicit keyboard navigation 
   await expect(record).toBeHidden()
   await page.emulateMedia({ media: 'screen' })
   const open = page.getByRole('link', { name: 'Open PRIVATE idea <script>window.outcomeLeak=true</script>', exact: true })
+  const geometry = await open.evaluate(link => {
+    const text = [...link.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim() === 'Open')
+    const range = document.createRange(); if (!text) throw new Error('Missing visible Open label'); range.selectNodeContents(text)
+    const lines = [...range.getClientRects()].filter(rect => rect.width > 0), cell = link.closest('td')?.getBoundingClientRect(), bounds = link.getBoundingClientRect()
+    return { lines: lines.length, insideCell: !cell || (bounds.left >= cell.left && bounds.right <= cell.right), insideLink: lines.every(rect => rect.left >= bounds.left && rect.right <= bounds.right) }
+  })
+  expect(geometry.lines).toBe(1); expect(geometry.insideCell).toBe(true); expect(geometry.insideLink).toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
   await open.focus(); await page.keyboard.press('Enter')
   await expect(page).toHaveURL(`/ideas/${outcomeID}`)
   await expect(page.getByRole('heading', { name: 'Idea and follow-through', exact: true })).toBeVisible()

@@ -1,33 +1,33 @@
 {
   "before_commit": "e9d7c4665a582feca6543718861ff56308d82fe9",
-  "candidate_main_base": "6e8ab511f00f3c3e8b63c91200a52637bee65119",
+  "candidate_main_base": "ea88901f7204a0a3a441ef03610e97e6b5297740",
   "candidate_parent": "4161d276a39c2eca614b591508c61ae961111c37",
   "fixtures": "Identical synthetic fixture functions; actual production portal builds; no domain/provider writes in capture cases.",
   "captures": "Directory/source use the unchanged standard device viewport. Complete publication/owner-plan regions retain the same CSS width/DPR, temporarily extending viewport height to fit the actual app scrollport and restoring it afterward. No product styles/data are changed for capture.",
   "source_sha256": {
-    "web/src/outcome-workspace.tsx": "11b943fed562e893d86de6759c9c5dd7feba7fd546a8d824f98c82f7cf0c3ae5",
+    "web/src/outcome-workspace.tsx": "e8479a62950009f247b98f1754a501bac4ab28dfbf46a8526d75951328e14792",
     "web/src/outcome-controls.tsx": "14fb963f8975e4fd1773ddca333811a79965fda2c94be1c2c46fa11b45640072",
     "web/src/outcome-command.tsx": "3ee779fef070fc33ea7ef2d0e8ccc6075cbc23f43f9fd874198beeb7323ebcca",
     "web/src/outcome-safety.tsx": "059bea0481bfa5e869eb2d7e1094f1692fe466f59d5c124ef48f2ae1ec4a88b8",
     "web/src/outcome-read.ts": "0f0e435dbdfb652aa4f44c7a47f615c300585e56eb5f88901a23bf16e9ce0aa6",
-    "web/src/outcome-decision.tsx": "c65878646fc08e28064536c8e40ed33802fb9e45e9975b70ca428a9d5b34571f",
-    "web/src/outcome-publication.tsx": "8e5d7953a67b20ba663dfbe47206f56ef7a6f04b6e5d11cbd0dab4270548f253",
-    "web/src/outcome-reviews.tsx": "8e502bdaef963b0436850330a991e837b8cfebd155b4bfbf23273f8b37d055f4",
+    "web/src/outcome-decision.tsx": "73ca34d9d1c7666f6f27f0c604a5d8edc35b933c120d9f6f30020962c6086b7a",
+    "web/src/outcome-publication.tsx": "78b812c109a9802a78494754ea24b9bb4ea18736816aa58d0b66b2374cf23249",
+    "web/src/outcome-reviews.tsx": "8ec3458b5671e5da65e1bca625884e864b1f9f68a491e339d32c86034ec4bdd7",
     "web/src/outcome-api.ts": "fdf671e06c01c3423f130b63276ddab32080e1f8497f5b664a0fc2cc1e600ff5",
-    "web/src/design-system/outcomes.css": "e8a6bce98fb6ec288027b827c35ed42f46ab20e5ba5528005ac0344d6edf44d4",
-    "web/e2e/outcomes.spec.ts": "2e26e7ce3814c9bd80932aef75a8d2ccf5b00fe05102d052b66b2e14045b3b11",
+    "web/src/design-system/outcomes.css": "4094bb3b7ddbd075929edc330f3d76d1baa62029b084d24656d274835443d1aa",
+    "web/e2e/outcomes.spec.ts": "42f4ea9812362de76fa0bf730bda57278f93be2ecad3060c7d560265866d2d3d",
     "web/e2e/outcomes-admin.spec.ts": "5d11b99d5be0da29be3b06940533a2fdcd235b7e3f69d395f91d260984b34613"
   },
   "images_sha256": {
-    "after-admin-desktop-directory.png": "753e27181421e19a93ba3e4bec5713faa32bf21941196c4fa0b24ac991d603bd",
-    "after-admin-desktop-owner-plan.png": "0fb4596c0466e2a518b835d1c0c54862505b2db70fcce38759a1dd3dfcd4b695",
-    "after-admin-desktop-publication.png": "f832740f1be32b1b1bbbda74213de5caf320c41f9301f3ba781dd90a199e47ce",
+    "after-admin-desktop-directory.png": "f8ef43ef1bcd55b6fe76a3c3f3ddb42f1c41f42cecca5294f730eca9f794e742",
+    "after-admin-desktop-owner-plan.png": "dd3c34f6bc8509246922b90529a5b1270a23e1264202e7a590f7880af6ddf26e",
+    "after-admin-desktop-publication.png": "47199cebcdc54d90f21e95d4e3a36387eb072e98cf8bc1573141cb32fadbe0c3",
     "after-admin-desktop-source.png": "218b50a3f70d4f507be59fc43a56740762612258fa210cbb54f16392bdc67ee7",
     "after-admin-mobile-directory.png": "c9501c1a955e25258e8010f88d9b56727078dd83531db9978b62461e2a13d6e4",
-    "after-admin-mobile-owner-plan.png": "ecd02ab8db1eafb5b4d94be630fbe8e01fff8461baf8a4fad729862211631de2",
-    "after-admin-mobile-publication.png": "3cbdb938adc860dfe996731fe5b1843ae81f483a419fe10636d1a11c89149c3c",
+    "after-admin-mobile-owner-plan.png": "ef908ba5ce2d64f0fe754a343afe33fef1a3bc7531eace87c9349c1d269247aa",
+    "after-admin-mobile-publication.png": "ca657a46d48faae5f9dcf0459e975712e0a10a3211139a249df8ec9b2ae2b46e",
     "after-admin-mobile-source.png": "be251d0181b5d0f40132e74c3e7d4150879eda5fc1d8c3227a2623e9fd12097a",
-    "after-participant-desktop-directory.png": "dae4d727cd1614ad0d37a0454770b1f690800f5e8195424abeb871fc02441960",
+    "after-participant-desktop-directory.png": "64dcbeb5ffc59ff1058b5123488b8f156c8339a7c244a41693ddf1cf0f0c6f25",
     "after-participant-desktop-source.png": "8c8d42a977abbb9af66724294aa7255d62f7fd682257ace03687942a5287bcee",
     "after-participant-mobile-directory.png": "a25986521b96c500776bff3e38442e35ff8acdc4613916898a6d6f2c5d720365",
     "after-participant-mobile-source.png": "a9aaf4de29147917c27332bfbb252b23dd4d590660badd587775b779aa89fb1f",
@@ -46,6 +46,8 @@
   },
   "fixture_sha256": {
     "web/e2e/fixtures.ts": "b9cf5dfcd0f038a54e47054ba0f9cfe8846ddbff96e65c789cc92d47ab3ae201",
-    "web/e2e/media-workspace-fixtures.ts": "f9ee4b5e186e0035afac90b3e6ed58595db1fe0aa9a5548554dc50e8cae9ba98"
-  }
+    "web/e2e/media-workspace-fixtures.ts": "d19bd0b59fd3d69809d8e9837787043413d14fabdd76d85dc6bd842bafb3c775"
+  },
+  "review_delta_parent": "45bf5ad9d39ec776e8981889f9868980c2f49c25",
+  "review_delta_recaptures": "Only AFTER directories in both portals/widths and AFTER admin publication/owner-plan regions were refreshed for the scoped static Open action and plain-language copy delta. Original BEFORE and AFTER source images remain unchanged from the original complete evidence set."
 }

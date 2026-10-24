@@ -1,7 +1,7 @@
 # Actual Fleet outcomes before/after evidence
 
 Before: production app at `e9d7c4665a582feca6543718861ff56308d82fe9`.
-After: final PR #261 candidate based on `6e8ab511f00f3c3e8b63c91200a52637bee65119`.
+After: final PR #261 candidate based on `ea88901f7204a0a3a441ef03610e97e6b5297740`.
 
 Both builds use identical synthetic fixture data and device configurations. The
 baseline production source is unchanged; only fixture/capture files were copied.
@@ -33,3 +33,8 @@ The screenshot fixtures deliberately include inert hostile-looking source text.
 
 The [manifest](visual-manifest.json) records source/fixture/image SHA-256 values.
 Independent source/state/authority checks are recorded in the [contract map](contract-map.md).
+
+Final review delta: refreshed only AFTER directories (both portals/widths) and
+AFTER publication/owner-plan regions for the scoped one-line Open action and
+plain-language approval/media copy. BEFORE and AFTER source images remain the
+original matching captures. The manifest distinguishes this recapture generation.

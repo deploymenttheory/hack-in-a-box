@@ -66,7 +66,7 @@ function OutcomeDirectory({ eventID }: { eventID?: string }) {
             { id: 'source', label: 'Source', cell: value => value.definition.kind === 'pitch' ? 'Future-theme pitch' : 'Team outcome' },
             { id: 'owner', label: 'Follow-through', cell: value => value.owner_id ? 'Owner assigned' : 'No owner assigned' },
             { id: 'version', label: 'Current version', cell: value => value.current_version },
-          ]} actions={value => <Link className={buttonVariants({ variant: 'ghost' })} to="/ideas/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.definition.problem}`}><Icon name="next" />Open</Link>} />
+          ]} actions={value => <Link className={`${buttonVariants({ variant: 'ghost' })} fleet-outcome-open`} to="/ideas/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.definition.problem}`}><Icon name="next" />Open</Link>} />
           {!records.length && <p>No ideas are available in this view.</p>}
           <CollectionPagination source={{ kind: 'cursor', loaded: records.length, busy: listing.isFetchingNextPage, next: listing.hasNextPage ? () => void listing.fetchNextPage() : undefined }} />
         </>}
@@ -164,7 +164,7 @@ function ProjectDirectory() {
           { id: 'solution', label: 'Reviewed solution', essential: true, cell: value => value.solution },
           { id: 'status', label: 'Reviewed follow-up status', cell: value => <StatusBadge>{value.follow_up_status.replaceAll('_', ' ')}</StatusBadge> },
           { id: 'version', label: 'Publication version', cell: value => value.version },
-        ]} actions={value => <Link className={buttonVariants({ variant: 'ghost' })} to="/projects/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.problem}`}><Icon name="next" />Open</Link>} />
+        ]} actions={value => <Link className={`${buttonVariants({ variant: 'ghost' })} fleet-outcome-open`} to="/projects/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.problem}`}><Icon name="next" />Open</Link>} />
         {!records.length && <p>No permitted reviewed projects match this search.</p>}
         <CollectionPagination source={{ kind: 'cursor', loaded: records.length, busy: projects.isFetchingNextPage }} />
         {projects.hasNextPage && <Button icon="nextPage" variant="outline" disabled={projects.isFetchingNextPage} onClick={() => void projects.fetchNextPage()}>More reviewed projects</Button>}

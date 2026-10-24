@@ -1,7 +1,7 @@
 # Ideas and outcome follow-through — #242 / UI-09
 
 This report describes the complete present UI implementation in PR #261, based
-on main `6e8ab511f00f3c3e8b63c91200a52637bee65119`. The native idea, outcome,
+on main `ea88901f7204a0a3a441ef03610e97e6b5297740`. The native idea, outcome,
 owner-plan, publication and released-project surfaces are rebuilt with the
 accepted Fleet foundations. Local acceptance work is complete; the frozen
 candidate still requires independent review and exact-head repository CI before
@@ -92,3 +92,19 @@ must be fixed and verified before readiness.
 #119 still owns missing archive/export backend work; #163 owns the additional
 cross-event showcase; #113 owns result/feedback release. This UI work does not
 claim any of those separate product deliverables complete.
+
+## Final visual review delta
+
+Initial paired frozen-source reviews at f6a70f6 reported Standards 0 / Spec 0.
+The subsequent visual inspection found a split static Open action label. The
+real text-range geometry assertion reproduced two lines before the scoped fix
+(`/private/tmp/fleet242-open-red.log`). After correction, **6/6 admin and 4/4
+participant focused desktop/mobile cases pass**, retaining keyboard navigation,
+within-cell text/link geometry, no overflow and no-write checks
+(`/private/tmp/fleet242-delta-{admin,public}.log`). Approval/media copy now
+explains owner/date/message/channel and current consent/access plainly; original
+unknown-send/replacement warnings remain. Lint and both production builds pass
+(`/private/tmp/fleet242-delta-{lint,build}.log`); the focused production review
+unit suite passes **4/4** (`/private/tmp/fleet242-delta-unit.log`). Only the affected AFTER directory
+and preparation images were refreshed; before/source evidence is unchanged.
+The final bounded delta and rebase still require independent review/exact-head CI.

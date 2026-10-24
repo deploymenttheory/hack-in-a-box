@@ -27,3 +27,5 @@
 .fleet-outcomes .fleet-review-flow :is(p,li,dd) { overflow-wrap: anywhere; }
 .fleet-outcomes .fleet-outcome-section ol > li { padding-block: var(--space-3); border-block-end: 1px solid var(--border); }
 @media (max-width: 48rem) { .fleet-outcome-facts > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); } }
+
+.fleet-outcomes .fleet-outcome-open { white-space: nowrap; overflow-wrap: normal; min-width: max-content; flex-shrink: 0; }
