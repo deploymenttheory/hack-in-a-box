@@ -1,6 +1,7 @@
 # Mentor operations UI migration — issue #240
 
-Base: merged team/coverage main `e159ebfd4f54ee8a67e5924eb216cb2bbd8372ec`.
+Initial implementation/visual baseline: merged team/coverage main `e159ebfd4f54ee8a67e5924eb216cb2bbd8372ec`.
+Current integration base: resource main `c91c52e3503f21077b519c9eae306d4dd0bd5ca9`.
 This is an incremental draft checkpoint, not a claim that UI-07 is complete.
 Accepted reference: `docs/design/fleet-reference/fleet-preview.html`, visual contract,
 primitive API, task patterns and independently published style guide.
@@ -268,7 +269,7 @@ completes **32/32**, with API/cookie/private-storage access forbidden in every c
 
 The rebuilt expanded administrator/shared team-and-coverage selection completes
 **218/218** desktop/mobile cases, including shared roster/focus/planning consumers. The first
-pre-fix run passed198 cases with only the two intended later-page failures and18
+pre-fix run passed 198 cases with only the two intended later-page failures and 18
 unrun after its failure limit. No pre-fix run is claimed as final proof. Independent
 Standards/Spec reviews and full exact-head GitHub CI remain mandatory before ready
 or merge; the parent delivery agent owns those steps. No backend transaction or real
@@ -276,9 +277,50 @@ provider behaviour changed, so this migration adds no PostgreSQL/provider operat
 
 
 A final factual-reader regression also reproduces a current-authority gap: returning
-through client routes while the15-second query cache is fresh can show the former
+through client routes while the 15-second query cache is fresh can show the former
 organiser projection without starting a new native read. The dedicated factual
 query now requires a fresh mounted GET, gates presentation until that read completes,
 and removes its cache when unmounted. This does not change its factual allowlist or
 printability. Its direct red-to-green proof and all post-main integration checks are
 required after restacking onto newly merged resource main c91c52e.
+
+
+## Restacked source freeze and review handoff
+
+The final implementation is restacked onto actual merged main **c91c52e**, with
+source commit **0ef17fc53786ea16d0f5c13a92dac0590fd87553** and web tree
+**d2998da5c329db9147eb4260a2b38a1ffc9d83d9**. The subsequent verification/evidence
+commit changes only this record and actual PNG artifacts. Shared conflict resolution
+preserves the incoming exact-scope resource redaction hook and its regression plus
+this lane's exact-intent resolve/older-unconfirmed regression. ResourceReader's
+per-mount current GET/acknowledgement contracts, added public resource/guidance
+suites, production protected-upload guide and new CI matrix/required aggregate are
+preserved. No resource implementation or CI workflow is changed relative to c91.
+
+Every post-rebase process is terminal with exit 0:
+
+- Full ESLint, **139 unit tests / 22 files**, and both production portal builds.
+- **262 participant browser cases** across all owned mentor/help/clarification/card/
+  review flows plus incoming resource, embargo, standalone guidance and private-reader
+  consumers, using one worker. Both factual-reader and later-page authority red-to-green
+  counterproofs pass on desktop/mobile.
+- **154 administrator integration cases** covering current huddle/factual projection,
+  every new held-write private owner, shared coverage/focus, resources, embargo and
+  guidance/private-reader contracts, using one worker. The broader pre-restack
+  administrator owner/dependency suite passed 218/218; it remains historical proof.
+- Independent Go-hosted guide: **34 desktop/mobile cases**, including both protected
+  upload and mentoring examples, with API, cookies and private storage forbidden.
+
+Local durable logs are `/private/tmp/hackbox257-rebase-{lint,unit,build}.log`,
+`/private/tmp/hackbox257-postrebase-public.log`,
+`/private/tmp/hackbox257-postrebase-admin.log`, and
+`/private/tmp/hackbox257-postrebase-guide.log`. The 10 matched after images are
+refreshed from the final post-rebase participant run. All local test/preview hosts
+are stopped. Temporary port-only Playwright configs are untracked local tooling.
+
+Implementation scope is complete for paired review. This PR remains **draft** until
+independent Standards and Spec review findings are resolved and full exact-head
+GitHub CI passes. The parent delivery agent owns ready/merge/issue reconciliation.
+No claim is made that a current read proves an earlier unknown write, that a live
+checkpoint is final qualification, or that this migration implements future judging,
+finalist/results publication or backend freeze policy.

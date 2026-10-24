@@ -127,6 +127,7 @@ discard without unlocking an uncertain write. A rejected discard retains exact i
 For a definite collection-wide denial (including standalone Today/preparation/readiness guidance), the collection owner must clear its private selection and affected cached projections and invalidate pending read lifetimes above any child that it disposes. Restoration requires fresh native authority; never reopen a cached child merely because its parent list is readable again. Keep event/session unknown-command metadata and barriers separate from private payload: `usePlanningUnknownRedaction` must match an exact owned actor/draft/event/resource namespace, redact private titles/commands, retain original unknown revisions/comparison requirements and leave unrelated histories untouched. Redaction is neither a receipt nor permission to replay.
 
 Every `ResourceReader` mount must finish its own current native GET before rendering a private document, attachment or acknowledgement. The lifetime is keyed by actor, draft scope, event and resource; its query cache is unique to the mount and removed/cancelled on departure. Prior cached authority, list restoration, stale intervals and another parent’s successful request do not authorise a new mount. A native 401 ends the session; 403/404 parent denials remain latched until explicit current-access retry. Keep the reader’s public props stable across library, guidance and inbox consumers.
+
 ### Private mentoring and reviewed common answers
 
 Use `HelpAttentionQueue` for the complete authorised support summary projection,
