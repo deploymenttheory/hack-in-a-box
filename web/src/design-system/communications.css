@@ -1,0 +1,4 @@
+.fleet-inbox { min-width: 0; }
+.fleet-inbox-filter { display: grid; gap: var(--space-2); max-width: 28rem; }
+.fleet-inbox-filter select { width: 100%; min-width: 0; }
+.fleet-inbox-filter p { margin: 0; }

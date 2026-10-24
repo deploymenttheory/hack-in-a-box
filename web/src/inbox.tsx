@@ -9,6 +9,9 @@ import { Failure, Loading } from './components/states'
 import { SafeMarkdown } from './components/safe-markdown'
 import { ResourceReader } from './resource-library'
 import { EventBrand } from './branding'
+import { CollectionHeading, CollectionPagination, CollectionRecords, CollectionToolbar } from './components/patterns/collection'
+import { StatusBadge } from './components/ui/feedback'
+import { usePrivateRequestScope } from './private-request-scope'
 
 export function InboxLink({ active = false }: { active?: boolean }) {
   const identity = useIdentity()
@@ -16,16 +19,35 @@ export function InboxLink({ active = false }: { active?: boolean }) {
   return <Link className="fleet-shell-inbox" data-active={active || undefined} to="/inbox" aria-current={active ? 'page' : undefined}><Icon name="list" /><span>Inbox{inbox.data && !inbox.error && inbox.data.unread > 0 ? ` (${inbox.data.unread} unread)` : ''}</span></Link>
 }
 export function InboxPage() {
+  const identity = useIdentity()
+  return <InboxWorkspace key={`${identity.person.id}:${identity.draft_scope}`} />
+}
+function InboxWorkspace() {
   const identity = useIdentity(), [eventID, setEventID] = useState(''), [selected, setSelected] = useState<string>()
-  const events = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-events'), queryFn: async () => unwrap(await api.GET('/api/v1/events', { params: { query: { limit: 100 } } })), retry: false })
-  const notifications = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, 'personal', 'inbox'),eventID], initialPageParam: undefined as string | undefined, queryFn: async ({ pageParam }) => unwrap(await api.GET('/api/v1/inbox', { params: { query: { event_id: eventID || undefined, cursor: pageParam, limit: 30 } } })), getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
+  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:inbox`), filterScope = usePrivateRequestScope(eventID, scope)
+  const events = useQuery({ queryKey: privateKey(identity.person.id, 'personal', 'inbox-events'), queryFn: async () => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events', { signal: ticket.signal, params: { query: { limit: 100 } } })); ticket.assert(); return value }, retry: false })
+  const notifications = useInfiniteQuery({ queryKey: [...privateKey(identity.person.id, 'personal', 'inbox'),eventID], initialPageParam: undefined as string | undefined, queryFn: async ({ pageParam }) => { const ticket = filterScope.capture(); const value = unwrap(await api.GET('/api/v1/inbox', { signal: ticket.signal, params: { query: { event_id: eventID || undefined, cursor: pageParam, limit: 30 } } })); ticket.assert(); return value }, getNextPageParam: page => page.next_cursor ?? undefined, refetchInterval: 30_000, refetchOnWindowFocus: 'always', retry: false })
   const items = notifications.data?.pages.flatMap(page => page.items) ?? []
-  return <section className="workspace inbox"><div className="page-heading"><div><p className="eyebrow">Your notifications</p><h1>Inbox</h1><p>Announcements and reminders available to your current event access.</p></div><Button variant="outline" onClick={() => void notifications.refetch()}>Refresh inbox</Button></div>
-    <label htmlFor="inbox-event">Filter by event</label><select id="inbox-event" value={eventID} onChange={e => { setEventID(e.target.value); setSelected(undefined) }}><option value="">All your events</option>{events.data?.items.map(event => <option key={event.id} value={event.id}>{event.name}</option>)}</select>
-    {events.error && <p role="status">Event choices are unavailable. All authorised notifications remain accessible.</p>}
-    {selected ? <Notification key={selected} id={selected} back={() => setSelected(undefined)} /> : notifications.isPending ? <Loading /> : notifications.error ? <Failure error={notifications.error} retry={() => void notifications.refetch()} /> : <><p role="status" aria-live="polite">{notifications.data?.pages[0].unread ?? 0} unread notifications in this view.</p><ul className="inbox-list">{items.map(item => <li key={item.id} className="panel"><p className="eyebrow">{item.event_name}</p><h2><button className="inbox-open" onClick={() => setSelected(item.id)}>{item.label}<span className="badge">{item.read_at ? 'Read' : 'Unread'}</span></button></h2><p>{new Date(item.created_at).toLocaleString()}</p></li>)}</ul>{!items.length && <p className="empty-state">No notifications are available in this view.</p>}{notifications.hasNextPage && <Button disabled={notifications.isFetchingNextPage} onClick={() => void notifications.fetchNextPage()}>More notifications</Button>}</>}
+  const collection = useRef<HTMLDivElement>(null), opener = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!selected && opener.current) {
+      [...(collection.current?.querySelectorAll<HTMLElement>('[data-record-focus]') ?? [])].find(node => node.dataset.recordFocus === opener.current)?.focus()
+      opener.current = undefined
+    }
+  }, [selected])
+  return <section className="workspace fleet-inbox">
+    <CollectionHeading title="Inbox" scope={{ entity: 'Your notifications' }} description="Announcements and reminders available to your current event access." secondary={[{ label: 'Refresh inbox', icon: 'refresh', disabled: notifications.isFetching, onSelect: () => void notifications.refetch() }]} />
+    {!selected && <CollectionToolbar source="cursor" summary={notifications.data && !notifications.error ? <p role="status" aria-live="polite">{notifications.data.pages[0].unread} unread notifications in this view.</p> : undefined} filters={<div className="fleet-inbox-filter"><label htmlFor="inbox-event">Filter by event</label><select id="inbox-event" value={eventID} onChange={e => { setEventID(e.target.value); setSelected(undefined) }}><option value="">All your events</option>{events.data?.items.map(event => <option key={event.id} value={event.id}>{event.name}</option>)}</select>{events.error && <p role="status">Event choices are unavailable. All authorised notifications remain accessible.</p>}{events.data?.next_cursor && <p>Only the first 100 event choices are listed. All your events includes every authorised notification.</p>}</div>} />}
+    {selected ? <Notification key={selected} id={selected} back={() => setSelected(undefined)} /> : notifications.isPending ? <Loading /> : notifications.error ? <Failure error={notifications.error} retry={() => void notifications.refetch()} /> : <div ref={collection}>
+      <CollectionRecords label="Your notifications" rows={items} rowKey={item => item.id} rowLabel={item => item.label}
+        columns={[{ id: 'event', label: 'Event', cell: item => item.event_name || 'Personal notification' }, { id: 'received', label: 'Received', cell: item => <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time> }, { id: 'read', label: 'Status', essential: true, cell: item => <StatusBadge tone={item.read_at ? 'neutral' : 'success'}>{item.read_at ? 'Read' : 'Unread'}</StatusBadge> }]}
+        actions={item => <Button icon="next" variant="ghost" data-record-focus={item.id} aria-label={`Open ${item.label}`} onClick={() => { opener.current = item.id; setSelected(item.id) }}>Open</Button>} />
+      {!items.length && <p className="empty-state">No notifications are available in this view.</p>}
+      <CollectionPagination label="Inbox pages" source={{ kind: 'cursor', loaded: items.length, busy: notifications.isFetchingNextPage, next: notifications.hasNextPage ? () => void notifications.fetchNextPage() : undefined }} />
+    </div>}
   </section>
 }
+
 function literalHTML(source: string) {
   return source.split('<br>\n').join('\n').replace(/&(amp|lt|gt|#34|#39);/g, (_, entity: string) => ({ amp: '&', lt: '<', gt: '>', '#34': '"', '#39': "'" })[entity] ?? '')
 }
