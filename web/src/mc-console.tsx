@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { type EventRecord } from './api/client'
 import { useIdentity } from './session'
 import { Button } from './components/ui/button'
+import { CollectionHeading } from './components/patterns'
 import { Alert } from './components/ui/surfaces'
 import { Field, Input, Textarea, focusFirstInvalid } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
@@ -22,8 +23,8 @@ export function MCWorkspace({event,onDirty}:{event:EventRecord;onDirty:(value:bo
 function MCReader({event,onDirty}:{event:EventRecord;onDirty:(value:boolean)=>void}){
  const identity=useIdentity(),reader=usePresentationReader(event.id,`${identity.person.id}:${identity.draft_scope}:${event.id}:presentation-reader`)
  const history=useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:presentation`)
- if(!reader.page)return <section className="fleet-mc-console"><h2>MC console</h2><CommunicationCommandHistory attempts={history.attempts}/>{reader.loading?<Loading/>:<><p>Current console access could not be verified. Private cues, drafts and display keys have been cleared.</p><Failure error={reader.error} retry={()=>void reader.read().catch(()=>undefined)}/></>}</section>
- if(!reader.page.can_control)return <section className="fleet-mc-console"><h2>MC console</h2><Alert role="status">Room changes are unavailable in the current operating state. Private editors and display keys have been cleared.</Alert><CommunicationCommandHistory attempts={history.attempts}/><CuePreview cue={reader.page.override??reader.page.published[reader.page.current_index]} label="Current live cue"/><Button icon="refresh" variant="outline" onClick={()=>void reader.read().catch(()=>undefined)}>Check current room access</Button></section>
+ if(!reader.page)return <section className="fleet-mc-console"><CollectionHeading title="MC console" scope={{event:event.name,entity:'Current console access'}}/><CommunicationCommandHistory attempts={history.attempts}/>{reader.loading?<Loading/>:<><p>Current console access could not be verified. Private cues, drafts and display keys have been cleared.</p><Failure error={reader.error} retry={()=>void reader.read().catch(()=>undefined)}/></>}</section>
+ if(!reader.page.can_control)return <section className="fleet-mc-console"><CollectionHeading title="MC console" scope={{event:event.name,entity:'Read-only room state'}}/><Alert role="status">Room changes are unavailable in the current operating state. Private editors and display keys have been cleared.</Alert><CommunicationCommandHistory attempts={history.attempts}/><CuePreview cue={reader.page.override??reader.page.published[reader.page.current_index]} label="Current live cue"/><Button icon="refresh" variant="outline" onClick={()=>void reader.read().catch(()=>undefined)}>Check current room access</Button></section>
  return <MCConsole key={reader.lifetime.editor.key} event={event} reader={reader} initial={reader.page} onDirty={onDirty}/>
 }
 function MCConsole({event,reader,initial,onDirty}:{event:EventRecord;reader:PresentationReader;initial:ConsolePage;onDirty:(value:boolean)=>void}){
@@ -45,7 +46,7 @@ function MCConsole({event,reader,initial,onDirty}:{event:EventRecord;reader:Pres
  function close(){setReview(undefined);navigation.restore()}
  async function confirm(){if(!review||disabled)return;const ticket=scope.capture(),intent=review;const accepted=await operation.send(intent);if(!ticket.current())return;if(accepted){if(intent.kind==='control'&&intent.command.action==='save')setDraft(undefined);if(intent.kind==='pair')setPairing({label:'',minutes:120});const page=reader.current();if(page)setReviewed(page);close()}}
  async function newBase(){const ticket=scope.capture(),page=await operation.newBase();if(!ticket.current()||!page)return;setReviewed(page);setReview(undefined);navigation.restore()}
- return <section ref={root} tabIndex={-1} className="fleet-mc-console mc-console"><header className="fleet-collection-heading"><div><p className="fleet-scope-label">{event.name} · Live event operation</p><h2>MC console</h2><p>Preview each change, then choose when it reaches the room.</p></div><p>Server snapshot {localDate(latest.server_now,latest.timezone)} · Revision {latest.revision}</p></header>
+ return <section ref={root} tabIndex={-1} className="fleet-mc-console mc-console"><CollectionHeading title="MC console" scope={{event:event.name,entity:'Live event operation'}} description="Preview each change, then choose when it reaches the room." status={<p>Server snapshot {localDate(latest.server_now,latest.timezone)} · Revision {latest.revision}</p>}/>
  {!!reader.error&&<Alert role="status"><p>The latest console snapshot could not be verified. Controls are paused and your unsent rehearsal is preserved.</p><Button icon="refresh" variant="outline" onClick={()=>void reader.read().catch(()=>undefined)}>Check current room access</Button></Alert>}
  {stale&&<Alert role="status"><h3>Another console changed the program</h3><p>Your unsent rehearsal is preserved. Latest current cue: {current?.title||'None'}. Latest saved rehearsal: {latest.draft.map(cue=>cue.title).join(' · ')||'Empty'}.</p><Button icon="refresh" disabled={operation.pending||operation.unknown||!permitted} onClick={()=>{setReviewed(latest);setReview(undefined)}}>Use latest revision and keep my rehearsal</Button></Alert>}
  {operation.feedback}
