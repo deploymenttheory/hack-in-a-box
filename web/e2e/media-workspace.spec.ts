@@ -76,7 +76,7 @@ test('organiser explicitly reviews untagged content before separate release and 
   const s = state(); s.role = 'organiser'; s.items = [{ ...source(), state: 'draft', can_edit: true, can_review: true, can_publish: false, can_withdraw: true, consent_state: 'not_reviewed' }]; await mockMedia(page, s); await page.goto(gallery)
   await page.getByRole('button', { name: 'Open private media review' }).click()
   await page.getByLabel('Reason for this action').fill('Checked venue image')
-  await page.emulateMedia({ media: 'print' }); await expect(page.locator('.media-card')).toBeHidden(); await page.emulateMedia({ media: 'screen' })
+  await page.emulateMedia({ media: 'print' }); await expect(page.locator('[data-media-record]')).toBeHidden(); await page.emulateMedia({ media: 'screen' })
   await expect(page.getByRole('button', { name: 'Record organiser review' })).toBeDisabled()
   await page.getByLabel('I checked the media and identified every recognisable person.').check(); await page.getByLabel('No identifiable people are present.').check(); await page.getByLabel('I reviewed the content, caption, recording destination and challenge classification.').check()
   await page.getByRole('button', { name: 'Record organiser review' }).click(); await page.getByRole('button', { name: 'Load current media metadata' }).click()
