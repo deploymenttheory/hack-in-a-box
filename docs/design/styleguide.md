@@ -120,3 +120,17 @@ checks real narrow viewports and keyboard focus, and makes cookie/private-store
 access fail. Existing portal journeys and full repository CI still apply. Capture
 synthetic desktop/mobile visual evidence and compare it with the accepted Fleet
 reference; guide verification is not certification of every future domain screen.
+
+The media decision history example uses the production `MediaHistoryDisclosure`
+and `MediaHistoryContent` with a local synthetic owner. Open starts in loading;
+explicit controls supply metadata-only cursor pages, read failure or access denial.
+Retry and reopen return to loading without reusing earlier rows. Close restores
+focus to the mounted disclosure button; expanded/controls attributes describe the
+region and the whole disclosure is hidden in print. Ready rows accept only version,
+action and recorded time. Loading, failure and denial states cannot carry rows.
+Use this beside a current native `can_read_history` record, including read-only
+archives. The native adapter owns fresh per-mount scope, current authorization,
+no-store transport and late-response fences. Never pass historical documents,
+consent tokens, captions, reasons or byte URLs. History is neither a byte grant,
+renewed approval nor an original command receipt. The example has no session,
+private persistence or transport. Its copyable snippet documents the owner seam.

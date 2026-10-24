@@ -108,3 +108,13 @@ projection and unknown-intent fences, private image/detail/navigation, consent
 re-incarnation browser counterproofs, actual matching visuals/guide and final full
 checks/reviews/CI above remain in progress. No new roles, write policy, PostgreSQL
 schema, real providers or real media/person data are introduced.
+
+### PR263 review correction: production history presentation and guide
+
+The native history contract is unchanged. `MediaHistoryDisclosure` and
+`MediaHistoryContent` are pure production presentation used by the native adapter
+and the independently hosted guide. The synthetic example exercises fresh loading,
+metadata-only paging, failure/retry, denial row suppression, keyboard close/return,
+reopen without cached rows and print hiding. It has no API, authentication, storage,
+media bytes or command receipt. Usage, accessibility and anti-pattern guidance live
+alongside the interactive example and in `docs/design/styleguide.md`.
