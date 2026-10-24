@@ -94,6 +94,9 @@ func (h handlers) ExportArchiveSource(
 	r contract.ExportArchiveSourceRequestObject,
 ) (contract.ExportArchiveSourceResponseObject, error) {
 	input := archives.ExportRequest{Source: string(r.Source)}
+	if r.Params.ContextId != nil {
+		input.ContextID = *r.Params.ContextId
+	}
 	if r.Params.ResourceId != nil {
 		input.ResourceID = *r.Params.ResourceId
 	}

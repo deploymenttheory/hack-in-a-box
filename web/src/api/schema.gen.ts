@@ -85,7 +85,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Audited no-store JSON page through the source owner's current role, authorship, field, retention and publication policy. Archive access alone grants no private assessment, logistics or survey response access. Deliverables require an explicit audience; missing formal outcomes are unavailable, never invented. Nested pages retain their native exclusive cursor. */
+        /** @description Audited no-store JSON page through the source owner's current role, authorship, field, retention and publication policy. Archive access alone grants no private assessment, logistics or survey response access. Deliverables require an explicit audience; missing formal outcomes are unavailable, never invented. Nested pages retain their native exclusive cursor. Recorded assessment contexts return their complete bounded submitted set; after is invalid with context_id. */
         get: operations["exportArchiveSource"];
         put?: never;
         post?: never;
@@ -3549,6 +3549,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ArchiveAssessmentPanel: {
+            context: components["schemas"]["ModerationContext"];
+            cards: components["schemas"]["MentorScorecard"][];
+        };
         ArchiveExport: {
             /** Format: uuid */
             event_id: string;
@@ -3562,6 +3566,7 @@ export interface components {
             resource_id?: string;
             roster?: components["schemas"]["LogisticsPage"];
             submission?: components["schemas"]["SubmissionPage"];
+            assessment_panel?: components["schemas"]["ArchiveAssessmentPanel"];
             assessments?: components["schemas"]["ScorecardPage"];
             projects?: components["schemas"]["OutcomeProjectPage"];
             feedback?: components["schemas"]["SurveyReport"];
@@ -7758,6 +7763,8 @@ export interface operations {
     exportArchiveSource: {
         parameters: {
             query?: {
+                /** @description Exact recorded moderation context for assessments; omitted means own independent cards only. */
+                context_id?: string;
                 /** @description Team ID for deliverables or own assessments; survey ID for published feedback. */
                 resource_id?: string;
                 after?: string;

@@ -173,6 +173,28 @@ func TestOperationalArchiveReadsRespectRetentionBeforeWorkerDeletion(t *testing.
 			if e != nil || exported.SourceState != "retention_expired" || exported.Roster != nil {
 				t.Fatal("archive hid expiry or exposed expired fields", exported, e)
 			}
+			report, e := archive.Read(t.Context(), owner.ID, id)
+			if e != nil {
+				t.Fatal(e)
+			}
+			for _, m := range report.Summary.Metrics {
+				if m.Key == "continued_projects" || m.Key == "evidenced_adoption_observations" {
+					t.Fatal("expired outcome source became zero fact", m)
+				}
+			}
+			for _, source := range []string{"objective-evidence", "published-outcomes"} {
+				projected, e := archive.Export(
+					t.Context(),
+					owner.ID,
+					id,
+					ExportRequest{Source: source, Limit: 10},
+				)
+				if e != nil || projected.SourceState != "retention_expired" ||
+					projected.Projects != nil ||
+					projected.Observations != nil {
+					t.Fatal("expired source became an empty fact", projected, e)
+				}
+			}
 			var count int
 			if e = pool.QueryRow(t.Context(), "SELECT count(*) FROM operational_profiles WHERE event_id=$1", id).
 				Scan(&count); e != nil ||

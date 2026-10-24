@@ -8,6 +8,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 )
 
 // PublishedEventProjectsInTransaction selects only this event's deliberately
@@ -61,6 +62,7 @@ func (s Service) PublishedEventProjectsInTransaction(
 // ArchiveReportingFacts counts retained readable records, not inferred business
 // value, participant performance, or a declaration that an adopted system works.
 type ArchiveReportingFacts struct {
+	State                     string
 	ContinuedProjects         int64
 	DatedAdoptionObservations int64
 }
@@ -80,6 +82,17 @@ func (s Service) ArchiveReportingFactsInTransaction(
 	); err != nil {
 		return ArchiveReportingFacts{}, wrap("authorize archive reporting facts", err)
 	}
+	row, err := q.LockEvent(ctx, eventID)
+	if err != nil {
+		return ArchiveReportingFacts{}, wrap("lock current follow-up report", err)
+	}
+	state, err := privacy.OperationalFieldsStateInTransaction(ctx, tx, row, s.now())
+	if err != nil {
+		return ArchiveReportingFacts{}, wrap("read current follow-up retention", err)
+	}
+	if state != "available" {
+		return ArchiveReportingFacts{State: state}, nil
+	}
 	v, err := q.OutcomeArchiveReportingFacts(
 		ctx,
 		dbgen.OutcomeArchiveReportingFactsParams{EventID: eventID, ActorID: actor, AtTime: s.now()},
@@ -88,7 +101,7 @@ func (s Service) ArchiveReportingFactsInTransaction(
 		return ArchiveReportingFacts{}, wrap("read retained outcome reporting facts", err)
 	}
 	return ArchiveReportingFacts{
-		ContinuedProjects:         v.ContinuedProjects,
+		State: state, ContinuedProjects: v.ContinuedProjects,
 		DatedAdoptionObservations: v.DatedAdoptionObservations,
 	}, nil
 }

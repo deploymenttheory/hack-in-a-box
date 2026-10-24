@@ -103,21 +103,15 @@ func (s Service) summary(
 	if err != nil {
 		return out, wrap("read outcome record counts", err)
 	}
+	out.Sources = append(
+		out.Sources,
+		SourceAvailability{
+			Source: "outcome_follow_up",
+			State:  facts.State,
+			Reason: "Current retained follow-up records; unavailable or expired sources are omitted from metrics, never reported as zero adoption or continued work.",
+		},
+	)
 	out.Metrics = []Metric{
-		{
-			Key:        "continued_projects",
-			Value:      facts.ContinuedProjects,
-			Unit:       "outcome_records",
-			Source:     "currently readable native outcome records with status=in_progress",
-			Definition: "Explicit current in-progress follow-up records, not code activity, completed entries, successful delivery or adoption.",
-		},
-		{
-			Key:        "evidenced_adoption_observations",
-			Value:      facts.DatedAdoptionObservations,
-			Unit:       "evidence_records",
-			Source:     "currently readable native demonstrated_adoption evidence with an observation date and source",
-			Definition: "Dated sourced evidence records, not unique adopted projects or a verified quantity. Read exact evidence, nullable value/denominator, measure version and current follow-up status separately; estimates and self-reports are excluded.",
-		},
 		{
 			Key:        "registrations",
 			Value:      c.RegistrationRecords,
@@ -198,6 +192,24 @@ func (s Service) summary(
 			Source:            "competition_entries.active=false or hack_teams.state=disbanded",
 			Definition:        "Unused/unscored entry repositories; no transfer or awarded result is inferred.",
 		},
+	}
+	if facts.State == "available" {
+		out.Metrics = append(out.Metrics, []Metric{
+			{
+				Key:        "continued_projects",
+				Value:      facts.ContinuedProjects,
+				Unit:       "outcome_records",
+				Source:     "currently readable native outcome records with status=in_progress",
+				Definition: "Explicit current in-progress follow-up records, not code activity, completed entries, successful delivery or adoption.",
+			},
+			{
+				Key:        "evidenced_adoption_observations",
+				Value:      facts.DatedAdoptionObservations,
+				Unit:       "evidence_records",
+				Source:     "currently readable native demonstrated_adoption evidence with an observation date and source",
+				Definition: "Dated sourced evidence records, not unique adopted projects or a verified quantity. Read exact evidence, nullable value/denominator, measure version and current follow-up status separately; estimates and self-reports are excluded.",
+			},
+		}...)
 	}
 	return out, nil
 }

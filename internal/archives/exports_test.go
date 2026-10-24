@@ -178,6 +178,20 @@ func TestArchiveExportsPreserveNativeRoleAndUnavailableSources(t *testing.T) {
 	}
 }
 
+func TestArchiveExportRejectsMisleadingScopeBeforeAudit(t *testing.T) {
+	for _, request := range []ExportRequest{
+		{Source: "roster", ResourceID: uuid.New(), Limit: 10},
+		{Source: "feedback", ResourceID: uuid.New(), Cursor: uuid.NewString(), Limit: 10},
+		{Source: "published-outcomes", ContextID: uuid.New(), Limit: 10},
+		{Source: "assessments", ResourceID: uuid.New(), ContextID: uuid.New(), Cursor: uuid.NewString(), Limit: 10},
+		{Source: "objective-evidence", Audience: "organiser", Limit: 10},
+	} {
+		if err := request.validate(); !errors.Is(err, access.ErrInvalid) {
+			t.Fatal("accepted contradictory export scope", request, err)
+		}
+	}
+}
+
 func TestArchiveEvidenceRetainsExactDefinitionsAndDoesNotInventAdoption(t *testing.T) {
 	pool := testdb.New(t, true)
 	owner, author := testdb.Person(t, pool), testdb.Person(t, pool)

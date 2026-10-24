@@ -355,7 +355,8 @@ func TestArchiveCountsDistinguishApplicationsPeopleAttendanceAndUnusedEntries(t 
 		t.Fatal("event name formula not neutralised", string(csv))
 	}
 	for _, source := range report.Sources {
-		if source.Source != "formal_submissions" && source.State != "unavailable" {
+		if source.Source != "formal_submissions" && source.Source != "outcome_follow_up" &&
+			source.State != "unavailable" {
 			t.Fatal("invented judging/result source", source)
 		}
 	}

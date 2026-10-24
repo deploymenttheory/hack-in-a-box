@@ -166,29 +166,49 @@ func (s Service) Panel(
 	ctx context.Context,
 	actor, eventID, teamID, contextID uuid.UUID,
 ) ([]Card, error) {
-	out := []Card{}
-	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
-		proof, err := s.context(ctx, tx, actor, eventID, teamID, contextID)
-		if err != nil {
-			return err
-		}
-		for _, reference := range proof.Cards {
-			card, err := currentSubmitted(ctx, q, eventID, teamID, reference)
-			if err != nil {
-				return err
-			}
-			if card.RunID != proof.RunID {
-				return access.ErrConflict
-			}
-			if err = s.cardAuthority(ctx, q, card.AuthorID, eventID, teamID, card); err != nil {
-				return err
-			}
-			out = append(out, card)
-		}
-		return nil
+	var out PanelReport
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.PanelReportInTransaction(ctx, tx, actor, eventID, teamID, contextID)
+		return err
 	})
 	if err != nil {
 		return nil, fmt.Errorf("read recorded moderation card context: %w", err)
+	}
+	return out.Cards, nil
+}
+
+// PanelReport binds the exact current submitted-card projection to the actual
+// native recorded context that grants its cross-author disclosure.
+type PanelReport struct {
+	Context ModerationContext `json:"context"`
+	Cards   []Card            `json:"cards"`
+}
+
+func (s Service) PanelReportInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID, contextID uuid.UUID,
+) (PanelReport, error) {
+	out := PanelReport{Cards: []Card{}}
+	proof, err := s.context(ctx, tx, actor, eventID, teamID, contextID)
+	if err != nil {
+		return out, err
+	}
+	out.Context = proof
+	q := dbgen.New(tx)
+	for _, reference := range proof.Cards {
+		card, err := currentSubmitted(ctx, q, eventID, teamID, reference)
+		if err != nil {
+			return PanelReport{}, err
+		}
+		if card.RunID != proof.RunID {
+			return PanelReport{}, access.ErrConflict
+		}
+		if err = s.cardAuthority(ctx, q, card.AuthorID, eventID, teamID, card); err != nil {
+			return PanelReport{}, err
+		}
+		out.Cards = append(out.Cards, card)
 	}
 	return out, nil
 }
