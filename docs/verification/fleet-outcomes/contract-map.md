@@ -51,3 +51,21 @@ The root has authorised only the bounded forwarding fix and actual HTTP+PostgreS
 6. Full appropriate lint/unit/build/browser/native checks, exact-head independent reviews and all repository CI before ready/merge.
 
 #119 owns missing archive/export backend work; #163 owns the additional searchable cross-event showcase; #113 owns result/feedback publication. This redesign does not complete or reopen those separate product deliverables.
+
+
+## Native HTTP read integration correction
+
+The HTTP list adapter passed the event UUID into the service cursor slot and the
+cursor UUID into the optional event slot. A real PostgreSQL HTTP regression
+reproduced repeated own pages, forbidden authorised event review, and incorrect
+missing-event validation before the fix. The adapter now passes the native
+cursor and original optional event pointer in their declared positions. No API,
+schema, service policy, publication or provider semantics changed.
+
+`HACKBOX_INTEGRATION=1 go test -race -count=1 -p 2 ./internal/httpapi -run
+'^TestOutcomesHTTP(PaginationAndEventReviewScope|OrdinaryMemberPrivateHistoryAndReviewedPublication)$'`
+passed both tests, including own/default-mode multi-page no-repeat ordering,
+current event review filtering/cursor, unrelated event/role denial without
+private payload, omitted-event validation and the existing private publication
+journey. Red and green logs: `/private/tmp/fleet242-http-red.log` and
+`/private/tmp/fleet242-http-green.log`.

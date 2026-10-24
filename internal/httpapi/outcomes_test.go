@@ -152,3 +152,103 @@ func TestOutcomesHTTPOrdinaryMemberPrivateHistoryAndReviewedPublication(t *testi
 		t.Fatal("private outcome body in logs")
 	}
 }
+
+// Exercise the HTTP adapter, not only the service: both UUID arguments have the
+// same Go type, but swapping the event filter and cursor changes authority.
+func TestOutcomesHTTPPaginationAndEventReviewScope(t *testing.T) {
+	pool := testdb.New(t, true)
+	f := newEmbargoFixture(t, pool, time.Now().UTC().AddDate(0, 0, 20))
+	if err := database.Migrate(t.Context(), pool, 0); err != nil {
+		t.Fatal(err)
+	}
+	native := &outcomes.Service{Pool: pool, Now: func() time.Time { return f.now }}
+	f.router = NewRouter(f.cfg, slog.New(slog.NewJSONHandler(&f.logs, nil)), Dependencies{Pool: pool, Auth: f.auth, Outcomes: native, Events: event.Service{Pool: pool}})
+	otherOwner := testdb.Person(t, pool)
+	otherEvent := testdb.Event(t, pool, otherOwner.ID)
+	ids := []uuid.UUID{
+		uuid.MustParse("10000000-0000-4000-8000-000000000001"),
+		uuid.MustParse("10000000-0000-4000-8000-000000000002"),
+		uuid.MustParse("10000000-0000-4000-8000-000000000003"),
+		uuid.MustParse("10000000-0000-4000-8000-000000000004"),
+		uuid.MustParse("10000000-0000-4000-8000-000000000005"),
+	}
+	for i, id := range ids {
+		c := outcomes.Command{ID: uuid.New(), Action: "propose", Reason: "Synthetic pagination regression", Definition: &outcomes.Definition{Kind: "pitch", Problem: "PRIVATE scoped outcome " + id.String(), Audience: "Synthetic people", ProposedValue: "Proposed benefit only"}}
+		path := "/api/v1/outcomes/" + id.String()
+		f.expect(f.request(f.stranger, "PUT", path, c, 0), 200)
+		if i < 3 {
+			eventID, reviewer := f.id, f.owner
+			if i == 2 {
+				eventID, reviewer = otherEvent, otherOwner
+			}
+			adopt := outcomes.Command{ID: uuid.New(), Action: "adopt", Reason: "Associate exact synthetic source", Provenance: &outcomes.Provenance{EventID: &eventID}}
+			f.expect(f.request(reviewer, "PUT", path, adopt, 1), 200)
+		}
+	}
+	assertPages := func(t *testing.T, actor dbgen.Person, query string, want []uuid.UUID) {
+		t.Helper()
+		var got []uuid.UUID
+		cursor := ""
+		for n := 0; n < 4; n++ {
+			path := "/api/v1/outcomes?limit=2" + query
+			if cursor != "" {
+				path += "&cursor=" + cursor
+			}
+			response := f.request(actor, "GET", path, nil, 0)
+			if response.Code != 200 {
+				t.Fatalf("page %d: want 200 got %d: %s", n, response.Code, response.Body)
+			}
+			var page outcomes.Page
+			if err := json.Unmarshal(response.Body.Bytes(), &page); err != nil {
+				t.Fatal(err)
+			}
+			for _, item := range page.Items {
+				got = append(got, item.ID)
+			}
+			if page.NextCursor == nil {
+				break
+			}
+			next := page.NextCursor.String()
+			if next == cursor {
+				t.Fatalf("cursor repeated on page %d: %s", n, next)
+			}
+			cursor = next
+		}
+		if len(got) != len(want) {
+			t.Fatalf("want %v got %v", want, got)
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Fatalf("want ordered distinct %v got %v", want, got)
+			}
+		}
+	}
+	t.Run("own explicit and omitted mode paginate without repeats", func(t *testing.T) {
+		assertPages(t, f.stranger, "&mode=own", ids)
+		assertPages(t, f.stranger, "", ids)
+	})
+	t.Run("review filters exact event and preserves cursor", func(t *testing.T) {
+		assertPages(t, f.owner, "&mode=review&event_id="+f.id.String(), []uuid.UUID{ids[0], ids[1], ids[3], ids[4]})
+	})
+	t.Run("wrong event and non organiser disclose no private outcomes", func(t *testing.T) {
+		for _, actor := range []dbgen.Person{f.owner, f.mentor, f.stranger} {
+			eventID := f.id
+			if actor.ID == f.owner.ID {
+				eventID = otherEvent
+			}
+			response := f.request(actor, "GET", "/api/v1/outcomes?mode=review&event_id="+eventID.String()+"&cursor="+ids[0].String(), nil, 0)
+			if response.Code != 403 {
+				t.Fatalf("want forbidden got %d: %s", response.Code, response.Body)
+			}
+			if strings.Contains(response.Body.String(), "PRIVATE scoped outcome") {
+				t.Fatal("denied review disclosed private outcomes")
+			}
+		}
+	})
+	t.Run("review requires explicit event", func(t *testing.T) {
+		response := f.request(f.owner, "GET", "/api/v1/outcomes?mode=review", nil, 0)
+		if response.Code != 400 {
+			t.Fatalf("want invalid missing event got %d: %s", response.Code, response.Body)
+		}
+	})
+}
