@@ -10,6 +10,7 @@ import { Failure, Loading } from './components/states'
 import { SafeMarkdown } from './components/safe-markdown'
 import { denied, sameDocument, sameSource, textBytes, uncertain, useAccessFailure, useClarifications, useCurrentPage, type AnswerDocument, type AnswerDraft, type Question, type Source } from './clarification-context'
 import { MentorTaskReview, MentorUnknown, useMentorTaskNavigation } from './mentor-task'
+import { usePrivateRequestScope } from './private-request-scope'
 import { usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
 
 type Review = components['schemas']['ClarificationReview']
@@ -18,70 +19,82 @@ type Pending = { intentID: string; action: Action; version: number; revision: nu
 const empty: AnswerDocument = { title: '', body: '', kind: 'clarification' }
 const exactDraft = (a: AnswerDraft | undefined | null, b: AnswerDraft | undefined | null) => (!a && !b) || (!!a && !!b && a.id === b.id && a.version === b.version && a.revision === b.revision)
 export function OfficialAnswerEditor({ question, enabled }: { question: Question; enabled: boolean }) {
-  const { key, event } = useClarifications()
-  const query = useQuery({ queryKey: [...key, 'review', question.id], gcTime: 0, retry: false, refetchOnMount: 'always', refetchInterval: 10_000, refetchOnWindowFocus: 'always', queryFn: async ({ signal }) => { const value = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/review', { signal, cache: 'no-store', params: { path: { event_id: event.id, question_id: question.id } } })); if (!value.workspace.can_review || !value.workspace.review_audience) throw new APIError(403, 'forbidden'); return value } })
+  const { key, event, observe, privateScope } = useClarifications(), identity = useIdentity(), cache = useQueryClient()
+  const [manualFailure, setManualFailure] = useState<unknown>()
+  const queryScope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${question.id}:answer-review`, privateScope)
+  async function readReview(signal?: AbortSignal) {
+    const ticket = queryScope.capture()
+    const value = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/review', { signal: signal ?? ticket.signal, cache: 'no-store', params: { path: { event_id: event.id, question_id: question.id } } }))
+    ticket.assert()
+    // Never return an observer's reverted cached snapshot after observing a
+    // restricted response. This exact read must reject before any continuation.
+    if (!value.workspace.can_review || !value.workspace.review_audience) { observe(value.workspace); throw new APIError(403, 'forbidden') }
+    observe(value.workspace); ticket.assert(); setManualFailure(undefined); return value
+  }
+  const query = useQuery({ queryKey: [...key, 'review', question.id], gcTime: 0, retry: false, refetchOnMount: 'always', refetchInterval: 10_000, refetchOnWindowFocus: 'always', queryFn: ({ signal }) => readReview(signal) })
   useAccessFailure(query.error)
   if (denied(query.error)) return null
   if (!query.data || !query.isFetchedAfterMount) return query.error ? <Failure error={query.error} retry={() => void query.refetch()} /> : <Loading />
   if (!query.data.workspace.can_review || !query.data.workspace.review_audience) return <p role="alert">Current official-answer review authority is unavailable. Private editor and review snapshots have been removed.</p>
-  return <section className="clarification-private py-6 border-t border-border"><h2>Staff official-answer review</h2>{query.error && <Failure error={query.error} retry={() => void query.refetch()} />}<AnswerForm key={`${question.id}:${query.data.workspace.can_review}`} question={question} review={query.data} readFresh={!query.error} enabled={enabled && !query.error && !query.data.workspace.archived} reload={async () => { const result = await query.refetch(); if (result.error) throw result.error; return result.data! }} /></section>
+  return <section className="clarification-private py-6 border-t border-border"><h2>Staff official-answer review</h2>{!!(query.error || manualFailure) && <Failure error={query.error || manualFailure} retry={() => void query.refetch()} />}<AnswerForm key={`${question.id}:${query.data.workspace.can_review}`} question={question} review={query.data} readFresh={!query.error && !manualFailure} enabled={enabled && !query.error && !manualFailure && !query.data.workspace.archived} reload={async () => { try { const value = await readReview(); cache.setQueryData([...key, 'review', question.id], value); return value } catch (error) { if (queryScope.capture().current()) setManualFailure(error); throw error } }} /></section>
 }
 function AnswerForm({ question, review, readFresh, enabled, reload }: { question: Question; review: Review; readFresh: boolean; enabled: boolean; reload: () => Promise<Review> }) {
   const identity = useIdentity(), { event, key, deny } = useClarifications(), cache = useQueryClient(), active = useCurrentPage()
   const history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${question.id}:official-answer`)
   const [base, setBase] = useState<AnswerDraft | undefined>(review.draft ?? undefined), [document, setDocument] = useState<AnswerDocument>(review.draft?.document ?? empty)
   const [busy, setBusy] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [pending, setPending] = useState<Pending>(), [prepared, setPrepared] = useState<Pending>(), [comparison, setComparison] = useState<Review>()
-  const dirty = !sameDocument(document, base?.document ?? empty), changed = readFresh && !exactDraft(base, review.draft), unknown = !!pending || history.unconfirmed
+  const dirty = !sameDocument(document, base?.document ?? empty), changed = readFresh && (review.draft?.revision ?? 0) >= (base?.revision ?? 0) && !exactDraft(base, review.draft), unknown = !!pending || (!busy && history.unconfirmed)
   const currentSource = review.workspace.source, sourceCurrent = !base || sameSource(base.source, currentSource)
   const root = useRef<HTMLElement>(null), lock = useRef(false), terminal = useRef(false), navigation = useMentorTaskNavigation({ root, dirty: dirty || !!prepared, pending: busy, unknown })
   usePlanningDepartureBarrier(busy)
   const valid = !!document.title.trim() && !!document.body.trim() && textBytes(document.title) <= 200 && textBytes(document.body) <= 16000 && !document.title.includes('\0') && !document.body.includes('\0')
   function prepare(action: Action) {
-    if (!enabled || busy || lock.current || terminal.current || unknown || changed || !review.workspace.review_audience || (action === 'save' ? !valid : !base || dirty || !sourceCurrent)) return
+    if (!active.current() || !enabled || busy || lock.current || terminal.current || unknown || changed || !review.workspace.review_audience || (action === 'save' ? !valid : !base || dirty || !sourceCurrent)) return
     navigation.capture(); setPrepared({ intentID: crypto.randomUUID(), action, version: action === 'save' ? (base?.version ?? 0) + 1 : base!.version, revision: (base?.revision ?? 0) + 1, document: structuredClone(document), source: structuredClone(currentSource), id: base?.id, audience: { ...review.workspace.review_audience } })
   }
   async function write() {
-    if (!prepared || !enabled || busy || lock.current || terminal.current || unknown || changed) return
+    if (!active.current() || !prepared || !enabled || busy || lock.current || terminal.current || unknown || changed) return
     const intent = structuredClone(prepared), action = intent.action
     lock.current = true; setBusy(true); setFailure(undefined); setNotice(''); setComparison(undefined)
     let attempted = false, confirmed = false
     try {
       const latest = await reload()
-      if (!active.current) return
+      if (!active.current()) return
       if (!latest.workspace.can_review || !latest.workspace.review_audience || latest.workspace.archived) { setPrepared(undefined); setNotice('Current review authority or write policy changed. No write was sent.'); return }
       if (!exactDraft(base, latest.draft) || intent.revision !== (latest.draft?.revision ?? 0) + 1 || !sameSource(intent.source, latest.workspace.source)) { setPrepared(undefined); setComparison(latest); setNotice('The server version or common source changed. Compare it with your unsent text and review again before any write.'); return }
       if (action === 'publish' && (latest.workspace.review_audience.count !== intent.audience.count || latest.workspace.review_audience.label !== intent.audience.label)) { setPrepared(undefined); setNotice('The native audience preview changed. Review the current publication audience before sending; no publication was sent.'); return }
       if (action !== 'save' && (!base || !sameSource(base.source, latest.workspace.source))) { setPrepared(undefined); setComparison(latest); setNotice('Current source policy changed. No approval or publication was sent.'); return }
       attempted = true
+      history.record({ operation: `Common answer ${action}`, revision: intent.revision - 1, command: { intentID: intent.intentID, questionID: question.id, version: intent.version } })
       const result = action === 'save'
         ? unwrap(await api.PUT('/api/v1/events/{event_id}/questions/{question_id}/answer', { params: { path: { event_id: event.id, question_id: question.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.revision - 1}"` } }, body: intent.document }))
         : unwrap(await api.POST('/api/v1/events/{event_id}/clarifications/{answer_id}/actions', { params: { path: { event_id: event.id, answer_id: intent.id! }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.revision - 1}"` } }, body: { action, version: intent.version } }))
-      if (!active.current) return
+      if (!active.current()) return
       if (result.question_id !== question.id || result.version !== intent.version || result.revision !== intent.revision || !sameDocument(result.document, intent.document) || !sameSource(result.source, intent.source) || (action === 'approve' && !result.approved) || (action === 'publish' && !result.published)) throw new Error('Unverified answer response')
-      confirmed = true; setBase(result); setDocument(result.document); setPrepared(undefined); setPending(undefined); navigation.restore()
+      confirmed = true; cache.setQueryData([...key, 'review', question.id], { ...latest, draft: result }); history.resolve(intent.intentID); setBase(result); setDocument(result.document); setPrepared(undefined); setPending(undefined); navigation.restore()
       setNotice(action === 'save' ? `Saved draft version ${result.version}. It is not an official common answer until separately approved and published.` : action === 'approve' ? `Version ${result.version} approved. It has not been published by this action.` : `Official version ${result.version} published. Safe common inbox references are recorded with publication.`)
       void cache.invalidateQueries({ queryKey: [...key, 'question-history', question.id] }); void cache.invalidateQueries({ queryKey: [...key, 'question', question.id] }); void cache.invalidateQueries({ queryKey: [...key, 'questions'] }); void cache.invalidateQueries({ queryKey: [...key, 'common'] }); await reload()
     } catch (error) {
-      if (!active.current) return
+      if (!active.current()) return
       setFailure(error); deny(error)
       if (confirmed) { setNotice('The write was confirmed, but the follow-up read failed. Refresh the current review before another decision.'); return }
-      if (attempted && uncertain(error)) { terminal.current = true; setPending(intent); history.record({ operation: `Common answer ${action}`, revision: intent.revision - 1, command: { intentID: intent.intentID, questionID: question.id, version: intent.version } }); setNotice('Outcome unknown. No action will be repeated automatically. Read the exact version and immutable transition before another write.') }
-      else { setPrepared(undefined); setNotice(attempted ? 'No new saved or published state was confirmed. Your editor text remains only in this page.' : 'Current source could not be verified. No write was sent; your editor text remains unsent.'); if (error instanceof APIError && error.status === 409) setComparison(review) }
-    } finally { lock.current = false; if (active.current) setBusy(false) }
+      if (attempted && uncertain(error)) { terminal.current = true; setPending(intent); setNotice('Outcome unknown. No action will be repeated automatically. Read the exact version and immutable transition before another write.') }
+      else { if (attempted) history.resolve(intent.intentID); setPrepared(undefined); setNotice(attempted ? 'No new saved or published state was confirmed. Your editor text remains only in this page.' : 'Current source could not be verified. No write was sent; your editor text remains unsent.'); if (error instanceof APIError && error.status === 409) setComparison(review) }
+    } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   async function reconcile() {
     if (lock.current || busy) return
     lock.current = true; setBusy(true); setFailure(undefined)
     try {
-      const latest = await reload(); if (!active.current) return
+      const latest = await reload(); if (!active.current()) return
       const draft = latest.draft
       if (!pending) { setComparison(latest); setNotice('Current review refreshed. Earlier unresolved commands stay unresolved; editor changes remain unsent.'); return }
       const match = draft && draft.version === pending.version && draft.revision >= pending.revision && sameDocument(draft.document, pending.document) && sameSource(draft.source, pending.source) && (pending.action === 'save' || (draft.id === pending.id && (pending.action === 'approve' ? draft.approved : draft.published)))
       let recorded = false, cursor: string | undefined
-      if (match) do { const page = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/history', { cache: 'no-store', params: { path: { event_id: event.id, question_id: question.id }, query: { cursor, limit: 30 } } })); if (!active.current) return; recorded = page.items.some(t => t.actor_id === identity.person.id && t.version === pending.version && t.revision === pending.revision && t.action === ({ save: 'authored', approve: 'approved', publish: 'published' }[pending.action])); cursor = page.next_cursor ?? undefined; if (recorded) break } while (cursor)
+      if (match) do { const page = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/history', { cache: 'no-store', params: { path: { event_id: event.id, question_id: question.id }, query: { cursor, limit: 30 } } })); if (!active.current()) return; recorded = page.items.some(t => t.actor_id === identity.person.id && t.version === pending.version && t.revision === pending.revision && t.action === ({ save: 'authored', approve: 'approved', publish: 'published' }[pending.action])); cursor = page.next_cursor ?? undefined; if (recorded) break } while (cursor)
       if (match && recorded && draft) { history.resolve(pending.intentID); terminal.current = false; setBase(draft); setDocument(draft.document); setPending(undefined); setPrepared(undefined); setComparison(undefined); setNotice(`The server confirms matching version ${draft.version} and the exact original transition: ${draft.published ? 'published' : draft.approved ? 'approved, not published' : 'saved draft, not published'}. No action was replayed.`) }
       else { setComparison(latest); setNotice('Compare the authoritative server version with your unsent editor. An unmatched original outcome remains unknown; no write was replayed.') }
-    } catch (error) { if (active.current) { setFailure(error); deny(error) } } finally { lock.current = false; if (active.current) setBusy(false) }
+    } catch (error) { if (active.current()) { setFailure(error); deny(error) } } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   function adoptServer(keepText: boolean) {
     const latest = comparison ?? review

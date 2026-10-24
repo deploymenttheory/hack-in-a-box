@@ -23,7 +23,7 @@ export function HelpActions({ value, refresh }: { value: Help; refresh: () => Pr
   const currentAuthority = helpAuthority(value), [authority, setAuthority] = useState(currentAuthority)
   if (authority !== currentAuthority) { setAuthority(currentAuthority); setReview(undefined); setTarget(''); setPending(false); setOriginalID(undefined) }
   useLayoutEffect(() => { original.current = undefined }, [currentAuthority])
-  const unknown = uncertain || history.unconfirmed
+  const unknown = uncertain || (!pending && history.unconfirmed)
   const focusRoot = useRef<HTMLElement>(null)
   const navigation = useMentorTaskNavigation({ root: focusRoot, dirty: !!target || !!review, pending, unknown })
   usePlanningDepartureBarrier(pending)
@@ -36,19 +36,20 @@ export function HelpActions({ value, refresh }: { value: Help; refresh: () => Pr
     const ticket = scope.capture(); if (!ticket.current()) return
     busy.current = true; original.current = command; setOriginalID(command.id); setPending(true); setFailure(undefined); setNotice('')
     try {
+      if (!retry) history.record({ operation: 'Help ownership change', revision: command.revision, command: { intentID: command.id, requestID: value.request.id } })
       const updated = unwrap(await api.POST('/api/v1/events/{event_id}/help/{request_id}/actions', { params: { path: { event_id: value.request.event_id, request_id: value.request.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${command.revision}"`, 'Idempotency-Key': command.id } }, body: command.body }))
       ticket.assert()
       if (updated.request.id !== value.request.id || updated.request.event_id !== value.request.event_id) throw new Error('Unexpected help response')
       cache.setQueryData(helpKey(identity.person.id, value.request.event_id, value.request.id), updated)
-      setNotice('Request change saved on the server.'); setUncertain(false); terminal.current = false; original.current = undefined; setOriginalID(undefined); history.clear(); setTarget(''); setReview(undefined); navigation.restore()
+      setNotice('Request change saved on the server.'); setUncertain(false); terminal.current = false; original.current = undefined; setOriginalID(undefined); history.resolve(command.id); setTarget(''); setReview(undefined); navigation.restore()
       await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, value.request.event_id, 'help-queue') })
     } catch (error) {
       if (!ticket.current()) return
       setFailure(error)
       if (error instanceof APIError && error.status < 500 && error.status !== 408 && !unknown) {
-        original.current = undefined; setOriginalID(undefined); setReview(undefined)
+        history.resolve(command.id); original.current = undefined; setOriginalID(undefined); setReview(undefined)
         setNotice(error.status === 409 ? 'This request changed before your action completed. The latest owner and state are shown; your action was not applied. Review before choosing again.' : 'The server rejected this action. Current access and request state are checked again below.')
-      } else { terminal.current = true; setUncertain(true); if (!history.unconfirmed) history.record({ operation: 'Help ownership change', revision: command.revision, command: { intentID: command.id, requestID: value.request.id } }); setNotice('Action outcome is unconfirmed. Checking shows current state, not an original command receipt. No action is replayed automatically.') }
+      } else { terminal.current = true; setUncertain(true); setNotice('Action outcome is unconfirmed. Checking shows current state, not an original command receipt. No action is replayed automatically.') }
       await refresh()
     } finally { busy.current = false; if (ticket.current()) setPending(false) }
   }

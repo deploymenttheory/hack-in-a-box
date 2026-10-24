@@ -151,3 +151,28 @@ Still outstanding: dedicated capability-only / held-continuation clarification
 regressions, huddle/moderation/second-review and review-dashboard/factual compositions,
 evidence picker/preview completion, actual guide and before/after captures, all
 remaining dependent-consumer/native checks, independent reviews and full exact-head CI.
+
+## In-flight private lifetime checkpoint
+
+All new help, observation, check-in, scorecard and clarification owners now record
+only minimal intent/resource/revision metadata immediately before the actual HTTP
+write. A held response followed by current permission loss cannot erase the original
+write barrier. Raw private input remains inside the currently authorised owner.
+Known exact success or first-attempt definite rejection resolves only that intent;
+current reads, component remounts and later unrelated writes do not settle it.
+
+Dedicated desktop/mobile regressions cover held help, observation, scorecard and
+common-answer writes, restricted answer preflights, and held attachment preflights.
+The restricted answer test exposed an actual stale observer-refetch result: the
+fresh denied projection cancelled its query and the observer returned older allowed
+cached data. Direct authoritative preflight reads plus synchronous inherited private
+scope tickets now block that continuation before its PUT. These 12 regressions and
+all 40 clarification/native-reader journeys pass (52/52), with both builds and
+focused lint passing. A broader help/mentor/card run passed 74 before two known-note
+denial cases exposed the denial scrub removing its own active query and looping
+back to loading. Retaining that active denial result while removing other private
+children fixes both cases; the four missing-note/partial-restoration cases pass.
+The remaining breadth must still run on the complete final source.
+
+Review/huddle/factual composition is in progress separately from this checkpoint.
+All previously listed unfinished scope and final verification requirements remain.

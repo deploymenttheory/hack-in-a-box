@@ -16,36 +16,39 @@ import { ContextLink, CollectionPagination } from './components/patterns'
 
 type Payload = { command_id: string; team_id: string; topic: 'challenge' | 'rubric'; body: string; attachments: string[] }
 export function AskQuestion({ teamID, onLeaveRisk, onPending }: { teamID: string; onLeaveRisk: (risk: boolean) => void; onPending: (pending: boolean) => void }) {
-  const identity = useIdentity(), { event, key, workspace, writable, deny, refresh } = useClarifications(), cache = useQueryClient(), active = useCurrentPage()
+  const identity = useIdentity(), { event, key, workspace, writable, deny, observe, refresh } = useClarifications(), cache = useQueryClient(), active = useCurrentPage()
   const history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${teamID}:ask`)
   const [body, setBody] = useState(''), [topic, setTopic] = useState<'challenge' | 'rubric'>('challenge'), [files, setFiles] = useState<UploadedQuestionFile[]>([]), [review, setReview] = useState<{ payload: Payload; source: Source }>()
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [savedID, setSavedID] = useState<string>(), [attempt, setAttempt] = useState<Payload>()
-  const unknown = !!attempt || history.unconfirmed, pending = busy || uploading, leaveRisk = !!body || !!files.length || !!review || unknown || pending
+  const unknown = !!attempt || (!busy && history.unconfirmed), pending = busy || uploading, leaveRisk = !!body || !!files.length || !!review || unknown || pending
   const root = useRef<HTMLElement>(null), lock = useRef(false), terminal = useRef(false), navigation = useMentorTaskNavigation({ root, dirty: !!body || !!files.length || !!review, pending, unknown })
   usePlanningDepartureBarrier(pending)
   useEffect(() => { onLeaveRisk(leaveRisk); onPending(pending); return () => { onLeaveRisk(false); onPending(false) } }, [leaveRisk, pending, onLeaveRisk, onPending])
   function prepare() { if (!writable || !workspace.can_ask || lock.current || unknown || uploading || !body.trim() || textBytes(body) > 8000 || body.includes('\0')) return; navigation.capture(); setReview({ payload: { command_id: crypto.randomUUID(), team_id: teamID, topic, body, attachments: files.map(file => file.id) }, source: structuredClone(workspace.source) }) }
   async function send(retry = false) {
     const payload = retry ? attempt : review?.payload
-    if (!payload || !writable || !workspace.can_ask || lock.current || uploading || (!retry && (unknown || terminal.current))) return
+    if (!active.current() || !payload || !writable || !workspace.can_ask || lock.current || uploading || (!retry && (unknown || terminal.current))) return
     lock.current = true; setBusy(true); setFailure(undefined); setNotice(''); setSavedID(undefined)
     let attempted = false
     try {
-      if (!await refresh('ask') || !active.current) return
+      if (!await refresh('ask') || !active.current()) return
       const current = unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { cache: 'no-store', params: { path: { event_id: event.id } } }))
-      if (!active.current || current.archived || !current.can_ask || current.team_id !== teamID) return
+      if (!active.current()) return
+      observe(current)
+      if (!active.current() || current.archived || !current.can_ask || current.team_id !== teamID) return
       if (!retry && review && !sameSource(review.source, current.source)) { setReview(undefined); setNotice('The common source changed. Read and review your question against the current challenge/rubric before sending. No question was sent.'); return }
       attempted = true
+      if (!retry) history.record({ operation: 'Private team question', revision: 0, command: { intentID: payload.command_id } })
       const result = unwrap(await api.POST('/api/v1/events/{event_id}/questions', { params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token } }, body: payload }))
-      if (!active.current) return
+      if (!active.current()) return
       if (result.team_id !== teamID || result.author_id !== identity.person.id || result.body !== payload.body || result.topic !== payload.topic || JSON.stringify(result.attachments) !== JSON.stringify(payload.attachments)) throw new Error('Unverified private question response')
-      terminal.current = false; history.clear(); setAttempt(undefined); setReview(undefined); setBody(''); setFiles([]); setSavedID(result.id); setNotice('Saved as a private team question. It is not a common official answer.'); navigation.restore(); void cache.invalidateQueries({ queryKey: [...key, 'questions'] })
+      terminal.current = false; history.resolve(payload.command_id); setAttempt(undefined); setReview(undefined); setBody(''); setFiles([]); setSavedID(result.id); setNotice('Saved as a private team question. It is not a common official answer.'); navigation.restore(); void cache.invalidateQueries({ queryKey: [...key, 'questions'] })
     } catch (error) {
-      if (!active.current) return
+      if (!active.current()) return
       setFailure(error); deny(error)
-      if (attempted && uncertain(error)) { terminal.current = true; setAttempt(payload); if (!history.unconfirmed) history.record({ operation: 'Private team question', revision: 0, command: { intentID: payload.command_id } }); setNotice('The outcome is unknown. Your original question is retained only in this task. An explicit retry uses its same native command ID; nothing is repeated automatically.') }
-      else { setReview(undefined); setNotice(attempted ? 'This response did not confirm a saved question. Your text remains unsent in this page.' : 'Current authority/source could not be verified. No question was sent; your text remains unsent.') }
-    } finally { lock.current = false; if (active.current) setBusy(false) }
+      if (attempted && uncertain(error)) { terminal.current = true; setAttempt(payload); setNotice('The outcome is unknown. Your original question is retained only in this task. An explicit retry uses its same native command ID; nothing is repeated automatically.') }
+      else { if (attempted && !retry) history.resolve(payload.command_id); setReview(undefined); setNotice(attempted ? 'This response did not confirm a saved question. Your text remains unsent in this page.' : 'Current authority/source could not be verified. No question was sent; your text remains unsent.') }
+    } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   return <section ref={root} tabIndex={-1} className="clarification-private py-6 border-t border-border"><h2>Ask a private team question</h2><p>Only your current team and explicit organisers can read the original. This is not a submission or assessment.</p>
     <div hidden={!!review || unknown} inert={!!review || unknown}><form className="grid gap-4 max-w-3xl" onSubmit={e => { e.preventDefault(); prepare() }}><fieldset className="grid gap-4" disabled={!writable || busy || unknown || uploading}>
@@ -73,27 +76,28 @@ export function PrivateQuestionReader({ id }: { id: string }) {
   </section>
 }
 function QuestionTriage({ question, enabled, refresh }: { question: Question; enabled: boolean; refresh: () => Promise<boolean> }) {
-  const identity = useIdentity(), { event, key, deny, workspace } = useClarifications(), active = useCurrentPage(), cache = useQueryClient()
+  const identity = useIdentity(), { event, key, deny, observe, workspace } = useClarifications(), active = useCurrentPage(), cache = useQueryClient()
   const [busy, setBusy] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [original, setOriginal] = useState<{ action: 'triage' | 'close' | 'reopen'; revision: number }>(), [review, setReview] = useState<{ action: 'triage' | 'close' | 'reopen'; revision: number }>()
   const history = usePlanningUnknownCommands(`${identity.person.id}:${identity.draft_scope}:${event.id}:${question.id}:triage`), lock = useRef(false), terminal = useRef(false), root = useRef<HTMLElement>(null)
-  const unknown = !!original || history.unconfirmed, navigation = useMentorTaskNavigation({ root, dirty: !!review, pending: busy, unknown })
+  const unknown = !!original || (!busy && history.unconfirmed), navigation = useMentorTaskNavigation({ root, dirty: !!review, pending: busy, unknown })
   usePlanningDepartureBarrier(busy)
   async function send() {
-    if (!enabled || !workspace.can_review || lock.current || terminal.current || unknown || !review || review.revision !== question.revision) return
+    if (!active.current() || !enabled || !workspace.can_review || lock.current || terminal.current || unknown || !review || review.revision !== question.revision) return
     lock.current = true; let attempted = false; setBusy(true); setFailure(undefined); setNotice('')
-    try { const current = unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { params: { path: { event_id: event.id } }, cache: 'no-store' })); if (!active.current || !current.can_review || current.archived) return
+    try { const current = unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { params: { path: { event_id: event.id } }, cache: 'no-store' })); if (!active.current()) return; observe(current); if (!active.current() || !current.can_review || current.archived) return
       attempted = true
-      unwrap(await api.POST('/api/v1/events/{event_id}/questions/{question_id}/triage', { params: { path: { event_id: event.id, question_id: question.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${review.revision}"` } }, body: { action: review.action } })); if (!active.current) return
-      setReview(undefined); setNotice('Triage decision recorded.'); navigation.restore(); void cache.invalidateQueries({ queryKey: [...key, 'question-history', question.id] }); await refresh()
-    } catch (error) { if (active.current) { setFailure(error); deny(error); if (attempted && uncertain(error)) { terminal.current = true; setOriginal(review); history.record({ operation: 'Private question triage', revision: review.revision, command: { intentID: `${question.id}:${review.action}:${review.revision + 1}` } }); setNotice('Outcome unknown. Only exact immutable question history can establish the original decision.') } else { setReview(undefined); setNotice('No triage decision was confirmed. Refresh before choosing again.'); await refresh() } } } finally { lock.current = false; if (active.current) setBusy(false) }
+      history.record({ operation: 'Private question triage', revision: review.revision, command: { intentID: `${question.id}:${review.action}:${review.revision + 1}` } })
+      unwrap(await api.POST('/api/v1/events/{event_id}/questions/{question_id}/triage', { params: { path: { event_id: event.id, question_id: question.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${review.revision}"` } }, body: { action: review.action } })); if (!active.current()) return
+      history.resolve(`${question.id}:${review.action}:${review.revision + 1}`); setReview(undefined); setNotice('Triage decision recorded.'); navigation.restore(); void cache.invalidateQueries({ queryKey: [...key, 'question-history', question.id] }); await refresh()
+    } catch (error) { if (active.current()) { setFailure(error); deny(error); if (attempted && uncertain(error)) { terminal.current = true; setOriginal(review); setNotice('Outcome unknown. Only exact immutable question history can establish the original decision.') } else { if (attempted) history.resolve(`${question.id}:${review.action}:${review.revision + 1}`); setReview(undefined); setNotice('No triage decision was confirmed. Refresh before choosing again.'); await refresh() } } } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   async function reconcile() {
     if (busy || lock.current || !original) { await refresh(); return }
     lock.current = true; setBusy(true)
     try { let cursor: string | undefined, found = false
-      do { const page = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/history', { params: { path: { event_id: event.id, question_id: question.id }, query: { cursor, limit: 30 } }, cache: 'no-store' })); if (!active.current) return; found = page.items.some(t => t.actor_id === identity.person.id && t.revision === original.revision + 1 && t.action === ({ triage: 'triaged', close: 'closed', reopen: 'reopened' }[original.action])); cursor = page.next_cursor ?? undefined; if (found) break } while (cursor)
-      if (found) { history.clear(); terminal.current = false; setOriginal(undefined); setReview(undefined); setNotice('Exact original triage transition confirmed from immutable history. No action was replayed.'); await refresh() } else setNotice('No exact original triage transition was confirmed. Current question state is not its receipt; writes remain paused.')
-    } catch (error) { if (active.current) { setFailure(error); deny(error) } } finally { lock.current = false; if (active.current) setBusy(false) }
+      do { const page = unwrap(await api.GET('/api/v1/events/{event_id}/questions/{question_id}/history', { params: { path: { event_id: event.id, question_id: question.id }, query: { cursor, limit: 30 } }, cache: 'no-store' })); if (!active.current()) return; found = page.items.some(t => t.actor_id === identity.person.id && t.revision === original.revision + 1 && t.action === ({ triage: 'triaged', close: 'closed', reopen: 'reopened' }[original.action])); cursor = page.next_cursor ?? undefined; if (found) break } while (cursor)
+      if (found) { history.resolve(`${question.id}:${original.action}:${original.revision + 1}`); terminal.current = false; setOriginal(undefined); setReview(undefined); setNotice('Exact original triage transition confirmed from immutable history. No action was replayed.'); await refresh() } else setNotice('No exact original triage transition was confirmed. Current question state is not its receipt; writes remain paused.')
+    } catch (error) { if (active.current()) { setFailure(error); deny(error) } } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   function prepare(action: 'triage' | 'close' | 'reopen') { if (!enabled || unknown || lock.current) return; navigation.capture(); setReview({ action, revision: question.revision }) }
   return <section ref={root} tabIndex={-1} className="py-4 border-t border-border"><h3>Explicit staff triage</h3>{!review && !unknown && <div className="fleet-pattern-actions"><Button icon="next" variant="outline" disabled={!enabled || busy || question.status !== 'open'} onClick={() => prepare('triage')}>Mark triaged</Button><Button icon="close" variant="outline" disabled={!enabled || busy || question.status === 'closed'} onClick={() => prepare('close')}>Close question</Button><Button icon="refresh" variant="outline" disabled={!enabled || busy || question.status !== 'closed'} onClick={() => prepare('reopen')}>Reopen question</Button></div>}

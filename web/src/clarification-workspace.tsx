@@ -23,13 +23,19 @@ function ClarificationWorkspace({ eventID, questionID }: { eventID: string; ques
   const key = useMemo(() => [...privateKey(identity.person.id, eventID, 'clarifications'), identity.draft_scope], [identity.person.id, identity.draft_scope, eventID])
   const scope = usePrivateRequestScope(key.join(':'))
   const [failure, setFailure] = useState<unknown>(), [tab, setTab] = useState('common'), [privateEpoch, setPrivateEpoch] = useState(0), [privateLeaveRisk, setPrivateLeaveRisk] = useState(false), [privatePending, setPrivatePending] = useState(false)
+  const privateScope = usePrivateRequestScope(`${key.join(':')}:private:${privateEpoch}`, scope)
   const scrub = useCallback((includeCommon = false) => {
     const predicate = (query: { queryKey: readonly unknown[] }) => query.queryKey.length > key.length && query.queryKey.slice(0, key.length).every((part, i) => part === key[i]) && !(includeCommon ? ['access', 'event'] : ['access', 'event', 'common', 'published-rubric']).includes(String(query.queryKey[key.length]))
-    void cache.cancelQueries({ predicate }); cache.removeQueries({ predicate }); setPrivateEpoch(value => value + 1); setPrivateLeaveRisk(false); setTab('common')
-  }, [cache, key])
+    privateScope.invalidate(); void cache.cancelQueries({ predicate }); cache.removeQueries({ predicate }); setPrivateEpoch(value => value + 1); setPrivateLeaveRisk(false); setTab('common')
+  }, [cache, key, privateScope])
+  const observe = useCallback((value: Workspace) => {
+    const previous = cache.getQueryData<Workspace>([...key, 'access'])
+    if (previous && ((previous.can_review && !value.can_review) || previous.team_id !== value.team_id)) scrub()
+    cache.setQueryData([...key, 'access'], value)
+  }, [cache, key, scrub])
   const workspace = useQuery({ queryKey: [...key, 'access'], gcTime: 0, retry: false, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 10_000, queryFn: async ({ signal }) => {
-    const ticket = scope.capture(), previous = cache.getQueryData<Workspace>([...key, 'access'])
-    try { const value = unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })); ticket.assert(); if (previous && ((previous.can_review && !value.can_review) || previous.team_id !== value.team_id)) scrub(); return value } catch (error) { if (ticket.current() && denied(error)) scrub(true); throw error }
+    const ticket = scope.capture()
+    try { const value = unwrap(await api.GET('/api/v1/events/{event_id}/clarification-workspace', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })); ticket.assert(); observe(value); return value } catch (error) { if (ticket.current() && denied(error)) scrub(true); throw error }
   } })
   const event = useQuery({ queryKey: [...key, 'event'], gcTime: 0, retry: false, refetchOnWindowFocus: 'always', refetchInterval: 10_000, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}', { signal, cache: 'no-store', params: { path: { event_id: eventID } } })); ticket.assert(); return value } })
   const deny = useCallback((error: unknown) => { if (denied(error)) { scrub(true); setFailure(error) } }, [scrub])
@@ -44,7 +50,7 @@ function ClarificationWorkspace({ eventID, questionID }: { eventID: string; ques
   const value = workspace.data, record = event.data
   if (inaccessible) return <section><ContextLink back target={{ label: 'Back to event', href: `/events/${eventID}` }} /><CollectionHeading title="Questions and official clarifications" scope={{ entity: 'Current event' }} description="Common challenge questions require actual publication and current access." /><Failure error={inaccessible} retry={() => void refresh()} /></section>
   if (!value || !record || !workspace.isFetchedAfterMount) return workspace.error || event.error ? <Failure error={workspace.error || event.error} retry={() => void refresh()} /> : <Loading />
-  return <ClarificationContext.Provider value={{ event: record, workspace: value, key, deny, refresh, writable: !workspace.error && !event.error && !value.archived }}><section className="fleet-clarification-workspace">
+  return <ClarificationContext.Provider value={{ event: record, workspace: value, key, privateScope, deny, observe, refresh, writable: !workspace.error && !event.error && !value.archived }}><section className="fleet-clarification-workspace">
     <ContextLink back target={{ label: 'Back to event', href: `/events/${eventID}` }} /><CollectionHeading title={questionID ? 'Private team question' : 'Questions and official clarifications'} scope={{ entity: record.name, event: record.configuration.timezone }} description="Private source questions and reviewed common answers have separate audiences and actions." />
     {(workspace.error || event.error) && <><Failure error={workspace.error || event.error} retry={() => void refresh()} /><p role="status">Current access could not be refreshed. Private unsent text remains only in this page; actions are paused.</p></>}{value.archived && <p role="status">This event is read-only. Existing authorised questions and official answers remain available.</p>}
     <div key={privateEpoch}>{questionID ? value.team_id || value.can_review ? <PrivateQuestionReader key={questionID} id={questionID} /> : <p role="alert">Current private question authority is unavailable. No former private source is restored.</p> : <><nav className="fleet-pattern-actions py-4 border-b border-border" aria-label="Clarification sections"><Button icon="book" variant="ghost" disabled={privatePending} aria-pressed={tab === 'common'} onClick={() => selectTab('common')}>Official answers</Button>{(value.team_id || value.can_review) && <Button icon="help" variant="ghost" disabled={privatePending} aria-pressed={tab === 'private'} onClick={() => selectTab('private')}>{value.can_review ? 'Staff question queue' : "Your team's private questions"}</Button>}</nav>

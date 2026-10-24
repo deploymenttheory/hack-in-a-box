@@ -23,7 +23,7 @@ export function HelpRequestTask({ event, context, refresh }: { event: EventRecor
   const scope = usePrivateRequestScope(`${owner}:${context.request_team?.id}:${context.can_request}`)
   const [form, setForm] = useState<Omit<Input, 'team_id'>>({ ...empty }), [review, setReview] = useState<Intent>(), [pending, setPending] = useState(false), [uncertain, setUncertain] = useState(false), [failure, setFailure] = useState<unknown>(), [created, setCreated] = useState<string>(), [placeError, setPlaceError] = useState(false), [originalID, setOriginalID] = useState<string>(), [notice, setNotice] = useState('Unsent form. Nothing is saved yet.')
   const original = useRef<Intent | undefined>(undefined), busy = useRef(false), terminal = useRef(false), locationInput = useRef<HTMLInputElement>(null)
-  const unknown = uncertain || history.unconfirmed
+  const unknown = uncertain || (!pending && history.unconfirmed)
   const dirty = !!form.description || !!form.location || !!form.meeting_url || !!review
   const focusRoot = useRef<HTMLElement>(null)
   const navigation = useMentorTaskNavigation({ root: focusRoot, dirty, pending, unknown })
@@ -38,7 +38,7 @@ export function HelpRequestTask({ event, context, refresh }: { event: EventRecor
   async function confirmed(value: Page, intent: Intent) {
     if (value.request.id !== intent.requestID || value.request.event_id !== event.id || value.request.requester_id !== identity.person.id || !Object.entries(intent.input).every(([key, v]) => value.request[key as keyof typeof value.request] === v)) throw new Error('Unexpected creation response')
     cache.setQueryData(helpKey(identity.person.id, event.id, value.request.id), value)
-    setCreated(value.request.id); terminal.current = false; setUncertain(false); setForm({ ...empty }); setReview(undefined); original.current = undefined; setOriginalID(undefined); history.clear(); setNotice('Help request saved on the server. Its current status appears in the queue.'); await refresh(); navigation.restore()
+    setCreated(value.request.id); terminal.current = false; setUncertain(false); setForm({ ...empty }); setReview(undefined); original.current = undefined; setOriginalID(undefined); history.resolve(intent.commandID); setNotice('Help request saved on the server. Its current status appears in the queue.'); await refresh(); navigation.restore()
   }
   async function submit(retry = false) {
     if (busy.current || !enabled || (!retry && (terminal.current || unknown || !review))) return
@@ -48,13 +48,14 @@ export function HelpRequestTask({ event, context, refresh }: { event: EventRecor
     const ticket = scope.capture(); if (!ticket.current()) return
     busy.current = true; original.current = intent; setOriginalID(intent.commandID); setPending(true); setFailure(undefined)
     try {
+      if (!retry) history.record({ operation: 'Create help request', revision: 0, command: { intentID: intent.commandID, requestID: intent.requestID } })
       const value = unwrap(await api.PUT('/api/v1/events/{event_id}/help/{request_id}', { params: { path: { event_id: event.id, request_id: intent.requestID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': '"0"', 'Idempotency-Key': intent.commandID } }, body: intent.input }))
       ticket.assert(); await confirmed(value, intent)
     } catch (error) {
       if (!ticket.current()) return
       setFailure(error)
-      if (error instanceof APIError && error.status < 500 && error.status !== 408 && !unknown) { original.current = undefined; setOriginalID(undefined); setReview(undefined); setNotice(error.status === 409 ? 'The server rejected this request. Competition-output support requires the scheduled live start and common challenge publication; review current access and event state.' : 'The server rejected this input or access. No new request was confirmed. Your unsent text remains.') }
-      else { terminal.current = true; setUncertain(true); if (!history.unconfirmed) history.record({ operation: 'Create help request', revision: 0, command: { intentID: intent.commandID, requestID: intent.requestID } }); setNotice('Request creation outcome is unconfirmed. Keep this exact intent; nothing is replayed automatically.') }
+      if (error instanceof APIError && error.status < 500 && error.status !== 408 && !unknown) { history.resolve(intent.commandID); original.current = undefined; setOriginalID(undefined); setReview(undefined); setNotice(error.status === 409 ? 'The server rejected this request. Competition-output support requires the scheduled live start and common challenge publication; review current access and event state.' : 'The server rejected this input or access. No new request was confirmed. Your unsent text remains.') }
+      else { terminal.current = true; setUncertain(true); setNotice('Request creation outcome is unconfirmed. Keep this exact intent; nothing is replayed automatically.') }
       await refresh()
     } finally { busy.current = false; if (ticket.current()) setPending(false) }
   }
