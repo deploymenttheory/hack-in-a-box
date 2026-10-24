@@ -4,14 +4,17 @@ import type { ReactNode } from 'react'
 import { expect, test, vi } from 'vitest'
 import { APIError } from './api/client'
 import { useCoveragePage } from './coverage-command'
+import { PlanningOperations, usePlanningUnknownCommands } from './planning-operations'
+
+vi.mock('@tanstack/react-router', () => ({ useBlocker: () => undefined }))
 
 vi.mock('./session', () => ({ useIdentity: () => ({ person: { id: 'coverage-person' }, draft_scope: 'current-session' }) }))
 
 function setup(write: (input: unknown, revision: number) => Promise<{ revision: number; can_manage?: boolean }>) {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const load = vi.fn().mockResolvedValue({ revision: 7 })
-  function Wrapper({ children }: { children: ReactNode }) { return <QueryClientProvider client={cache}>{children}</QueryClientProvider> }
-  return { ...renderHook(() => useCoveragePage('coverage-event', 'roster', load, write), { wrapper: Wrapper }), load }
+  function Wrapper({ children }: { children: ReactNode }) { return <QueryClientProvider client={cache}><PlanningOperations>{children}</PlanningOperations></QueryClientProvider> }
+  return { ...renderHook(() => { const page = useCoveragePage('coverage-event', 'roster', load, write); const history = usePlanningUnknownCommands(page.scopeKey); return { ...page, history } }, { wrapper: Wrapper }), load }
 }
 
 test('an ended private session cannot start a roster write even before the page unmounts', async () => {
@@ -77,4 +80,38 @@ test('a fresh restricted projection fences old command closures and late privile
   expect(result.current.query.data).toMatchObject({ revision: 7, can_manage: false })
   expect(result.current.command.kind).toBe('unknown')
   expect(write).toHaveBeenCalledOnce()
+})
+
+for (const boundary of ['restricted', 401, 403, 404] as const) {
+  test(`an earlier private unknown payload is redacted at ${boundary} without losing the write barrier`, async () => {
+    const write = vi.fn().mockRejectedValue(new APIError(503, 'unavailable'))
+    const { result, load } = setup(write)
+    await waitFor(() => expect(result.current.state.kind).toBe('ready'))
+    load.mockResolvedValue({ revision: 7, can_manage: true })
+    await act(async () => { await result.current.read() })
+    const payload = { action: 'profile', availability: 'private-availability', capacity: 19 }
+    await act(async () => { await result.current.act(payload, 7, true) })
+    expect(JSON.stringify(result.current.history.attempts)).toContain('private-availability')
+    if (boundary === 'restricted') load.mockResolvedValue({ revision: 8, can_manage: false })
+    else load.mockRejectedValue(new APIError(boundary, 'access_lost'))
+    await act(async () => { await result.current.read() })
+    expect(JSON.stringify(result.current.history.attempts)).not.toContain('private-availability')
+    expect(result.current.history.attempts[0]).toMatchObject({ revision: 7, command: { intentID: expect.any(String) } })
+    expect(result.current.history.unconfirmed).toBe(true)
+    await act(async () => { await result.current.act(payload, 8, true) })
+    expect(write).toHaveBeenCalledOnce()
+    expect(result.current.command.kind).not.toBe('saved')
+  })
+}
+
+test('initial participant projection retains its ordinary unknown join intent through fresh reads', async () => {
+  const write = vi.fn().mockRejectedValue(new APIError(503, 'unavailable'))
+  const { result, load } = setup(write)
+  await waitFor(() => expect(result.current.state.kind).toBe('ready'))
+  load.mockResolvedValue({ revision: 7, can_manage: false })
+  await act(async () => { await result.current.read() })
+  await act(async () => { await result.current.act({ action: 'join', invitation_code: 'ordinary-code' }, 7, true) })
+  await act(async () => { await result.current.read() })
+  expect(JSON.stringify(result.current.history.attempts)).toContain('ordinary-code')
+  expect(result.current.history.unconfirmed).toBe(true)
 })
