@@ -6,11 +6,11 @@ const team = '33333333-3333-4333-8333-333333333333', cpID = '44444444-4444-4444-
 function checkpoint(): Checkpoint { return { definition: { id: cpID, run_id: cpID, name: 'Technical checkpoint', opens_wall_time: '2020-01-01T09:00:00', closes_wall_time: '2030-01-01T17:00:00', dst_choice: '' }, version: 1, purpose: 'checkpoint', rubric: { id: cpID, version: 2, digest: 'published-safe-digest' }, criteria: { name: 'Published rubric', mode: 'mentor_qualification', required_judge_count: 1, finalist_count: 1, reserve_count: 0, prizes: [], side_quests: [], categories: [{ id: category, label: 'Technical merit', min_score: 0, max_score: 5, weight: 1, guidance: 'Inspect the demonstrated working output.', anchors: [{ score: 0, description: 'Explicitly observed no working output.' }, { score: 5, description: 'Strong demonstrated output.' }] }, { id: nextCategory, label: 'Teamwork', min_score: 0, max_score: 5, weight: 1, guidance: 'Observe collaboration; leave unobserved work pending.', anchors: [] }] }, timezone: 'Europe/London', opens_at: '2020-01-01T09:00:00Z', closes_at: '2030-01-01T17:00:00Z' } }
 async function fixture(page: Page) {
  await mockWorkspace(page)
- const state = { cp: checkpoint(), revision: 10, cards: [] as Card[], history: [] as Card[], writes: [] as Command[], denied: false, readFailure: '' as '' | 'checkpoint' | 'card', lost: false, failed: false, reject: 0, ownReads: 0, observationReads: [] as string[], observations: [] as components['schemas']['MentorObservation'][], secondPage: false, frozen: true }
+ const state = { cp: checkpoint(), revision: 10, cards: [] as Card[], history: [] as Card[], writes: [] as Command[], denied: false, readFailure: '' as '' | 'checkpoint' | 'card', denyCard: false, lost: false, failed: false, reject: 0, ownReads: 0, observationReads: [] as string[], observations: [] as components['schemas']['MentorObservation'][], secondPage: false, frozen: true }
  await page.route(`**/events/${firstID}/teams/${team}/**`, async route => {
   const request = route.request(), url = new URL(request.url()), path = url.pathname
   const error = (status: number) => route.fulfill({ status, json: { error: { code: status === 409 ? 'conflict' : 'forbidden', request_id: 'synthetic' } } })
-  if (state.denied) return error(403)
+  if (state.denied || (state.denyCard && path.includes('/scorecards'))) return error(403)
   if (request.method() === 'GET' && ((state.readFailure === 'checkpoint' && path.endsWith('/scorecard-checkpoints')) || (state.readFailure === 'card' && path.endsWith('/scorecards')))) return route.abort('failed')
   if (path.endsWith('/scorecard-checkpoints')) return route.fulfill({ json: { revision: state.revision, items: [state.cp], next_cursor: null } })
   if (path.includes('/scorecards/') && path.endsWith('/history')) { const before = Number(url.searchParams.get('cursor') ?? 9999); return route.fulfill({ json: { items: state.history.filter(c => c.reference.version < before).sort((a,b) => b.reference.version-a.reference.version).slice(0, Number(url.searchParams.get('limit') ?? 50)), next_cursor: null } }) }
@@ -94,7 +94,7 @@ test('prelive current denial and future checkpoint windows cannot enable scoring
 test('active native revocation hides private page without a focus switch', async ({ page }) => {
  const state = await fixture(page); await open(page); await page.getByLabel('Private evidence note for Technical merit').fill('REVOKED PRIVATE INPUT'); state.denied = true
  await expect(page.getByRole('region', { name: 'Your private scorecard' })).toHaveCount(0, { timeout: 20_000 }); await expect(page.locator('body')).not.toContainText('REVOKED PRIVATE INPUT'); expect(state.writes).toHaveLength(0)
- state.denied = false; await page.getByRole('button', { name: 'Read current checkpoints', exact: true }).click(); await expect(page.getByLabel('Private evidence note for Technical merit')).toHaveValue('')
+ state.denied = false; await page.getByRole('button', { name: 'Read current checkpoints', exact: true }).click(); await expect(page.getByRole('region', { name: 'Your private scorecard' })).toHaveCount(0); await page.getByRole('button', { name: 'Open Technical checkpoint', exact: true }).click(); await expect(page.getByLabel('Private evidence note for Technical merit')).toHaveValue('')
 })
 test('native own-card cursor finds saved version beyond first page and never renders another author', async ({ page }) => {
  const state = await fixture(page); await open(page); await score(page, '4'); await page.getByLabel('Private evidence note for Technical merit').fill('Saved beyond first page'); await reviewCard(page, 'Save private draft'); await expect(status(page)).toContainText('draft version 1')
@@ -139,4 +139,24 @@ test('a later different successful assessment preserves earlier unresolved comma
  state.failed = false; await reviewCard(page, 'Save private draft'); await expect(status(page)).toContainText('Confirmed your exact draft version 1')
  await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toContainText('Original outcome remains unconfirmed')
  expect(state.writes).toHaveLength(2); expect(state.writes[0].scores).not.toEqual(state.writes[1].scores)
+})
+
+
+test('restoring only checkpoint collection authority never resurrects a formerly selected private card', async ({ page }) => {
+ const state = await fixture(page); await page.clock.install(); await open(page)
+ await score(page, '4'); await page.getByLabel('Private evidence note for Technical merit').fill('PRIVATE-CARD-BEFORE-PARENT-DENIAL')
+ await reviewCard(page, 'Save private draft'); await expect(status(page)).toContainText('Confirmed your exact draft')
+ state.denied = true; await page.clock.fastForward(16_000)
+ await expect(page.getByRole('region', { name: 'Your private scorecard' })).toHaveCount(0)
+ state.denied = false; state.denyCard = true
+ await page.getByRole('button', { name: 'Read current checkpoints', exact: true }).click()
+ await expect(page.getByRole('button', { name: 'Open Technical checkpoint', exact: true })).toBeVisible()
+ await expect(page.getByRole('region', { name: 'Your private scorecard' })).toHaveCount(0)
+ await page.getByRole('button', { name: 'Open Technical checkpoint', exact: true }).click()
+ await expect(page.getByRole('alert')).toBeVisible()
+ await expect(page.locator('body')).not.toContainText('PRIVATE-CARD-BEFORE-PARENT-DENIAL')
+ await page.clock.fastForward(20_000)
+ await expect(page.locator('body')).not.toContainText('PRIVATE-CARD-BEFORE-PARENT-DENIAL')
+ await expect(page.getByLabel('Private evidence note for Technical merit')).toHaveCount(0)
+ expect(state.writes).toHaveLength(1)
 })

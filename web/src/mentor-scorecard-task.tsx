@@ -33,10 +33,11 @@ export function CardEditor({ eventID, teamID, checkpoint, initial, refresh, onRi
     if (writing.current || terminal.current || unknown) return
     const lifetime = scope.capture(); if (!lifetime.current()) return
     writing.current = true
-    const ticket = generation.current; setBusy(true); setFailure(undefined)
+    const ticket = generation.current; let attempted = false; setBusy(true); setFailure(undefined)
     try {
       const current = await currentCard(eventID, teamID, checkpoint, identity.person.id, lifetime.signal); lifetime.assert()
       if (current.revision !== intent.revision || (current.card?.reference.version ?? 0) !== intent.command.version || current.frozenRevision !== intent.frozenRevision) { setPrepared(undefined); setReview(current); setNotice('The reviewed source changed. Compare current versions and review again; no write was sent.'); return }
+      attempted = true
       const card = unwrap(await api.POST('/api/v1/events/{event_id}/teams/{team_id}/scorecards', { params: { path: { event_id: eventID, team_id: teamID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${intent.revision}"` } }, body: intent.command }))
       if (ticket !== generation.current || !lifetime.current()) return
       if (!matchesReceipt(card, intent)) throw new Error('The response did not confirm the exact scorecard version and content.')
@@ -48,7 +49,7 @@ export function CardEditor({ eventID, teamID, checkpoint, initial, refresh, onRi
         if ([401, 403, 404].includes(error.status)) { scope.invalidate(); terminal.current = true; setPrepared(undefined); setValues([]); setUncertain(undefined); setReview(undefined); setReceipt(null); setNotice('Current access was denied. Private scores and evidence have been cleared.'); void refresh() }
         else if (error.status === 400) { setPrepared(undefined); setUncertain(undefined); setNotice('Validation rejected this input; no server save was made. Your entered scores and notes remain unsent in memory.') }
         else { setPrepared(undefined); setReview(undefined); setNotice('The server rejected this version. Check the exact saved version before reviewing a newer base; no write will be replayed automatically.') }
-      } else { terminal.current = true; setUncertain(intent); history.record({ operation: 'Private scorecard', revision: intent.revision, command: { intentID: `${intent.command.checkpoint_id}:${intent.expectedVersion}`, expectedVersion: intent.expectedVersion } }); setNotice('Save outcome is unconfirmed. Your original version-bound intent is retained in page memory. Check the exact saved version; do not assume a save or retry blindly.') }
+      } else if (!attempted) { setPrepared(undefined); setNotice('Current sources could not be verified. No write was sent; your input remains unsent.') } else { terminal.current = true; setUncertain(intent); history.record({ operation: 'Private scorecard', revision: intent.revision, command: { intentID: `${intent.command.checkpoint_id}:${intent.expectedVersion}`, expectedVersion: intent.expectedVersion } }); setNotice('Save outcome is unconfirmed. Your original version-bound intent is retained in page memory. Check the exact saved version; do not assume a save or retry blindly.') }
     } finally { writing.current = false; if (lifetime.current()) setBusy(false) }
   }
   async function save(submit: boolean) {

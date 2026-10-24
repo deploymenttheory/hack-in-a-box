@@ -239,3 +239,20 @@ test('native byte-limit validation rejection retains unsent text and is never re
   await expect(page.getByRole('alert')).toBeVisible(); expect(await copies(page)).toBe(1); expect(state.notes).toHaveLength(0)
   await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveValue('UNSENT PRIVATE <script> literal evidence')
 })
+
+
+test('restored parent team collection cannot revive an absent formerly opened private note', async ({ page }) => {
+ const state = await fixture(page); state.notes = [saved()]; await page.clock.install()
+ await page.goto(`/events/${firstID}/mentor/${teamIDs[0]}?note=${noteID}`)
+ await page.getByRole('button', { name: 'Load saved server text (replace editor)' }).click()
+ await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveValue('SAVED PRIVATE EVIDENCE')
+ state.denied = true; await page.clock.fastForward(16_000)
+ await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveCount(0)
+ state.notes = []; state.denied = false; await page.clock.fastForward(16_000)
+ await expect(page.getByText('Private observation entry is unavailable.', { exact: false })).toBeVisible()
+ await expect(page.locator('body')).not.toContainText('SAVED PRIVATE EVIDENCE')
+ await expect(page.getByRole('button', { name: 'Load saved server text (replace editor)' })).toHaveCount(0)
+ await page.clock.fastForward(20_000)
+ await expect(page.getByLabel('Evidence (private)', { exact: true })).toHaveCount(0)
+ expect(state.commands).toHaveLength(0)
+})

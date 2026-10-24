@@ -98,3 +98,20 @@ regressions (in addition to current denial coverage), clarifications and attachm
 common-answer review, moderation/huddles/second reviews and factual preview, actual
 guide examples/guidance and before/after evidence, full dependent-consumer suites,
 independent two-axis review and exact-head CI. This checkpoint is still a draft.
+
+## Private parent restoration boundary
+
+Parent observation/assignment and checkpoint denial now cancels/removes only that
+actor/event/team's owned private child caches and clears selected inspector/card
+state. Private detail readers require a successful post-mount current read before
+rendering cached content. A restricted observation projection also scrubs its child
+note/history references. This does not erase another team's sources or any separate
+unknown-command memory. Held cancelled child queries cannot refill removed caches.
+
+Two lifecycle unit tests pass. Both production builds and targeted lint pass. The
+bounded parent/restoration/revocation/transport/earlier-unknown browser selection
+completed 16/16 desktop/mobile journeys, including new restored-parent/absent-note
+and restored-checkpoint/denied-old-card canaries checked again after 20 seconds.
+Successful list restoration now requires an explicit current record action; it
+never silently revives the previously selected private task. A confirmation
+preflight failure also stays not-sent rather than inventing an uncertain write.
