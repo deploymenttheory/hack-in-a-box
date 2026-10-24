@@ -210,5 +210,20 @@ reconnection labels retained state as last-known. Keep the QR and visible canoni
 HTTPS destination identical, distance-readable type, explicit keyboard actions and
 print exclusion. The interactive snippet shows the production boundary. Do not
 substitute contact metadata for confirmed rendering or a current read for an
-original command acknowledgement. MC decision/unknown lifecycle examples are being
-completed in UI-11 before the draft is ready.
+original command acknowledgement. The decision example below shares the actual
+production review and deliberately retains an unknown original outcome.
+
+`PresentationReview` is also imported by the synthetic decision owner. Capture
+an immutable action, source revision, target cue/countdown or display, and reason
+before opening it. Correction/cancellation restore the initiating control and
+unchanged inputs. Native adapters check the current session and console before
+sending; their endpoints offer no idempotent replay or original-command lookup.
+Keep only action/revision metadata above route lifetimes, never cue text, reasons,
+labels or one-time pairing keys. A direct matching response may settle that safe
+metadata after private teardown; current reads and later commands never settle
+an earlier lost response. The guide demonstrates unknown and changed-source
+barriers without calling an API or inventing a receipt. Use a deliberate fresh
+starting point for a different reviewed action. Current denial clears private
+snapshots and held continuations; temporary reads retain unsent work with writes
+paused. Pairing keys are shown once in local memory and scrubbed on departure,
+hiding, print and session end; contact records never prove rendering.

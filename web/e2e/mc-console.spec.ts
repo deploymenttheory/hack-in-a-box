@@ -74,6 +74,9 @@ test('rehearses and saves without changing live cues, then explicitly activates 
   expect(data.page.published[0].title).toBe('Planned opening')
   await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Activate saved rehearsal' }).click()
+  await expect(page.getByRole('region',{name:'Review cue activation'})).toContainText('This publishes all saved rehearsal cues as the approved program')
+  await expect(page.getByRole('region',{name:'Program cue 1'})).toContainText('Planned opening')
+  await expect(page.getByRole('region',{name:'Program cue 2'})).toContainText(hostile)
   await page.getByRole('button', {name:'Confirm room change',exact:true}).click()
   await expect(live(page).getByRole('heading', { name: hostile, exact: true })).toBeVisible()
   expect(data.requests.at(-1)?.body).toMatchObject({ action: 'activate', from_draft: true, index: 1 })
@@ -322,3 +325,92 @@ test('a fresh permission downgrade fences a held old console preflight before an
   expect(data.requests).toHaveLength(0)
  }finally{release()}
 })
+
+test('transient console reads pause writes without dropping nested unsent rehearsal input',async({page})=>{
+ const data=await prepare(page)
+ await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+ await page.getByLabel('Cue title',{exact:true}).fill('Synthetic unsent during temporary outage')
+ let unavailable=true
+ await page.route(`**/events/${firstID}/presentation`,route=>unavailable&&route.request().method()==='GET'?route.fulfill({status:503,json:{error:{code:'unavailable',message:'Synthetic temporary outage',request_id:'synthetic'}}}):route.fallback())
+ await expect(page.getByText('The latest console snapshot could not be verified.',{exact:false})).toBeVisible()
+ await expect(page.getByLabel('Cue title',{exact:true})).toHaveValue('Synthetic unsent during temporary outage')
+ await expect(page.getByRole('button',{name:'Save rehearsal',exact:true})).toBeDisabled()
+ unavailable=false
+ await page.getByRole('button',{name:'Check current room access',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Save rehearsal',exact:true})).toBeEnabled()
+ await expect(page.getByLabel('Cue title',{exact:true})).toHaveValue('Synthetic unsent during temporary outage')
+ expect(data.requests).toHaveLength(0)
+})
+
+test('pairing secret is removed for print and a session-ending signal clears mounted private editors',async({page})=>{
+ const data=await prepare(page)
+ await page.getByRole('button',{name:'Manage displays',exact:true}).click()
+ await page.getByLabel('Display label',{exact:true}).fill('Synthetic once-only room')
+ await page.getByRole('button',{name:'Pair display',exact:true}).click()
+ await page.getByRole('button',{name:'Confirm display pairing',exact:true}).click()
+ await expect(page.getByRole('textbox',{name:'New display secret',exact:true})).toHaveValue('SyntheticDisplayOnlySecretNeverUseOutsideTests123456789')
+ await page.evaluate(()=>window.dispatchEvent(new Event('beforeprint')))
+ await expect(page.getByRole('textbox',{name:'New display secret',exact:true})).toHaveCount(0)
+ await page.emulateMedia({media:'print'})
+ await expect(page.locator('.fleet-mc-console')).toBeHidden()
+ await page.emulateMedia({media:'screen'})
+ await page.getByRole('button',{name:'Edit rehearsal',exact:true}).click()
+ await page.getByLabel('Cue title',{exact:true}).fill('PRIVATE session-ending draft')
+ await page.evaluate(()=>window.dispatchEvent(new Event('session-ending')))
+ await expect(page.getByLabel('Cue title',{exact:true})).toHaveCount(0)
+ await expect(page.getByText('PRIVATE session-ending draft',{exact:true})).toHaveCount(0)
+ expect(data.requests).toHaveLength(1)
+})
+
+test('an uncertain pairing cannot recover its once-only key or replay pairing from current contact metadata',async({page})=>{
+ const data=await prepare(page),pairingID='47b85018-a096-4f82-af26-7240ec37e6ce'
+ let pairs=0
+ await page.route(`**/events/${firstID}/presentation/pairings`,async route=>{
+  pairs++;data.page.revision++;data.page.pairings=[{id:pairingID,label:'Synthetic uncertain room',created_at:data.page.server_now,expires_at:new Date(Date.now()+120*60_000).toISOString(),revoked_at:null,last_seen_at:null,stale:true}]
+  return route.fulfill({status:503,json:{error:{code:'unavailable',message:'Synthetic response lost',request_id:'synthetic'}}})
+ })
+ await page.getByRole('button',{name:'Manage displays',exact:true}).click()
+ await page.getByLabel('Display label',{exact:true}).fill('Synthetic uncertain room')
+ await page.getByRole('button',{name:'Pair display',exact:true}).click()
+ await page.getByRole('button',{name:'Confirm display pairing',exact:true}).click()
+ await expect(page.getByText('A display may have been paired, but its once-only secret cannot be recovered from the list.',{exact:false})).toBeVisible()
+ await page.getByRole('button',{name:'Read current room state',exact:true}).click()
+ await expect(page.getByRole('textbox',{name:'New display secret',exact:true})).toHaveCount(0)
+ await page.getByRole('button',{name:'Correct details',exact:true}).click()
+ await expect(page.getByRole('region',{name:'Display sessions'})).toContainText('No contact yet')
+ await expect(page.getByRole('button',{name:'Pair display',exact:true})).toBeDisabled()
+ page.once('dialog',dialog=>dialog.accept())
+ await page.getByRole('button',{name:'Review current state as a new starting point',exact:true}).click()
+ await page.getByRole('button',{name:'Revoke Synthetic uncertain room',exact:true}).click()
+ await expect(page.getByRole('region',{name:'Review display revocation'})).toContainText(pairingID)
+ await page.getByRole('button',{name:'Confirm display revocation',exact:true}).click()
+ await expect(page.getByRole('region',{name:'Display sessions'})).toContainText('Revoked')
+ expect(pairs).toBe(1)
+ expect(data.requests.map(item=>(item.body as {reason:string}).reason)).toEqual(['Synthetic reviewed room operation'])
+})
+
+for(const boundary of ['beforeprint','hidden','pagehide'] as const){
+ test(`held pairing acknowledgement after ${boundary} settles safe metadata without redisplaying the key`,async({page})=>{
+  const data=await prepare(page),pairingID='47b85018-a096-4f82-af26-7240ec37e6ce'
+  let release!:()=>void,started=false,finished=false,posts=0
+  const held=new Promise<void>(resolve=>{release=resolve})
+  await page.route(`**/events/${firstID}/presentation/pairings`,async route=>{
+   posts++;data.page.revision++;const pairing={id:pairingID,label:'Synthetic held room',created_at:data.page.server_now,expires_at:new Date(Date.now()+120*60_000).toISOString(),revoked_at:null,last_seen_at:null,stale:true};data.page.pairings=[pairing];started=true
+   await held;try{await route.fulfill({status:201,json:{revision:data.page.revision,pairing,token:'SyntheticWithheldOnceOnlySecret12345678901234567890'}})}finally{finished=true}
+  })
+  try{
+   await page.getByRole('button',{name:'Manage displays',exact:true}).click()
+   await page.getByLabel('Display label',{exact:true}).fill('Synthetic held room')
+   await page.getByRole('button',{name:'Pair display',exact:true}).click()
+   await page.getByRole('button',{name:'Confirm display pairing',exact:true}).click()
+   await expect.poll(()=>started).toBe(true)
+   await page.evaluate(boundary=>{if(boundary==='hidden'){Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))}else window.dispatchEvent(new Event(boundary))},boundary)
+   release();await expect.poll(()=>finished).toBe(true)
+   await expect(page.getByRole('complementary',{name:'Unconfirmed command history'})).toHaveCount(0)
+   await expect(page.getByRole('textbox',{name:'New display secret',exact:true})).toHaveCount(0)
+   await expect(page.getByText('Its key was withheld because this page was hidden or printed.',{exact:false})).toBeVisible()
+   await expect(page.getByRole('region',{name:'Display sessions'})).toContainText('No contact yet')
+   expect(posts).toBe(1)
+  }finally{release()}
+ })
+}

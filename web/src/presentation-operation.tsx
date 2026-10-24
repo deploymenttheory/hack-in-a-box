@@ -14,16 +14,16 @@ export type PresentationIntent={revision:number;reason:string;source:ConsolePage
 type State={kind:'idle'|'pending'|'unknown'|'rejected'|'accepted';message?:string}
 export function usePresentationOperation(eventID:string,reader:PresentationReader,scope:PrivateRequestScope){
  const identity=useIdentity(),history=useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:${eventID}:presentation`),lock=useRef(false),hard=useRef(false)
- const [state,setState]=useState<State>({kind:'idle'}),[secret,setSecret]=useState('')
- useEffect(()=>{const clear=()=>setSecret(''),hidden=()=>{if(document.visibilityState!=='visible')clear()};window.addEventListener('beforeprint',clear);window.addEventListener('pagehide',clear);document.addEventListener('visibilitychange',hidden);return()=>{window.removeEventListener('beforeprint',clear);window.removeEventListener('pagehide',clear);document.removeEventListener('visibilitychange',hidden)}},[])
+ const [state,setState]=useState<State>({kind:'idle'}),[secret,setSecret]=useState(''),disclosureEpoch=useRef(0)
+ useEffect(()=>{const clear=()=>{disclosureEpoch.current++;setSecret('')},hidden=()=>{if(document.visibilityState!=='visible')clear()};window.addEventListener('beforeprint',clear);window.addEventListener('pagehide',clear);document.addEventListener('visibilitychange',hidden);return()=>{window.removeEventListener('beforeprint',clear);window.removeEventListener('pagehide',clear);document.removeEventListener('visibilitychange',hidden)}},[])
  const remembered=history.pending||history.unconfirmed
- const effective:State=history.pending?{kind:'pending',message:'An earlier room change is awaiting its response. Do not start a replacement.'}:history.unconfirmed?{kind:'unknown',message:'An earlier room change is unconfirmed. Read the current room before deliberately choosing a new starting point. Nothing is replayed.'}:state
+ const effective:State=history.pending?{kind:'pending',message:'An earlier room change is awaiting its response. Do not start a replacement.'}:history.unconfirmed?state.kind==='unknown'?state:{kind:'unknown',message:'An earlier room change is unconfirmed. Read the current room before deliberately choosing a new starting point. Nothing is replayed.'}:state
  usePlanningDepartureBarrier(effective.kind==='pending')
  async function send(input:PresentationIntent){
   if(lock.current||hard.current||remembered)return false
   const ticket=scope.capture();if(!ticket.current())return false
-  const intent=structuredClone(input);lock.current=true;setState({kind:'pending',message:'Checking current room control access…'});setSecret('')
-  let sent=false,acknowledged=false,attempt:string|undefined
+  const intent=structuredClone(input),disclosure=disclosureEpoch.current;lock.current=true;setState({kind:'pending',message:'Checking current room control access…'});setSecret('')
+  let sent=false,acknowledged=false,disclosed=false,attempt:string|undefined
   try{
    const session=await getSession({signal:ticket.signal});ticket.assert()
    if(session.person.id!==identity.person.id||session.draft_scope!==identity.draft_scope)throw new DOMException('Session changed','AbortError')
@@ -41,10 +41,10 @@ export function usePresentationOperation(eventID:string,reader:PresentationReade
    acknowledged=true;history.complete(attempt);hard.current=false
    if(!ticket.current())return true
    if(intent.kind==='pair'){
-    setSecret((response as {token:string}).token)
+    if(disclosure===disclosureEpoch.current&&document.visibilityState==='visible'){setSecret((response as {token:string}).token);disclosed=true}
     await reader.read().catch(()=>undefined);ticket.assert()
    }else reader.receive(response as ConsolePage)
-   setState({kind:'accepted',message:intent.kind==='control'&&intent.command.action==='save'?'Rehearsal saved. The room display is unchanged.':intent.kind==='control'&&intent.command.action==='return_to_schedule'?'Returned to the planned schedule.':intent.kind==='pair'?'Display paired. Transfer the secret once, then dismiss it.':'The server accepted this reviewed room change.'});return true
+   setState({kind:'accepted',message:intent.kind==='control'&&intent.command.action==='save'?'Rehearsal saved. The room display is unchanged.':intent.kind==='control'&&intent.command.action==='return_to_schedule'?'Returned to the planned schedule.':intent.kind==='pair'?disclosed?'Display paired. Transfer the secret once, then dismiss it.':'Display paired. Its key was withheld because this page was hidden or printed. Review the pairing and revoke it before creating another if needed.':'The server accepted this reviewed room change.'});return true
   }catch(failure){
    if(acknowledged)return true
    const definite=failure instanceof APIError&&failure.status>=400&&failure.status<500&&failure.status!==408
@@ -57,6 +57,6 @@ export function usePresentationOperation(eventID:string,reader:PresentationReade
   }finally{lock.current=false}
  }
  async function newBase(){if(lock.current||history.pending)return undefined;lock.current=true;const ticket=scope.capture();try{ticket.assert();const page=await reader.read();ticket.assert();if(!page.can_control)return undefined;history.selectNewBase();hard.current=false;setState({kind:'idle'});return page}catch{return undefined}finally{lock.current=false}}
- return {send,newBase,secret,dismissSecret:()=>setSecret(''),pending:effective.kind==='pending',unknown:effective.kind==='unknown',state:effective,
- feedback:<><CommunicationCommandHistory attempts={history.attempts}/>{effective.kind!=='idle'&&<Alert tone={effective.kind==='unknown'?'warning':effective.kind==='accepted'?'success':'neutral'} role={effective.kind==='rejected'?'alert':'status'}><p>{effective.message}</p>{effective.kind==='unknown'&&<p>No retry or recovery receipt is available for the original room command.</p>}</Alert>}</>}
+ return {send,newBase,secret,dismissSecret:()=>{disclosureEpoch.current++;setSecret('')},pending:effective.kind==='pending',unknown:effective.kind==='unknown',state:effective,
+ feedback:<><CommunicationCommandHistory attempts={history.attempts}/>{effective.kind!=='idle'&&<Alert tone={effective.kind==='unknown'?'warning':effective.kind==='accepted'?'success':'neutral'} role={effective.kind==='rejected'?'alert':'status'}><p>{effective.message}</p>{effective.kind==='unknown'&&<p>Check the current room before choosing a different change. The earlier outcome remains unconfirmed.</p>}</Alert>}</>}
 }

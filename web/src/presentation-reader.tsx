@@ -31,7 +31,7 @@ export function usePresentationReader(eventID:string, owner:string){
    const value=unwrap(await api.GET('/api/v1/events/{event_id}/presentation',{signal:ticket.signal,cache:'no-store',params:{path:{event_id:eventID}}}));ticket.assert()
    if(generation!==epoch.current||serial!==request.current)throw new DOMException('Presentation read superseded','AbortError')
    return accept(value)
-  }catch(failure){if(ticket.current()&&generation===epoch.current&&serial===request.current){deny(failure);setError(failure);setLoading(false)}throw failure}
+  }catch(failure){if(ticket.current()&&generation===epoch.current){if(presentationDenied(failure))deny(failure);else if(serial===request.current){setError(failure);setLoading(false)}}throw failure}
  },[accept,deny,eventID,root])
  useEffect(()=>{void Promise.resolve().then(read).catch(()=>undefined);const timer=window.setInterval(()=>void read().catch(()=>undefined),2000);const focus=()=>void read().catch(()=>undefined);window.addEventListener('focus',focus);return()=>{window.clearInterval(timer);window.removeEventListener('focus',focus)}},[read])
  useLayoutEffect(()=>{const end=()=>deny(new APIError(401,'presentation_session_ended'));const names=['session-ending','session-expired','mentor-draft-invalidated'];names.forEach(name=>window.addEventListener(name,end));return()=>{names.forEach(name=>window.removeEventListener(name,end));lifetime.editor.invalidate()}},[deny,lifetime])

@@ -133,16 +133,19 @@ for (const palette of [
 
 test('a held authorised asset cannot create a URL after equal-sequence asset withdrawal',async({page})=>{
  const state=await room(page)
- let started=false,release!:()=>void
+ let started=false,finished=false,release!:()=>void
  const held=new Promise<void>(resolve=>{release=resolve})
  await page.evaluate(()=>{const original=URL.createObjectURL;Object.assign(window,{displayCreatedURLs:0});URL.createObjectURL=function(blob){(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs++;return original(blob)}})
- await page.route('**/display/assets/*',async route=>{started=true;await held;return route.fulfill({contentType:'image/png',body:raster})})
+ await page.route('**/display/assets/*',async route=>{started=true;await held;try{await route.fulfill({contentType:'image/png',body:raster})}catch{/* The current projection cancelled this obsolete asset read. */}finally{finished=true}})
  try{
   state.snapshot={...state.snapshot,assets:[{id:assetID,kind:'logo',media_type:'image/png',digest:createHash('sha256').update(raster).digest('hex')}]}
   await page.clock.runFor(1_100);await expect.poll(()=>started).toBe(true)
-  state.snapshot={...state.snapshot,assets:[]}
+  state.snapshot={...state.snapshot,assets:[],server_now:'2030-06-14T09:00:02Z'}
   await page.clock.runFor(1_100)
-  release();await page.clock.runFor(100)
+  // Observe that the complete equal-sequence withdrawal was accepted BEFORE
+  // releasing the obsolete response; advancing fake time alone is not a read.
+  await expect(page.getByRole('status')).toContainText('10:00:02')
+  release();await expect.poll(()=>finished).toBe(true)
   await expect(page.getByAltText('Event logo')).toHaveCount(0)
   expect(await page.evaluate(()=>(window as unknown as {displayCreatedURLs:number}).displayCreatedURLs)).toBe(0)
  }finally{release()}
