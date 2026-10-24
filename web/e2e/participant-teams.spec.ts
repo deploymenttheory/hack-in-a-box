@@ -88,3 +88,45 @@ test('waitlisted joiner can request a team but has no confirmed seat or private 
   expect(state.teams().teams).toEqual([])
   expect(state.teams().requests[0].confirmed).toBe(false)
 })
+
+async function existingParticipantTeam(page: Page) {
+  await mockWorkspace(page)
+  const member = { id: person.id, name: person.display_name }
+  const value: TeamPage = { revision: 2, can_manage: false, can_create: true, frozen: false, freeze_at: registrationEvent.team_freeze, people: [], requests: [], teams: [{ id: invitation, name: 'Synthetic attendee team', state: 'published', captain: person.id, published_captain: person.id, invitation_code: invitation, frozen: false, draft: [member], published: [member] }] }
+  await page.route('**/api/v1/registration/events/**', route => route.fulfill({ json: { event: registrationEvent, branding: defaultBranding, forms: [], registrations: [fixtureRegistration()] } }))
+  let writes = 0
+  await page.route(`**/events/${firstID}/teams`, route => { if (route.request().method() !== 'GET') writes++; return route.fulfill({ json: value }) })
+  await page.goto(`/register/${firstID}`)
+  return { writes: () => writes }
+}
+
+test('participant team detail and cancelled review return focus to their actual initiating actions', async ({ page }) => {
+  await existingParticipantTeam(page)
+  const source = page.getByRole('button', { name: 'View Synthetic attendee team', exact: true })
+  await source.focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Back to roster', exact: true }).click()
+  await expect(source).toBeFocused()
+  const create = page.getByRole('button', { name: 'Create draft team', exact: true })
+  await create.click(); await page.getByLabel('Team name', { exact: true }).fill('Synthetic unsent team')
+  const review = page.getByRole('button', { name: 'Review draft team', exact: true })
+  await review.focus(); await page.keyboard.press('Enter')
+  await page.getByRole('button', { name: 'Cancel change', exact: true }).click()
+  await expect(review).toBeFocused()
+  await expect(page.getByLabel('Team name', { exact: true })).toHaveValue('Synthetic unsent team')
+})
+
+test('participant typed join draft requires deliberate route discard and never sends a command', async ({ page }) => {
+  const state = await existingParticipantTeam(page)
+  await page.getByRole('button', { name: 'Request to join', exact: true }).click()
+  await page.getByLabel('Captain’s invitation code').fill(invitation)
+  const dialogs: string[] = []
+  page.once('dialog', dialog => { dialogs.push(dialog.message()); void dialog.dismiss() })
+  await page.getByRole('link', { name: '← Find events', exact: true }).click()
+  expect(dialogs).toHaveLength(1)
+  await expect(page).toHaveURL(new RegExp(`/register/${firstID}$`))
+  await expect(page.getByLabel('Captain’s invitation code')).toHaveValue(invitation)
+  page.once('dialog', dialog => void dialog.accept())
+  await page.getByRole('link', { name: '← Find events', exact: true }).click()
+  await expect(page).toHaveURL(/\/register$/)
+  expect(state.writes()).toBe(0)
+})

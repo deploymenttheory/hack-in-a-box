@@ -105,3 +105,17 @@ that original intent. Read-only back navigation does not release the write barri
 `coverage-detail.tsx` uses a real local Back button and focuses its heading; the owner
 restores the initiating record/action focus when it closes. The interactive guide's
 roster example imports these production components with synthetic in-memory state.
+
+
+Roster adapters bind privileged editor and reviewed snapshots to the owning API's
+current `can_manage` projection, independently of the parent event query. A lost
+capability replaces that local lifetime immediately; child resolution tickets and
+parent projection generations fence held continuations and late private responses.
+
+Capture the real initiating control through `useCoverageFocus`: stable record/action
+keys restore the rendered counterpart after viewport changes; a unique native action
+name identifies a heading action. The root is a named focus fallback when the original
+action no longer exists. Keep nested editors mounted hidden/inert during correction
+review, or lift their drafts. Report actual nested inputs and review separately from
+pending/unknown commands; `useCoverageDraftGuard` confirms deliberate local/route
+discard without unlocking an uncertain write. A rejected discard retains exact input.

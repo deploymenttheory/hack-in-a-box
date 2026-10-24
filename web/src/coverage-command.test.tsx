@@ -7,7 +7,7 @@ import { useCoveragePage } from './coverage-command'
 
 vi.mock('./session', () => ({ useIdentity: () => ({ person: { id: 'coverage-person' }, draft_scope: 'current-session' }) }))
 
-function setup(write: (input: unknown, revision: number) => Promise<{ revision: number }>) {
+function setup(write: (input: unknown, revision: number) => Promise<{ revision: number; can_manage?: boolean }>) {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const load = vi.fn().mockResolvedValue({ revision: 7 })
   function Wrapper({ children }: { children: ReactNode }) { return <QueryClientProvider client={cache}>{children}</QueryClientProvider> }
@@ -58,4 +58,23 @@ test('a late response after session end cannot refill the current roster or anno
   await act(async () => { finish({ revision: 8 }); await pending })
   expect(result.current.query.data?.revision).toBe(7)
   expect(result.current.command.kind).not.toBe('saved')
+})
+
+
+test('a fresh restricted projection fences old command closures and late privileged responses', async () => {
+  let finish!: (value: { revision: number; can_manage: boolean }) => void
+  const write = vi.fn(() => new Promise<{ revision: number; can_manage: boolean }>(resolve => { finish = resolve }))
+  const { result, load } = setup(write)
+  await waitFor(() => expect(result.current.state.kind).toBe('ready'))
+  load.mockResolvedValue({ revision: 7, can_manage: true })
+  await act(async () => { await result.current.read() })
+  const originalAct = result.current.act
+  let pending!: Promise<boolean>
+  act(() => { pending = originalAct({ action: 'publish' }, 7, true) })
+  load.mockResolvedValue({ revision: 7, can_manage: false })
+  await act(async () => { await result.current.read() })
+  await act(async () => { finish({ revision: 8, can_manage: true }); await pending; await originalAct({ action: 'publish' }, 7, true) })
+  expect(result.current.query.data).toMatchObject({ revision: 7, can_manage: false })
+  expect(result.current.command.kind).toBe('unknown')
+  expect(write).toHaveBeenCalledOnce()
 })

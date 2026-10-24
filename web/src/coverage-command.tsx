@@ -8,6 +8,8 @@ import { Alert } from './components/ui/surfaces'
 import { Button } from './components/ui/button'
 import type { CollectionState } from './components/patterns/model'
 
+function managementProjection(page: { revision: number } | undefined) { return page && 'can_manage' in page && typeof page.can_manage === 'boolean' ? page.can_manage : undefined }
+
 // These APIs return current pages, not durable per-command receipts. A lost
 // response stays uncertain even when a subsequent read shows the desired state.
 export function useCoveragePage<T extends { revision: number }>(eventID: string, resource: string, load: (signal: AbortSignal) => Promise<T>, write: (input: unknown, revision: number) => Promise<T>) {
@@ -17,13 +19,15 @@ export function useCoveragePage<T extends { revision: number }>(eventID: string,
   const history = usePlanningUnknownCommands(scopeKey)
   const [command, setCommand] = useState<{ kind: 'idle' | 'pending' | 'saved' | 'rejected' | 'stale' | 'unknown' | 'denied'; message?: string; intent?: string; currentRevision?: number }>({ kind: 'idle' })
   const lock = useRef(false), terminal = useRef(false)
+  const projection = useRef<{ value: boolean | undefined; epoch: number }>({ value: undefined, epoch: 0 })
+  const [projectionEpoch, setProjectionEpoch] = useState(0)
   const remembered = history.unconfirmed ? history.attempts.at(-1) : undefined
   const capsule = remembered?.command
   const retainedIntent = capsule && typeof capsule === 'object' && 'intentID' in capsule && typeof capsule.intentID === 'string' ? capsule.intentID : 'retained local intent'
   const visibleCommand = command.kind === 'idle' && remembered ? { kind: 'unknown' as const, intent: retainedIntent, message: 'An earlier change in this event session remains unconfirmed. Read the current roster to compare; the original change cannot be replayed.' } : command
   usePlanningDepartureBarrier(command.kind === 'pending')
   const key = useMemo(() => privateKey(identity.person.id, eventID, resource), [identity.person.id, eventID, resource])
-  const query = useQuery({ queryKey: key, retry: false, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 30_000, queryFn: async ({ signal }) => { const ticket = scope.capture(); const result = await load(signal); ticket.assert(); return result } })
+  const query = useQuery({ queryKey: key, retry: false, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 30_000, queryFn: async ({ signal }) => { const ticket = scope.capture(); const result = await load(signal); ticket.assert(); const capability = managementProjection(result); if (projection.current.value !== capability) { projection.current = { value: capability, epoch: projection.current.epoch + 1 }; setProjectionEpoch(projection.current.epoch) }; return result } })
   const denied = query.error instanceof APIError && [401, 403, 404].includes(query.error.status)
   useLayoutEffect(() => { if (denied) scope.invalidate() }, [denied, scope])
   async function read() {
@@ -37,21 +41,29 @@ export function useCoveragePage<T extends { revision: number }>(eventID: string,
   async function act(input: unknown, revision: number, allowed: boolean) {
     if (lock.current || terminal.current || history.unconfirmed || !allowed || denied || query.error || command.kind === 'unknown' || command.kind === 'denied') return false
     const ticket = scope.capture()
-    if (!ticket.current()) return false
+    if (!ticket.current() || projectionEpoch !== projection.current.epoch || managementProjection(query.data) !== projection.current.value) return false
     if (query.data?.revision !== revision) { setCommand({ kind: 'stale', message: 'The roster changed. Review the current changes again before publishing.' }); return false }
     lock.current = true
-    const intent = crypto.randomUUID()
+    const intent = crypto.randomUUID(), permissionEpoch = projection.current.epoch
+    const acceptCurrentPermission = () => {
+      if (permissionEpoch === projection.current.epoch) return true
+      terminal.current = true
+      history.record({ operation: `${resource} change`, revision, command: { intentID: intent } })
+      setCommand({ kind: 'unknown', intent, message: 'Current access changed while the request was in flight. Its original outcome remains unconfirmed. The earlier private response was discarded and this change will not be replayed.' })
+      return false
+    }
     setCommand({ kind: 'pending', intent, message: 'Sending the reviewed change…' })
     try {
       const updated = await write(input, revision)
       ticket.assert()
+      if (!acceptCurrentPermission()) return false
       if (updated.revision !== revision + 1) throw new Error('Unverified response')
       cache.setQueryData(key, updated)
       setCommand({ kind: 'saved', message: `Server response received at roster revision ${updated.revision}. Review the current roster before another change.` })
       void cache.invalidateQueries({ queryKey: ['private', identity.person.id, eventID] })
       return true
     } catch (error) {
-      if (!ticket.current()) return false
+      if (!ticket.current() || !acceptCurrentPermission()) return false
       if (error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408) {
         const revoked = [401, 403, 404].includes(error.status)
         const message = error.code === 'teams_unready' ? 'Publication rejected: resolve teams below three, select a draft-member captain and respect hard capacity. Existing published assignments were not changed. Freeze also requires every confirmed competitor to be assigned.' : error.message
