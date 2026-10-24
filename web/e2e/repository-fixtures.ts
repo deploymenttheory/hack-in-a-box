@@ -1,3 +1,4 @@
+import { repositoryIntentFingerprint } from '../src/repository-fingerprint'
 import { expect, type Page } from '@playwright/test'
 import { firstID, fixtureEvent, mockWorkspace, person } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -11,15 +12,15 @@ export async function repositoryFixture(page: Page, regular = false) {
   const app: S['GitHubAppStatus'] = { revision: 1, configured: true, installation_id: 45678, webhook_configured: true, configuration: { app_id: 42, app_slug: 'synthetic-app', organization_id: 99, organization: 'synthetic-org', template_repository: 'synthetic-template' }, diagnostics: { code: 'healthy', checks: [{ operation: 'manage_repository_invitations', required: ['administration:write'], allowed: true }], checked_at: '2026-10-24T12:00:00Z' } }
   const access: S['RepositoryAccessView'] = { revision: 1, team_id: repositoryTeam, plan: null, grants: [], execution: [], can_manage: !regular, grants_open: true, flags: [{ code: 'verified_account_required', person_id: repositoryMember, github_id: null }], observed_at: null }
   const own: S['OwnRepositoryInvitations'] = { team_id: repositoryTeam, repository_id: 123456, current_github_id: 98765, link_revision: 2, grants: [{ id: '88888888-8888-4888-8888-888888888888', member, app_managed: true, effect_uncertain: false, state: 'pending', invitation_id: 91234, diagnostic: 'awaiting_acceptance', observed_at: '2026-10-24T12:00:00Z' }], observed_at: '2026-10-24T12:00:00Z', diagnostic: '' }
-  const state = { event, rows, app, access, own, denyAccess: false, holdAccess: undefined as Promise<void> | undefined, accessReads: 0, ownReads: 0, mode: 'normal' as 'normal' | 'lost-before' | 'lost-after', writes: [] as { path: string; body: Record<string, unknown>; revision: string }[], receipts: new Map<string, { actor_id: string; plan: S['RepositoryAccessPlan'] }>() }
+  const state = { event, rows, app, access, own, denyCollection: false, collectionError: false, appError: false, accessError: false, ownDenied: false, exposeAllRows: false, holdOwn: undefined as Promise<void> | undefined, holdWrites: undefined as Promise<void> | undefined, denyAccess: false, holdAccess: undefined as Promise<void> | undefined, accessReads: 0, ownReads: 0, mode: 'normal' as 'normal' | 'lost-before' | 'lost-after', writes: [] as { path: string; body: Record<string, unknown>; revision: string }[], denyReceipts: false, hideReceipts: false, corruptReceipt: false, receipts: new Map<string, { command_fingerprint: string; actor_id: string; plan: S['RepositoryAccessPlan'] }>() }
   const sync = () => { app.revision = event.revision; access.revision = event.revision }
   await page.route(`**/api/v1/events/${firstID}`, route => { sync(); return route.fulfill({ json: event }) })
   await page.route(`**/api/v1/events/${firstID}/teams`, route => route.fulfill({ json: { revision: event.revision, can_manage: !regular, can_create: false, frozen: true, freeze_at: '2026-10-01T12:00:00Z', teams: rows.map((row, i) => ({ id: row.team_id, name: ['Synthetic team', 'Uncertain team', 'Disbanded team'][i], state: row.unused ? 'disbanded' : 'published', captain: person.id, published_captain: person.id, invitation_code: null, frozen: true, draft: [], published: [{ id: person.id, name: person.display_name }] })), people: [], requests: [] } }))
   await page.route(`**/api/v1/events/${firstID}/github-app**`, async route => {
     const path = new URL(route.request().url()).pathname
-    if (route.request().method() === 'GET') { sync(); return route.fulfill({ json: app }) }
+    if (route.request().method() === 'GET') { sync(); if (state.appError) return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Synthetic provider status failure', request_id: 'synthetic' } } }); return route.fulfill({ json: app }) }
     const body = route.request().postDataJSON() ?? {}
-    state.writes.push({ path, body, revision: route.request().headers()['if-match'] })
+    state.writes.push({ path, body, revision: route.request().headers()['if-match'] }); if (state.holdWrites) await state.holdWrites
     expect(route.request().headers()['x-csrf-token']).toBeTruthy()
     if (state.mode === 'lost-before') return route.abort('failed')
     if (body.action === 'configure') { app.configuration = { app_id: body.app_id, app_slug: body.app_slug, organization_id: body.organization_id, organization: body.organization, template_repository: body.template_repository }; app.configured = true; app.installation_id = 0 }
@@ -34,10 +35,10 @@ export async function repositoryFixture(page: Page, regular = false) {
     const error = (status: number) => route.fulfill({ status, json: { error: { code: 'forbidden', message: 'Synthetic current denial', request_id: 'synthetic' } } })
     sync()
     if (request.method() === 'GET') {
-      if (path.includes('/receipts/')) { const id = path.split('/').at(-1)!, action = url.searchParams.get('action')!, receipt = state.receipts.get(`${action}:${id}`); return route.fulfill({ json: { action, actor_id: receipt?.actor_id ?? null, plan: receipt?.plan ?? null } }) }
-      if (path.endsWith('/access')) { state.accessReads++; if (state.holdAccess) await state.holdAccess; if (state.denyAccess) return error(403); return route.fulfill({ json: access }) }
-      if (path.endsWith('/invitations')) { state.ownReads++; return route.fulfill({ json: own }) }
-      return route.fulfill({ json: regular ? rows.slice(0, 1) : rows })
+      if (path.includes('/receipts/')) { const id = path.split('/').at(-1)!, action = url.searchParams.get('action')!, receipt = state.hideReceipts ? undefined : state.receipts.get(`${action}:${id}`); if (state.denyReceipts) return error(403); return route.fulfill({ json: { action, actor_id: receipt?.actor_id ?? null, plan: receipt?.plan ?? null, command_fingerprint: receipt ? state.corruptReceipt ? '0'.repeat(64) : receipt.command_fingerprint : null } }) }
+      if (path.endsWith('/access')) { state.accessReads++; if (state.holdAccess) await state.holdAccess; if (state.denyAccess) return error(403); if (state.accessError) return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Synthetic access status failure', request_id: 'synthetic' } } }); return route.fulfill({ json: path.includes(uncertainTeam) ? { ...access, team_id: uncertainTeam, plan: null, grants: [], execution: [], flags: [] } : access }) }
+      if (path.endsWith('/invitations')) { state.ownReads++; if (state.holdOwn) await state.holdOwn; if (state.ownDenied) return error(403); return route.fulfill({ json: own }) }
+      if (state.denyCollection) return error(403); if (state.collectionError) return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Synthetic collection read failure', request_id: 'synthetic' } } }); return route.fulfill({ json: regular && !state.exposeAllRows ? rows.slice(0, 1) : rows })
     }
     const body = request.postDataJSON(); state.writes.push({ path, body, revision: request.headers()['if-match'] })
     expect(request.headers()['x-csrf-token']).toBeTruthy()
@@ -53,7 +54,7 @@ export async function repositoryFixture(page: Page, regular = false) {
       access.plan = receipt
     }
     if (body.action === 'approve') { expect(body.plan_id).toBe(access.plan?.id); expect(body.plan_version).toBe(access.plan?.version); receipt = { ...access.plan!, approval_reason: body.reason, approved_at: '2026-10-24T12:01:00Z', approved_by: person.id }; access.plan = receipt; access.execution = receipt.actions.map(action => ({ action_id: action.id, state: 'planned', diagnostic: '', attempted: false, updated_at: '2026-10-24T12:01:00Z' })) }
-    if (receipt && body.action !== 'refresh') state.receipts.set(`${body.action}:${receipt.id}`, { actor_id: person.id, plan: structuredClone(receipt) })
+    if (receipt && body.action !== 'refresh') state.receipts.set(`${body.action}:${receipt.id}`, { actor_id: person.id, plan: structuredClone(receipt), command_fingerprint: await repositoryIntentFingerprint({ action: body.action, actorID: person.id, eventID: firstID, teamID: repositoryTeam, repositoryID: receipt.repository_id, planID: receipt.id, version: receipt.version, reason: body.action === 'review' ? receipt.reason : receipt.approval_reason }) })
     event.revision++; sync(); if (state.mode === 'lost-after') return route.abort('failed'); return route.fulfill({ json: { receipt, current: access } })
   })
   return state

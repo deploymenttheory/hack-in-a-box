@@ -19,3 +19,29 @@ test('current repository collection opens an exact team inspector with independe
   await inspector.getByRole('link', { name: 'Back to repositories', exact: true }).click(); await expect(opener).toBeFocused()
   expect(state.writes).toHaveLength(0); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width)
 })
+
+
+test('regular repository view shows only the current own identity and distinguishes pending from accepted or ambiguous invitations', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'regular', 'Owning regular-portal policy')
+  const state = await repositoryFixture(page, true); state.exposeAllRows = true; state.event.can_read_staff = true; state.event.can_edit = true
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Repositories'); await expect(page.getByRole('button', { name: 'Inspect repository', exact: true })).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Open App setup', exact: true })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review published-team provisioning', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Inspect repository', exact: true }).click(); const own = page.getByRole('heading', { name: 'Your repository invitation', exact: true }).locator('..'); await expect(own).toContainText('pending'); await expect(own).toContainText('A pending invitation is not accepted access'); expect(state.accessReads).toBe(0)
+  state.own.grants[0].state = 'accepted'; await own.getByRole('button', { name: 'Refresh your current invitation status', exact: true }).click(); await expect(own.getByText('accepted', { exact: true })).toBeVisible()
+  state.own.grants[0].state = 'ambiguous'; state.own.grants[0].effect_uncertain = true; await own.getByRole('button', { name: 'Refresh your current invitation status', exact: true }).click(); await expect(own).toContainText('Provider effect unknown'); await expect(own.getByText('ambiguous', { exact: true })).toBeVisible(); expect(state.writes).toHaveLength(0)
+})
+
+test('regular parent denial and partial restoration require fresh own authority before any old invitation can return', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'regular', 'Owning regular-portal policy')
+  const state = await repositoryFixture(page, true); await page.goto(`/events/${firstID}`); await openEventSection(page, 'Repositories'); await page.getByRole('button', { name: 'Inspect repository', exact: true }).click(); await expect(page.getByText('Invitation 91234', { exact: false })).toBeVisible()
+  state.ownDenied = true; await page.getByRole('button', { name: 'Refresh current status', exact: true }).click(); await expect(page.getByRole('button', { name: 'Check current repository access', exact: true })).toBeVisible(); await expect(page.getByText('Invitation 91234', { exact: false })).toHaveCount(0)
+  let release!: () => void; state.holdOwn = new Promise<void>(resolve => { release = resolve }); state.ownDenied = false; state.own.grants = []
+  await page.getByRole('button', { name: 'Check current repository access', exact: true }).click(); await expect(page.getByRole('button', { name: 'Inspect repository', exact: true })).toHaveCount(0); await expect(page.getByText('Invitation 91234', { exact: false })).toHaveCount(0)
+  release(); await page.getByRole('button', { name: 'Inspect repository', exact: true }).click(); await expect(page.getByText('No current invitation is recorded.', { exact: false })).toBeVisible(); await expect(page.getByText('Invitation 91234', { exact: false })).toHaveCount(0); expect(state.writes).toHaveLength(0)
+})
+
+test('regular missing verified identity links to account verification without pretending access or allowing provisioning', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'regular', 'Owning regular-portal policy')
+  const state = await repositoryFixture(page, true); state.own.current_github_id = null; state.own.grants = []; state.own.diagnostic = 'verified_account_required'
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Repositories'); await page.getByRole('button', { name: 'Inspect repository', exact: true }).click(); await expect(page.getByText('No verified GitHub identity linked', { exact: false })).toBeVisible(); await expect(page.getByRole('link', { name: 'Verify your own GitHub account', exact: true })).toHaveAttribute('href', '/account'); await expect(page.getByRole('button', { name: /approval|provisioning|reconciliation/ })).toHaveCount(0); expect(state.writes).toHaveLength(0)
+})

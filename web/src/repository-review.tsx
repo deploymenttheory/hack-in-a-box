@@ -6,7 +6,7 @@ type S = components['schemas']
 export function RepositoryActionReview({ title, children, pending, disabled, confirmLabel, confirm, correct }: { title: string; children: ReactNode; pending: boolean; disabled?: boolean; confirmLabel: string; confirm: () => void; correct: () => void }) {
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => { heading.current?.focus() }, [])
-  // Native autofocus is not supported on headings. Callback-ref focuses only
+  // Native autofocus is not supported on headings. The effect focuses only
   // this review opening; it neither queues a request nor reads private data.
   return <section className="fleet-review-flow" aria-label={title}><h4 tabIndex={-1} ref={heading}>{title}</h4>{children}<div className="fleet-pattern-actions"><Button icon="back" variant="outline" disabled={pending || disabled} onClick={correct}>Correct details</Button><Button icon="check" pending={pending} disabled={disabled} onClick={confirm}>{confirmLabel}</Button></div></section>
 }

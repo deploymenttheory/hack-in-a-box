@@ -469,3 +469,19 @@ test('MC production review captures source, restores keyboard focus and never tr
  await section.getByRole('button',{name:'Simulate changed room revision',exact:true}).click()
  await expect(section.getByRole('button',{name:'Confirm display pairing',exact:true})).toBeDisabled()
 })
+
+test('repository production review preserves exact actions and actual correction focus while current reads cannot settle an unknown original', async ({ page }) => {
+  const applicationRequests: string[] = []
+  page.on('request', request => { if (/\/api\/|\/auth\//.test(new URL(request.url()).pathname)) applicationRequests.push(request.url()) })
+  await page.goto('/patterns.html')
+  const example = page.getByRole('region', { name: 'Repository access workflow example', exact: true })
+  const opener = example.getByRole('button', { name: 'Review synthetic repository access', exact: true })
+  await example.getByLabel('Synthetic repository approval reason', { exact: true }).fill('Synthetic keyboard review')
+  await opener.focus(); await page.keyboard.press('Enter'); await expect(example.getByRole('heading', { name: 'Review synthetic repository access', exact: true })).toBeFocused()
+  await expect(example.getByRole('region', { name: 'Exact repository access plan', exact: true })).toContainText('Verified GitHub ID 98765')
+  await example.getByRole('button', { name: 'Correct details', exact: true }).click(); await expect(opener).toBeFocused(); await expect(example.getByLabel('Synthetic repository approval reason', { exact: true })).toHaveValue('Synthetic keyboard review')
+  await opener.click(); await example.getByRole('button', { name: 'Confirm synthetic access approval', exact: true }).click(); await example.getByRole('button', { name: 'Simulate lost original acknowledgement', exact: true }).click(); await example.getByRole('button', { name: 'Read synthetic current repository facts', exact: true }).click()
+  await expect(example.getByRole('button', { name: 'Confirm synthetic access approval', exact: true })).toBeDisabled(); await expect(example.getByRole('status')).toContainText('Original approval outcome unknown')
+  await example.getByRole('button', { name: 'Supply synthetic exact original receipt', exact: true }).click(); await expect(example.getByRole('status')).toContainText('Access work is queued; provider acceptance and invitation acceptance are separate')
+  expect(applicationRequests).toEqual([])
+})

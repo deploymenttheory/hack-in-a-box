@@ -1,6 +1,6 @@
 import { webcrypto } from 'node:crypto'
 import { afterEach, expect, test, vi } from 'vitest'
-import vectors from '../../api/repository-access-fingerprint-vectors.json'
+import vectors from './repository-access-fingerprint-vectors.json'
 import { repositoryIntentFingerprint, repositoryReason, type RepositoryIntentIdentity } from './repository-fingerprint'
 afterEach(() => vi.unstubAllGlobals())
 test('native and browser command fingerprints share UTF-8 length-framed golden identity for Unicode and literal markup', async () => {

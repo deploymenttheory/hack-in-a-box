@@ -9,7 +9,7 @@ import (
 )
 
 func TestRepositoryCommandFingerprintBrowserParity(t *testing.T) {
-	encoded, err := os.ReadFile("../../api/repository-access-fingerprint-vectors.json")
+	encoded, err := os.ReadFile("../../web/src/repository-access-fingerprint-vectors.json")
 	if err != nil {
 		t.Fatal(err)
 	}

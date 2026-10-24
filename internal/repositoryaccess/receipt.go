@@ -31,7 +31,11 @@ type Receipt struct {
 
 // ReadReceipt is a current-authorised, actor-bound lookup only. It does not call
 // the provider, derive a plan, audit a write, enqueue work or advance revisions.
-func (s Service) ReadReceipt(ctx context.Context, actor, eventID, teamID, planID uuid.UUID, action string) (Receipt, error) {
+func (s Service) ReadReceipt(
+	ctx context.Context,
+	actor, eventID, teamID, planID uuid.UUID,
+	action string,
+) (Receipt, error) {
 	out := Receipt{Action: action}
 	if planID == uuid.Nil || (action != "review" && action != "approve") {
 		return out, access.ErrInvalid
@@ -52,7 +56,8 @@ func (s Service) ReadReceipt(ctx context.Context, actor, eventID, teamID, planID
 		var approvedBy *uuid.UUID
 		var approvedAt *time.Time
 		var approvalReason string
-		err = tx.QueryRow(ctx, `SELECT definition,created_by,approved_by,approved_at,approval_reason FROM repository_access_plans WHERE id=$1 AND event_id=$2 AND team_id=$3`, planID, eventID, teamID).Scan(&encoded, &createdBy, &approvedBy, &approvedAt, &approvalReason)
+		err = tx.QueryRow(ctx, `SELECT definition,created_by,approved_by,approved_at,approval_reason FROM repository_access_plans WHERE id=$1 AND event_id=$2 AND team_id=$3`, planID, eventID, teamID).
+			Scan(&encoded, &createdBy, &approvedBy, &approvedAt, &approvalReason)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
@@ -74,7 +79,8 @@ func (s Service) ReadReceipt(ctx context.Context, actor, eventID, teamID, planID
 		if err = json.Unmarshal(encoded, &retained); err != nil {
 			return fmt.Errorf("decode original repository access receipt: %w", err)
 		}
-		if retained.ID != planID || retained.EventID != eventID || retained.TeamID != teamID || retained.RepositoryID != current.GithubRepositoryID.Int64 {
+		if retained.ID != planID || retained.EventID != eventID || retained.TeamID != teamID ||
+			retained.RepositoryID != current.GithubRepositoryID.Int64 {
 			return access.ErrConflict
 		}
 		// A review receipt is the immutable original definition, not a later approval.
@@ -103,7 +109,16 @@ func commandFingerprint(action string, actor uuid.UUID, plan Plan) string {
 	if action == "approve" {
 		version, reason = plan.Version, plan.ApprovalReason
 	}
-	fields := []string{action, actor.String(), plan.EventID.String(), plan.TeamID.String(), strconv.FormatInt(plan.RepositoryID, 10), plan.ID.String(), strconv.FormatInt(version, 10), strings.TrimSpace(reason)}
+	fields := []string{
+		action,
+		actor.String(),
+		plan.EventID.String(),
+		plan.TeamID.String(),
+		strconv.FormatInt(plan.RepositoryID, 10),
+		plan.ID.String(),
+		strconv.FormatInt(version, 10),
+		strings.TrimSpace(reason),
+	}
 	var canonical strings.Builder
 	canonical.WriteString("hackbox:repository-access-command:v1\n")
 	for _, field := range fields {
