@@ -1,9 +1,39 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { APIError } from './api/client'
 import { useAdmissionCommand } from './registration-command'
+import { PlanningOperations, planningDepartureAllowed } from './planning-operations'
 vi.mock('@tanstack/react-router', () => ({ useBlocker: vi.fn() }))
 const intent = { label: 'Accept offer', resource: 'registration-1', revision: 7 }
+
+test('event history restores unknown intent after remount and denial destroys the retained capsule', async () => {
+  const user = userEvent.setup(), write = vi.fn().mockRejectedValue(new APIError(503, 'unavailable'))
+  function Owner() {
+    const command = useAdmissionCommand('person:event:form')
+    return <><p>{JSON.stringify(command.outcome)}</p><button onClick={() => void command.run(intent, write, () => 'Saved')}>Write</button><button onClick={() => void command.readCurrent(async () => { throw new APIError(403, 'forbidden') })}>Denied read</button></>
+  }
+  function Workspace() { const [open, setOpen] = useState(true); return <PlanningOperations><button onClick={() => setOpen(value => !value)}>Toggle owner</button>{open && <Owner />}</PlanningOperations> }
+  render(<Workspace />)
+  await user.click(screen.getByRole('button', { name: 'Write' })); await user.click(screen.getByRole('button', { name: 'Toggle owner' })); await user.click(screen.getByRole('button', { name: 'Toggle owner' }))
+  expect(screen.getByText(JSON.stringify({ kind: 'uncertain', intent }))).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Write' })); expect(write).toHaveBeenCalledOnce()
+  expect(screen.getByLabelText('Unconfirmed command history')).toHaveTextContent('Expected revision 7')
+  await user.click(screen.getByRole('button', { name: 'Denied read' })); await user.click(screen.getByRole('button', { name: 'Toggle owner' })); await user.click(screen.getByRole('button', { name: 'Toggle owner' }))
+  expect(screen.queryByLabelText('Unconfirmed command history')).not.toBeInTheDocument()
+  expect(screen.getByText(JSON.stringify({ kind: 'idle' }))).toBeVisible()
+})
+
+test('a pending admission command rejects local planning departure until the response settles', async () => {
+  let finish!: () => void
+  const { result } = renderHook(() => useAdmissionCommand('pending:departure'))
+  let running!: Promise<boolean>
+  act(() => { running = result.current.run(intent, () => new Promise<void>(resolve => { finish = resolve }), () => 'Saved') })
+  expect(planningDepartureAllowed()).toBe(false)
+  await act(async () => { finish(); await running })
+  expect(planningDepartureAllowed()).toBe(true)
+})
 
 test('unknown admission write retains original intent and read-only reconciliation never settles or replays it', async () => {
   const write = vi.fn().mockRejectedValue(new APIError(503, 'unavailable')), confirmed = vi.fn(() => 'Confirmed'), read = vi.fn().mockResolvedValue({ revision: 8, state: 'confirmed' })

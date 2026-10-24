@@ -4,14 +4,19 @@ import { fixtureRegistration } from './registration-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 
 test('unknown form command survives local section replacement without replay or publication', async ({ page }) => {
-  await mockWorkspace(page); let writes = 0, reads = 0
+  await mockWorkspace(page); let writes = 0, reads = 0, release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
   const form = { revision: 1, version: 1, published_version: null, definition: { id: '00000000-0000-4000-8000-000000000003', name: 'Recovery draft', audience: 'attendee', fields: [] } }
-  await page.route(`**/events/${firstID}/registration/forms**`, route => {
-    if (route.request().method() === 'PUT') { writes++; expect(route.request().headers()['if-match']).toBe('"1"'); expect(route.request().headers()['x-csrf-token']).toBeTruthy(); expect(route.request().postDataJSON().name).toBe('Original unknown definition'); return route.fulfill({ status: 503, json: { error: { code: 'unavailable' } } }) }
+  await page.route(`**/events/${firstID}/registration/forms**`, async route => {
+    if (route.request().method() === 'PUT') { writes++; expect(route.request().headers()['if-match']).toBe('"1"'); expect(route.request().headers()['x-csrf-token']).toBeTruthy(); expect(route.request().postDataJSON().name).toBe('Original unknown definition'); await gate; return route.fulfill({ status: 503, json: { error: { code: 'unavailable' } } }) }
     reads++; return route.fulfill({ json: { items: [{ ...form, revision: reads > 1 ? 2 : 1 }] } })
   })
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Forms'); await page.getByRole('button', { name: 'Recovery draft · Draft' }).click()
   await page.getByLabel('Form name', { exact: true }).fill('Original unknown definition'); await page.getByRole('button', { name: 'Save form draft' }).click()
+  await expect.poll(() => writes).toBe(1)
+  await openEventSection(page, 'Overview'); await expect(page.getByLabel('Form name', { exact: true })).toHaveValue('Original unknown definition')
+  await page.getByRole('link', { name: '← Switch event', exact: true }).click(); await expect(page).toHaveURL(new RegExp('/events/' + firstID + '$'))
+  release()
   await expect(page.getByRole('heading', { name: 'Outcome unknown' })).toBeVisible()
   page.on('dialog', dialog => void dialog.accept()); await openEventSection(page, 'Overview'); await openEventSection(page, 'Forms')
   await page.getByRole('button', { name: 'Recovery draft · Draft' }).click()
@@ -20,6 +25,10 @@ test('unknown form command survives local section replacement without replay or 
   await page.getByRole('button', { name: 'Check current status' }).click()
   await expect(page.getByRole('button', { name: 'Save form draft' })).toBeDisabled(); await expect(page.getByRole('button', { name: /Publish form version/ })).toBeDisabled()
   expect(writes).toBe(1); expect(reads).toBeGreaterThan(1)
+  if (process.env.REGISTRATION_RECOVERY_CAPTURE && test.info().project.name === 'desktop') await page.screenshot({ path: '../docs/verification/registration-recovery/unknown-form-history.png', fullPage: true })
+  await page.evaluate(() => window.dispatchEvent(new Event('session-expired')))
+  await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toHaveCount(0); await expect(page.getByLabel('Form name', { exact: true })).toHaveCount(0)
+  expect(await page.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage))).not.toContain('Original unknown definition')
 })
 
 test('pending and unknown policy commands retain their barrier across section changes', async ({ page }) => {
@@ -45,6 +54,7 @@ test('long applicant names wrap without overflowing the actual tablet collection
   await page.route(`**/events/${firstID}/registrations/**`, route => route.fulfill({ json: new URL(route.request().url()).pathname.endsWith('/offer-policy') ? { revision: 1, automated: false, working_days: 2 } : { items: [{ registration, display_name: name }], next_cursor: null } }))
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Applicants'); await expect(page.getByRole('button', { name: 'Review ' + name })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024)
+  if (process.env.REGISTRATION_RECOVERY_CAPTURE && test.info().project.name === 'desktop') await page.screenshot({ path: '../docs/verification/registration-recovery/long-name-tablet.png', fullPage: true })
 })
 
 test('applicant canvas breakpoint moves keyboard focus to visible detail and back to its source', async ({ page }) => {
