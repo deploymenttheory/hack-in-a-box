@@ -37,6 +37,7 @@ test('keyboard opens safe preview and recipient read state toggles without arbit
   expect(state.requests).toEqual([{ read: true }])
   await page.getByRole('button', { name: 'Mark unread', exact: true }).click()
   expect(state.requests).toEqual([{ read: true }, { read: false }])
+  await page.screenshot({ path: testInfo.outputPath('inbox-detail.png'), fullPage: true })
   await page.getByRole('button', { name: 'Back to inbox', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Open Released event resource' })).toBeFocused()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
