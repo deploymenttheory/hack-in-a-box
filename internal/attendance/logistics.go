@@ -13,6 +13,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 )
 
 func (s Service) Logistics(
@@ -21,13 +22,42 @@ func (s Service) Logistics(
 	limit int32,
 	export bool,
 ) (OperationalPage, error) {
+	var result OperationalPage
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		result, err = s.LogisticsInTransaction(ctx, tx, actor, eventID, cursor, limit, export)
+		return err
+	})
+	if err != nil {
+		return result, fmt.Errorf("read logistics transaction: %w", err)
+	}
+	return result, nil
+}
+
+// LogisticsInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) LogisticsInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, cursor uuid.UUID,
+	limit int32,
+	export bool,
+) (OperationalPage, error) {
 	result := OperationalPage{Items: []OperationalEntry{}}
 	if limit < 1 || limit > 100 {
 		return result, access.ErrInvalid
 	}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
-		if _, err := lock(ctx, q, actor, eventID, access.ProfileExport); err != nil {
+	q := dbgen.New(tx)
+	err := func() error {
+		row, err := lock(ctx, q, actor, eventID, access.ProfileExport)
+		if err != nil {
 			return err
+		}
+		state, err := privacy.OperationalFieldsStateInTransaction(ctx, tx, row, s.now())
+		if err != nil {
+			return fmt.Errorf("check current logistics retention: %w", err)
+		}
+		if state != "available" {
+			return access.ErrNotFound
 		}
 		roster, err := q.AttendanceRoster(
 			ctx,
@@ -107,7 +137,7 @@ func (s Service) Logistics(
 			}
 		}
 		return nil
-	})
+	}()
 	if err != nil {
 		return result, fmt.Errorf("read logistics roster: %w", err)
 	}

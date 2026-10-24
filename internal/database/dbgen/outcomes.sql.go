@@ -218,6 +218,33 @@ func (q *Queries) OutcomeAnyOrganiser(ctx context.Context, personID uuid.UUID) (
 	return allowed, err
 }
 
+const outcomeArchiveReportingFacts = `-- name: OutcomeArchiveReportingFacts :one
+SELECT
+ (SELECT count(*) FROM outcome_heads h WHERE h.event_id=$1::uuid AND h.status='in_progress' AND outcome_readable(h.id,$2::uuid,$3::timestamptz)) AS continued_projects,
+ (SELECT count(*) FROM outcome_evidence e JOIN outcome_heads h ON h.id=e.outcome_id
+ WHERE h.event_id=$1::uuid AND outcome_readable(h.id,$2::uuid,$3::timestamptz)
+ AND e.document->>'basis'='demonstrated_adoption' AND e.document->>'observed_at' IS NOT NULL
+ AND length(trim(COALESCE(e.document->>'source','')))>0) AS dated_adoption_observations
+`
+
+type OutcomeArchiveReportingFactsParams struct {
+	EventID uuid.UUID
+	ActorID uuid.UUID
+	AtTime  time.Time
+}
+
+type OutcomeArchiveReportingFactsRow struct {
+	ContinuedProjects         int64
+	DatedAdoptionObservations int64
+}
+
+func (q *Queries) OutcomeArchiveReportingFacts(ctx context.Context, arg OutcomeArchiveReportingFactsParams) (OutcomeArchiveReportingFactsRow, error) {
+	row := q.db.QueryRow(ctx, outcomeArchiveReportingFacts, arg.EventID, arg.ActorID, arg.AtTime)
+	var i OutcomeArchiveReportingFactsRow
+	err := row.Scan(&i.ContinuedProjects, &i.DatedAdoptionObservations)
+	return i, err
+}
+
 const outcomeCommand = `-- name: OutcomeCommand :one
 SELECT outcome_id, version, command_id, actor_id, expected_version, command, document, created_at FROM outcome_versions WHERE outcome_id=$1 AND command_id=$2
 `
@@ -448,7 +475,7 @@ func (q *Queries) OutcomeHistory(ctx context.Context, arg OutcomeHistoryParams) 
 }
 
 const outcomeObservationsPage = `-- name: OutcomeObservationsPage :many
-SELECT oe.outcome_id, oe.id, oe.outcome_version, oe.actor_id, oe.document, oe.created_at FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
+SELECT oe.outcome_id, oe.id, oe.outcome_version, oe.actor_id, oe.document, oe.created_at,oh.status AS current_follow_up_status FROM outcome_evidence oe JOIN outcome_heads oh ON oh.id=oe.outcome_id
 WHERE oh.event_id=$1::uuid
 AND outcome_readable(oh.id,$2::uuid,$3::timestamptz)
 AND (oe.outcome_id,oe.id)>($4::uuid,$5::uuid)
@@ -464,7 +491,17 @@ type OutcomeObservationsPageParams struct {
 	PageSize        int32
 }
 
-func (q *Queries) OutcomeObservationsPage(ctx context.Context, arg OutcomeObservationsPageParams) ([]OutcomeEvidence, error) {
+type OutcomeObservationsPageRow struct {
+	OutcomeID             uuid.UUID
+	ID                    uuid.UUID
+	OutcomeVersion        int64
+	ActorID               uuid.UUID
+	Document              []byte
+	CreatedAt             time.Time
+	CurrentFollowUpStatus string
+}
+
+func (q *Queries) OutcomeObservationsPage(ctx context.Context, arg OutcomeObservationsPageParams) ([]OutcomeObservationsPageRow, error) {
 	rows, err := q.db.Query(ctx, outcomeObservationsPage,
 		arg.EventID,
 		arg.ActorID,
@@ -477,9 +514,9 @@ func (q *Queries) OutcomeObservationsPage(ctx context.Context, arg OutcomeObserv
 		return nil, err
 	}
 	defer rows.Close()
-	items := []OutcomeEvidence{}
+	items := []OutcomeObservationsPageRow{}
 	for rows.Next() {
-		var i OutcomeEvidence
+		var i OutcomeObservationsPageRow
 		if err := rows.Scan(
 			&i.OutcomeID,
 			&i.ID,
@@ -487,6 +524,7 @@ func (q *Queries) OutcomeObservationsPage(ctx context.Context, arg OutcomeObserv
 			&i.ActorID,
 			&i.Document,
 			&i.CreatedAt,
+			&i.CurrentFollowUpStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -609,6 +647,60 @@ func (q *Queries) OutcomeProjectVersion(ctx context.Context, arg OutcomeProjectV
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const outcomePublishedEventProjectsPage = `-- name: OutcomePublishedEventProjectsPage :many
+SELECT pv.outcome_id, pv.version, pv.source_version, pv.command_id, pv.actor_id, pv.expected_version, pv.command, pv.document, pv.state, pv.published_fields, pv.created_at FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
+WHERE oh.event_id=$1::uuid AND ph.outcome_id>$2
+AND outcome_project_readable(ph.outcome_id,$3::uuid,$4::timestamptz)
+ORDER BY ph.outcome_id LIMIT $5
+`
+
+type OutcomePublishedEventProjectsPageParams struct {
+	EventID  uuid.UUID
+	AfterID  uuid.UUID
+	ActorID  uuid.UUID
+	AtTime   time.Time
+	PageSize int32
+}
+
+func (q *Queries) OutcomePublishedEventProjectsPage(ctx context.Context, arg OutcomePublishedEventProjectsPageParams) ([]OutcomeProjectVersion, error) {
+	rows, err := q.db.Query(ctx, outcomePublishedEventProjectsPage,
+		arg.EventID,
+		arg.AfterID,
+		arg.ActorID,
+		arg.AtTime,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OutcomeProjectVersion{}
+	for rows.Next() {
+		var i OutcomeProjectVersion
+		if err := rows.Scan(
+			&i.OutcomeID,
+			&i.Version,
+			&i.SourceVersion,
+			&i.CommandID,
+			&i.ActorID,
+			&i.ExpectedVersion,
+			&i.Command,
+			&i.Document,
+			&i.State,
+			&i.PublishedFields,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const outcomePublishedProject = `-- name: OutcomePublishedProject :one

@@ -14,6 +14,87 @@ info:
 security:
   - session: []
 paths:
+  /api/v1/archives:
+    get:
+      operationId: listArchivedEvents
+      description: Current-authority archived event metadata. Restricted summaries are absent rather than inferred empty.
+      parameters:
+        - { name: after, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: One cursor page of currently visible archived events.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchivePage' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/archives/reports:
+    get:
+      operationId: listArchiveReports
+      description: Per-event native metrics for current organisers only. Counts retain separate cohorts and imply no global or unique cross-event population.
+      parameters:
+        - { name: after, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Authorised archived event report page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchiveReportPage' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/archive:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    get:
+      operationId: getEventArchive
+      responses:
+        '200':
+          description: Current-authority read-only event archive.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventArchive' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/archive/summary.csv:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+    get:
+      operationId: exportArchiveSummary
+      description: Deliberate audited current-organiser no-store CSV; all cells are formula-neutralised and no person or credential fields are included.
+      responses:
+        '200':
+          description: Native participation metrics with explicit units, sources and denominators.
+          headers:
+            Content-Disposition: { schema: { type: string } }
+          content:
+            text/csv: { schema: { type: string } }
+        default: { $ref: '#/components/responses/Error' }
+  /api/v1/events/{event_id}/archive/exports/{source}:
+    parameters:
+      - { $ref: '#/components/parameters/EventID' }
+      - name: source
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [roster, deliverables, assessments, published-outcomes, feedback, objective-evidence]
+    get:
+      operationId: exportArchiveSource
+      description: Audited no-store JSON page through the source owner's current role, authorship, field, retention and publication policy. Archive access alone grants no private assessment, logistics or survey response access. Deliverables require an explicit audience; missing formal outcomes are unavailable, never invented. Nested pages retain their native exclusive cursor. Recorded assessment contexts return their complete bounded submitted set; after is invalid with context_id.
+      parameters:
+        - { name: context_id, in: query, description: Exact recorded moderation context for assessments; omitted means own independent cards only., schema: { type: string, format: uuid } }
+        - { name: resource_id, in: query, description: Team ID for deliverables or own assessments; survey ID for published feedback., schema: { type: string, format: uuid } }
+        - { name: after, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: audience, in: query, schema: { type: string, enum: [organiser, mentor, participant] } }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200':
+          description: Exactly one current-authorised native source projection. JSON is a data export and never a CSV/spreadsheet formula.
+          headers:
+            Content-Disposition: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchiveExport' }
+        default: { $ref: '#/components/responses/Error' }
   /healthz:
     get:
       operationId: getHealth
@@ -5755,6 +5836,90 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    ArchiveAssessmentPanel:
+      type: object
+      additionalProperties: false
+      required: [context, cards]
+      properties:
+        context: { $ref: '#/components/schemas/ModerationContext' }
+        cards: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/MentorScorecard' } }
+    ArchiveExport:
+      type: object
+      additionalProperties: false
+      required: [event_id, event_revision, source, source_state]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_revision: { type: integer, format: int64 }
+        source_state: { type: string, enum: [available, unavailable, retention_expired] }
+        source: { type: string, enum: [roster, deliverables, assessments, published-outcomes, feedback, objective-evidence] }
+        resource_id: { type: string, format: uuid }
+        roster: { $ref: '#/components/schemas/LogisticsPage' }
+        submission: { $ref: '#/components/schemas/SubmissionPage' }
+        assessment_panel: { $ref: '#/components/schemas/ArchiveAssessmentPanel' }
+        assessments: { $ref: '#/components/schemas/ScorecardPage' }
+        projects: { $ref: '#/components/schemas/OutcomeProjectPage' }
+        feedback: { $ref: '#/components/schemas/SurveyReport' }
+        observations: { $ref: '#/components/schemas/OutcomeObservationPage' }
+    ArchiveMetric:
+      type: object
+      additionalProperties: false
+      required: [key, value, unit, denominator, denominator_source, source, definition]
+      properties:
+        key: { type: string }
+        value: { type: integer, format: int64, minimum: 0 }
+        unit: { type: string }
+        denominator: { type: integer, format: int64, nullable: true, minimum: 0 }
+        denominator_source: { type: string }
+        source: { type: string }
+        definition: { type: string }
+    ArchiveSourceAvailability:
+      type: object
+      additionalProperties: false
+      required: [source, state, reason]
+      properties:
+        source: { type: string }
+        state: { type: string, enum: [available, incomplete, unavailable, restricted, retention_expired] }
+        reason: { type: string }
+    ArchiveSummary:
+      type: object
+      additionalProperties: false
+      required: [event_id, event_name, event_revision, observed_at, metrics, sources]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_name: { type: string }
+        event_revision: { type: integer, format: int64 }
+        observed_at: { type: string, format: date-time }
+        metrics: { type: array, items: { $ref: '#/components/schemas/ArchiveMetric' } }
+        sources: { type: array, items: { $ref: '#/components/schemas/ArchiveSourceAvailability' } }
+    EventArchive:
+      type: object
+      additionalProperties: false
+      required: [event_id, event_name, event_revision, completed_at, read_only, summary_state, summary]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_name: { type: string }
+        event_revision: { type: integer, format: int64 }
+        completed_at: { type: string, format: date-time, nullable: true }
+        read_only: { type: boolean }
+        summary_state: { type: string, enum: [available, restricted] }
+        summary:
+          allOf: [{ $ref: '#/components/schemas/ArchiveSummary' }]
+          nullable: true
+    ArchivePage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/EventArchive' } }
+        next_cursor: { type: string, format: uuid, nullable: true }
+    ArchiveReportPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor, cohort]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ArchiveSummary' } }
+        next_cursor: { type: string, format: uuid, nullable: true }
+        cohort: { type: string }
     FeedbackSource:
       {
         "type": "object",
@@ -14111,12 +14276,14 @@ components:
         "additionalProperties": false,
         "required": [
           "outcome_id",
+          "current_follow_up_status",
           "outcome_version",
           "evidence",
           "recorded_at",
           "measures"
         ],
         "properties": {
+          "current_follow_up_status": {"type":"string", "enum":["proposed","reviewing","accepted","in_progress","closed"]},
           "outcome_id": {
             "type": "string",
             "format": "uuid"
@@ -14140,9 +14307,11 @@ components:
               "additionalProperties": false,
               "required": [
                 "reference",
+                "objective_description",
                 "definition"
               ],
               "properties": {
+                "objective_description": {"type":"string"},
                 "reference": {
                   "$ref": "#/components/schemas/OutcomeMeasureReference"
                 },

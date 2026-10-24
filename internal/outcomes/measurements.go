@@ -18,15 +18,17 @@ import (
 
 type (
 	ObservationMeasure struct {
-		Reference  objectives.MeasureReference `json:"reference"`
-		Definition objectives.Measure          `json:"definition"`
+		ObjectiveDescription string                      `json:"objective_description"`
+		Reference            objectives.MeasureReference `json:"reference"`
+		Definition           objectives.Measure          `json:"definition"`
 	}
 	Observation struct {
-		OutcomeID      uuid.UUID            `json:"outcome_id"`
-		OutcomeVersion int64                `json:"outcome_version"`
-		Evidence       Evidence             `json:"evidence"`
-		RecordedAt     time.Time            `json:"recorded_at"`
-		Measures       []ObservationMeasure `json:"measures"`
+		CurrentFollowUpStatus string               `json:"current_follow_up_status"`
+		OutcomeID             uuid.UUID            `json:"outcome_id"`
+		OutcomeVersion        int64                `json:"outcome_version"`
+		Evidence              Evidence             `json:"evidence"`
+		RecordedAt            time.Time            `json:"recorded_at"`
+		Measures              []ObservationMeasure `json:"measures"`
 	}
 )
 
@@ -67,12 +69,33 @@ func (s Service) Observations(
 	cursor string,
 	limit int32,
 ) (ObservationPage, error) {
+	var out ObservationPage
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.ObservationsInTransaction(ctx, tx, actor, eventID, cursor, limit)
+		return err
+	})
+	if err != nil {
+		return out, wrap("read observations transaction", err)
+	}
+	return out, nil
+}
+
+// ObservationsInTransaction preserves this owner's current field and resource policy
+// while composing a read in the caller's event-locked transaction.
+func (s Service) ObservationsInTransaction(ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	cursor string,
+	limit int32,
+) (ObservationPage, error) {
 	out := ObservationPage{Items: []Observation{}}
 	a, b, err := observationCursor(cursor)
 	if err != nil || limit < 1 || limit > 100 {
 		return out, access.ErrInvalid
 	}
-	err = database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+	q := dbgen.New(tx)
+	err = func() error {
 		if err := (access.EventPolicy{Queries: q}).Authorize(
 			ctx,
 			actor,
@@ -109,13 +132,24 @@ func (s Service) Observations(
 				return access.ErrConflict
 			}
 			item := Observation{
-				OutcomeID:      row.OutcomeID,
-				OutcomeVersion: row.OutcomeVersion,
-				Evidence:       evidence,
-				RecordedAt:     row.CreatedAt,
-				Measures:       []ObservationMeasure{},
+				CurrentFollowUpStatus: row.CurrentFollowUpStatus,
+				OutcomeID:             row.OutcomeID,
+				OutcomeVersion:        row.OutcomeVersion,
+				Evidence:              evidence,
+				RecordedAt:            row.CreatedAt,
+				Measures:              []ObservationMeasure{},
 			}
 			for _, ref := range evidence.Measures {
+				objective, e := objectives.ResolveDefinitionInTransaction(
+					ctx,
+					tx,
+					actor,
+					eventID,
+					ref.Objective,
+				)
+				if e != nil {
+					return wrap("resolve exact objective definition", e)
+				}
 				definition, e := objectives.ResolveMeasureInTransaction(
 					ctx,
 					tx,
@@ -128,7 +162,11 @@ func (s Service) Observations(
 				}
 				item.Measures = append(
 					item.Measures,
-					ObservationMeasure{Reference: ref, Definition: definition},
+					ObservationMeasure{
+						ObjectiveDescription: objective.Description,
+						Reference:            ref,
+						Definition:           definition,
+					},
 				)
 			}
 			out.Items = append(out.Items, item)
@@ -141,6 +179,6 @@ func (s Service) Observations(
 			out.NextCursor = &value
 		}
 		return nil
-	})
+	}()
 	return out, wrap("outcome observations", err)
 }

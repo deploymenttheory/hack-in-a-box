@@ -38,7 +38,8 @@ func TestScorecardMigrationPreservesPopulated32AndGuardedRollback(t *testing.T) 
 			t.Fatal(err)
 		}
 	}
-	now := time.Now().UTC().Truncate(time.Second)
+	// This migration fixture tests retained data, not the host clock or a DST fold.
+	now := time.Date(2026, time.February, 2, 9, 0, 0, 0, time.UTC)
 	config := event.DefaultConfiguration()
 	config.LiveStart = now.Add(-time.Hour)
 	config.LiveEnd = now.Add(3 * time.Hour)

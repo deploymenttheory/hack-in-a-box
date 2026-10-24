@@ -15,6 +15,7 @@ import (
 type Action string
 
 const (
+	ArchiveExported               Action = "archive.exported"
 	RepositoryAccessChanged       Action = "repository.access_changed"
 	RepositoryProvisioningChanged Action = "repository.provisioning_changed"
 	SurveyResponsesExported       Action = "survey.responses_exported"
@@ -142,7 +143,8 @@ type Record struct {
 
 func Append(ctx context.Context, q *dbgen.Queries, r Record) error {
 	switch r.Action {
-	case RepositoryAccessChanged,
+	case ArchiveExported,
+		RepositoryAccessChanged,
 		RepositoryProvisioningChanged,
 		SurveyResponsesExported,
 		MediaChanged,

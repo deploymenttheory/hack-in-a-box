@@ -113,7 +113,31 @@ func project(row dbgen.OperationalProfileRow, roles []string, self bool) View {
 }
 
 func (s Service) Read(ctx context.Context, actor, event, person uuid.UUID) (View, error) {
-	q := dbgen.New(s.Pool)
+	var out View
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		out, err = s.readInTransaction(ctx, tx, actor, event, person)
+		return err
+	})
+	if err != nil {
+		return View{}, fmt.Errorf("read operational profile: %w", err)
+	}
+	return out, nil
+}
+
+func (s Service) readInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, event, person uuid.UUID,
+) (View, error) {
+	q := dbgen.New(tx)
+	rowEvent, err := q.LockEvent(ctx, event)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return View{}, access.ErrNotFound
+	}
+	if err != nil {
+		return View{}, fmt.Errorf("lock operational profile reader: %w", err)
+	}
 	if err := active(ctx, q, actor); err != nil {
 		return View{}, err
 	}
@@ -127,6 +151,13 @@ func (s Service) Read(ctx context.Context, actor, event, person uuid.UUID) (View
 		); err != nil {
 			return View{}, fmt.Errorf("authorize profile fields: %w", err)
 		}
+	}
+	state, err := OperationalFieldsStateInTransaction(ctx, tx, rowEvent, s.now())
+	if err != nil {
+		return View{}, err
+	}
+	if state != "available" {
+		return View{}, access.ErrNotFound
 	}
 	row, err := q.OperationalProfile(
 		ctx,
@@ -263,8 +294,9 @@ func (s Service) Export(
 		return nil, access.ErrInvalid
 	}
 	result := []View{}
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
-		if _, err := q.LockEvent(ctx, event); err != nil {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+		row, err := q.LockEvent(ctx, event)
+		if err != nil {
 			return fmt.Errorf("lock profile export: %w", err)
 		}
 		if err := (access.EventPolicy{Queries: q}).Authorize(
@@ -275,6 +307,13 @@ func (s Service) Export(
 			access.ProfileExport,
 		); err != nil {
 			return fmt.Errorf("authorize logistics export: %w", err)
+		}
+		state, err := OperationalFieldsStateInTransaction(ctx, tx, row, s.now())
+		if err != nil {
+			return err
+		}
+		if state != "available" {
+			return access.ErrNotFound
 		}
 		rows, err := q.ListOperationalProfiles(
 			ctx,

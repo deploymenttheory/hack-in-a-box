@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/archives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
@@ -152,6 +153,7 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Moderation:      communicationRuntime.Moderation,
 		Content:         content.Service{Pool: pool, Storage: storage},
 		Submissions:     submissions.Service{Pool: pool},
+		Archives:        archives.Service{Pool: pool},
 		Attendance:      attendance.Service{Pool: pool},
 		Preparation:     preparation.Service{Pool: pool},
 		Teams:           teams.Service{Pool: pool},
