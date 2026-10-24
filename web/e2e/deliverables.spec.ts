@@ -260,3 +260,31 @@ test('denied completion write clears private feedback and review without replay'
   await expect(page.getByText('SYNTHETIC-PRIVATE-REVIEW-CANARY', { exact: false })).toHaveCount(0)
   expect(state.writes).toHaveLength(0)
 })
+
+test('an unknown upload retries its exact captured payload but current denial clears the former team editor', async ({ page }) => {
+  const state = await setup(page)
+  await fillRepository(page)
+  await page.getByRole('button', { name: 'Edit evidence for Technical notes', exact: true }).click()
+  await page.getByLabel('Evidence type for Technical notes', { exact: true }).selectOption('file')
+  await page.getByLabel('File for Technical notes', { exact: true }).setInputFiles({ name: 'private-notes.txt', mimeType: 'text/plain', buffer: Buffer.from('SYNTHETIC-PRIVATE-UPLOAD-CANARY') })
+  state.failUpload()
+  await page.getByRole('button', { name: 'Upload Technical notes', exact: true }).click()
+  await expect(page.getByText('Upload outcome unknown', { exact: true })).toBeVisible()
+  expect(state.writes.filter(value => value.path.endsWith('/files'))).toHaveLength(1)
+  const original = state.writes.find(value => value.path.endsWith('/files'))!
+  let rejected = 0
+  await page.route(`**/events/${firstID}/files`, async route => {
+    rejected++
+    expect(route.request().postDataJSON()).toEqual(original.body)
+    expect(route.request().headers()['idempotency-key']).toBe(original.key)
+    expect(route.request().headers()['if-match']).toBe(original.revision)
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Upload Technical notes', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Team evidence editor' })).toHaveCount(0)
+  await expect(page.getByText('private-notes.txt', { exact: false })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Technical notes', exact: true })).toHaveCount(0)
+  expect(rejected).toBe(1)
+  expect(state.value.final).toBeNull()
+})

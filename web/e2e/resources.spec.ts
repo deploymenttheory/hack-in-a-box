@@ -44,11 +44,12 @@ async function setup(page: Page, judge = false) {
 
 test('reads safely, downloads protected attachments and explicitly acknowledges the displayed version', async ({ page }, info) => {
   const state = await setup(page)
+  await page.screenshot({ path: info.outputPath('resource-directory.png'), fullPage: true })
   await page.getByRole('button', { name: 'Read Getting started' }).click()
   await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toBeFocused()
   await expect(page.getByRole('link', { name: 'Useful link' })).toHaveAttribute('rel', 'noopener noreferrer')
   await expect(page.getByRole('link', { name: 'Danger' })).toHaveCount(0)
-  await expect(page.locator('.content-markdown script,.content-markdown iframe,.content-markdown img')).toHaveCount(0)
+  await expect(page.getByRole('article', { name: 'Released resource text' }).locator('script,iframe,img')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'guide.txt' })).toHaveAttribute('href', `/api/v1/events/${firstID}/files/${fileID}`)
   expect(state.acknowledgements).toHaveLength(0)
   await page.getByRole('button', { name: 'I have read version 1' }).click(); await page.getByRole('button', { name: 'Confirm acknowledgement' }).click()

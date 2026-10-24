@@ -33,12 +33,19 @@ function DeliverablesLifetime({ event, onDirty }: { event: EventRecord; onDirty:
   </section>
 }
 function TeamSubmission({ event, team, organiser, paused, onDirty }: { event: EventRecord; team: Team; organiser: boolean; paused: boolean; onDirty: (dirty: boolean) => void }) {
-  const identity = useIdentity(), [editorDirty, setEditorDirty] = useState(false), [reviewDirty, setReviewDirty] = useState(false), [editorDenied, setEditorDenied] = useState<unknown>(), [reviewDenied, setReviewDenied] = useState<unknown>()
+  const identity = useIdentity(), cache = useQueryClient(), [editorDirty, setEditorDirty] = useState(false), [reviewDirty, setReviewDirty] = useState(false), [editorDenied, setEditorDenied] = useState<unknown>(), [reviewDenied, setReviewDenied] = useState<unknown>()
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${team.id}:submission`)
   useEffect(() => { onDirty(editorDirty || reviewDirty); return () => onDirty(false) }, [editorDirty, reviewDirty, onDirty])
   const page = useQuery({ queryKey: privateKey(identity.person.id, event.id, `submission-${team.id}`), retry: false, queryFn: async ({ signal }) => { const ticket = scope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission', { signal, params: { path: { event_id: event.id, team_id: team.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always', refetchInterval: 15_000 })
   const draftScope = usePrivateRequestScope(`${scope.key}:draft:${page.data?.can_read_draft === true}`)
   const draft = useQuery({ queryKey: privateKey(identity.person.id, event.id, `submission-draft-${team.id}`), enabled: page.data?.can_read_draft === true, retry: false, queryFn: async () => { const ticket = draftScope.capture(); const value = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission/draft', { signal: ticket.signal, params: { path: { event_id: event.id, team_id: team.id } } })); ticket.assert(); return value }, refetchOnWindowFocus: 'always' })
+  const mayReadDraft = page.data?.can_read_draft
+  useEffect(() => {
+    if (mayReadDraft !== false && !resourceDenied(draft.error) && !editorDenied && !resourceDenied(page.error)) return
+    const key = privateKey(identity.person.id, event.id, `submission-draft-${team.id}`)
+    void cache.cancelQueries({ queryKey: key })
+    cache.removeQueries({ queryKey: key })
+  }, [mayReadDraft, draft.error, editorDenied, page.error, cache, identity.person.id, event.id, team.id])
   if (page.isPending) return <Loading />
   if (!page.data || resourceDenied(page.error)) return <Failure error={page.error} retry={() => void page.refetch()} />
   const value = page.data, captain = team.published.find(person => person.id === team.published_captain), editable = value.can_read_draft || value.can_submit

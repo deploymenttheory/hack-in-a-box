@@ -1,4 +1,6 @@
 @layer components {
+ .private-team-access .fleet-collection-table thead th { overflow-wrap: normal; }
+ .private-team-access .fleet-collection-table td:nth-child(2) { white-space: nowrap; }
  .fleet-resource-workspace { min-width: 0; }
  .fleet-resource-section { border-top: 1px solid var(--border); padding-block: var(--space-6); }
  .fleet-resource-prose { max-width: 56rem; line-height: var(--line-body); overflow-wrap: anywhere; }
@@ -8,6 +10,7 @@
  .fleet-resource-facts dt { color: var(--muted-foreground); font-size: var(--text-caption); }
  .fleet-resource-facts dd { margin: var(--space-1) 0 0; overflow-wrap: anywhere; }
  .fleet-resource-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+ .fleet-resource-comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-6); }
  .fleet-resource-editor-layout { display: grid; gap: var(--space-6); }
  .fleet-resource-authoring fieldset { border: 0; border-radius: 0; background: transparent; padding: var(--space-3) 0; min-width: 0; }
  .fleet-resource-authoring label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; }
