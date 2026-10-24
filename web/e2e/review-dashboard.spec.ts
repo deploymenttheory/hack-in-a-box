@@ -127,3 +127,19 @@ test('temporary parent coordination failure pauses the mounted private draft and
  state.readFailure=true;await page.getByRole('button',{name:'Recheck current panel authority'}).click();await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByLabel('Formal evidence note',{exact:true})).toBeHidden()
  state.readFailure=false;await page.getByRole('button',{name:'Try again',exact:true}).click();await expect(page.getByLabel('Formal evidence note',{exact:true})).toHaveValue('PRIVATE same-page correction');expect(state.writes).toHaveLength(0)
 })
+
+test('current capability loss on a later native agenda page clears the selected private owner without inferring absence from page one',async({page})=>{
+ const state=await fixture(page);state.agendaFirstEmpty=true;await page.clock.install();await page.goto(teamPath)
+ await expect(page.getByRole('button',{name:'Open intended-panel context'})).toHaveCount(0);await page.getByRole('button',{name:'More records',exact:true}).click();await page.getByRole('button',{name:'Open intended-panel context'}).click();await page.getByRole('button',{name:'Propose category change',exact:true}).click();await page.getByLabel('Formal evidence note',{exact:true}).fill('PRIVATE later-page draft')
+ state.item.can_record=false;state.item.can_manage=false;await page.clock.fastForward(16_000)
+ await expect(page.getByRole('heading',{name:'Intended-panel context',exact:true})).toHaveCount(0);await expect(page.locator('body')).not.toContainText('PRIVATE later-page draft');expect(state.writes).toHaveLength(0)
+})
+
+test('returning to a factual preview waits for current native authority instead of displaying its old cached projection',async({page})=>{
+ const state=await fixture(page);await page.goto(teamPath);await page.getByRole('link',{name:'Preview factual judge handoff'}).click();await expect(page.getByText('Frozen submission revision 7',{exact:false})).toBeVisible();await page.getByRole('link',{name:/Team review/}).click()
+ state.previewDenied=true;let release!:()=>void,started=false;const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route('**/judge-summary-preview',async route=>{started=true;await gate;await route.fallback()})
+ await page.getByRole('link',{name:'Preview factual judge handoff'}).click()
+ try{await expect(page.getByText('Frozen submission revision 7',{exact:false})).toHaveCount(0);await expect.poll(()=>started).toBe(true)}finally{release()}
+ await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByText('Frozen submission revision 7',{exact:false})).toHaveCount(0);expect(state.writes).toHaveLength(0)
+})

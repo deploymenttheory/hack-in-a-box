@@ -228,3 +228,57 @@ old mobile page mixed all panel controls in one long form; the new selected hudd
 has a focused canvas, explicit task navigation and independent evidence inspection.
 The final complete matching capture set, dependency/portal proof and independent
 reviews/full exact-head CI are still outstanding. This PR remains a draft.
+
+
+## Complete matching visual evidence
+
+All images below are actual deterministic native browser captures at the configured
+desktop and iPhone 13/Chromium viewports, with synthetic identities and source data.
+The before set is merged main e159ebf; the after set is this UI branch. No PNG was
+edited or composed. Existing source and privacy assertions run before each capture.
+
+| Current workflow | Before desktop / mobile | After desktop / mobile |
+| --- | --- | --- |
+| Mentor private observation / separate check-in | [Desktop](before/mentor-private-mobile-entry-desktop.png) · [Mobile](before/mentor-private-mobile-entry-mobile.png) | [Desktop](after/mentor-private-mobile-entry-desktop.png) · [Mobile](after/mentor-private-mobile-entry-mobile.png) |
+| Independent provisional scorecard | [Desktop](before/private-checkpoint-scorecard-desktop.png) · [Mobile](before/private-checkpoint-scorecard-mobile.png) | [Desktop](after/private-checkpoint-scorecard-desktop.png) · [Mobile](after/private-checkpoint-scorecard-mobile.png) |
+| Current team help and operational history | [Desktop](before/team-help-current-history-desktop.png) · [Mobile](before/team-help-current-history-mobile.png) | [Desktop](after/team-help-current-history-desktop.png) · [Mobile](after/team-help-current-history-mobile.png) |
+| Support and assessment coverage | [Desktop](before/support-and-completeness-desktop.png) · [Mobile](before/support-and-completeness-mobile.png) | [Desktop](after/support-and-completeness-desktop.png) · [Mobile](after/support-and-completeness-mobile.png) |
+| Intended private panel and exact evidence | [Desktop](before/private-panel-evidence-desktop.png) · [Mobile](before/private-panel-evidence-mobile.png) | [Desktop](after/private-panel-evidence-desktop.png) · [Mobile](after/private-panel-evidence-mobile.png) |
+
+Visual comparison against the accepted Fleet reference: old repeated boxed note,
+recovery, check-in, category and panel forms are replaced with flat source headings,
+shared controls and separator rows. Team comparison uses a real table/mobile list;
+selected work owns the narrow canvas. Named Lucide/text actions separate evidence
+inspection, gaps, proposals and formal decisions instead of exposing every edit at
+once. Existing exact evidence and pending/unobserved semantics remain visible.
+
+## Final local proof and precise limits
+
+The broad participant selection completes **234/234** desktop/mobile cases, covering
+all migrated native owners plus dependent help readers, mentor-support drilldown,
+team resources, inbox, participant guidance, connection recovery and portal shell.
+The final cursor audit found a selected huddle capability observation restricted to
+page one. The new real later-page test fails against the published pre-fix bundle
+on both widths, retaining a panel after current capability loss. Inspecting the
+matching record on every returned page fixes it without inferring absence from an
+incomplete page. Both production builds pass and the complete huddle/support suite
+then completes **34/34**, including both red-to-green counterproofs. Full ESLint and
+all **133 unit tests / 19 files** pass. The final independently Go-hosted guide
+completes **32/32**, with API/cookie/private-storage access forbidden in every case.
+
+The rebuilt expanded administrator/shared team-and-coverage selection completes
+**218/218** desktop/mobile cases, including shared roster/focus/planning consumers. The first
+pre-fix run passed198 cases with only the two intended later-page failures and18
+unrun after its failure limit. No pre-fix run is claimed as final proof. Independent
+Standards/Spec reviews and full exact-head GitHub CI remain mandatory before ready
+or merge; the parent delivery agent owns those steps. No backend transaction or real
+provider behaviour changed, so this migration adds no PostgreSQL/provider operation.
+
+
+A final factual-reader regression also reproduces a current-authority gap: returning
+through client routes while the15-second query cache is fresh can show the former
+organiser projection without starting a new native read. The dedicated factual
+query now requires a fresh mounted GET, gates presentation until that read completes,
+and removes its cache when unmounted. This does not change its factual allowlist or
+printability. Its direct red-to-green proof and all post-main integration checks are
+required after restacking onto newly merged resource main c91c52e.
