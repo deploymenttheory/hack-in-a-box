@@ -10,6 +10,9 @@ var (
 	errOrigin = errors.New(
 		"HACKBOX_PUBLIC_ORIGIN must be an HTTP origin (HTTPS in production), with no path, query, fragment or credentials",
 	)
+	errAdministrationOrigin = errors.New(
+		"HACKBOX_ADMIN_ORIGIN must be an HTTP origin (HTTPS in production), with no path, query, fragment or credentials",
+	)
 	errWorkspaceOrigin = errors.New(
 		"HACKBOX_WORKSPACE_ORIGIN must be an HTTP origin (HTTPS in production), with no path, query, fragment or credentials",
 	)
@@ -52,6 +55,9 @@ func validateEndpoints(cfg *Config) []error {
 	var problems []error
 	if !validOrigin(cfg.PublicOrigin, cfg.Environment) {
 		problems = append(problems, errOrigin)
+	}
+	if cfg.AdministrationOrigin != "" && !validOrigin(cfg.AdministrationOrigin, cfg.Environment) {
+		problems = append(problems, errAdministrationOrigin)
 	}
 	if !validOrigin(cfg.WorkspaceOrigin, cfg.Environment) {
 		problems = append(problems, errWorkspaceOrigin)

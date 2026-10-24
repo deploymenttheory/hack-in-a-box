@@ -2,9 +2,10 @@
 
 Issue #88 / LIV-04. Base `bc350d8c3145e8cb1787a840568a8f7b42cf349f`.
 This is the full currently implementable Today surface, still awaiting browser,
-HTTP/PG parity, visual and final review/CI verification. Judge assigned-work
-integration remains a real dependency on #108; an explicit unavailable state is
-not proof that judges have no assignments and does not close that acceptance.
+HTTP/PG parity, visual and final review/CI verification. Current judge assigned preparation and released-document acknowledgements use
+the existing owners and must be verified as that role’s available assigned work.
+Final scoring assignments remain owned by #108; an explicit unavailable state is
+not proof that judges have no assignments and does not claim a scoring journey.
 
 ## Read projection and owning facts
 
@@ -22,7 +23,7 @@ The frontend projects existing API observations:
 
 | Context | Existing owning facts and real destinations |
 | --- | --- |
-| Personal | Own registrations/offers; current team/freeze; assigned preparation; released document acknowledgements/rules/support; published-team submission metadata; credential metadata and own repository invitations; help and official clarifications. |
+| Personal | Own registrations/offers; current team/freeze; assigned preparation; paged required released-document acknowledgements/rules/support; published-team submission metadata; credential metadata and own repository invitations; help and official clarifications. |
 | Mentor | Published own coverage/window/slot; authorised paged review metadata; own role tasks; help and released guidance. |
 | Organiser | Native lifecycle blockers, preparation exceptions, private staff schedule review, content release readiness and authorised paged review exceptions. |
 | Judge | Current grant, own preparation/released guidance; final assignment/score domain unavailable pending #108. No fabricated zero/none assignments. |
@@ -79,3 +80,9 @@ adapter or recovery store.
 - Browser role/readiness/clock/privacy/navigation journeys, guide verification,
   matched before/after screenshots, full builds/checks and independent review/
   exact-head CI remain pending. There is no all-roles/whole-issue completion claim.
+
+### Independent administration destinations
+
+`HACKBOX_ADMIN_ORIGIN` is optional outside Compose. It is validated as an origin with no credentials, path, query or fragment and must use HTTPS in production. It does not replace `HACKBOX_WORKSPACE_ORIGIN` or confer a role. Compose supplies the existing independent admin origin to the public runtime as well. The authenticated Today read exposes only this trusted origin, so a participant-portal staff action can link to `/events/{event_id}?section={mounted_section}` in the separate administration portal without guessing a host or port. Each destination validates the requested section against its own current capability registry; forged/unavailable sections show the ordinary overview. Existing session/departure barriers remain active. Without configured origin, an unavailable admin action is labelled explicitly rather than silently opening the wrong workspace.
+
+Current checkpoint verification: native Today current-role/revocation/archive and existing published-display release/privacy/timer parity passed against disposable PostgreSQL. The actual HTTP current-role/no-store/unknown-event/received-unconfirmed denial proof passed; its initial fixture incorrectly used `offered` as a competition claim, which the native schema forbids. The corrected fixture uses `received`; no access assertion was relaxed. Optional administration-origin config and authenticated generated HTTP response proof passed. New read-lifetime and trusted-navigation units passed (4); focused lint and TypeScript passed. Newly authored native browser journeys remain pending execution, as do full guide, production builds and matched visual evidence. These checkpoint results do not claim full issue acceptance or final CI success.

@@ -7201,6 +7201,9 @@ components:
       additionalProperties: false
       required: [event, roles, participation_state, program]
       properties:
+        administration_origin:
+          type: string
+          description: Optional deployment-validated independent administration origin; no authority is conferred by navigation.
         event: {$ref: '#/components/schemas/Event'}
         roles:
           type: array

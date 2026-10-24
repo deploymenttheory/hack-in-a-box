@@ -20,5 +20,8 @@ func (h handlers) GetToday(
 	if err != nil {
 		return nil, fmt.Errorf("read Today context: %w", err)
 	}
+	if h.AdministrationOrigin != "" {
+		page.AdministrationOrigin = &h.AdministrationOrigin
+	}
 	return convertDTO[contract.GetToday200JSONResponse](page)
 }

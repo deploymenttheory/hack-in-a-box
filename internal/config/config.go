@@ -29,55 +29,57 @@ var (
 
 // Config is shared by the API and worker processes. HTTP fields apply to the API.
 type Config struct {
-	SMTP               maildelivery.Settings
-	CredentialKeys     *secretbox.Keyring
-	Surface            string
-	DatabaseURL        string
-	PublicOrigin       string
-	WorkspaceOrigin    string
-	GitHubClientID     string
-	GitHubClientSecret string
-	GitHubTokenKey     string
-	OIDCIssuer         string
-	OIDCClientID       string
-	OIDCClientSecret   string
-	BootstrapSubject   string
-	StoragePath        string
-	WebDir             string
-	MetricsToken       string
-	FileMaxBytes       int64
-	FileEventQuota     int64
-	Environment        string
-	LogLevel           slog.Level
-	HTTPAddr           string
-	MaxBodyBytes       int64
-	RequestTimeout     time.Duration
-	ShutdownTimeout    time.Duration
+	SMTP                 maildelivery.Settings
+	CredentialKeys       *secretbox.Keyring
+	Surface              string
+	DatabaseURL          string
+	PublicOrigin         string
+	WorkspaceOrigin      string
+	AdministrationOrigin string
+	GitHubClientID       string
+	GitHubClientSecret   string
+	GitHubTokenKey       string
+	OIDCIssuer           string
+	OIDCClientID         string
+	OIDCClientSecret     string
+	BootstrapSubject     string
+	StoragePath          string
+	WebDir               string
+	MetricsToken         string
+	FileMaxBytes         int64
+	FileEventQuota       int64
+	Environment          string
+	LogLevel             slog.Level
+	HTTPAddr             string
+	MaxBodyBytes         int64
+	RequestTimeout       time.Duration
+	ShutdownTimeout      time.Duration
 }
 
 // Load uses an injected environment lookup so configuration tests are isolated.
 func Load(getenv func(string) string) (Config, error) {
 	cfg := Config{
-		Surface:            valueOr(getenv("HACKBOX_SURFACE"), "public"),
-		DatabaseURL:        getenv("HACKBOX_DATABASE_URL"),
-		PublicOrigin:       valueOr(getenv("HACKBOX_PUBLIC_ORIGIN"), "http://127.0.0.1:8080"),
-		GitHubClientID:     getenv("HACKBOX_GITHUB_CLIENT_ID"),
-		GitHubClientSecret: getenv("HACKBOX_GITHUB_CLIENT_SECRET"),
-		GitHubTokenKey:     getenv("HACKBOX_GITHUB_TOKEN_KEY"),
-		OIDCIssuer:         getenv("HACKBOX_OIDC_ISSUER"),
-		OIDCClientID:       getenv("HACKBOX_OIDC_CLIENT_ID"),
-		OIDCClientSecret:   getenv("HACKBOX_OIDC_CLIENT_SECRET"),
-		BootstrapSubject:   getenv("HACKBOX_BOOTSTRAP_SUBJECT"),
-		StoragePath:        valueOr(getenv("HACKBOX_STORAGE_PATH"), "data/files"),
-		WebDir:             valueOr(getenv("HACKBOX_WEB_DIR"), "web/dist"),
-		MetricsToken:       getenv("HACKBOX_METRICS_TOKEN"),
-		FileMaxBytes:       8 << 20,
-		FileEventQuota:     1 << 30,
-		Environment:        getenv("HACKBOX_ENV"),
-		HTTPAddr:           valueOr(getenv("HACKBOX_HTTP_ADDR"), "127.0.0.1:8080"),
-		MaxBodyBytes:       16 << 20,
-		RequestTimeout:     10 * time.Second,
-		ShutdownTimeout:    20 * time.Second,
+		AdministrationOrigin: getenv("HACKBOX_ADMIN_ORIGIN"),
+		Surface:              valueOr(getenv("HACKBOX_SURFACE"), "public"),
+		DatabaseURL:          getenv("HACKBOX_DATABASE_URL"),
+		PublicOrigin:         valueOr(getenv("HACKBOX_PUBLIC_ORIGIN"), "http://127.0.0.1:8080"),
+		GitHubClientID:       getenv("HACKBOX_GITHUB_CLIENT_ID"),
+		GitHubClientSecret:   getenv("HACKBOX_GITHUB_CLIENT_SECRET"),
+		GitHubTokenKey:       getenv("HACKBOX_GITHUB_TOKEN_KEY"),
+		OIDCIssuer:           getenv("HACKBOX_OIDC_ISSUER"),
+		OIDCClientID:         getenv("HACKBOX_OIDC_CLIENT_ID"),
+		OIDCClientSecret:     getenv("HACKBOX_OIDC_CLIENT_SECRET"),
+		BootstrapSubject:     getenv("HACKBOX_BOOTSTRAP_SUBJECT"),
+		StoragePath:          valueOr(getenv("HACKBOX_STORAGE_PATH"), "data/files"),
+		WebDir:               valueOr(getenv("HACKBOX_WEB_DIR"), "web/dist"),
+		MetricsToken:         getenv("HACKBOX_METRICS_TOKEN"),
+		FileMaxBytes:         8 << 20,
+		FileEventQuota:       1 << 30,
+		Environment:          getenv("HACKBOX_ENV"),
+		HTTPAddr:             valueOr(getenv("HACKBOX_HTTP_ADDR"), "127.0.0.1:8080"),
+		MaxBodyBytes:         16 << 20,
+		RequestTimeout:       10 * time.Second,
+		ShutdownTimeout:      20 * time.Second,
 	}
 	cfg.WorkspaceOrigin = valueOr(getenv("HACKBOX_WORKSPACE_ORIGIN"), cfg.PublicOrigin)
 	keys, keyErr := secretbox.Parse(getenv("HACKBOX_CREDENTIAL_KEYRING"))

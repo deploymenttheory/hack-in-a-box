@@ -4118,6 +4118,8 @@ export interface components {
             message: string;
         };
         TodayPage: {
+            /** @description Optional deployment-validated independent administration origin; no authority is conferred by navigation. */
+            administration_origin?: string;
             event: components["schemas"]["Event"];
             /** @description Only the current actor's active event grants; switching UI context grants no authority. */
             roles: components["schemas"]["StaffRole"][];

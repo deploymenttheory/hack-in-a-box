@@ -28,6 +28,9 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	ctx := t.Context()
 	q := dbgen.New(pool)
 	cfg, err := config.Load(func(key string) string {
+		if key == "HACKBOX_ADMIN_ORIGIN" {
+			return "https://admin.example.test"
+		}
 		if key == "HACKBOX_ENV" {
 			return "test"
 		}
@@ -40,7 +43,16 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	owner, reader, offered := testdb.Person(t, pool), testdb.Person(t, pool), testdb.Person(t, pool)
+	owner, reader, unconfirmed := testdb.Person(
+		t,
+		pool,
+	), testdb.Person(
+		t,
+		pool,
+	), testdb.Person(
+		t,
+		pool,
+	)
 	id := testdb.Event(t, pool, owner.ID)
 	now := time.Date(2027, 6, 20, 10, 0, 0, 0, time.UTC)
 	if err = q.SetMembership(
@@ -57,7 +69,7 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	}
 	if err = q.SetCompetitionState(
 		ctx,
-		dbgen.SetCompetitionStateParams{EventID: id, PersonID: offered.ID, State: "offered"},
+		dbgen.SetCompetitionStateParams{EventID: id, PersonID: unconfirmed.ID, State: "received"},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +126,9 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	) ||
 		page.Event.CanEdit ||
 		page.Event.CanReadStaff ||
-		!page.Program.ServerNow.Equal(now) {
+		!page.Program.ServerNow.Equal(
+			now,
+		) || page.AdministrationOrigin == nil || *page.AdministrationOrigin != "https://admin.example.test" {
 		t.Fatalf("context request escalated current roles: %+v", page)
 	}
 	for _, key := range []string{`"draft":`, `"pairings":`, `"token":`, `"can_control":`} {
@@ -125,7 +139,7 @@ func TestTodayHTTPCurrentReaderRolesNoStoreAndNoContextEscalation(t *testing.T) 
 	if w = request(nil, id, ""); w.Code != http.StatusUnauthorized {
 		t.Fatalf("unauthenticated Today: %d", w.Code)
 	}
-	if w = request(&offered, id, ""); w.Code != http.StatusForbidden {
+	if w = request(&unconfirmed, id, ""); w.Code != http.StatusForbidden {
 		t.Fatalf("offer must not grant event-reader access: %d", w.Code)
 	}
 	if w = request(&reader, uuid.New(), ""); w.Code != http.StatusNotFound {

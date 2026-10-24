@@ -4,7 +4,7 @@ import { usePrivateRequestScope, type PrivateRequestScope } from './private-requ
 
 // A mounted read lifetime only: no task store, query cache, private payload
 // persistence, inferred receipt or write replay. Definite denial stays latched.
-export function useTodayRead<T>(key: string, load: (signal: AbortSignal) => Promise<T>, parent?: PrivateRequestScope, identityOf?: (value: T) => string) {
+export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertCurrent: () => void) => Promise<T>, parent?: PrivateRequestScope, identityOf?: (value: T) => string) {
   const authority = usePrivateRequestScope(`${key}:authority`, parent)
   const scope = usePrivateRequestScope(`${key}:read`, authority)
   const life = useMemo(() => ({ scope, denied: false, ended: false, reading: false, attempt: 0, signature: undefined as string | undefined }), [scope])
@@ -16,7 +16,7 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal) => Prom
     scope.renew(); const ticket = scope.capture()
     setSnapshot(previous => ({ ...(previous.key === key ? previous : { key }), pending: true, denied: false, error: undefined }))
     try {
-      const data = await load(ticket.signal); ticket.assert()
+      ticket.assert(); const data = await load(ticket.signal, ticket.assert); ticket.assert()
       const signature = identityOf?.(data)
       // Fence old private child reads synchronously on an actual native role or
       // authority boundary, before React disposes/replaces those child owners.

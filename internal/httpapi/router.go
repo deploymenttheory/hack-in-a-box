@@ -22,6 +22,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, dependencies ...Dependenc
 	if len(dependencies) > 0 {
 		deps = dependencies[0]
 	}
+	deps.AdministrationOrigin = cfg.AdministrationOrigin
 	metrics := new(measurements)
 	router := chi.NewRouter()
 	router.Use(

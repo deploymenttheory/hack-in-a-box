@@ -18,10 +18,11 @@ import (
 )
 
 type Page struct {
-	Event              event.View           `json:"event"`
-	Roles              []string             `json:"roles"`
-	ParticipationState string               `json:"participation_state"`
-	Program            presentation.Program `json:"program"`
+	AdministrationOrigin *string              `json:"administration_origin,omitempty"`
+	Event                event.View           `json:"event"`
+	Roles                []string             `json:"roles"`
+	ParticipationState   string               `json:"participation_state"`
+	Program              presentation.Program `json:"program"`
 }
 
 type Service struct {
