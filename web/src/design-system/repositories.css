@@ -1,0 +1,7 @@
+.fleet-repositories { min-width: 0; }
+.fleet-repositories :is(th,td,dd,h2,h3) { overflow-wrap: anywhere; }
+.fleet-repository-section { border-block-start: 1px solid var(--border); padding-block: var(--space-6); }
+.fleet-repository-facts { display: grid; gap: var(--space-3); }
+.fleet-repository-facts > div { display: grid; gap: var(--space-2); }
+.fleet-repository-facts dd { margin: 0; }
+@media print { .fleet-repositories { display: none !important; } }
