@@ -20,6 +20,7 @@ export function usePlanningUnknownCommands(owner: string) {
   function update(change: (value: History[string]) => History[string]) { if (shared) shared.update(owner, change); else setLocal(change) }
   return { unconfirmed: value.requiresReview, attempts: value.attempts,
     record: (attempt: Attempt) => update(previous => ({ requiresReview: true, attempts: [...previous.attempts, structuredClone(attempt)] })),
+    redactCommands: (redact: (command: unknown) => unknown) => update(previous => ({ ...previous, attempts: previous.attempts.map(attempt => ({ ...attempt, command: redact(attempt.command) })) })),
     clear: () => update(() => ({ requiresReview: false, attempts: [] })),
     // A deliberate new base permits a different command; the old capsule stays.
     selectNewBase: () => update(previous => ({ ...previous, requiresReview: false })) }

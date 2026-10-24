@@ -37,6 +37,10 @@ focus. The owning adapter retains generated API calls, CSRF, revision checks,
 current authorization, payload/receipt matching and private data lifecycle. Use
 `PrivateRequestScope` or the existing owning-domain fence for asynchronous work.
 Frame keys do not authorize a request or clear state stored above that frame.
+When current roster capability is lost, redact privileged unknown-command payloads
+from event-lifetime history while retaining minimal intent metadata, original revision
+and the unresolved write barrier. An initial participant projection must not erase
+ordinary unknown join/create intent merely because it has no management capability.
 
 ## Capability examples
 
@@ -87,3 +91,35 @@ restore them. Owners retain dirty/uncertain navigation guards and return focus
 when their inspector closes. Set data-record-focus to the row key on the primary
 local action when it must preserve focus across a responsive breakpoint. The
 interactive guide includes the actual production composition and keyboard example.
+
+
+## Team and mentor planning
+
+Team/mentor collections use complete authorised projections. Search and counts apply
+only to that projection; published coverage never implies access to other teams or
+private assessments. Use a concise named detail beside the roster; allocation,
+placement, profile editing and publication reviews need the full canvas. Keep the
+reviewed revision, exact affected teams/slots/windows and recorded reason visible.
+
+`coverage-command.tsx` is the bounded adapter for the native team/coverage page-response
+APIs. Their responses contain no durable command receipt. Successful explicit responses
+are labelled server responses; an interrupted/timeout/5xx write retains its local
+diagnostic intent and permits current-state reads only. A later revision cannot settle
+that original intent. Read-only back navigation does not release the write barrier.
+`coverage-detail.tsx` uses a real local Back button and focuses its heading; the owner
+restores the initiating record/action focus when it closes. The interactive guide's
+roster example imports these production components with synthetic in-memory state.
+
+
+Roster adapters bind privileged editor and reviewed snapshots to the owning API's
+current `can_manage` projection, independently of the parent event query. A lost
+capability replaces that local lifetime immediately; child resolution tickets and
+parent projection generations fence held continuations and late private responses.
+
+Capture the real initiating control through `useCoverageFocus`: stable record/action
+keys restore the rendered counterpart after viewport changes; a unique native action
+name identifies a heading action. The root is a named focus fallback when the original
+action no longer exists. Keep nested editors mounted hidden/inert during correction
+review, or lift their drafts. Report actual nested inputs and review separately from
+pending/unknown commands; `useCoverageDraftGuard` confirms deliberate local/route
+discard without unlocking an uncertain write. A rejected discard retains exact input.

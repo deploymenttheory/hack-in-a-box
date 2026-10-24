@@ -28,7 +28,9 @@ test('withdrawal invalidates mentor publication while frozen competitors stay in
   await page.getByLabel('Team receiving coverage').selectOption(teamIDs[0])
   await page.getByLabel('Mentor for this slot').selectOption(mentorIDs[2])
   await page.getByRole('button', { name: 'Preview mentor change', exact: true }).click()
-  await page.getByRole('button', { name: 'Save mentor draft change', exact: true }).click()
+  await page.getByRole('button', { name: 'Review mentor draft change', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm mentor change', exact: true }).click()
+  await page.getByLabel('Coverage view').selectOption('published')
   await page.getByRole('button', { name: 'Review mentor publication', exact: true }).click()
 
   // Another participant withdraws after this organiser reviewed the roster.
@@ -40,7 +42,8 @@ test('withdrawal invalidates mentor publication while frozen competitors stay in
   state.stale = true
   await page.getByRole('button', { name: 'Publish mentor coverage', exact: true }).click()
   await expect(page.getByText('The roster changed. Review the current mentor publication again.')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Publish mentor coverage', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Publish mentor coverage', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Cancel mentor publication', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Published mentor roster' })).toContainText('Morgan Design')
   expect(state.commands.filter(c => c.action === 'publish')).toHaveLength(1)
   await page.getByRole('button', { name: 'Review mentor publication', exact: true }).click()
@@ -49,7 +52,10 @@ test('withdrawal invalidates mentor publication while frozen competitors stay in
   await expect(page.getByRole('region', { name: 'Published mentor roster' })).not.toContainText('Morgan Design')
 
   await openEventSection(page, 'Teams')
+  await page.getByRole('button', { name: 'View North Stars', exact: true }).click()
   await expect(page.getByText('This depleted team may continue. Reassignment is unavailable.')).toBeVisible()
+  await page.getByRole('button', { name: 'Back to roster', exact: true }).click()
+  await page.getByRole('button', { name: /Placement pool/ }).click()
   await expect(page.getByRole('button', { name: 'Assign draft member', exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Review publication and freeze', exact: true })).toHaveCount(0)
   expect(competitorWrites).toEqual([])
