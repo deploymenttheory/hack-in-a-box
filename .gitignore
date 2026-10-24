@@ -76,3 +76,5 @@ web/node_modules
 web/test-results-planning-public/
 web/test-results-planning-full-*/
 web/test-results-registration-evidence/
+
+web/test-results-resources-*/

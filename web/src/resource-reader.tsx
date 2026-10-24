@@ -27,7 +27,7 @@ function ReleasedDocument({ event, id, page, paused, onDeny, back, read }: { eve
   const identity = useIdentity(), cache = useQueryClient(), heading = useRef<HTMLDivElement>(null), opener = useRef<HTMLButtonElement>(null)
   const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`, onDeny)
   const [review, setReview] = useState<{ version: number; title: string }>()
-  useEffect(() => { heading.current?.focus() }, [id, page.version])
+  useEffect(() => { const target = heading.current?.querySelector('h1'); if (target) { target.tabIndex = -1; target.focus() } }, [id, page.version])
   async function acknowledge() {
     if (!review || paused) return
     const intent = review

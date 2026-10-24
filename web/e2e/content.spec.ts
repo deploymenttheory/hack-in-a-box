@@ -1,3 +1,4 @@
+import { uploadedFile } from './file-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
@@ -26,7 +27,7 @@ async function setup(page: Page) {
     if (path.endsWith('/files') && r.method() === 'POST') {
       const body = r.postDataJSON(); writes.push({ method: r.method(), path, body, revision: r.headers()['if-match'] })
       files.push({ id: fileID, filename: body.filename, media_type: body.media_type, size: 14, can_download: true })
-      return route.fulfill({ status: 201, json: { id: fileID, filename: body.filename, media_type: body.media_type, size: 14, checksum: 'synthetic' } })
+      return route.fulfill({ status: 201, json: uploadedFile(fileID, body) })
     }
     if (path.endsWith(`/files/${fileID}`)) return route.fulfill({ contentType: 'text/plain', body: 'Synthetic attachment' })
     if (!path.includes('/content')) return route.fallback()

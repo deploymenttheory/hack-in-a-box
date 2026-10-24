@@ -1,3 +1,4 @@
+import { uploadedFile } from './file-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
@@ -39,7 +40,7 @@ export async function setup(page: Page, { live = true, organiser = false, frozen
       const body = r.postDataJSON(), key = r.headers()['idempotency-key']; writes.push({ path, body, revision: r.headers()['if-match'], key })
       if (!files.has(key)) { files.set(key, fileID); event.revision++ }
       if (failUpload) { failUpload = false; return fail(503, 'unavailable') }
-      return route.fulfill({ status: 201, json: { id: files.get(key), filename: body.filename, media_type: body.media_type, size: 23, checksum: 'synthetic' } })
+      return route.fulfill({ status: 201, json: uploadedFile(files.get(key)!, body) })
     }
     if (!path.includes('/submission')) return route.fallback()
     if (denied) return fail(403, 'forbidden')

@@ -17,7 +17,7 @@ test('deliberately reveals and copies available team resources without persistin
   expect(state.reveals).toEqual([])
   await expect(page.getByLabel('Value hidden')).toHaveCount(2)
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (value: string) => { (window as unknown as { copiedValue: string }).copiedValue = value } } }))
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Copy Team account', exact: true }).click()
   await expect(page.getByRole('status')).toHaveText('Value copied to your clipboard.')
@@ -32,7 +32,7 @@ test('deliberately reveals and copies available team resources without persistin
 test('reports clipboard failure without claiming a successful copy', async ({ page }) => {
   const { secret } = await accessFixture(page)
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new DOMException('Synthetic denied permission', 'NotAllowedError') } } }))
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await page.getByRole('button', { name: 'Copy Team account', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Copy failed.')
   await expect(page.getByText('Value copied to your clipboard.', { exact: true })).toHaveCount(0)
@@ -42,9 +42,9 @@ test('reports clipboard failure without claiming a successful copy', async ({ pa
 test('timeout and changing the displayed resource remove old plaintext', async ({ page }) => {
   await page.clock.install({ time: new Date('2027-06-14T09:00:00Z') })
   const { secret, secondResource } = await accessFixture(page)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Reveal Room access code', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Room access code', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
   await expect(page.getByText(secret(secondResource), { exact: true })).toBeVisible()
   await page.clock.runFor(30_100)
@@ -55,12 +55,12 @@ test('timeout and changing the displayed resource remove old plaintext', async (
 test('current membership, assignment and version refreshes clear displayed values', async ({ page }) => {
   await page.clock.install({ time: new Date('2027-06-14T09:00:00Z') })
   const { state, secret } = await accessFixture(page)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   const oldValue = secret()
   state.items[0].version++; state.revision++
   await page.clock.runFor(5_100)
   await expect(page.getByText(oldValue, { exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toBeVisible()
   state.assigned = false
   await page.clock.runFor(5_100)
@@ -73,7 +73,7 @@ test('current membership, assignment and version refreshes clear displayed value
 
 test('session expiry and rejected reveal cannot retain plaintext', async ({ page }) => {
   const { state, secret } = await accessFixture(page)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toBeVisible()
   state.status = 401
   await page.getByRole('button', { name: 'Copy Team account', exact: true }).click()
@@ -85,7 +85,7 @@ test('session expiry and rejected reveal cannot retain plaintext', async ({ page
 test('navigation aborts an outstanding reveal and ignores its late response', async ({ page }) => {
   const { state, secret, firstResource } = await accessFixture(page)
   state.hold = true
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect.poll(() => !!state.delayed).toBe(true)
   await openEventSection(page, 'Overview')
   await state.delayed!.fulfill({ json: { id: firstResource, version: 1, value: secret() } }).catch(() => undefined)
@@ -97,7 +97,7 @@ test('navigation aborts an outstanding reveal and ignores its late response', as
 
 test('printing and hiding the tab remove private values without export or room controls', async ({ page }) => {
   const { secret } = await accessFixture(page)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(secret(), { exact: true })).toBeVisible()
   await page.emulateMedia({ media: 'print' })
   await expect(page.locator('.private-team-access')).toBeHidden()
@@ -105,7 +105,7 @@ test('printing and hiding the tab remove private values without export or room c
   await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')))
   await page.emulateMedia({ media: 'screen' })
   await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await page.evaluate(() => window.dispatchEvent(new Event('blur')))
   await expect(page.getByText(secret(), { exact: true })).toHaveCount(0)
   await expect(page.locator('.private-team-access').getByRole('link')).toHaveCount(0)
@@ -114,14 +114,14 @@ test('printing and hiding the tab remove private values without export or room c
 
 test('separate accounts and signing out cannot reuse another team value', async ({ page, browser }) => {
   const first = await accessFixture(page)
-  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+  await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
   await expect(page.getByText(first.secret(), { exact: true })).toBeVisible()
   const other = await browser.newContext()
   try {
     const secondPage = await other.newPage(), second = await accessFixture(secondPage, 'south')
     expect(second.state.reveals).toEqual([])
     await expect(secondPage.getByText(first.secret(), { exact: true })).toHaveCount(0)
-    await secondPage.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+    await secondPage.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await secondPage.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
     await expect(secondPage.getByText(second.secret(), { exact: true })).toBeVisible()
     await expect(secondPage.getByText(first.secret(), { exact: true })).toHaveCount(0)
     await noStoredValue(secondPage)
@@ -141,7 +141,7 @@ for (const copy of [false, true]) test(`a delayed ${copy ? 'copy' : 'reveal'} re
   await expect(page.getByText(/Available until/)).toBeVisible()
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { (window as unknown as { clipboardWrites: number }).clipboardWrites++ } } }))
   if (copy) {
-    await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click()
+    await page.getByRole('button', { name: 'Reveal Team account', exact: true }).click(); await page.getByRole('button', { name: 'Confirm reveal', exact: true }).click()
     await expect(page.getByText(secret(), { exact: true })).toBeVisible()
   }
   state.hold = true
