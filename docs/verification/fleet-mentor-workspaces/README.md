@@ -176,3 +176,55 @@ The remaining breadth must still run on the complete final source.
 
 Review/huddle/factual composition is in progress separately from this checkpoint.
 All previously listed unfinished scope and final verification requirements remain.
+
+## Review, moderation and published-guide checkpoint
+
+Review coverage now starts with comparable authorised team rows and a named detail
+inspector. Native operational support remains separate from assessment completion;
+unavailable assessment projections do not render suppressed placeholder counts as
+zero. Team review uses a cursor agenda and a focused huddle canvas on narrow screens.
+Configuration, second-review completion, opening, formal gaps/resolutions, proposals,
+moderator decisions and native final sign-off retain their distinct native commands.
+Each captures an exact source/action/reason/evidence review before confirmation.
+The adapter rechecks actual current coverage/agenda, role, huddle version and native
+source revision before writing; it grants no new panel/card/assignment access.
+
+Huddle unknown history above private owners holds only minimal diagnostic metadata.
+Exact immutable history matching includes team, huddle, expected version, author,
+action/reason and the action-specific source. Current reads cannot settle an earlier
+write. Permission loss clears selected private descendants and their owned caches,
+fences held continuations, and retains the minimal barrier. A temporary parent read
+failure pauses the mounted private draft and explicit recovery preserves input.
+Local/route discard is deliberate, and close/confirmed actions return focus to the
+actual responsive opener. A planned panel offers its named second an explicit route
+to their independent scorecard without fetching either private panel card.
+
+The factual handoff remains a dedicated backend projection and printable read-only
+preview; private review is hidden in print. It excludes qualification scores/ranks,
+raw notes and comparative commentary. New final judging, finalist/results release
+and backend freeze work remain separate tickets. Exact evidence selection/reading
+now uses production collection controls, fresh mounted reads and private lifetimes;
+working drafts and unauthorised observation text stay unavailable.
+
+The independent guide imports the real production help queue, mentoring review,
+unknown-state and detail components with synthetic local callbacks, plus copyable
+usage guidance. No API/session/cookie/private store is used. The new guide scenario
+also exercises current-read-is-not-receipt, keyboard return and portal/reset lifetime.
+
+Checkpoint proof (not final-head certification): both production builds and focused
+lint pass; the complete help/mentor/card/review selection completes 112/112 browser
+journeys. Full ESLint and all 133 unit tests (19 files, bounded two workers) pass.
+The independent Go-hosted guide completes 32/32 desktop/mobile browser journeys.
+The expanded native review/support suite completes 32/32, adding current capability
+loss, held-write/parent restoration, dirty local/route cancellation, actual opener
+focus, separate second review and transient parent recovery. Existing assertions are
+preserved with explicit task/review stages; the dependent support drilldown now
+selects the actual team record and scoped intended-panel help destination.
+
+Actual synthetic baseline images were generated from merged main e159ebf using
+its original native tests (10 desktop/mobile capture journeys passed). `before/`
+and `after/` contain the current retained captures. Initial inspection confirms the
+old mobile page mixed all panel controls in one long form; the new selected huddle
+has a focused canvas, explicit task navigation and independent evidence inspection.
+The final complete matching capture set, dependency/portal proof and independent
+reviews/full exact-head CI are still outstanding. This PR remains a draft.

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { useBlocker } from '@tanstack/react-router'
 import { Button } from './components/ui/button'
 import { Alert } from './components/ui/surfaces'
@@ -12,7 +12,9 @@ export function useMentorTaskNavigation({ dirty, pending, unknown, root }: { dir
   return { capture: () => { opener.current = focus.capture() }, restore: () => focus.restore(opener.current, true), discard: (leave: () => void) => { if (pending || ((dirty || unknown) && !window.confirm(unknown ? 'Leave this original outcome unconfirmed? No request will be replayed.' : 'Discard private unsent changes?'))) return false; leave(); focus.restore(opener.current, true); return true } }
 }
 export function MentorTaskReview({ title, children, confirm, correct, cancel, pending, disabled, confirmLabel = 'Confirm reviewed change' }: { title: string; children: ReactNode; confirm: () => void; correct: () => void; cancel?: () => void; pending: boolean; disabled?: boolean; confirmLabel?: string }) {
-  return <section className="fleet-review-flow" aria-label={title}><p className="fleet-scope-label">Review exact source and effect</p><h3>{title}</h3><div className="fleet-review-content">{children}</div><div className="fleet-pattern-actions"><Button icon="back" variant="outline" disabled={pending} onClick={correct}>Correct details</Button>{cancel && <Button variant="ghost" disabled={pending} onClick={cancel}>Cancel change</Button>}<Button icon="check" pending={pending} disabled={disabled} onClick={confirm}>{confirmLabel}</Button></div></section>
+  const heading=useRef<HTMLHeadingElement>(null)
+  useEffect(()=>{heading.current?.focus()},[])
+  return <section className="fleet-review-flow" aria-label={title}><p className="fleet-scope-label">Review exact source and effect</p><h3 ref={heading} tabIndex={-1}>{title}</h3><div className="fleet-review-content">{children}</div><div className="fleet-pattern-actions"><Button icon="back" variant="outline" disabled={pending} onClick={correct}>Correct details</Button>{cancel && <Button variant="ghost" disabled={pending} onClick={cancel}>Cancel change</Button>}<Button icon="check" pending={pending} disabled={disabled} onClick={confirm}>{confirmLabel}</Button></div></section>
 }
 export function MentorUnknown({ intent, children, read, pending }: { intent: string; children: ReactNode; read: () => void; pending: boolean }) {
   return <Alert tone="warning" role="status"><h3>Outcome unknown</h3><p>{children}</p><p className="fleet-reference">Local intent {intent} · diagnostic reference, not a server receipt</p><Button icon="refresh" variant="outline" pending={pending} onClick={read}>Check original outcome</Button></Alert>

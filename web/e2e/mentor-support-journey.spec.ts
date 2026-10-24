@@ -13,6 +13,7 @@ test('permitted support drilldown/ownership history stays separate from private 
  const independent=JSON.stringify(review.team.assessment)
  await page.goto(`/events/${firstID}/review`)
  await expect(page.getByText('PRIVATE-ORIGINAL-EVIDENCE')).toHaveCount(0);await expect(page.getByText('PRIVATE HELP',{exact:false})).toHaveCount(0)
+ await page.getByRole('button',{name:'Inspect Factual output team'}).click()
  await page.getByRole('link',{name:/competition output · waiting/}).click()
  await expect(page.getByText('PRIVATE HELP <script>window.badHelp=true</script>',{exact:true})).toBeVisible()
  await expect(page.getByText('PRIVATE-ORIGINAL-EVIDENCE')).toHaveCount(0)
@@ -30,8 +31,9 @@ test('permitted support drilldown/ownership history stays separate from private 
  await page.getByRole('button',{name:'Open intended-panel context'}).click()
  await expect(page.getByText('PRIVATE-ORIGINAL-EVIDENCE',{exact:true})).toBeVisible()
  await expect(page.getByText('PRIVATE HELP',{exact:false})).toHaveCount(0)
+ await page.getByRole('button',{name:'Record formal decision',exact:true}).click()
  await page.getByLabel('Explicit decision reason').fill('PRIVATE-UNSENT-MODERATION-REASON')
- await page.getByRole('link',{name:'Open help workspace'}).click()
+ page.once('dialog',dialog=>dialog.accept());await page.getByRole('region',{name:'Intended-panel context',exact:true}).getByRole('link',{name:'Open help workspace'}).click()
  await expect(page.getByText('PRIVATE-ORIGINAL-EVIDENCE')).toHaveCount(0)
  expect(await page.evaluate(()=>JSON.stringify({local:{...localStorage},session:{...sessionStorage}}))).not.toContain('PRIVATE-UNSENT-MODERATION-REASON')
  support.denied=true

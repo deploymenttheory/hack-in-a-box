@@ -127,3 +127,32 @@ discard without unlocking an uncertain write. A rejected discard retains exact i
 For a definite collection-wide denial (including standalone Today/preparation/readiness guidance), the collection owner must clear its private selection and affected cached projections and invalidate pending read lifetimes above any child that it disposes. Restoration requires fresh native authority; never reopen a cached child merely because its parent list is readable again. Keep event/session unknown-command metadata and barriers separate from private payload: `usePlanningUnknownRedaction` must match an exact owned actor/draft/event/resource namespace, redact private titles/commands, retain original unknown revisions/comparison requirements and leave unrelated histories untouched. Redaction is neither a receipt nor permission to replay.
 
 Every `ResourceReader` mount must finish its own current native GET before rendering a private document, attachment or acknowledgement. The lifetime is keyed by actor, draft scope, event and resource; its query cache is unique to the mount and removed/cancelled on departure. Prior cached authority, list restoration, stale intervals and another parent’s successful request do not authorise a new mount. A native 401 ends the session; 403/404 parent denials remain latched until explicit current-access retry. Keep the reader’s public props stable across library, guidance and inbox consumers.
+### Private mentoring and reviewed common answers
+
+Use `HelpAttentionQueue` for the complete authorised support summary projection,
+`CollectionRecords` for cursor-backed observations, scorecards and agenda metadata,
+and a focused inspector for the selected task. Help ownership, operational check-ins,
+independent assessment and formal moderation remain distinct. Show the actual
+checkpoint/run/rubric/author and provisional or frozen submission source before a
+reviewed change. Never derive rankings from support usage or activity.
+
+`MentorTaskReview` renders the captured source and effect before confirmation;
+current native permissions and versions are checked again before writing. Huddle
+metadata does not grant panel-card or observation access. Private questions become
+common answers only through separate authoring, approval and publication actions.
+The factual handoff uses only the dedicated backend factual projection, excluding
+scores, ranks and raw notes. No new final-judge or results-publication path is implied.
+
+Record only minimal unknown-intent metadata above private owners immediately before
+an HTTP write. Clear raw fields, selected descendants, owned private caches and held
+continuations on actual current projection loss or definite denial. Keys alone do
+not clear ancestor history or query caches. Restoring a parent collection must not
+resurrect an absent or denied detail. Current GET state cannot settle an original
+write; require its actual immutable identity/author/version/content or a native
+idempotent receipt. Keep the barrier when exact proof is absent. Acknowledge leaving
+an unresolved event session explicitly; never silently replay a write.
+
+The interactive mentoring guide imports the production queue, review, unknown-state
+and detail components with synthetic local callbacks. It runs without API, session,
+cookie or private-recovery-store access. Its Reset control clears local examples;
+portal/reset keys also reset these state owners.

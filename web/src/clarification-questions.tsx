@@ -51,7 +51,7 @@ export function AskQuestion({ teamID, onLeaveRisk, onPending }: { teamID: string
     } finally { lock.current = false; if (active.current()) setBusy(false) }
   }
   return <section ref={root} tabIndex={-1} className="clarification-private py-6 border-t border-border"><h2>Ask a private team question</h2><p>Only your current team and explicit organisers can read the original. This is not a submission or assessment.</p>
-    <div hidden={!!review || unknown} inert={!!review || unknown}><form className="grid gap-4 max-w-3xl" onSubmit={e => { e.preventDefault(); prepare() }}><fieldset className="grid gap-4" disabled={!writable || busy || unknown || uploading}>
+    <div hidden={!!review || unknown} inert={!!review || unknown}><form className="grid gap-4 max-w-3xl" onSubmit={e => { e.preventDefault(); prepare() }}><fieldset className="fleet-collection-fieldset grid gap-4" disabled={!writable || busy || unknown || uploading}>
       <Field id="question-topic" label="About"><Select value={topic} onChange={e => setTopic(e.target.value as 'challenge' | 'rubric')}><option value="challenge">Challenge</option><option value="rubric">Published rubric</option></Select></Field>
       <Field id="question-body" label="Your question" description={`${textBytes(body)} / 8,000 UTF-8 bytes · Unsent text stays only in this task.`}><Textarea value={body} maxLength={8000} onChange={e => setBody(e.target.value)} rows={6} /></Field></fieldset>
       <QuestionAttachmentUpload teamID={teamID} files={files} change={setFiles} disabled={!writable || busy || unknown || !!review} onBusy={setUploading} />

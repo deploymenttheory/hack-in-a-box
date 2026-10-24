@@ -303,3 +303,12 @@ test('communications guide reviews fixed synthetic content and never converts a 
   expect(await frame.locator('html').evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await example.screenshot({ path: info.outputPath('communications-guide-unknown.png') })
 })
+
+test('production mentoring queue reviews a scoped local task and current reads never invent its receipt',async({page})=>{
+ const frame=await examples(page,'Task patterns'),example=frame.getByRole('region',{name:'Private mentoring and operational support',exact:true})
+ const open=example.getByRole('button',{name:'Open request · syntheti',exact:true});await open.focus();await open.press('Enter');await expect(example.getByRole('heading',{name:'Synthetic private support task',exact:true})).toBeFocused()
+ await example.getByRole('button',{name:'Review synthetic claim',exact:true}).click();await expect(example.getByRole('heading',{name:'Review synthetic support ownership',exact:true})).toBeFocused();await example.getByRole('button',{name:'Simulate uncertain claim',exact:true}).click()
+ await example.getByRole('button',{name:'Check original outcome',exact:true}).click();await expect(example.getByText('Synthetic current request read. The original effect remains unconfirmed; no write is unlocked.')).toBeVisible();await expect(example.getByRole('button',{name:'Review synthetic claim',exact:true})).toHaveCount(0)
+ await example.getByRole('button',{name:'Back to roster',exact:true}).click();await expect(open).toBeFocused();await open.click();await expect(example.getByRole('heading',{name:'Outcome unknown',exact:true})).toBeVisible()
+ await page.getByLabel('Synthetic portal',{exact:true}).selectOption('participant');await expect(example.getByRole('heading',{name:'Outcome unknown',exact:true})).toHaveCount(0);await expect(open).toBeVisible()
+})

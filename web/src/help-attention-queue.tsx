@@ -7,7 +7,7 @@ import { Checkbox, Field, Label, Select } from './components/ui/fields'
 type Queue = components['schemas']['HelpQueue']
 // HelpQueue is the complete current-authority summary projection. It contains no
 // request prose; filters never inspect the detail cache or an assessment source.
-export function HelpAttentionQueue({ eventID, timezone, value, actorID }: { eventID: string; timezone: string; value: Queue; actorID: string }) {
+export function HelpAttentionQueue({ eventID, timezone, value, actorID, onOpen }: { onOpen?: (id:string)=>void; eventID: string; timezone: string; value: Queue; actorID: string }) {
   const [status, setStatus] = useState(''), [category, setCategory] = useState(''), [owner, setOwner] = useState(''), [overdue, setOverdue] = useState(false)
   const items = value.items.filter(r => (!status || r.status === status) && (!category || r.category === category) && (!owner || (owner === 'unassigned' ? !r.assignee_id : r.assignee_id === owner)) && (!overdue || r.overdue))
   const owners = new Map(value.items.filter(i => i.assignee_id).map(i => [i.assignee_id!, i.assignee_name || i.assignee_id!]))
@@ -24,7 +24,7 @@ export function HelpAttentionQueue({ eventID, timezone, value, actorID }: { even
       scope: { entity: `Team ${r.team_id.slice(0, 8)}`, event: `Owner ${r.assignee_name || r.assignee_id || 'Unassigned'}` },
       status: { label: `${r.status}${r.overdue ? ' · Overdue' : ''}`, tone: r.overdue ? 'warning' : 'neutral' },
       description: `${r.status === 'waiting' ? `Waiting ${Math.floor(r.waiting_seconds / 60)} minutes at the last server check.` : 'See the request for its operational history.'} Authoritative update: ${localDate(r.updated_at, timezone)}.`,
-      action: { label: `Open request · ${r.id.slice(0, 8)}`, icon: 'next', href: `/events/${encodeURIComponent(eventID)}/help/${encodeURIComponent(r.id)}` },
+      action: onOpen ? {label:`Open request · ${r.id.slice(0,8)}`,icon:'next',onSelect:()=>onOpen(r.id)} : { label: `Open request · ${r.id.slice(0, 8)}`, icon: 'next', href: `/events/${encodeURIComponent(eventID)}/help/${encodeURIComponent(r.id)}` },
     }))} />
   </section>
 }

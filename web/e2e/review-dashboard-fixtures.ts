@@ -10,7 +10,7 @@ export function summary(h:S['ModerationHuddle']):S['ReviewHuddleSummary']{return
 function team():S['ReviewTeam']{return {id:teamID,name:'Factual output team',state:'published',assignments:[{person_id:primaryID,name:'Primary mentor',slot:'primary',starts_at:'2027-06-20T09:00:00Z',ends_at:'2027-06-20T17:00:00Z'},{person_id:secondID,name:'Second reviewer',slot:'second',starts_at:'2027-06-20T09:00:00Z',ends_at:'2027-06-20T17:00:00Z'}],coverage_issues:[],output:{team_id:teamID,entry_id:teamID,outcome:'frozen',frozen_at:'2027-06-20T16:00:00Z',frozen_revision:7,submitted_at:'2027-06-20T15:55:00Z',artifacts:[{kind:'repository',count:1}]},support:{risk:'blocked',availability:'current',operational:{state:'blocked',changed_at:'2027-06-20T10:00:00Z'},actions:{unresolved:1,overdue:1,unavailable_owners:0,examples:[]},help:{waiting:2,claimed:1,unresolved:3,resolved:1,cancelled:0,overdue_waiting:1,oldest_waiting_seconds:1200,oldest_open_seconds:2400,first_response:{samples:2,mean_seconds:90},completion:{samples:1,mean_seconds:500},requests:[{id:cpID,team_id:teamID,category:'competition_output',status:'waiting',assignee_id:null,requested_at:'2027-06-20T10:00:00Z',updated_at:'2027-06-20T10:00:00Z',waiting_seconds:1200,response_seconds:null,completion_seconds:null,overdue:true,assignee_name:''}],more_requests:false}},assessment:{availability:'current',output_state:'frozen',live:{...completion},final:{...completion},canonical_final:false},agenda:[],more_agenda:false}}
 export async function fixture(page:Page, bootstrap=true){
  if(bootstrap)await mockWorkspace(page)
- const state={revision:12,actor:person.id,organiser:true,denied:false,cardDenied:false,previewDenied:false,lost:false,h:huddle(),item:summary(huddle()),team:team(),history:[] as S['ModerationHuddle'][],writes:[] as S['ModerationCommand'][],panelReads:0,preflightGate:undefined as Promise<void>|undefined}
+ const state={revision:12,actor:person.id,organiser:true,denied:false,readFailure:false,cardDenied:false,previewDenied:false,lost:false,h:huddle(),item:summary(huddle()),team:team(),history:[] as S['ModerationHuddle'][],writes:[] as S['ModerationCommand'][],panelReads:0,preflightGate:undefined as Promise<void>|undefined,writeGate:undefined as Promise<void>|undefined,lostBefore:false}
  if(bootstrap)await page.route('**/api/v1/session',route=>route.fulfill({json:{person:{...person,id:state.actor,platform_admin:false},draft_scope:cpID,csrf_token:'synthetic-csrf-token-32-characters',can_create_events:false}}))
  await page.route(`**/api/v1/events/${firstID}/**`,async route=>{
   const request=route.request(),url=new URL(request.url()),path=url.pathname
@@ -18,6 +18,7 @@ export async function fixture(page:Page, bootstrap=true){
   if(!/review|moderation-huddles|judge-summary-preview|scorecards\/panel|feedback/.test(path))return route.fallback()
   if(state.denied)return error(403)
   if(path.endsWith('/review-coverage')&&state.preflightGate)await state.preflightGate
+  if(path.endsWith('/review-coverage')&&state.readFailure)return error(503)
   if(path.endsWith('/review-coverage'))return route.fulfill({json:{event_id:firstID,event_name:'Synthetic review event',timezone:'Europe/London',revision:state.revision,now:'2027-06-20T16:05:00Z',organiser:state.organiser,moderators:state.organiser?[{id:person.id,name:'Named moderator'}]:[],teams:[state.team],next_cursor:null}})
   if(path.endsWith('/review-checkpoints'))return route.fulfill({json:{revision:state.revision,timezone:'Europe/London',now:'2027-06-20T16:05:00Z',coverage:{availability:'current',items:[{id:cpID,version:1,name:'Frozen final qualification',purpose:'mentor_final',run_id:cpID,opens_at:'2026-10-23T09:00:00Z',closes_at:'2030-01-01T17:00:00Z',reviews:[{person_id:state.actor,name:'Current actor',slot:'primary',state:'submitted',pending_categories:1,missing_evidence:1,overdue:false}]}],next_cursor:null}}})
   if(path.endsWith('/review-agenda'))return route.fulfill({json:{revision:state.revision,timezone:'Europe/London',now:'2027-06-20T16:05:00Z',availability:state.team.assessment.availability==='not_applicable'?'not_applicable':'current',agenda:{items:state.team.assessment.availability==='not_applicable'?[]:[state.item],next_cursor:null}}})
@@ -26,13 +27,17 @@ export async function fixture(page:Page, bootstrap=true){
   if(path.endsWith('/history'))return route.fulfill({json:{items:state.history.filter(h=>h.version<Number(url.searchParams.get('cursor')??9999)).sort((a,b)=>b.version-a.version),next_cursor:null}})
   if(path.includes('/moderation-huddles/')){
    if(request.method()==='GET')return route.fulfill({json:state.h})
-   const command=request.postDataJSON() as S['ModerationCommand'];state.writes.push(command)
+   const command=request.postDataJSON() as S['ModerationCommand'];state.writes.push(command);if(state.writeGate)await state.writeGate;if(state.lostBefore)return route.abort('failed')
    if(request.headers()['if-match']!==`"${state.revision}"`||command.version!==state.h.version)return error(409)
    const h=structuredClone(state.h);h.version++;h.action=command.action;h.reason=command.reason;h.actor_id=state.actor
    if(command.action==='configure'&&command.definition){h.definition=command.definition;h.state='planned';h.second_review={reviewer_id:command.definition.second_reviewer_id,due_at:command.definition.review_due_at,card:null,completed_at:null}}
    if(command.action==='propose_change'){const original={category_id:command.category_id!,value:2,pending:false,evidence:[{kind:'note' as const,id:null,version:null,note:'PRIVATE-ORIGINAL-EVIDENCE'}]};h.proposals.push({id:command.proposal_id!,card:command.card!,original_reviewer_id:primaryID,original,proposed_value:command.proposed_value!,evidence:command.evidence!,proposed_by:state.actor,proposed_at:h.changed_at,reason:command.reason,state:'proposed',decided_by:null,decided_at:null,decision_reason:''})}
+   if(command.action==='complete_second_review'){h.second_review.card={id:secondID,version:1};h.second_review.completed_at=h.changed_at}
+   if(command.action==='open'){h.state='open';h.cards=[{id:primaryID,version:1},{id:secondID,version:1}]}
+   if(command.action==='cancel')h.state='cancelled'
+   if(command.action==='accept_change'||command.action==='reject_change'){const proposal=h.proposals.find(p=>p.id===command.proposal_id);if(proposal){proposal.state=command.action==='accept_change'?'accepted':'rejected';proposal.decided_by=state.actor;proposal.decided_at=h.changed_at;proposal.decision_reason=command.reason}}
    if(command.action==='sign_off'){h.state='signed';h.signoff_id=cpID}
-   state.h=h;state.history.push(h);state.revision++;state.item=summary(h)
+   state.h=h;state.history.push(h);state.revision++;state.item={...summary(h),can_manage:state.actor===h.definition.moderator_id&&h.state!=='signed'}
    if(state.lost)return route.abort('failed')
    return route.fulfill({json:h})
   }
