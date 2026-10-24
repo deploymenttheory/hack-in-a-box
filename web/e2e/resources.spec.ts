@@ -1,5 +1,5 @@
 import { openEventSection, expectEventSection } from './event-navigation-fixture'
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page, type Route } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 
@@ -44,15 +44,16 @@ async function setup(page: Page, judge = false) {
 
 test('reads safely, downloads protected attachments and explicitly acknowledges the displayed version', async ({ page }, info) => {
   const state = await setup(page)
+  await page.screenshot({ path: info.outputPath('resource-directory.png'), fullPage: true })
   await page.getByRole('button', { name: 'Read Getting started' }).click()
   await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toBeFocused()
   await expect(page.getByRole('link', { name: 'Useful link' })).toHaveAttribute('rel', 'noopener noreferrer')
   await expect(page.getByRole('link', { name: 'Danger' })).toHaveCount(0)
-  await expect(page.locator('.content-markdown script,.content-markdown iframe,.content-markdown img')).toHaveCount(0)
+  await expect(page.getByRole('article', { name: 'Released resource text' }).locator('script,iframe,img')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'guide.txt' })).toHaveAttribute('href', `/api/v1/events/${firstID}/files/${fileID}`)
   expect(state.acknowledgements).toHaveLength(0)
-  await page.getByRole('button', { name: 'I have read version 1' }).click()
-  await expect(page.getByRole('status')).toContainText('You acknowledged version 1')
+  await page.getByRole('button', { name: 'I have read version 1' }).click(); await page.getByRole('button', { name: 'Confirm acknowledgement' }).click()
+  await expect(page.getByRole('region', { name: 'Required acknowledgement' }).getByRole('status')).toContainText('You acknowledged version 1')
   expect(state.acknowledgements).toEqual([{ id: guideID, version: '"1"', csrf: 'synthetic-csrf-token-32-characters' }])
   await page.screenshot({ path: info.outputPath('resource-reader.png'), fullPage: true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
@@ -65,20 +66,21 @@ test('a material release requires reading the new version before acknowledging a
   const state = await setup(page)
   await page.getByRole('button', { name: 'Read Getting started' }).click()
   state.guide.version = 2; state.guide.revision = 2; state.guide.released_version = 2; state.guide.document.markdown = '# Updated guide\n\nRead the material change.'
-  await page.getByRole('button', { name: 'I have read version 1' }).click()
-  await expect(page.getByText('This resource or your access changed.', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'I have read version 1' }).click(); await page.getByRole('button', { name: 'Confirm acknowledgement' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Current version needed' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'I have read version 2' })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Reload latest resource' }).click()
+  await page.getByRole('button', { name: 'Read current state' }).click()
   await expect(page.getByText('Read the material change.', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'I have read version 2' }).click()
-  await expect(page.getByRole('status')).toContainText('You acknowledged version 2')
+  await page.getByRole('button', { name: 'Use reviewed current state' }).click()
+  await page.getByRole('button', { name: 'I have read version 2' }).click(); await page.getByRole('button', { name: 'Confirm acknowledgement' }).click()
+  await expect(page.getByRole('region', { name: 'Required acknowledgement' }).getByRole('status')).toContainText('You acknowledged version 2')
   expect(state.acknowledgements.map(a => a.version)).toEqual(['"1"', '"2"'])
 })
 
 test('search and navigation reveal the common challenge only after publication', async ({ page }) => {
   const state = await setup(page)
   await expect(page.getByRole('button', { name: 'Read Common challenge' })).toHaveCount(0)
-  await page.getByLabel('Search resources').fill('Common challenge'); await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await page.getByRole('searchbox', { name: 'Search resources', exact: true }).fill('Common challenge'); await page.getByRole('button', { name: 'Search', exact: true }).click()
   await expect(page.getByText('No released resources match your search.')).toBeVisible()
   state.release(); await page.getByRole('button', { name: 'Refresh resources' }).click()
   await page.getByRole('button', { name: 'Read Common challenge' }).click()
@@ -99,9 +101,9 @@ test('role-specific libraries contain only returned authorised resources', async
 test('pagination, search and refreshed team access update resource navigation', async ({ page }) => {
   const state = await setup(page); state.paginate()
   await page.getByRole('button', { name: 'Refresh resources' }).click()
-  await page.getByRole('button', { name: 'More resources' }).click()
+  await page.getByRole('button', { name: 'More records' }).click()
   await expect(page.getByRole('button', { name: 'Read Aurora team resource' })).toBeVisible()
-  await page.getByLabel('Search resources').fill('Aurora'); await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await page.getByRole('searchbox', { name: 'Search resources', exact: true }).fill('Aurora'); await page.getByRole('button', { name: 'Search', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Read Getting started' })).toHaveCount(0)
   state.removeTeam(); await page.getByRole('button', { name: 'Refresh resources' }).click()
   await expect(page.getByText('No released resources match your search.')).toBeVisible()
@@ -110,9 +112,120 @@ test('pagination, search and refreshed team access update resource navigation', 
 test('revocation removes the reader and prevents a stale acknowledgement', async ({ page }) => {
   const state = await setup(page)
   await page.getByRole('button', { name: 'Read Getting started' }).click()
-  state.revoke(); await page.getByRole('button', { name: 'I have read version 1' }).click()
+  state.revoke(); await page.getByRole('button', { name: 'I have read version 1' }).click(); await page.getByRole('button', { name: 'Confirm acknowledgement' }).click()
   await expect(page.getByRole('alert')).toContainText('You do not have access')
   await expect(page.getByRole('heading', { name: 'Getting started' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'guide.txt' })).toHaveCount(0)
   expect(state.acknowledgements).toHaveLength(0)
+})
+
+test('an unknown acknowledgement keeps its original intent after a current read and never replays', async ({ page }) => {
+  const state = await setup(page)
+  let attempts = 0
+  await page.route(`**/content/${guideID}/acknowledgements`, async route => {
+    attempts++
+    expect(route.request().headers()['if-match']).toBe('"1"')
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    state.guide.acknowledged_at = '2027-06-13T09:30:00Z'
+    await route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  expect(attempts).toBe(0)
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Back to resources', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Read current state', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Required acknowledgement' })).toContainText('You acknowledged version 1')
+  await expect(page.getByRole('region', { name: 'Earlier unconfirmed resource commands' })).toContainText('Acknowledge Getting started · Expected revision 1')
+  await expect(page.getByText('Acknowledgement recorded for version 1.', { exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Use reviewed current state', exact: true }).click()
+  expect(attempts).toBe(1)
+  await expect(page.getByRole('region', { name: 'Earlier unconfirmed resource commands' })).toContainText('Original outcome remains unconfirmed')
+})
+
+
+test('denied reading clears its exact cached body across Back and reopening while an older GET arrives late', async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Synthetic guidance')
+  const held: Route[] = []
+  await page.route(`**/content/${guideID}**`, async route => {
+    if (route.request().method() === 'POST') return route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+    held.push(route)
+  })
+  await page.getByRole('button', { name: 'Refresh resources', exact: true }).click()
+  await expect.poll(() => held.length).toBe(1)
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('You do not have access')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(2)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await held[0].fulfill({ json: state.guide }).catch(() => undefined)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toHaveCount(0)
+  await held[1].fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+  await expect(page.getByRole('alert')).toContainText('You do not have access')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Read Aurora team resource', exact: true })).toBeVisible()
+})
+
+for (const trigger of ['link', 'button'] as const) test(`keyboard ${trigger} reader return keeps the actual opener after a responsive width change`, async ({ page }, info) => {
+  await setup(page)
+  const name = trigger === 'link' ? 'Getting started' : 'Read Getting started'
+  await page.getByRole(trigger, { name, exact: true }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Getting started', exact: true })).toBeFocused()
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole(trigger, { name, exact: true })).toBeFocused()
+})
+
+// A new reader must establish current authority even when no prior denial was
+// delivered. Cached content from a successful older mount is never that proof.
+for (const status of [401, 403, 404]) test(`fresh reader mount hides cached document while current GET is held then ${status}`, async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Synthetic guidance')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  const held: Route[] = []
+  await page.route(`**/content/${guideID}`, route => { held.push(route) })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(1)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'guide.txt', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'I have read version 1', exact: true })).toHaveCount(0)
+  // Dispose this mount while its old successful response is still held.
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).click()
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await expect.poll(() => held.length).toBe(2)
+  await held[0].fulfill({ json: state.guide }).catch(() => undefined)
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await held[1].fulfill({ status, json: { error: { code: 'forbidden', request_id: 'synthetic' } } })
+  if (status === 401) await expect(page.getByRole('heading', { name: 'Sign in to continue.', exact: true })).toBeVisible()
+  else await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'guide.txt', exact: true })).toHaveCount(0)
+  expect(state.acknowledgements).toHaveLength(0)
+})
+
+test('a denied reconciliation read retains the redacted original acknowledgement barrier', async ({ page }) => {
+  const state = await setup(page); let attempts = 0
+  await page.route(`**/content/${guideID}/acknowledgements`, route => {
+    attempts++; expect(route.request().headers()['if-match']).toBe('"1"')
+    return route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Read Getting started', exact: true }).click()
+  await page.getByRole('button', { name: 'I have read version 1', exact: true }).click()
+  await page.getByRole('button', { name: 'Confirm acknowledgement', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
+  state.revoke(); await page.getByRole('button', { name: 'Read current state', exact: true }).click()
+  const history = page.getByRole('complementary', { name: 'Unconfirmed command history', exact: true })
+  await expect(history).toContainText('Resource acknowledgement · Expected revision 1 · Original outcome remains unconfirmed')
+  await expect(history).not.toContainText('Getting started')
+  await expect(page.getByRole('article', { name: 'Released resource text' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Confirm acknowledgement', exact: true })).toHaveCount(0)
+  expect(attempts).toBe(1)
 })

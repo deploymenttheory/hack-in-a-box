@@ -81,6 +81,17 @@ state; changing account/event/portal drops the corresponding synthetic scope.
 Appearance and density changes retain drafts. Viewport controls resize a genuine
 iframe viewport; available width can constrain a requested size on small screens.
 
+Task patterns also imports the actual production `ProtectedUploadControls` shared
+by content attachments, `TaskEvidence` and team deliverables. Its owner-controlled
+example chooses synthetic file metadata, captures one key/revision/team/reason,
+permits deliberate identical retries after an unknown callback, clears metadata
+on denial and focuses the relevant feedback. A synthetic owner callback is not a
+file upload, attachment acceptance or formal submission receipt. The example has
+no FileReader, byte transfer, account or API transport; it can display selected
+local metadata without reading the file. Reset restores the labelled native
+input. Usage/reference entries explain owner scope barriers, privacy, pending
+locks, focus, and the separate native `ProtectedUpload` adapter.
+
 Every future UI PR must update production code, its interactive examples,
 copyable snippets and intended-use/variant/semantics/accessibility/anti-pattern
 guidance together when behaviour changes. Keep the actual icon registry as the

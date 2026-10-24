@@ -68,7 +68,7 @@ async function contentFixture(page: Page, retained = false) {
     }
     return route.fulfill({ json: current })
   })
-  return { ...objectives, current, writes, open: async () => { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Content'); await page.getByRole('button', { name: 'Edit Objective guidance', exact: true }).click() } }
+  return { ...objectives, current, writes, open: async () => { await page.goto(`/events/${firstID}`); await openEventSection(page, 'Content'); await page.getByRole('button', { name: 'Edit Objective guidance', exact: true }).click(); await page.getByRole('navigation', { name: 'Content editor sections', exact: true }).getByRole('button', { name: 'Objective disclosures', exact: true }).click() } }
 }
 
 test('content author deliberately selects immutable objective/measure references without copying private planning inputs', async ({ page }, info) => {

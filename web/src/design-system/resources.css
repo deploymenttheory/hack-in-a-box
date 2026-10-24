@@ -1,0 +1,24 @@
+@layer components {
+ .private-team-access .fleet-collection-table thead th { overflow-wrap: normal; }
+ .private-team-access .fleet-collection-table td:nth-child(2) { white-space: nowrap; }
+ .fleet-resource-workspace { min-width: 0; }
+ .fleet-resource-section { border-top: 1px solid var(--border); padding-block: var(--space-6); }
+ .fleet-resource-prose { max-width: 56rem; line-height: var(--line-body); overflow-wrap: anywhere; }
+ .fleet-resource-prose h2, .fleet-resource-prose h3 { font-size: var(--text-section); font-weight: var(--weight-emphasis); margin-block: var(--space-6) var(--space-3); }
+ .fleet-resource-prose p, .fleet-resource-prose ul, .fleet-resource-prose ol { margin-block: var(--space-3); }
+ .fleet-resource-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--space-4); margin-block: var(--space-4); }
+ .fleet-resource-facts dt { color: var(--muted-foreground); font-size: var(--text-caption); }
+ .fleet-resource-facts dd { margin: var(--space-1) 0 0; overflow-wrap: anywhere; }
+ .fleet-resource-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+ .fleet-resource-comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-6); }
+ .fleet-resource-editor-layout { display: grid; gap: var(--space-6); }
+ .fleet-resource-authoring fieldset { border: 0; border-radius: 0; background: transparent; padding: var(--space-3) 0; min-width: 0; }
+ .fleet-resource-authoring label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; }
+ .fleet-resource-form { display: grid; gap: var(--space-4); max-width: 56rem; }
+ .fleet-resource-fields { border: 0; background: transparent; border-radius: 0; padding: 0; margin: 0; min-width: 0; }
+ .fleet-resource-fields legend { padding: 0 0 var(--space-3); font-weight: var(--weight-emphasis); }
+ .fleet-resource-fields label.check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: 400; }
+ .fleet-resource-records { list-style: none; margin: 0; padding: 0; }
+ .fleet-resource-records > li { display: flex; align-items: start; justify-content: space-between; gap: var(--space-4); border-bottom: 1px solid var(--border); padding-block: var(--space-3); }
+ @media (max-width: 48rem) { .fleet-resource-facts { grid-template-columns: 1fr; } .fleet-resource-records > li { flex-wrap: wrap; } }
+}

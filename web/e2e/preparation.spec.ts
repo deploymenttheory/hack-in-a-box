@@ -1,3 +1,4 @@
+import { uploadedFile } from './file-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
@@ -138,13 +139,13 @@ test('creates a task and safely retries a protected evidence upload', async ({ p
   await page.route(`**/events/${firstID}/files`, route => {
     uploadKeys.push(route.request().headers()['idempotency-key'])
     if (uploadKeys.length === 1) return route.fulfill({ status: 503, json: { error: { code: 'unavailable', message: 'Synthetic interruption' } } })
-    return route.fulfill({ status: 201, json: { id: '454d6575-9a8a-44db-96ed-387bb60516fc', filename: 'receipt.txt' } })
+    return route.fulfill({ status: 201, json: uploadedFile('454d6575-9a8a-44db-96ed-387bb60516fc', route.request().postDataJSON()) })
   })
   await page.getByRole('button', { name: 'New task', exact: true }).click(); await page.getByLabel('Task title').fill('Book catering')
   await page.getByRole('button',{name:'Evidence',exact:true}).click()
   await page.getByLabel('Upload evidence file').setInputFiles({ name: 'receipt.txt', mimeType: 'text/plain', buffer: Buffer.from('Synthetic receipt') })
   await page.getByRole('button', { name: 'Upload selected file' }).click(); await expect(page.getByRole('alert')).toContainText('could not complete')
-  await page.getByRole('button', { name: 'Upload selected file' }).click(); await expect(page.getByText('File uploaded. Save the task to attach it.')).toBeVisible()
+  await page.getByRole('button', { name: 'Upload selected file' }).click(); await expect(page.getByText('uploaded. Save the owning page or evidence to attach it;', { exact: false })).toBeVisible()
   expect(uploadKeys[0]).toBe(uploadKeys[1])
   await page.getByRole('button', { name: 'Save task' }).click(); await expect(page.getByText('Task saved.', { exact: true })).toBeVisible()
   expect(requests.at(-1)?.body.definition.evidence[0]).toMatchObject({ kind: 'file', label: 'receipt.txt', visibility: 'organisers', file_id: '454d6575-9a8a-44db-96ed-387bb60516fc' })

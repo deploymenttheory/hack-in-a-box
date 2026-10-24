@@ -1,3 +1,4 @@
+import { uploadedFile } from './file-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
@@ -26,7 +27,7 @@ async function setup(page: Page) {
     if (path.endsWith('/files') && r.method() === 'POST') {
       const body = r.postDataJSON(); writes.push({ method: r.method(), path, body, revision: r.headers()['if-match'] })
       files.push({ id: fileID, filename: body.filename, media_type: body.media_type, size: 14, can_download: true })
-      return route.fulfill({ status: 201, json: { id: fileID, filename: body.filename, media_type: body.media_type, size: 14, checksum: 'synthetic' } })
+      return route.fulfill({ status: 201, json: uploadedFile(fileID, body) })
     }
     if (path.endsWith(`/files/${fileID}`)) return route.fulfill({ contentType: 'text/plain', body: 'Synthetic attachment' })
     if (!path.includes('/content')) return route.fallback()
@@ -57,6 +58,7 @@ async function setup(page: Page) {
   await expect(page.getByRole('heading', { name: 'Content', exact: true })).toBeVisible()
   return { items, writes, versions, workspace, blockers, deny: () => { denied = true }, missingFile: () => { missingFile = true } }
 }
+async function contentSection(page: Page, name: string) { await page.getByRole('navigation', { name: 'Content editor sections' }).getByRole('button', { name, exact: true }).click() }
 const editor = (page: Page) => page.getByRole('form', { name: 'Content editor' })
 
 test('editing approved content creates a draft and requires review again', async ({ page }, info) => {
@@ -92,6 +94,7 @@ test('role and team previews never grant access and dangerous Markdown stays ine
   await expect(preview.locator('script,iframe,img')).toHaveCount(0)
   await page.getByLabel('Preview as').selectOption('mentor')
   await expect(preview).toContainText('Outside the release audience')
+  await contentSection(page, 'Release audience')
   await editor(page).getByLabel('Mentor', { exact: true }).check()
   await expect(preview).toContainText('Included in the release audience')
   await editor(page).getByLabel('All confirmed attendees').uncheck()
@@ -111,6 +114,7 @@ test('templates, placeholder validation, file upload and missing-file approval',
   await expect(page.getByRole('button', { name: 'Approve version 1' })).toBeDisabled()
   await expect(page.getByLabel('Approval blockers')).toContainText('Resolve every {{placeholder}}')
   await page.getByLabel('Markdown', { exact: true }).fill('# FAQ\n\nAsk the organising team.')
+  await contentSection(page, 'Attachments')
   await page.getByLabel('Choose an attachment').setInputFiles({ name: 'guide.txt', mimeType: 'text/plain', buffer: Buffer.from('Synthetic guide') })
   await page.getByRole('button', { name: 'Upload attachment' }).click()
   await expect(page.getByRole('link', { name: 'guide.txt' })).toBeVisible()
@@ -119,6 +123,7 @@ test('templates, placeholder validation, file upload and missing-file approval',
   state.missingFile()
   await page.getByRole('button', { name: 'Approve version 2' }).click()
   await expect(page.getByRole('alert')).toContainText('An attachment is missing')
+  await contentSection(page, 'Page content')
   await expect(page.getByLabel('Markdown', { exact: true })).toHaveValue('# FAQ\n\nAsk the organising team.')
   expect(state.writes.some(w => w.path.endsWith('/files'))).toBe(true)
 })
@@ -130,6 +135,7 @@ test('challenge controls show common timing and readiness without a manual bypas
   await expect(readiness).toContainText('Seven calendar days before live start')
   await expect(readiness).toContainText('32 confirmed competitors · Minimum 30')
   await expect(readiness).toContainText('Freeze every confirmed team before publication.')
+  await contentSection(page, 'Release audience')
   await expect(page.getByLabel('All confirmed attendees')).toBeDisabled()
   await expect(page.getByLabel('Release method')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Release approved version' })).toHaveCount(0)
@@ -170,12 +176,13 @@ test('uses reusable event briefs, protects unsaved work, and disables revoked mu
   await expect(page.getByRole('form', { name: 'Content editor' })).toBeVisible()
   state.deny(); await page.getByRole('button', { name: 'Save new draft' }).click()
   await expect(page.getByRole('alert')).toContainText('do not have access')
-  await expect(page.getByRole('button', { name: 'Save new draft' })).toBeDisabled()
+  await expect(editor(page)).toHaveCount(0)
 })
 
 test('resolves event-local schedules and requires a reason to withdraw released pages', async ({ page }) => {
   const { writes } = await setup(page)
   await page.getByRole('button', { name: 'Edit Team handbook' }).click()
+  await contentSection(page, 'Release timing')
   await page.getByLabel('Release method').selectOption('scheduled')
   await page.getByLabel('Release time in Europe/London').fill('2027-06-10T10:30')
   await expect(page.getByRole('region', { name: 'Audience preview' })).toContainText('2027-06-10 10:30 · Europe/London (unsaved; resolved on save)')
@@ -202,10 +209,60 @@ test('invalid and past schedules cannot approve and keep the organiser draft', a
   await expect(page.getByRole('button', { name: 'Approve version 1' })).toBeDisabled()
   await expect(page.getByRole('alert')).toContainText('The release schedule is in the past.')
   await page.route('**/api/v1/time/resolve', route => route.fulfill({ status: 409, json: { error: { code: 'event_blocked', message: 'Scheduling needs attention.', request_id: 'synthetic', blockers: [{ field: 'dst_choice', code: 'ambiguous_time', message: 'Choose the earlier or later occurrence of this repeated local time.' }] } } }))
+  await contentSection(page, 'Release timing')
   await page.getByLabel('Release time in Europe/London').fill('2027-10-31T01:30')
   await page.getByRole('button', { name: 'Save new draft' }).click()
   await expect(page.getByText('Choose the earlier or later occurrence', { exact: false })).toBeVisible()
   await expect(page.getByLabel('Release time in Europe/London')).toHaveValue('2027-10-31T01:30')
   await expect(page.getByRole('button', { name: 'Approve version 1' })).toBeDisabled()
   expect(writes).toHaveLength(0)
+})
+
+test('lost release response preserves unknown command history after reading the native released version', async ({ page }) => {
+  const state = await setup(page)
+  let releases = 0
+  await page.route(`**/content/${pageID}/actions`, async route => {
+    const body = route.request().postDataJSON()
+    if (body.action !== 'release') return route.fallback()
+    releases++
+    expect(route.request().headers()['if-match']).toBe('"3"')
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf-token-32-characters')
+    state.items[0].state = 'released'; state.items[0].revision = 4; state.items[0].released_version = 1
+    state.items[0].released_at = '2027-06-01T10:00:00Z'
+    return route.fulfill({ status: 503, json: { error: { code: 'unavailable', request_id: 'synthetic' } } })
+  })
+  await page.getByRole('button', { name: 'Edit Team handbook', exact: true }).click()
+  await page.getByRole('button', { name: 'Release approved version', exact: true }).click()
+  await expect(page.getByText('Release action outcome is unconfirmed.', { exact: false })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Close editor', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Review latest saved version', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Latest saved content' })).toContainText('released')
+  expect(releases).toBe(1)
+  await page.getByLabel('I reviewed the latest saved version').check()
+  await page.getByRole('button', { name: 'Keep my edits for a new draft', exact: true }).click()
+  await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).toContainText('Content release · Expected revision 3 · Original outcome remains unconfirmed')
+  await expect(page.getByText('Version released to its audience.', { exact: true })).toHaveCount(0)
+  expect(releases).toBe(1)
+})
+
+test('denied privileged history clears the private editor and its audience preview', async ({ page }) => {
+  await setup(page)
+  await page.getByRole('button', { name: 'Edit Team handbook', exact: true }).click()
+  await page.getByLabel('Markdown', { exact: true }).fill('SYNTHETIC-PRIVATE-DRAFT-CANARY')
+  await page.route(`**/content/${pageID}/history*`, route => route.fulfill({ status: 403, json: { error: { code: 'forbidden', request_id: 'synthetic' } } }))
+  await page.getByText('Version comparison and history', { exact: true }).click()
+  await expect(editor(page)).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Audience preview' })).toHaveCount(0)
+  await expect(page.getByText('SYNTHETIC-PRIVATE-DRAFT-CANARY', { exact: false })).toHaveCount(0)
+})
+
+
+test('closing a new template restores the actual template action for keyboard users', async ({ page }, info) => {
+  await setup(page)
+  await page.getByRole('button', { name: 'Start from template', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(editor(page)).toBeVisible()
+  await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: 'Close editor', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Start from template', exact: true })).toBeFocused()
 })
