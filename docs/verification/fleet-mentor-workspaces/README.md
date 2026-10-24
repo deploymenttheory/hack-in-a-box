@@ -1,0 +1,45 @@
+# Mentor operations UI migration — issue #240
+
+Base: merged team/coverage main `e159ebfd4f54ee8a67e5924eb216cb2bbd8372ec`.
+This is an incremental draft checkpoint, not a claim that UI-07 is complete.
+Accepted reference: `docs/design/fleet-reference/fleet-preview.html`, visual contract,
+primitive API, task patterns and independently published style guide.
+
+## Native source and ownership inventory
+
+| Workflow / nested owner | Current native contract and boundary | Intended composition |
+| --- | --- | --- |
+| `mentor-workspace.tsx`: assigned roster, TeamSummary, TeamEvidence | Published mentor coverage identifies current own assignments. Observations require a current published team and active assigned mentor or organiser. Authorship confers no lasting access after assignment loss. | Reuse #237 roster/coverage contracts; scoped team workspace and evidence inspector. |
+| ObservationEditor; `mentor-observation-api.ts`; mentor-drafts/recovery | UUID-keyset current notes; immutable per-note/version history and independent status history cursors. `can_record` requires actual common release + live start + current assignment; note author controls edits. POST takes event revision and note UUID/version, not an invented idempotency endpoint. Recovery reads exact note history/current authority, never assumes absence from a truncated list. | Focused evidence edit → exact review → native receipt/history; retain draft correction but scrub on current authority loss. |
+| OperationalStatus; NoteHistory/StatusHistory | Operational state/reason/next action is private and separate from observation evidence and all scores. Independent versions plus event revision fence concurrent changes. | Separate check-in task with original-source review; no competitive status inference. |
+| `help-workspace.tsx`: RequestForm; `help-attention-queue.tsx` | Complete authorised summary array, native scoped waiting/claimed/resolved/cancelled counts, no prose or cursor. Request creation requires current confirmed published membership. Setup/logistics differ from competition-output help (actual common publication + live start). | Attention queue and focused new-request flow. Initial checkpoint migrates queue only. |
+| `help-reader.tsx`; `help-actions.tsx` | Native current-request capability flags and eligible transfer targets. Request revision + CSRF + Idempotency-Key, stable request/command UUIDs. Claim/release/transfer/resolve/cancel/reopen remain operational. Current GET is not an action receipt; deliberate native idempotent retry must retain exact original command. Meeting route validation stays server-owned. | Named request inspector, reviewed action and exact unknown reconciliation. |
+| `clarification-workspace.tsx`: CommonAnswers, PublishedRubric, PrivateQuestionList | Common answers have server search and UUID cursor; private questions have a separate cursor without global client search. Workspace supplies `can_ask`, `can_review`, team/source, staff attachment gate and native common audience count. | Common answer collection and distinct private attention queue; never mix source questions/attachments into common feed. |
+| `clarification-questions.tsx`; question-files; reader/context | Private question UUID/command identity, current team and source references; private attachment ownership/bytes gated independently. Definite denial clears context; current capability loss must also scrub mounted child drafts/late work. | Private focused question/attachment task and evidence inspector. |
+| `clarification-answer-editor.tsx` | Save document, explicit approve, explicit publish; exact answer revision/version and immutable common challenge/rubric source. Answer document deliberately has no private question/attachment reference. Reviewed audience is native metadata, not publication authority. | Review/correct/confirm common answer publication with source/audience preview. |
+| `scorecard-workspace.tsx`: checkpoint/card loader, editor, SavedCard, history; evidence picker/preview | Cursor-scoped checkpoint/card/history endpoints, current private author/mentor or second reviewer. Rubric digest, checkpoint version, native run and event/card versions bind scores. Pending/unobserved is absent, never zero. Submitted/locked/moderated states remain authoritative. `mentor_final` additionally requires post-cutoff native frozen submission revision. | Focused provisional/final evidence score task and exact original-source review. |
+| `scorecard-api.ts` / model | CurrentCard pages current checkpoint metadata; exact reconciliation reads immutable expected card version and matches actor/team/checkpoint/rubric/run/purpose/frozen submission, full scores/evidence and event revision. No automatic version rebasing or fabricated idempotency header. | Preserve real matcher; current GET alone cannot settle an uncertain original card write. |
+| `review-dashboard.tsx`: dashboard, TeamSummary, TeamReview, CheckpointCoordination | Cursor coverage projection separates operational support from assessment completeness, source availability and native final signoff. Missing/suppressed/unavailable categories remain explicit. Mentor view sees own completion before actual huddle access; metadata grants no private card authority. | Attention queue → named team review workspace with explicit next actions. |
+| `review-huddles.tsx`: configuration, panel/editor, history; review-huddle-api | Current intended panel/moderator, live/assessment stage and source versions govern access/actions. Configure, second review, open, gaps/resolutions, change proposals/decisions, cancel/signoff are separate native commands. Revision+version+actor/action-specific immutable-history match is a real receipt; read-current is not. | Focused configuration/decision review preserving reason, exact source, draft state, keyboard opener and uncertain write barrier. |
+| JudgeSummaryPreview | Dedicated factual backend projection; team/output state, native frozen metadata and artifact counts only. No qualification score, rank, raw private notes or comparative commentary. | Read-only factual handoff inspector. New final judging #109, finalist panels #111, result release #113 and backend freeze #96 remain separate. |
+
+## First checkpoint and remaining work
+
+Implemented: real help queue consumes shared `ActionQueue`, `CollectionToolbar`,
+semantic fields and icons. Local filters operate only on the complete authorised
+summary array; counts retain their native scope. Native request links and all
+existing command adapters remain in place. The presentation export accepts actor ID
+and native queue data, allowing the guide to import actual production composition.
+
+Remaining before readiness: every other nested composition above; first-class
+edit/review/correct/result/next action; current capability/assignment/window fences;
+minimal unresolved history and payload redaction across private projection loss;
+dirty/pending/unknown navigation and real responsive opener focus; actual guide
+examples/guidance; synthetic before/after desktop/mobile evidence; meaningful native
+browser/privacy/claim/window/receipt tests; full local checks, independent Standards
+and Spec reviews and full exact-head CI. No backend/schema/provider policy change.
+
+First-checkpoint proof: TypeScript and both production portal builds pass; targeted
+ESLint for the changed source passes. Existing organiser authorised-summary filter
+and private-prose isolation journey passes on desktop and mobile (2/2). These are
+bounded checkpoint checks, not full issue acceptance or release certification.
