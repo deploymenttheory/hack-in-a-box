@@ -67,7 +67,7 @@ test('resources recheck withdrawal and hide previously opened rules', async ({ p
 })
 
 
-test('organiser readiness warns without a lifecycle gate and starter contacts remain unresolved drafts', async ({ page }) => {
+test('organiser readiness warns without a lifecycle gate and starter contacts remain unresolved drafts @admin', async ({ page }) => {
   await setup(page)
   await openEventSection(page, 'Content')
   await expect(page.getByRole('region', { name: 'Guidance readiness' })).toContainText('These do not block the event lifecycle.')
@@ -90,4 +90,17 @@ test('keyboard guidance reader returns to its actual guidance action across widt
   await page.setViewportSize(info.project.name === 'mobile' ? { width: 1280, height: 800 } : { width: 390, height: 844 })
   await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Read Current event rules', exact: true })).toBeFocused()
+})
+
+
+test('a removed guidance opener returns keyboard focus to the current named guidance heading', async ({ page }) => {
+  await page.clock.install({ time: new Date('2027-06-14T09:00:00Z') })
+  const state = await setup(page); await openEventSection(page, 'Today')
+  await page.getByRole('button', { name: 'Read Current event rules', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Current event rules', exact: true })).toBeFocused()
+  state.hide(); await page.clock.runFor(15_100)
+  await expect(page.getByRole('alert')).toContainText('You do not have access')
+  await page.getByRole('button', { name: 'Back to resources', exact: true }).focus(); await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: 'Read Current event rules', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Rules and contacts', exact: true })).toBeFocused()
 })

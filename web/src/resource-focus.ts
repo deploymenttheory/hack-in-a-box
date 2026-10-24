@@ -12,7 +12,7 @@ export function useResourceReturnFocus(root: RefObject<HTMLElement | null>) {
       const saved = opener.current, candidates = [...(root.current?.querySelectorAll<HTMLElement>('[data-resource-opener], [data-record-focus]') ?? [])]
       const replacement = saved?.element.isConnected ? saved.element : candidates.find(element => (element.dataset.resourceOpener ?? element.dataset.recordFocus) === saved?.key && element.tagName === saved?.tag)
       if (replacement && replacement.getClientRects().length && !replacement.matches(':disabled')) { replacement.focus(); return }
-      const fallback = root.current?.querySelector<HTMLElement>('h1, h2')
+      const fallback = root.current?.querySelector<HTMLElement>('h1, h2, h3')
       if (fallback) { fallback.tabIndex = -1; fallback.focus() }
     })
   }

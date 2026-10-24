@@ -244,7 +244,7 @@ test('roster example keeps unknown intent after a synthetic current read and ret
   await expect(example.getByRole('heading', { name: 'Outcome unknown', exact: true })).toBeVisible()
 })
 
-test('production upload controls keep captured retries deliberate, clear denial and restore useful focus without network', async ({ page }) => {
+test('production upload controls keep captured retries deliberate, clear denial and restore useful focus without network', async ({ page }, info) => {
   const frame = await examples(page, 'Task patterns')
   const upload = frame.getByRole('region', { name: 'Protected upload workflow', exact: true })
   await upload.getByRole('button', { name: 'Choose synthetic file metadata', exact: true }).focus()
@@ -273,4 +273,5 @@ test('production upload controls keep captured retries deliberate, clear denial 
   await expect(upload.getByRole('status').filter({ hasText: 'Synthetic owner callback' })).toBeFocused()
   await expect(upload.getByRole('button', { name: 'Send synthetic upload callback', exact: true })).toBeDisabled()
   expect(await frame.locator('body').evaluate(element => element.scrollWidth > innerWidth)).toBe(false)
+  await upload.screenshot({ path: info.outputPath('protected-upload-guide.png') })
 })
