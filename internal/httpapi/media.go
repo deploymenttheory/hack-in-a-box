@@ -203,3 +203,19 @@ func (h handlers) GetMediaConsentGuidance(
 	}
 	return view, nil
 }
+
+func (h handlers) GetMediaHistory(
+	ctx context.Context,
+	r contract.GetMediaHistoryRequestObject,
+) (contract.GetMediaHistoryResponseObject, error) {
+	var before int64
+	if r.Params.BeforeVersion != nil {
+		before = *r.Params.BeforeVersion
+	}
+	_, limit := page(nil, r.Params.Limit)
+	view, err := h.Media.History(ctx, actor(ctx).ID, r.EventId, r.MediaId, before, limit)
+	if err != nil {
+		return nil, fmt.Errorf("current-owned media decision history: %w", err)
+	}
+	return convertDTO[contract.GetMediaHistory200JSONResponse](view)
+}

@@ -238,6 +238,40 @@ func TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance(t *t
 			t.Fatal(err)
 		}
 	}
+
+	historyPath := path + "/history"
+	check(request(attendee, "GET", historyPath, nil, 1, true), 403)
+	nonowner := testdb.Person(t, pool)
+	exec(`INSERT INTO event_memberships(event_id,person_id,role)VALUES($1,$2,'photographer')`, eventID, nonowner.ID)
+	check(request(nonowner, "GET", historyPath, nil, 1, true), 403)
+	otherEvent := testdb.Event(t, pool, owner.ID)
+	check(request(owner, "GET", "/api/v1/events/"+otherEvent.String()+"/media/"+item.ID.String()+"/history", nil, 1, true), 404)
+	history := request(photographer, "GET", historyPath+"?limit=2", nil, 1, true)
+	check(history, 200)
+	var metadata struct {
+		Items []map[string]json.RawMessage `json:"items"`
+		Next  *int64                       `json:"next_before_version"`
+	}
+	if err = json.Unmarshal(history.Body.Bytes(), &metadata); err != nil {
+		t.Fatal(err)
+	}
+	if len(metadata.Items) != 2 || metadata.Next == nil || *metadata.Next != 2 {
+		t.Fatal("history paging", history.Body)
+	}
+	for _, entry := range metadata.Items {
+		if len(entry) != 3 || entry["version"] == nil || entry["action"] == nil || entry["changed_at"] == nil {
+			t.Fatal("history private field leak", history.Body)
+		}
+	}
+	history = request(owner, "GET", historyPath+"?before_version=2&limit=2", nil, 1, true)
+	check(history, 200)
+	if err = json.Unmarshal(history.Body.Bytes(), &metadata); err != nil {
+		t.Fatal(err)
+	}
+	if len(metadata.Items) != 1 || metadata.Next != nil {
+		t.Fatal("history next page", history.Body)
+	}
+	check(request(owner, "GET", historyPath+"?before_version=0", nil, 1, true), 400)
 	check(request(attendee, "GET", path+"/original", nil, 1, true), 200)
 	check(request(attendee, "GET", path+"/thumbnail", nil, 1, true), 200)
 	file, _, err := native.Original(ctx, attendee.ID, eventID, item.ID)
@@ -264,12 +298,15 @@ func TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance(t *t
 	check(request(attendee, "GET", path+"/original", nil, 1, true), 404)
 	check(request(attendee, "GET", path+"/thumbnail", nil, 1, true), 404)
 	check(request(owner, "GET", path+"/original", nil, 1, true), 403)
+	check(request(owner, "GET", historyPath, nil, 1, true), 200)
+	check(request(photographer, "GET", historyPath, nil, 1, true), 200)
 	exec(
 		`UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='photographer'`,
 		eventID,
 		photographer.ID,
 	)
 	check(request(photographer, "GET", guide, nil, 1, true), 403)
+	check(request(photographer, "GET", historyPath, nil, 1, true), 403)
 	exec(`UPDATE people SET session_revision=session_revision+1 WHERE id=$1`, attendee.ID)
 	check(request(attendee, "GET", base+"/photo-consent", nil, 1, true), 401)
 	for _, secret := range []string{"SENSITIVE-MEDIA", "sensitive-media@example.test", csrf} {

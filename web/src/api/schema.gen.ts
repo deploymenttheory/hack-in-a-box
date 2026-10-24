@@ -3126,6 +3126,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/media/{media_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        /** Current organiser or photographer-owner decision metadata only; historical content and bytes are never returned. */
+        get: operations["getMediaHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/media/{media_id}": {
         parameters: {
             query?: never;
@@ -7013,6 +7033,18 @@ export interface components {
             consent: "unknown" | "yes" | "no";
             eligible: boolean;
         };
+        MediaHistoryEntry: {
+            /** Format: int64 */
+            version: number;
+            action: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        MediaHistoryPage: {
+            items: components["schemas"]["MediaHistoryEntry"][];
+            /** Format: int64 */
+            next_before_version: number | null;
+        };
         MediaItem: {
             /** Format: uuid */
             id: string;
@@ -7029,6 +7061,8 @@ export interface components {
             /** @enum {string} */
             consent_state: "not_reviewed" | "reviewed";
             recording_url: string;
+            /** @description Current native owner may read decision metadata, including read-only archives; grants no historical content or byte access. */
+            can_read_history: boolean;
             can_read_original: boolean;
             can_edit: boolean;
             can_review: boolean;
@@ -13272,6 +13306,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OwnPhotoConsent"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMediaHistory: {
+        parameters: {
+            query?: {
+                before_version?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-owned immutable media decision metadata. No historical content, identities or byte grants. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaHistoryPage"];
                 };
             };
             default: components["responses"]["Error"];

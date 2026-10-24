@@ -32,3 +32,8 @@ ORDER BY id LIMIT sqlc.arg(page_size);
 
 -- name: MediaMaintenanceEvents :many
 SELECT DISTINCT event_id FROM event_media WHERE event_id>sqlc.arg(cursor)::uuid AND state IN('reviewed','released') ORDER BY event_id LIMIT sqlc.arg(page_size);
+
+-- name: MediaHistoryMetadata :many
+SELECT version,action,created_at FROM media_versions
+WHERE event_id=$1 AND id=$2 AND version<sqlc.arg(before_version)::bigint
+ORDER BY version DESC LIMIT sqlc.arg(page_size);
