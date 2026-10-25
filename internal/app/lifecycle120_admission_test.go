@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/uuid"
@@ -19,13 +20,16 @@ type lifecycleAdmissions struct {
 	clients       []*lifecycleClient
 	registrations []registration.View
 	attendeeForm  registration.FormView
+	census        map[string]int64
+	offerID       uuid.UUID
+	waitlistedID  uuid.UUID
 }
 
 // Every mutation here travels through the authenticated native HTTP owner.
 // The final integrated scenario will reuse this phase, including its negative
 // gates; independently running this checkpoint does not complete #120.
 func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current event.View) (lifecycleAdmissions, error) {
-	var cohort lifecycleAdmissions
+	cohort := lifecycleAdmissions{census: map[string]int64{}}
 	base := "/api/v1/events/" + current.ID.String()
 	form, err := publishLifecycleForm(ctx, owner, current.ID, "attendee")
 	if err != nil {
@@ -88,10 +92,22 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 		}
 		cohort.clients = append(cohort.clients, client)
 		cohort.registrations = append(cohort.registrations, applied)
+		if applied.State == "waitlisted" {
+			cohort.waitlistedID = applied.ID
+			if applied.WaitlistPosition == nil || *applied.WaitlistPosition != 1 {
+				return cohort, fmt.Errorf("overflow competitor did not receive the actual first FIFO position")
+			}
+			cohort.census["overflow_waitlist_position"] = *applied.WaitlistPosition
+		}
 		if i == 29 {
-			if _, err := lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusConflict); err != nil {
+			blocked, err := lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusConflict)
+			if err != nil {
 				return cohort, err
 			}
+			if blocked.ConfirmedAttendees != 29 {
+				return cohort, fmt.Errorf("minimum rejection did not observe exactly 29 confirmed competitors")
+			}
+			cohort.census["minimum_blocked_confirmed"] = blocked.ConfirmedAttendees
 		}
 		if i == 30 {
 			if err := owner.call(ctx, http.MethodGet, base, -1, nil, &current, http.StatusOK); err != nil {
@@ -100,6 +116,7 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 			if current.Stage != "registration" || current.ConfirmedAttendees != 30 {
 				return cohort, fmt.Errorf("staff counted as competitors or threshold automatically advanced the event")
 			}
+			cohort.census["minimum_reached_without_auto_advance"] = current.ConfirmedAttendees
 		}
 	}
 	current, err = lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusOK)
@@ -109,6 +126,7 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 	if current.ConfirmedAttendees != 35 {
 		return cohort, fmt.Errorf("explicit competition go decision changed the confirmed count")
 	}
+	cohort.census["explicit_go_confirmed"] = current.ConfirmedAttendees
 	// A withdrawal after go must preserve the stage and cause a real FIFO
 	// offer. Accept through its owner before admission closes, during preparation.
 	departed := cohort.registrations[34]
@@ -127,24 +145,33 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 	if len(own.Items) != 1 || own.Items[0].State != "offered" || own.Items[0].Offer == nil || own.Items[0].WaitlistPosition != nil {
 		return cohort, fmt.Errorf("native preparation-phase FIFO offer was not reserved")
 	}
+	if own.Items[0].ID != cohort.waitlistedID {
+		return cohort, fmt.Errorf("FIFO offer went to a different registration")
+	}
+	cohort.offerID = own.Items[0].Offer.ID
 	if err := owner.call(ctx, http.MethodGet, base, -1, nil, &current, http.StatusOK); err != nil {
 		return cohort, err
 	}
 	if current.Stage != "preparation" || current.ConfirmedAttendees != 34 {
 		return cohort, fmt.Errorf("an outstanding offer counted as confirmed or withdrawal regressed the stage")
 	}
+	cohort.census["pending_offer_excluded_confirmed"] = current.ConfirmedAttendees
 	var accepted registration.View
 	if err := cohort.clients[35].call(ctx, http.MethodPost, base+"/registrations/"+own.Items[0].ID.String()+"/respond", own.Items[0].Revision,
 		map[string]string{"action": "accept"}, &accepted, http.StatusOK); err != nil {
 		return cohort, err
 	}
 	cohort.registrations[35] = accepted
+	if accepted.Offer == nil || accepted.Offer.ID != cohort.offerID || accepted.Offer.State != "accepted" {
+		return cohort, fmt.Errorf("FIFO acceptance did not preserve the original native offer")
+	}
 	if err := owner.call(ctx, http.MethodGet, base, -1, nil, &current, http.StatusOK); err != nil {
 		return cohort, err
 	}
 	if withdrawn.State != "withdrawn" || accepted.State != "confirmed" || current.Stage != "preparation" || current.ConfirmedAttendees != 35 {
 		return cohort, fmt.Errorf("withdrawal/FIFO acceptance changed the go decision or competition census")
 	}
+	cohort.census["accepted_offer_confirmed"] = current.ConfirmedAttendees
 	return cohort, nil
 }
 
@@ -242,7 +269,43 @@ func TestLifecycleComposeAdmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := allocateLifecycleTeams(t.Context(), owner, current.ID, &cohort); err != nil {
+	page, err := allocateLifecycleTeams(t.Context(), owner, current.ID, &cohort)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := owner.call(t.Context(), http.MethodGet, "/api/v1/events/"+current.ID.String(), -1, nil, &current, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	if current.ConfirmedAttendees != 32 || len(cohort.clients) != 36 || !page.Frozen {
+		t.Fatal("final native competition census did not match the exercised cohort")
+	}
+	cohort.census["after_pair_reassignment_confirmed"] = current.ConfirmedAttendees
+	type teamReceipt struct {
+		ID      uuid.UUID   `json:"id"`
+		State   string      `json:"state"`
+		Frozen  bool        `json:"frozen"`
+		Members []uuid.UUID `json:"members"`
+	}
+	var groups []teamReceipt
+	for _, team := range page.Teams {
+		group := teamReceipt{ID: team.ID, State: team.State, Frozen: team.Frozen, Members: []uuid.UUID{}}
+		for _, member := range team.Published {
+			group.Members = append(group.Members, member.ID)
+		}
+		groups = append(groups, group)
+	}
+	receipt, err := json.MarshalIndent(map[string]any{
+		"checkpoint": "native-compose-admission-teams-only", "complete_lifecycle": false,
+		"event_id": current.ID, "applications": len(cohort.clients), "census": cohort.census,
+		"waitlisted_registration_id": cohort.waitlistedID, "accepted_offer_id": cohort.offerID,
+		"frozen_revision": page.Revision, "teams": groups,
+		"assertions":                     []string{"normal-oidc-for-every-person", "published-exact-form-version", "native-facilitator-selection", "staff-excluded-from-minimum", "409-attendance_shortfall-without-state-change", "threshold-does-not-auto-advance", "explicit-go", "capacity-and-fifo", "offer-excluded-until-accepted", "offer-survives-preparation", "target-five-published-teams", "actual-withdrawal-leaves-two", "409-teams_unready-without-state-change", "explicit-unlock-and-reassignment", "draft-does-not-change-publication", "reviewed-republication", "native-freeze", "409-teams_frozen-without-state-change"},
+		"queued_notifications_exercised": false,
+	}, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join("/artifacts", "admission-teams-only.json"), receipt, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	t.Log("partial native HTTP admission/allocation checkpoint; L01-L18 integrated lifecycle remains required")
