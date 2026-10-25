@@ -213,3 +213,20 @@ initial-panel evidence remains attributed to cleancb417, not relabelled as this
 later correction. Full native final-card/tie/signoff and write-guide acceptance
 remain open. The new-proposal review now explicitly states its actual native
 reset of current ballots/resolutions while preserving immutable history.
+
+## Independent interactive write guide
+
+The guide now imports actual production final-card fields/validation and the
+production confirmation dialog, using explicitly fictional memory callbacks.
+Initial new standalone/embedded cases failed all four real-opener return
+assertions while the four inherited read-guide cases passed. The guide owner now
+restores the actual enabled opener after the correction render; unchanged cases
+pass **8/8 in 4.0s** across both widths. They cover retained invalid values and
+first-invalid focus, captured review/correction, pending dismissal lock, unknown
+versus current facts, private scope disposal and safe synthetic original callback.
+Cookie/storage traps and the no-account/API boundary stay active. This is guide
+behavior, not real native domain acknowledgement or a device certification.
+
+The dedicated production browser configuration now supports a bounded regular
+portal run as well as administrator, preserving actual portal accessible names.
+No full ordinary browser suite is multiplied by the new configuration.

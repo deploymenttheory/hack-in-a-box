@@ -329,3 +329,12 @@ publication capability; #112/#113 own later result/publication/feedback actions.
 Use the actual native discovery/action capabilities before enabling commands,
 keep editable invalid forms actionable, preserve exact version/request recovery,
 and return focus to the actual review opener or an enabled local fallback.
+
+The moderation example also imports the controlled production final-card fields,
+including pending categories, descriptive anchors, retained evidence references,
+reason validation and first-invalid focus. Its separate memory-only callback
+shows reviewed values, pending dismissal locks, unknown outcomes and private
+scope disposal. These fictional callbacks never imply a saved native card,
+selection signoff or published announcement. Keep sent-command metadata and
+its departure guard above the private editor; a current read or a deliberate new
+base cannot acknowledge an earlier request.
