@@ -1,3 +1,4 @@
+import { AnnouncedResults } from './results-view'
 import type { CSSProperties, ReactNode } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { brandStyle, contrast, defaultBranding } from './design-system/palette'
@@ -19,5 +20,6 @@ export function RoomCanvas({ snapshot, serverNow, connection, assets, fullscreen
     <div className="room-live-status" role="status">{connection === 'connected' ? 'Live room feed' : 'Connection lost · reconnecting · showing last-known room state'} · Last update {new Intl.DateTimeFormat('en-GB',{timeZone:snapshot.timezone,dateStyle:'medium',timeStyle:'medium'}).format(new Date(snapshot.server_now))}</div>
     <section className="room-current"><div className="room-copy"><p className="room-kicker">{snapshot.override_active ? 'Urgent announcement' : 'Now'}</p><h1>{snapshot.current?.title ?? 'Waiting for the MC'}</h1><p className="room-instructions">{snapshot.current?.text ?? 'The next approved activity will appear here.'}</p>{snapshot.current?.content_title && <p className="room-content">{snapshot.current.content_title}</p>}</div><aside><div className="room-countdown" aria-label={`Countdown ${time}`}>{time}</div><p>{snapshot.mode === 'held' ? 'Timer held' : remaining === 0 ? 'Time complete' : 'Time remaining'}</p>{destination && <div className="room-qr"><p className="room-call-to-action">Scan or open this link</p><QRCodeSVG value={destination} size={320} marginSize={4} level="M" title="Scan to open the displayed link" /><a href={destination} target="_blank" rel="noopener noreferrer">{destination}</a></div>}</aside></section>
     <footer><span>Next</span><strong>{snapshot.next?.title ?? 'Await the MC’s next instruction'}</strong></footer>
+    {!!snapshot.results?.length && <AnnouncedResults items={snapshot.results} timezone={snapshot.timezone} room />}
   </main>
 }

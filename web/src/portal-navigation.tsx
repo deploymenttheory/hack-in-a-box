@@ -1,3 +1,4 @@
+import { isResultsDestination } from './results-link'
 import { styleguideURL } from './styleguide-url'
 import { useState, type ReactNode } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -10,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover
 import { InboxLink } from './inbox'
 
 export type PortalDestination = { href: string; label: string; icon: IconName }
-export function permittedDestinations(session: Pick<Session, 'can_create_events'>, admin: boolean, event?: Pick<EventRecord, 'id' | 'name' | 'can_read_review_coverage'>): PortalDestination[] {
+export function permittedDestinations(session: Pick<Session, 'can_create_events'>, admin: boolean, event?: Pick<EventRecord, 'id' | 'name' | 'can_read_review_coverage'> & Partial<Pick<EventRecord, 'can_edit'>>): PortalDestination[] {
   return [
     { href: '/', label: 'Workspace', icon: 'layout' },
     { href: '/ideas', label: 'Ideas & projects', icon: 'book' },
@@ -20,6 +21,10 @@ export function permittedDestinations(session: Pick<Session, 'can_create_events'
     ...(admin && session.can_create_events ? [{ href: '/events/new', label: 'Create event', icon: 'add' } as const, { href: '/templates', label: 'Event templates', icon: 'layout' } as const] : []),
     ...(event ? [
       { href: `/events/${event.id}`, label: event.name + ' workspace', icon: 'calendar' } as const,
+      { href: `/events/${event.id}/results/ballots`, label: 'Your assigned tie ballots', icon: 'check' } as const,
+      { href: `/events/${event.id}/results`, label: 'Announced results', icon: 'check' } as const,
+      { href: `/events/${event.id}/team-feedback`, label: 'Team feedback reports', icon: 'book' } as const,
+      ...(admin && 'can_edit' in event && event.can_edit ? [{ href: `/events/${event.id}/results/prepare`, label: 'Prepare and announce results', icon: 'send' } as const] : []),
       { href: `/events/${event.id}/judging`, label: 'Judge desk and practice', icon: 'check' } as const,
       { href: `/events/${event.id}/panel`, label: 'Moderation and selections', icon: 'list' } as const,
       { href: `/events/${event.id}/surveys`, label: 'Surveys and feedback', icon: 'list' } as const,
@@ -33,7 +38,7 @@ export function permittedDestinations(session: Pick<Session, 'can_create_events'
 function DestinationSearch({ destinations }: { destinations: PortalDestination[] }) {
   const [open, setOpen] = useState(false), [search, setSearch] = useState('')
   const matches = destinations.filter(item => item.label.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
-  return <Popover open={open} onOpenChange={value => { setOpen(value); if (!value) setSearch('') }}><PopoverTrigger render={<Button variant="ghost" icon="search" className="fleet-destination-trigger" />}><span className="fleet-destination-label">Find a destination</span></PopoverTrigger><PopoverContent title="Go to a workspace" className="fleet-destination-search"><Label htmlFor="portal-destination">Search permitted destinations</Label><Input id="portal-destination" type="search" autoComplete="off" maxLength={100} value={search} onChange={event => setSearch(event.target.value)} /><p className="fleet-visually-hidden" role="status">{matches.length} matching destinations</p><ul>{matches.map(item => <li key={item.href}><a href={item.href}><Icon name={item.icon} />{item.label}</a></li>)}</ul>{!matches.length && <p>No matching destinations. Try another name.</p>}<p className="fleet-shell-note">Current access is checked when you open a destination.</p></PopoverContent></Popover>
+  return <Popover open={open} onOpenChange={value => { setOpen(value); if (!value) setSearch('') }}><PopoverTrigger render={<Button variant="ghost" icon="search" className="fleet-destination-trigger" />}><span className="fleet-destination-label">Find a destination</span></PopoverTrigger><PopoverContent title="Go to a workspace" className="fleet-destination-search"><Label htmlFor="portal-destination">Search permitted destinations</Label><Input id="portal-destination" type="search" autoComplete="off" maxLength={100} value={search} onChange={event => setSearch(event.target.value)} /><p className="fleet-visually-hidden" role="status">{matches.length} matching destinations</p><ul>{matches.map(item => <li key={item.href}>{isResultsDestination(item.href) ? <Link to={item.href} onClick={() => setOpen(false)}><Icon name={item.icon} />{item.label}</Link> : <a href={item.href}><Icon name={item.icon} />{item.label}</a>}</li>)}</ul>{!matches.length && <p>No matching destinations. Try another name.</p>}<p className="fleet-shell-note">Current access is checked when you open a destination.</p></PopoverContent></Popover>
 }
 function EventSwitcher({ session, event }: { session: Session; event: EventRecord }) {
   const [open, setOpen] = useState(false)

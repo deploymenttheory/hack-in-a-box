@@ -338,3 +338,42 @@ scope disposal. These fictional callbacks never imply a saved native card,
 selection signoff or published announcement. Keep sent-command metadata and
 its departure guard above the private editor; a current read or a deliberate new
 base cannot acknowledge an earlier request.
+
+## Results and deliberate team feedback
+
+`AnnouncedResults` accepts only the typed native announcement projection. It selects
+one latest publication per kind for participant and room reading; MC cue, countdown,
+QR destination and next cue remain independent. It never loads private preparation
+or looks up an unpublished result. `ResultReview`, `TeamFeedbackContent` and
+`TeamFeedbackReview` are the same production presentations used in the independent
+synthetic guide, with local callbacks and no account, API or storage access.
+
+Native owners keep report body, review and recipients in disposable private memory,
+exclude private reading/reviews from print and retain only original request metadata
+above route and authority lifetimes. Capture exact actor, event, team, source,
+version, authoring body and explicit score inclusion before review. Re-read current
+source and audience before sending. An original acknowledgement must match actor,
+request, action, version and native fingerprint; current GET never settles a lost
+response. Correction saves preserve the previous release until a separate deliberate
+versioned release records author and confirmed published-team audience. Score choice
+starts off; only exact own-team category averages and total can be included.
+
+Keep the initiating form mounted with `hidden` during review so cancellation restores
+the actual opener. Pending locks dismissal; unknown offers original receipt lookup
+or deliberate current-base review, never an automatic replay. Current denial disposes
+private report, audience and held continuation; restoring permission starts a fresh
+read. The guide distinguishes synthetic callback completion from a native receipt.
+
+`BallotTasks` and `BallotReview` demonstrate a judge's explicitly selected overall
+or category tie and captured vote/replacement. No first tie or winner is selected
+automatically; task status and the next assigned tie remain visible. Selection
+focuses the current tie heading; cancel returns to the actual review opener. Category
+labels come from the same current native frozen brief's published rubric. Native ballot discovery supplies the exact current judge run and
+candidate set; names and frozen deliverables come from current assigned briefs.
+Only native-returned judge ties are offered; qualification panel categories keep
+their separate native mentor/organiser authority.
+Only the caller's vote prose is displayed. Every required judge and a strict
+majority remain native authority; a split offers another deliberate reviewed vote.
+No organiser casting action is inferred, and announcement/award confirmation stay
+separate. Vote recovery matches actor, request, run, tie/candidates, version and
+native fingerprint without retaining observed evidence or reasons above the task.

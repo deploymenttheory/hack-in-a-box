@@ -36,6 +36,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teamreports"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
@@ -91,6 +92,7 @@ func newAPIDependencies(
 	}
 	deps := httpapi.Dependencies{
 		Results:             resultOwner,
+		TeamReports:         teamreports.Service{Pool: pool, Now: now, Results: &resultOwner},
 		ResultsAdminSurface: cfg.Surface == "admin",
 		Judging:             judges,
 		Qualification:       owner,

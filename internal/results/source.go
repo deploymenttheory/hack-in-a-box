@@ -12,6 +12,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
@@ -35,6 +36,15 @@ func (s Service) source(
 	ctx context.Context,
 	tx pgx.Tx,
 	actor, eventID uuid.UUID,
+) (assessmentSource, error) {
+	return s.sourceMode(ctx, tx, actor, eventID, false)
+}
+
+func (s Service) sourceMode(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	readOnly bool,
 ) (assessmentSource, error) {
 	out := assessmentSource{preview: emptyPreview()}
 	q := dbgen.New(tx)
@@ -124,10 +134,14 @@ func (s Service) source(
 		)
 		return out, nil
 	}
-	completion, tallies, err := CalculateInTransaction(
+	completionReader := s.Judging.CompletionInTransaction
+	if readOnly {
+		completionReader = s.Judging.ReadCompletionInTransaction
+	}
+	completion, tallies, err := calculateCompletion(
 		ctx,
 		tx,
-		s.Judging,
+		completionReader,
 		actor,
 		eventID,
 		out.preview.JudgeRunID,
@@ -135,7 +149,7 @@ func (s Service) source(
 	if err != nil {
 		if errors.Is(err, access.ErrConflict) || errors.Is(err, access.ErrForbidden) ||
 			errors.Is(err, access.ErrNotFound) ||
-			errors.Is(err, ErrIncomplete) {
+			errors.Is(err, ErrIncomplete) || readOnly && errors.Is(err, event.ErrBlocked) {
 			out.preview.Blockers = append(
 				out.preview.Blockers,
 				"current_required_judge_assessment_needed",

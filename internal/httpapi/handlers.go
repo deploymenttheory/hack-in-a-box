@@ -62,12 +62,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
+	"github.com/deploymenttheory/hack-in-a-box/internal/teamreports"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Dependencies struct {
+	TeamReports          teamreports.Service
 	Results              results.Service
 	ResultsAdminSurface  bool
 	Qualification        qualification.Service

@@ -22,8 +22,14 @@ func (s Service) assessment(
 	tx pgx.Tx,
 	actor, eventID, runID, teamID uuid.UUID,
 ) (rubric.AssessmentSnapshot, submissions.Page, error) {
+	return s.assessmentMode(ctx, tx, actor, eventID, runID, teamID, true)
+}
+
+func (s Service) assessmentMode(ctx context.Context, tx pgx.Tx,
+	actor, eventID, runID, teamID uuid.UUID, write bool,
+) (rubric.AssessmentSnapshot, submissions.Page, error) {
 	var empty rubric.AssessmentSnapshot
-	a, err := s.guard(ctx, tx, actor, eventID, true)
+	a, err := s.guard(ctx, tx, actor, eventID, write)
 	if err != nil {
 		return empty, submissions.Page{}, err
 	}
@@ -42,7 +48,12 @@ func (s Service) assessment(
 	if err != nil {
 		return empty, p, failure("current frozen final", err)
 	}
-	snapshot, err := (rubric.Service{Pool: s.Pool, Clock: s.now, Finalists: s.Finalists}).StartAssessmentInTransaction(
+	owner := rubric.Service{Pool: s.Pool, Clock: s.now, Finalists: s.Finalists}
+	read := owner.ReadAssessmentInTransaction
+	if write {
+		read = owner.StartAssessmentInTransaction
+	}
+	snapshot, err := read(
 		ctx,
 		tx,
 		actor,

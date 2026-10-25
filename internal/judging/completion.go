@@ -34,12 +34,31 @@ func (s Service) CompletionInTransaction(
 	tx pgx.Tx,
 	actor, eventID, runID uuid.UUID,
 ) (Completion, error) {
+	return s.completion(ctx, tx, actor, eventID, runID, true)
+}
+
+// ReadCompletionInTransaction validates settled sources with all current native
+// authority and evidence gates, without starting assessment or permitting writes.
+func (s Service) ReadCompletionInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, runID uuid.UUID,
+) (Completion, error) {
+	return s.completion(ctx, tx, actor, eventID, runID, false)
+}
+
+func (s Service) completion(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, runID uuid.UUID,
+	write bool,
+) (Completion, error) {
 	out := Completion{
 		RunID:              runID,
 		Cards:              []Card{},
 		RepositoryEvidence: []submissionfreeze.FinalEvidence{},
 	}
-	a, err := s.guard(ctx, tx, actor, eventID, true)
+	a, err := s.guard(ctx, tx, actor, eventID, write)
 	if err != nil {
 		return out, err
 	}
@@ -111,7 +130,7 @@ func (s Service) CompletionInTransaction(
 			return out, access.ErrConflict
 		}
 		teams++
-		cards, err := s.completedCards(ctx, tx, eventID, runID, entry.TeamID, ids, d)
+		cards, err := s.completedCards(ctx, tx, eventID, runID, entry.TeamID, ids, d, write)
 		if err != nil {
 			return out, err
 		}
@@ -185,7 +204,7 @@ func (s Service) ResultApprovalCurrentInTransaction(
 	tx pgx.Tx,
 	actor, eventID, runID, approvalID uuid.UUID,
 ) error {
-	current, err := s.CompletionInTransaction(ctx, tx, actor, eventID, runID)
+	current, err := s.ReadCompletionInTransaction(ctx, tx, actor, eventID, runID)
 	if err != nil {
 		return err
 	}
@@ -273,10 +292,11 @@ func (s Service) completedCards(
 	eventID, runID, teamID uuid.UUID,
 	ids []uuid.UUID,
 	d rubric.Definition,
+	write bool,
 ) ([]Card, error) {
 	out := []Card{}
 	for _, judge := range ids {
-		snapshot, final, err := s.assessment(ctx, tx, judge, eventID, runID, teamID)
+		snapshot, final, err := s.assessmentMode(ctx, tx, judge, eventID, runID, teamID, write)
 		if err != nil {
 			return nil, err
 		}

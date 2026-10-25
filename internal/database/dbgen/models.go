@@ -1904,6 +1904,28 @@ type TeamCredentialAssignment struct {
 	TeamID       uuid.UUID
 }
 
+type TeamFeedbackCommand struct {
+	EventID   uuid.UUID
+	TeamID    uuid.UUID
+	RequestID uuid.UUID
+	ActorID   uuid.UUID
+	Version   int64
+	Receipt   []byte
+}
+
+type TeamFeedbackVersion struct {
+	EventID        uuid.UUID
+	TeamID         uuid.UUID
+	Version        int64
+	State          string
+	AuthorID       uuid.UUID
+	ActorID        uuid.UUID
+	JudgeRunID     *uuid.UUID
+	ConfirmationID *uuid.UUID
+	Document       []byte
+	ChangedAt      time.Time
+}
+
 type TeamRepository struct {
 	EventID              uuid.UUID
 	TeamID               uuid.UUID

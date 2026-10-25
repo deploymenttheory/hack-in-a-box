@@ -4,6 +4,83 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/teams/{team_id}/feedback-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTeamFeedbackReport"];
+        put?: never;
+        post: operations["changeTeamFeedbackReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/feedback-report/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTeamFeedbackReportHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/feedback-report/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTeamFeedbackReportReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/feedback-report/released": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getReleasedTeamFeedbackReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/results": {
         parameters: {
             query?: never;
@@ -4167,6 +4244,125 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        TeamFeedbackCurrentSource: {
+            binding: string;
+            /** Format: uuid */
+            team_id: string;
+            scores_available: boolean;
+            final_scores: components["schemas"]["TeamFeedbackScores"] | null;
+        };
+        TeamFeedbackBody: {
+            title: string;
+            summary: string;
+            highlights: string[];
+            next_steps: string[];
+        };
+        TeamFeedbackSource: {
+            /** Format: uuid */
+            confirmation_id: string | null;
+            /** Format: uuid */
+            judge_run_id: string | null;
+            binding: string;
+            /** Format: uuid */
+            team_id: string;
+        };
+        TeamFeedbackScores: {
+            /** Format: uuid */
+            confirmation_id: string;
+            /** Format: uuid */
+            judge_run_id: string;
+            binding: string;
+            /** Format: uuid */
+            team_id: string;
+            scores_available: boolean;
+            reference: components["schemas"]["RubricReference"];
+            required_judges: number;
+            categories: {
+                /** Format: uuid */
+                category_id: string;
+                label: string;
+                average: components["schemas"]["ResultExact"];
+            }[];
+            total: components["schemas"]["ResultExact"] | null;
+        };
+        TeamFeedbackRecord: {
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            state: "draft" | "released";
+            /** Format: uuid */
+            team_id: string;
+            body: components["schemas"]["TeamFeedbackBody"];
+            include_final_scores: boolean;
+            source: components["schemas"]["TeamFeedbackSource"];
+            final_scores: components["schemas"]["TeamFeedbackScores"] | null;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            audience: string[];
+            /** Format: date-time */
+            changed_at: string;
+            /** Format: date-time */
+            released_at: string | null;
+            reason: string;
+        };
+        TeamFeedbackReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** @enum {string} */
+            action: "save" | "release";
+            /** Format: int64 */
+            expected_version: number;
+            /** Format: int64 */
+            version: number;
+            fingerprint: string;
+        };
+        TeamFeedbackCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "release";
+            source_binding: string;
+            reason: string;
+            body?: components["schemas"]["TeamFeedbackBody"];
+            include_final_scores?: boolean;
+            score_binding?: string;
+        };
+        TeamFeedbackPage: {
+            /** Format: int64 */
+            version: number;
+            current_source: components["schemas"]["TeamFeedbackCurrentSource"] | null;
+            latest: components["schemas"]["TeamFeedbackRecord"] | null;
+            receipt: components["schemas"]["TeamFeedbackReceipt"] | null;
+        };
+        ReleasedTeamFeedbackReport: {
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            team_id: string;
+            body: components["schemas"]["TeamFeedbackBody"];
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            released_by: string;
+            /** Format: date-time */
+            released_at: string;
+            final_scores: components["schemas"]["TeamFeedbackScores"] | null;
+        };
+        TeamFeedbackHistory: {
+            items: components["schemas"]["TeamFeedbackRecord"][];
+        };
+        TeamFeedbackRecovery: {
+            receipt: components["schemas"]["TeamFeedbackReceipt"] | null;
+        };
+        ReleasedTeamFeedback: {
+            report: components["schemas"]["ReleasedTeamFeedbackReport"] | null;
+        };
         ResultExact: {
             numerator: string;
             denominator: string;
@@ -9338,6 +9534,135 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getTeamFeedbackReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser-only report preparation on the admin portal; draft is never a participant release. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamFeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeTeamFeedbackReport: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted current event revision for results commands; result version is captured separately in the body. */
+                "If-Match": components["parameters"]["ResultRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamFeedbackCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original acknowledgement plus separately current organiser preparation; explicit save and release only. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamFeedbackPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeamFeedbackReportHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current organiser-only retained report versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamFeedbackHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTeamFeedbackReportReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Actor-exact original acknowledgement under current organiser and team authority; never inferred from current GET. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamFeedbackRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReleasedTeamFeedbackReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Only explicitly released own-team report under current confirmed published membership; optional final scores require deliberate organiser selection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleasedTeamFeedback"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getResults: {
         parameters: {
             query?: never;
