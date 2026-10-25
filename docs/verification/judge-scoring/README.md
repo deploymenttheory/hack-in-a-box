@@ -123,3 +123,33 @@ with PostgreSQL/race in33.652s; strict authenticated HTTP contract/authority
 passed5.229s. The summary source configured lint reported0issues and generated
 TypeScript checked successfully. Fresh exact-head CI, independent reviews and
 real #110 policy integration remain outstanding acceptance gates.
+
+## Mixed-deliverable recipient privacy correction
+
+Independent review of404377c found two P1 projection defects. A mentor could
+explicitly author/approve facts for a mentor-only final artifact and the judge
+brief returned them without checking the recipient's per-artifact audience.
+Likewise retained card evidence and attached notes survived in own/deliberation/
+history projections after a dual-role judge lost mentor access, even while the
+same frozen final retained another judge-visible artifact.
+
+Actual native regressions first establish a mixed immutable final with two
+artifacts visible to the assigned mentor/judge and one visible to a judge-only
+recipient. They exercise explicit factual approval, submitted independent cards,
+opened deliberation and actual mentor-role revocation while judge assignment
+remains. On unchanged404 production both failed (package10.010s), revealing the
+hidden ID and its attached note. The same cases pass after correction6.281s.
+
+Current projections now copy and filter each referenced deliverable and its
+attached prose through the recipient's native exact-revision submission document.
+This covers the approved briefing, author/reviewer summary read, own card,
+deliberation peers and authored history. Untargeted judge-authored notes remain
+independent scoring evidence; no semantic text sanitization is claimed. Visible
+facts/evidence remain and retained summary/card JSON bytes are asserted unchanged.
+Native final/SHA identity, result completeness, original receipts and migration51
+are unchanged.
+
+The full scoring owner passes real PostgreSQL/race28.632s; existing strict
+authenticated judge HTTP/OpenAPI/CSRF/role-loss tests pass5.273s. These results are
+pre-rebase local evidence. Canonical parity, configured lint, integration after
+rebase and fresh exact-head CI remain separate checks; this is not acceptance.

@@ -153,6 +153,10 @@ func (s Service) Summary(
 				}
 			}
 		}
+		if out.Summary != nil {
+			projected := projectSummary(*out.Summary, p.Final.Document)
+			out.Summary = &projected
+		}
 		if requestID != uuid.Nil {
 			var raw []byte
 			err = tx.QueryRow(ctx, "SELECT result FROM judge_commands WHERE event_id=$1 AND request_id=$2 AND actor_id=$3", eventID, requestID, actor).

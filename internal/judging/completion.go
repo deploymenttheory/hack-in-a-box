@@ -244,6 +244,8 @@ func (s Service) OwnHistory(
 			out[i].Repository = FreezeEvidence{Status: "unavailable"}
 			out[i].Scores = []Score{}
 			out[i].State = "source_unavailable"
+		} else {
+			out[i] = projectCard(out[i], document)
 		}
 	}
 	return out, nil

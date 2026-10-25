@@ -35,6 +35,7 @@ type fixture struct {
 	s                             Service
 	owner, first, second, member  dbgen.Person
 	event, team, run, deliverable uuid.UUID
+	hiddenDeliverable             uuid.UUID
 	now                           time.Time
 	dates                         event.Configuration
 	criteria                      rubric.Configuration
@@ -212,6 +213,19 @@ func setup(t *testing.T, managed ...bool) *fixture {
 			Audience:      []string{"judge", "mentor", "organiser"},
 		},
 	}
+	if len(managed) > 2 && managed[2] {
+		f.hiddenDeliverable = uuid.New()
+		defs.Deliverables = append(
+			defs.Deliverables,
+			templates.Deliverable{
+				ID:            f.hiddenDeliverable,
+				Title:         "Mentor-only artifact",
+				Required:      true,
+				EvidenceKinds: []string{"url"},
+				Audience:      []string{"mentor", "organiser"},
+			},
+		)
+	}
 	raw, _ = json.Marshal(defs)
 	f.exec(
 		"INSERT INTO event_definitions(event_id,definitions) VALUES($1,$2) ON CONFLICT(event_id) DO UPDATE SET definitions=EXCLUDED.definitions",
@@ -256,14 +270,14 @@ func setup(t *testing.T, managed ...bool) *fixture {
 		p.Revision,
 		submissions.Command{
 			Reason: "Synthetic formal output",
-			Evidence: []submissions.Evidence{
+			Evidence: append([]submissions.Evidence{
 				{
 					DeliverableID: f.deliverable,
 					Kind:          kind,
 					Label:         "Demonstration",
 					URL:           url,
 				},
-			},
+			}, mixedFinalEvidence(f)...),
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -969,5 +983,19 @@ func TestFactualBriefDoesNotImportPrivateNativeMentorEvidence(t *testing.T) {
 		brief.SubmissionRevision != *brief.Output.FrozenRevision ||
 		len(brief.Output.Artifacts) != 1 {
 		t.Fatal("factual native final metadata missing", brief.Output)
+	}
+}
+
+func mixedFinalEvidence(f *fixture) []submissions.Evidence {
+	if f.hiddenDeliverable == uuid.Nil {
+		return nil
+	}
+	return []submissions.Evidence{
+		{
+			DeliverableID: f.hiddenDeliverable,
+			Kind:          "url",
+			Label:         "Mentor-only artifact",
+			URL:           "https://example.test/private-mentor-artifact",
+		},
 	}
 }

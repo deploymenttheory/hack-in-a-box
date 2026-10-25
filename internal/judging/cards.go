@@ -126,6 +126,14 @@ func (s Service) Brief(
 			copy.Scores = []Score{}
 			card = &copy
 		}
+		if card != nil {
+			projected := projectCard(*card, p.Final.Document)
+			card = &projected
+		}
+		if mentorSummary.Summary != nil {
+			projected := projectSummary(*mentorSummary.Summary, p.Final.Document)
+			mentorSummary.Summary = &projected
+		}
 		out = Brief{
 			MentorSummary:        mentorSummary.Summary,
 			TeamID:               teamID,
@@ -161,7 +169,10 @@ func (s Service) Brief(
 				}
 				if c != nil && c.State == "submitted" && c.SubmissionRevision == p.Final.Revision &&
 					sameFreeze(c.Repository, freezeEvidence(evidence)) {
-					out.SubmittedCards = append(out.SubmittedCards, *c)
+					out.SubmittedCards = append(
+						out.SubmittedCards,
+						projectCard(*c, p.Final.Document),
+					)
 				}
 			}
 		}
