@@ -7,16 +7,16 @@ import { outcomeDenied } from './outcome-command'
 
 // Cached private data is never a mount's authority. A route must obtain its own
 // current GET, even when its parent has temporarily lost and regained access.
-export function useOutcomeRead<T>(id: string, category: string, read: (signal: AbortSignal) => Promise<T>) {
+export function useOutcomeRead<T>(id: string, category: string, read: (signal: AbortSignal) => Promise<T>, onDenied?: () => void) {
   const identity = useIdentity(), cache = useQueryClient()
   const [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(0)
   const [blocked, setBlocked] = useState<unknown>()
   const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${category}:${id}`)
   const prefix = useMemo(() => privateKey(identity.person.id, id, category), [identity.person.id, id, category])
   const deny = useCallback((error: unknown) => {
-    scope.invalidate(); setBlocked(error)
+    scope.invalidate(); setBlocked(error); onDenied?.()
     void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix })
-  }, [scope, cache, prefix])
+  }, [scope, cache, prefix, onDenied])
   useEffect(() => () => { void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix }) }, [cache, prefix])
   const current = useQuery({ queryKey: [...prefix, identity.draft_scope, mount, generation], gcTime: 0, enabled: !blocked,
     queryFn: async ({ signal }) => {
