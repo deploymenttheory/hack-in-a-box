@@ -75,3 +75,30 @@ reason/panel payloads. This changes retained metadata only, not native authority
 or any command precondition. The full five-case communications suite passes
 (506ms), along with TypeScript and focused ESLint. Native command/browser receipt
 matching remains a separate required proof; this unit success is not that proof.
+
+## Native receipt codec and command-owner extension
+
+The additive real PostgreSQL/race test
+`TestFrontendQualificationCodecUsesActualAcceptedOriginalReceipts` uses the
+existing native receipt fixture and actual `Service.Change`/`OriginalReceipt`.
+With `HACKBOX_INTEGRATION=1`, it passed in **3.991s** and produced three accepted
+command/receipt vectors, including initial version0, verbatim HTML/Unicode reason,
+and nil versus explicit empty evidence. The frontend fingerprint matches those
+actual immutable native receipts; the shared metadata plus codec suite passes
+**6/6 in 906ms**. Go lint reports zero issues. Types/focused lint and both portal/
+static-guide builds pass for the codec/API/field extension.
+
+This working-tree extension adds exact native API adapters, controlled reasoned
+score fields, and a scoped reviewed-command/original-recovery owner. Its UI owner
+integration and native browser command journeys remain pending the newly
+implemented actual producer discovery/readiness checkpoint. The hook is not
+claimed as an exercised complete workflow. The three corpus commands are panel
+configuration; final-card/evidence/tie serialization still requires real native
+UI command proof. No stored private body survives task disposal.
+
+The first Go invocation omitted the explicit integration flag, so its successful
+compile with skipped fixture is **not** native execution evidence. An attempted
+frontend corpus run then correctly failed to resolve the absent artifact. The
+explicitly enabled native run generated the real corpus; only the subsequent
+six passing frontend cases are codec evidence. All owned native/browser/build
+handles reached terminal status; the fixture terminated only its own container.
