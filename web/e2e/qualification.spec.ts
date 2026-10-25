@@ -60,3 +60,44 @@ test('current native discovery and editable panel validation support keyboard re
  await page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}).press('Enter');await expect(page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true})).toBeFocused();expect(writes).toHaveLength(1)
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
+
+async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|'408'){
+ const state=await fixture(page),writes:QualificationCommand[]=[],organiser=initial.round.panel.organiser_id,mentor=initial.round.panel.mentor_ids[0]
+ state.page.round.version=0;state.page.round.cards=[];state.page.round.signoff=null;state.page.current=false;state.page.preview=null;state.page.capabilities={can_read_panel:false,can_configure_panel:true,can_propose:false,can_sign_off:false,read_only:false,record_locked:false}
+ let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/staff`,route=>route.fulfill({json:{items:[{person_id:organiser,display_name:'Current organising lead',role:'organiser',active:true,changed_at:'2027-06-20T15:00:00Z'},{person_id:mentor,display_name:'Current panel mentor',role:'mentor',active:true,changed_at:'2027-06-20T15:00:00Z'}]}}))
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  if(route.request().method()!=='POST')return state.denied?route.fulfill({status:403,json:{error:{code:'forbidden',message:'Synthetic reader denied',request_id:'synthetic'}}}):route.fulfill({json:state.page})
+  const body=route.request().postDataJSON() as QualificationCommand;writes.push(body)
+  const receipt={request_id:body.request_id,run_id:run,action:body.action,expected_revision:state.page.revision,expected_version:body.version,version:body.version+1,fingerprint:await qualificationFingerprint(body,state.page.revision)}
+  await gate
+  if(response==='408')return route.fulfill({status:408,json:{error:{code:'timeout',message:'Synthetic response timeout after dispatch',request_id:'synthetic'}}})
+  return route.fulfill({json:{...state.page,receipt}})
+ })
+ await page.goto(path);await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:'Review entered panel decision',exact:true})).toBeEnabled();await page.getByLabel('Recorded panel reason',{exact:true}).fill('Private panel reason must disappear on current denial');await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter');await page.getByRole('alertdialog',{name:'Review private panel command',exact:true}).getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
+ await expect.poll(()=>writes.length).toBe(1)
+ return {state,writes,release}
+}
+test('HTTP408 retains the original panel outcome as unknown without replay',async({page})=>{
+ const task=await pendingPanel(page,'408');task.release()
+ await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown')
+ await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
+ expect(task.writes).toHaveLength(1)
+})
+for(const response of ['ack','408'] as const)test(`sent panel metadata protects pending and ${response} departure after private reader denial`,async({page})=>{
+ const task=await pendingPanel(page,response)
+ try{
+  task.state.denied=true;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect(page.getByLabel('Recorded panel reason',{exact:true})).toHaveCount(0)
+  await expect(page.getByLabel('Original panel command history')).toContainText('Awaiting acknowledgement')
+  expect(await page.evaluate(()=>dispatchEvent(new Event('planning-departure',{cancelable:true})))).toBe(false)
+  expect(await page.evaluate(()=>dispatchEvent(new Event('beforeunload',{cancelable:true})))).toBe(false)
+  await page.getByRole('link',{name:test.info().project.metadata.portal==='regular'?'Hack in a Box home':'Hack in a Box · Admin home',exact:true}).click();await expect(page).toHaveURL(new RegExp(`${path}$`))
+  task.release()
+  if(response==='ack'){await expect(page.getByLabel('Original panel command history')).toHaveCount(0);expect(await page.evaluate(()=>dispatchEvent(new Event('planning-departure',{cancelable:true})))).toBe(true);return}
+  await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown')
+  page.on('dialog',dialog=>void dialog.dismiss());expect(await page.evaluate(()=>dispatchEvent(new Event('planning-departure',{cancelable:true})))).toBe(false)
+  await page.getByRole('link',{name:test.info().project.metadata.portal==='regular'?'Hack in a Box home':'Hack in a Box · Admin home',exact:true}).click();await expect(page).toHaveURL(new RegExp(`${path}$`))
+  page.removeAllListeners('dialog');page.once('dialog',dialog=>void dialog.accept());await page.getByRole('link',{name:test.info().project.metadata.portal==='regular'?'Hack in a Box home':'Hack in a Box · Admin home',exact:true}).click();await expect(page).toHaveURL(/\/$/)
+  task.state.denied=false;await page.goBack();await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown');expect(task.writes).toHaveLength(1)
+ }finally{task.release()}
+})

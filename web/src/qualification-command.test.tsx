@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {createMemoryHistory,createRootRoute,createRouter,RouterProvider} from '@tanstack/react-router'
 import {webcrypto} from 'node:crypto'
 import {fireEvent,render,screen,waitFor} from '@testing-library/react'
 import {afterEach,expect,test,vi} from 'vitest'
@@ -25,9 +26,10 @@ function setup(){
  vi.mocked(readQualification).mockResolvedValue(page)
  function Owner(){const command=useQualificationCommand({eventID:'event',runID:page.round.run_id,page,parent,paused:false,refresh,assertActionReady:ready});return <><button onClick={event=>void command.prepare(body,<p>Captured private review reason: {body.reason}</p>,event.currentTarget)}>Review initial panel</button><button onClick={()=>void refresh()}>Read current panel facts</button><QualificationCommandReview {...command}/></>}
  function Workspace(){const [visible,show]=useState(true);return <Theme><CommunicationSafety><IdentityContext.Provider value={identity}><button onClick={()=>show(false)}>Close private panel task</button><QualificationCommandHistory eventID="event" runID={page.round.run_id}/>{visible&&<Owner/>}</IdentityContext.Provider></CommunicationSafety></Theme>}
- render(<Workspace/>);return {vector,page,body,refresh,ready}
+ const root=createRootRoute({component:Workspace}),router=createRouter({routeTree:root,history:createMemoryHistory({initialEntries:['/']})})
+ render(<RouterProvider router={router}/>);return {vector,page,body,refresh,ready}
 }
-async function confirm(){fireEvent.click(screen.getByText('Review initial panel'));await screen.findByRole('alertdialog',{name:'Review private panel command'});fireEvent.click(screen.getByRole('button',{name:'Confirm reviewed panel command'}))}
+async function confirm(){fireEvent.click(await screen.findByText('Review initial panel'));await screen.findByRole('alertdialog',{name:'Review private panel command'});fireEvent.click(screen.getByRole('button',{name:'Confirm reviewed panel command'}))}
 
 test('lost initial write keeps exact version0 identity after private teardown; only matching original acknowledgement settles it',async()=>{
  const {vector,body,refresh,ready}=setup()

@@ -1,4 +1,5 @@
-import {useEffect,useRef,useState,type ReactNode} from 'react'
+import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react'
+import {useBlocker} from '@tanstack/react-router'
 import {APIError} from './api/client'
 import {useIdentity} from './session'
 import {useCommunicationCommands} from './communication-tests'
@@ -10,6 +11,7 @@ import {Failure} from './components/states'
 import {originalQualificationReceipt,readQualification,sendQualification} from './qualification-api'
 import {matchesQualificationReceipt,qualificationFingerprint,type QualificationCommand,type QualificationIntent,type QualificationPage} from './qualification-model'
 
+const confirmPanelDeparture=()=>window.confirm('Leave this panel with an original command outcome still unconfirmed? Safe request metadata remains for this signed-in session; no request will be replayed.')
 export const qualificationNamespace=(actor:string,session:string,eventID:string,runID:string)=>`${actor}:${session}:${eventID}:qualification:${runID}`
 type Reviewed={body:QualificationCommand;intent:QualificationIntent;summary:ReactNode}
 type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:()=>void;onNewBase?:()=>void}
@@ -55,8 +57,8 @@ export function useQualificationCommand(options:Options){
    commands.complete(attemptID)
    if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);options.onAcknowledged?.();await refresh()}
   }catch(error){
-   if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500)commands.complete(attemptID);else commands.uncertain(attemptID)}
-   if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);setFailureStage(!attemptID?'before_write':error instanceof APIError&&error.status>=400&&error.status<500?'rejected':'unknown');if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
+   if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408)commands.complete(attemptID);else commands.uncertain(attemptID)}
+   if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);setFailureStage(!attemptID?'before_write':error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408?'rejected':'unknown');if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
   }finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }
  async function prepareBase(source:HTMLElement){
@@ -76,7 +78,7 @@ export function useQualificationCommand(options:Options){
   }catch(error){if(ticket.current()){setFailure(error);setFailureStage('before_write');if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}}
   finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }
- return {prepare,pending,blocked,retryBlocked:paused||pending,unknown:commands.unconfirmed,attempts:commands.attempts,ack,failure,failureStage,review,captured,baseReview,prepareBase,confirmBase,cancelBase:()=>{if(!pending)setBaseReview(undefined)},returnBaseFocus:()=>{const source=baseOpener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},headingRef:(element:HTMLHeadingElement|null)=>{fallback.current=element},returnFocus:()=>{const source=opener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},confirm,cancel:()=>{if(!pending)setReview(undefined)}}
+ return {prepare,pending,sentPending:commands.pending,blocked,retryBlocked:paused||pending,unknown:commands.unconfirmed,attempts:commands.attempts,ack,failure,failureStage,review,captured,baseReview,prepareBase,confirmBase,cancelBase:()=>{if(!pending)setBaseReview(undefined)},returnBaseFocus:()=>{const source=baseOpener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},headingRef:(element:HTMLHeadingElement|null)=>{fallback.current=element},returnFocus:()=>{const source=opener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},confirm,cancel:()=>{if(!pending)setReview(undefined)}}
 }
 
 export function QualificationCommandReview({headingRef,failure,failureStage,ack,attempts,unknown,captured,retryBlocked,confirm,review,pending,blocked,cancel,returnFocus,baseReview,prepareBase,confirmBase,cancelBase,returnBaseFocus}:ReturnType<typeof useQualificationCommand>){
@@ -89,6 +91,15 @@ export function QualificationCommandReview({headingRef,failure,failureStage,ack,
 export function QualificationCommandHistory({eventID,runID}:{eventID:string;runID:string}){
  const identity=useIdentity(),owner=qualificationNamespace(identity.person.id,identity.draft_scope,eventID,runID),commands=useCommunicationCommands(owner),scope=usePrivateRequestScope(`${owner}:original-history`)
  const [reading,setReading]=useState(false),[failure,setFailure]=useState<unknown>(),[message,setMessage]=useState('')
+ const pending=commands.attempts.some(attempt=>attempt.state==='pending'),unknown=commands.attempts.some(attempt=>attempt.state==='unknown')
+ usePlanningDepartureBarrier(pending)
+ useBlocker({shouldBlockFn:()=>pending||unknown&&!confirmPanelDeparture(),enableBeforeUnload:commands.attempts.length>0})
+ useLayoutEffect(()=>{
+  if(!unknown||pending)return
+  const guard=(event:Event)=>{if(!confirmPanelDeparture())event.preventDefault()}
+  window.addEventListener('planning-departure',guard)
+  return()=>window.removeEventListener('planning-departure',guard)
+ },[unknown,pending])
  const opener=useRef<HTMLButtonElement|null>(null),outcome=useRef<HTMLParagraphElement|null>(null)
  useEffect(()=>{if(!message)return;const frame=requestAnimationFrame(()=>{const source=opener.current;(source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:outcome.current)?.focus()});return()=>cancelAnimationFrame(frame)},[message])
  async function recover(attempt:typeof commands.attempts[number],source:HTMLButtonElement){

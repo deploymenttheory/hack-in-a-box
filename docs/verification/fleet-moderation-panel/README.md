@@ -194,3 +194,22 @@ The independent109 correction review exposed applicable hardening to complete in
 this111 owner: HTTP408 must remain unknown, and sent-command departure barriers
 must survive private task denial in the metadata owner. Those are explicit
 remaining work, not waived by this passing initial native matrix.
+
+## Timeout uncertainty and surviving departure protection
+
+On the unchanged compiled production owner, six new actual browser cases failed:
+HTTP408 discarded original identity on both widths, and both pending/ACK and
+pending/408 planning barriers disappeared after private reader denial. The
+correction keeps408 unknown and moves sent-command route/planning/before-unload
+protection into the surviving metadata history, leaving unsent/preflight guards
+with private editors. The same six assertions pass **6/6 in 4.8s**. They cover
+late exact ACK barrier release, refused/acknowledged unknown departure, retained
+metadata on actual return and absence of extra POST; no case timeout or global
+retry changed. The brand selector uses each actual portal's full accessible name.
+
+TypeScript/focused ESLint and the controller/shared-metadata/codec suite pass
+**10/10 in 1.10s** after adapting its harness to a real in-memory router. Native
+initial-panel evidence remains attributed to cleancb417, not relabelled as this
+later correction. Full native final-card/tie/signoff and write-guide acceptance
+remain open. The new-proposal review now explicitly states its actual native
+reset of current ballots/resolutions while preserving immutable history.
