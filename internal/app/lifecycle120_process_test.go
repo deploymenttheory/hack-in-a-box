@@ -164,6 +164,9 @@ func runLifecycleProvider(ctx context.Context) error {
 	if err := os.MkdirAll(directory, 0o700); err != nil {
 		return err
 	}
+	if _, err := os.Stat(filepath.Join(directory, "domain-time")); !errors.Is(err, os.ErrNotExist) {
+		return errors.New("lifecycle provider requires a fresh isolated control volume; refusing to reset domain time")
+	}
 	timeline, err := newLifecycleTimeline(time.Now().UTC())
 	if err != nil {
 		return err

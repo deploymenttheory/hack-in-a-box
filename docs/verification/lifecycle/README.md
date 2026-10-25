@@ -11,6 +11,33 @@ Results/report UI #113, independent verification #114, showcase #163 and the
 Fleet cutover #245 remain prerequisite gates, rather than inferred completion
 from their draft branches or a closed supporting issue.
 
+## Infrastructure checkpoints under construction
+
+`Dockerfile` and `compose.yaml` in this directory build an explicitly named
+verification image containing the test-only process entrypoint. They do not
+modify the production image targets. The network is internal, PostgreSQL has
+no host binding, and provider clock control uses only the owner-private Unix
+socket. The provider refuses to reuse an existing control clock, so each
+independent rehearsal requires a fresh isolated project/volumes.
+
+The `bootstrap` profile runs only normal OIDC, configured admin bootstrap,
+draft-event creation, private/unprivileged denials and independent portal
+session/logout assertions. Its `bootstrap-only.json` receipt explicitly sets
+`complete_lifecycle` to false. The `admission` profile is another partial native
+HTTP checkpoint: published forms, facilitator selection, confirmed minimum,
+capacity/FIFO, explicit go, withdrawal and offer acceptance during preparation.
+It then publishes teams of five, depletes a published team to two through real
+withdrawals, rejects its republication, explicitly unlocks/reassigns the pair,
+republishes six teams of four-to-six and freezes them. A post-freeze move must
+return the exact native rejection without changing the allocation projection.
+These profile names cannot be used as the final release command. Neither
+checkpoint, its image build, nor its Compose run has been executed yet.
+
+The most recent verification compiled both checkpoint drivers and passed the
+independent DST oracle (`go test ./internal/app -run
+'^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.493 seconds).
+No browser, PostgreSQL, native OIDC or queued effect is implied by that result.
+
 ## Execution boundary
 
 The full scenario runs in an isolated Docker Compose project with real

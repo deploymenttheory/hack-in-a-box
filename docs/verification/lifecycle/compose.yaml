@@ -1,0 +1,109 @@
+name: hackbox-lifecycle
+x-fixture: &fixture
+  image: hackbox-lifecycle:verification
+  build:
+    context: ../../..
+    dockerfile: docs/verification/lifecycle/Dockerfile
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [synthetic]
+  environment: &environment
+    HACKBOX_ENV: test
+    HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-lifecycle-only@postgres:5432/lifecycle?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: http://public:8080
+    HACKBOX_ADMIN_ORIGIN: http://admin:8080
+    HACKBOX_WORKSPACE_ORIGIN: http://public:8080
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web-public
+    HACKBOX_OIDC_ISSUER: http://provider:8080
+    HACKBOX_OIDC_CLIENT_ID: lifecycle-public
+    HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
+    HACKBOX_BOOTSTRAP_SUBJECT: owner
+    HACKBOX_LIFECYCLE_ISOLATED: synthetic-only
+    HACKBOX_LIFECYCLE_CONTROL: /control
+  command: ['-test.run=^TestLifecycleComposeProcess$', '-test.timeout=60m', '-test.v']
+  volumes: [files:/data/files, 'control:/control:ro']
+  depends_on:
+    migrate: {condition: service_completed_successfully}
+    provider: {condition: service_healthy}
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    networks: [synthetic]
+    environment:
+      POSTGRES_DB: lifecycle
+      POSTGRES_USER: lifecycle
+      POSTGRES_PASSWORD: synthetic-lifecycle-only
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U lifecycle -d lifecycle']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  migrate:
+    <<: *fixture
+    entrypoint: [/app/migrate]
+    command: []
+    volumes: []
+    depends_on:
+      postgres: {condition: service_healthy}
+  provider:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: provider
+    volumes: [control:/control]
+    depends_on: {}
+    healthcheck: &healthcheck
+      test: [CMD, /app/healthcheck]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  public:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: public
+    healthcheck: *healthcheck
+  admin:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: admin
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: http://admin:8080
+      HACKBOX_OIDC_CLIENT_ID: lifecycle-admin
+      HACKBOX_WEB_DIR: /app/web-admin
+    healthcheck: *healthcheck
+  worker:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: worker
+  bootstrap:
+    <<: *fixture
+    profiles: [bootstrap]
+    command: ['-test.run=^TestLifecycleComposeBootstrap$', '-test.timeout=2m', '-test.v']
+    volumes: ['control:/control:ro', 'artifacts:/artifacts']
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+  admission:
+    <<: *fixture
+    profiles: [admission]
+    command: ['-test.run=^TestLifecycleComposeAdmission$', '-test.timeout=5m', '-test.v']
+    volumes: ['control:/control:ro', 'artifacts:/artifacts']
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+volumes:
+  database:
+  files:
+  control:
+  artifacts:
+networks:
+  synthetic: {internal: true}
