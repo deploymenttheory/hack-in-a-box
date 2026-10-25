@@ -2,7 +2,6 @@ package results
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/google/uuid"
@@ -60,122 +59,17 @@ func (s Service) Change(
 		if err != nil {
 			return err
 		}
-		var announcement *Announcement
-		publicationBinding := input.SourceBinding
-		switch input.Action {
-		case "prepare":
-			full := source.preview.Binding != "" && len(source.preview.Blockers) == 0 &&
-				input.SourceBinding == source.preview.Binding
-			qualificationOnly := source.preview.FinalistsBinding != "" &&
-				input.SourceBinding == source.preview.FinalistsBinding
-			if !full && !qualificationOnly {
-				return access.ErrConflict
-			}
-			round.Source = source.preview
-			round.PreparedBy = actor
-			round.Votes = []Vote{}
-			round.Confirmation = nil
-		case "publish_finalists":
-			if source.preview.Selection == nil || source.preview.FinalistsBinding == "" ||
-				input.SourceBinding != source.preview.FinalistsBinding {
-				return access.ErrConflict
-			}
-			announcement, err = s.finalistAnnouncement(ctx, tx, eventID, source.preview)
-			if err != nil {
-				return err
-			}
-			// Preparation and release remain distinct; this snapshot records only the
-			// exact reviewed source accompanying this deliberate release.
-			if round.Source.Binding != source.preview.Binding ||
-				round.Source.FinalistsBinding != source.preview.FinalistsBinding {
-				round.Votes = []Vote{}
-				round.Confirmation = nil
-			}
-			round.Source = source.preview
-		case "confirm":
-			if !readyPreparedSource(round, source, input.SourceBinding) {
-				return access.ErrConflict
-			}
-			states, err := resolveJudgeTies(
-				source.preview.Ties,
-				source.completion.Assignments,
-				round.Votes,
-			)
-			if err != nil {
-				return err
-			}
-			if err := ValidateAwards(source.preview, states, input.Awards); err != nil {
-				if errors.Is(err, ErrIncomplete) {
-					return access.ErrConflict
-				}
-				return err
-			}
-			id := uuid.New()
-			if err := s.Judging.RecordResultApprovalInTransaction(
-				ctx,
-				tx,
-				actor,
-				eventID,
-				source.preview.JudgeRunID,
-				id,
-				source.completion.Binding,
-				input.Reason,
-			); err != nil {
-				return err
-			}
-			round.Confirmation = &Confirmation{
-				ID:              id,
-				JudgeApprovalID: id,
-				SourceBinding:   source.preview.Binding,
-				DecisionBinding: decisionBinding(source.preview.Binding, round.Votes, input.Awards),
-				Awards:          input.Awards,
-				ActorID:         actor,
-				Reason:          input.Reason,
-				At:              s.now(),
-			}
-		case "publish_awards":
-			if !readyPreparedSource(round, source, input.SourceBinding) ||
-				round.Confirmation == nil {
-				return access.ErrConflict
-			}
-			confirmation := round.Confirmation
-			if confirmation.SourceBinding != source.preview.Binding ||
-				confirmation.DecisionBinding != decisionBinding(
-					source.preview.Binding,
-					round.Votes,
-					confirmation.Awards,
-				) {
-				return access.ErrConflict
-			}
-			states, err := resolveJudgeTies(
-				source.preview.Ties,
-				source.completion.Assignments,
-				round.Votes,
-			)
-			if err != nil {
-				return err
-			}
-			if err := ValidateAwards(source.preview, states, confirmation.Awards); err != nil {
-				if errors.Is(err, ErrIncomplete) {
-					return access.ErrConflict
-				}
-				return err
-			}
-			if err := s.Judging.ResultApprovalCurrentInTransaction(
-				ctx,
-				tx,
-				actor,
-				eventID,
-				source.preview.JudgeRunID,
-				confirmation.JudgeApprovalID,
-			); err != nil {
-				return err
-			}
-			announcement, err = s.awardAnnouncement(ctx, tx, eventID, confirmation.Awards)
-			if err != nil {
-				return err
-			}
-			publicationBinding = confirmation.DecisionBinding
+		announcement, publicationBinding, err := s.applyDecision(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			input,
+			source,
+			&round,
+		)
+		if err != nil {
+			return err
 		}
 		if err = s.retain(
 			ctx,
@@ -250,7 +144,8 @@ func validateCommand(expected int64, input Command) error {
 }
 
 func readyPreparedSource(round Round, source assessmentSource, binding string) bool {
-	return round.PreparedBy != uuid.Nil && source.completion != nil && len(source.preview.Blockers) == 0 &&
+	return round.PreparedBy != uuid.Nil && source.completion != nil &&
+		len(source.preview.Blockers) == 0 &&
 		binding != "" &&
 		binding == source.preview.Binding &&
 		round.Source.Binding == binding

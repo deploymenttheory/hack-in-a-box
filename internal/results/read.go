@@ -66,6 +66,7 @@ func (s Service) page(
 		out.Round.Source = emptyPreview()
 		out.Round.Votes = []Vote{}
 		out.Round.Confirmation = nil
+		out.Round.Reason = ""
 	}
 	if source.completion != nil {
 		out.TieStates, err = resolveJudgeTies(

@@ -127,6 +127,11 @@ func TestFinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote(t *
 		t.Fatal("outsider read ballots", err)
 	}
 	f.reopen(t, 0)
+	stale, err := f.service.Read(ctx, actor, eventID)
+	resultsSourceRequire(t, err)
+	if stale.Round.Reason != "" || len(stale.Round.Votes) != 0 || stale.Round.Confirmation != nil {
+		t.Fatal("unavailable source retained private decision prose", stale)
+	}
 	if page, err := f.service.Ballots(ctx, f.judges[1].ID, eventID); err == nil || len(page.Ties) != 0 {
 		t.Fatal("stale private ballot source survived reopen", page, err)
 	}

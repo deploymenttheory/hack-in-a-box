@@ -50,12 +50,12 @@ func (s Service) DiscoverNotificationSourcesPageInTransaction(
 	for rows.Next() {
 		var source NotificationSource
 		if err = rows.Scan(&source.ID, &source.Version, &source.PublishedAt); err != nil {
-			return nil, nil, err
+			return nil, nil, failure("notification source rows", err)
 		}
 		out = append(out, source)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, nil, err
+		return nil, nil, failure("notification source rows", err)
 	}
 	var next *uuid.UUID
 	if len(out) > int(limit) {
@@ -80,7 +80,7 @@ func (s Service) ResolveNotificationAudienceInTransaction(
 	err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM result_publications p WHERE p.event_id=$1 AND p.id=$2 AND p.result_version=$3 AND p.published_at<=$4 AND NOT EXISTS(SELECT 1 FROM result_publications newer WHERE newer.event_id=p.event_id AND newer.kind=p.kind AND newer.result_version>p.result_version AND newer.published_at<=$4))", eventID, publicationID, version, s.now()).
 		Scan(&exists)
 	if err != nil {
-		return nil, err
+		return nil, failure("notification audience rows", err)
 	}
 	if !exists {
 		return nil, access.ErrNotFound
@@ -91,18 +91,18 @@ func (s Service) ResolveNotificationAudienceInTransaction(
 		eventID,
 	)
 	if err != nil {
-		return nil, err
+		return nil, failure("notification audience rows", err)
 	}
 	out := []uuid.UUID{}
 	for rows.Next() {
 		var id uuid.UUID
 		if err = rows.Scan(&id); err != nil {
 			rows.Close()
-			return nil, err
+			return nil, failure("notification audience rows", err)
 		}
 		out = append(out, id)
 	}
 	err = rows.Err()
 	rows.Close()
-	return out, err
+	return out, failure("notification audience iteration", err)
 }

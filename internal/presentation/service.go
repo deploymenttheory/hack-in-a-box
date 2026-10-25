@@ -35,7 +35,11 @@ type Service struct {
 // ResultAuthority supplies only explicitly announced, safe room projections.
 // Pairing validation stays with presentation and never uses controller roles.
 type ResultAuthority interface {
-	RoomAnnouncementsInTransaction(context.Context, pgx.Tx, uuid.UUID) ([]results.Announcement, error)
+	RoomAnnouncementsInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+	) ([]results.Announcement, error)
 }
 
 func (s Service) now() time.Time {
@@ -449,7 +453,7 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		if s.Results != nil {
 			result.Results, err = s.Results.RoomAnnouncementsInTransaction(ctx, tx, eventID)
 			if err != nil {
-				return err
+				return fmt.Errorf("read announced room results: %w", err)
 			}
 		}
 		if err = displayBranding(ctx, q, eventID, &result); err != nil {

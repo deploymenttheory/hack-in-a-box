@@ -90,7 +90,7 @@ func (s Service) OriginalReceipt(
 					out.Receipt.RunID,
 					team,
 				); err != nil {
-					return err
+					return failure("current receipt target", err)
 				}
 			}
 		} else if !current.organiser {

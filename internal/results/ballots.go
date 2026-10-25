@@ -89,7 +89,7 @@ func (s Service) ballotPage(
 				source.preview.JudgeRunID,
 				team,
 			); err != nil {
-				return BallotPage{}, err
+				return BallotPage{}, failure("current ballot target", err)
 			}
 		}
 		item := JudgeTie{State: state}
@@ -140,12 +140,8 @@ func (s Service) Vote(
 	input Command,
 ) (BallotPage, error) {
 	var out BallotPage
-	if input.Action != "vote" || input.RequestID == uuid.Nil || expected < 0 || input.Version < 0 ||
-		input.TieID == "" || input.TeamID == uuid.Nil || strings.TrimSpace(input.Reason) == "" ||
-		len(
-			input.Reason,
-		) > 2000 || len(input.Evidence) == 0 || len(input.Evidence) > 30 || len(input.Awards) != 0 {
-		return out, access.ErrInvalid
+	if err := validateVote(expected, input); err != nil {
+		return out, err
 	}
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
 		current, err := s.guard(ctx, tx, actor, eventID, true)
@@ -218,7 +214,7 @@ func (s Service) Vote(
 				team,
 				evidence,
 			); err != nil {
-				return err
+				return failure("current ballot evidence", err)
 			}
 		}
 		vote := Vote{
@@ -263,7 +259,7 @@ func (s Service) Vote(
 		}
 		current.event, err = dbgen.New(tx).Event(ctx, eventID)
 		if err != nil {
-			return err
+			return failure("read event after vote", err)
 		}
 		out, err = s.ballotPage(ctx, tx, actor, eventID, current, round, source)
 		out.Receipt = &receipt
@@ -273,4 +269,15 @@ func (s Service) Vote(
 		return BallotPage{}, failure("record final judge vote", err)
 	}
 	return out, nil
+}
+
+func validateVote(expected int64, input Command) error {
+	if input.Action != "vote" || input.RequestID == uuid.Nil || expected < 0 || input.Version < 0 ||
+		input.TieID == "" || input.TeamID == uuid.Nil || strings.TrimSpace(input.Reason) == "" ||
+		len(
+			input.Reason,
+		) > 2000 || len(input.Evidence) == 0 || len(input.Evidence) > 30 || len(input.Awards) != 0 {
+		return access.ErrInvalid
+	}
+	return nil
 }
