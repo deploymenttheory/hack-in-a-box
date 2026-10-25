@@ -119,3 +119,20 @@ runtime/router/static surface and private Unix-socket orchestration. Its complet
 concurrency/promotion/attendance/withdrawal journey is implemented but not yet
 executed at this checkpoint. Final production guide export, broad checks, native
 browser proof, screenshots/provenance, reviews and exact-head CI remain open.
+
+
+The first actual native-browser run executed on clean source `f8eff812` with its
+rebuilt production assets. It failed **before the booking journey**, on both
+viewport fixtures: the bootstrap administrator's fixture person snapshot had an
+older `session_revision`, so native authentication correctly rejected the test
+cookie and displayed Sign in. No successful native booking proof is attributed to
+that run. Both owned PostgreSQL containers were terminated by their test cleanup.
+The private test session issuer now reloads the current person through the native
+repository before issuing a cookie. Production authentication is unchanged.
+Action waits are bounded to fail a fixture setup error promptly; actual booking,
+capacity, current-authority and independent-role assertions are unchanged.
+
+An ancestry-only rebase onto merged backend main `2d82ac40` changed the frontend
+head to `3534ce6f` with the identical tree `7a1bdd61372bdad13164b9414ecad4795498aa5a`.
+The corrected native fixture requires a fresh clean-head run; prior proof is not
+relabelled as that future result.

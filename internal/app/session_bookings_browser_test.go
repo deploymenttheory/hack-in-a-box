@@ -116,6 +116,14 @@ func runSessionBookingBrowser(t *testing.T, viewport string) {
 				http.Error(w, "unknown native surface", 400)
 				return
 			}
+			// Bootstrap and current identity changes advance the native session revision.
+			// Issue the synthetic session from the current repository row, exactly as
+			// production authentication requires; stale fixture snapshots stay invalid.
+			person, err := q.Person(request.Context(), person.ID)
+			if err != nil {
+				http.Error(w, "current synthetic actor unavailable", 500)
+				return
+			}
 			cookie, err := surface.sessionCookie(request.Context(), person)
 			if err != nil {
 				http.Error(w, "synthetic session unavailable", 500)

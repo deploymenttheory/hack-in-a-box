@@ -19,5 +19,5 @@ test('native concurrent bookings, own original outcomes, cancellation/promotion,
   await control('withdraw',{actor:waitingRole});await waiting.evaluate(()=>dispatchEvent(new Event('focus')));await expect(waiting.getByRole('link',{name:'Open authorised meeting link'})).toHaveCount(0);expect(await control('evidence')).toMatchObject({booked:0,confirmed:1,team_members:0,commands:5})
   // The cancelled winner's event place survives every session-only change.
   expect(winnerRole).not.toBe(waitingRole);for(const page of [owner,winner,facilitator])expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);expect(errors).toEqual([])
- }finally{await Promise.all([ownerContext.close(),firstContext.close(),secondContext.close(),facilitatorContext.close()])}
+ }finally{const closed=await Promise.allSettled([ownerContext.close(),firstContext.close(),secondContext.close(),facilitatorContext.close()]);for(const result of closed)if(result.status==='rejected'&&browser.isConnected())throw new Error('Native fixture context cleanup failed')}
 })
