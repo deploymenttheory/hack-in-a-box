@@ -59,3 +59,8 @@ Initial tool bookkeeping: a type-check command was accidentally started from the
 worktree root rather than web, then terminated only its owned handle. The actual
 successful checks use this worktree's pinned `web/node_modules/.bin/tsc` and
 ESLint. No dependency or global tool was installed or changed by that attempt.
+
+The initial production reader/guide implementation was checkpointed as
+`47467be94a99d25217ef360204d374666bd3e4a0`. The following housekeeping checkpoint
+only ignores owned Playwright outputs and adds this source attribution; it does
+not claim that the earlier working-tree executions ran on a later clean commit.
