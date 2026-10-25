@@ -503,3 +503,21 @@ ESLint and both production builds passed on the owned correction overlay.
 No native policy, receipt matcher, API or schema changed; all eight native CI
 cases and the40m Go CI budget remain required. Affected clean-source native
 proof and new independent correction reviews/current-head CI remain pending.
+
+At exact clean `95eecedf43ac705cf668987dc95d1ba0fe1e4451`, the affected actual
+**admin/desktop/final native journey PASSED** (Go/race157.971s; subtest156.24s).
+The private PostgreSQL fixture stopped and terminated normally. This covers all
+five actual final cards, independent evidence, real ballots/casting, exact
+versioned signoff, manual other/same-team focus, separate preparations, retained
+history, retired outputs and actual session denial. The copied source record
+`native-focus-correction-admin-desktop-95eecedf.json` confirms identical start/end
+HEAD, clean worktree and successful browser command. Its SHA256 is
+`dc931b5f4a6d94d084840821dc1f60b96ce01cd191080eb278326e0bcb77705c`.
+
+This was a bounded affected-scope native proof, not a new eight-case matrix.
+The precise suppressed-key race is locked down by the deterministic production
+dialog tests; no claim is made that a natural poll interrupted this successful
+native run. Prior current-CI failures and original source attribution stay
+unchanged. The production restoration correction and test-only input helper
+require independent correction reviews and all latest-head CI, including all
+eight native moderation cases, before acceptance.
