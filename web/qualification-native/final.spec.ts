@@ -25,7 +25,7 @@ test('real five-team final cards retain exact outcome and next confirmation acti
   await page.getByLabel(`Moderated evidence for ${category.label}`,{exact:true}).fill('Actual reviewed independent source, final observation <trace> & evidence')
  }
  await accept(page,'Actual first final card, preserving native evidence trace')
- await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · Draft')
+ await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
  await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toBeVisible()
  await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
  const proof=await control<{cards:number;current:boolean;signoff:boolean}>('evidence');expect(proof).toMatchObject({cards:1,current:false,signoff:false})
