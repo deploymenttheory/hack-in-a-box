@@ -30,6 +30,8 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install browser tooling
         run: npm --prefix web ci
+      - name: Verify UI runtime runner provenance and resource guards
+        run: python3 -B scripts/test_verify_fleet_runtime.py
       - name: Verify modules
         run: |
           go mod tidy
