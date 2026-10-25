@@ -74,7 +74,7 @@ try {
         await admin.getByLabel('Venue', { exact: true }).fill('Synthetic workshop')
         await admin.getByRole('button', { name: 'Attendance and dates', exact: true }).click()
         const year = new Date().getUTCFullYear() + 1
-        for (const [label, when] of [['Final admission', '06-05T12:00:00'], ['Team freeze', '06-06T12:00:00'], ['Live start', '06-14T09:00:00'], ['Submission cutoff', '06-15T16:00:00'], ['Live end', '06-15T17:00:00']]) {
+        for (const [label, when] of [['Final admission', '06-05T12:00'], ['Team freeze', '06-06T12:00'], ['Live start', '06-14T09:00'], ['Submission cutoff', '06-15T16:00'], ['Live end', '06-15T17:00']]) {
           await admin.getByLabel(label, { exact: true }).fill(`${year}-${when}`)
         }
         await admin.getByRole('button', { name: 'Organiser responsibility', exact: true }).click()

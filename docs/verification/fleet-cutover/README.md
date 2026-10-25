@@ -94,8 +94,16 @@ the intended127.0.0.1 binding and HTTP200. See
 therefore uses a dedicated bridge, publishes only loopback ports and leaves its
 database unexposed. Both probes cleaned their scoped resources.
 
-The complete normal-image browser journey is still **unexecuted** after that
-pre-login fixture failure. The earlier
+The next attempt atfc2963eb reached real sign-in in both portals and the
+creation form, then stopped before creation at a Playwright datetime-fill
+normalisation error. A bare step1 datetime-local input reproduced the same
+error: requesting12:00:00 yields the browser value12:00, while supplying the
+canonical12:00 succeeds. The fixture now enters that canonical minute form;
+the existing application already adds seconds for its native time resolver.
+No product input, timing or assertion is weakened.
+
+The complete normal-image browser journey remains **unverified** at this
+checkpoint; earlier failed projects were fully removed. The earlier
 237-test/source-inventory results above do not establish its success. Preserve
 each failed attempt separately, diagnose its actual symptom, then record the
 exact executed source and measured result before changing this status.
