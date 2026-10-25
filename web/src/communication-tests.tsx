@@ -59,6 +59,12 @@ export function useCommunicationCommands(owner: string) {
     uncertain: (id: string) => update(previous => previous.map(attempt => attempt.id === id ? { ...attempt, state: 'unknown', blocks: true } : attempt)),
     selectNewBase: () => update(previous => previous.some(attempt => attempt.state === 'pending') ? previous : previous.map(attempt => ({ ...attempt, blocks: false }))) }
 }
+// Read-only projection for an explicit actor/session/domain/event namespace.
+// It cannot complete attempts or expose another operation's private payload.
+export function useCommunicationCommandNamespace(ownerPrefix: string) {
+  const store = useStore(), prefix = `${ownerPrefix}:`
+  return Object.entries(store.memory.commands).filter(([owner]) => owner.startsWith(prefix)).flatMap(([, attempts]) => attempts)
+}
 export function CommunicationCommandHistory({ attempts }: { attempts: Attempt[] }) {
   return attempts.length > 0 && <aside className="fleet-planning-section" aria-label="Unconfirmed command history"><h2>Unconfirmed earlier commands</h2><p>Safe metadata is retained for this signed-in session, across routes and editing versions. Current facts do not establish these original acknowledgements.</p><ul>{attempts.map(attempt => <li key={attempt.id}>{attempt.operation} · Expected revision {attempt.revision} · {attempt.state === 'pending' ? 'Awaiting original acknowledgement' : 'Original outcome remains unconfirmed'}</li>)}</ul></aside>
 }

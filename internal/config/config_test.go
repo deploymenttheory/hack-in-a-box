@@ -175,3 +175,74 @@ func TestWorkspaceOriginIsIndependentAndSafelyValidated(t *testing.T) {
 		t.Fatal("production workspace HTTP accepted")
 	}
 }
+
+func TestAdministrationOriginIsOptionalIndependentAndValidated(t *testing.T) {
+	t.Parallel()
+	for _, origin := range []string{"https://user:secret-password@example.test", "https://example.test/path", "https://example.test?secret-query", "https://example.test#secret-fragment", "javascript:alert(1)", "https://example.test?", "https://example.test#"} {
+		_, err := config.Load(func(key string) string {
+			if key == "HACKBOX_ENV" {
+				return "test"
+			}
+			if key == "HACKBOX_ADMIN_ORIGIN" {
+				return origin
+			}
+			return ""
+		})
+		if err == nil || !strings.Contains(err.Error(), "HACKBOX_ADMIN_ORIGIN") ||
+			strings.Contains(err.Error(), "secret-") {
+			t.Fatalf("unsafe administration origin: %v", err)
+		}
+	}
+	cfg, err := config.Load(func(key string) string {
+		if key == "HACKBOX_ENV" {
+			return "test"
+		}
+		if key == "HACKBOX_ADMIN_ORIGIN" {
+			return "https://admin.example.test"
+		}
+		return ""
+	})
+	if err != nil || cfg.AdministrationOrigin != "https://admin.example.test" ||
+		cfg.WorkspaceOrigin != cfg.PublicOrigin {
+		t.Fatal("administration origin replaced canonical workspace or was not retained")
+	}
+	cfg, err = config.Load(func(key string) string {
+		if key == "HACKBOX_ENV" {
+			return "test"
+		}
+		return ""
+	})
+	if err != nil || cfg.AdministrationOrigin != "" {
+		t.Fatal("optional administration origin became required")
+	}
+}
+
+func TestAdministrationOriginRequiresHTTPSInProduction(t *testing.T) {
+	t.Parallel()
+	for _, origin := range []string{"http://admin.example.test", "https://admin.example.test"} {
+		_, err := config.Load(func(key string) string {
+			switch key {
+			case "HACKBOX_ENV":
+				return "production"
+			case "HACKBOX_ADMIN_ORIGIN":
+				return origin
+			case "HACKBOX_PUBLIC_ORIGIN":
+				return "https://workspace.example.test"
+			case "HACKBOX_OIDC_ISSUER":
+				return "https://issuer.example.test"
+			case "HACKBOX_OIDC_CLIENT_ID":
+				return "synthetic"
+			case "HACKBOX_METRICS_TOKEN":
+				return "synthetic-metrics-token-32-characters"
+			}
+			return ""
+		})
+		if origin == "http://admin.example.test" &&
+			(err == nil || !strings.Contains(err.Error(), "HACKBOX_ADMIN_ORIGIN")) {
+			t.Fatal("production HTTP administration origin accepted")
+		}
+		if origin == "https://admin.example.test" && err != nil {
+			t.Fatalf("valid production administration origin rejected: %v", err)
+		}
+	}
+}

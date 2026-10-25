@@ -1,0 +1,11 @@
+@layer components {
+  .fleet-today { min-width: 0; }
+  .fleet-today-section { border-block: 1px solid var(--border); padding-block: var(--space-6); margin-block: var(--space-6); }
+  .fleet-today-program { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+  .fleet-today-program dt { font-weight: var(--weight-emphasis); }
+  .fleet-today-program dd { margin: var(--space-3) 0; overflow-wrap: anywhere; }
+  .fleet-today-private table { width: 100%; border-collapse: collapse; }
+  .fleet-today-private th, .fleet-today-private td { text-align: start; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+  @media (max-width: 48rem) { .fleet-today-program { grid-template-columns: 1fr; } }
+  @media print { .fleet-today, .fleet-today-private { display: none !important; } }
+}

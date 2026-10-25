@@ -1,7 +1,8 @@
+import type { useCommunicationCommands } from './communication-tests'
 import { useRef, useState } from 'react'
 import { useBlocker } from '@tanstack/react-router'
 import { APIError } from './api/client'
-import { usePrivateRequestScope, type PrivateRequestTicket } from './private-request-scope'
+import { usePrivateRequestScope, type PrivateRequestScope, type PrivateRequestTicket } from './private-request-scope'
 import { usePlanningDepartureBarrier, usePlanningUnknownCommands } from './planning-operations'
 import { Button } from './components/ui/button'
 import { Alert } from './components/ui/surfaces'
@@ -11,26 +12,37 @@ type Intent = { operation: string; revision: number; command: unknown }
 export const resourceDenied = (error: unknown): error is APIError => error instanceof APIError && [401, 403, 404].includes(error.status)
 // Native resources expose versions/history, not client-command receipts. Reads
 // can establish a new reviewed base while the original unknown capsule remains.
-export function useResourceOperation(owner: string, deny?: (error: unknown) => void, { preserveUnknownOnDenial = false }: { preserveUnknownOnDenial?: boolean } = {}) {
-  const scope = usePrivateRequestScope(owner), history = usePlanningUnknownCommands(owner), lock = useRef(false)
+export function useResourceOperation(owner: string, deny?: (error: unknown) => void, { preserveUnknownOnDenial = false, parentScope, safeCommands, resourceID }: { preserveUnknownOnDenial?: boolean; parentScope?: PrivateRequestScope; safeCommands?: ReturnType<typeof useCommunicationCommands>; resourceID?: string } = {}) {
+  const scope = usePrivateRequestScope(owner, parentScope), history = usePlanningUnknownCommands(owner), lock = useRef(false)
   const [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [stale, setStale] = useState(false), [notice, setNotice] = useState(''), [reading, setReading] = useState(false), [currentRead, setCurrentRead] = useState(false)
-  const blocked = pending || history.unconfirmed || stale
+  const blocked = pending || !!safeCommands?.pending || !!safeCommands?.unconfirmed || history.unconfirmed || stale
   usePlanningDepartureBarrier(blocked)
-  useBlocker({ shouldBlockFn: () => lock.current || blocked, enableBeforeUnload: blocked || history.attempts.length > 0 })
+  useBlocker({ shouldBlockFn: () => lock.current || blocked, enableBeforeUnload: blocked || history.attempts.length > 0 || !!safeCommands?.attempts.length })
   async function run<T>(intent: Intent, write: () => Promise<T>, accept: (value: T, ticket: PrivateRequestTicket) => string | Promise<string>, rejected?: (error: APIError, ticket: PrivateRequestTicket) => Promise<void>) {
     if (lock.current || blocked) return false
     const ticket = scope.capture(); if (!ticket.current()) return false
+    // A current-role owner may disappear before its response. Keep only safe
+    // original-attempt metadata in the authenticated safety owner, never its payload.
+    const pendingID = safeCommands?.begin({ operation: intent.operation, revision: intent.revision, command: { intentID: crypto.randomUUID(), action: 'update', revision: intent.revision, resourceID } })
     lock.current = true; setPending(true); setFailure(undefined); setNotice(''); setCurrentRead(false)
     try {
-      const value = await write(); ticket.assert()
+      const value = await write()
+      // The native adapter validates the original response before returning. Its
+      // acknowledgement settles metadata even after private authority teardown.
+      if (pendingID) safeCommands?.complete(pendingID)
+      ticket.assert()
       const message = await accept(value, ticket); ticket.assert()
       setNotice(message); lock.current = false
       return true
     } catch (error) {
+      if (pendingID) {
+        if (error instanceof APIError && error.status < 500 && error.status !== 408) safeCommands?.complete(pendingID)
+        else safeCommands?.uncertain(pendingID)
+      }
       if (!ticket.current()) return false
       setFailure(error)
       if (resourceDenied(error)) { if (!preserveUnknownOnDenial) history.clear(); deny?.(error); lock.current = false }
-      else if (!(error instanceof APIError) || error.status >= 500 || error.status === 408) history.record(structuredClone(intent))
+      else if (!(error instanceof APIError) || error.status >= 500 || error.status === 408) { if (!pendingID) history.record(structuredClone(intent)) }
       else if (error.code === 'revision_conflict') setStale(true)
       else {
         lock.current = false
@@ -50,10 +62,10 @@ export function useResourceOperation(owner: string, deny?: (error: unknown) => v
     catch (error) { if (ticket.current()) { setFailure(error); if (resourceDenied(error)) { if (!preserveUnknownOnDenial) history.clear(); deny?.(error) } } }
     finally { if (ticket.current()) setReading(false) }
   }
-  function useCurrent() { if (!currentRead || pending || reading) return; history.selectNewBase(); setStale(false); setCurrentRead(false); setFailure(undefined); lock.current = false }
-  function canLeave() { return !lock.current && !blocked && (!history.attempts.length || window.confirm('Leave with earlier command outcomes still unconfirmed? The original request was not replayed; its in-memory context may be cleared.')) }
-  return { capture: () => scope.capture(), run, read, useCurrent, canLeave, blocked, pending, reading, failure, notice, stale, currentRead, unknown: history.unconfirmed, attempts: history.attempts, isBlocked: () => lock.current || blocked }
+  function useCurrent() { if (!currentRead || pending || reading) return; history.selectNewBase(); safeCommands?.selectNewBase(); setStale(false); setCurrentRead(false); setFailure(undefined); lock.current = false }
+  function canLeave() { return !lock.current && !blocked && (!(history.attempts.length || safeCommands?.attempts.length) || window.confirm('Leave with earlier command outcomes still unconfirmed? The original request was not replayed; its in-memory context may be cleared.')) }
+  return { capture: () => scope.capture(), run, read, useCurrent, canLeave, blocked, pending, reading, failure, notice, stale, currentRead, unknown: history.unconfirmed || !!safeCommands?.unconfirmed, attempts: [...history.attempts, ...(safeCommands?.attempts ?? [])], isBlocked: () => lock.current || blocked }
 }
 export function ResourceOperationResult({ operation, read, acceptCurrent, hideCurrentChoice = false }: { operation: ReturnType<typeof useResourceOperation>; read: () => void; hideCurrentChoice?: boolean; acceptCurrent?: { label: string; disabled: boolean; onSelect: () => void } }) {
-  return <>{operation.pending && <p role="status">Sending the reviewed request…</p>}{operation.notice && <p role="status">{operation.notice}</p>}{!!operation.failure && !operation.unknown && <Failure error={operation.failure} />}{(operation.unknown || operation.stale) && <Alert tone="warning" role="status"><h3>{operation.unknown ? 'Outcome unknown' : 'Current version needed'}</h3><p>{operation.unknown ? 'The original request may have completed. Current state does not prove this exact request. No write is replayed automatically.' : 'The server rejected the stale revision. Read the current state, preserve any unsaved input, then review before another deliberate action.'}</p><Button icon="refresh" variant="outline" pending={operation.reading} onClick={read}>Read current state</Button>{operation.currentRead && <><p>The current server facts are displayed. The original unknown outcome remains unconfirmed.</p>{!hideCurrentChoice && <Button icon="check" variant="outline" disabled={acceptCurrent?.disabled} onClick={acceptCurrent?.onSelect ?? operation.useCurrent}>{acceptCurrent?.label ?? "Use reviewed current state"}</Button>}</>}</Alert>}{operation.attempts.length > 0 && <section className="fleet-resource-section" aria-label="Earlier unconfirmed resource commands"><h3>Earlier unconfirmed requests</h3><ul>{operation.attempts.map((intent, index) => <li key={index}>{intent.operation} · Expected revision {intent.revision} · Original outcome remains unconfirmed</li>)}</ul></section>}</>
+  return <>{operation.pending && <p role="status">Sending the reviewed request…</p>}{operation.notice && <p role="status">{operation.notice}</p>}{!!operation.failure && !operation.unknown && <Failure error={operation.failure} />}{(operation.unknown || operation.stale) && <Alert tone="warning" role="status"><h3>{operation.unknown ? 'Outcome unknown' : 'Current version needed'}</h3><p>{operation.unknown ? 'The original request may have completed. Current state does not prove this exact request. No write is replayed automatically.' : 'The server rejected the stale revision. Read the current state, preserve any unsaved input, then review before another deliberate action.'}</p><Button icon="refresh" variant="outline" pending={operation.reading} onClick={read}>Read current state</Button>{operation.currentRead && <><p>The current server facts are displayed. The original unknown outcome remains unconfirmed.</p>{!hideCurrentChoice && <Button icon="check" variant="outline" disabled={acceptCurrent?.disabled} onClick={acceptCurrent?.onSelect ?? operation.useCurrent}>{acceptCurrent?.label ?? "Use reviewed current state"}</Button>}</>}</Alert>}{operation.attempts.length > 0 && <section className="fleet-resource-section" aria-label="Earlier unconfirmed resource commands"><h3>Earlier unconfirmed requests</h3><ul>{operation.attempts.map((intent, index) => <li key={index}>{intent.operation} · Expected revision {intent.revision} · {'state' in intent && intent.state === 'pending' ? 'Awaiting original acknowledgement' : 'Original outcome remains unconfirmed'}</li>)}</ul></section>}</>
 }

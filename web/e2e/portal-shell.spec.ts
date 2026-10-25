@@ -33,9 +33,12 @@ test('shell collection, permitted destination search and current event context a
 test('host does not invent event authority and revoked current reads withdraw contextual destinations', async ({ page }) => {
   await mockWorkspace(page)
   await page.route('**/api/v1/session', route => route.fulfill({ json: { person: { ...person, platform_admin: false }, csrf_token: 'synthetic-csrf-token-32-characters', draft_scope: '22222222-2222-4222-8222-222222222222', can_create_events: false } }))
-  let revoked = false
+  let revoked = false, reads = 0
+  let release!: () => void
+  const restoration = new Promise<void>(resolve => { release = resolve })
+  let holdRestoration = false
   const event = { ...fixtureEvent(), can_read_staff: false, can_read_review_coverage: false, can_edit: false, can_present: false, can_transition: false, can_manage_owner: false }
-  await page.route(`**/api/v1/events/${firstID}`, route => revoked ? route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Synthetic', request_id: 'synthetic' } } }) : route.fulfill({ json: event }))
+  await page.route(`**/api/v1/events/${firstID}`, async route => { reads++; if (revoked) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Synthetic', request_id: 'synthetic' } } }); if (holdRestoration) await restoration; return route.fulfill({ json: event }) })
   await page.goto(`/events/${firstID}`)
   await expect(page.locator('.fleet-shell-context')).toContainText('Event access')
   await page.getByRole('button', { name: 'Find a destination' }).click()
@@ -46,8 +49,25 @@ test('host does not invent event authority and revoked current reads withdraw co
   revoked = true
   await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')))
   await expect(page.locator('.fleet-shell-context')).toContainText('Event access unavailable')
+  await expect(page.getByRole('navigation', { name: 'Event sections', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Switch event · North Star Hack', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'North Star Hack', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Find a destination' }).click()
   await search.fill('North Star'); await expect(page.getByText('No matching destinations. Try another name.')).toBeVisible()
+  await search.fill('Surveys and feedback'); await expect(page.getByText('No matching destinations. Try another name.')).toBeVisible()
+  await page.keyboard.press('Escape')
+  revoked = false; holdRestoration = true
+  const before = reads
+  await page.getByRole('button', { name: 'Try again', exact: true }).click()
+  await expect.poll(() => reads).toBeGreaterThan(before)
+  await expect(page.locator('.fleet-shell-context')).toContainText('Event access unavailable')
+  await expect(page.getByRole('navigation', { name: 'Event sections', exact: true })).toHaveCount(0)
+  release()
+  await expect(page.locator('.fleet-shell-context')).toContainText('North Star Hack')
+  await expect(page.getByRole('navigation', { name: 'Event sections', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Find a destination' }).click()
+  await search.fill('North Star')
+  await expect(page.getByRole('link', { name: 'North Star Hack workspace', exact: true })).toBeVisible()
 })
 
 test('bookmarked unauthenticated destination keeps a safe same-origin login return and expiry recovery', async ({ page }) => {

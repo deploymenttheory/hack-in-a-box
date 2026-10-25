@@ -404,6 +404,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/transition": {
         parameters: {
             query?: never;
@@ -4098,6 +4116,30 @@ export interface components {
             field: string;
             code: string;
             message: string;
+        };
+        TodayPage: {
+            /** @description Optional deployment-validated independent administration origin; no authority is conferred by navigation. */
+            administration_origin?: string;
+            event: components["schemas"]["Event"];
+            /** @description Only the current actor's active event grants; switching UI context grants no authority. */
+            roles: components["schemas"]["StaffRole"][];
+            /** @description Existing native competition claim state, or empty when none. An offer is not a confirmed competitor. */
+            participation_state: string;
+            program: components["schemas"]["TodayProgram"];
+        };
+        TodayProgram: {
+            /** Format: int64 */
+            sequence: number;
+            /** Format: date-time */
+            server_now: string;
+            current: components["schemas"]["DisplayCue"] | null;
+            next: components["schemas"]["DisplayCue"] | null;
+            /** @enum {string} */
+            mode: "held" | "running";
+            remaining_seconds: number;
+            /** Format: date-time */
+            timer_ends_at: string | null;
+            override_active: boolean;
         };
         Event: {
             /** Format: uuid */
@@ -8376,6 +8418,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Event"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getToday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current event-reader context and allowlisted published room program. No controller page, unreleased schedule or task store. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayPage"];
                 };
             };
             default: components["responses"]["Error"];

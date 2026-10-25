@@ -156,21 +156,7 @@ func conflict(err error) error {
 }
 
 func (s Service) Read(ctx context.Context, actor, id uuid.UUID) (View, error) {
-	q := dbgen.New(s.Pool)
-	if err := (access.EventPolicy{Queries: q}).Authorize(
-		ctx,
-		actor,
-		id,
-		id,
-		access.EventRead,
-	); err != nil {
-		return View{}, fmt.Errorf("authorize event: %w", err)
-	}
-	row, err := q.Event(ctx, id)
-	if err != nil {
-		return View{}, fmt.Errorf("load event: %w", err)
-	}
-	return s.view(ctx, q, actor, row)
+	return s.read(ctx, dbgen.New(s.Pool), actor, id)
 }
 
 func (s Service) Decisions(
