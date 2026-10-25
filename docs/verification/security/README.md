@@ -108,3 +108,45 @@ trust boundaries are in [threat-model.md](threat-model.md).
 
 This checkpoint does not clear the integrated showcase/mentor feature,
 privileged configured-deployment abuse, independent review or final CI gates.
+
+## Supplemental delivery proof at43250218
+
+The separately committed delivery manifest covers actual HTTP display
+capabilities and SSE revocation, policy-before-payload subscription checks,
+native queued-job current role/assignment/event checks, overlapping file roles,
+room projection, approved multi-channel confidentiality and GitHub App
+least-privilege operation tokens. On clean source
+`432502185d422016eb0cae19f54e23044d641500`, all **7 groups/12 exact parents
+PASS**, with no skips/failures; see
+[`native-delivery-matrix.json`](native-delivery-matrix.json) for the actual source
+record, cases, commands and log hashes.
+
+Reproduce this additional scope with:
+
+```sh
+HACKBOX_INTEGRATION=1 python3 scripts/verify-security.py \
+  --manifest docs/verification/security/delivery-cases.json \
+  --output-dir /private/tmp/hackbox121-security-delivery
+```
+
+The two explicit manifests together executed **24 groups/63 distinct top-level
+cases**, retaining their separate source identities. No case or current feature
+is inferred from another package's passing label. The actual rendering suite
+also passed49 files/237 unit tests; the four browser cases, lint, both portal
+builds and advisory/dependency-graph log digests are retained separately in
+[`frontend-advisory-summary.json`](frontend-advisory-summary.json).
+
+## Remaining delivery gates
+
+- Integrate the completed #163 showcase source, then execute its native
+  search/direct-route/current-consent/current-audience/stale-response abuse proof
+  as part of this release verification, not as an unexecuted reference.
+- Integrate the separately owned mentor-contribution feature and verify its
+  current authority, original private evidence, tie/confirmation and publication
+  boundaries. The absent feature cannot be certified by current judge tests.
+- Execute privileged abuse scenarios against the final integrated local
+  synthetic deployment. Historical anonymous-only preview observations and
+  native HTTP fixtures retain their actual narrower scope.
+- Obtain independent reviews and complete final current-head required CI. Keep
+  this PR Draft and #121 open; no critical/high-severity release sign-off or full
+  release completion is claimed by these scoped results.
