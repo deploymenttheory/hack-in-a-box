@@ -153,3 +153,37 @@ The full scoring owner passes real PostgreSQL/race28.632s; existing strict
 authenticated judge HTTP/OpenAPI/CSRF/role-loss tests pass5.273s. These results are
 pre-rebase local evidence. Canonical parity, configured lint, integration after
 rebase and fresh exact-head CI remain separate checks; this is not acceptance.
+
+## Organiser reopen coordination metadata
+
+Integration with #109 exposed a genuine missing consumer contract. `Round`
+provides current assignments but no per-author card version; `Brief` intentionally
+requires the assigned judge and returns only that judge's private card. An
+organiser must not infer a card revision or acquire private scores just to reopen
+it. The additive organiser-only
+`GET /api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}/states` now provides
+exact run/team/author, latest version/state, current source availability/change
+and native reopen capability. It includes only the current final revision and
+opaque current repository-decision UUID required as write preconditions by the
+existing reopen POST. It never includes scores, notes, artifact identities,
+repository source, URL or SHA. No storage migration or permission exception.
+
+Current event/run, active entry/team, assigned judge, declared conflicts and
+post-cutoff native exact-final/freeze eligibility are rechecked transactionally.
+Unavailable current source is explicitly distinct from a known changed source.
+Only a submitted card under current eligible authority/writable event can offer
+reopen. The native command independently rechecks everything, requires a reason,
+fences exact version and preserves existing approval invalidation/history.
+
+An actual PostgreSQL/race organiser-only discovery→reasoned exact-version reopen
+case passed3.975s. It proves the organiser cannot acquire `Brief`, judge and
+competitor cannot acquire metadata, JSON has no private card/artifact/code
+fields, stale versions fail, post-reopen state is current, and disbandment denies
+access. Strict HTTP additionally checks judge/outsider denial and organiser-only
+current native run lookup; current full-owner/API results are reported in PR
+metadata. This is local proof, not final CI or acceptance.
+
+With this additive seam, the complete selected native scoring owner passed
+PostgreSQL/race27.863s and strict authenticated judge HTTP4.876s. Focused configured
+lint reported0issues. Exact committed generation parity, generated TypeScript,
+independent re-review and new immutable-head CI remain separate final gates.

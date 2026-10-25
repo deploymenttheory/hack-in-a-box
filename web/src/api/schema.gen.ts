@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeCardStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams/{team_id}/judge-summary": {
         parameters: {
             query?: never;
@@ -3980,6 +4000,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JudgeCardState: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            version: number;
+            state: string;
+            source_changed: boolean;
+            can_reopen: boolean;
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: uuid */
+            repository_decision_id: string | null;
+            source_available: boolean;
+        };
+        JudgeCardStates: {
+            items: components["schemas"]["JudgeCardState"][];
+        };
         JudgeSummaryFact: {
             /** Format: uuid */
             deliverable_id: string;
@@ -8636,6 +8677,31 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgeCardStates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only current card state/version and opaque reopen preconditions; no scores, notes, artifacts or code. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeCardStates"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getJudgeSummary: {
         parameters: {
             query?: {

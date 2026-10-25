@@ -178,3 +178,14 @@ func (h handlers) ChangeJudgeSummary(
 	}
 	return convertDTO[contract.ChangeJudgeSummary200JSONResponse](v)
 }
+
+func (h handlers) GetJudgeCardStates(
+	ctx context.Context,
+	r contract.GetJudgeCardStatesRequestObject,
+) (contract.GetJudgeCardStatesResponseObject, error) {
+	v, err := h.Judging.CardStates(ctx, actor(ctx).ID, r.EventId, r.RunId, r.TeamId)
+	if err != nil {
+		return nil, fmt.Errorf("organiser judge card metadata: %w", err)
+	}
+	return convertDTO[contract.GetJudgeCardStates200JSONResponse](v)
+}

@@ -190,6 +190,19 @@ func TestJudgeHTTPIsolatedPracticeStrictContractAndCurrentAuthority(t *testing.T
 	if w = request(other, "GET", receiptPath, "\"0\"", nil, true); w.Code != 403 {
 		t.Fatal("receipt actor privacy", w.Code, w.Body)
 	}
+	metadataPath := "/api/v1/events/" + eventID.String() + "/judging/" + uuid.New().
+		String() +
+		"/teams/" + uuid.New().
+		String() +
+		"/states"
+	for _, person := range []dbgen.Person{judge, other} {
+		if w = request(person, "GET", metadataPath, "\"0\"", nil, true); w.Code != 403 {
+			t.Fatal("non-organiser obtained card coordination metadata", w.Code, w.Body)
+		}
+	}
+	if w = request(owner, "GET", metadataPath, "\"0\"", nil, true); w.Code != 404 {
+		t.Fatal("organiser metadata route failed current native run lookup", w.Code, w.Body)
+	}
 	if _, err = pool.Exec(
 		ctx,
 		"UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2",
