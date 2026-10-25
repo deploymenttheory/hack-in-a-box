@@ -338,3 +338,28 @@ scope disposal. These fictional callbacks never imply a saved native card,
 selection signoff or published announcement. Keep sent-command metadata and
 its departure guard above the private editor; a current read or a deliberate new
 base cannot acknowledge an earlier request.
+
+## Results and deliberate team feedback
+
+`AnnouncedResults` accepts only the typed native announcement projection. It selects
+one latest publication per kind for participant and room reading; MC cue, countdown,
+QR destination and next cue remain independent. It never loads private preparation
+or looks up an unpublished result. `ResultReview`, `TeamFeedbackContent` and
+`TeamFeedbackReview` are the same production presentations used in the independent
+synthetic guide, with local callbacks and no account, API or storage access.
+
+Native owners keep report body, review and recipients in disposable private memory,
+exclude private reading/reviews from print and retain only original request metadata
+above route and authority lifetimes. Capture exact actor, event, team, source,
+version, authoring body and explicit score inclusion before review. Re-read current
+source and audience before sending. An original acknowledgement must match actor,
+request, action, version and native fingerprint; current GET never settles a lost
+response. Correction saves preserve the previous release until a separate deliberate
+versioned release records author and confirmed published-team audience. Score choice
+starts off; only exact own-team category averages and total can be included.
+
+Keep the initiating form mounted with `hidden` during review so cancellation restores
+the actual opener. Pending locks dismissal; unknown offers original receipt lookup
+or deliberate current-base review, never an automatic replay. Current denial disposes
+private report, audience and held continuation; restoring permission starts a fresh
+read. The guide distinguishes synthetic callback completion from a native receipt.
