@@ -1,6 +1,8 @@
-# Optional session frontend — implementation checkpoint
+# Optional session frontend — verification ledger
 
 Issue #167 remains a complete in-progress deliverable. This branch now targets main after backend #166/PR #271 merged as `2d82ac4`. It is not release certification or an acceptance closure.
+**Current evidence:** unfiltered native6/6 passed on clean00ccff8, full public guide60/60 on1a24306 plus affected guide4/4 after the layout correction, and final-source-chain administrator39passed/1skip and participant33passed/7skips through their actual CI configurations. Inherited rehearsal, final-head CI and independent final reviews remain pending. Earlier sections below are historical checkpoints, not current acceptance claims.
+
 The backend owns current audience/eligibility, FIFO capacity, exact original
 acknowledgements, immutable calendar sequence and notification suppression.
 
@@ -181,3 +183,14 @@ Actual before/after captures and hashes are in [visual-manifest.json](visual-man
 Fresh types, full web lint, affected definition/receipt tests13/13, both portal builds and production guide export passed during this correction chain. The inherited original native rehearsal, final-head CI and final independent full-scope reviews remain required; this draft does not claim issue acceptance or release certification.
 
 The narrow-heading correction changes only the owned session collection wrapper/styles, without rewriting shared collection patterns. Both portal bundles and the guide were rebuilt; updated native/guide proof and image recapture remain pending for that final visual correction.
+
+
+## Corrected visual/current source checkpoint — 00ccff8
+
+After the session-owned narrow title/action correction, the complete **unfiltered native6/6** passed again on clean00ccff8: **package20.542s**, desktop10.44s/mobile8.72s. Both fixture records confirm clean identical start/end source, no selection filter, actual production bundles and PostgreSQL. The mobile native title-width invariant passed; replacement captures show the full title and separate Open action above readable facts. All eight after images and their manifest/fixture records now reference this corrected native run. Earlier failed captures remain in the diagnostic artifacts, not the final image set.
+
+The affected public session guide cases then passed4/4 in4.1s against the rebuilt export; the earlier full guide60/60 remains attributed to1a24306. Final copy cleanup removes implementation-only independence/device-clock language from ordinary screens while preserving optional booking, event admission, timezone and calendar guidance. Current captures are explicitly attributed to the preceding00ccff8 copy; no broad native rerun is inferred from this copy-only edit.
+
+Continuous participant browser configuration now explicitly includes the owned session suite, alongside the existing administrator coverage. Current conflict-warning→native-shaped date-review/calendar-state, title layout and real keyboard/private-lifetime cases run through those actual CI configurations. The participant suite passed33 tests with7 intentional skips in25.9s (organiser-only cases and desktop narrow-only geometry). Final inherited native rehearsal, exact-head CI and independent reviews remain pending.
+
+The matching administrator CI-config session suite passed39 tests with1 intentional desktop narrow-only skip in29.5s after the final copy/coverage changes. Types, affected lint and all three production exports passed for that source chain.
