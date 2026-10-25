@@ -50,6 +50,37 @@ replaced by a visual migration.
 | Versioned production guide, contribution rules, independent availability | Existing independent production host/build and contribution rules are retained. A current isolated image and separately browsed guide must be proved; an already running guide at 8082 is not candidate-release evidence. |
 | Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #164/#165 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
 
+## Reproducible normal-image runtime and browser probe
+
+`python3 scripts/verify-fleet-runtime.py --artifacts /PRIVATE/NEW/ARTIFACT-DIRECTORY`
+builds only tracked, committed HEAD into uniquely named normal public/admin/guide
+images. Install the locked frontend dependencies and Playwright Chromium first.
+The four fixed loopback ports18180/18181/18182/19190 must be free; an existing
+project or artifact directory fails preflight instead of being overwritten.
+
+The probe uses a private PostgreSQL database and a verification-only external
+OIDC provider on loopback. The application images run their normal commands,
+OIDC/PKCE/nonce/signature/session checks and bootstrap flow. They have no test
+clock, test entrypoint, seeded session or successful mocked API response. Real
+browser form → review → native event creation → both portal readers is followed
+by independent logout, an unauthenticated guide and scoped public-process
+failure while administration/guide continue. Desktop/mobile, light/dark,
+finite-animation settling, overflow, serious/critical Axe checks and synthetic
+screenshots are part of that bounded probe. It does not prove every domain route
+or replace the full lifecycle/security/accessibility release scopes.
+
+Only project-prefixed ephemeral services/volumes/networks are removed in the
+runner's finally block. It never restarts Docker or modifies the normal user
+projects. Artifacts are private, contain no authentication trace/cookie values,
+retain image IDs/source and image hashes, and report zero remaining project
+resources after successful cleanup. The external provider script is not included
+in the application runtime image. Its identities and credentials are synthetic.
+
+At this source checkpoint this new runtime probe is **unexecuted**. The earlier
+237-test/source-inventory results above do not establish its success. Preserve
+each failed attempt separately, diagnose its actual symptom, then record the
+exact executed source and measured result before changing this status.
+
 ## Source inventory versus actual integration
 
 Run `node scripts/check-fleet-cutover.mjs`. It parses registered router members,
