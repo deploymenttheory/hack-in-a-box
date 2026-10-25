@@ -11,6 +11,9 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 )
 
+// The cohort belongs only to this event-locked transaction. Reuse its exact
+// native sources across ballots/decisions; never cache it across commands,
+// readers or lock lifetimes. Each ballot still rechecks its actor and evidence.
 func (s Service) ballots(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -19,6 +22,7 @@ func (s Service) ballots(
 	tie Tie,
 	seat int,
 	remaining []uuid.UUID,
+	teams []nativeTeam,
 ) ([]uuid.UUID, bool) {
 	counts := map[uuid.UUID]int{}
 	seen := map[uuid.UUID]bool{}
@@ -41,11 +45,7 @@ func (s Service) ballots(
 				return nil, false
 			}
 		}
-		teamList, err := s.cohort(ctx, tx, eventID, v)
-		if err != nil {
-			return nil, false
-		}
-		team, err := findTeam(teamList, vote.TeamID)
+		team, err := findTeam(teams, vote.TeamID)
 		if err != nil || team.source == nil {
 			return nil, false
 		}
@@ -86,6 +86,7 @@ func (s Service) resolved(
 	eventID uuid.UUID,
 	v scope,
 	tie Tie,
+	teams []nativeTeam,
 ) ([]uuid.UUID, bool) {
 	result := []uuid.UUID{}
 	for seat := 1; seat <= tie.Seats; seat++ {
@@ -98,7 +99,7 @@ func (s Service) resolved(
 		}
 		decision := v.round.Decisions[index]
 		remaining := without(tie.TeamIDs, result)
-		winners, valid := s.ballots(ctx, tx, eventID, v, tie, seat, remaining)
+		winners, valid := s.ballots(ctx, tx, eventID, v, tie, seat, remaining, teams)
 		if !valid || decision.ActorID != v.round.Panel.OrganiserID ||
 			!slices.Contains(winners, decision.TeamID) ||
 			decision.Casting != (len(winners) > 1) {
@@ -114,10 +115,6 @@ func (s Service) resolved(
 			); err != nil {
 				return nil, false
 			}
-		}
-		teams, err := s.cohort(ctx, tx, eventID, v)
-		if err != nil {
-			return nil, false
 		}
 		team, err := findTeam(teams, decision.TeamID)
 		if err != nil || team.source == nil {
@@ -231,7 +228,7 @@ func (s Service) changeTie(
 		if actor != v.round.Panel.OrganiserID {
 			return access.ErrForbidden
 		}
-		winners, valid := s.ballots(ctx, tx, eventID, *v, tie, seat, remaining)
+		winners, valid := s.ballots(ctx, tx, eventID, *v, tie, seat, remaining, teams)
 		if !valid || !slices.Contains(winners, input.TeamID) {
 			return access.ErrConflict
 		}

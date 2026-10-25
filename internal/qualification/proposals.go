@@ -89,8 +89,8 @@ func (s Service) proposal(
 	if len(p.Blockers) > 0 {
 		return p, nil
 	}
-	s.resolveTotals(ctx, tx, eventID, v, &p, cards)
-	s.resolveCategories(ctx, tx, eventID, v, &p, cards)
+	s.resolveTotals(ctx, tx, eventID, v, &p, cards, teams)
+	s.resolveCategories(ctx, tx, eventID, v, &p, cards, teams)
 	if len(p.Blockers) == 0 {
 		for index, ranking := range p.Rankings {
 			if index < v.criteria.FinalistCount {
@@ -171,6 +171,7 @@ func (s Service) resolveTotals(
 	v scope,
 	p *Proposal,
 	cards map[uuid.UUID]FinalCard,
+	teams []nativeTeam,
 ) {
 	for id, card := range cards {
 		var total int64
@@ -217,7 +218,7 @@ func (s Service) resolveTotals(
 			tie.ID = tieID(p.Binding, tie)
 			p.Ties = append(p.Ties, tie)
 			if seats > 0 {
-				resolved, valid := s.resolved(ctx, tx, eventID, v, tie)
+				resolved, valid := s.resolved(ctx, tx, eventID, v, tie, teams)
 				if !valid {
 					p.Blockers = append(p.Blockers, "unresolved_tie:"+tie.ID)
 				} else {
@@ -239,6 +240,7 @@ func (s Service) resolveCategories(
 	v scope,
 	p *Proposal,
 	cards map[uuid.UUID]FinalCard,
+	teams []nativeTeam,
 ) {
 	for _, category := range v.criteria.Categories {
 		var max *int
@@ -263,7 +265,7 @@ func (s Service) resolveCategories(
 			tie := Tie{Kind: "category", CategoryID: &id, TeamIDs: winners, Seats: 1}
 			tie.ID = tieID(p.Binding, tie)
 			p.Ties = append(p.Ties, tie)
-			if resolved, valid := s.resolved(ctx, tx, eventID, v, tie); valid {
+			if resolved, valid := s.resolved(ctx, tx, eventID, v, tie, teams); valid {
 				winners = resolved
 			} else {
 				p.Blockers = append(p.Blockers, "unresolved_tie:"+tie.ID)

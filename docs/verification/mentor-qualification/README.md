@@ -125,3 +125,13 @@ process sample and timeout stacks remain at `/private/tmp/hackbox110-ties-actual
 and `/private/tmp/hackbox110-ties.log`. Testcontainers' reaper removed owned
 PostgreSQL3583405e62cd; no labelled testcontainers remained at the post-run check.
 This is a native validation-performance failure, not successful tie acceptance.
+
+On the patch-equivalent rebase onto merged #108 main
+`b2b09b6c35fa6cdc8ae6e9fa30acfe3ca5fbd063`, the unchanged tie regression passed
+with the original5m timeout: **PostgreSQL/-race127.530s**, handle83441. Only
+redundant full-cohort reads inside the same event-locked transaction were removed;
+ballot/decision actor authority, native evidence authorization, source identity,
+required ballots, duplicate rejection and casting checks remain. No cross-command,
+cross-reader or cross-transaction cache exists. This is a bounded full five-team
+all-ties workflow proof, not an event-scale performance certification. The actual
+300.329s RED and sample retain their original source attribution.
