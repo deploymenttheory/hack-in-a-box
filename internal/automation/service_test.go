@@ -173,10 +173,7 @@ func (f *fixture) campaign(purpose, body string, approve bool, channels ...strin
 			f.t.Fatal(err)
 		}
 	}
-	loc, err := time.LoadLocation("Europe/London")
-	if err != nil {
-		f.t.Fatal(err)
-	}
+	wall, choice := testdb.WallTimeForInstant(f.t, f.now.Add(time.Minute), "Europe/London")
 	f.campaignID = uuid.New()
 	definition := communications.CampaignDefinition{
 		ID:         f.campaignID,
@@ -185,8 +182,9 @@ func (f *fixture) campaign(purpose, body string, approve bool, channels ...strin
 		AudienceID: audience.ID,
 		Channels:   channels,
 		Timing: communications.CampaignTiming{
-			Kind:     "fixed",
-			WallTime: f.now.Add(time.Minute).In(loc).Format("2006-01-02T15:04:05"),
+			Kind:      "fixed",
+			WallTime:  wall,
+			DSTChoice: choice,
 		},
 	}
 	actions := []string{"save"}
@@ -211,6 +209,10 @@ func (f *fixture) campaign(purpose, body string, approve bool, channels ...strin
 			command,
 		)
 		if err != nil {
+			var blocker *event.Blocked
+			if errors.As(err, &blocker) {
+				f.t.Fatalf("campaign %s: %v; blockers=%+v", action, err, blocker.Issues)
+			}
 			f.t.Fatal(err)
 		}
 		f.campaignVersion = detail.Campaign.Campaign.Version
