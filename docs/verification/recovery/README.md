@@ -1,148 +1,137 @@
-# Recovery implementation checkpoint
+# Recovery verification — issue #124
 
-Issue #124 is in progress. This first slice implements durable startup isolation;
-it is not yet a complete backup or restore procedure.
+The full implementation is a review candidate in Draft PR #269. Independent final
+reviews and all exact-head CI checks remain required before merge. The executed
+native and packaged proofs below are distinct; neither is represented as a broad
+production security/release certification.
 
-- Migration 48 owns the singleton recovery hold and immutable operator maintenance
-  history. An active hold refuses rollback to a binary without this startup gate.
-- Both API surfaces and the worker wait before opening files, constructing provider
-  runtimes, cleaning storage, reconciling intents or starting River.
-- A shared process-lifetime database lease prevents a quiesced capture from racing
-  native process startup. Operators must stop their services deliberately; this
-  tool never stops containers.
-- `go run ./cmd/recovery -action hold|status` uses the deployment database connection
-  from `HACKBOX_DATABASE_URL`. `-action resume -hold UUID -review FINGERPRINT`
-  requires the current hold and unresolved-operation metadata fingerprint. It does
-  not approve, resolve, renumber or resend an original operation.
+## Delivered scope
 
-The first regression exercises real PostgreSQL and actual worker composition:
-held startup must leave the storage path absent and reconciliation history empty;
-wrong/stale reviews and rollback are rejected; reviewed resume preserves pending
-and ambiguous operation identities/states. Executed: `HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test -race
-./internal/recovery -run TestRecoveryHold -count=1` passed against isolated real
-PostgreSQL (6.775s). The fixture includes failed active-hold rollback and successful
-post-review rollback. This proves this bounded slice, not the remaining restore scope.
+- Consistent quiesced PostgreSQL/native-files capture into private authenticated
+  age ciphertext; fixed encrypted manifest binds schema, capture interval, object
+  metadata and ciphertext hashes. No plaintext backup/dump/archive scratch files.
+- Complete authenticated EOF/path/type/inventory/checksum validation before fresh
+  database/files restore. Existing targets are refused; restored schema/file
+  metadata must agree before private staged files are published.
+- Durable recovery hold before API/admin/worker file opening, cleanup, provider
+  wiring, maintenance, lease reconciliation and River. New restore hold commits
+  with SQL. Active holds cannot be bypassed through schema rollback.
+- Explicit current typed pending-action review and fingerprint-bound resume,
+  immutable maintenance history, and preservation of original identities,
+  approvals, attempts and ambiguous outcomes. No provider is called by the tool.
+- Separate private archive identity and retained deployment credential keys;
+  existing pgx keyword/URI deployment configuration and pool tuning are preserved.
+- A pinned, independent operator image with bundled PostgreSQL clients, executable
+  isolated rehearsal and [operator runbook](../../recovery-runbook.md).
 
-Remaining full issue scope: private authenticated streaming backups; consistent
-PostgreSQL plus files capture; complete authenticated validation and fresh-target
-restore; separate archive identities/deployment credential keys; safe review of all
-native pending/ambiguous external actions; malicious archive tests; fresh isolated
-PostgreSQL/files recovery of native histories and attachments; missing/wrong/retained
-credential-key proof; measured synthetic RTO/RPO and the final operator runbook.
-No production backups, real provider actions or existing user container changes
-are part of the rehearsal.
+## Native real-PostgreSQL/race proof
 
-Bounded compile/lint: `GOMAXPROCS=2 GOFLAGS=-p=1 golangci-lint run
-./internal/recovery/... ./cmd/recovery/... ./internal/app/... ./internal/database/...`
-completed with zero issues. An initial CLI exit/defer lint finding was corrected
-before this checkpoint. No full-suite, encrypted-backup or timed-restore proof is
-claimed yet.
+Executed with capped workers on the native source frozen into `294d74b`; subsequent
+client-connection changes are covered separately below. The shared fixture-only
+clock correction `450b9ff` was cherry-picked as `7218da6` before packaged builds.
 
-## Encrypted archive and fresh-target checkpoint
+```sh
+HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 \
+  go test -race ./internal/recovery ./internal/credentials \
+  -run 'TestRecovery|TestArchive|TestFreshEncryptedRecovery' -count=1 -v
+```
 
-`filippo.io/age` v1.3.2 is pinned after checking the current Go module proxy and
-[maintained release](https://github.com/FiloSottile/age/releases/tag/v1.3.2).
-The [age streaming API](https://pkg.go.dev/filippo.io/age#Encrypt) owns encryption
-and authenticated framing; this implementation does not design its own framing.
-A private bundle contains `database.age`, `files.age` and `manifest.age` only.
-Native file identities/checksums and the two ciphertext hashes are bound by the
-encrypted manifest. There are no plaintext dump/archive scratch artifacts.
+Terminal: recovery **9.951s PASS**, credentials **10.726s PASS**. These are selected
+regressions, not a claim that every repository test ran locally.
 
-Verification consumes all authenticated streams to EOF, validates the exact
-inventory and rejects paths/symlinks/extra objects/checksum inconsistencies.
-Restore first copies ciphertext into an owned private directory and verifies the
-whole bundle; it refuses existing database relations/storage, streams into a
-fresh target and commits a new hold with the SQL restore. Raw keys remain outside
-both source database and archive. An operator-only Docker target includes the
-existing pinned PostgreSQL 17.7 clients.
+The fresh-server dataset has 1,000 synthetic accounts, an actually released common
+challenge/rules with exact approved rubric, resolved help with three transitions,
+a private question and approved/published common answer using native inbox
+contracts, dated outcome evidence, an explicitly approved 30-day follow-up, an
+attachment, encrypted native credential, and original pending/ambiguous operation
+and attempt history. **Seventeen nonempty native history tables** compare exactly
+after restoration. Native owner reads and stranger denial are exercised.
 
-Executed terminal proof after correction:
+The native cases also prove:
 
-- Bounded archive/CLI/testdb lint: zero issues.
-- `GOMAXPROCS=2 GOFLAGS=-p=1 go test -race ./internal/recovery
-  ./internal/credentials -run 'TestArchive|TestFreshEncryptedRecovery' -count=1`:
-  recovery passed 1.556s; native credentials passed 7.362s (integration enabled).
-- Ten deterministic archive cases cover valid data, wrong identity, truncated DB
-  and file ciphertext, unsafe tar path, symlink header/artifact, wrong native
-  checksum, unexpected artifact and public artifact permissions.
-- Fresh-server proof creates separate source/target PostgreSQL containers and a
-  fresh native storage directory. A wrong archive identity exposes neither
-  database schema nor restored files. Missing, wrong-material, new-only and retained
-  old deployment keys retain native credential semantics. A subsequent source
-  replacement is absent from the recovered credential; existing target overwrite
-  is refused. All containers are fixture-owned and removed afterward.
+- Missing/wrong archive identity does not expose schema or files; missing,
+  wrong-material, new-only and retained historical deployment keys preserve native
+  credential reveal behavior. A subsequent source replacement is absent from the
+  recovered value; an existing target cannot be overwritten.
+- Actual held worker composition leaves storage unopened and reconciliation empty;
+  wrong/stale reviews fail. New native schedules and verification attempts change
+  the safe fingerprint without exposing their bodies/destinations.
+- Live native runtime prevents exclusive capture, hold identity remains stable,
+  maintenance history rejects DELETE/TRUNCATE, active-hold rollback fails and
+  post-review rollback succeeds. Original operation states/approvals remain.
+- Ten deterministic archive scenarios cover valid input, wrong key, truncated DB
+  and file streams, unsafe tar path, symlink header/artifact, wrong native checksum,
+  unexpected artifact and public artifact permissions.
+- Archive identity creation is private, separate and cannot overwrite old keys.
+  An actual failed SQL stream rolls back its prior synthetic table. The initial
+  unchanged-flags atomicity probe already passed; explicit `--file=-` documents
+  stdin/single-transaction use, not a claimed formerly reproduced atomicity bug.
 
-The original exact rehearsal failed because `pg_dump` clears the session search
-path; the appended hold statement was unqualified. Qualifying its two native
-recovery tables fixed that observed failure. Temporary stderr instrumentation was
-removed; diagnostics never included the plaintext dump or deployment keys.
+## Actual packaged operator proof
 
-An earlier successful measured 34-byte/one-attachment rehearsal captured in
-316.381ms and restored in 928.502ms. This excludes image retrieval, target startup,
-operator review and external-key retrieval; it is **not** a production RTO claim.
-A larger native-history dataset and final explicit RTO/RPO runbook remain pending.
+Source: **`c2471d85e9af0a28acb036e378bec4f0c4130f5e`**.
 
-## Native history, review and custody checkpoint
+```sh
+docker build --target recovery --tag hackbox-recovery:124-c2471d8 .
+HACKBOX_RECOVERY_IMAGE=hackbox-recovery:124-c2471d8 \
+  ./scripts/rehearse-recovery.sh
+```
 
-The current native dataset now includes 1,000 synthetic accounts, approved rubric
-and actually released common challenge/rules, resolved help with three transitions,
-a private question and native-inbox-backed approved/published answer, dated outcome
-evidence, an explicitly approved 30-day follow-up, original pending/ambiguous
-operations and attempts, plus the credential and attachment. Seventeen nonempty
-native history tables match exactly after fresh-server restoration; native owner
-reads and stranger denial are checked. This is not an empty-schema comparison.
+Both commands completed successfully. Image:
+`sha256:5b07cf0d854b676110e800f5fe281e15f8fc0321d66b9004ddb1c2dc5c8cf7ec`.
+The [machine-readable result](operator-result.json) records exact provenance and
+script digest. The host provided Docker, OpenSSL, Python and shell utilities;
+**no host pg_dump/psql** was used.
 
-The typed safe review inventory now includes native unmaterialized schedules and
-approved outcome follow-ups as well as generic jobs, SMTP/verification/repository/
-communication/content states. Newly appearing schedules or verification attempts
-invalidate an old review. Private command text/destinations are excluded.
-`review_entries` counts records, not people or distinct effects.
+This exercises actual keygen → backup → verify → fresh restore → actual held
+worker → known synthetic inventory review → explicit resume, using existing
+**keyword pgx connection strings plus pool tuning**, with validated equivalent
+operator client URIs. Native PostgreSQL/migrate/worker binaries run in the image.
+The source/target PostgreSQL servers and all files/keys/archive volumes are fresh
+and uniquely scoped. No deployment `.env`, real provider or existing container is
+used. Read-only container/network/volume checks after completion found **zero**
+remaining resources with the owned recovery prefix.
 
-Executed terminal capped proof (before the packaged-image rehearsal):
+Measured dataset: **one event, one 43-byte attachment, original pending and
+ambiguous intents**. Fresh restore: **484.510ms**; whole synthetic rehearsal:
+**11.052379667s**. Snapshot completed at **2026-10-25 00:50:24.332992678 UTC**.
+Image build/pull, real external-key retrieval and human review are excluded. This
+small deterministic measurement is **not** a production RTO promise or a claim to
+represent a production-size media corpus. Fresh servers/volumes establish logical
+clean-host isolation; this is not a claim of a second physical machine.
 
-- Owned recovery/CLI/testdb lint: zero issues.
-- `HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test -race
-  ./internal/recovery ./internal/credentials -run
-  'TestRecovery|TestArchive|TestFreshEncryptedRecovery' -count=1 -v`:
-  recovery passed 9.951s; credentials passed 10.726s.
-- Recovery cases include ten archive scenarios, private archive-key custody,
-  actual held worker/no cleanup/reconciliation, stale typed review, immutable
-  history including TRUNCATE rejection, migration rollback protection and a
-  real PostgreSQL failed-stream rollback.
-- An unchanged-flags atomicity probe already passed; adding explicit `--file=-`
-  clarifies PostgreSQL's documented stdin/single-transaction invocation. It is not
-  evidence of a formerly reproduced atomicity defect.
-- `go mod tidy -diff` produced zero bytes after canonical normalization.
-- The isolated operator script passes Bash syntax and ShellCheck. Its actual
-  packaged execution remains pending and is not inferred from native callbacks.
+The actual packaged worker stayed alive while held, with zero reconciliation and
+a physically present old orphan preserved. After it was stopped, reviewed resume
+left the original pending/ambiguous states and zero attempt counts unchanged.
+A source mutation after backup was absent from the recovered event, demonstrating
+snapshot RPO rather than pretending subsequent writes were recovered. Deployment
+backup cadence determines the real loss window; this procedure adds no PITR.
 
-Full operator procedure: [recovery runbook](../../recovery-runbook.md).
+## Diagnosed integration failures and final checks
 
-The first actual packaged command rehearsal exposed a connection integration
-failure before completing capture: libpq does not expand a URI supplied only as
-its `PGDATABASE` default, and UID 10001 has no implicit database username. A tight
-own-database probe confirmed the binary existed and explicit PGHOST/PGUSER/
-PGDATABASE/PGPORT/PGPASSWORD/PGSSLMODE succeeded where URI-only PGDATABASE failed.
-The command now maps the explicit deployment URI to fixed documented libpq
-variables, preserving encoded credentials and TLS settings without password argv.
-Unsupported/ambiguous options fail closed. The pure connection regression passed
-under race detection (1.448s), with bounded native/CLI lint zero issues.
-The packaged rehearsal is being rebuilt; no successful packaged result is claimed
-from the initial failing image.
+The initial native fresh restore failed because `pg_dump` clears session search
+path. Qualifying the appended recovery-hold tables fixed that exact observed
+failure. Temporary private stderr instrumentation was removed.
 
-The corrected packaged image `hackbox-recovery:124-e8ef87b` (image digest
-`sha256:653bbd9c95d9083e3e4dd365b95d1cb660e55fedc4af5146a01d25d3307a1ee8`)
-completed the actual isolated operator rehearsal: one event, one 43-byte attachment
-and original pending/ambiguous intents; 8.801448s total including fresh database
-startup, 317.783ms actual restore. The actual packaged worker remained alive and
-held with zero reconciliation and its old orphan preserved, then was stopped;
-reviewed resume preserved both original states/attempt counts. All own resources
-were removed. This result predates the following compatibility extension and is
-not attributed to that later source.
+The initial actual packaged capture failed because libpq does not expand a URI
+supplied solely as its PGDATABASE default. An isolated probe showed the installed
+binary existed and explicit libpq fields succeeded where URI-only default failed.
+The corrected adapter preserves encoded credentials/TLS in documented environment
+fields, keeps secrets out of argv/output, and accepts equivalent operator
+configuration for existing keyword deployments. Changed host/database/credential/
+TLS fails equivalence validation. Pool-only tuning is consumed by native pgx
+parsing before conversion. Final focused compatibility race proof: **1.374s PASS**;
+bounded native/CLI lint: **zero issues**. Earlier failed images are not attributed
+as successful final packaged proof.
 
-Existing keyword pgx deployment DSNs are now preserved with an optional separately
-supplied, natively validated equivalent operator URI; pool-only options are
-validated/consumed by pgx before libpq conversion. Host/database/user/password/TLS/
-startup mismatches fail closed. Bounded compatibility race tests passed 1.374s and
-native/CLI lint had zero issues. The actual packaged rehearsal now exercises that
-keyword-plus-pool configuration; its new image/result are still pending.
+Canonical generation completed successfully, adding only the two unused SQLC
+recovery table model types; public HTTP/TypeScript contracts are unchanged. A
+read-only symlink to existing browser tooling resolved the isolated worktree's
+initial missing generator. No shared dependencies were modified. ShellCheck,
+Bash syntax and final `go mod tidy -diff` are clean. Native recovery/CLI/testdb lint
+previously completed with zero issues. Local full-repository Go/browser campaigns
+were not repeated; exact-head CI must supply those required checks before merge.
+
+The final documentation/generated-model commit follows the executed packaged
+source above. Generated additions are unused table types; no tested recovery
+behavior or operator script changed after that source was frozen.
