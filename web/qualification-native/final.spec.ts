@@ -1,7 +1,7 @@
 import {writeFileSync} from 'node:fs'
 import {expect,test,type Page} from '@playwright/test'
 import {native,owner,control,teamLabel} from './native'
-import {activate,typeInto,selectNative} from './keyboard'
+import {activate,typeInto,selectNative,reach} from './keyboard'
 import type {QualificationPage} from '../src/qualification-model'
 async function accept(page:Page,reason:string){
  await typeInto(page.getByLabel('Recorded panel reason',{exact:true}),reason)
@@ -20,7 +20,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   const body=request.postDataJSON() as {request_id:string;action:string}
   writeFileSync(native.command_metadata_path,JSON.stringify({request_id:body.request_id,action:body.action}),{mode:0o600})
  })
- await page.goto(`/events/${native.event_id}/panel/${native.run_id}`)
+ await page.goto(`/events/${native.event_id}/panel/${native.run_id}`);await page.bringToFront()
  await activate(page.getByRole('button',{name:'Configure intended panel',exact:true}))
  await selectNative(page.getByLabel('Organising lead',{exact:true}),native.owner_id)
  for(const name of ['Native primary mentor','Native independent second mentor'])await activate(page.getByRole('checkbox',{name,exact:true}),'Space')
@@ -53,13 +53,13 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await expect(page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true})).toContainText('Required current ballots incomplete')
  await expect(page.getByRole('button',{name:'Review exact panel signoff',exact:true})).toHaveCount(0)
  for(const [actor,candidate] of [['primary',native.team_ids[0]],['second',native.team_ids[4]]] as const){
-  const voterContext=await owner(browser,actor),voter=await voterContext.newPage();await voter.goto(`/events/${native.event_id}/panel/${native.run_id}`)
+  const voterContext=await owner(browser,actor),voter=await voterContext.newPage();await voter.goto(`/events/${native.event_id}/panel/${native.run_id}`);await voter.bringToFront()
   await activate(voter.getByRole('button',{name:'Record ballot: UX · Seat 1',exact:true}))
   await selectNative(voter.getByLabel('Candidate for affected tie seat',{exact:true}),candidate)
   await typeInto(voter.getByLabel('Supporting observed evidence',{exact:true}),`Independent ${actor} ballot grounded in the actual UX comparison`)
   await accept(voter,`Independent ${actor} reasoned UX ballot`);await voterContext.close()
  }
- await activate(page.getByRole('button',{name:'Read current panel source',exact:true}))
+ await page.bringToFront();await activate(page.getByRole('button',{name:'Read current panel source',exact:true}))
  const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true});await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
  await activate(page.getByRole('button',{name:'Review casting tie decision: UX · Seat 1',exact:true}))
  await selectNative(page.getByLabel('Candidate for affected tie seat',{exact:true}),native.team_ids[4])
@@ -108,7 +108,19 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await activate(page.getByRole('button',{name:'Read recorded panel history',exact:true}))
  await activate(history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)))
  await expect(history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)).locator('..').getByText('Recorded reason: Confirm exact reviewed final card 3',{exact:true})).toBeVisible()
- await control('expire');await activate(page.getByRole('button',{name:'Read current panel source',exact:true}))
+
+ // Start from a real available keyboard action, then let the actual native
+ // request observe a revoked synthetic session. A periodic request may win the
+ // same race; both must dispose the private history on the real denial.
+ const currentSource=page.getByRole('button',{name:'Read current panel source',exact:true});await reach(currentSource)
+ const denied=page.waitForResponse(response=>{const path=new URL(response.url()).pathname;return response.status()===401&&path.startsWith(`/api/v1/events/${native.event_id}`)||response.status()===403&&path===`/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`})
+ let revoked=false
+ await page.route(`**/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`,async route=>{
+  if(route.request().method()==='GET'&&!revoked){revoked=true;await control('expire')}
+  await route.continue()
+ })
+ await page.keyboard.press('Enter');await denied
+
  await expect(history).toHaveCount(0);await expect(page.getByRole('heading',{name:'Moderation and selections',exact:true})).toHaveCount(0)
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
  await context.close()

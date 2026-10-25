@@ -1,10 +1,11 @@
 import {expect,type Locator} from '@playwright/test'
 
 // Actual native focus traversal. Merely pressing a locator can implicitly wake
-// a background tab and race the real source-read pause. Activate the page first,
-// then traverse its current enabled focus order; never force focus or mutate DOM.
+// a background tab and race the real source-read pause. The journey activates
+// pages once when switching actors, then traverses their current enabled focus
+// order. Never force focus or mutate DOM.
 export async function reach(control:Locator){
- const page=control.page();await page.bringToFront();await expect(control).toBeVisible()
+ const page=control.page();await expect(control).toBeVisible()
  for(let step=0;step<180;step++){
   await expect(control).toBeEnabled()
   await expect.poll(()=>control.evaluate(element=>!element.closest('[inert]'))).toBe(true)
