@@ -14,7 +14,8 @@ type Entry = components['schemas']['SessionAttendanceEntry']
 export function SessionAttendance({eventID,session,parent,disabled,acknowledged}:{eventID:string;session:BookableSession;parent:PrivateRequestScope;disabled:boolean;acknowledged:(receipt:SessionReceipt|undefined)=>void}){
  const identity=useIdentity()
  const load=useCallback(async(signal:AbortSignal)=>unwrap(await api.GET('/api/v1/events/{event_id}/sessions/{session_id}/attendance',{signal,cache:'no-store',params:{path:{event_id:eventID,session_id:session.id}}})),[eventID,session.id])
- const read=useTodayRead(`${identity.person.id}:${identity.draft_scope}:${eventID}:${session.id}:attendance`,load,parent)
+ const subjects=useCallback((roster:Roster)=>JSON.stringify(roster.items.map(person=>person.person_id).sort()),[])
+ const read=useTodayRead(`${identity.person.id}:${identity.draft_scope}:${eventID}:${session.id}:attendance`,load,parent,subjects)
  if(read.denied)return <p>Current facilitator roster access was removed. Private attendance names and reviews have been cleared.</p>
  if(!read.data)return read.error?<Failure error={read.error} retry={()=>void read.refresh()}/>:<Loading/>
  return <SessionAttendanceOwner key={read.generation} eventID={eventID} session={session} read={read} disabled={disabled} acknowledged={acknowledged}/>

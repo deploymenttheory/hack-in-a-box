@@ -136,3 +136,30 @@ An ancestry-only rebase onto merged backend main `2d82ac40` changed the frontend
 head to `3534ce6f` with the identical tree `7a1bdd61372bdad13164b9414ecad4795498aa5a`.
 The corrected native fixture requires a fresh clean-head run; prior proof is not
 relabelled as that future result.
+
+
+The corrected-auth native run on clean `22fefac7` reached the actual domain
+journey. **Mobile passed** the full organiser configuration/notification approval,
+two simultaneous native bookers, exact separate waitlist outcome, cancellation
+and promotion, facilitator correction/assignment loss, native withdrawal and
+unchanged competition/team-state assertions (**11.0s browser; 33.19s Go subcase**).
+**Desktop failed** because the notification-channel review remained disabled after
+its preview read (**17.5s browser; 32.73s Go subcase**); aggregate **66.811s FAIL**.
+This is not an aggregate native pass. Per-viewport artifact directories now retain
+both cases independently, and fixed response-revision/UI-enabled metadata will
+help diagnose the observed desktop race without logging private bodies or auth.
+
+Independent review also found a fresh200 roster omission case: the native roster
+can remove a withdrawn/ineligible subject while the facilitator retains general
+session and roster permissions. Its held attendance review retained the old name
+(**RED 6.6s**). Accepted current sorted subject IDs now define the private roster
+lifetime; removal synchronously renews the scope and remounts the private owner.
+The held-review and held-unknown-write cases passed desktop/mobile **4/4 in14.6s**.
+Safe original request metadata survives and exact lookup can settle the original
+attendance acknowledgement without restoring the removed subject's name.
+
+The native test cleanup no longer throws from a finally block: it collects all
+context cleanup results, preserves the original journey error, then reports a
+cleanup-only failure after the finally block. Affected lint explicitly including
+`web/session-native` passed after the CI `no-unsafe-finally` finding. The duplicated
+guide synthetic supply callback now reuses its existing controlled handler.
