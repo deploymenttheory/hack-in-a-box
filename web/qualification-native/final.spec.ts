@@ -4,10 +4,10 @@ import {native,owner,control} from './native'
 import type {QualificationPage} from '../src/qualification-model'
 async function accept(page:Page,reason:string){
  await page.getByLabel('Recorded panel reason',{exact:true}).fill(reason)
- await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
+ const submit=page.getByRole('button',{name:'Review entered panel decision',exact:true});await expect(submit).toBeEnabled();await submit.press('Enter')
  const dialog=page.getByRole('alertdialog',{name:'Review private panel command',exact:true})
  await expect(dialog).toContainText(reason)
- await dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
+ const confirm=dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true});await expect(confirm).toBeEnabled();await confirm.press('Enter')
  await expect(dialog).toHaveCount(0)
 }
 test('real five-team evidence, final cards, split tie ballots, casting signoff and separate preparation',async({browser})=>{
@@ -40,7 +40,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true});await expect(confirm).toBeFocused()
   await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
   if(index===0)await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})
-  await confirm.press('Enter');await accept(page,`Confirm exact reviewed final card ${index+1}`)
+  await expect(confirm).toBeEnabled();await confirm.press('Enter');await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
   await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter')
@@ -66,7 +66,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await accept(page,'Recorded organiser casting reason after both independent mentor ballots')
  await page.getByRole('button',{name:'Review exact panel signoff',exact:true}).press('Enter')
  await page.getByLabel('Recorded panel reason',{exact:true}).fill('Exact versioned private panel approval after all native blockers are resolved')
- await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
+ const submitSignoff=page.getByRole('button',{name:'Review entered panel decision',exact:true});await expect(submitSignoff).toBeEnabled();await submitSignoff.press('Enter')
  const review=page.getByRole('alertdialog',{name:'Review private panel command',exact:true});await expect(review).toContainText('Proposed finalists');await expect(review).toContainText('Reserve');await expect(review).toContainText('All eligible teams remain category candidates')
  await review.getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
  await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
