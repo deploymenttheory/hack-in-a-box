@@ -7,12 +7,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -152,8 +155,8 @@ type Page struct {
 	Current  bool                    `json:"current"`
 }
 type History struct {
-	Items      []Round `json:"items"`
-	NextCursor *int64  `json:"next_cursor"`
+	Items      []HistoricalRound `json:"items"`
+	NextCursor *int64            `json:"next_cursor"`
 }
 type CardInput struct {
 	TeamID  uuid.UUID                  `json:"team_id"`
@@ -187,6 +190,9 @@ func failure(operation string, err error) error {
 	if err == nil {
 		return nil
 	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return access.ErrNotFound
+	}
 	return fmt.Errorf("qualification %s: %w", operation, err)
 }
 
@@ -201,4 +207,9 @@ type Receipt struct {
 }
 type Recovery struct {
 	Receipt *Receipt `json:"receipt"`
+}
+
+type HistoricalRound struct {
+	Snapshot Round `json:"snapshot"`
+	Current  bool  `json:"current"`
 }

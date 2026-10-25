@@ -2,9 +2,11 @@
 
 This is a full-scope draft, not an acceptance or release claim. It depends on the
 actual #108 native owner and migration51; migration52 belongs only to this lane.
-No provisional checkpoint is promoted into a final card. API/generated-client,
-full cohort/tie/privacy/managed-evidence, migration parity and runtime proof are
-still pending at this first observable checkpoint.
+No provisional checkpoint is promoted into a final card. Native read/write,
+original-receipt/history APIs, generated contracts and real runtime policy wiring
+are implemented. Complete managed-evidence/correction/history, fresh-final consumer,
+exclusion/concurrency/schema preservation proof and final validation remain pending.
+Earlier checkpoint statements below retain their historical source attribution.
 
 ## Native source and owner
 
@@ -155,3 +157,47 @@ projection, HTTP success claim or provider effect is inferred. Log:
 `/private/tmp/hackbox110-receipts.log`. Canonical sqlc regeneration includes the
 real complete migration51 and additive52 command table. Public API/runtime/history
 and current-source broad proof remain pending.
+
+## Native API/runtime and current audience checkpoint
+
+The owned extension of `2d664a0b` on mainb986 adds strict versioned native
+read/write/original-receipt/history APIs and generated Go/TypeScript contracts.
+Runtime composition passes the same actual qualification owner into both
+`Rubrics.Finalists` and `Judging.Finalists`; it shares actual moderation,
+scorecard, freeze and pool/clock owners, with no placeholder selection policy.
+
+A genuine separate-panel current-conflict regression failed14.806s: after an
+actual `mentors.Change` reporting conflict, the panel-only mentor retained other
+private cards/cohort facts and a stored proposal. The same regression passed
+16.185s after checking the reader's native scope across the eligible cohort
+before emitting global private state. Safe metadata/public criteria remain.
+History applies this current scope and its original audience separately.
+
+The initial native history audience/exclusive-version test passed5.946s.
+Historical snapshots are explicitly distinct from current selection and original
+request receipts. Per-recipient history evidence copying and historical source
+withdrawal/amendment need the expanded current-source proof still listed below.
+
+The actual authenticated native runtime test reached strict OpenAPI/CSRF,
+publication, real preparation→live transition, cutoff/not-submitted settlement,
+reviewed panel write, both independent portal reads and immutable original
+receipt recovery. Two fixture expectations were corrected: missing required CSRF
+header is400 at schema validation, and an unpublished foreign event is403 before
+run lookup. An asserted edit/readback corrected a missed formatted-line change;
+those expectation failures are not product REDs.
+
+A separate authorised-event unknown-run probe then reproduced a new endpoint
+500 (RED6.741s). Native missing-row normalization corrected it to404; the unchanged
+full HTTP/runtime assertions passed **PostgreSQL/-race8.413s**. They also retain
+role-loss denial, private no-store responses, missing original/fresh-read
+separation and exactly one persisted command despite denied probes. No usable
+complete moderated-card HTTP/cohort or live-provider claim is inferred from this
+bounded metadata journey. Logs: `/private/tmp/hackbox110-http-notfound-{red,green}.log`.
+
+Both touched API/runtime packages compile; canonical Go/TypeScript generation,
+TypeScript no-emit checking and configured lint across all six touched owner/API/
+runtime packages pass (0issues). Shared complete web dependencies are reused
+read-only with matching lockfile; no global dependency install. The complete
+managed amendment/history/native fresh-final integration, excluded outcomes,
+required-review/gap/concurrency and actual populated51→52/rollback cases remain
+owned here before final source-wide verification, CI and independent reviews.

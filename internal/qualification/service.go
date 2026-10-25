@@ -2,6 +2,7 @@ package qualification
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -136,6 +137,31 @@ func (s Service) page(
 	teams, err := s.cohort(ctx, tx, eventID, v)
 	if err != nil {
 		return Page{}, err
+	}
+	if panelReader(actor, v.round) {
+		for _, team := range teams {
+			if !team.status.Eligible {
+				continue
+			}
+			err := mentors.AuthorizeQualificationPanelInTransaction(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				team.status.TeamID,
+			)
+			if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) ||
+				errors.Is(err, access.ErrConflict) {
+				clearPrivate(&out.Round)
+				preview := emptyProposal()
+				preview.Blockers = append(preview.Blockers, "current_panel_scope_required")
+				out.Preview = &preview
+				return out, nil
+			}
+			if err != nil {
+				return Page{}, failure("current cohort reader", err)
+			}
+		}
 	}
 	for _, team := range teams {
 		out.Teams = append(out.Teams, team.status)

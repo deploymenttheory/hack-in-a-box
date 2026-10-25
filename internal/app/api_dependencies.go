@@ -31,6 +31,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
@@ -150,5 +151,15 @@ func newAPIDependencies(
 			EventQuota: cfg.FileEventQuota,
 		},
 	}
+	owner := qualification.Service{
+		Pool:       pool,
+		Now:        now,
+		Moderation: communicationRuntime.Moderation,
+		Cards:      communicationRuntime.Scorecards,
+		Freeze:     communicationRuntime.SubmissionFreeze,
+	}
+	deps.Qualification = owner
+	deps.Judging.Finalists = &owner
+	deps.Rubrics.Finalists = &owner
 	return deps, nil
 }
