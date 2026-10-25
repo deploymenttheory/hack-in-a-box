@@ -16,6 +16,7 @@ test('native panel reader separates source-specific authority and uses organiser
  await expect(page.getByText('This source is not disclosed under current source-specific authority. A panel selection does not grant private huddle access.',{exact:true})).toBeVisible()
  await expect(page.getByRole('link',{name:'Inspect formal build and frozen code',exact:true})).toHaveAttribute('href',`/events/${firstID}/teams/${team}/build`)
  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Synthetic recorded moderation reason')
+ await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:`Inspect Team ${team}`,exact:true})).toBeFocused()
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
 test('finalist preparation is private and independent from category preview',async({page})=>{
@@ -111,4 +112,12 @@ test('authoritative excluded-target visibility change disposes already-open priv
  withheld=true;state.page.round.eligibility=[];state.page.round.reason='';await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
  await expect(page.getByText(canary,{exact:false})).toHaveCount(0);expect(historyReads).toBe(1)
  await page.getByRole('button',{name:'Read recorded panel history',exact:true}).press('Enter');await history.getByText(/Panel version 4 · sign off/).press('Enter');await expect(history).not.toContainText(canary);await expect(history).toContainText(`Team ${visible.team_id} · Card version 2`)
+})
+test('retired formal output never presents a retained historical card as current scoring evidence',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0]
+ team.outcome='withdrawn';team.eligible=false;team.card_source_current=false;team.can_save_card=false;team.can_sign_card=false;team.source=null;state.page.current=false;state.page.round.signoff=null;state.page.preview=null
+ await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter')
+ await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('No current moderated card is disclosed. Missing evidence is not a zero score.')
+ await expect(page.getByText('Recorded reason: Synthetic recorded moderation reason',{exact:true})).toHaveCount(0)
+ await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toHaveCount(0)
 })

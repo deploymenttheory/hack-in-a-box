@@ -111,6 +111,43 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport, scenario strin
 				return
 			}
 			w.WriteHeader(http.StatusNoContent)
+		case "retire":
+			if scenario != "final" {
+				http.Error(w, "final fixture required", 400)
+				return
+			}
+			current, err := admin.deps.Submissions.Read(request.Context(), r.owner.ID, r.eventID, final.teams[0].id)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			if _, err = admin.deps.Submissions.Outcome(request.Context(), r.owner.ID, r.eventID, final.teams[0].id, current.Revision, "withdrawn", "Actual test-owned organiser withdrawal after private panel preparation"); err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			// Existing native outcome fixtures own these team lifecycle facts. This
+			// bridge tests the UI consuming disbandment, not a team lifecycle workflow.
+			tx, err := r.pool.Begin(request.Context())
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			defer func() { _ = tx.Rollback(request.Context()) }()
+			if _, err = tx.Exec(request.Context(), "UPDATE competition_entries SET active=false WHERE event_id=$1 AND team_id=$2", r.eventID, final.teams[1].id); err == nil {
+				_, err = tx.Exec(request.Context(), "UPDATE hack_teams SET state='disbanded' WHERE event_id=$1 AND id=$2", r.eventID, final.teams[1].id)
+			}
+			if err == nil {
+				_, err = tx.Exec(request.Context(), "INSERT INTO team_repositories(event_id,team_id,organization_id,organization,name,app_id,installation_id,template_repository,requested_by,state)VALUES($1,$2,99,'synthetic-org','UNUSED-DISBANDED-REPOSITORY-CANARY',42,55,'template',$3,'pending')", r.eventID, final.teams[1].id, r.owner.ID)
+			}
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			if err = tx.Commit(request.Context()); err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
 		case "evidence":
 			current, err := admin.deps.Qualification.Read(request.Context(), r.owner.ID, r.eventID, run)
 			if err != nil {

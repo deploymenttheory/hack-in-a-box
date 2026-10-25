@@ -33,9 +33,12 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
   const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true});await expect(confirm).toBeFocused()
   await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
+  if(index===0)await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})
   await confirm.press('Enter');await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
+  await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter')
+  await expect(page.getByRole('button',{name:`Inspect Team ${team}`,exact:true})).toBeFocused()
  }
  let proof=await control<{cards:number;current:boolean;signoff:boolean;page:QualificationPage}>('evidence');expect(proof).toMatchObject({cards:5,current:false,signoff:false})
  expect(proof.page.round.cards.every(card=>card.state==='signed')).toBe(true)
@@ -70,6 +73,24 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await page.getByRole('button',{name:'Preview category preparation',exact:true}).press('Enter')
  await expect(page.getByRole('region',{name:'Private finalist preparation',exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toContainText(`Team ${native.team_ids[4]}`)
  await expect(page.getByRole('button',{name:/^(Publish|Send|Release) /})).toHaveCount(0)
+ await page.emulateMedia({colorScheme:'light'});const light=await page.locator('.theme').first().evaluate(element=>getComputedStyle(element).getPropertyValue('--background'))
+ await page.screenshot({path:test.info().outputPath('signed-private-preparation-light.png'),fullPage:true,animations:'disabled'})
+ await page.emulateMedia({colorScheme:'dark'});await expect.poll(()=>page.locator('.theme').first().evaluate(element=>getComputedStyle(element).getPropertyValue('--background'))).not.toBe(light)
+ await page.screenshot({path:test.info().outputPath('signed-private-preparation-dark.png'),fullPage:true,animations:'disabled'})
+ await page.emulateMedia({colorScheme:'light'})
+
+ await control('retire');await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
+ await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toHaveCount(0)
+ await expect(page.getByText('Withdrawn entry · excluded from scoring',{exact:true})).toBeVisible();await expect(page.getByText('Disbanded team · repository unused; excluded from scoring',{exact:true})).toBeVisible()
+ for(const team of native.team_ids.slice(0,2)){
+  await page.getByRole('button',{name:`Inspect Team ${team}`,exact:true}).press('Enter')
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('No current moderated card is disclosed. Missing evidence is not a zero score.')
+  await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toHaveCount(0)
+  await expect(page.getByText('UNUSED-DISBANDED-REPOSITORY-CANARY',{exact:false})).toHaveCount(0)
+  await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:`Inspect Team ${team}`,exact:true})).toBeFocused()
+ }
+ proof=await control<typeof proof>('evidence');expect(proof.current).toBe(false);for(const team of proof.page.teams.filter(team=>native.team_ids.slice(0,2).includes(team.team_id))){expect(team.card_source_current).toBe(false);expect(team.can_save_card).toBe(false);expect(team.can_sign_card).toBe(false)}
+
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
  await context.close()
 })
