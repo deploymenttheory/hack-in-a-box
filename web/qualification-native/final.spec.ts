@@ -1,5 +1,6 @@
 import {expect,test,type Page} from '@playwright/test'
 import {native,owner,control} from './native'
+import type {QualificationPage} from '../src/qualification-model'
 async function accept(page:Page,reason:string){
  await page.getByLabel('Recorded panel reason',{exact:true}).fill(reason)
  await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
@@ -8,27 +9,67 @@ async function accept(page:Page,reason:string){
  await dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
  await expect(dialog).toHaveCount(0)
 }
-test('real five-team final cards retain exact outcome and next confirmation action',async({browser})=>{
+test('real five-team evidence, final cards, split tie ballots, casting signoff and separate preparation',async({browser})=>{
  test.skip(native.scenario!=='final','Separate initial no-final journey')
+ test.setTimeout(180_000)
  const context=await owner(browser),page=await context.newPage()
  await page.goto(`/events/${native.event_id}/panel/${native.run_id}`)
  await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter')
  await page.getByLabel('Organising lead',{exact:true}).selectOption(native.owner_id)
  for(const name of ['Native primary mentor','Native independent second mentor'])await page.getByRole('checkbox',{name,exact:true}).press('Space')
  await accept(page,'Real native intended five-team panel')
- const team=native.team_ids[0]
- await page.getByRole('button',{name:`Inspect Team ${team}`,exact:true}).press('Enter')
- await page.getByRole('button',{name:'Edit reasoned final card',exact:true}).press('Enter')
- for(const category of native.categories){
-  await page.getByRole('checkbox',{name:`Pending/unobserved for ${category.label}`,exact:true}).press('Space')
-  await page.getByLabel(`Moderated score for ${category.label}`,{exact:true}).fill('6')
-  await page.getByLabel(`Moderated evidence for ${category.label}`,{exact:true}).fill('Actual reviewed independent source, final observation <trace> & evidence')
+ const values=[[10,9,10,9,9],[9,8,9,8,8],[8,7,8,7,7],[7,6,7,6,6],[1,10,10,1,1]]
+ for(const [index,team] of native.team_ids.entries()){
+  await page.getByRole('button',{name:`Inspect Team ${team}`,exact:true}).press('Enter')
+  const source=page.getByRole('region',{name:'Independent original final evidence',exact:true})
+  await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
+  await page.getByRole('button',{name:'Edit reasoned final card',exact:true}).press('Enter')
+  for(const [position,category] of native.categories.entries()){
+   await page.getByRole('checkbox',{name:`Pending/unobserved for ${category.label}`,exact:true}).press('Space')
+   await page.getByLabel(`Moderated score for ${category.label}`,{exact:true}).fill(String(values[index][position]))
+   await page.getByLabel(`Moderated evidence for ${category.label}`,{exact:true}).fill(`Team ${index+1}: actual independent ${category.label} evidence <trace> & observation`)
+  }
+  await accept(page,`Actual final card ${index+1}, preserving native evidence trace`)
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
+  const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true});await expect(confirm).toBeFocused()
+  await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
+  await confirm.press('Enter');await accept(page,`Confirm exact reviewed final card ${index+1}`)
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
+  await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
  }
- await accept(page,'Actual first final card, preserving native evidence trace')
- await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
- await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toBeVisible()
- await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
- const proof=await control<{cards:number;current:boolean;signoff:boolean}>('evidence');expect(proof).toMatchObject({cards:1,current:false,signoff:false})
+ let proof=await control<{cards:number;current:boolean;signoff:boolean;page:QualificationPage}>('evidence');expect(proof).toMatchObject({cards:5,current:false,signoff:false})
+ expect(proof.page.round.cards.every(card=>card.state==='signed')).toBe(true)
+ await page.getByRole('button',{name:'Review current selection proposal',exact:true}).press('Enter');await accept(page,'Review all five signed native finals, including non-finalist category evidence')
+ await expect(page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true})).toContainText('Required current ballots incomplete')
+ await expect(page.getByRole('button',{name:'Review exact panel signoff',exact:true})).toHaveCount(0)
+ for(const [actor,candidate] of [['primary',native.team_ids[0]],['second',native.team_ids[4]]] as const){
+  const voterContext=await owner(browser,actor),voter=await voterContext.newPage();await voter.goto(`/events/${native.event_id}/panel/${native.run_id}`)
+  await voter.getByRole('button',{name:'Record ballot: UX · Seat 1',exact:true}).press('Enter')
+  await voter.getByLabel('Candidate for affected tie seat',{exact:true}).selectOption(candidate)
+  await voter.getByLabel('Supporting observed evidence',{exact:true}).fill(`Independent ${actor} ballot grounded in the actual UX comparison`)
+  await accept(voter,`Independent ${actor} reasoned UX ballot`);await voterContext.close()
+ }
+ await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
+ const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true});await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ await page.getByRole('button',{name:'Review casting tie decision: UX · Seat 1',exact:true}).press('Enter')
+ await page.getByLabel('Candidate for affected tie seat',{exact:true}).selectOption(native.team_ids[4])
+ await page.getByLabel('Supporting observed evidence',{exact:true}).fill('Compare both independent UX observations; retain the non-finalist category candidate')
+ await accept(page,'Recorded organiser casting reason after both independent mentor ballots')
+ await page.getByRole('button',{name:'Review exact panel signoff',exact:true}).press('Enter')
+ await page.getByLabel('Recorded panel reason',{exact:true}).fill('Exact versioned private panel approval after all native blockers are resolved')
+ await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
+ const review=page.getByRole('alertdialog',{name:'Review private panel command',exact:true});await expect(review).toContainText('Proposed finalists');await expect(review).toContainText('Reserve');await expect(review).toContainText('All eligible teams remain category candidates')
+ await review.getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
+ await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
+ proof=await control<typeof proof>('evidence');expect(proof).toMatchObject({cards:5,current:true,signoff:true})
+ expect(proof.page.preview!.finalist_ids).toEqual(native.team_ids.slice(0,3));expect(proof.page.preview!.reserve_ids).toEqual([native.team_ids[3]])
+ for(const label of ['Technical approach','UX'])expect(proof.page.preview!.categories.find(value=>value.category_id===native.categories.find(category=>category.label===label)!.id)!.team_ids).toEqual([native.team_ids[4]])
+ await page.getByRole('button',{name:'Preview finalist preparation',exact:true}).press('Enter')
+ const finalists=page.getByRole('region',{name:'Private finalist preparation',exact:true});await expect(finalists).toBeVisible();await expect(finalists).not.toContainText('Technical approach');await expect(finalists).not.toContainText(`Team ${native.team_ids[4]}`)
+ await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toHaveCount(0)
+ await page.getByRole('button',{name:'Preview category preparation',exact:true}).press('Enter')
+ await expect(page.getByRole('region',{name:'Private finalist preparation',exact:true})).toHaveCount(0);await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toContainText(`Team ${native.team_ids[4]}`)
+ await expect(page.getByRole('button',{name:/^(Publish|Send|Release) /})).toHaveCount(0)
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
  await context.close()
 })
