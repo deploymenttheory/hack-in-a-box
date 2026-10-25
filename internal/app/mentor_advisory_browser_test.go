@@ -235,4 +235,22 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 	if retained != 3 {
 		t.Fatal("browser replayed or wrote after current authority/source ended", retained)
 	}
+	var versions, votes int
+	resultsSourceRequire(
+		t,
+		r.pool.QueryRow(ctx, "SELECT count(*) FROM result_versions WHERE event_id=$1", r.eventID).
+			Scan(&versions),
+	)
+	resultsSourceRequire(
+		t,
+		r.pool.QueryRow(ctx, "SELECT jsonb_array_length(document->'votes') FROM result_versions WHERE event_id=$1 ORDER BY version DESC LIMIT 1", r.eventID).
+			Scan(&votes),
+	)
+	if versions != 2 || votes != 1 {
+		t.Fatal(
+			"advisory changed native result decisions or counted as another vote",
+			versions,
+			votes,
+		)
+	}
 }
