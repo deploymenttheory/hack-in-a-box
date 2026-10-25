@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { test, expect } from '@playwright/test'
+import { test, expect, type Route } from '@playwright/test'
 import type { components } from '../src/api/schema.gen'
 import { actor, native } from './native'
 test('native assigned overall and category ties require explicit selection, all judges and reviewed replacements', async ({ browser }, testInfo) => {
@@ -10,7 +10,22 @@ test('native assigned overall and category ties require explicit selection, all 
   for (const input of await page.getByLabel(/^Your observed evidence for /).all()) await input.fill(note)
   await page.getByLabel('Reason for your tie vote', { exact: true }).fill(note)
   const submit = page.getByRole('button', { name: 'Review tie vote', exact: true }); await submit.click()
-  const review = page.getByRole('alertdialog', { name: 'Review your tie vote', exact: true }); await review.getByRole('button', { name: 'Cancel', exact: true }).click(); await expect(submit).toBeFocused(); await submit.click(); await review.getByRole('button', { name: 'Record reviewed tie vote', exact: true }).click()
+  const review = page.getByRole('alertdialog', { name: 'Review your tie vote', exact: true })
+  // Exercise the CI-observed current-read/cancel overlap deterministically. Hold
+  // only the actual native200 response; neither data nor authority is fabricated.
+  let release!: () => void, ready!: () => void, held = false
+  const resume = new Promise<void>(resolve => { release = resolve }), started = new Promise<void>(resolve => { ready = resolve })
+  const holdRead = async (route: Route) => {
+   if (route.request().method() !== 'GET' || held) return route.fallback()
+   held = true; const response = await route.fetch(); expect(response.status()).toBe(200); ready(); await resume; await route.fulfill({ response })
+  }
+  const readPath = '**/api/v1/events/' + native.ballot_event_id + '/results/ballots'
+  await page.route(readPath, holdRead)
+  await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await started
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Decision status', exact: true })).toBeFocused()
+  release(); await expect(submit).toBeFocused(); await page.unroute(readPath, holdRead)
+  await submit.click(); await review.getByRole('button', { name: 'Record reviewed tie vote', exact: true }).click()
  }
  try {
   await a.goto(path); await expect(a.getByRole('heading', { name: 'Review assigned ties' })).toBeVisible(); await expect(a.getByLabel(/^Your observed evidence for /)).toHaveCount(0); await a.getByRole('button', { name: 'Review Overall final', exact: true }).press('Enter'); await expect(a.getByRole('region', { name: 'Selected tie', exact: true }).getByRole('heading')).toBeFocused(); await expect(a.getByLabel('Your selected winner', { exact: true })).toHaveValue(''); await expect(a.getByLabel(/^Your observed evidence for /)).toHaveCount(2)

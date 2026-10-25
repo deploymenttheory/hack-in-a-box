@@ -28,6 +28,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  // Only exact completion removes it; disposal of this private scope is never ACK.
  const recovered = failureStageValue === 'unknown' && !!unknownAttempt && scope.capture().current() && !commands.attempts.some(attempt => attempt.id === unknownAttempt)
  const failure = recovered ? undefined : failureValue, failureStage = recovered ? undefined : failureStageValue
+ const deferredFocus = useRef<{ source: HTMLElement; fallback: HTMLElement; current: () => boolean } | undefined>(undefined)
  const pending = preparing || commands.pending, stale = !!review && (options.version(options.page) !== review.intent.version || options.revision(options.page) !== review.intent.revision), blocked = options.paused || pending || commands.unconfirmed || stale
  usePlanningDepartureBarrier(pending)
  async function prepare(body: B, summary: ReactNode, source: HTMLElement) {
@@ -77,7 +78,20 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) { if (ticket.current()) setFailure(error) }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
- const focus = (source: HTMLElement | null) => source?.isConnected && !source.matches(':disabled') ? source : fallback.current ?? false
+ // A current read can temporarily disable the original opener while a review
+ // closes. Keep an accessible fallback, then return only within the same private
+ // owner and only while the user has left focus on that fallback.
+ useEffect(() => {
+  if (options.paused || pending) return
+  const deferred = deferredFocus.current; deferredFocus.current = undefined
+  if (deferred?.current() && !commands.unconfirmed && deferred.source.isConnected && !deferred.source.matches(':disabled') && document.activeElement === deferred.fallback) deferred.source.focus()
+ }, [options.paused, pending, commands.unconfirmed])
+ const focus = (source: HTMLElement | null) => {
+  deferredFocus.current = undefined
+  if (source?.isConnected && !source.matches(':disabled')) return source
+  if (source?.isConnected && options.paused && !commands.unconfirmed && fallback.current) deferredFocus.current = { source, fallback: fallback.current, current: scope.capture().current }
+  return fallback.current ?? false
+ }
  return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
 }
 export function ResultDecisionState({ failure, failureStage, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'failureStage' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {
