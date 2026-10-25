@@ -26,11 +26,11 @@ function SubmittedBuildEvent(props:{eventID:string;teamID:string;judgeRun?:strin
 }
 function SubmittedBuild({eventID,teamID,judgeRun}:{eventID:string;teamID:string;judgeRun?:string}){
  const boundary=useEventReadBoundary(eventID)
- const load=useCallback(async(signal:AbortSignal)=>{
+ const load=useCallback(async(signal:AbortSignal,assertCurrent:()=>void)=>{
   // Discovery is not a grant. This exact owner also checks current conflicts,
   // assignment and frozen output before any broader artifact request begins.
   let judgeName:string|undefined,judgeRevision:number|undefined
-  if(judgeRun){const brief=unwrap(await api.GET('/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}',{signal,cache:'no-store',params:{path:{event_id:eventID,run_id:judgeRun,team_id:teamID}}}));judgeName=brief.team_name;judgeRevision=brief.submission_revision}
+  if(judgeRun){const brief=unwrap(await api.GET('/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}',{signal,cache:'no-store',params:{path:{event_id:eventID,run_id:judgeRun,team_id:teamID}}}));assertCurrent();judgeName=brief.team_name;judgeRevision=brief.submission_revision}
   const [event,submission]=await Promise.all([api.GET('/api/v1/events/{event_id}',{signal,cache:'no-store',params:{path:{event_id:eventID}}}).then(unwrap),api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission',{signal,cache:'no-store',params:{path:{event_id:eventID,team_id:teamID}}}).then(unwrap)])
   // Discard a mismatched current projection rather than keeping an old judge
   // target visible. No scores, private guidance or other cards enter this owner.

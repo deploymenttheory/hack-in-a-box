@@ -168,3 +168,27 @@ The next reversible integration stacks on real frozen #108 run/assignment
 contracts. The exact judge source additionally rechecks assignment, conflicts and
 current final evidence; discovery rows never grant artifact permission. That
 consumer integration and exact-head full CI/reviews remain open before acceptance.
+
+## Current judge discovery integration
+
+The reversible consumer integration uses actual #108 source404377c: current own
+round assignments are discovered through its generated endpoint, and the exact
+judge/team briefing is reauthorised before artifact reads. The UI retains only
+team name and native final revision from that briefing; it does not retain score
+cards or private judge instructions. A changed formal target clears artifacts.
+A parent event lifetime also fences held exact-brief continuations.
+
+On the current owned working-tree extension of5d4c30fb, TypeScript, affected
+ESLint and both production builds passed. The finite admin browser suite passed
+22/22 in11.7s across desktop and Chromium narrow emulation. This includes three
+new assignment/denial/mismatch scenarios plus the existing cutoff/recovery
+journeys, using deterministic HTTP fixtures. The corresponding regular portal
+and expanded real PostgreSQL judge-assignment/conflict journey remain pending;
+no actual native/real-device claim is inferred from these synthetic reads.
+
+The expanded native fixture establishes its own approved common rubric and
+challenge before publication, then advances time monotonically through live
+start/cutoff. It consumes the actual native judge run, assignment and declared
+conflict owner; no target IDs or permission grants are fabricated by the UI.
+Source404377c's independently reviewed audience findings are being corrected by
+its owner. Corrected-parent integration and exact-source proof remain required.

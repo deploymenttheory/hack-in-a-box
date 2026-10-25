@@ -15,10 +15,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
+	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -86,6 +90,14 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 	}
 	// Advance from actual common publication to the live window, never backwards.
 	r.clock.set(eventPage.Configuration.LiveStart)
+	rounds, err := admin.deps.Judging.Rounds(ctx, r.owner.ID, r.eventID)
+	if err != nil || len(rounds.Items) != 1 {
+		t.Fatalf("current native judge round: %+v %v", rounds, err)
+	}
+	runID := rounds.Items[0].RunID
+	if _, err = admin.deps.Judging.ChangeRound(ctx, r.owner.ID, r.eventID, runID, rounds.Items[0].Revision, judging.RoundCommand{RequestID: uuid.New(), Action: "assign", TeamID: r.teamID, JudgeIDs: []uuid.UUID{r.mc.ID}, Reason: "Synthetic current judge assignment"}); err != nil {
+		t.Fatal(err)
+	}
 	app := &freezeBrowserApp{}
 	freeze := &submissionfreeze.Service{Pool: r.pool, App: app, Now: r.clock.read}
 	queue, err := jobs.New(r.pool, slog.New(slog.NewTextHandler(io.Discard, nil)), map[string]jobs.Handler{submissionfreeze.HandlerKind: freeze})
@@ -123,6 +135,8 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 				actor = r.owner
 			case "mentor":
 				actor = r.mentor
+			case "judge":
+				actor = r.mc
 			case "competitor":
 			default:
 				http.Error(w, "unknown synthetic actor", 400)
@@ -167,6 +181,13 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 			}
 		case "remove-mentor":
 			_, actionErr = r.pool.Exec(request.Context(), "DELETE FROM resource_assignments WHERE event_id=$1 AND resource_id=$2 AND person_id=$3", r.eventID, r.teamID, r.mentor.ID)
+		case "judge-conflict":
+			current, readErr := admin.deps.Judging.Round(request.Context(), r.owner.ID, r.eventID, runID)
+			if readErr != nil {
+				actionErr = readErr
+				break
+			}
+			_, actionErr = admin.deps.Judging.ChangeRound(request.Context(), r.owner.ID, r.eventID, runID, current.Revision, judging.RoundCommand{RequestID: uuid.New(), Action: "declare_conflict", JudgeID: r.mc.ID, CompetitorID: r.competitor.ID, ConflictKind: "reporting", Enabled: true, Reason: "Synthetic explicitly declared reporting conflict"})
 		case "evidence":
 			app.mu.Lock()
 			defer app.mu.Unlock()
@@ -193,7 +214,7 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 	})}
 	go func() { _ = server.Serve(listener) }()
 	t.Cleanup(func() { _ = server.Close() })
-	manifest := map[string]any{"event_id": r.eventID, "team_id": r.teamID, "admin": admin.server.URL, "public": public.server.URL, "socket": socket, "viewport": viewport}
+	manifest := map[string]any{"event_id": r.eventID, "team_id": r.teamID, "judge_run": runID, "admin": admin.server.URL, "public": public.server.URL, "socket": socket, "viewport": viewport}
 	raw, err = json.Marshal(manifest)
 	if err != nil {
 		t.Fatal(err)
@@ -241,14 +262,18 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 // rewrite an operation due date to make a cutoff job claimable.
 func newFreezeBrowserFixture(t *testing.T) *liveRehearsal {
 	t.Helper()
-	r := &liveRehearsal{pool: testdb.New(t, true), clock: &rehearsalClock{now: time.Date(2026, 6, 20, 9, 0, 0, 0, time.UTC)}}
+	live := time.Date(2026, 6, 20, 9, 0, 0, 0, time.UTC)
+	publication := live.AddDate(0, 0, -7)
+	r := &liveRehearsal{pool: testdb.New(t, true), clock: &rehearsalClock{now: publication.Add(-time.Minute)}}
 	r.owner = testdb.Person(t, r.pool)
 	r.mentor = testdb.Person(t, r.pool)
 	r.competitor = testdb.Person(t, r.pool)
+	r.mc = testdb.Person(t, r.pool) // Separate synthetic judge; no MC role is granted.
 	r.eventID = testdb.Event(t, r.pool, r.owner.ID)
 	r.teamID = uuid.New()
 	c := event.DefaultConfiguration()
-	c.LiveStart = r.clock.read()
+	c.MinimumAttendance = 1
+	c.LiveStart = live
 	c.LiveEnd = c.LiveStart.Add(8 * time.Hour)
 	c.SubmissionCutoff = c.LiveStart.Add(7 * time.Hour)
 	c.TeamFreeze = c.LiveStart.Add(-8 * 24 * time.Hour)
@@ -261,16 +286,52 @@ func newFreezeBrowserFixture(t *testing.T) *liveRehearsal {
 		sql  string
 		args []any
 	}{
-		{"UPDATE events SET stage='preparation',configuration=$2,published_at=$3,team_frozen_at=$4 WHERE id=$1", []any{r.eventID, raw, c.LiveStart.Add(-7 * 24 * time.Hour), c.TeamFreeze}},
+		{"UPDATE events SET stage='preparation',configuration=$2,team_frozen_at=$3 WHERE id=$1", []any{r.eventID, raw, c.TeamFreeze}},
 		{"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'mentor')", []any{r.eventID, r.mentor.ID}},
+		{"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'judge')", []any{r.eventID, r.mc.ID}},
 		{"INSERT INTO competition_claims(event_id,person_id,state) VALUES($1,$2,'confirmed')", []any{r.eventID, r.competitor.ID}},
 		{"INSERT INTO hack_teams(event_id,id,name,state,frozen,published_captain_id) VALUES($1,$2,'Synthetic native build team','published',true,$3)", []any{r.eventID, r.teamID, r.competitor.ID}},
 		{"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')", []any{r.eventID, r.teamID, r.competitor.ID}},
 		{"INSERT INTO competition_entries(event_id,team_id) VALUES($1,$2)", []any{r.eventID, r.teamID}},
+		{"INSERT INTO event_gate_facts(event_id,attendance_ready,teams_ready,total_teams,frozen_teams,assigned_attendees)VALUES($1,true,true,1,1,1)", []any{r.eventID}},
 	} {
 		if _, err = r.pool.Exec(t.Context(), cmd.sql, cmd.args...); err != nil {
 			t.Fatal(err)
 		}
+	}
+	criteria := rubric.Service{Pool: r.pool, Clock: r.clock.read}
+	definition := rubric.Default(rubric.AllTeams, r.eventID)
+	definition.RequiredJudgeCount = 1
+	definition.PrivateJudgeGuidance = "PRIVATE-SYNTHETIC-JUDGE-GUIDANCE"
+	version, err := criteria.Change(t.Context(), r.owner.ID, r.eventID, 0, rubric.Command{Action: "save", Definition: &definition, Reason: "Synthetic configured criteria"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	version, err = criteria.Change(t.Context(), r.owner.ID, r.eventID, version.Revision, rubric.Command{Action: "approve", Version: version.Reference.Version, Reason: "Synthetic criteria approval"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	common := content.Service{Pool: r.pool, Clock: r.clock.read}
+	challenge, err := common.Save(t.Context(), r.owner.ID, r.eventID, uuid.New(), 0, content.Input{Kind: "challenge", Document: content.Document{Title: "Synthetic native challenge", Markdown: "Build a fictional prototype", Audience: access.ContentAudience{Confirmed: true}, Rubric: &version.Reference}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, action := range []string{"review", "approve"} {
+		challenge, err = common.Action(t.Context(), r.owner.ID, r.eventID, challenge.ID, challenge.Revision, action, "Synthetic reviewed common challenge")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.clock.set(publication)
+	if err = common.Dispatch(t.Context(), r.eventID, challenge.ID, challenge.Revision); err != nil {
+		t.Fatal(err)
+	}
+	version, err = criteria.Configuration(t.Context(), r.owner.ID, r.eventID, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = criteria.Change(t.Context(), r.owner.ID, r.eventID, version.Revision, rubric.Command{Action: "create_run", Purpose: "judge_final", Version: version.Reference.Version, Reason: "Synthetic independent final judging"}); err != nil {
+		t.Fatal(err)
 	}
 	return r
 }
