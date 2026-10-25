@@ -59,6 +59,11 @@ The four fixed loopback ports18180/18181/18182/19190 must be free; an existing
 project container, volume, network or artifact directory fails preflight instead
 of being overwritten. Every run gets a distinct project suffix.
 
+`python3 -B scripts/test_verify_fleet_runtime.py` exercises the two runner
+guards without starting Docker services: leftover volume/network refusal and
+concurrent live-fixture edits while only the frozen archive is executed. These
+are tool-boundary regressions, not application/browser verification.
+
 The probe uses a private PostgreSQL database and a verification-only external
 OIDC provider on loopback. The application images run their normal commands,
 OIDC/PKCE/nonce/signature/session checks and bootstrap flow. They have no test

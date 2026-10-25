@@ -35,6 +35,8 @@ jobs:
       - run: npm --prefix web ci
       - run: npm --prefix web run lint
       - run: npm --prefix web test
+      - name: Verify UI runtime runner provenance and resource guards
+        run: python3 -B scripts/test_verify_fleet_runtime.py
   web-browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
