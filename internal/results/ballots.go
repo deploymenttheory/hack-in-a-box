@@ -17,6 +17,7 @@ import (
 // BallotPage exposes current assigned ties and only the caller's own evidence.
 // It cannot carry raw cards, qualification data or another judge's prose.
 type BallotPage struct {
+	JudgeRunID    uuid.UUID  `json:"judge_run_id"`
 	Revision      int64      `json:"revision"`
 	Version       int64      `json:"version"`
 	SourceBinding string     `json:"source_binding"`
@@ -67,6 +68,7 @@ func (s Service) ballotPage(
 	source assessmentSource,
 ) (BallotPage, error) {
 	out := BallotPage{
+		JudgeRunID:    source.preview.JudgeRunID,
 		Revision:      current.event.Revision,
 		Version:       round.Version,
 		SourceBinding: source.preview.Binding,

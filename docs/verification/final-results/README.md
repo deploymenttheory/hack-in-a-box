@@ -152,6 +152,12 @@ checks; Firefox could not launch its temporary profile on the local machine, so
 its browser scenario is not claimed green locally. The unchanged Linux Firefox
 CI gate must pass on the final head.
 
+The ballot consumer now carries its actual `judge_run_id` from the same native
+source as `source_binding`. A real two-team regression first failed because the
+run was absent (32.038s); native ballot/HTTP tests now pass in 78.303s and use the
+returned run to open the exact assigned frozen brief. This is derived scope
+metadata, not a new assessment grant or an inferred run selection.
+
 ## Remaining acceptance gates
 
 - Independent full Standards/Spec reviews, green final-head CI and equal-tree

@@ -4361,6 +4361,11 @@ export interface components {
             source_binding: string;
             ties: components["schemas"]["ResultJudgeTie"][];
             receipt: components["schemas"]["ResultReceipt"] | null;
+            /**
+             * Format: uuid
+             * @description Exact current native judge_final run for authorised frozen brief reads; from the same snapshot as source_binding.
+             */
+            judge_run_id: string;
         };
         ResultAnnouncements: {
             items: components["schemas"]["ResultAnnouncement"][];

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"testing"
@@ -106,6 +107,20 @@ func TestFinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote(t *
 		return results.JudgeTie{}
 	}
 	firstAccepted := vote(0, f.runtime.teamID, "first")
+	encoded, err := json.Marshal(firstAccepted)
+	resultsSourceRequire(t, err)
+	var scope struct {
+		JudgeRunID *uuid.UUID `json:"judge_run_id"`
+	}
+	resultsSourceRequire(t, json.Unmarshal(encoded, &scope))
+	if scope.JudgeRunID == nil || *scope.JudgeRunID != f.judgeRun {
+		t.Fatal("ballot reader omitted exact native brief scope", string(encoded))
+	}
+	brief, err := f.admin.deps.Judging.Brief(ctx, f.judges[0].ID, eventID, *scope.JudgeRunID, f.runtime.teamID)
+	resultsSourceRequire(t, err)
+	if brief.RunID != *scope.JudgeRunID || brief.TeamID != f.runtime.teamID {
+		t.Fatal("ballot scope did not open the actual assigned frozen brief", brief)
+	}
 	first := find(firstAccepted)
 	if first.State.WinnerID != nil || first.State.Blocker != "all_required_judge_votes_required" {
 		t.Fatal("partial panel resolved tie", first)
