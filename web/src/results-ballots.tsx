@@ -32,7 +32,7 @@ export function ResultsBallotsPage() {
 }
 function BallotEvent({ eventID }: { eventID: string }) {
  const event = useEventAuthority(eventID)
- if (event.denial) return <Failure error={event.denial} retry={() => void event.refresh()} />
+ if (event.denial || event.query.error && !event.verified) return <Failure error={event.denial ?? event.query.error} retry={() => void event.refresh()} />
  if (!event.verified || !event.query.data) return <Loading />
  return <BallotReader key={event.generation} eventID={eventID} eventName={event.query.data.name} parent={event.scope} paused={event.boundary.paused} />
 }

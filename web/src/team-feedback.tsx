@@ -28,9 +28,9 @@ export function TeamFeedbackPage() {
 }
 function FeedbackEvent({ eventID, teamID }: { eventID: string; teamID?: string }) {
  const authority = useEventAuthority(eventID)
- if (authority.denial) return <Failure error={authority.denial} retry={() => void authority.refresh()} />
+ if (authority.denial || authority.query.error && !authority.verified) return <Failure error={authority.denial ?? authority.query.error} retry={() => void authority.refresh()} />
  if (!authority.verified || !authority.query.data) return <Loading />
- return <FeedbackTeams key={authority.generation} eventID={eventID} teamID={teamID} eventName={authority.query.data.name} timezone={authority.query.data.configuration.timezone} readOnly={authority.query.data.stage === 'archived'} parent={authority.scope} paused={authority.boundary.paused} />
+ return <>{!!authority.query.error && <Failure error={authority.query.error} retry={() => void authority.refresh()} />}<FeedbackTeams key={authority.generation} eventID={eventID} teamID={teamID} eventName={authority.query.data.name} timezone={authority.query.data.configuration.timezone} readOnly={authority.query.data.stage === 'archived'} parent={authority.scope} paused={authority.boundary.paused} /></>
 }
 function FeedbackTeams({ eventID, teamID, eventName, timezone, readOnly, parent, paused }: { eventID: string; teamID?: string; eventName: string; timezone: string; readOnly: boolean; parent: PrivateRequestScope; paused: boolean }) {
  const identity = useIdentity(), load = useCallback((signal: AbortSignal) => readTeams(eventID, signal), [eventID])

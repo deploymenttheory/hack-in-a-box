@@ -22,7 +22,7 @@ export function AnnouncedResultsPage() {
 }
 function AnnouncedEvent({ eventID }: { eventID: string }) {
  const authority = useEventAuthority(eventID)
- if (authority.denial) return <Failure error={authority.denial} retry={() => void authority.refresh()} />
+ if (authority.denial || authority.query.error && !authority.verified) return <Failure error={authority.denial ?? authority.query.error} retry={() => void authority.refresh()} />
  if (!authority.verified || !authority.query.data) return <Loading />
  return <AnnouncedReader key={authority.generation} eventID={eventID} name={authority.query.data.name} timezone={authority.query.data.configuration.timezone} parent={authority.scope} paused={authority.boundary.paused} />
 }
@@ -39,7 +39,7 @@ export function ResultsPreparationPage() {
 }
 function ResultsEvent({ eventID }: { eventID: string }) {
  const authority = useEventAuthority(eventID)
- if (authority.denial || authority.query.error && !authority.query.data) return <Failure error={authority.denial ?? authority.query.error} retry={() => void authority.refresh()} />
+ if (authority.denial || authority.query.error && (!authority.query.data || !authority.verified)) return <Failure error={authority.denial ?? authority.query.error} retry={() => void authority.refresh()} />
  if (!authority.verified || !authority.query.data) return <Loading />
  return <ResultsReader key={authority.generation} eventID={eventID} name={authority.query.data.name} timezone={authority.query.data.configuration.timezone} parent={authority.scope} paused={authority.boundary.paused} />
 }
