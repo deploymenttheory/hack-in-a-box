@@ -1,0 +1,504 @@
+{
+  "standard": "WCAG 2.2",
+  "level": "AA",
+  "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/",
+  "source_sha256": "6e3c5fe397257cae509a2fb4752b73062cf8cbeb92c2cec618989b17e4cf7057",
+  "note": "Inventory only. Every applicable A/AA criterion requires evaluation across full pages and complete processes; no row is passed by generating this file. Applicability decisions require reasons and evidence.",
+  "criteria": [
+    {
+      "criterion": "1.1.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#non-text-content",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.2.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#audio-only-and-video-only-prerecorded",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.2.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#captions-prerecorded",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.2.3",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#audio-description-or-media-alternative-prerecorded",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.2.4",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#captions-live",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.2.5",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#audio-description-prerecorded",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.3.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#info-and-relationships",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.3.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#meaningful-sequence",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.3.3",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#sensory-characteristics",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.3.4",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#orientation",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.3.5",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#identify-input-purpose",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#use-of-color",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#audio-control",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.3",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#contrast-minimum",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.4",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#resize-text",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.5",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#images-of-text",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.10",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#reflow",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.11",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#non-text-contrast",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.12",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#text-spacing",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "1.4.13",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#content-on-hover-or-focus",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.1.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#keyboard",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.1.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#no-keyboard-trap",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.1.4",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#character-key-shortcuts",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.2.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#timing-adjustable",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.2.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#pause-stop-hide",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.3.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#three-flashes-or-below-threshold",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#bypass-blocks",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#page-titled",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.3",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#focus-order",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.4",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#link-purpose-in-context",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.5",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#multiple-ways",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.6",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#headings-and-labels",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.7",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#focus-visible",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.4.11",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#focus-not-obscured-minimum",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#pointer-gestures",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#pointer-cancellation",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.3",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#label-in-name",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.4",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#motion-actuation",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.7",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#dragging-movements",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "2.5.8",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#target-size-minimum",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.1.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#language-of-page",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.1.2",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#language-of-parts",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.2.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#on-focus",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.2.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#on-input",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.2.3",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#consistent-navigation",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.2.4",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#consistent-identification",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.2.6",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#consistent-help",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#error-identification",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.2",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#labels-or-instructions",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.3",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#error-suggestion",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.4",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#error-prevention-legal-financial-data",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.7",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#redundant-entry",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "3.3.8",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#accessible-authentication-minimum",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "4.1.1",
+      "level": "A",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#parsing",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "criterion": "4.1.3",
+      "level": "AA",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#status-messages",
+      "status": "not_evaluated",
+      "applicability": null,
+      "evidence": [],
+      "defects": []
+    }
+  ]
+}

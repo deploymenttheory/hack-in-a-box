@@ -57,6 +57,20 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			"set HACKBOX_INTEGRATION=1 HACKBOX_LIVE_REHEARSAL=1 after building both production portals",
 		)
 	}
+	runNativeBrowserRehearsal(t, "playwright.live.config.ts", "test-results-live")
+}
+
+func TestAccessibilityBrowsers(t *testing.T) {
+	if os.Getenv("HACKBOX_ACCESSIBILITY") != "1" {
+		t.Skip("set HACKBOX_INTEGRATION=1 HACKBOX_ACCESSIBILITY=1 after building both portals")
+	}
+	runNativeBrowserRehearsal(t, "playwright.accessibility.config.ts", "test-results-accessibility-native")
+}
+
+// Both suites use the same native fixture, private control channel and production
+// router. Configuration selects verification, never a different product policy.
+func runNativeBrowserRehearsal(t *testing.T, configuration, outputDirectory string) {
+	t.Helper()
 	r := newLiveRehearsal(t)
 	admin, public := r.surface(t, "admin"), r.surface(t, "public")
 	// A separate native database/runtime keeps irreversible cutoff settlement out
@@ -329,7 +343,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"node_modules/@playwright/test/cli.js",
 		"test",
 		"--config",
-		"playwright.live.config.ts",
+		configuration,
 	)
 	if project := os.Getenv("HACKBOX_REHEARSAL_PROJECT"); project != "" {
 		if project != "chromium" && project != "firefox-display" {
@@ -367,8 +381,9 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		t.Fatal(err)
 	}
 	proof := map[string]any{
-		"source_commit":     strings.TrimSpace(string(source)),
-		"source_commit_end": strings.TrimSpace(string(sourceAfter)),
+		"browser_configuration": configuration,
+		"source_commit":         strings.TrimSpace(string(source)),
+		"source_commit_end":     strings.TrimSpace(string(sourceAfter)),
 		"source_worktree_clean": len(strings.TrimSpace(string(statusBefore))) == 0 &&
 			len(strings.TrimSpace(string(statusAfter))) == 0,
 		"fixture_run_id":            manifest["run_id"],
@@ -386,7 +401,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(
-		filepath.Join(command.Dir, "test-results-live", "native-fixture.json"),
+		filepath.Join(command.Dir, outputDirectory, "native-fixture.json"),
 		proofJSON,
 		0o600,
 	); err != nil {
