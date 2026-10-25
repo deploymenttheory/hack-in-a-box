@@ -1,3 +1,4 @@
+import { ResultsBallotsPage } from './results-ballots'
 import { TeamFeedbackPage, TeamFeedbackDirectoryPage } from './team-feedback'
 import { AnnouncedResultsPage, ResultsPreparationPage } from './results-workspace'
 import { QualificationPanelPage, QualificationDirectoryPage } from './qualification'
@@ -57,6 +58,7 @@ const judgeDesk = createRoute({ getParentRoute: () => root, path: '/events/$even
 const judgePractice = createRoute({ getParentRoute: () => root, path: '/events/$eventId/judging/practice', component: JudgePracticePage })
 const teamFeedbackDirectory = createRoute({ getParentRoute: () => root, path: '/events/$eventId/team-feedback', component: TeamFeedbackDirectoryPage })
 const teamFeedback = createRoute({ getParentRoute: () => root, path: '/events/$eventId/teams/$teamId/feedback-report', component: TeamFeedbackPage })
+const resultBallots = createRoute({ getParentRoute: () => root, path: '/events/$eventId/results/ballots', component: ResultsBallotsPage })
 const publishedResults = createRoute({ getParentRoute: () => root, path: '/events/$eventId/results', component: AnnouncedResultsPage })
 const prepareResults = createRoute({ getParentRoute: () => root, path: '/events/$eventId/results/prepare', component: ResultsPreparationPage })
 const home = createRoute({ getParentRoute: () => root, path: '/', component: EventDirectory })
@@ -77,6 +79,6 @@ const template = createRoute({ getParentRoute: () => root, path: '/templates/$te
 const registration = createRoute({ getParentRoute: () => root, path: '/register/$eventId', component: RegistrationPage })
 const registrations = createRoute({ getParentRoute: () => root, path: '/register', component: RegistrationDirectory })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([teamFeedbackDirectory, teamFeedback, publishedResults, prepareResults, qualificationDirectory, qualificationPanel, judgeDesk, judgePractice, assignedBuilds, submittedBuild, surveyDirectory, surveyCreate, surveyManage, surveyResults, ideas, idea, outcomeReview, projects, project, ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, newEvent, event, account, templates, template, registrations, registration]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([resultBallots, teamFeedbackDirectory, teamFeedback, publishedResults, prepareResults, qualificationDirectory, qualificationPanel, judgeDesk, judgePractice, assignedBuilds, submittedBuild, surveyDirectory, surveyCreate, surveyManage, surveyResults, ideas, idea, outcomeReview, projects, project, ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, newEvent, event, account, templates, template, registrations, registration]), defaultPendingComponent: Loading })
 declare module '@tanstack/react-router' { interface Register { router: typeof router } }
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

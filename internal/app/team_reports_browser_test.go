@@ -12,6 +12,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/google/uuid"
 )
@@ -33,6 +34,11 @@ func runTeamReportsBrowser(t *testing.T, viewport string) {
 	}, nil)
 	f.complete(t)
 	r := f.runtime
+	ballots, secondTeam := newTiedResultsFixture(t)
+	ballotPage, err := ballots.service.Read(ctx, ballots.runtime.owner.ID, ballots.runtime.eventID)
+	resultsSourceRequire(t, err)
+	_, err = ballots.service.Change(ctx, ballots.runtime.owner.ID, ballots.runtime.eventID, ballotPage.Revision, results.Command{RequestID: uuid.New(), Version: ballotPage.Round.Version, Action: "prepare", SourceBinding: ballotPage.Preview.Binding, Reason: "Prepare native browser assigned final tie"})
+	resultsSourceRequire(t, err)
 	display, err := f.admin.deps.Presentation.Read(ctx, r.owner.ID, r.eventID)
 	resultsSourceRequire(t, err)
 	paired, err := f.admin.deps.Presentation.Pair(ctx, r.owner.ID, r.eventID, display.Revision, presentation.PairInput{Label: "Native results browser display", Minutes: 60, Reason: "Actual scoped native room proof"})
@@ -51,30 +57,36 @@ func runTeamReportsBrowser(t *testing.T, viewport string) {
 			http.Error(w, "POST required", 405)
 			return
 		}
-		var input struct{ Action, Actor, Surface string }
+		var input struct{ Action, Actor, Surface, Edition string }
 		if err := json.NewDecoder(http.MaxBytesReader(w, req.Body, 1024)).Decode(&input); err != nil {
 			http.Error(w, "invalid private control", 400)
 			return
 		}
 		switch input.Action {
 		case "session":
-			surface := f.public
+			edition := f
+			if input.Edition == "ballots" {
+				edition = ballots
+			}
+			surface := edition.public
 			if input.Surface == "admin" {
-				surface = f.admin
+				surface = edition.admin
 			} else if input.Surface != "public" {
 				http.Error(w, "unknown surface", 400)
 				return
 			}
-			person := r.competitor
+			person := edition.runtime.competitor
 			if input.Actor == "owner" {
-				person = r.owner
+				person = edition.runtime.owner
 			} else if input.Actor == "judge" {
-				person = f.judges[0]
+				person = edition.judges[0]
+			} else if input.Actor == "judge2" {
+				person = edition.judges[1]
 			} else if input.Actor != "competitor" {
 				http.Error(w, "unknown actor", 400)
 				return
 			}
-			person, err := dbgen.New(r.pool).Person(req.Context(), person.ID)
+			person, err := dbgen.New(edition.runtime.pool).Person(req.Context(), person.ID)
 			if err != nil {
 				http.Error(w, "actor unavailable", 500)
 				return
@@ -88,7 +100,17 @@ func runTeamReportsBrowser(t *testing.T, viewport string) {
 		case "room":
 			_ = json.NewEncoder(w).Encode(map[string]string{"token": paired.Token})
 		case "complete":
-			completeReportEvent(t, f)
+			for _, stage := range []string{"assessment", "completed"} {
+				current, err := f.admin.deps.Events.Read(req.Context(), r.owner.ID, r.eventID)
+				if err != nil {
+					http.Error(w, "current event unavailable", 500)
+					return
+				}
+				if _, err = f.admin.deps.Events.Transition(req.Context(), r.owner.ID, r.eventID, current.Revision, stage, "Complete native browser hack before own-team feedback", false); err != nil {
+					http.Error(w, "native completion failed", 500)
+					return
+				}
+			}
 			w.WriteHeader(204)
 		case "evidence":
 			var versions, releases int
@@ -103,7 +125,7 @@ func runTeamReportsBrowser(t *testing.T, viewport string) {
 	})}
 	go func() { _ = control.Serve(listener) }()
 	t.Cleanup(func() { _ = control.Close() })
-	manifest, err := json.Marshal(map[string]any{"event_id": r.eventID, "team_id": r.teamID, "admin": f.admin.server.URL, "public": f.public.server.URL, "socket": socket, "viewport": viewport})
+	manifest, err := json.Marshal(map[string]any{"event_id": r.eventID, "team_id": r.teamID, "admin": f.admin.server.URL, "public": f.public.server.URL, "socket": socket, "viewport": viewport, "ballot_event_id": ballots.runtime.eventID, "ballot_team_id": ballots.runtime.teamID, "second_team_id": secondTeam, "ballot_admin": ballots.admin.server.URL, "ballot_public": ballots.public.server.URL})
 	resultsSourceRequire(t, err)
 	path := filepath.Join(private, "manifest.json")
 	resultsSourceRequire(t, os.WriteFile(path, manifest, 0600))

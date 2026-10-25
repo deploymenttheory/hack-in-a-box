@@ -8,7 +8,7 @@ export type TeamFeedbackCommand = S['TeamFeedbackCommand']
 export type TeamFeedbackRecord = S['TeamFeedbackRecord']
 export type TeamFeedbackScores = S['TeamFeedbackScores']
 export function teamFeedbackFingerprint(teamID: string, expected: number, command: TeamFeedbackCommand) {
- return nativeFingerprint({ TeamID: teamID.toLowerCase(), ExpectedVersion: expected, Command: { request_id: command.request_id.toLowerCase(), action: command.action, source_binding: command.source_binding, body: { title: command.body?.title ?? '', summary: command.body?.summary ?? '', highlights: command.body?.highlights ?? null, next_steps: command.body?.next_steps ?? null }, include_final_scores: command.include_final_scores ?? false, reason: command.reason } })
+ return nativeFingerprint({ TeamID: teamID.toLowerCase(), ExpectedVersion: expected, Command: { request_id: command.request_id.toLowerCase(), action: command.action, source_binding: command.source_binding, score_binding: command.score_binding ?? '', body: { title: command.body?.title ?? '', summary: command.body?.summary ?? '', highlights: command.body?.highlights ?? null, next_steps: command.body?.next_steps ?? null }, include_final_scores: command.include_final_scores ?? false, reason: command.reason } })
 }
 export function matchesTeamFeedbackReceipt(receipt: S['TeamFeedbackReceipt'], intent: DecisionMetadata, teamID: string) {
  return receipt.team_id === teamID && receipt.actor_id === intent.actorID && receipt.request_id === intent.requestID && receipt.action === intent.action && receipt.expected_version === intent.version && receipt.version === intent.version + 1 && receipt.fingerprint === intent.fingerprint

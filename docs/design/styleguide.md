@@ -363,3 +363,12 @@ the actual opener. Pending locks dismissal; unknown offers original receipt look
 or deliberate current-base review, never an automatic replay. Current denial disposes
 private report, audience and held continuation; restoring permission starts a fresh
 read. The guide distinguishes synthetic callback completion from a native receipt.
+
+`BallotReview` also demonstrates a judge's captured final tie vote and explicit
+replacement. Native ballot discovery supplies the exact current judge run and
+candidate set; names and frozen deliverables come from current assigned briefs.
+Only the caller's vote prose is displayed. Every required judge and a strict
+majority remain native authority; a split offers another deliberate reviewed vote.
+No organiser casting action is inferred, and announcement/award confirmation stay
+separate. Vote recovery matches actor, request, run, tie/candidates, version and
+native fingerprint without retaining observed evidence or reasons above the task.
