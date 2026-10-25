@@ -132,7 +132,7 @@ def main():
     owner.call('GET', '/api/v1/events/' + second['id'] + '/files/' + file['id'], 404, 'foreign-event-file-id-substitution')
     require(public.call('GET', private_file, 200, 'independent-public-session-authorised-file') == b'PRIVATE-SECURITY121-MANUAL-FILE', 'positive file bytes')
     malicious = {'filename': 'active.png', 'media_type': 'image/png', 'content': base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>').decode()}
-    owner.call('POST', base + '/files', 400, 'active-asset-mime-spoof', malicious, revision=first['revision'], key=str(uuid.uuid4()))
+    owner.call('POST', base + '/files', 415, 'active-asset-mime-spoof', malicious, revision=first['revision'], key=str(uuid.uuid4()))
     stranger.call('GET', base + '/exports/readiness.csv?audience=organiser', 403, 'guessed-organiser-export')
     content_id = str(uuid.uuid4())
     page = {'kind': 'page', 'document': {'title': 'PRIVATE-SECURITY121-DRAFT', 'markdown': 'PRIVATE-SECURITY121-DRAFT-BODY', 'audience': {'confirmed': True, 'roles': [], 'teams': []}, 'attachments': [], 'scheduled_at': None}}
