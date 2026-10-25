@@ -17,7 +17,8 @@ export async function reach(control:Locator){
 export async function activate(control:Locator,key:'Enter'|'Space'='Enter'){await reach(control);await control.page().keyboard.press(key)}
 export async function typeInto(control:Locator,value:string){await reach(control);await control.page().keyboard.press('ControlOrMeta+A');await control.page().keyboard.insertText(value)}
 export async function selectNative(control:Locator,value:string){
+ await reach(control)
  const label=await control.locator('option').evaluateAll((options,wanted)=>options.find(option=>option instanceof HTMLOptionElement&&option.value===wanted)?.textContent,value)
  if(!label)throw new Error('Requested native select option is not currently disclosed')
- await reach(control);await control.page().keyboard.type(label);await control.page().keyboard.press('Tab');await expect(control).toHaveValue(value)
+ await control.page().keyboard.type(label);await control.page().keyboard.press('Tab');await expect(control).toHaveValue(value)
 }

@@ -19,6 +19,7 @@ export function qualificationOutcome(team:QualificationTeam){
 export function currentPrivateSelection(page:QualificationPage){return page.current&&page.round.signoff&&page.round.proposal?page.round.proposal:undefined}
 
 export type QualificationIntent={requestID:string;runID:string;action:string;revision:number;version:number;fingerprint:string}
+export type QualificationCardAcknowledgement={requestID:string;action:string;version:number;teamID:string;cardVersion:number;freezeBinding:string}
 const nilUUID='00000000-0000-0000-0000-000000000000'
 const nativeUUID=(value:string|undefined)=>value?.toLowerCase()??nilUUID
 const nativeEvidence=(e:QualificationEvidence)=>({kind:e.kind,id:e.id?nativeUUID(e.id):null,version:e.version,note:e.note})

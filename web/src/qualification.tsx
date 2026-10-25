@@ -11,7 +11,7 @@ import {ActionLink,Button} from './components/ui/button'
 import {Failure,Loading} from './components/states'
 import {readHuddle} from './review-huddle-api'
 import {QualificationOverview,QualificationCardComparison,QualificationSelection,QualificationPreparationPreview,QualificationEvidenceList,QualificationEvidenceDestination} from './qualification-view'
-import type {QualificationPage as PanelPage,QualificationCard,QualificationIntent,QualificationCommand} from './qualification-model'
+import type {QualificationPage as PanelPage,QualificationCard,QualificationCardAcknowledgement} from './qualification-model'
 import {QualificationCommandHistory} from './qualification-command'
 import {CollectionHeading,CollectionRecords} from './components/patterns'
 import {Link} from '@tanstack/react-router'
@@ -44,7 +44,7 @@ function QualificationEvent({eventID,runID}:{eventID:string;runID:string}){
 }
 function QualificationReader({eventID,runID,eventName,timezone}:{eventID:string;runID:string;eventName:string;timezone:string}){
  const identity=useIdentity(),boundary=useEventReadBoundary(eventID)
- const [continuation,setContinuation]=useState<{requestID:string;action:string;version:number;generation:number;teamID:string;cardVersion:number;freezeBinding:string}>()
+ const [continuation,setContinuation]=useState<QualificationCardAcknowledgement&{generation:number}>()
 
  const load=useCallback(async(signal:AbortSignal)=>{const value=unwrap(await api.GET('/api/v1/events/{event_id}/mentor-qualification/{run_id}',{signal,cache:'no-store',params:{path:{event_id:eventID,run_id:runID}}}));if(value.round.run_id!==runID)throw new Error('The current native panel did not match this requested run.');return value},[eventID,runID])
  const signature=useCallback((page:PanelPage)=>JSON.stringify([page.round.panel,page.capabilities,page.tie_actions,page.current,!!page.round.reason,!!page.round.signoff?.reason,page.round.eligibility.map(value=>[value.team_id,value.binding,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.round.votes.map(value=>[value.tie_id,value.seat,value.team_id,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.round.decisions.map(value=>[value.tie_id,value.seat,value.team_id,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.teams.map(t=>[t.team_id,t.eligible,t.outcome,t.freeze_binding,t.blockers,t.source?.binding,t.can_save_card,t.can_sign_card,t.can_decide_eligibility]),page.round.cards.map(c=>[c.team_id,c.version,c.source.binding,c.scores.map(s=>s.evidence.map(e=>[e.kind,e.id,e.version]))])]),[])
@@ -52,18 +52,12 @@ function QualificationReader({eventID,runID,eventName,timezone}:{eventID:string;
  if(read.denied)return <section><p>Current panel access is unavailable. Private selections, evidence and earlier review context have been cleared.</p><ActionLink icon="back" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink><Button icon="refresh" onClick={()=>{setContinuation(undefined);void read.refresh()}}>Check current panel access</Button></section>
  if(!read.data)return read.error?<Failure error={read.error} retry={()=>void read.refresh()}/>:<Loading/>
 
- const next=continuation?.generation===read.generation&&read.data.round.version===continuation.version+1&&read.data.teams.some(team=>team.team_id===continuation.teamID&&team.freeze_binding===continuation.freezeBinding)&&read.data.round.cards.some(card=>card.team_id===continuation.teamID&&card.version===continuation.cardVersion)?continuation:undefined
- const acknowledged=(intent:QualificationIntent,body:QualificationCommand)=>{
-  const teamID=body.card?.team_id??body.team_id
-  if(!teamID||!body.freeze_binding||!['save_card','sign_card'].includes(body.action))return
-  // Carry only exact acknowledgement identity and navigation coordinates across
-  // the disposed private task. Every score, reason and action comes from the
-  // separately authorised current read, never the retained command body.
-  setContinuation({requestID:intent.requestID,action:intent.action,version:intent.version,generation:read.generation+1,teamID,cardVersion:(body.card?.version??body.card_version??0)+1,freezeBinding:body.freeze_binding})
- }
+ const next=read.data.capabilities.can_read_panel&&continuation?.generation===read.generation&&read.data.round.version===continuation.version+1&&read.data.teams.some(team=>team.team_id===continuation.teamID&&team.card_source_current&&team.freeze_binding===continuation.freezeBinding)&&read.data.round.cards.some(card=>card.team_id===continuation.teamID&&card.version===continuation.cardVersion)?continuation:undefined
+ const acknowledged=(value:QualificationCardAcknowledgement)=>setContinuation({...value,generation:read.generation+1})
+
  return <QualificationWorkspace initialSelected={next?.teamID} acknowledgement={next} onAcknowledged={acknowledged} key={read.generation} eventID={eventID} eventName={eventName} timezone={timezone} page={read.data} parent={read.authority} paused={read.pending||!!read.error||!!boundary?.paused} refresh={()=>read.refresh()} failure={read.error}/>
 }
-function QualificationWorkspace({eventID,eventName,timezone,page,parent,paused,refresh,failure,initialSelected,acknowledgement,onAcknowledged}:{eventID:string;eventName:string;timezone:string;page:PanelPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;failure:unknown;initialSelected?:string;acknowledgement?:{requestID:string;action:string;version:number};onAcknowledged:(intent:QualificationIntent,body:QualificationCommand)=>void}){
+function QualificationWorkspace({eventID,eventName,timezone,page,parent,paused,refresh,failure,initialSelected,acknowledgement,onAcknowledged}:{eventID:string;eventName:string;timezone:string;page:PanelPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;failure:unknown;initialSelected?:string;acknowledgement?:{requestID:string;action:string;version:number};onAcknowledged:(value:QualificationCardAcknowledgement)=>void}){
 
  const disclosedIDs=page.teams.map(team=>team.team_id).join('|')
  const loadNames=useCallback(async(signal:AbortSignal)=>{
@@ -74,17 +68,27 @@ function QualificationWorkspace({eventID,eventName,timezone,page,parent,paused,r
   return Object.fromEntries(roster.teams.filter(team=>disclosed.has(team.id)).map(team=>[team.id,team.name]))
  },[eventID,disclosedIDs])
  const names=useTodayRead(`${eventID}:${page.round.run_id}:qualification-labels`,loadNames,parent)
- const [selected,select]=useState<string|undefined>(initialSelected)
+ const [selection,select]=useState<{id?:string;ackID?:string}>(()=>paused?{}:{id:initialSelected,ackID:initialSelected?acknowledgement?.requestID:undefined})
+ // A matched reply can arrive after a current poll already replaced this task.
+ // Apply that one safe navigation event once, only after current authority is
+ // verified. Manual navigation wins thereafter; no private draft is restored.
+ if(!paused&&initialSelected&&acknowledgement&&selection.ackID!==acknowledgement.requestID)select({id:initialSelected,ackID:acknowledgement.requestID})
+ const selected=selection.id
  const root=useRef<HTMLElement>(null),navigation=useCoverageFocus(root)
- useLayoutEffect(()=>{if(!acknowledgement)return;const frame=requestAnimationFrame(()=>(root.current?.querySelector<HTMLElement>('[data-qualification-next]')??root.current?.querySelector<HTMLElement>('h3[tabindex="-1"]'))?.focus());return()=>cancelAnimationFrame(frame)},[acknowledgement])
+ const focusedAcknowledgement=useRef<string>(undefined)
+ useLayoutEffect(()=>{
+  if(!acknowledgement||paused||focusedAcknowledgement.current===acknowledgement.requestID)return
+  const frame=requestAnimationFrame(()=>{(root.current?.querySelector<HTMLElement>('[data-qualification-next]')??root.current?.querySelector<HTMLElement>('h3[tabindex="-1"]'))?.focus();focusedAcknowledgement.current=acknowledgement.requestID})
+  return()=>cancelAnimationFrame(frame)
+ },[acknowledgement,paused,selected])
  const risk=useRef<()=>boolean>(()=>true)
  const change=(id?:string)=>{
   if(!risk.current())return
-  const closing=selected;select(id)
+  const closing=selected;select(previous=>({...previous,id}))
   if(!id&&closing)navigation.restore({attribute:'data-record-focus',value:closing})
  }
  const team=page.teams.find(value=>value.team_id===selected),card=team?.card_source_current?page.round.cards.find(value=>value.team_id===selected):undefined,teamName=(id:string)=>names.data?.[id]||`Team ${id}`,categoryName=(id:string)=>page.criteria.categories.find(value=>value.id===id)?.label??`Category ${id}`
- return <section ref={root} className="fleet-qualification-workspace" tabIndex={-1} data-private-qualification>{acknowledgement&&<p role="status">Original {acknowledgement.action.replaceAll('_',' ')} acknowledged for request {acknowledgement.requestID}, expected panel version {acknowledgement.version}. The displayed card is separately read current state; no announcement was released.</p>}<ActionLink icon="back" variant="ghost" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink>{!!failure&&<Failure error={failure} retry={refresh}/>}<DetailWorkspace collection={<QualificationOverview page={page} eventName={eventName} teamName={teamName} disabled={paused} inspect={id=>change(id)} actions={<Button icon="refresh" variant="outline" disabled={paused} onClick={refresh}>Read current panel source</Button>}/>} detail={team&&<Inspector focusOnOpen={!acknowledgement} identity={team.team_id} title={teamName(team.team_id)} scope={{event:eventName,entity:'Current native qualification evidence'}} back={{href:`/events/${eventID}/panel/${page.round.run_id}`,label:'Back to panel',onNavigate:()=>change(undefined)}}><QualificationEvidenceDestination eventID={eventID} teamID={team.team_id}/><ActionLink icon="book" href={`/events/${eventID}/review/${team.team_id}`}>Inspect required reviews and evidence gaps</ActionLink><QualificationCardComparison card={card} page={page} timezone={timezone} source={(card?.source??team.source)?<QualificationSourceEvidence eventID={eventID} teamID={team.team_id} sourceRef={(card?.source??team.source)!} parent={parent}/>:<p>No current canonical source is disclosed here. Open the permitted team review to inspect required evidence and blockers.</p>}/></Inspector>}/><QualificationEditor onAcknowledged={onAcknowledged} key={selected??'panel'} eventID={eventID} page={page} teamID={selected} parent={parent} paused={paused} refresh={refresh} registerDeparture={fn=>{risk.current=fn}}/>{page.preview&&<QualificationSelection proposal={page.preview} teamName={teamName} categoryName={categoryName}/>}<QualificationHistory eventID={eventID} runID={page.round.run_id} parent={parent} paused={paused}/><QualificationPreparationPreview key={`${page.round.run_id}:${page.round.signoff?.binding??'unsigned'}`} page={page} teamName={teamName} categoryName={categoryName}/></section>
+ return <section ref={root} className="fleet-qualification-workspace" tabIndex={-1} data-private-qualification>{acknowledgement&&<p role="status">Original {acknowledgement.action.replaceAll('_',' ')} acknowledged for request {acknowledgement.requestID}, expected panel version {acknowledgement.version}. The displayed card is separately read current state; no announcement was released.</p>}<ActionLink icon="back" variant="ghost" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink>{!!failure&&<Failure error={failure} retry={refresh}/>}<DetailWorkspace collection={<QualificationOverview page={page} eventName={eventName} teamName={teamName} disabled={paused} inspect={id=>change(id)} actions={<Button icon="refresh" variant="outline" disabled={paused} onClick={refresh}>Read current panel source</Button>}/>} detail={team&&<Inspector focusOnOpen={!acknowledgement} identity={team.team_id} title={teamName(team.team_id)} scope={{event:eventName,entity:'Current native qualification evidence'}} back={{href:`/events/${eventID}/panel/${page.round.run_id}`,label:'Back to panel',onNavigate:()=>change(undefined)}}><QualificationEvidenceDestination eventID={eventID} teamID={team.team_id}/><ActionLink icon="book" href={`/events/${eventID}/review/${team.team_id}`}>Inspect required reviews and evidence gaps</ActionLink><QualificationCardComparison card={card} page={page} timezone={timezone} source={(card?.source??team.source)?<QualificationSourceEvidence eventID={eventID} teamID={team.team_id} sourceRef={(card?.source??team.source)!} parent={parent}/>:<p>No current canonical source is disclosed here. Open the permitted team review to inspect required evidence and blockers.</p>}/></Inspector>}/>{team&&card?.state==='signed'&&<Button data-qualification-next icon="team" focusableWhenDisabled disabled={paused} onClick={()=>change(undefined)}>Review another team</Button>}<QualificationEditor onAcknowledged={onAcknowledged} key={selected??'panel'} eventID={eventID} page={page} teamID={selected} parent={parent} paused={paused} refresh={refresh} registerDeparture={fn=>{risk.current=fn}}/>{page.preview&&<QualificationSelection proposal={page.preview} teamName={teamName} categoryName={categoryName}/>}<QualificationHistory eventID={eventID} runID={page.round.run_id} parent={parent} paused={paused}/><QualificationPreparationPreview key={`${page.round.run_id}:${page.round.signoff?.binding??'unsigned'}`} page={page} teamName={teamName} categoryName={categoryName}/></section>
 }
 function QualificationSourceEvidence({eventID,teamID,sourceRef,parent}:{eventID:string;teamID:string;sourceRef:QualificationCard['source'];parent:PrivateRequestScope}){
  const load=useCallback(async(signal:AbortSignal)=>{

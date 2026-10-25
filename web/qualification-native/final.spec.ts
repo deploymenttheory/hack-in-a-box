@@ -44,7 +44,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await activate(confirm);await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
-  await activate(page.getByRole('link',{name:'Back to panel',exact:true}))
+  const nextTeam=page.getByRole('button',{name:'Review another team',exact:true});await expect(nextTeam).toBeFocused();await activate(nextTeam)
   await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()
  }
  let proof=await control<{cards:number;current:boolean;signoff:boolean;page:QualificationPage}>('evidence');expect(proof).toMatchObject({cards:5,current:false,signoff:false})

@@ -10,18 +10,18 @@ import {EvidencePicker} from './scorecard-evidence'
 import {QualificationCommandReview,useQualificationCommand} from './qualification-command'
 import {QualificationSelection} from './qualification-view'
 import {QualificationScoreFields,qualificationFieldErrors,qualificationInputScores,qualificationScoreInputs} from './qualification-fields'
-import {assertQualificationActionReady,qualificationWords,type QualificationCommand,type QualificationIntent,type QualificationPage,type QualificationEvidence} from './qualification-model'
+import {assertQualificationActionReady,qualificationWords,type QualificationCommand,type QualificationCardAcknowledgement,type QualificationPage,type QualificationEvidence} from './qualification-model'
 
 type Action=QualificationCommand['action']
 type TieAction=QualificationPage['tie_actions'][number]
-type Props={eventID:string;page:QualificationPage;teamID?:string;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;registerDeparture:(fn:()=>boolean)=>void;onAcknowledged?:(intent:QualificationIntent,body:QualificationCommand)=>void}
+type Props={eventID:string;page:QualificationPage;teamID?:string;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;registerDeparture:(fn:()=>boolean)=>void;onAcknowledged?:(value:QualificationCardAcknowledgement)=>void}
 export function QualificationEditor({eventID,page,teamID,parent,paused,refresh,registerDeparture,onAcknowledged}:Props){
  const team=page.teams.find(value=>value.team_id===teamID),card=page.round.cards.find(value=>value.team_id===teamID)
  const [action,setAction]=useState<Action>(),[reason,setReason]=useState(''),[inputs,setInputs]=useState(()=>qualificationScoreInputs(page,card)),[errors,setErrors]=useState<Record<string,string>>({}),[mentorIDs,setMentorIDs]=useState(page.round.panel.mentor_ids),[organiserID,setOrganiserID]=useState(page.round.panel.organiser_id),[tie,setTie]=useState<TieAction>(),[choice,setChoice]=useState(''),[evidence,setEvidence]=useState(''),[eligibility,setEligibility]=useState('ineligible')
  const [staffReady,setStaffReady]=useState(false),acceptStaffReadiness=useCallback((ready:boolean)=>setStaffReady(ready),[setStaffReady])
  const tieLabel=(value:TieAction)=>{const definition=page.preview?.ties.find(tie=>tie.id===value.tie_id);return `${definition?.category_id?(page.criteria.categories.find(category=>category.id===definition.category_id)?.label??definition.category_id):definition?.kind==='total'?'Finalist and reserve':`Selection ${value.tie_id}`} · Seat ${value.seat}`}
  const form=useRef<HTMLFormElement>(null),heading=useRef<HTMLHeadingElement>(null),actionOpener=useRef<HTMLElement|null>(null)
- const command=useQualificationCommand({eventID,runID:page.round.run_id,page,parent,paused,refresh,assertActionReady:assertQualificationActionReady,onAcknowledged:(intent,body)=>{onAcknowledged?.(intent,body);setAction(undefined);setReason('');setEvidence('');setErrors({})},onNewBase:()=>{setAction(undefined);setReason('');setEvidence('');setErrors({})}})
+ const command=useQualificationCommand({eventID,runID:page.round.run_id,page,parent,paused,refresh,assertActionReady:assertQualificationActionReady,onCardAcknowledged:onAcknowledged,onAcknowledged:()=>{setAction(undefined);setReason('');setEvidence('');setErrors({})},onNewBase:()=>{setAction(undefined);setReason('');setEvidence('');setErrors({})}})
  const dirty=!!reason||!!evidence||JSON.stringify(inputs)!==JSON.stringify(qualificationScoreInputs(page,card))
  const depart=()=>command.pending?false:!(dirty||command.unknown)||window.confirm(command.unknown?'Leave the original panel outcome unresolved? Safe request metadata remains; no private body is retained.':'Discard your unsent panel reason and score changes?')
  useBlocker({shouldBlockFn:()=>command.sentPending||command.unknown?false:!depart(),enableBeforeUnload:dirty||command.pending||command.unknown})

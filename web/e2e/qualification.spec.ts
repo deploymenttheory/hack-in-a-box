@@ -135,3 +135,27 @@ test('pending current read preserves keyboard return to the same team without pe
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Synthetic recorded moderation reason')
  }finally{release()}
 })
+test('matching late original acknowledgement preserves the next action after current polling disposes its private editor',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0],card=state.page.round.cards[0]
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities={can_read_panel:true,can_configure_panel:false,can_propose:false,can_sign_off:false,record_locked:false,read_only:false}
+ card.version=1;card.state='draft';team.card_version=1;team.card_state='draft';team.can_sign_card=true;team.source=card.source
+ let posted=false,release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  if(route.request().method()!=='POST')return route.fulfill({json:state.page})
+  const body=route.request().postDataJSON() as QualificationCommand,revision=state.page.revision
+  const receipt={request_id:body.request_id,run_id:run,action:body.action,expected_revision:revision,expected_version:body.version,version:body.version+1,fingerprint:await qualificationFingerprint(body,revision)}
+  state.page.revision++;state.page.round.version++;card.version=2;card.state='signed';team.card_version=2;team.card_state='signed';team.can_sign_card=false;posted=true
+  await gate;return route.fulfill({json:{...state.page,receipt}})
+ })
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter');await page.getByRole('button',{name:'Review saved final card confirmation',exact:true}).press('Enter')
+  await page.getByLabel('Recorded panel reason',{exact:true}).fill('Private captured confirmation reason')
+  await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter');await page.getByRole('alertdialog',{name:'Review private panel command',exact:true}).getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
+  await expect.poll(()=>posted).toBe(true);await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toHaveCount(0);await expect(page.getByLabel('Original panel command history')).toContainText('Awaiting acknowledgement')
+  release()
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
+  await expect(page.getByRole('status').filter({hasText:'Original sign card acknowledged for request'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Review another team',exact:true})).toBeFocused()
+ }finally{release()}
+})
