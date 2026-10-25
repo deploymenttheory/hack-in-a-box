@@ -19,8 +19,8 @@ test "$#" -le 1
 
 race_manifest=$(mktemp -d)
 trap 'rm -rf "$race_manifest"' EXIT HUP INT TERM
-go list ./cmd/... ./internal/... > "$race_manifest/packages"
-race_app=$(go list ./internal/app)
+go list -race ./cmd/... ./internal/... > "$race_manifest/packages"
+race_app=$(go list -race ./internal/app)
 test "$(awk -v app="$race_app" '$0 == app { count++ } END { print count+0 }' "$race_manifest/packages")" -eq 1
 awk -v app="$race_app" '$0 != app' "$race_manifest/packages" > "$race_manifest/other-packages"
 test -s "$race_manifest/other-packages"
@@ -28,7 +28,7 @@ test -s "$race_manifest/other-packages"
 # Go's -list output includes top-level tests, examples and fuzz tests. -run
 # selects those parents and all their subtests; benchmarks are not run by the
 # original default command either. Go identifiers contain no regex operators.
-go test ./internal/app -list '^(Test|Example|Fuzz)' > "$race_manifest/list-output"
+go test -race ./internal/app -list '^(Test|Example|Fuzz)' > "$race_manifest/list-output"
 awk '/^(Test|Example|Fuzz)/ && !/[[:space:]]/' "$race_manifest/list-output" | LC_ALL=C sort > "$race_manifest/all"
 test -s "$race_manifest/all"
 test -z "$(uniq -d "$race_manifest/all")"
