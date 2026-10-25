@@ -58,6 +58,7 @@ class Client:
             require(response.status == want, label + ': unexpected status ' + str(response.status))
             require('no-store' in response.headers.get('Cache-Control', ''), label + ': cache policy')
             require(response.headers.get('X-Content-Type-Options') == 'nosniff', label + ': sniffing policy')
+            require(response.headers.get('Access-Control-Allow-Origin') is None, label + ': no ambient cross-origin read grant')
             payload = response.read(4 << 20)
             observations.append({'scenario': label, 'status': response.status})
             if payload and response.headers.get('Content-Type', '').startswith('application/json'):
@@ -106,6 +107,10 @@ def event_input(name):
 
 def main():
     require(os.environ.get('HACKBOX_SECURITY_ISOLATED') == 'synthetic-only', 'isolated synthetic deployment flag required')
+    for portal in ('admin', 'public'):
+        anonymous = Client('http://' + portal + ':8080')
+        for route in ('session', 'events', 'projects'):
+            anonymous.call('GET', '/api/v1/' + route, 401, 'anonymous-' + portal + '-' + route, origin='https://attacker.invalid')
     owner = Client.login('http://admin:8080', 'owner')
     public = Client.login('http://public:8080', 'owner')
     stranger = Client.login('http://admin:8080', 'stranger')
