@@ -9,6 +9,7 @@ const scoring=(page:import('@playwright/test').Page)=>page.getByRole('region',{n
 const review=(page:import('@playwright/test').Page)=>page.getByRole('alertdialog',{name:'Review locked submission',exact:true})
 test('scores every current assigned build with retained validation, reviewed draft and explicit submitted locks',async({page})=>{
  const data=await prepareJudging(page)
+ const programme=page.getByRole('region',{name:'Published presentation order',exact:true});await expect(programme.getByRole('listitem')).toHaveCount(2);await expect(programme.getByRole('listitem').first()).toContainText('Aurora demonstration · Current cue')
  await page.getByRole('button',{name:'Assigned build 1',exact:true}).press('Enter')
  await page.getByLabel('Your evidence for Demo',{exact:true}).fill('Retained independent evidence')
  await page.getByRole('button',{name:'Review competition submission',exact:true}).click()

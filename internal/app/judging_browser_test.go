@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -224,6 +225,42 @@ func newJudgeBrowserEdition(t *testing.T, surface string, final bool) judgeBrows
 			Action:             "approve",
 			SubmissionRevision: page.Final.Revision,
 			Reason:             "Explicit exact-version factual review excluding private notes and qualification scores",
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	room, err := f.surface.deps.Presentation.Change(
+		ctx,
+		r.mc.ID,
+		r.eventID,
+		0,
+		presentation.Command{
+			Action: "save",
+			Reason: "Synthetic actual published judging programme",
+			Cues: []presentation.Cue{
+				{
+					ID:              uuid.New(),
+					Title:           "Native demonstration slot",
+					Text:            "Public room text is not part of the title-only order",
+					DurationSeconds: 60,
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	index := 0
+	if _, err = f.surface.deps.Presentation.Change(
+		ctx,
+		r.mc.ID,
+		r.eventID,
+		room.Revision,
+		presentation.Command{
+			Action:    "activate",
+			FromDraft: true,
+			Index:     &index,
+			Reason:    "Publish native presentation slot",
 		},
 	); err != nil {
 		t.Fatal(err)

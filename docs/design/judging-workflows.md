@@ -43,3 +43,18 @@ private scores/notes/code never enter that coordination owner. Reopen is not a
 resubmission and invalidates affected unannounced result approvals natively.
 Qualification finalists remain the real #110 policy; there is no UI permission or
 qualification scoring shortcut. Award tally/ties/publication belong to #112.
+
+The presentation owner supplies the separate generated
+`GET /events/{event}/judging/presentation-order` read projection. It returns only
+published, currently public-to-room cue titles, compact visible ordinals and a
+current marker. It reuses the native display release filter; embargoed content,
+draft programmes, content bodies/URLs, pairing/control secrets and team-to-cue
+associations never enter this projection. Current native judge assignment/conflict
+or organiser authority is required on every read. An active MC override is
+labelled without projecting its private payload or marking a programme cue as
+current. This read seam supplies no scoring or MC mutation permission.
+
+The desk uses actual event branding and event-local cutoff context. Its frozen
+build destination is the independently authorised submitted-build reader with
+`judge_run` context. The reader performs its own exact-team and native artifact
+reads; a desk link does not transfer authority or score data.

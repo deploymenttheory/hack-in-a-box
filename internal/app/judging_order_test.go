@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -49,6 +50,7 @@ func TestJudgePublishedOrderUsesNativeReleaseAndAssignmentAuthority(t *testing.T
 	r := f.runtime
 	ctx := t.Context()
 	common := content.Service{Pool: r.pool, Clock: r.clock.read}
+	releaseAt := r.clock.read().Add(30 * time.Minute)
 	hidden, err := common.Save(
 		ctx,
 		r.owner.ID,
@@ -58,9 +60,10 @@ func TestJudgePublishedOrderUsesNativeReleaseAndAssignmentAuthority(t *testing.T
 		content.Input{
 			Kind: "page",
 			Document: content.Document{
-				Title:    "PRIVATE-UNRELEASED-RESOURCE",
-				Markdown: "Private resource body",
-				Audience: access.ContentAudience{Confirmed: true},
+				Title:       "PRIVATE-UNRELEASED-RESOURCE",
+				Markdown:    "Private resource body",
+				Audience:    access.ContentAudience{Confirmed: true},
+				ScheduledAt: &releaseAt,
 			},
 		},
 	)
@@ -227,15 +230,15 @@ func TestJudgePublishedOrderUsesNativeReleaseAndAssignmentAuthority(t *testing.T
 			t.Fatal("published cue falsely labelled current during override", item)
 		}
 	}
-	if _, err = common.Action(
-		ctx,
-		r.owner.ID,
-		r.eventID,
-		hidden.ID,
-		hidden.Revision,
-		"release",
-		"Explicit current public release",
-	); err != nil {
+	if err = common.Dispatch(ctx, r.eventID, hidden.ID, hidden.Revision); err != nil {
+		t.Fatal(err)
+	}
+	beforeRelease, err := f.surface.deps.Presentation.ReadJudgeOrder(ctx, f.first.ID, r.eventID)
+	if err != nil || len(beforeRelease.Items) != 2 {
+		t.Fatal("scheduled content escaped embargo", beforeRelease, err)
+	}
+	r.clock.set(releaseAt)
+	if err = common.Dispatch(ctx, r.eventID, hidden.ID, hidden.Revision); err != nil {
 		t.Fatal(err)
 	}
 	order, err = f.surface.deps.Presentation.ReadJudgeOrder(ctx, f.first.ID, r.eventID)

@@ -1,21 +1,47 @@
 # Judge UI — issue109
 
-Observable frontend Draft depending on PR277. The current backend parent is actual
-97c6a74, including immutable freeze bindings, per-deliverable recipient privacy and
-organiser-only reopen metadata. Both production portals use the same generated
-native APIs. No backend provider or score store is replaced by a UI simulation.
+Both production portals consume the merged #108 native contracts. Current source
+adds the narrow native presentation-order read projection required by #109, plus
+its generated API/HTTP integration and real PostgreSQL release/authority proof.
+The original parent PR277 is merged; the concrete #110 finalist policy remains
+owned by that separate backend deliverable. No UI grant bypasses its native gate.
 
-Implemented source covers current assignments, current/next published room cues,
-exact frozen evidence and factual summary, rubric version/anchors, retained private
-input/validation, captured draft/submit review, exact original response/lookup,
-locked cards, explicit new bases and captured identical retry, next assigned build,
-metadata-only reasoned organiser reopen and separate pre-live fictional practice.
-The independent guide imports actual production presentations with labelled local
-synthetic callbacks and no account/API/storage/provider access.
+The Fleet desk covers assigned builds, independently released programme order,
+actual event branding, exact frozen artifacts and reviewed factual summary,
+rubric version/anchors, private retained validation, deliberate draft/submit
+review, original receipt lookup and captured identical retry, locked cards,
+keyboard next-build movement, metadata-only reasoned organiser reopen and
+separate fictional pre-live practice. The independent guide imports production
+presentation components and has no account/API/storage/provider access.
 
-The first build of both portals passed. Additional lifetime/type corrections,
-configured lint, full final builds, browser/guide/privacy tests, native integration,
-visual captures and independent reviews remain pending. No screenshot, browser
-run or acceptance is claimed before actual verification. The native #110 policy
-integration remains a real parent dependency; no finalist grant is manufactured.
-Detailed ownership rules are in docs/design/judging-workflows.md.
+## Source and proof attribution
+
+The original four native portal/viewport journeys passed on source
+41e677aa78355be4fddd1577a9a1e7e0fe4a584b (98.264s total). Those runs cover the
+actual PostgreSQL/router/compiled portals, native practice/reset isolation, a
+committed save whose response is deliberately lost, exact original receipt
+recovery, organiser metadata/reasoned reopen, resubmission and real session
+revision expiry. They predate the new presentation-order API and merged native
+build-reader integration; they are not proof of those additions.
+
+The subsequent scheduled-embargo integration case uses real native content
+scheduling, a monotonic clock and native Dispatch before and after the due instant.
+It passed in 4.356s and proves public compact order, embargo/draft exclusion,
+current marker/override, current conflict/assignment/role loss, organiser access,
+archive and fail-closed unwired authority. The first new order/branding/actual
+merged-build-reader native admin-desktop journey passed in 11.816s. Final matrix
+proof and screenshots will be attributed below to their exact clean source.
+
+## Actual CI guide failure and correction
+
+Published 41e CI passed 61 of 62 guide cases but failed the existing mobile
+late-write/revoked-scope case before a write: Project Atlas never opened. A
+controlled actual pointer-down/release regression reproduced the target moving
+26px (y382 to356) before release on the unchanged scroll bridge. The preview
+requested ancestor scrolling during pointerdown/focus, cancelling the click.
+The correction defers pointer-origin alignment until click while retaining
+keyboard-focus alignment and the bridge's exact origin/source/shape validation.
+Both viewport regressions and the unchanged original late-write case passed
+4/4 in5.3s. No original assertion or timeout was relaxed. Full final guide,
+portal, native matrix, canonical parity/lint and independent paired review remain
+separate gates; local proof does not claim fresh exact GitHub CI has passed.
