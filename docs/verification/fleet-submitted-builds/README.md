@@ -171,16 +171,16 @@ consumer integration and exact-head full CI/reviews remain open before acceptanc
 
 ## Current judge discovery integration
 
-The reversible consumer integration uses actual #108 source404377c: current own
+The reversible consumer integration uses actual #108 source 404377c: current own
 round assignments are discovered through its generated endpoint, and the exact
 judge/team briefing is reauthorised before artifact reads. The UI retains only
 team name and native final revision from that briefing; it does not retain score
 cards or private judge instructions. A changed formal target clears artifacts.
 A parent event lifetime also fences held exact-brief continuations.
 
-On the current owned working-tree extension of5d4c30fb, TypeScript, affected
+On the current owned working-tree extension of 5d4c30fb, TypeScript, affected
 ESLint and both production builds passed. The finite admin browser suite passed
-22/22 in11.7s across desktop and Chromium narrow emulation. This includes three
+22/22 in 11.7s across desktop and Chromium narrow emulation. This includes three
 new assignment/denial/mismatch scenarios plus the existing cutoff/recovery
 journeys, using deterministic HTTP fixtures. The corresponding regular portal
 and expanded real PostgreSQL judge-assignment/conflict journey remain pending;
@@ -193,11 +193,26 @@ conflict owner; no target IDs or permission grants are fabricated by the UI.
 Source404377c's independently reviewed audience findings are being corrected by
 its owner. Corrected-parent integration and exact-source proof remain required.
 
-The corresponding regular-portal finite browser selection passed22/22 in4.7s.
-The clean c166637 expanded native run failed both viewports (package28.486s):
-actual judge brief409 correctly rejected assessment because the historical
+The corresponding regular-portal finite browser selection passed 22/22 in 4.7s.
+The clean c166637 expanded native run failed both viewports (package 28.486s):
+actual judge brief 409 correctly rejected assessment because the historical
 fixture had advanced the clock while leaving lifecycle at preparation. Existing
 cutoff/recovery/reconciliation steps completed before that failure. This is a
 fixture orchestration defect, not a product RED. The fixture now invokes the
 actual organiser preparation-to-live transition with its current revision; no
 native timing, final or authority gate changes. Both owned databases terminated.
+
+The corrected clean source f7898153a022013bba2abbe71824d29b560c2445 passed
+unfiltered native 2/2 with -race in 16.070s. Both per-viewport manifests record a
+clean start and unchanged source. It covers actual current assigned-judge
+round discovery, keyboard activation of its exact build link, independent native
+brief authorization, current verified code and private-guidance exclusion, then
+an actual declared reporting conflict removes both artifact access and discovery
+links. The original native cutoff/recovery/reconciliation and mentor revocation
+checks remain in the same run. New judge screenshots were visually inspected at
+both widths and are attributed separately in [judge-visual-manifest.json](judge-visual-manifest.json);
+older a242 images/proof keep their original source attribution.
+
+The actual existing regular-portal pending/accepted/ambiguous invitation and
+missing-verified-account scenarios also passed 4/4 in 2.1s. These HTTP-fixture tests
+verify the affected acceptance guidance without claiming a real GitHub effect.
