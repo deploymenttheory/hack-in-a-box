@@ -46,6 +46,15 @@ type AuditEvent struct {
 	OccurredAt time.Time
 }
 
+type BookableSession struct {
+	EventID          uuid.UUID
+	ID               uuid.UUID
+	Revision         int64
+	CalendarSequence int64
+	Definition       []byte
+	Cancelled        bool
+}
+
 type CateringSetting struct {
 	EventID uuid.UUID
 	Buffer  int32
@@ -1389,6 +1398,44 @@ type Session struct {
 	Token  string
 	Data   []byte
 	Expiry time.Time
+}
+
+type SessionAttendance struct {
+	EventID   uuid.UUID
+	SessionID uuid.UUID
+	PersonID  uuid.UUID
+	Present   bool
+	Revision  int64
+}
+
+type SessionBooking struct {
+	EventID       uuid.UUID
+	SessionID     uuid.UUID
+	PersonID      uuid.UUID
+	State         string
+	QueueSequence int64
+	Revision      int64
+	UpdatedAt     time.Time
+}
+
+type SessionCommand struct {
+	EventID     uuid.UUID
+	SessionID   uuid.UUID
+	RequestID   uuid.UUID
+	ActorID     uuid.UUID
+	Fingerprint string
+	Result      []byte
+}
+
+type SessionHistory struct {
+	ID              int64
+	EventID         uuid.UUID
+	SessionID       uuid.UUID
+	ActorID         uuid.UUID
+	PersonID        *uuid.UUID
+	Action          string
+	SessionRevision int64
+	CreatedAt       time.Time
 }
 
 type SmtpCampaignMessage struct {
