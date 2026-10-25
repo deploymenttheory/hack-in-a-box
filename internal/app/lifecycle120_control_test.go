@@ -22,15 +22,20 @@ func newLifecycleControl(directory string) (*lifecycleControl, error) {
 		return nil, errors.New("private lifecycle socket directory must be absolute")
 	}
 	socket := filepath.Join(directory, "control.sock")
-	transport := &http.Transport{DialContext: func(ctx context.Context, _, address string) (net.Conn, error) {
-		if address != "lifecycle-control:80" {
-			return nil, errors.New("fixture control cannot dial a network endpoint")
-		}
-		var dial net.Dialer
-		return dial.DialContext(ctx, "unix", socket)
-	}}
-	return &lifecycleControl{http: &http.Client{Transport: transport, Timeout: 10 * time.Second,
-		CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}}, nil
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, _, address string) (net.Conn, error) {
+			if address != "lifecycle-control:80" {
+				return nil, errors.New("fixture control cannot dial a network endpoint")
+			}
+			var dial net.Dialer
+			return dial.DialContext(ctx, "unix", socket)
+		},
+	}
+	return &lifecycleControl{http: &http.Client{
+		Transport:     transport,
+		Timeout:       10 * time.Second,
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse },
+	}}, nil
 }
 
 func (c *lifecycleControl) close() { c.http.CloseIdleConnections() }
@@ -44,15 +49,19 @@ func (c *lifecycleControl) initialTimeline(ctx context.Context) (lifecycleTimeli
 		return phase.Timeline, err
 	}
 	if phase.Timeline.Initial.IsZero() || !phase.Now.Equal(phase.Timeline.Initial) ||
-		!phase.Timeline.Initial.Before(phase.Timeline.Publication) || !phase.Timeline.Publication.Before(phase.Timeline.Live) {
-		return phase.Timeline, errors.New("checkpoint requires the provider's fresh initial domain phase")
+		!phase.Timeline.Initial.Before(
+			phase.Timeline.Publication,
+		) || !phase.Timeline.Publication.Before(phase.Timeline.Live) {
+		return phase.Timeline, errors.New(
+			"checkpoint requires the provider's fresh initial domain phase",
+		)
 	}
 	return phase.Timeline, nil
 }
 
 func (c *lifecycleControl) call(ctx context.Context, method, path string, input, output any) error {
 	switch path {
-	case "/clock", "/mail/fault", "/mail/messages":
+	case "/clock", "/mail/fault", "/mail/messages", "/github/proof":
 	default:
 		return errors.New("unknown owner-private lifecycle control")
 	}
@@ -75,7 +84,10 @@ func (c *lifecycleControl) call(ctx context.Context, method, path string, input,
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode != http.StatusOK || response.Header.Get("Cache-Control") != "no-store" {
-		return fmt.Errorf("owner-private lifecycle control returned status %d without a valid response", response.StatusCode)
+		return fmt.Errorf(
+			"owner-private lifecycle control returned status %d without a valid response",
+			response.StatusCode,
+		)
 	}
 	if output == nil {
 		return nil
@@ -90,7 +102,13 @@ func (c *lifecycleControl) advance(ctx context.Context, at time.Time) error {
 	var phase struct {
 		Now time.Time `json:"now"`
 	}
-	if err := c.call(ctx, http.MethodPost, "/clock", map[string]time.Time{"at": at}, &phase); err != nil {
+	if err := c.call(
+		ctx,
+		http.MethodPost,
+		"/clock",
+		map[string]time.Time{"at": at},
+		&phase,
+	); err != nil {
 		return err
 	}
 	if !phase.Now.Equal(at) {

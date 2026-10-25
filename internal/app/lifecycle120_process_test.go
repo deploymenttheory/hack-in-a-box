@@ -70,8 +70,12 @@ func runLifecycleNativeProcess(ctx context.Context, role string) error {
 		return err
 	}
 	dsn, err := url.Parse(cfg.DatabaseURL)
-	if err != nil || dsn.Hostname() != "postgres" || dsn.Path != "/lifecycle" || cfg.Environment != "test" || cfg.OIDCIssuer == "" {
-		return errors.New("lifecycle fixture must use its isolated Compose database and configured OIDC")
+	if err != nil || dsn.Hostname() != "postgres" || dsn.Path != "/lifecycle" ||
+		cfg.Environment != "test" ||
+		cfg.OIDCIssuer == "" {
+		return errors.New(
+			"lifecycle fixture must use its isolated Compose database and configured OIDC",
+		)
 	}
 	clock, err := newLifecycleFileClock(os.Getenv("HACKBOX_LIFECYCLE_CONTROL"))
 	if err != nil {
@@ -182,7 +186,9 @@ func runLifecycleProvider(ctx context.Context) error {
 		return err
 	}
 	if _, err := os.Stat(filepath.Join(directory, "domain-time")); !errors.Is(err, os.ErrNotExist) {
-		return errors.New("lifecycle provider requires a fresh isolated control volume; refusing to reset domain time")
+		return errors.New(
+			"lifecycle provider requires a fresh isolated control volume; refusing to reset domain time",
+		)
 	}
 	timeline, err := newLifecycleTimeline(time.Now().UTC())
 	if err != nil {
@@ -196,8 +202,13 @@ func runLifecycleProvider(ctx context.Context) error {
 		return err
 	}
 	defer func() { _ = relay.close() }()
+	github, err := newLifecycleGitHub(directory)
+	if err != nil {
+		return err
+	}
 	provider, err := newLifecycleOIDC("http://provider:8080", map[string]string{
-		"lifecycle-public": "http://public:8080/auth/callback", "lifecycle-admin": "http://admin:8080/auth/callback",
+		"lifecycle-public": "http://public:8080/auth/callback",
+		"lifecycle-admin":  "http://admin:8080/auth/callback",
 	})
 	if err != nil {
 		return err
@@ -216,49 +227,78 @@ func runLifecycleProvider(ctx context.Context) error {
 		_ = listener.Close()
 		return err
 	}
-	control := &http.Server{ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/mail/") {
-			relay.control(w, r)
-			return
-		}
-		if r.URL.Path != "/clock" {
-			http.NotFound(w, r)
-			return
-		}
-		if r.Method == http.MethodGet {
-			lifecycleJSON(w, map[string]any{"now": clock.read(), "timeline": timeline})
-			return
-		}
-		var input struct {
-			At time.Time `json:"at"`
-		}
-		if r.Method != http.MethodPost || json.NewDecoder(io.LimitReader(r.Body, 1024)).Decode(&input) != nil {
-			http.Error(w, "invalid monotonic lifecycle phase", http.StatusBadRequest)
-			return
-		}
-		if err := clock.advance(directory, input.At, timeline.Day90.Add(24*time.Hour)); err != nil {
-			http.Error(w, "clock fixture unavailable", http.StatusInternalServerError)
-			return
-		}
-		lifecycleJSON(w, map[string]any{"now": clock.read()})
-	})}
+	control := &http.Server{
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      5 * time.Second,
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/github/") {
+				github.control(w, r)
+				return
+			}
+			if strings.HasPrefix(r.URL.Path, "/mail/") {
+				relay.control(w, r)
+				return
+			}
+			if r.URL.Path != "/clock" {
+				http.NotFound(w, r)
+				return
+			}
+			if r.Method == http.MethodGet {
+				lifecycleJSON(w, map[string]any{"now": clock.read(), "timeline": timeline})
+				return
+			}
+			var input struct {
+				At time.Time `json:"at"`
+			}
+			if r.Method != http.MethodPost ||
+				json.NewDecoder(io.LimitReader(r.Body, 1024)).Decode(&input) != nil {
+				http.Error(w, "invalid monotonic lifecycle phase", http.StatusBadRequest)
+				return
+			}
+			if err := clock.advance(
+				directory,
+				input.At,
+				timeline.Day90.Add(24*time.Hour),
+			); err != nil {
+				http.Error(w, "clock fixture unavailable", http.StatusInternalServerError)
+				return
+			}
+			lifecycleJSON(w, map[string]any{"now": clock.read()})
+		}),
+	}
 	go func() { _ = control.Serve(listener) }()
 	defer func() { _ = control.Close() }()
 	defer func() { _ = os.Remove(socket) }()
 	mux := http.NewServeMux()
 	mux.Handle("/", provider)
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux.Handle("/github/", github)
+	mux.Handle("/github-api/", github)
+	mux.HandleFunc(
+		"/readyz",
+		func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) },
+	)
 	server := &http.Server{Addr: "0.0.0.0:8080", Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	network, err := listen.Listen(ctx, "tcp", server.Addr)
 	if err != nil {
 		return fmt.Errorf("listen isolated provider: %w", err)
 	}
-	return httpserver.Serve(ctx, server, network, 10*time.Second, slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+	return httpserver.Serve(
+		ctx,
+		server,
+		network,
+		10*time.Second,
+		slog.New(slog.NewJSONHandler(os.Stderr, nil)),
+	)
 }
 
 func writeLifecycleClock(directory string, value time.Time) error {
 	temporary := filepath.Join(directory, "domain-time.next")
-	if err := os.WriteFile(temporary, []byte(value.UTC().Format(time.RFC3339Nano)), 0o600); err != nil {
+	if err := os.WriteFile(
+		temporary,
+		[]byte(value.UTC().Format(time.RFC3339Nano)),
+		0o600,
+	); err != nil {
 		return err
 	}
 	return os.Rename(temporary, filepath.Join(directory, "domain-time"))

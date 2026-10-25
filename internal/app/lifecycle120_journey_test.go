@@ -15,6 +15,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
@@ -33,6 +34,7 @@ type lifecycleJourneyEvent struct {
 	rubric     rubric.Configuration
 	objective  objectives.View
 	brand      templates.Branding
+	github     githubapp.Status
 	commonHash string
 }
 type lifecycleJourney struct {
@@ -191,6 +193,16 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("native connected journey did not reach live with its real confirmed census")
 		}
 	}
+	var providerProof lifecycleGitHubProof
+	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
+		t.Fatal(err)
+	}
+	if providerProof.AppJWTsVerified < 4 || providerProof.InstallationTokensMinted < 2 ||
+		providerProof.TemplateReads < 2 {
+		t.Fatal(
+			"native GitHub installation did not exercise actual verified App/scoped REST transport",
+		)
+	}
 	type eventReceipt struct {
 		ID          uuid.UUID            `json:"event_id"`
 		Mode        string               `json:"mode"`
@@ -235,6 +247,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		map[string]any{
 			"checkpoint":              "connected-two-event-start-to-live-only",
 			"complete_lifecycle":      false,
+			"github_transport_proof":  providerProof,
 			"events":                  items,
 			"overlapping_oidc_people": len(run.events[0].cohort.clients),
 			"explicit_retention_days": 120,
@@ -254,6 +267,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"exact-version-acknowledgements",
 				"early-live-denied-without-mutation",
 				"native-scheduled-live-transition",
+				"normal-configured-encrypted-github-app-owner",
+				"real-app-jwt-scoped-template-rest",
+				"single-use-native-installation-callback",
 			},
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},
@@ -396,6 +412,7 @@ func (r *lifecycleJourney) prepareEvent(
 	); err != nil {
 		t.Fatal(err)
 	}
+	r.configureGitHubApp(t, &item)
 	return item
 }
 
