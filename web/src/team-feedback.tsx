@@ -34,7 +34,7 @@ function FeedbackTeams({ eventID, teamID, eventName, parent, paused }: { eventID
  const identity = useIdentity(), load = useCallback((signal: AbortSignal) => readTeams(eventID, signal), [eventID])
  const signature = useCallback((page: Awaited<ReturnType<typeof readTeams>>) => JSON.stringify([page.can_manage, page.teams.map(t => [t.id, t.state, t.name, t.published.map(p => p.id)])]), [])
  const read = useTodayRead(`${eventID}:feedback-teams`, load, parent, signature)
- if (read.denied) return <p>Current team access is unavailable. Private feedback has been cleared.</p>
+ if (read.denied) return <section><p>Current team access is unavailable. Private feedback has been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current team access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
  const teams = read.data.teams.filter(t => t.state === 'published' && (admin && read.data!.can_manage || t.published.some(p => p.id === identity.person.id)))
  const team = teams.find(t => t.id === teamID)
@@ -42,9 +42,9 @@ function FeedbackTeams({ eventID, teamID, eventName, parent, paused }: { eventID
 }
 function FeedbackReader({ eventID, teamID, teamName, members, parent, paused, organiser }: { eventID: string; teamID: string; teamName: string; members: { id: string; name: string }[]; parent: PrivateRequestScope; paused: boolean; organiser: boolean }) {
  const load = useCallback(async (signal: AbortSignal) => organiser ? { kind: 'staff' as const, page: await readReport(eventID, teamID, signal) } : { kind: 'released' as const, page: unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/feedback-report/released', { signal, cache: 'no-store', params: { path: { event_id: eventID, team_id: teamID } } })) }, [eventID, teamID, organiser])
- const signature = useCallback((value: Awaited<ReturnType<typeof load>>) => value.kind === 'staff' ? JSON.stringify([value.kind, value.page.current_source?.binding, value.page.current_source?.team_id]) : JSON.stringify([value.kind, value.page.report?.version]), [])
+ const signature = useCallback((value: Awaited<ReturnType<typeof load>>) => value.kind === 'staff' ? JSON.stringify([value.kind, value.page.current_source?.binding, value.page.current_source?.team_id, value.page.current_source?.final_scores?.binding, value.page.current_source?.scores_available]) : JSON.stringify([value.kind, value.page.report?.version]), [])
  const read = useTodayRead(`${eventID}:${teamID}:feedback-report:${organiser}`, load, parent, signature)
- if (read.denied) return <p>Current report access is unavailable. Private report content and held reviews have been cleared.</p>
+ if (read.denied) return <section><p>Current report access is unavailable. Private report content and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current report access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
  const data = read.data
  if (data.kind === 'released' && data.page.report && (data.page.report.team_id !== teamID || data.page.report.final_scores && data.page.report.final_scores.team_id !== teamID)) return <p>The native released report did not match this exact team.</p>
