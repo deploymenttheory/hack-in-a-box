@@ -20,13 +20,12 @@ function setup(status = 503) {
  }
  return { ...hook, lose, error, send, parent, read }
 }
-test('current reads and new bases retain the transport failure until another owner acknowledges that exact original attempt', async () => {
+test('current reads do not acknowledge a request and exact completion clears its obsolete transport failure', async () => {
  const { result, lose, error, send, read } = setup(), original = await lose('33333333-3333-4333-8333-333333333333')
  expect(result.current.decision.failure).toBe(error)
  await act(async () => { await read() })
  expect(result.current.decision.failure).toBe(error)
- act(() => result.current.history.selectNewBase())
- expect(result.current.decision.failure).toBe(error)
+ expect(result.current.decision.unknown).toBe(true)
  // OriginalResultHistory completes only after matching exact native metadata.
  // Exercise the actual shared-store transition from that separate owner.
  act(() => result.current.history.complete(original))
@@ -36,7 +35,9 @@ test('current reads and new bases retain the transport failure until another own
 })
 test('acknowledging an earlier attempt cannot dismiss a later unknown failure and session disposal cannot infer success', async () => {
  const { result, lose, error, parent } = setup(), first = await lose('44444444-4444-4444-8444-444444444444')
- act(() => result.current.history.selectNewBase())
+ await act(async () => { await result.current.decision.readBase(document.createElement('button')) })
+ await act(async () => { await result.current.decision.chooseBase() })
+ expect(result.current.history.attempts.some(attempt => attempt.id === first && attempt.state === 'unknown')).toBe(true)
  const second = await lose('55555555-5555-4555-8555-555555555555')
  act(() => result.current.history.complete(first))
  expect(result.current.decision.failure).toBe(error)
