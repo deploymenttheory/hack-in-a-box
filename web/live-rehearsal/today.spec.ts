@@ -12,6 +12,9 @@ test('actual Today rules, contacts and personal completion remain separate from 
   const submissionPath = `/api/v1/events/${native.event_id}/teams/${native.team_id}/submission`
   try {
     const before = await (await context.request.get(submissionPath)).json()
+    expect(before.outcome).toBe('open')
+    expect(before.can_submit).toBe(true)
+    expect(before.final).toBeNull()
     await page.goto(`/events/${native.event_id}`)
     await openEventSection(page, 'Today')
     const today = page.getByRole('region', { name: 'Your event Today', exact: true })

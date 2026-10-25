@@ -3,15 +3,16 @@ import { request } from 'node:http'
 import type { Browser, BrowserContext } from '@playwright/test'
 
 type Cookie = { Name: string; Value: string }
-type Manifest = { event_id: string; team_id: string; other_event_id: string; answer_id: string; private_question_id: string; help_id: string; admin: string; public: string; display: string; socket: string; run_id: string }
+type Manifest = { phase: { event_id: string; team_id: string; public: string }; event_id: string; team_id: string; other_event_id: string; answer_id: string; private_question_id: string; help_id: string; admin: string; public: string; display: string; socket: string; run_id: string }
 const path = process.env.HACKBOX_REHEARSAL_MANIFEST
 if (!path) throw new Error('Run through the Go TestLiveRehearsalBrowsers owner; native servers and PostgreSQL are required.')
 export const native = JSON.parse(readFileSync(path, 'utf8')) as Manifest
 
-export async function actor(browser: Browser, surface: 'admin' | 'public', role: 'mc' | 'mentor' | 'competitor' | 'owner'): Promise<BrowserContext> {
-  const cookie = await control<Cookie>('session', { actor: role, surface })
-  const context = await browser.newContext({ baseURL: native[surface] })
-  await context.addCookies([{ name: cookie.Name, value: cookie.Value, url: native[surface], httpOnly: true, sameSite: 'Lax' }])
+export async function actor(browser: Browser, surface: 'admin' | 'public', role: 'mc' | 'mentor' | 'competitor' | 'owner', fixture?: 'phase'): Promise<BrowserContext> {
+  const cookie = await control<Cookie>('session', { actor: role, surface, fixture })
+  const origin = fixture === 'phase' ? native.phase.public : native[surface]
+  const context = await browser.newContext({ baseURL: origin })
+  await context.addCookies([{ name: cookie.Name, value: cookie.Value, url: origin, httpOnly: true, sameSite: 'Lax' }])
   return context
 }
 

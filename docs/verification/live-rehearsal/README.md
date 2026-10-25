@@ -9,14 +9,14 @@ base `c0c8b21`; no placeholder or mocked Today route is used.
 
 All seven native Chromium journeys passed together at clean source
 `1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2`. The PR remains Draft pending final
-exact-head CI and independent reviews.
+the isolated preparation/live Today correction, exact-head CI and independent reviews.
 
 | Issue #90 criterion | Actual verification | Result |
 | --- | --- | --- |
 | Disconnected displays retain the last authorized cue and report stale status | Native MC pairing/SSE, forwarding outage, retained opening, native advance, latest building cue on reconnect | Combined native Chromium pass; matched three-state images |
 | No observations, secrets or embargoed output in display responses/caches | Actual private observation/question/help/unreleased cue fixtures; complete snapshot allowlist; bearer-only GETs; controller denial; no-store; URL/storage/cache scans | Combined native Chromium pass |
 | Reconnect/clock drift converge without duplicate actions | True browser offline, incorrect client clock, native snapshot/DB revision delta, held countdown and revocation | Combined native Chromium pass |
-| Preparation/build week/live review/submission/freeze/cutoff with lifecycle lag | Native calendar T−7, actual dashboard and frozen POST refusal, mentor review versus operational status, cutoff settlement before lifecycle advances | Combined native Chromium pass across all four phases |
+| Preparation/build week/live review/submission/freeze/cutoff with lifecycle lag | Native calendar T−7, actual dashboard and frozen POST refusal, mentor review versus operational status, cutoff settlement before lifecycle advances | Historical combined dashboard proof; corrected isolated Today/domain journey passed 1/1 locally (17.2s); new combined run pending |
 | Today/readiness/rules/contacts/help/corrections across roles/events/accounts | Mobile keyboard/version acknowledgement/focus return; real personal PUT versus unchanged formal output; admin Today→MC; Today→help→native common correction/account-event denial; mentor recovery/role loss; actual logout and another account | Combined native Chromium pass on both production portals |
 | Completed Fleet consumers/guide and action continuity | Production reader/navigation/confirmation consumers and unchanged independently published guide | Native pass plus [full guide CI at15e9f6c](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40152932109/job/121048067372); final-head guide CI remains required |
 
@@ -41,8 +41,7 @@ exact-head CI and independent reviews.
   no unexecuted child verification is claimed.
 
 Remaining gates: final exact-head Linux/ordinary/guide CI and independent
-Standards/Spec reviews. Root owns merging and #90 acceptance closure. No feature
-or dependency work is left pending; merged Today #88 is exercised here.
+Standards/Spec reviews. Root owns merging and #90 acceptance closure. The preparation/release/live/cutoff journey now has an independent native database/runtime; its real Today next actions passed the focused journey. New combined proof including the ordinary live `open` outcome and submission eligibility is pending. Merged Today #88 is exercised here.
 
 ## Architecture and safety boundaries
 
@@ -68,7 +67,11 @@ native router unchanged. An outage closes proxy connections and returns 503 for
 new API requests. Browser offline mode is a separate interruption.
 
 Fixtures use an actually approved rubric, reviewed/approved challenge and native
-common dispatch. `schedule.ChallengePublication` derives T−7 across spring DST:
+common dispatch. The phase fixture starts before publication with an approved but
+unreleased challenge, dispatches only at its actual T−7 phase, and advances
+monotonically through live/cutoff. Its irreversible cutoff outcome belongs to a
+separate database/runtime from the ordinary live Today, MC, display and mentor
+fixtures; it is never rewound or erased. `schedule.ChallengePublication` derives T−7 across spring DST:
 22 March 2027 10:00 UTC for a 29 March 09:00 UTC live start, preserving local
 calendar time. The small fixture explicitly configures its minimum attendance;
 production defaults and lifecycle rules are unchanged. Native `can_create` is

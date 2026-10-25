@@ -61,9 +61,11 @@ type liveRehearsal struct {
 	eventID                       uuid.UUID
 	teamID                        uuid.UUID
 	otherEventID                  uuid.UUID
+	challengeID                   uuid.UUID
+	challengeRevision             int64
 }
 
-func newLiveRehearsal(t *testing.T) *liveRehearsal {
+func newLiveRehearsal(t *testing.T, unreleased ...bool) *liveRehearsal {
 	t.Helper()
 	r := &liveRehearsal{
 		pool:  testdb.New(t, true),
@@ -143,7 +145,7 @@ func newLiveRehearsal(t *testing.T) *liveRehearsal {
 	}
 	reference := testdb.ApprovedRubric(t, r.pool, r.owner.ID, r.eventID)
 	publication := r.clock.read()
-	r.clock.set(publication.Add(-time.Minute))
+	r.clock.set(publication.Add(-time.Hour))
 	common := content.Service{Pool: r.pool, Clock: r.clock.read}
 	challenge, err := common.Save(
 		t.Context(),
@@ -178,14 +180,14 @@ func newLiveRehearsal(t *testing.T) *liveRehearsal {
 			t.Fatal(err)
 		}
 	}
-	r.clock.set(publication)
-	if err := common.Dispatch(
-		t.Context(),
-		r.eventID,
-		challenge.ID,
-		challenge.Revision,
-	); err != nil {
-		t.Fatal(err)
+	r.challengeID, r.challengeRevision = challenge.ID, challenge.Revision
+	if len(unreleased) == 0 || !unreleased[0] {
+		r.clock.set(publication)
+		if err := common.Dispatch(t.Context(), r.eventID, challenge.ID, challenge.Revision); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		r.clock.set(publication.Add(-30 * time.Minute))
 	}
 	return r
 }

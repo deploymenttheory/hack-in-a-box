@@ -18,6 +18,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 )
@@ -58,6 +59,10 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	}
 	r := newLiveRehearsal(t)
 	admin, public := r.surface(t, "admin"), r.surface(t, "public")
+	// A separate native database/runtime keeps irreversible cutoff settlement out
+	// of ordinary live Today, display and private mentor recovery scenarios.
+	phase := newLiveRehearsal(t, true)
+	phasePublic := phase.surface(t, "public")
 	for _, surface := range []rehearsalSurface{admin, public} {
 		// Native router owns SPA fallback; missing built assets must fail visibly.
 		response, err := http.Get(
@@ -134,6 +139,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				Action  string    `json:"action"`
 				Actor   string    `json:"actor"`
 				Surface string    `json:"surface"`
+				Fixture string    `json:"fixture"`
 				Instant time.Time `json:"instant"`
 			}
 			if err := json.NewDecoder(http.MaxBytesReader(w, request.Body, 1024)).
@@ -141,24 +147,31 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				http.Error(w, "invalid control", 400)
 				return
 			}
+			fixture, publicSurface := r, public
+			if input.Fixture == "phase" {
+				fixture, publicSurface = phase, phasePublic
+			} else if input.Fixture != "" {
+				http.Error(w, "unknown fixture", 400)
+				return
+			}
 			var err error
 			switch input.Action {
 			case "session":
-				person := r.mc
+				person := fixture.mc
 				switch input.Actor {
 				case "mc":
-					person = r.mc
+					person = fixture.mc
 				case "mentor":
-					person = r.mentor
+					person = fixture.mentor
 				case "competitor":
-					person = r.competitor
+					person = fixture.competitor
 				case "owner":
-					person = r.owner
+					person = fixture.owner
 				default:
 					http.Error(w, "unknown synthetic actor", 400)
 					return
 				}
-				surface := public
+				surface := publicSurface
 				if input.Surface == "admin" {
 					surface = admin
 				} else if input.Surface != "public" {
@@ -237,12 +250,22 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 						return
 					}
 				}
+			case "release-phase-challenge":
+				common := content.Service{Pool: phase.pool, Clock: phase.clock.read}
+				if err := common.Dispatch(request.Context(), phase.eventID, phase.challengeID, phase.challengeRevision); err != nil {
+					http.Error(w, err.Error(), 409)
+					return
+				}
 			case "clock":
 				if input.Instant.IsZero() {
 					http.Error(w, "instant required", 400)
 					return
 				}
-				r.clock.set(input.Instant)
+				if input.Fixture == "phase" && input.Instant.Before(phase.clock.read()) {
+					http.Error(w, "phase clock cannot move backwards", 409)
+					return
+				}
+				fixture.clock.set(input.Instant)
 			case "outage":
 				proxy.outage.Store(true)
 				proxy.server.CloseClientConnections()
@@ -279,6 +302,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	t.Cleanup(func() { _ = control.Close() })
 	// Only synthetic short-lived test sessions are passed to the node owner.
 	manifest := map[string]any{
+		"phase":               map[string]any{"event_id": phase.eventID, "team_id": phase.teamID, "public": phasePublic.server.URL},
 		"answer_id":           support.answerID,
 		"help_id":             support.helpID,
 		"private_question_id": support.questionID,
@@ -350,6 +374,8 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"fixture_run_id":            manifest["run_id"],
 		"event_id":                  r.eventID,
 		"team_id":                   r.teamID,
+		"phase_event_id":            phase.eventID,
+		"phase_team_id":             phase.teamID,
 		"publication_at":            previousClock,
 		"project_selection":         os.Getenv("HACKBOX_REHEARSAL_PROJECT"),
 		"test_selection":            os.Getenv("HACKBOX_REHEARSAL_GREP"),
