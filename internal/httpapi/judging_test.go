@@ -201,5 +201,27 @@ func TestJudgeHTTPIsolatedPracticeStrictContractAndCurrentAuthority(t *testing.T
 	if w = request(judge, "GET", path, "\"0\"", nil, true); w.Code != 403 {
 		t.Fatal("role loss kept practice", w.Code, w.Body)
 	}
+	summaryPath := "/api/v1/events/" + eventID.String() + "/teams/" + uuid.New().
+		String() +
+		"/judge-summary"
+	if w = request(other, "GET", summaryPath, "\"0\"", nil, true); w.Code != 403 {
+		t.Fatal("unassigned actor factual draft authority", w.Code, w.Body)
+	}
+	if w = request(
+		other,
+		"POST",
+		summaryPath,
+		"\"0\"",
+		map[string]any{
+			"request_id":          uuid.New(),
+			"action":              "save",
+			"submission_revision": 1,
+			"reason":              "Judge-facing facts",
+			"qualification_total": 50,
+		},
+		true,
+	); w.Code != 400 {
+		t.Fatal("factual briefing admitted qualification field", w.Code, w.Body)
+	}
 	_ = q
 }

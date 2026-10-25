@@ -4,6 +4,25 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/teams/{team_id}/judge-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeSummary"];
+        put?: never;
+        post: operations["changeJudgeSummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/judging": {
         parameters: {
             query?: never;
@@ -3961,6 +3980,41 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JudgeSummaryFact: {
+            /** Format: uuid */
+            deliverable_id: string;
+            fact: string;
+        };
+        JudgeFactualSummary: {
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            approved_by: string | null;
+            /** Format: int64 */
+            submission_revision: number;
+            repository: components["schemas"]["JudgeFreezeEvidence"];
+            facts: components["schemas"]["JudgeSummaryFact"][];
+        };
+        JudgeSummaryPage: {
+            /** Format: int64 */
+            version: number;
+            summary: components["schemas"]["JudgeFactualSummary"] | null;
+            receipt: components["schemas"]["JudgeReceipt"] | null;
+        };
+        JudgeSummaryCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "approve";
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: uuid */
+            repository_decision_id?: string | null;
+            facts?: components["schemas"]["JudgeSummaryFact"][];
+            reason: string;
+        };
         JudgeRounds: {
             items: components["schemas"]["JudgeRound"][];
         };
@@ -4133,6 +4187,7 @@ export interface components {
             own_card: components["schemas"]["JudgeCard"] | null;
             submitted_cards: components["schemas"]["JudgeCard"][];
             deliberation: boolean;
+            mentor_summary: components["schemas"]["JudgeFactualSummary"] | null;
         };
         SubmissionFreezeSource: {
             managed_evidence_ids: string[];
@@ -8581,6 +8636,64 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgeSummary: {
+        parameters: {
+            query?: {
+                request_id?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current separately authored and explicitly reviewed factual briefing; no private assessment projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeSummaryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeSummary: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeSummaryCommand"];
+            };
+        };
+        responses: {
+            /** @description Current separately authored and explicitly reviewed factual briefing; no private assessment projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getJudgeRounds: {
         parameters: {
             query?: never;

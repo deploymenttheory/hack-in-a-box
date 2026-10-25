@@ -83,6 +83,7 @@ type CardCommand struct {
 	Reason               string     `json:"reason"`
 }
 type Brief struct {
+	MentorSummary        *FactualSummary           `json:"mentor_summary"`
 	TeamID               uuid.UUID                 `json:"team_id"`
 	TeamName             string                    `json:"team_name"`
 	RunID                uuid.UUID                 `json:"run_id"`

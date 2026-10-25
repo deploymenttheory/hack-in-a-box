@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
@@ -138,4 +140,41 @@ func (h handlers) GetJudgeReceipt(
 		return nil, fmt.Errorf("recover judge acknowledgement: %w", err)
 	}
 	return convertDTO[contract.GetJudgeReceipt200JSONResponse](v)
+}
+
+func (h handlers) GetJudgeSummary(
+	ctx context.Context,
+	r contract.GetJudgeSummaryRequestObject,
+) (contract.GetJudgeSummaryResponseObject, error) {
+	requestID := uuid.Nil
+	if r.Params.RequestId != nil {
+		requestID = *r.Params.RequestId
+	}
+	v, err := h.Judging.Summary(ctx, actor(ctx).ID, r.EventId, r.TeamId, requestID)
+	if err != nil {
+		return nil, fmt.Errorf("judge summary request: %w", err)
+	}
+	return convertDTO[contract.GetJudgeSummary200JSONResponse](v)
+}
+
+func (h handlers) ChangeJudgeSummary(
+	ctx context.Context,
+	r contract.ChangeJudgeSummaryRequestObject,
+) (contract.ChangeJudgeSummaryResponseObject, error) {
+	if r.Body == nil {
+		return nil, access.ErrInvalid
+	}
+	n, err := judgeRevision(r.Params.IfMatch)
+	if err != nil {
+		return nil, fmt.Errorf("judge summary revision: %w", err)
+	}
+	c, err := convertDTO[judging.SummaryCommand](r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("judge summary command: %w", err)
+	}
+	v, err := h.Judging.ChangeSummary(ctx, actor(ctx).ID, r.EventId, r.TeamId, n, c)
+	if err != nil {
+		return nil, fmt.Errorf("judge summary request: %w", err)
+	}
+	return convertDTO[contract.ChangeJudgeSummary200JSONResponse](v)
 }

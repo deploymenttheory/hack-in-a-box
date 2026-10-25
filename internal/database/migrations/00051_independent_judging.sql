@@ -1,4 +1,13 @@
 -- +goose Up
+CREATE TABLE judge_factual_summaries (
+ event_id uuid NOT NULL,
+ team_id uuid NOT NULL,
+ version bigint NOT NULL CHECK(version>0),
+ document jsonb NOT NULL,
+ PRIMARY KEY(event_id,team_id,version),
+ FOREIGN KEY(event_id,team_id) REFERENCES competition_entries(event_id,team_id)
+);
+CREATE TRIGGER judge_factual_summaries_retained BEFORE UPDATE OR DELETE OR TRUNCATE ON judge_factual_summaries FOR EACH STATEMENT EXECUTE FUNCTION reject_audit_mutation();
 CREATE TABLE judge_rounds (
  event_id uuid NOT NULL REFERENCES events(id),
  run_id uuid NOT NULL,
@@ -75,7 +84,7 @@ CREATE TRIGGER judge_result_invalidations_retained BEFORE UPDATE OR DELETE OR TR
 -- +goose Down
 -- +goose StatementBegin
 DO $$ BEGIN
- IF EXISTS(SELECT 1 FROM judge_history) OR EXISTS(SELECT 1 FROM judge_commands) OR EXISTS(SELECT 1 FROM judge_cards) OR EXISTS(SELECT 1 FROM judge_practice_cards) OR EXISTS(SELECT 1 FROM judge_result_approvals) THEN
+ IF EXISTS(SELECT 1 FROM judge_factual_summaries) OR EXISTS(SELECT 1 FROM judge_history) OR EXISTS(SELECT 1 FROM judge_commands) OR EXISTS(SELECT 1 FROM judge_cards) OR EXISTS(SELECT 1 FROM judge_practice_cards) OR EXISTS(SELECT 1 FROM judge_result_approvals) THEN
  RAISE EXCEPTION 'Independent judge history and approvals must be retained';
  END IF;
 END $$;
@@ -88,3 +97,4 @@ DROP TABLE judge_history;
 DROP TABLE judge_cards;
 DROP TABLE judge_assignments;
 DROP TABLE judge_rounds;
+DROP TABLE judge_factual_summaries;

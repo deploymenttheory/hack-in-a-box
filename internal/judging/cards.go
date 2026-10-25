@@ -100,6 +100,14 @@ func (s Service) Brief(
 		if err != nil {
 			return failure("exact final repository evidence", err)
 		}
+		mentorSummary, err := summaryInTransaction(ctx, tx, eventID, teamID)
+		if err != nil {
+			return err
+		}
+		if mentorSummary.Summary != nil &&
+			(mentorSummary.Summary.ApprovedBy == nil || mentorSummary.Summary.SubmissionRevision != p.Final.Revision || !sameFreeze(mentorSummary.Summary.Repository, freezeEvidence(evidence))) {
+			mentorSummary.Summary = nil
+		}
 		_, open, err := round(ctx, tx, eventID, runID)
 		if err != nil {
 			return err
@@ -119,6 +127,7 @@ func (s Service) Brief(
 			card = &copy
 		}
 		out = Brief{
+			MentorSummary:        mentorSummary.Summary,
 			TeamID:               teamID,
 			TeamName:             team.Name,
 			RunID:                runID,

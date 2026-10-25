@@ -812,6 +812,13 @@ type JudgeCommand struct {
 	Result      []byte
 }
 
+type JudgeFactualSummary struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	Version  int64
+	Document []byte
+}
+
 type JudgeHistory struct {
 	ID         int64
 	EventID    uuid.UUID
