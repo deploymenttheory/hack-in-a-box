@@ -145,3 +145,26 @@ its tests bind that exact name. This is not a product-policy RED. The affected
 static guide rerun remains pending. Visual inspection also prompted plain user
 labels in place of implementation wording and an actual styled Back action;
 updated source-attributed image capture remains required after that copy change.
+
+## Current visual and public-guide checkpoint — a242af0
+
+After naming the exact synthetic outcome status and improving Back navigation
+and user-facing wording, the four owned static-guide cases passed **4/4 in5.7s**
+on the independent Go host. Standalone and embedded review/current-read/unknown/
+synthetic callback flows are covered; cookie/private-store traps and API/auth
+request checks remain active. This is scoped guide evidence, not a broad suite claim.
+
+On clean executable `a242af0f81140d145343728ea46992ce82bf6cf5`, actual unfiltered
+native keyboard/receipt/capture/reconciliation/current-assignment journeys passed
+**2/2 with -race, package20.914s** (desktop10.90s/narrow8.53s). Both PostgreSQL
+containers were terminated. Current screenshots and hashes are in
+[visual-manifest.json](visual-manifest.json); original f308 proof records retain
+that older attribution, while the new `native-a242-*` records identify this run.
+These are synthetic native-production captures, not a same-state legacy pixel
+comparison or real mobile certification. Native owned proof is now wired into
+the existing Linux rehearsal job with its own retained artifacts.
+
+The next reversible integration stacks on real frozen #108 run/assignment
+contracts. The exact judge source additionally rechecks assignment, conflicts and
+current final evidence; discovery rows never grant artifact permission. That
+consumer integration and exact-head full CI/reviews remain open before acceptance.

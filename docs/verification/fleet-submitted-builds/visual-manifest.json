@@ -1,0 +1,49 @@
+{
+  "before": {
+    "source_commit": "b2f7f5a0e128cf6843dbc0250fd29098afb8c00b",
+    "note": "Submitted-build route is absent from reviewed main. No same-state legacy screenshot comparison is claimed."
+  },
+  "after": {
+    "source_commit": "a242af0f81140d145343728ea46992ce82bf6cf5",
+    "runtime": "Actual production portal bundles, native PostgreSQL/HTTP, synthetic people, recording read-only branch provider. Desktop and narrow Chromium emulation, not real-device certification.",
+    "result": "Unfiltered native2/2, race-enabled package20.914s; exact source clean at start/end."
+  },
+  "images": [
+    {
+      "path": "images/after-administrator-code-review-desktop.png",
+      "width": 1440,
+      "height": 1221,
+      "sha256": "5bf6ac9e887458ca0b22a022a8ccccebe29422c7b602dc6f5c0fe5f2c1236e41"
+    },
+    {
+      "path": "images/after-assigned-mentor-verified-desktop.png",
+      "width": 1440,
+      "height": 1281,
+      "sha256": "50621259b32446de936b60f5f0d8b2f4325b1f4af4b13645edbeeb9c3555c952"
+    },
+    {
+      "path": "images/after-participant-unresolved-desktop.png",
+      "width": 1440,
+      "height": 1221,
+      "sha256": "44ae3f320a9944b985ca43092d31a952a4cf6cfa903a9d3cb816b311dab1e42a"
+    },
+    {
+      "path": "images/after-administrator-code-review-mobile.png",
+      "width": 390,
+      "height": 1832,
+      "sha256": "3072e88c66bdc17bdc16b0bf859fad93107a3b962c3156ebe80841e1a0ad9a90"
+    },
+    {
+      "path": "images/after-assigned-mentor-verified-mobile.png",
+      "width": 390,
+      "height": 1871,
+      "sha256": "db33487580f98c67305ca9bbf54f8a5fb11df31604f2963a1d13d4ffa565c00d"
+    },
+    {
+      "path": "images/after-participant-unresolved-mobile.png",
+      "width": 390,
+      "height": 1861,
+      "sha256": "8276afa2331422773d69ac762526ab63b7221fd49cb91c904d3e4aee949baeee"
+    }
+  ]
+}
