@@ -8,6 +8,7 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
   const authority = usePrivateRequestScope(`${key}:authority`, parent)
   const scope = usePrivateRequestScope(`${key}:read`, authority)
   const life = useMemo(() => ({ scope, denied: false, ended: false, reading: false, attempt: 0, signature: undefined as string | undefined }), [scope])
+  const [generation, setGeneration] = useState(0)
   const [snapshot, setSnapshot] = useState<{ key: string; data?: T; error?: unknown; pending: boolean; denied: boolean }>({ key, pending: true, denied: false })
   const read = useCallback(async (explicit = false) => {
     if (life.ended || life.denied && !explicit || life.reading && !explicit) return
@@ -20,7 +21,7 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
       const signature = identityOf?.(data)
       // Fence old private child reads synchronously on an actual native role or
       // authority boundary, before React disposes/replaces those child owners.
-      if (life.signature !== undefined && life.signature !== signature) authority.renew()
+      if (life.signature !== undefined && life.signature !== signature) { authority.renew(); setGeneration(value => value + 1) }
       life.signature = signature; life.denied = false
       setSnapshot({ key, data, pending: false, denied: false })
     } catch (error) {
@@ -46,5 +47,5 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
     events.forEach(event => window.addEventListener(event, end))
     return () => events.forEach(event => window.removeEventListener(event, end))
   }, [scope, authority, life, key])
-  return { ...(snapshot.key === key ? snapshot : { key, pending: true, denied: false }), refresh: () => read(true), authority }
+  return { ...(snapshot.key === key ? snapshot : { key, pending: true, denied: false }), refresh: () => read(true), authority, generation }
 }
