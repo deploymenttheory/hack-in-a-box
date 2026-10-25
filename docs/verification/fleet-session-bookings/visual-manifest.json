@@ -1,0 +1,88 @@
+{
+  "before": {
+    "source_commit": "2d82ac402fc68e39af0c49708fa6f363742bbd66",
+    "fixture": "sessionsFixture mocked API; production reviewed-main portal builds; Sessions registry absent; adjacent Overview context, not an old booking UI"
+  },
+  "after": {
+    "source_commit": "1a2430683221a533d73e7d55191c6dbf1b19b5c5",
+    "source_tree": "582e953064e3d51b68295aed1eca01715dcbf84d",
+    "runtime_build_commit": "4db1fe6",
+    "runtime_note": "No web/src changes between runtime build checkpoint4db1fe6 and captured source1a24306; actual native HTTP/PostgreSQL fixtures and independent production portal bundles",
+    "command": "HACKBOX_INTEGRATION=1 HACKBOX_SESSION_BROWSER=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test ./internal/app -run ^TestSessionBookingBrowsers$ -count=1 -v -race -p=1 -parallel=1 -timeout=5m",
+    "result": "6 browser cases passed; package24.126s; desktop10.95s/mobile11.63s"
+  },
+  "images": [
+    {
+      "path": "images/after-administrator-definition-review-desktop.png",
+      "width": 1440,
+      "height": 1846,
+      "sha256": "102fa98f73b2d781c6e76ed99d6b4cb52cc710ea041dd5204c722ee0169a9645"
+    },
+    {
+      "path": "images/after-administrator-definition-review-mobile.png",
+      "width": 390,
+      "height": 2218,
+      "sha256": "45726d5dcbd7b7b73f32eecb88f7ec5d363c7ae99c29da0f3da7b17b3cf7d3d9"
+    },
+    {
+      "path": "images/after-administrator-discovery-desktop.png",
+      "width": 1440,
+      "height": 1595,
+      "sha256": "c6b9483138b78e3efebc1738f30d882cb683da53238c2b25678a2eb02324569f"
+    },
+    {
+      "path": "images/after-administrator-discovery-mobile.png",
+      "width": 390,
+      "height": 1096,
+      "sha256": "86103aa634f897c87b510e71fdb0560c5186ad2997f02a685a8fb2d2a43616e6"
+    },
+    {
+      "path": "images/after-participant-attendance-review-desktop.png",
+      "width": 1440,
+      "height": 1454,
+      "sha256": "ec229d76067f83417b75a04eb60211fdc8cb08b156358c45b5d1d917e1247dc2"
+    },
+    {
+      "path": "images/after-participant-attendance-review-mobile.png",
+      "width": 390,
+      "height": 1810,
+      "sha256": "b33c88e1d4a10a469217c734e63dc419ac68e1a8ba3a82ee3c7dd8a28a393ee3"
+    },
+    {
+      "path": "images/after-participant-booked-desktop.png",
+      "width": 1440,
+      "height": 1384,
+      "sha256": "ed6fcd33b079dca3eb8f630a72caed2e202435b52e6f73ab7019cc4362fc628e"
+    },
+    {
+      "path": "images/after-participant-booked-mobile.png",
+      "width": 390,
+      "height": 1803,
+      "sha256": "f17e9b610907f2a7270f9d55f35a8245c0c6bc81e033887c63454d50708ed990"
+    },
+    {
+      "path": "images/before-administrator-desktop-sessions-absent.png",
+      "width": 1440,
+      "height": 1286,
+      "sha256": "5ccbb63ecd5bc55b981bf1e20e2381f68c7be93e34b04a6421f872b03b84556d"
+    },
+    {
+      "path": "images/before-administrator-mobile-sessions-absent.png",
+      "width": 390,
+      "height": 1739,
+      "sha256": "09f5b413cd1ee714b211ea7f0e0752c37c84226da90f649569419cedad7a5a27"
+    },
+    {
+      "path": "images/before-participant-desktop-sessions-absent.png",
+      "width": 1440,
+      "height": 1023,
+      "sha256": "486cf42022736e57859a1b6832b8e4e000b126957e123201e11a85c8b286ce79"
+    },
+    {
+      "path": "images/before-participant-mobile-sessions-absent.png",
+      "width": 390,
+      "height": 1198,
+      "sha256": "15c584b0dd070b4847c37d152586538c6376fb0fc60c699bd25d35de6353e32d"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "browser_command_succeeded": true,
+  "event_id": "1e25cca9-6671-4948-ac4a-849422af75b7",
+  "fixture_run_id": "a18a104b-60ff-464a-8d4c-4bcdc34ad30a",
+  "new_session_id": "eb68579e-8635-4d84-915a-77162101f632",
+  "session_id": "6a871536-3690-4718-a631-e1e4e7e98e8e",
+  "source_commit": "1a2430683221a533d73e7d55191c6dbf1b19b5c5",
+  "source_commit_end": "1a2430683221a533d73e7d55191c6dbf1b19b5c5",
+  "source_tree": "582e953064e3d51b68295aed1eca01715dcbf84d",
+  "source_worktree_clean": true,
+  "test_selection": "",
+  "viewport": "desktop"
+}

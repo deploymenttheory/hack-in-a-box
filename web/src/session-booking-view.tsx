@@ -19,11 +19,11 @@ export function sessionState(session: BookableSession) {
   return session.available > 0 ? 'Available' : 'Full · Session waitlist'
 }
 export function SessionCollection({ sessions, open, disabled }: { sessions: BookableSession[]; open: (session: BookableSession, opener: HTMLButtonElement) => void; disabled?: boolean }) {
-  return <CollectionRecords label="Sessions on this page" rows={sessions} rowKey={s => s.id} rowLabel={s => s.title} disabled={disabled} columns={[
+  return <div className="fleet-session-collection"><CollectionRecords label="Sessions on this page" rows={sessions} rowKey={s => s.id} rowLabel={s => s.title} disabled={disabled} columns={[
     { id: 'time', label: 'Event-local time', essential: true, cell: s => <>{localDate(s.start, s.timezone)}<br />{s.timezone}</> },
     { id: 'state', label: 'Your session status', essential: true, cell: sessionState },
     { id: 'capacity', label: 'Capacity', cell: s => `${s.available} available · ${s.booked}/${s.capacity} booked` },
-  ]} actions={s => <Button icon="calendar" variant="ghost" disabled={disabled} onClick={e => open(s, e.currentTarget)}>Open {s.title}</Button>} />
+  ]} actions={s => <Button icon="calendar" variant="ghost" disabled={disabled} onClick={e => open(s, e.currentTarget)}>Open {s.title}</Button>} /></div>
 }
 export function SessionFacts({ session }: { session: BookableSession }) {
   return <><p role="status">{sessionState(session)}</p><dl className="fleet-session-facts">{[

@@ -1,7 +1,6 @@
 # Optional session frontend — implementation checkpoint
 
-Issue #167 remains a complete in-progress deliverable. This branch is stacked on
-backend #166/PR #271. It is not release certification or an acceptance closure.
+Issue #167 remains a complete in-progress deliverable. This branch now targets main after backend #166/PR #271 merged as `2d82ac4`. It is not release certification or an acceptance closure.
 The backend owns current audience/eligibility, FIFO capacity, exact original
 acknowledgements, immutable calendar sequence and notification suppression.
 
@@ -163,3 +162,22 @@ context cleanup results, preserves the original journey error, then reports a
 cleanup-only failure after the finally block. Affected lint explicitly including
 `web/session-native` passed after the CI `no-unsafe-finally` finding. The duplicated
 guide synthetic supply callback now reuses its existing controlled handler.
+
+
+## Clean native and public-guide checkpoint — 1a24306
+
+The unfiltered native PostgreSQL/HTTP/production-browser harness passed all three journeys on both desktop1440×1000 and mobile390×844: **6/6 browser cases; package24.126s** (desktop10.95s, mobile11.63s). Both per-viewport fixture records show the same clean source commit and tree at start/end, no test filter, and successful browser command. Test-owned PostgreSQL containers were cleaned. No production authentication or policy was weakened.
+
+The native journeys assert simultaneous booking commands against one place, separate immutable waitlist acknowledgement, cancellation/promotion with original ACK retained, actual Tab/Shift-Tab/Space/Enter booking and attendance correction, scoped assignment loss and withdrawal, unchanged event/team counts, full organiser creation from an existing agenda item and Back→collection→Open result, plus a valid native agenda date correction advancing the calendar observation without inventing a needs-review policy.
+
+The actual minute-resolution create RED was source22005ed: native ResolveLocal requires seconds and rejected the submitted minute-only wall with400. Source4db1fe6 normalizes exact minute strings by appending :00, preserves explicit seconds and step1 validity, and keeps wall time/DST choices in event timezone without Date conversion. Both native create journeys now receive200 and retain the safe configuration ACK above the new private owner, then navigate to the created session.
+
+Keyboard helpers initially failed mobile native select navigation. Opening a popup and serializing pages alone did not resolve it; those hypotheses are not claimed as fixes. Actual label type-ahead followed by Tab avoids intermediate destination changes. Both-portal mocked keyboard journeys passed4/4 each; the subsequent full native run passed. Notification preview click failures occurred in earlier runs and were preserved separately; no speculative production notification patch is claimed. Safe fixed-label interaction diagnostics remain in the owned test harness.
+
+The complete production public guide suite passed **60/60 in51.9s** against the independent Go static host: existing examples, embedded and standalone sessions, print/review/recovery, exact shape/origin/source spoof rejection and deliberate outer-control focus. The prior59/60 run exposed a test-side raw iframe lookup race; the test now waits for and evaluates the exact task-pattern iframe. No API/auth/cookie/private-store dependency is introduced.
+
+Actual before/after captures and hashes are in [visual-manifest.json](visual-manifest.json). Before images are reviewed-main production UI with explicitly mocked synthetic API data and prove the Sessions UI was absent; after images are native PostgreSQL/HTTP production journeys with synthetic people and example destinations. They are not a same-state pixel comparison. Native [desktop](native-desktop-fixture.json) and [mobile](native-mobile-fixture.json) source records accompany the images. Visual inspection found a real narrow discovery defect in these historical1a24306 captures: the long Open action squeezed the title beside it. The finite production mobile RED measured only68.75px title width. Session-owned wrapping now places title and action on separate rows; the same administrator check passed. These historical captures are retained with source attribution until the corrected native recapture replaces them. Other inspected detail/review controls keep scope and useful actions visible.
+
+Fresh types, full web lint, affected definition/receipt tests13/13, both portal builds and production guide export passed during this correction chain. The inherited original native rehearsal, final-head CI and final independent full-scope reviews remain required; this draft does not claim issue acceptance or release certification.
+
+The narrow-heading correction changes only the owned session collection wrapper/styles, without rewriting shared collection patterns. Both portal bundles and the guide were rebuilt; updated native/guide proof and image recapture remain pending for that final visual correction.

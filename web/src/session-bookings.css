@@ -5,3 +5,5 @@
  .fleet-session-facts dt { color: var(--muted-foreground); font-weight: var(--weight-body); }
  .fleet-session-facts dd { margin: 0; overflow-wrap: anywhere; }
 }
+
+@media (max-width: 47.99rem) { .fleet-session-collection .fleet-record-heading { flex-wrap: wrap; } .fleet-session-collection .fleet-record-heading h2 { flex-basis: 100%; min-inline-size: 0; overflow-wrap: anywhere; } .fleet-session-collection .fleet-record-heading .fleet-button { max-inline-size: 100%; white-space: normal; text-align: start; } }
