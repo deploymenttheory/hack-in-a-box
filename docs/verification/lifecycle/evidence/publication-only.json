@@ -1,0 +1,47 @@
+{
+  "acknowledged_people": [
+    "6859aa0c-a5cb-4c1c-a3cc-97b72f5112f6",
+    "daca3687-1b23-4e41-9609-b275ab034490"
+  ],
+  "calendar_interval_hours": 167,
+  "challenge_id": "64ccf321-91e7-4577-8f29-2533959e4736",
+  "checkpoint": "native-compose-publication-only",
+  "common_response_sha256": "5f178f8499241a6b9aef7d9b33e77b7624204f7db411ef9e3022163ec0d64ad2",
+  "complete_lifecycle": false,
+  "event_id": "2e9661d1-211a-4b2c-ae93-c7389699d9a6",
+  "expected_local_calendar_publication": "2026-03-23T09:00:00Z",
+  "explicit_retention_days": 120,
+  "live_start": "2026-03-30T09:00:00+01:00",
+  "native_worker_publication_maintenance": true,
+  "observed_wall_seconds_after_clock_advance": 2.745614793,
+  "provider_delivery_exercised": false,
+  "published_at": "2026-03-23T09:00:00Z",
+  "rubric_reference": {
+    "id": "8e06a759-59e2-491b-9a3d-9af251211590",
+    "version": 1,
+    "digest": "07d3ef136fc3453ca2d611a9fc9dde1e756aeff8bca9759ab158d0f2a6a55032"
+  },
+  "image_id": "sha256:864e6ebd23f05108a67d40e1643274c6ddd93d6da53a2e53a96f464368ce742f",
+  "image_source": "07c207a43eb9de12d0d0908ad0d0529fddedf765",
+  "compose_source": "07c207a43eb9de12d0d0908ad0d0529fddedf765",
+  "main_base": "2cfbce4046625e719bfec3a442641a70fda54cdc",
+  "schema_version": 54,
+  "project": "hackbox-lifecycle120-publication-20261025",
+  "test_seconds": 3.28,
+  "services_started": [
+    "postgres",
+    "provider",
+    "migrate",
+    "public",
+    "admin",
+    "worker"
+  ],
+  "cleanup": "project-labelled containers, volumes and internal network removed; verification queries empty",
+  "excluded_proof": [
+    "browser",
+    "smtp-delivery",
+    "github-provider",
+    "full-lifecycle",
+    "production-images"
+  ]
+}

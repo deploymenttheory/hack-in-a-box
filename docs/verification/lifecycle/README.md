@@ -99,14 +99,22 @@ default exclusive expiry and explicitly configured native 30/60/90 effects.
 Their [exact run and failure provenance](evidence/clock-runs.md) distinguishes
 component fixtures from the required full HTTP lifecycle and production images.
 
-The next `publication` profile is implemented and compiles, but is **not yet
-executed**. It repeats genuine admission/allocation through HTTP, configures the
-explicit retained-response policy through the native HTTP owner, approves the
-exact rubric/challenge, denies early route/search/rubric access, and requires
-the actual worker's publication maintenance at the independent DST/T−7 instant.
-It also checks identical attendee rubric bytes and native version-bound
-acknowledgements. Its partial receipt remains `complete_lifecycle=false`; a
-fresh verification-image rebuild and native run are still required.
+The `publication` profile subsequently **passed** in 3.28 seconds after rebasing
+onto main `2cfbce40`/schema 54. Source `07c207a4` built verification image
+`sha256:864e6ebd23f05108a67d40e1643274c6ddd93d6da53a2e53a96f464368ce742f`.
+It repeated genuine admission/allocation through HTTP, configured the explicit
+retained-response policy through the native HTTP owner, approved the exact
+rubric/challenge, denied early route/search/rubric access, and observed the real
+worker's publication maintenance at the independent DST/T−7 instant. Publication
+was March 23 at 09:00 UTC for March 30 at 09:00 London time: 167 hours, with a
+2.746-second observed wall delay after domain-clock advance. Attendee rubric
+bytes matched and native version-bound acknowledgements persisted. The
+[partial receipt](evidence/publication-only.json) remains
+`complete_lifecycle=false`; browser and provider-delivery proof is excluded.
+Its project was removed and label-filtered cleanup checks were empty. Historical
+pre-rebase proof sources remain under the local evidence branch
+`evidence/lifecycle120-before-schema54-rebase`; their earlier receipts are not
+relabelled as results on this newer source.
 
 The most recent lightweight compile check compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
