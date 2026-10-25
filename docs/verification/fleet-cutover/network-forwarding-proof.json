@@ -1,0 +1,35 @@
+{
+  "source": "065e2bc3266eeca6e7898caa9bff45f01f564e1c",
+  "project": "hackbox-fleet245-network-26ccc65c",
+  "kind": "Normal guide-only port forwarding differential, not app UI proof",
+  "results": [
+    {
+      "internal": true,
+      "normal_image": "hackbox-fleet245-guide:065e2bc3266e",
+      "container_health_exit": 0,
+      "declared_bindings": {
+        "8080/tcp": []
+      },
+      "host": {
+        "error": "URLError",
+        "detail": "<urlopen error [Errno 61] Connection refused>"
+      }
+    },
+    {
+      "internal": false,
+      "normal_image": "hackbox-fleet245-guide:065e2bc3266e",
+      "container_health_exit": 0,
+      "declared_bindings": {
+        "8080/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "18182"
+          }
+        ]
+      },
+      "host": {
+        "status": 200
+      }
+    }
+  ]
+}

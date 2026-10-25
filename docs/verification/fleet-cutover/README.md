@@ -85,7 +85,17 @@ retain image IDs/source and image hashes, and report zero remaining project
 resources after successful cleanup. The external provider script is not included
 in the application runtime image. Its identities and credentials are synthetic.
 
-At this source checkpoint this new runtime probe is **unexecuted**. The earlier
+The first runtime attempt at065e2bc3 built all three images and reached healthy
+containers, but the host browser failed before login. A guide-only differential
+kept the image/port fixed: DockerDesktop29.6.1 internal network produced an empty
+published binding and connection refusal; an ordinary dedicated bridge produced
+the intended127.0.0.1 binding and HTTP200. See
+[the source-attributed differential](network-forwarding-proof.json). This fixture
+therefore uses a dedicated bridge, publishes only loopback ports and leaves its
+database unexposed. Both probes cleaned their scoped resources.
+
+The complete normal-image browser journey is still **unexecuted** after that
+pre-login fixture failure. The earlier
 237-test/source-inventory results above do not establish its success. Preserve
 each failed attempt separately, diagnose its actual symptom, then record the
 exact executed source and measured result before changing this status.

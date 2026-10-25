@@ -103,4 +103,4 @@ volumes:
   database:
   files:
 networks:
-  default: {internal: true}
+  default: {}
