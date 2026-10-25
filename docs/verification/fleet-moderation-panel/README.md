@@ -102,3 +102,13 @@ frontend corpus run then correctly failed to resolve the absent artifact. The
 explicitly enabled native run generated the real corpus; only the subsequent
 six passing frontend cases are codec evidence. All owned native/browser/build
 handles reached terminal status; the fixture terminated only its own container.
+
+A bounded production command-owner test now passes **2/2 in 929ms**, covering
+lost initial writes, safe version0 identity after private task teardown,
+mismatched versus exact original acknowledgement, current reads remaining
+separate, and deliberate byte-identical captured retry. It uses explicit API
+transport doubles plus the real native receipt corpus; it is not a native browser
+acceptance run. Its initial failure expected an internal exception string that
+shared Failure deliberately sanitises; the corrected test checks the exact public
+failure, persistent unknown metadata and absence of acknowledgement before the
+subsequent genuine matching-corpus receipt. No product assertion was removed.
