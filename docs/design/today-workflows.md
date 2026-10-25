@@ -64,7 +64,7 @@ keyboard return, temporary failure/denial and a changed server observation that
 cannot publish a challenge or open a submission. The guide imports no auth/API
 adapter or recovery store.
 
-## Checkpoint evidence (not final acceptance)
+## Historical checkpoint evidence (superseded by final owner verification below)
 
 - Additive contract generation and native package compilation passed.
 - Real PostgreSQL current roles/revocation/outsider/disabled reader, unapproved
@@ -106,3 +106,16 @@ The existing canonical event GET is observed synchronously, including the portal
 Today and its personal preparation/guidance descendants inherit that read lifetime. Personal task filtering also requires the actor's current required role, even when an organiser can see an earlier task whose owner ID still points to them. Administration visibility is not personal assignment; personal totals count only actual current assignments. The exact organiser+judge missing-role case and native release→draft→live→cutoff phases pass at both widths in both portals (12 cases). Parent/held-write/reading-ACK cases pass12 per portal; guide context/focus/clock/denial/print and no-private-store/API proof pass2. The initial held-parent browser trigger addressed Document rather than React Query's actual Window visibility listener; the trace showed no later parent GET. Correcting that trigger preserved and passed the full authority assertions.
 
 Pending-modal history is inspected as intentionally inert background metadata, then the tests require actual mounted private-editor/dialog removal and visible history after teardown. The independent guide journey navigates to the real Task patterns preview iframe. These corrections preserve the original pending/unknown/revision/no-replay/private-data assertions. Full final owner/shared-consumer inventories and matched synthetic visuals remain pending before review/merge.
+
+
+## Final owner verification before independent review
+
+Product source `37be520a3e82e191f6fce852e618660b59dc09e0`, based on main `c759a42e3d8561326b976db1ecf1966c315599d6`, completed the finite both-portal inventory in `web/playwright.today.config.ts`: **122 regular and 228 administrator browser cases passed (350 total)**, one worker, desktop and mobile. This includes Today plus its existing guidance, resources, planning, personal preparation and submission consumers. Role assignment, real native owner navigation, exact revision/CSRF, pending/unknown original outcomes, held old reads/writes, equal-revision parent authority loss, current denial/partial restoration, native clock phases, safe contact links, focus, print and no-private-storage assertions remain enabled. No whole standard application CI pass is claimed by this bounded inventory.
+
+Final TypeScript, full repository ESLint, **20 relevant unit cases**, independent guide production build and **54 complete guide browser cases** passed. Production portal builds had already passed before the unchanged product source was used for these journeys. The guide exercises the actual production Today components with synthetic backend-free owners, including context, owner focus, observation, denial, clock and print boundaries.
+
+[Matched visual evidence](evidence/today/README.md) contains **24 actual application screenshots**: competitor, mentor and compatible organiser/judge contexts, both independent portals and widths, before main `c759a42e3d8561326b976db1ecf1966c315599d6` and after product `37be520a3e82e191f6fce852e618660b59dc09e0`. All capture journeys passed without horizontal overflow or API writes. These are deterministic synthetic records, not live provider or user data.
+
+Native real-PostgreSQL Today/display parity, current-role/revocation/archive/privacy, generated HTTP no-store/received-unconfirmed denial and trusted administration-origin proofs passed earlier and remain separately attributed to those native checks. Published `18f` Go CI also passed. Subsequent shared pure test support `450b9ffd6ab74940118f97f5b20cec277c35c710` preserves known UTC instants when retained campaign fixtures cross London's repeated hour; its owner proved the seven original PostgreSQL/race/HTTP scenarios, ordinary/both-fold vectors and existing production DST tests. It changes no production policy or UI and does not alter screenshot provenance.
+
+Judge current-role assigned preparation and required released rubric/rule reading use existing native owners. Final-scoring assignments remain explicitly unavailable pending their native #108/#109 owners; no scoring assignment journey or invented empty-assignment fact is claimed. Independent Standards/Spec reviews and exact final-head CI are still merge requirements. Earlier failed checkpoint CI and their preserved red→green diagnoses above remain historical evidence rather than being rewritten as passes.
