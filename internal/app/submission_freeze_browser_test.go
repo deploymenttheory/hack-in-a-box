@@ -90,6 +90,9 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 	}
 	// Advance from actual common publication to the live window, never backwards.
 	r.clock.set(eventPage.Configuration.LiveStart)
+	if _, err = admin.deps.Events.Transition(ctx, r.owner.ID, r.eventID, eventPage.Revision, "live", "Synthetic organiser starts the live hack", false); err != nil {
+		t.Fatal(err)
+	}
 	rounds, err := admin.deps.Judging.Rounds(ctx, r.owner.ID, r.eventID)
 	if err != nil || len(rounds.Items) != 1 {
 		t.Fatalf("current native judge round: %+v %v", rounds, err)

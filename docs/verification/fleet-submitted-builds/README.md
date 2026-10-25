@@ -192,3 +192,12 @@ start/cutoff. It consumes the actual native judge run, assignment and declared
 conflict owner; no target IDs or permission grants are fabricated by the UI.
 Source404377c's independently reviewed audience findings are being corrected by
 its owner. Corrected-parent integration and exact-source proof remain required.
+
+The corresponding regular-portal finite browser selection passed22/22 in4.7s.
+The clean c166637 expanded native run failed both viewports (package28.486s):
+actual judge brief409 correctly rejected assessment because the historical
+fixture had advanced the clock while leaving lifecycle at preparation. Existing
+cutoff/recovery/reconciliation steps completed before that failure. This is a
+fixture orchestration defect, not a product RED. The fixture now invokes the
+actual organiser preparation-to-live transition with its current revision; no
+native timing, final or authority gate changes. Both owned databases terminated.
