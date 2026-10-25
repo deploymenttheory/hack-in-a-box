@@ -24,7 +24,7 @@ export function RepositoryWorkspace({ event, onDirty, administration = false }: 
 }
 function RepositoryLifetime({ event, administration }: { event: EventRecord; administration: boolean }) {
   const identity = useIdentity(), cache = useQueryClient(), staff = administration && event.can_read_staff
-  const writeScope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:repository-write-authority`), wasWritable = useRef(administration && event.can_edit)
+  const writeScope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:repository-write-authority`)
   const leave = useRepositoryDeparture()
   const [selected, setSelected] = useState<string>(), opener = useRef<HTMLElement | null>(null)
   const clearSelection = useCallback(() => setSelected(undefined), [])
@@ -37,8 +37,9 @@ function RepositoryLifetime({ event, administration }: { event: EventRecord; adm
     // A held older collection must also respect the latest native Event read
     // before it can renew any write lifetime from an older event closure.
     const writable = staff && event.can_edit && teams.can_manage && cache.getQueryData<EventRecord>(privateKey(identity.person.id, event.id, 'event'))?.can_edit !== false
-    if (!writable) writeScope.invalidate(); else if (!wasWritable.current) writeScope.renew()
-    wasWritable.current = writable
+    // Only this fresh authorized domain read can renew an ended lifetime.
+    // Renewal changes its epoch: original captured command tickets stay ended.
+    if (!writable) writeScope.invalidate(); else if (!writeScope.capture().current()) writeScope.renew()
     if (staff) return { rows: rows.map(row => ({ ...row, teamName: names.get(row.team_id) })), writable }
     const own = rows.filter(row => teams.teams.some(team => team.id === row.team_id && team.state === 'published' && team.published.some(member => member.id === identity.person.id)))
     // A regular portal never turns organiser flags into administrative discovery.

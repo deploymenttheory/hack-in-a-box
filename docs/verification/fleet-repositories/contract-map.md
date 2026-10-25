@@ -299,3 +299,36 @@ Executed tight proof, without timeout/retry weakening:
 Permitted-state appearance is unchanged, so existing actual visual evidence
 remains attributed to its captured source. No backend, provider policy, broad
 permission store or shared safe-metadata behavior changed in this correction.
+
+## Delta review correction: authorized write restoration
+
+Both delta reviewers found that the previous `wasWritable` Boolean could remain
+true when successful parent false→true responses coalesced before a readonly
+React commit. A subsequent fresh collection then left the write scope inactive,
+although controls were enabled.
+
+A new actual Workspace/App-command test reproduced this: two existing Workspace
+cases passed but the restored command silently produced no POST. The stronger
+version holds an original command through loss/restoration and fresh collection;
+its old private acknowledgment remains suppressed, while a new deliberate command
+must POST after the original acknowledgment settles. Before correction it failed
+exactly `expected POST 2 times, got 1`. Logs
+`/private/tmp/hackbox94-restoration-{red,held-red}.log`.
+
+The correction removes duplicate Boolean bookkeeping. Only the existing fresh,
+authorized collection path renews an ended write scope; cached permission alone
+does not renew it. Renewal changes the epoch, so original captured tickets stay
+invalid. Existing readonly scopes, safe metadata and immutable commands are
+unchanged.
+
+- Exact authority suite **5/5 PASS** (3.41s), including all four prior regressions
+  and the held-original/restored-new-command case:
+  `/private/tmp/hackbox94-restoration-green.log`.
+- Targeted ESLint **PASS**: `/private/tmp/hackbox94-restoration-lint.log`.
+- One full current-source TypeScript check, `npx tsc -b`, **PASS**:
+  `/private/tmp/hackbox94-restoration-types.log`.
+- Actual prior `b5210df` CI compiler failures were unsupported `exact` options on
+  Testing Library role queries, not browser execution failures. Removed those
+  options; string accessible-name matching remains exact by default. Behavioral
+  assertions were retained. Full browser/build proof still belongs to mandatory
+  final-head CI; it was not rerun locally or claimed successful here.
