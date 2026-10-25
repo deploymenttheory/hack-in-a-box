@@ -61,3 +61,26 @@ complete #112 PostgreSQL/API/publication proof.
   and separate embargo tests. Normal 52→53 migration and guarded rollback proof.
 - Independent full Standards/Spec review, final-head CI and equal-tree merge audit
   before any ticket/epic closure.
+
+## Native result retention schema checkpoint
+
+Schema 53 now adds immutable versioned decisions, original-command receipts and
+separately typed finalist/award publications. Composite native source references
+bind judge approvals and qualification versions to the same event. Publication
+identity is unique per event, kind and exact source binding, retaining independent
+finalist and award embargoes. Update, delete and direct/cascade truncate are
+rejected; populated rollback is refused, while empty rollback is supported.
+Generated SQL models and the required application schema version are updated.
+
+The actual PostgreSQL/race results package passed in 5.570 seconds, including
+existing exact arithmetic, populated parent-schema 52→53 upgrade, prior approved
+rubric preservation, incomplete native-reference rejection, duplicate publication
+source rejection, independent publication kinds, cross-event foreign keys,
+retention mutation checks and both guarded/empty rollback cases. These are schema
+fixtures, not proof that a service command authorised or published an award.
+Configured Go lint for results/database/judging passes with zero issues. A first
+source-only insertion helper command failed before writing its new assertions;
+those assertions were then inserted and passed in the recorded final run.
+
+The full native command, actual qualification handoff, HTTP/runtime/API, vote,
+confirmation and downstream publication acceptance above remain required.
