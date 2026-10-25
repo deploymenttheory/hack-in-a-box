@@ -1,0 +1,12 @@
+{
+  "browser_command_succeeded": true,
+  "event_id": "8ce0b685-bff8-4a3f-b429-0b24ae57655b",
+  "run_id": "b04414f8-c078-4e74-b726-06107ee3b8d2",
+  "scope": "initial native panel; no formal final; no full card/tie/signoff acceptance",
+  "source_commit": "cb41704ca5b9dce5835d0d87c7ebb0688f52bdb3",
+  "source_commit_end": "cb41704ca5b9dce5835d0d87c7ebb0688f52bdb3",
+  "source_tree": "8f4d19b4a4674fa1cf690955d4242f6d3bacd40d",
+  "source_worktree_clean": true,
+  "surface": "public",
+  "viewport": "desktop"
+}

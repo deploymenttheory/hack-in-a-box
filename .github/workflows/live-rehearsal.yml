@@ -43,6 +43,10 @@ jobs:
         env:
           HACKBOX_JUDGE_BROWSER: '1'
         run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestJudgeUIBrowsers$' -count=1 -timeout=8m
+      - name: Native moderation panel browsers
+        env:
+          HACKBOX_QUALIFICATION_BROWSER: '1'
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestQualificationBrowsers$' -count=1 -timeout=5m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
@@ -66,4 +70,10 @@ jobs:
         with:
           name: native-judge-ui-proof
           path: web/test-results-judging-native
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: native-moderation-panel-proof
+          path: web/test-results-qualification-native
           retention-days: 7

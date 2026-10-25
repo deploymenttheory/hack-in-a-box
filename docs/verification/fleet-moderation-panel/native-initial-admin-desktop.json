@@ -1,0 +1,12 @@
+{
+  "browser_command_succeeded": true,
+  "event_id": "076a8d67-3f7f-4705-800f-26f497d4326a",
+  "run_id": "8a0ae2e0-3262-472d-9136-e4be7cb837fb",
+  "scope": "initial native panel; no formal final; no full card/tie/signoff acceptance",
+  "source_commit": "cb41704ca5b9dce5835d0d87c7ebb0688f52bdb3",
+  "source_commit_end": "cb41704ca5b9dce5835d0d87c7ebb0688f52bdb3",
+  "source_tree": "8f4d19b4a4674fa1cf690955d4242f6d3bacd40d",
+  "source_worktree_clean": true,
+  "surface": "admin",
+  "viewport": "desktop"
+}

@@ -1,0 +1,104 @@
+[
+  {
+    "command": {
+      "request_id": "a685891f-aab9-46b0-af66-24626d61c2e1",
+      "freeze_binding": "",
+      "repository_decision_id": null,
+      "version": 0,
+      "action": "configure_panel",
+      "reason": "  Native \u003cpanel\u003e \u0026 reason\u2028\u2029😀﻿  ",
+      "panel": {
+        "mentor_ids": [
+          "a92d6cae-5c59-43f8-926e-b5db66273d5a",
+          "bef45bd7-f113-411d-afb4-d061e6e4a788"
+        ],
+        "organiser_id": "66c76651-d49d-488d-a10c-1aa337ce3bff"
+      },
+      "card": null,
+      "team_id": "00000000-0000-0000-0000-000000000000",
+      "card_version": 0,
+      "decision": "",
+      "evidence": null,
+      "tie_id": "",
+      "seat": 0
+    },
+    "revision": 9,
+    "receipt": {
+      "request_id": "a685891f-aab9-46b0-af66-24626d61c2e1",
+      "run_id": "42525d5e-5d08-498e-9264-dc0d5b8cdd3e",
+      "action": "configure_panel",
+      "expected_revision": 9,
+      "expected_version": 0,
+      "version": 1,
+      "fingerprint": "567eebf643cb65d6e9338795e1d49b6f3ba159459e3fdea621395fd04116da50"
+    }
+  },
+  {
+    "command": {
+      "request_id": "95a46eec-358e-46be-b0d4-dbc3bbcbd628",
+      "freeze_binding": "",
+      "repository_decision_id": null,
+      "version": 1,
+      "action": "configure_panel",
+      "reason": "Explicit empty evidence is a distinct captured intent",
+      "panel": {
+        "mentor_ids": [
+          "a92d6cae-5c59-43f8-926e-b5db66273d5a",
+          "bef45bd7-f113-411d-afb4-d061e6e4a788"
+        ],
+        "organiser_id": "66c76651-d49d-488d-a10c-1aa337ce3bff"
+      },
+      "card": null,
+      "team_id": "00000000-0000-0000-0000-000000000000",
+      "card_version": 0,
+      "decision": "",
+      "evidence": [],
+      "tie_id": "",
+      "seat": 0
+    },
+    "revision": 10,
+    "receipt": {
+      "request_id": "95a46eec-358e-46be-b0d4-dbc3bbcbd628",
+      "run_id": "42525d5e-5d08-498e-9264-dc0d5b8cdd3e",
+      "action": "configure_panel",
+      "expected_revision": 10,
+      "expected_version": 1,
+      "version": 2,
+      "fingerprint": "98ca33a22257d7fe711ba0c5eb6c563bf940e9a18622a72bdcd0e3c3db0fe07e"
+    }
+  },
+  {
+    "command": {
+      "request_id": "db2908fb-3cc6-421c-b2d5-0db366d5e2fa",
+      "freeze_binding": "",
+      "repository_decision_id": null,
+      "version": 2,
+      "action": "configure_panel",
+      "reason": "Native nil evidence remains a distinct captured intent",
+      "panel": {
+        "mentor_ids": [
+          "a92d6cae-5c59-43f8-926e-b5db66273d5a",
+          "bef45bd7-f113-411d-afb4-d061e6e4a788"
+        ],
+        "organiser_id": "66c76651-d49d-488d-a10c-1aa337ce3bff"
+      },
+      "card": null,
+      "team_id": "00000000-0000-0000-0000-000000000000",
+      "card_version": 0,
+      "decision": "",
+      "evidence": null,
+      "tie_id": "",
+      "seat": 0
+    },
+    "revision": 11,
+    "receipt": {
+      "request_id": "db2908fb-3cc6-421c-b2d5-0db366d5e2fa",
+      "run_id": "42525d5e-5d08-498e-9264-dc0d5b8cdd3e",
+      "action": "configure_panel",
+      "expected_revision": 11,
+      "expected_version": 2,
+      "version": 3,
+      "fingerprint": "be2c466efe54e06d9f9c14420a52bdb740de7c52a2c3788bdb5dfeea51e13810"
+    }
+  }
+]
