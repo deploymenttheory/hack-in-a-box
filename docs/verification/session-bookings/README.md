@@ -1,7 +1,7 @@
 # Optional session bookings — issue #166
 
-This is a compiling backend implementation candidate; final acceptance and merge
-still require the remaining verification and independent reviews below.
+This is the full backend implementation candidate. Independent acceptance reviews,
+upstream integration and every final-head CI check remain merge requirements.
 Issue #166 remains optional M5; first-release Today and ordinary agenda use do not
 require bookings. Frontend workflows belong to #167.
 
@@ -128,17 +128,56 @@ Original exact command replays still return their retained acknowledgement.
 All datasets and transports are synthetic. These focused proofs are attributed to
 implementation checkpoints, not represented as a complete final-head CI campaign.
 
+## Final local candidate proof
+
+The complete native owner suite passed **13 top-level tests** (including two
+migration rollback subcases) with PostgreSQL and the race detector in **31.336s**.
+This includes 16 concurrent reservations, current-role transaction interleaving,
+exact window edges, native DST gaps/folds, date revision conflicts, scoped
+facilitator capacity/attendance, current-reader filtering and receipt-store outage.
+
+The affected production graph selection also passed with `-race`: seven app
+cases **14.411s**, two authenticated HTTP cases **5.887s**, two existing
+communications cases **4.791s**, current-recipient inbox compatibility **3.008s**,
+and three calendar/MIME cases **1.223s**. The full-owner run is separate from
+this selection; repeated cases are not represented as additional coverage.
+Commands and terminal logs are retained under `/private/tmp/hackbox166-` on the
+verification host, with `GOMAXPROCS=2 GOFLAGS=-p=1 HACKBOX_INTEGRATION=1`.
+
+`sh scripts/check-generated.sh` completed and explicit generated-source diff
+checks were clean. Installed `golangci-lint run` across all changed owners and
+adapters completed with **zero issues**. An initial `go tool golangci-lint`
+invocation did not run because that tool alias is not installed; the successful
+check used the installed repository linter binary.
+The only new final-checkpoint changes are meaningful synthetic tests and this
+evidence; production source remains the published native/API candidate.
+
 ## Remaining completion gates
 
-Finish the meaningful bounded role-loss/promotion, window-edge, calendar-edit and
-retained-approved-delivery rollback checks; verify affected existing message-owner
-compatibility and final source/contract parity; publish the final acceptance map;
-obtain independent Standards/Spec reviews and every exact-head CI check. Frontend
-keyboard/mobile workflows and interactive guide composition remain owned by #167.
-No feature-completion or merge claim is made here yet.
+Integrate actual recovery/notification-clock upstream merges, obtain independent
+Standards/Spec reviews and pass every exact-head CI check. Frontend keyboard/mobile
+workflows and interactive guide composition remain owned by #167. No merge or
+broad release-certification claim is made here.
 
 Migration 49 is reserved for this owner. Recovery migration 48 will be inherited
 from its independently reviewed PR #269 before final integration; no recovery
 runtime or migration implementation is duplicated here. Root-reviewed pure
 migration-fixture isolation is a separate support commit and will be deduplicated
 when its upstream recovery merge becomes the base.
+
+## Acceptance evidence map
+
+| Issue criterion | Native implementation and meaningful proof |
+| --- | --- |
+| No oversubscription; exact retry; eligible FIFO | Event-first/session lock, independent FIFO queue and immutable command ledger. `TestConcurrentSessionPlacesHaveIndependentFIFOAndOriginalReceipts` races 16 reservations for three places; the native role-loss transaction test holds the same event lock until permission loss commits before promotion. |
+| Separate competition admission and teams | Only session-owned places/attendance mutate. `TestNativeWithdrawalAndSessionCancellationSerializeWithoutAdmissionBypass` races actual registration withdrawal and own cancellation; event claims and team membership remain under their existing owners. Event waitlistees cannot book or be promoted. |
+| Current eligibility and approved change delivery | Current active identity, agenda audience, event claim, exact facilitator and source revisions are rechecked at native reads/mutations and effect dispatch. Runtime/SMTP tests prove withdrawal suppression, minimal own cancellation, parent-readonly suppression, immutable unknown attempts and explicit existing no-resend review. |
+| Native timezone, windows/conflicts, stable calendars | Native DST gap/fold choices, exact open/close edges, warning-only conflicts and captured session revision. Calendar tests retain event/session/person UID, advance personal sequence on real edits/cancellation/rebooking and preserve prior attempt snapshots. |
+| Current private meeting/roster scope; no early output scoring | Authenticated OpenAPI-validated HTTP proof checks attendee/private configuration, unrelated readers, current facilitator removal and field allowlists. The session contract exposes no competition submission or scoring command and grants no assessment authority. |
+| Capacity reduction with explicit remediation | Existing bookings are retained; organiser projection reports shortfall. `TestCapacityReductionAndCurrentAssignedFacilitatorScope` verifies no eviction plus current exact attendance assignment. |
+
+The additional real-PG rollback proof rejects dropping schema 49 with approved
+SMTP deliveries, retains the exact original snapshot and schema version, then
+executes the surviving approved update and later cancellation through the native
+outbox. This is an immutable-history preservation check, not an assertion that a
+current read can settle an uncertain original command.

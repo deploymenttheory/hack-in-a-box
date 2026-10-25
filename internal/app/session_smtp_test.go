@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 	"slices"
 	"strings"
 	"sync"
@@ -11,10 +12,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 )
 
@@ -239,5 +243,74 @@ func TestSessionSMTPUnknownEffectCannotBeReplacedByNewConfigurationOrGet(t *test
 	}
 	if len(transport.sent()) != 1 {
 		t.Fatal("review disposition or replacement sent original again")
+	}
+}
+
+func TestSessionSMTPDateChangeAndRollbackRetainApprovedOriginals(t *testing.T) {
+	f := newSessionNotificationFixture(t)
+	ctx := t.Context()
+	transport := f.smtp(t, maildelivery.Accepted)
+	f.approve(t, []string{"smtp"})
+	f.reserve(t)
+	initial, initialSnapshot := f.operation(t, "booked")
+	if err := f.runtime.Jobs.Execute(ctx, initial); err != nil {
+		t.Fatal(err)
+	}
+	current, err := f.events.Read(ctx, f.owner.ID, f.eventID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := current.Configuration
+	c.LiveStart = c.LiveStart.AddDate(0, 0, 8)
+	c.LiveEnd = c.LiveEnd.AddDate(0, 0, 8)
+	c.SubmissionCutoff = c.SubmissionCutoff.AddDate(0, 0, 8)
+	if _, err = f.events.Update(ctx, f.owner.ID, f.eventID, current.Revision, event.Input{ID: f.eventID, Name: current.Name, Slug: current.Slug, Configuration: c, Reason: "Synthetic postponed session"}); err != nil {
+		t.Fatal(err)
+	}
+	changed, changedSnapshot := f.operation(t, "booked")
+	if changed == initial {
+		t.Fatal("date change did not retain a new approved occurrence")
+	}
+	db := stdlib.OpenDBFromPool(f.pool)
+	defer func() { _ = db.Close() }()
+	provider, err := goose.NewProvider(goose.DialectPostgres, db, os.DirFS("../database/migrations"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = provider.DownTo(ctx, 47); err == nil {
+		t.Fatal("rollback erased approved session deliveries")
+	}
+	var version int64
+	if err = f.pool.QueryRow(ctx, `SELECT version_id FROM goose_db_version WHERE is_applied ORDER BY id DESC LIMIT 1`).Scan(&version); err != nil || version != 49 {
+		t.Fatal("rejected rollback changed owned schema", version, err)
+	}
+	var retained string
+	if err = f.pool.QueryRow(ctx, `SELECT snapshot::text FROM smtp_campaign_messages WHERE operation_id=$1`, changed).Scan(&retained); err != nil || retained != changedSnapshot {
+		t.Fatal("rollback rewrote approved delivery", err)
+	}
+	if err = f.runtime.Jobs.Execute(ctx, changed); err != nil {
+		t.Fatal(err)
+	}
+	messages := transport.sent()
+	if len(messages) != 2 || messages[0].Calendar == nil || messages[1].Calendar == nil {
+		t.Fatal("date change not delivered", len(messages))
+	}
+	before, after := messages[0].Calendar, messages[1].Calendar
+	if after.Sequence <= before.Sequence || after.Start.Equal(before.Start) || *after.SessionID != *before.SessionID || *after.PersonID != *before.PersonID || after.EventID != before.EventID {
+		t.Fatal("date update lost stable calendar identity or sequence", before, after)
+	}
+	if _, err = f.registration.Respond(ctx, f.person.ID, f.eventID, f.registrationID, 1, "withdraw"); err != nil {
+		t.Fatal(err)
+	}
+	cancel, _ := f.operation(t, "ineligible")
+	if err = f.runtime.Jobs.Execute(ctx, cancel); err != nil {
+		t.Fatal(err)
+	}
+	messages = transport.sent()
+	if len(messages) != 3 || !messages[2].Calendar.Cancelled || messages[2].Calendar.Sequence <= after.Sequence {
+		t.Fatal("cancellation did not supersede changed date", messages)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT snapshot::text FROM smtp_campaign_messages WHERE operation_id=$1`, initial).Scan(&retained); err != nil || retained != initialSnapshot {
+		t.Fatal("date/cancel rewrote original attempt", err)
 	}
 }
