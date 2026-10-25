@@ -1,0 +1,10 @@
+{
+  "native_http_and_production_portal": true,
+  "native_postgresql": true,
+  "private_unix_control": true,
+  "providers": "none; URL-only final, no provider workers",
+  "result": "passed",
+  "source": "af260c9d5efc11d3c832c08d62f8e0e1e8ef9b51",
+  "surface": "admin",
+  "viewport": "mobile"
+}
