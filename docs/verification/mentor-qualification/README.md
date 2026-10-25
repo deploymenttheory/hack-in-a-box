@@ -285,3 +285,44 @@ Configured lint across qualification/rubric/judging/app passes **0 issues**.
 
 Final integrated source-wide owner/API/runtime proof, generation/type parity,
 current-head CI and independent full Spec/Standards reviews remain pending.
+
+## Frozen689 full proof and final-review corrections
+
+Clean frozen `6897630cd85e0c60b1560b00685d6014fc2cb188` completed the full
+PostgreSQL/-race owner run: qualification241.597s, moderation68.935s,
+scorecards27.996s, rubric16.700s and judging34.051s. Both actual authenticated
+app/generated-router qualification journeys passed9.642s. Canonical SQL/Go/TS
+parity generated into private temporary outputs and TypeScript no-emit pass;
+affected configured lint reports0issues. Exact logs:
+`/private/tmp/hackbox110-final-6897630-{native-owners,http}.log`.
+Independent full review found Standards0 and two Spec P1s; those results do not
+turn the frozen source into accepted final behavior.
+
+The shared downstream #112 contract explicitly requires qualification panel
+majority/casting. An actual six-team/five-mentor2/1/1/1 native ballot reproduced
+incorrect non-casting resolution on unchanged689 production (RED20.357s).
+Complete participation now remains distinct from a resolvable choice: a unique
+submajority exposes no resolution, while all ballots remain recorded. Actual
+3/1/1 majority, existing2/2/1 tied-leader casting and existing two-mentor readiness
+are preserved (expanded GREEN47.932s). No new ballot, replay or casting policy is
+invented. Logs: `/private/tmp/hackbox110-majority-{red-6897630,complete-green}.log`.
+
+A separate native ineligible-team conflict reproduced private eligibility,
+evidence and latest round prose in current and historical projections (RED2.692s).
+Current native per-target scope now filters complete retained private records,
+including excluded teams; removed card paths also scrub attached round prose.
+Projection copies leave stored versions/ACKs untouched and preserve other-team
+selection/exclusion computation. The focused existing privacy controls pass
+16.596s. The expanded control uses a separate qualification-only panel mentor,
+actual second-team formal URL/frozen independent proof, and confirms its signed
+card/ranking survives the excluded-target conflict, original bytes remain exact,
+and explicit authority restoration recovers the legitimate record (GREEN6.780s).
+A duplicate state fixture and an original-independent-reviewer conflict initially
+confounded that control; the corrected fixture uses real pre-cutoff submission
+and separates the recipient from canonical source authors, without relaxing any
+native policy/assertion. Logs: `/private/tmp/hackbox110-excluded-privacy-red.log`
+and `/private/tmp/hackbox110-private-targets-panel-reader-green.log`.
+
+Corrections were developed in a separate worktree while689 remained untouched
+for the full reviews. Corrected current-source integration, delta reviews and
+all final-head CI gates remain pending;689 proof keeps its original attribution.

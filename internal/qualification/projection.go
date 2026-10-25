@@ -82,6 +82,9 @@ func (s Service) projectRoundEvidence(
 	reader, eventID uuid.UUID,
 	round *Round,
 ) error {
+	if err := s.projectRoundTargets(ctx, tx, reader, eventID, round); err != nil {
+		return err
+	}
 	round.Cards = slices.Clone(round.Cards)
 	for i := range round.Cards {
 		card := &round.Cards[i]

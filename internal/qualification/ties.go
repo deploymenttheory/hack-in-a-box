@@ -77,6 +77,11 @@ func (s Service) ballots(
 			winners = append(winners, id)
 		}
 	}
+	// Complete participation is distinct from a resolvable outcome. A unique
+	// leader needs a majority; only tied leaders use the recorded casting path.
+	if len(winners) == 1 && highest <= len(v.round.Panel.MentorIDs)/2 {
+		return []uuid.UUID{}, true
+	}
 	return winners, highest > 0
 }
 

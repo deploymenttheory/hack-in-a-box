@@ -179,6 +179,9 @@ func (s Service) page(
 		}
 		cards = append(cards, card)
 	}
+	if len(cards) != len(v.round.Cards) {
+		out.Round.Reason = ""
+	}
 	out.Round.Cards = cards
 	if !panelReader(actor, v.round) {
 		out.Round.Proposal = nil

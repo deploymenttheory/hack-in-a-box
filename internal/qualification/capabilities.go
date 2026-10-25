@@ -154,7 +154,7 @@ func (s Service) tieActions(
 				CandidateTeamIDs: remaining,
 				CanVote:          slices.Contains(v.round.Panel.MentorIDs, actor) && !hasVoted,
 				HasVoted:         hasVoted,
-				CanResolve:       actor == v.round.Panel.OrganiserID && valid,
+				CanResolve:       actor == v.round.Panel.OrganiserID && valid && len(choices) > 0,
 				ResolveTeamIDs:   choices,
 				Casting:          valid && len(choices) > 1,
 				RequiredVotes:    len(v.round.Panel.MentorIDs),

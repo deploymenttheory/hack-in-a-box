@@ -200,6 +200,7 @@ func (s Service) historicalRound(
 		}
 	}
 	if len(cards) != len(round.Cards) {
+		round.Reason = ""
 		round.Proposal = nil
 		round.Votes = []Vote{}
 		round.Decisions = []TieDecision{}
