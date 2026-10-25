@@ -73,7 +73,10 @@ type Service struct {
 	Maintenance func(context.Context) error
 	// FastMaintenance dispatches local time-sensitive releases independently of provider reconciliation.
 	FastMaintenance func(context.Context) error
-	handlers        map[string]Handler
+	// DomainNow controls only due/current retained-source eligibility. Nil keeps
+	// the normal wall clock; River, transport, attempts and leases stay wall time.
+	DomainNow func() time.Time
+	handlers  map[string]Handler
 }
 
 func New(pool *pgxpool.Pool, logger *slog.Logger, handlers map[string]Handler) (*Service, error) {
@@ -141,7 +144,7 @@ func (s *Service) enqueue(
 	}
 	if retained != nil {
 		allowed, checkErr := dbgen.New(tx).
-			RetainedCommunicationOccurrence(ctx, dbgen.RetainedCommunicationOccurrenceParams{EventID: input.EventID, OccurrenceID: *retained, AtTime: time.Now()})
+			RetainedCommunicationOccurrence(ctx, dbgen.RetainedCommunicationOccurrenceParams{EventID: input.EventID, OccurrenceID: *retained, AtTime: s.domainNow()})
 		if checkErr != nil {
 			return dbgen.Operation{}, fmt.Errorf("check retained enqueue: %w", checkErr)
 		}
@@ -257,7 +260,7 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 	if err != nil {
 		return fmt.Errorf("read operation candidate: %w", err)
 	}
-	if !claimable(candidate) {
+	if !s.claimable(candidate) {
 		return nil
 	}
 	handler := s.handlers[candidate.Kind]
@@ -305,7 +308,7 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 		}
 		// Approval, cancellation or identity changes during the callback require a
 		// fresh current-authority check; the normal worker snooze preserves work.
-		if !claimable(op) || !sameCandidate(candidate, op) {
+		if !s.claimable(op) || !sameCandidate(candidate, op) {
 			return nil
 		}
 		if event.Revision != snapshot.Revision {
@@ -320,7 +323,7 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 				dbgen.RetainedCommunicationOccurrenceParams{
 					EventID:      op.EventID,
 					OccurrenceID: *op.RetainedOccurrenceID,
-					AtTime:       time.Now(),
+					AtTime:       s.domainNow(),
 				},
 			)
 			if checkErr != nil {
@@ -367,8 +370,15 @@ func (s *Service) executeLocked(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func claimable(op dbgen.Operation) bool {
-	return op.State == "pending" && op.Approved && !op.Cancelled && !op.DueAt.After(time.Now())
+func (s *Service) domainNow() time.Time {
+	if s.DomainNow != nil {
+		return s.DomainNow()
+	}
+	return time.Now()
+}
+
+func (s *Service) claimable(op dbgen.Operation) bool {
+	return op.State == "pending" && op.Approved && !op.Cancelled && !op.DueAt.After(s.domainNow())
 }
 
 func sameCandidate(before, after dbgen.Operation) bool {

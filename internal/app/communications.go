@@ -224,6 +224,7 @@ func newCommunicationRuntime(
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
+	outbox.DomainNow = now
 	freeze.Jobs = outbox
 	webhooks.Jobs = outbox
 	composer.Jobs = outbox
