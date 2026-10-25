@@ -1,4 +1,4 @@
-import { useRef, useState, useLayoutEffect, type ReactNode } from 'react'
+import { useRef, useState, useLayoutEffect, useEffect, type ReactNode } from 'react'
 import { useBlocker } from '@tanstack/react-router'
 import { APIError } from './api/client'
 import { useIdentity } from './session'
@@ -82,6 +82,8 @@ export function ResultDecisionState({ decision }: { decision: Pick<ReturnType<ty
 export function OriginalResultHistory<R>({ owner, read, matches }: { owner: string; read: (requestID: string, signal: AbortSignal) => Promise<R>; matches: (result: R, intent: DecisionMetadata) => boolean }) {
  const identity = useIdentity(), commands = useCommunicationCommands(owner), scope = usePrivateRequestScope(`${owner}:history`)
  const [pending, setPending] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState('')
+ const outcome = useRef<HTMLParagraphElement>(null)
+ useEffect(() => { if (notice) { const frame = requestAnimationFrame(() => outcome.current?.focus()); return () => cancelAnimationFrame(frame) } }, [notice])
  const departure = () => window.confirm('Leave with an original result or report outcome still unknown? Safe request metadata remains in this signed-in session. No request will be replayed.')
  usePlanningDepartureBarrier(commands.pending)
  useBlocker({ shouldBlockFn: () => commands.pending || commands.unconfirmed && !departure(), enableBeforeUnload: commands.pending || commands.unconfirmed })
@@ -99,5 +101,5 @@ export function OriginalResultHistory<R>({ owner, read, matches }: { owner: stri
    commands.complete(attempt.id); setNotice('The exact original request was acknowledged. Read current facts separately before the next action.')
   } catch (error) { if (ticket.current()) setFailure(error) } finally { if (ticket.current()) setPending(false) }
  }
- return <>{commands.attempts.length > 0 && <aside className="fleet-result-history fleet-results-private" aria-label="Original request history"><h2>Original request history</h2><p>Request identity only. Private prose, scores, reasons and recipients are cleared when the editor closes.</p>{commands.attempts.map(attempt => <div key={attempt.id}><p>Request {attempt.command.requestID} · Version {attempt.command.expectedVersion} · {attempt.state === 'pending' ? 'Awaiting original acknowledgement' : 'Original outcome unknown'}</p>{attempt.state === 'unknown' && <Button icon="refresh" variant="outline" pending={pending} onClick={() => void recover(attempt)}>Read original acknowledgement</Button>}</div>)}{!!failure && <Failure error={failure} />}</aside>}{notice && <p role="status">{notice}</p>}</>
+ return <>{commands.attempts.length > 0 && <aside className="fleet-result-history fleet-results-private" aria-label="Original request history"><h2>Original request history</h2><p>Request identity only. Private prose, scores, reasons and recipients are cleared when the editor closes.</p>{commands.attempts.map(attempt => <div key={attempt.id}><p>Request {attempt.command.requestID} · Version {attempt.command.expectedVersion} · {attempt.state === 'pending' ? 'Awaiting original acknowledgement' : 'Original outcome unknown'}</p>{attempt.state === 'unknown' && <Button icon="refresh" variant="outline" pending={pending} onClick={() => void recover(attempt)}>Read original acknowledgement</Button>}</div>)}{!!failure && <Failure error={failure} />}</aside>}{notice && <p role="status" tabIndex={-1} ref={outcome}>{notice}</p>}</>
 }
