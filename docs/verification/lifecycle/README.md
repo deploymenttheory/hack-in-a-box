@@ -41,8 +41,7 @@ It then publishes teams of five, depletes a published team to two through real
 withdrawals, rejects its republication, explicitly unlocks/reassigns the pair,
 republishes six teams of four-to-six and freezes them. A post-freeze move must
 return the exact native rejection without changing the allocation projection.
-These profile names cannot be used as the final release command. The admission
-checkpoint has not been executed yet.
+These profile names cannot be used as the final release command.
 
 The dedicated verification image **built successfully** from source
 `2b203526e53ec2c88e272c9890b65f473ca1aa54`:
@@ -67,9 +66,24 @@ process was capped at 0.5 CPU/256 MiB, PostgreSQL at 0.75 CPU/384 MiB, and Go at
 two processors. Only this project's services, volumes and network were removed
 after exporting its safe receipt.
 
+The bounded native admission/allocation checkpoint subsequently **passed** in
+0.39 seconds from source `c403ddc56a81e9553ceb03474e12bd7a55ca1086`, image ID
+`sha256:363166f25378dcbb727ed181120804206526f24c53b76a223fcac4f3127d42e1`.
+The [partial receipt](evidence/admission-teams.json) records 36 actual normal-OIDC
+attendee applications: a native minimum rejection at 29, no automatic advance
+at 30, explicit go at 35, the first FIFO waitlist position, an outstanding offer
+excluded from the count at 34, and acceptance of that exact offer back to 35.
+Native team publication, withdrawals leaving a pair, rejected republication,
+explicit unlock/reassignment, reviewed republication and freeze left 32 people
+in six teams of five/five/five/five/six/six. Exact team/member UUIDs and the
+native rejection/invariance assertions are retained. This used a fresh isolated
+project with the same caps; no worker, browser or provider delivery ran. The
+project's containers, volumes and network were removed and label checks were
+empty after cleanup. This remains partial evidence, not L01–L18 completion.
+
 The most recent lightweight compile check compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
-'^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.469 seconds).
+'^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.464 seconds).
 No browser, PostgreSQL, native OIDC or queued effect is implied by that result.
 
 ## Execution boundary
