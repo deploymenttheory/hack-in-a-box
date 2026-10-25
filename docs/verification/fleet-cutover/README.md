@@ -148,3 +148,21 @@ The unchanged acknowledged/lost-response journeys passed on desktop and mobile
 through the actual participant configuration: four tests, 4.5 seconds, one worker.
 Focused configuration ESLint passed. This is local working-tree evidence before
 commit; fresh exact-head CI and the remaining full cutover criteria still apply.
+
+## Rebase after session UI merge
+
+Rebased onto main `b2f7f5a0e128cf6843dbc0250fd29098afb8c00b`.
+Configuration conflicts were resolved additively: session and cutover artifact
+ignores, all TypeScript entry points, and both participant test registrations.
+The shared Today safety observer retains preparation, reading, session-booking
+and team-deliverable command histories together. Neither namespace can remove
+the other's pending/unknown navigation barrier.
+
+The existing safety regression now emits all four real owned command families,
+checks both session/evidence histories before and after lost responses, and keeps
+unrelated actor/session/event namespaces untouched. It and six adjacent
+deliverable cases passed: three files, seven tests, 1.45 seconds. Focused ESLint
+and diff checks passed. Participant discovery includes48 session cases and4
+deliverable-lifetime cases (52 total); discovery is not execution. Actual TypeScript build-mode type checking passed
+as well. These are local working-tree rebase-integration results,
+not complete245 acceptance or final CI.
