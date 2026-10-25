@@ -4,6 +4,79 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getResults"];
+        put?: never;
+        post: operations["changeResults"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/results/ballots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getResultBallots"];
+        put?: never;
+        post: operations["voteResultBallot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/results/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getResultReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/results/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getResultAnnouncements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/judging/presentation-order": {
         parameters: {
             query?: never;
@@ -4094,6 +4167,229 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ResultExact: {
+            numerator: string;
+            denominator: string;
+            /** @description Display rounding only; compare the exact numerator/denominator. */
+            display: string;
+        };
+        ResultCategoryAverage: {
+            /** Format: uuid */
+            category_id: string;
+            average: components["schemas"]["ResultExact"];
+        };
+        ResultTeamTally: {
+            /** Format: uuid */
+            team_id: string;
+            required_judges: number;
+            categories: components["schemas"]["ResultCategoryAverage"][];
+            total: components["schemas"]["ResultExact"];
+            rank: number;
+        };
+        ResultTie: {
+            id: string;
+            /** @enum {string} */
+            kind: "final" | "category";
+            /** Format: uuid */
+            category_id: string | null;
+            team_ids: string[];
+        };
+        ResultVoteEvidence: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            deliverable_id: string | null;
+            note: string;
+        };
+        ResultVote: {
+            tie_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            judge_id: string;
+            evidence: components["schemas"]["ResultVoteEvidence"][];
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        ResultTieState: {
+            tie: components["schemas"]["ResultTie"];
+            required_judge_ids: string[];
+            votes_received: number;
+            /** Format: uuid */
+            winner_id: string | null;
+            blocker: string;
+        };
+        ResultAward: {
+            /** Format: uuid */
+            prize_id: string;
+            name: string;
+            /** Format: uuid */
+            category_id: string | null;
+            /** Format: uuid */
+            team_id: string;
+            amount: string;
+            currency: string;
+        };
+        ResultConfirmation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            judge_approval_id: string;
+            source_binding: string;
+            decision_binding: string;
+            awards: components["schemas"]["ResultAward"][];
+            /** Format: uuid */
+            actor_id: string;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        ResultQualificationSelection: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: int64 */
+            round_version: number;
+            reference: components["schemas"]["RubricReference"];
+            signed_binding: string;
+            /** Format: uuid */
+            signer_id: string;
+            /** Format: date-time */
+            signed_at: string;
+            finalist_ids: string[];
+            reserve_ids: string[];
+            categories: components["schemas"]["QualificationCategoryProposal"][];
+        };
+        ResultPreview: {
+            /** Format: uuid */
+            judge_run_id: string | null;
+            reference: components["schemas"]["RubricReference"] | null;
+            criteria: components["schemas"]["PublicRubricDefinition"] | null;
+            binding: string;
+            finalists_binding: string;
+            selection: components["schemas"]["ResultQualificationSelection"] | null;
+            tallies: components["schemas"]["ResultTeamTally"][];
+            ties: components["schemas"]["ResultTie"][];
+            blockers: string[];
+        };
+        ResultRound: {
+            /** Format: uuid */
+            prepared_by: string;
+            /** Format: int64 */
+            version: number;
+            source: components["schemas"]["ResultPreview"];
+            votes: components["schemas"]["ResultVote"][];
+            confirmation: components["schemas"]["ResultConfirmation"] | null;
+            /** Format: uuid */
+            actor_id: string;
+            action: string;
+            reason: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        ResultNamedTeam: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        ResultAnnouncedAward: {
+            /** Format: uuid */
+            prize_id: string;
+            name: string;
+            /** Format: uuid */
+            category_id: string | null;
+            team: components["schemas"]["ResultNamedTeam"];
+            amount: string;
+            currency: string;
+        };
+        ResultAnnouncement: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "finalists" | "awards";
+            /** Format: int64 */
+            version: number;
+            finalists: components["schemas"]["ResultNamedTeam"][];
+            reserves: components["schemas"]["ResultNamedTeam"][];
+            awards: components["schemas"]["ResultAnnouncedAward"][];
+            /** Format: date-time */
+            published_at: string;
+        };
+        ResultReceipt: {
+            /** Format: uuid */
+            run_id: string;
+            tie_id: string;
+            team_ids: string[] | null;
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** @enum {string} */
+            action: "prepare" | "publish_finalists" | "vote" | "confirm" | "publish_awards";
+            /** Format: int64 */
+            expected_revision: number;
+            /** Format: int64 */
+            expected_version: number;
+            /** Format: int64 */
+            version: number;
+            fingerprint: string;
+            /** Format: uuid */
+            publication_id: string | null;
+        };
+        ResultRecovery: {
+            receipt: components["schemas"]["ResultReceipt"] | null;
+        };
+        ResultPage: {
+            tie_states: components["schemas"]["ResultTieState"][];
+            receipt: components["schemas"]["ResultReceipt"] | null;
+            /** Format: int64 */
+            revision: number;
+            round: components["schemas"]["ResultRound"];
+            preview: components["schemas"]["ResultPreview"];
+            current: boolean;
+            announcements: components["schemas"]["ResultAnnouncement"][];
+        };
+        ResultJudgeTie: {
+            state: components["schemas"]["ResultTieState"];
+            own_vote: components["schemas"]["ResultVote"] | null;
+        };
+        ResultBallotPage: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            version: number;
+            source_binding: string;
+            ties: components["schemas"]["ResultJudgeTie"][];
+            receipt: components["schemas"]["ResultReceipt"] | null;
+        };
+        ResultAnnouncements: {
+            items: components["schemas"]["ResultAnnouncement"][];
+        };
+        ResultCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "prepare" | "publish_finalists" | "confirm" | "publish_awards";
+            source_binding: string;
+            awards?: components["schemas"]["ResultAward"][];
+            reason: string;
+        };
+        ResultVoteCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "vote";
+            source_binding: string;
+            tie_id: string;
+            /** Format: uuid */
+            team_id: string;
+            evidence: components["schemas"]["ResultVoteEvidence"][];
+            reason: string;
+        };
         JudgePresentationOrderItem: {
             ordinal: number;
             title: string;
@@ -7585,6 +7881,7 @@ export interface components {
             digest: string;
         };
         DisplaySnapshot: {
+            results?: components["schemas"]["ResultAnnouncement"][];
             assets: components["schemas"]["DisplayAsset"][];
             override_active: boolean;
             /** Format: uuid */
@@ -9018,6 +9315,8 @@ export interface components {
         IdempotencyKey: string;
         /** @description Quoted presentation revision, starting at "0". */
         PresentationRevision: string;
+        /** @description Quoted current event revision for results commands; result version is captured separately in the body. */
+        ResultRevision: string;
         /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
         SessionRevision: string;
         /** @description Quoted event revision, for example "1". */
@@ -9033,6 +9332,161 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getResults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private organiser preparation on the administrator portal under current native authority; never a public announcement. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeResults: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted current event revision for results commands; result version is captured separately in the body. */
+                "If-Match": components["parameters"]["ResultRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original acknowledgement plus separately current organiser preparation; preparation, confirmation and each release are explicit commands. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getResultBallots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Only current own assigned ties and own ballots; no private mentor or other judge prose. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultBallotPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    voteResultBallot: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted current event revision for results commands; result version is captured separately in the body. */
+                "If-Match": components["parameters"]["ResultRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultVoteCommand"];
+            };
+        };
+        responses: {
+            /** @description Explicit reviewed vote or replacement with actor-exact original acknowledgement; no automatic tie resolution. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultBallotPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getResultReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Actor-exact original acknowledgement under current native recipient/target authority. Current reads never settle an original command. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getResultAnnouncements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Only explicitly released safe snapshots under current confirmed-attendee/staff audience authority; no private preparation or embargoed awards. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultAnnouncements"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getJudgePresentationOrder: {
         parameters: {
             query?: never;

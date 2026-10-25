@@ -33,6 +33,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -81,12 +82,20 @@ func newAPIDependencies(
 		Freeze:     communicationRuntime.SubmissionFreeze,
 	}
 	judges := judging.Service{Pool: pool, Now: now, Finalists: &owner}
-	room := presentation.Service{Pool: pool, Clock: now, OrderAuthority: judges}
+	resultOwner := results.Service{Pool: pool, Now: now, Judging: &judges, Qualification: &owner}
+	room := presentation.Service{
+		Pool:           pool,
+		Clock:          now,
+		OrderAuthority: judges,
+		Results:        &resultOwner,
+	}
 	deps := httpapi.Dependencies{
-		Judging:          judges,
-		Qualification:    owner,
-		Repositories:     *communicationRuntime.Repositories,
-		RepositoryAccess: *communicationRuntime.RepositoryAccess,
+		Results:             resultOwner,
+		ResultsAdminSurface: cfg.Surface == "admin",
+		Judging:             judges,
+		Qualification:       owner,
+		Repositories:        *communicationRuntime.Repositories,
+		RepositoryAccess:    *communicationRuntime.RepositoryAccess,
 		Media: media.Service{
 			Clock:   now,
 			Pool:    pool,
