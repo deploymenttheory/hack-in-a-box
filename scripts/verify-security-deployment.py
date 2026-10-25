@@ -49,13 +49,13 @@ def synthetic_tls(directory):
     ca_config = directory / 'ca.conf'
     ca_config.write_text("[req]\ndistinguished_name=dn\nx509_extensions=ca\nprompt=no\n[dn]\nCN=Isolated security121 synthetic CA\n[ca]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,keyCertSign,cRLSign\nsubjectKeyIdentifier=hash\n")
     extensions = directory / 'leaf.conf'
-    extensions.write_text("basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\nsubjectAltName=DNS:security-public.test,DNS:security-admin.test,DNS:security-issuer.test\n")
+    extensions.write_text("basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\nsubjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid,issuer\nsubjectAltName=DNS:security-public.test,DNS:security-admin.test,DNS:security-issuer.test\n")
     commands = [
         ['openssl', 'genrsa', '-out', str(directory / 'ca.key'), '2048'],
         ['openssl', 'req', '-new', '-x509', '-key', str(directory / 'ca.key'), '-sha256', '-days', '1', '-config', str(ca_config), '-out', str(directory / 'ca.pem')],
         ['openssl', 'req', '-new', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(directory / 'leaf.key'), '-out', str(directory / 'leaf.csr'), '-subj', '/CN=security-public.test'],
         ['openssl', 'x509', '-req', '-in', str(directory / 'leaf.csr'), '-CA', str(directory / 'ca.pem'), '-CAkey', str(directory / 'ca.key'), '-CAcreateserial', '-out', str(directory / 'leaf.pem'), '-days', '1', '-sha256', '-extfile', str(extensions)],
-        ['openssl', 'verify', '-CAfile', str(directory / 'ca.pem'), '-verify_hostname', 'security-public.test', str(directory / 'leaf.pem')],
+        ['openssl', 'verify', '-x509_strict', '-CAfile', str(directory / 'ca.pem'), '-verify_hostname', 'security-public.test', str(directory / 'leaf.pem')],
     ]
     for command in commands:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

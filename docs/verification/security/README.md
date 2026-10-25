@@ -314,3 +314,13 @@ At preparation, Python/Node syntax and local certificate generation/CA loading/
 correct-host verification/wrong-host rejection checks pass. These checks do not
 establish actual deployment HTTPS, OIDC or cookie success. The isolated supported
 profile walkthrough is **unexecuted** until its own measured receipt is recorded.
+
+The first actual TLS-profile attempt at527192a5 failed in the probe with a
+certificate-verification transport error after all normal APIs and the synthetic
+issuer became healthy. The project was fully cleaned. Strict local X509
+verification reproduced error85 (missing authority key identifier) in the
+synthetic leaf certificate. The fixture now includes authority/subject key
+identifiers and requires strict X509 verification before any deployment starts.
+The strict generation/CA-loading/host checks pass; an actual TLS rerun remains
+required. No application TLS check, normal API binary, timeout or certificate
+verification requirement was weakened. The failed run remains `passed:false`.

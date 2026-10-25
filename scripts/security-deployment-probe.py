@@ -236,5 +236,7 @@ if __name__ == '__main__':
     except Exception as error:
         # No exception traceback: urllib errors can contain callback URLs/codes.
         safe = str(error) if isinstance(error, AssertionError) else type(error).__name__
+        if isinstance(error, urllib.error.URLError) and isinstance(error.reason, ssl.SSLCertVerificationError):
+            safe = 'TLS certificate verification failed (code ' + str(error.reason.verify_code) + ')'
         print('FAIL isolated security walkthrough: ' + safe, file=sys.stderr)
         sys.exit(1)
