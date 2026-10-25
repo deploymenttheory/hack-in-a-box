@@ -154,3 +154,46 @@ still-authorised editor. If that current read proves source loss, the scoped
 reader still disposes its payload. No new network call, domain state or permission
 was introduced. TypeScript, both portal builds and ESLint pass with both bounded
 UI corrections; the latest native matrix remains required before final freeze.
+
+
+## Final author candidate and visual evidence
+
+At exact source `0b1b70014ce0d196a90758bedded2bce3600c60e`, the complete native
+four-case browser matrix passed **89.231s** (test **87.60s**): administration
+desktop **35.63s**, administration mobile **16.78s**, participant desktop
+**16.57s**, participant mobile **18.62s**. All four cases ran once, without
+retries, skips, flaky results or changed timers. The explicit status assertions
+prove that current reads retain uncertainty and exact original acknowledgement
+removes the obsolete transport error. Native role/source fencing, actual retained
+versions and exactly one real judge ballot remain part of every case.
+
+The immediately preceding attempt at `a110358c` is retained as **RED 174.148s**:
+three cases passed, and participant mobile reached the final read action after
+automatic current-source polling had already correctly denied its source. The
+old locator expected only the active-state read button. The final test accepts
+the actual active or already-denied read-only action, while retaining the exact
+denied heading, private-content absence and unchanged write-count assertions.
+No product authority or timing was altered for that test correction.
+
+The independent guide then passed **2/2 (2.2s)** at the same source. Its actual
+focus, correction, unknown acknowledgement separation and absence of private
+API/storage calls remain required assertions. The final improved shared-hook
+regression passed **3/3 (2.44s)**. Both portal builds/TypeScript, affected frontend
+and Go lint, independent guide build and canonical generation are clean.
+
+All Go, canonical API and database query bytes remain identical to `a85f8d84`,
+so the complete current native owner/schema proof above remains attributed to
+that exact source. Production frontend bytes remain identical to `a110358c`;
+`0b1b7001` adds only the final test-state locator and stronger unit-test seam.
+
+The sixteen unedited final synthetic screenshots were visually inspected across
+both portals, widths and light/dark modes. Mentor captures show exact ACK
+acknowledgement without the stale red failure; judge captures keep advisory
+provenance separate from the required judge ballot. Event-brand canvas colours
+remain authoritative within either shell theme. Files, SHA-256 hashes and
+normalised successful per-case results are indexed in
+[`native-browser-evidence.json`](native-browser-evidence.json). No raw authenticated
+traces, cookies or live user data are published.
+
+The author candidate is frozen for independent full Standards and Spec reviews
+and current-head CI. It remains Draft until those final gates pass.
