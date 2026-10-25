@@ -22,6 +22,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/mentor-qualification/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getQualification"];
+        put?: never;
+        post: operations["changeQualification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/mentor-qualification/{run_id}/commands/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getQualificationReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/mentor-qualification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getQualificationRounds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/mentor-qualification/{run_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getQualificationHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}/states": {
         parameters: {
             query?: never;
@@ -4028,6 +4104,257 @@ export interface components {
             revision: number;
             override_active: boolean;
             items: components["schemas"]["JudgePresentationOrderItem"][];
+        };
+        QualificationPanel: {
+            mentor_ids: string[];
+            /** Format: uuid */
+            organiser_id: string;
+        };
+        QualificationFinalSource: {
+            /** Format: uuid */
+            moderator_id: string;
+            freeze_binding: string;
+            freeze_status: string;
+            /** Format: uuid */
+            repository_decision_id: string | null;
+            /** Format: uuid */
+            huddle_id: string;
+            /** Format: int64 */
+            huddle_version: number;
+            /** Format: uuid */
+            signoff_id: string;
+            /** Format: int64 */
+            submission_revision: number;
+            rubric: components["schemas"]["RubricReference"];
+            binding: string;
+        };
+        QualificationFinalCard: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            version: number;
+            state: string;
+            source: components["schemas"]["QualificationFinalSource"];
+            scores: components["schemas"]["ScorecardCategory"][];
+            /** Format: uuid */
+            actor_id: string;
+            reason: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        QualificationEligibility: {
+            /** Format: uuid */
+            team_id: string;
+            binding: string;
+            decision: string;
+            reason: string;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+        };
+        QualificationTeamStatus: {
+            source: components["schemas"]["QualificationFinalSource"] | null;
+            /** Format: int64 */
+            card_version: number;
+            card_state: string;
+            card_source_current: boolean;
+            can_save_card: boolean;
+            can_sign_card: boolean;
+            can_decide_eligibility: boolean;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            entry_id: string;
+            outcome: string;
+            freeze_status: string;
+            freeze_binding: string;
+            eligible: boolean;
+            blockers: string[];
+        };
+        QualificationRanking: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            total: number;
+            rank: number;
+        };
+        QualificationCategoryProposal: {
+            /** Format: uuid */
+            category_id: string;
+            team_ids: string[];
+        };
+        QualificationTie: {
+            id: string;
+            kind: string;
+            /** Format: uuid */
+            category_id: string | null;
+            team_ids: string[];
+            seats: number;
+        };
+        QualificationVote: {
+            tie_id: string;
+            seat: number;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            reason: string;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+            /** Format: date-time */
+            at: string;
+        };
+        QualificationTieDecision: {
+            tie_id: string;
+            seat: number;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            casting: boolean;
+            reason: string;
+            evidence: components["schemas"]["ScorecardEvidence"][];
+            /** Format: date-time */
+            at: string;
+        };
+        QualificationProposal: {
+            binding: string;
+            rankings: components["schemas"]["QualificationRanking"][];
+            finalist_ids: string[];
+            reserve_ids: string[];
+            categories: components["schemas"]["QualificationCategoryProposal"][];
+            ties: components["schemas"]["QualificationTie"][];
+            blockers: string[];
+        };
+        QualificationSignoff: {
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            binding: string;
+            reason: string;
+        };
+        QualificationRound: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: int64 */
+            version: number;
+            panel: components["schemas"]["QualificationPanel"];
+            cards: components["schemas"]["QualificationFinalCard"][];
+            eligibility: components["schemas"]["QualificationEligibility"][];
+            proposal: components["schemas"]["QualificationProposal"] | null;
+            votes: components["schemas"]["QualificationVote"][];
+            decisions: components["schemas"]["QualificationTieDecision"][];
+            signoff: components["schemas"]["QualificationSignoff"] | null;
+            /** Format: uuid */
+            actor_id: string;
+            action: string;
+            reason: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        QualificationPage: {
+            capabilities: components["schemas"]["QualificationCapabilities"];
+            tie_actions: components["schemas"]["QualificationTieAction"][];
+            receipt: components["schemas"]["QualificationReceipt"] | null;
+            preview: components["schemas"]["QualificationProposal"] | null;
+            /** Format: int64 */
+            revision: number;
+            round: components["schemas"]["QualificationRound"];
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            teams: components["schemas"]["QualificationTeamStatus"][];
+            current: boolean;
+        };
+        QualificationHistory: {
+            items: components["schemas"]["QualificationHistoricalRound"][];
+            /** Format: int64 */
+            next_cursor: number | null;
+        };
+        QualificationCardInput: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            version: number;
+            scores: components["schemas"]["ScorecardCategory"][];
+        };
+        QualificationCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @description Exact opaque freeze identity captured from the team status; required for card save/sign and eligibility decisions. */
+            freeze_binding?: string;
+            /** Format: uuid */
+            repository_decision_id?: string | null;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "configure_panel" | "save_card" | "sign_card" | "decide_eligibility" | "propose" | "vote_tie" | "resolve_tie" | "sign_off";
+            reason: string;
+            panel?: components["schemas"]["QualificationPanel"] | null;
+            card?: components["schemas"]["QualificationCardInput"] | null;
+            /** Format: uuid */
+            team_id?: string;
+            /** Format: int64 */
+            card_version?: number;
+            decision?: string;
+            evidence?: components["schemas"]["ScorecardEvidence"][];
+            tie_id?: string;
+            seat?: number;
+        };
+        QualificationReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            run_id: string;
+            action: string;
+            /** Format: int64 */
+            expected_revision: number;
+            /** Format: int64 */
+            expected_version: number;
+            /** Format: int64 */
+            version: number;
+            fingerprint: string;
+        };
+        QualificationRecovery: {
+            receipt: components["schemas"]["QualificationReceipt"] | null;
+        };
+        QualificationHistoricalRound: {
+            snapshot: components["schemas"]["QualificationRound"];
+            current: boolean;
+        };
+        QualificationCapabilities: {
+            can_read_panel: boolean;
+            can_configure_panel: boolean;
+            can_propose: boolean;
+            can_sign_off: boolean;
+            read_only: boolean;
+            record_locked: boolean;
+        };
+        QualificationTieAction: {
+            tie_id: string;
+            seat: number;
+            candidate_team_ids: string[];
+            can_vote: boolean;
+            has_voted: boolean;
+            can_resolve: boolean;
+            resolve_team_ids: string[];
+            casting: boolean;
+            required_votes: number;
+            votes_complete: boolean;
+        };
+        QualificationRun: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            previous_run_id: string | null;
+            name: string;
+            /** Format: int64 */
+            version: number;
+            can_configure_panel: boolean;
+            record_locked: boolean;
+        };
+        QualificationRounds: {
+            items: components["schemas"]["QualificationRun"][];
         };
         JudgeCardState: {
             /** Format: uuid */
@@ -8724,6 +9051,137 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JudgePresentationOrder"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQualification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeQualification: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QualificationCommand"];
+            };
+        };
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQualificationReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQualificationRounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationRounds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQualificationHistory: {
+        parameters: {
+            query?: {
+                before?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationHistory"];
                 };
             };
             default: components["responses"]["Error"];
