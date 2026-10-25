@@ -50,12 +50,18 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 		t,
 		func(r *liveRehearsal) {
 			r.mentor.DisplayName = "Native primary mentor"
-			if _, err := r.pool.Exec(t.Context(), "UPDATE people SET display_name=$2 WHERE id=$1", r.mentor.ID, r.mentor.DisplayName); err != nil {
+			if _, err := r.pool.Exec(
+				t.Context(),
+				"UPDATE people SET display_name=$2 WHERE id=$1",
+				r.mentor.ID,
+				r.mentor.DisplayName,
+			); err != nil {
 				t.Fatal(err)
 			}
 			teams = append(teams, qualificationFinalTeam{id: r.teamID, member: r.competitor})
 			var configRaw []byte
-			if err := r.pool.QueryRow(t.Context(), "SELECT configuration FROM events WHERE id=$1", r.eventID).Scan(&configRaw); err != nil {
+			if err := r.pool.QueryRow(t.Context(), "SELECT configuration FROM events WHERE id=$1", r.eventID).
+				Scan(&configRaw); err != nil {
 				t.Fatal(err)
 			}
 			var config struct {
@@ -76,16 +82,25 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 					{"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot)VALUES($1,$2,$3,'published')", []any{r.eventID, team.id, team.member.ID}},
 					{"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,'primary','published',$4,$5)", []any{r.eventID, team.id, r.mentor.ID, config.LiveStart, config.LiveEnd}},
 				} {
-					if _, err := r.pool.Exec(t.Context(), statement.sql, statement.args...); err != nil {
+					if _, err := r.pool.Exec(
+						t.Context(),
+						statement.sql,
+						statement.args...); err != nil {
 						t.Fatal(err)
 					}
 				}
-				if err := dbgen.New(r.pool).CreateCompetitionEntry(t.Context(), dbgen.CreateCompetitionEntryParams{EventID: r.eventID, TeamID: team.id}); err != nil {
+				if err := dbgen.New(r.pool).
+					CreateCompetitionEntry(t.Context(), dbgen.CreateCompetitionEntryParams{EventID: r.eventID, TeamID: team.id}); err != nil {
 					t.Fatal(err)
 				}
 				teams = append(teams, team)
 			}
-			if _, err := r.pool.Exec(t.Context(), "UPDATE event_gate_facts SET total_teams=$2,frozen_teams=$2,assigned_attendees=$2 WHERE event_id=$1", r.eventID, count); err != nil {
+			if _, err := r.pool.Exec(
+				t.Context(),
+				"UPDATE event_gate_facts SET total_teams=$2,frozen_teams=$2,assigned_attendees=$2 WHERE event_id=$1",
+				r.eventID,
+				count,
+			); err != nil {
 				t.Fatal(err)
 			}
 		},
@@ -96,7 +111,12 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 			}
 			second = testdb.Person(t, r.pool)
 			second.DisplayName = "Native independent second mentor"
-			if _, err := r.pool.Exec(t.Context(), "UPDATE people SET display_name=$2 WHERE id=$1", second.ID, second.DisplayName); err != nil {
+			if _, err := r.pool.Exec(
+				t.Context(),
+				"UPDATE people SET display_name=$2 WHERE id=$1",
+				second.ID,
+				second.DisplayName,
+			); err != nil {
 				t.Fatal(err)
 			}
 			if _, err = r.pool.Exec(
@@ -123,7 +143,12 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 					t.Fatal(err)
 				}
 			}
-			if _, err = r.pool.Exec(t.Context(), "UPDATE mentor_profiles SET maximum_teams=$2 WHERE event_id=$1", r.eventID, count); err != nil {
+			if _, err = r.pool.Exec(
+				t.Context(),
+				"UPDATE mentor_profiles SET maximum_teams=$2 WHERE event_id=$1",
+				r.eventID,
+				count,
+			); err != nil {
 				t.Fatal(err)
 			}
 			for _, team := range teams {
@@ -313,16 +338,46 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 			}
 		}
 	}
-	return qualificationFinalFixture{teams: teams, runtime: r, admin: admin, public: public, run: run, checkpoint: cp, second: second, scores: scores}
+	return qualificationFinalFixture{
+		teams:      teams,
+		runtime:    r,
+		admin:      admin,
+		public:     public,
+		run:        run,
+		checkpoint: cp,
+		second:     second,
+		scores:     scores,
+	}
 }
 
 func TestQualificationFiveTeamNativeFinalFixture(t *testing.T) {
 	f := newQualificationFinalCohort(t, 5)
-	page, err := f.admin.deps.Qualification.Read(t.Context(), f.runtime.owner.ID, f.runtime.eventID, f.run)
+	page, err := f.admin.deps.Qualification.Read(
+		t.Context(),
+		f.runtime.owner.ID,
+		f.runtime.eventID,
+		f.run,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	page, err = f.admin.deps.Qualification.Change(t.Context(), f.runtime.owner.ID, f.runtime.eventID, f.run, page.Revision, qualification.Command{RequestID: uuid.New(), Version: page.Round.Version, Action: "configure_panel", Reason: "Actual intended five-team verification panel", Panel: &qualification.Panel{MentorIDs: []uuid.UUID{f.runtime.mentor.ID, f.second.ID}, OrganiserID: f.runtime.owner.ID}})
+	page, err = f.admin.deps.Qualification.Change(
+		t.Context(),
+		f.runtime.owner.ID,
+		f.runtime.eventID,
+		f.run,
+		page.Revision,
+		qualification.Command{
+			RequestID: uuid.New(),
+			Version:   page.Round.Version,
+			Action:    "configure_panel",
+			Reason:    "Actual intended five-team verification panel",
+			Panel: &qualification.Panel{
+				MentorIDs:   []uuid.UUID{f.runtime.mentor.ID, f.second.ID},
+				OrganiserID: f.runtime.owner.ID,
+			},
+		},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

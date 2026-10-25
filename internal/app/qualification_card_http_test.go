@@ -3,11 +3,13 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
+	"github.com/google/uuid"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
-	"github.com/google/uuid"
-	"testing"
 )
 
 func TestQualificationHTTPActualFrozenFinalReviewedCardAndHistoricalACK(t *testing.T) {
