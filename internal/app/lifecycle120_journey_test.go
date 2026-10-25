@@ -500,7 +500,7 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 		if branded.Branding.Primary != item.brand.Primary {
 			t.Fatal("event branding crossed the independent event boundary")
 		}
-		var planning objectives.List
+		var planning json.RawMessage
 		if err := reader.call(
 			ctx,
 			http.MethodGet,
@@ -508,11 +508,11 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 			-1,
 			nil,
 			&planning,
-			http.StatusOK,
+			http.StatusForbidden,
 		); err != nil {
 			t.Fatal(err)
 		}
-		if len(planning.Items) != 0 {
+		if bytes.Contains(planning, []byte(item.objective.Definition.Description)) {
 			t.Fatal("undisclosed private planning objective leaked to an attendee")
 		}
 	}
