@@ -14,7 +14,7 @@ import {matchesQualificationReceipt,qualificationFingerprint,type QualificationC
 const confirmPanelDeparture=()=>window.confirm('Leave this panel with an original command outcome still unconfirmed? Safe request metadata remains for this signed-in session; no request will be replayed.')
 export const qualificationNamespace=(actor:string,session:string,eventID:string,runID:string)=>`${actor}:${session}:${eventID}:qualification:${runID}`
 type Reviewed={body:QualificationCommand;intent:QualificationIntent;summary:ReactNode}
-type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:()=>void;onNewBase?:()=>void}
+type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:(intent:QualificationIntent,body:QualificationCommand)=>void;onNewBase?:()=>void}
 
 // This owner handles request identity and private lifetimes only. Native
 // capability/source readiness remains with its caller and is rechecked against
@@ -55,7 +55,7 @@ export function useQualificationCommand(options:Options){
    const result=await sendQualification(eventID,runID,target.intent.revision,identity.csrf_token,target.body)
    if(!result.receipt||!matchesQualificationReceipt(result.receipt,target.intent))throw new Error('The response did not match this exact original request. Its outcome remains unknown.')
    commands.complete(attemptID)
-   if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);options.onAcknowledged?.();await refresh()}
+   if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);options.onAcknowledged?.(target.intent,target.body);await refresh()}
   }catch(error){
    if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408)commands.complete(attemptID);else commands.uncertain(attemptID)}
    if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);setFailureStage(!attemptID?'before_write':error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408?'rejected':'unknown');if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
