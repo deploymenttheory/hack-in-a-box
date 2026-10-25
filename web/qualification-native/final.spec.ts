@@ -40,7 +40,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
   const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true});await expect(confirm).toBeFocused()
   await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
-  if(index===0)await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})
+  if(index===0){await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10);await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})}
   await activate(confirm);await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)

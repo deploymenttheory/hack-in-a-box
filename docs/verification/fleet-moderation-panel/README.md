@@ -375,3 +375,32 @@ Remaining acceptance gates: independent full Standards/Spec, final-head CI and
 review of the final source-attributed guide/visual record. Issue111 remains open
 until the parent completes those gates. #112/#113 publication and feedback are
 separate; no live provider effect or external acceptance is claimed here.
+
+### Frozen implementation: final native and guide evidence
+
+At exact clean `a6f5e447dff0726f3f709eb9741131f4e9a25f5e`, **all four final
+native portal/width journeys PASSED in one Go/race run (289.107s)**. This includes
+the resolved-tie warning assertion, actual keyboard/native-select flow, every
+card/ballot/casting/signoff step, separate preparations, retired-output checks,
+exact history and real denied-session disposal. This supersedes the earlier
+partial final runs without changing their historical outcomes. The original
+four initial cases remain attributed to e9a7a561 and all eight are mandatory in
+current-head CI.
+
+The independent production guide build and all8 checks passed on that frozen
+implementation in4.1s. `final-native/artifacts.json` records exact source/tree
+and SHA256 for four successful native records and12 genuine PNG captures.
+All8 signed light/dark portal/width captures and four comparison captures were
+visually inspected: no horizontal clipping, labels/actions remain readable,
+separate category preparation stays private and the false tie warning is absent.
+The event's configured light canvas remains its actual branding in a dark shell;
+these images reflect that existing branding contract.
+
+One comparison element capture could clip its lower boundary if its independently
+loaded original-evidence panel grew after screenshot measurement. A test-only
+readiness assertion now waits for all10 actual independent observations before
+measuring that capture. Its affected regular-narrow visual retest is recorded
+separately; no production implementation, authority or assertion is weakened.
+
+Only independent full reviews and final-head CI remain acceptance gates. No
+physical-device, screen-reader or full issue122 certification is claimed.
