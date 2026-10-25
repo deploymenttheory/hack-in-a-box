@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -45,7 +46,12 @@ func newAPIDependencies(
 	logger *slog.Logger,
 	storage files.Storage,
 	auth *identity.Auth,
+	clocks ...func() time.Time,
 ) (httpapi.Dependencies, error) {
+	var now func() time.Time
+	if len(clocks) > 0 {
+		now = clocks[0]
+	}
 	github, err := githubidentity.New(
 		pool,
 		githubidentity.Settings{
@@ -58,19 +64,20 @@ func newAPIDependencies(
 	if err != nil {
 		return httpapi.Dependencies{}, fmt.Errorf("configure GitHub identity: %w", err)
 	}
-	communicationRuntime, err := newCommunicationRuntime(pool, cfg, logger)
+	communicationRuntime, err := newCommunicationRuntime(pool, cfg, logger, clocks...)
 	if err != nil {
 		return httpapi.Dependencies{}, err
 	}
 	communicationRuntime.Clarifications.Storage = storage
 	queries := dbgen.New(pool)
-	policy := access.EventPolicy{Queries: queries}
+	policy := access.EventPolicy{Queries: queries, Clock: now}
 	deps := httpapi.Dependencies{
 		Repositories:     *communicationRuntime.Repositories,
 		RepositoryAccess: *communicationRuntime.RepositoryAccess,
 		Media: media.Service{
+			Clock:   now,
 			Pool:    pool,
-			Privacy: privacy.Service{Pool: pool},
+			Privacy: privacy.Service{Pool: pool, Clock: now},
 			Files: files.Service{
 				Pool:       pool,
 				Storage:    storage,
@@ -90,37 +97,38 @@ func newAPIDependencies(
 		Help:            communicationRuntime.Help,
 		Feedback:        *communicationRuntime.Feedback,
 		Clarifications:  *communicationRuntime.Clarifications,
-		Presentation:    presentation.Service{Pool: pool},
+		Presentation:    presentation.Service{Pool: pool, Clock: now},
 		Automation:      communicationRuntime.Automation,
 		Inbox:           *communicationRuntime.Inbox,
 		Communications:  *communicationRuntime.Communications,
 		MailContacts:    communicationRuntime.MailContacts,
 		SMTP:            communicationRuntime.SMTP,
 		TeamsWorkflow:   communicationRuntime.Teams,
-		Credentials:     credentials.Service{Pool: pool, Keys: cfg.CredentialKeys},
+		Credentials:     credentials.Service{Pool: pool, Keys: cfg.CredentialKeys, Now: now},
 		Mentors:         mentors.Service{Pool: pool},
-		Rubrics:         rubric.Service{Pool: pool},
-		Objectives:      objectives.Service{Pool: pool},
-		Observations:    observations.Service{Pool: pool},
+		Rubrics:         rubric.Service{Pool: pool, Clock: now},
+		Objectives:      objectives.Service{Pool: pool, Clock: now},
+		Observations:    observations.Service{Pool: pool, Now: now},
 		Scorecards:      *communicationRuntime.Scorecards,
 		ReviewDashboard: communicationRuntime.ReviewDashboard,
 		Moderation:      communicationRuntime.Moderation,
-		Content:         content.Service{Pool: pool, Storage: storage},
-		Submissions:     submissions.Service{Pool: pool},
+		Content:         content.Service{Pool: pool, Storage: storage, Clock: now},
+		Submissions:     submissions.Service{Pool: pool, Clock: now},
 		Archives:        archives.Service{Pool: pool},
-		Attendance:      attendance.Service{Pool: pool},
-		Preparation:     preparation.Service{Pool: pool},
-		Teams:           teams.Service{Pool: pool},
+		Attendance:      attendance.Service{Pool: pool, Now: now},
+		Preparation:     preparation.Service{Pool: pool, Now: now},
+		Teams:           teams.Service{Pool: pool, Now: now},
 		GitHub:          github,
 		Pool:            pool,
 		Permissions:     permissions.Service{Pool: pool},
 		Events: event.Service{
+			Clock:             now,
 			Pool:              pool,
-			SettleSubmissions: (submissions.Service{Pool: pool}).Settle,
+			SettleSubmissions: (submissions.Service{Pool: pool, Clock: now}).Settle,
 		},
-		Privacy:      privacy.Service{Pool: pool},
+		Privacy:      privacy.Service{Pool: pool, Clock: now},
 		Templates:    templates.Service{Pool: pool},
-		Registration: registration.Service{Pool: pool},
+		Registration: registration.Service{Pool: pool, Now: now},
 		Auth:         auth,
 		Audit:        audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{

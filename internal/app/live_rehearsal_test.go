@@ -236,14 +236,11 @@ func (r *liveRehearsal) surface(t *testing.T, surface string) rehearsalSurface {
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
 		storage,
 		auth,
+		r.clock.read,
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	deps.Events.Clock, deps.Presentation.Clock, deps.Submissions.Clock = r.clock.read, r.clock.read, r.clock.read
-	deps.Preparation.Now, deps.Teams.Now = r.clock.read, r.clock.read
-	deps.Observations.Now, deps.Content.Clock = r.clock.read, r.clock.read
-	deps.Help.Clock, deps.Clarifications.Clock = r.clock.read, r.clock.read
 	server.Config.Handler = httpapi.NewRouter(
 		cfg,
 		slog.New(slog.NewTextHandler(io.Discard, nil)),

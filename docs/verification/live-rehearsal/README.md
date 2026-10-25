@@ -99,3 +99,13 @@ copies constructed with real time. The harness must inject the same native clock
 before that graph is wired; replacing the resolver or dropping notifications
 would weaken the integration and is not an acceptable correction. The new
 support browser journey is authored but has not run past this fixture failure.
+
+The captured-runtime clock regression is now proved red→green at the native
+seam: `TestLiveRehearsalSupportClockPropagation` passed real PostgreSQL/race
+3.22s after constructing all shared clock-aware runtime instances with the same
+optional domain clock before callback/value wiring. Native inbox List/Open
+resolved the exact common-answer UUID and mentor-only source access remained
+denied. Omitted production clocks stay nil and use their existing real-time
+fallbacks. The original failed source is f5d04e4; its Linux failure matches the
+same resolver chain. The full support browser reproof and new Today fixtures
+remain pending; no old-head CI rerun is used as evidence.
