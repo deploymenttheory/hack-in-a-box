@@ -11,6 +11,12 @@ Results/report UI #113, independent verification #114, showcase #163 and the
 Fleet cutover #245 remain prerequisite gates, rather than inferred completion
 from their draft branches or a closed supporting issue.
 
+The confirmed category-adjudication rule is that mentors provide advisory input
+only. All required judges must vote; only judge ballots count toward a strict
+majority, and a split remains unresolved. The backend/UI advisory-input
+capability is still a prerequisite for that integrated journey and must not be
+simulated by counting mentor ballots or inventing a completed native owner.
+
 ## Infrastructure checkpoints under construction
 
 `Dockerfile` and `compose.yaml` in this directory build an explicitly named
@@ -168,7 +174,7 @@ component passes are supporting evidence only.
 | L10 Live support and interruption | Mentor checkpoint/observation, team help with simultaneous claims, private question→common clarification, corrected answer, private resource; interrupt/reconnect Wi-Fi | One claim wins, losing claim has no side effect; private origin/raw notes withheld; corrected notification uses actual current published revision; pending/unknown write retains original identity and reconnect does not replay it |
 | L11 Provider failure and recovery | Approve message, let real worker attempt deterministic provider failure/unknown outcome, review/reconcile using original identity | Durable operation/attempt/native provider policy, exact audience, no blind uncertain resend, explicit safe retry or unresolved state; real queue/lease effect, not synthetic application success |
 | L12 Repository and cutoff | Native repository setup/access; submit repo and non-repo entries; fail one cutoff capture, attempt late replacement, reconcile exact cutoff evidence | Frozen SHA/branch/revision as actually evidenced, late head never substituted; disbanded repository remains unused/unscored; cutoff applies even before stage advancement; census covers every team with frozen/explicit absent/withdrawn outcome |
-| L13 Independent judging | Synthetic practice before live, actual live checkpoints, cutoff final mentor cards where applicable, signed qualification, fresh required judge cards and recorded decisions | Both templates, no practice/checkpoint accumulation or mentor carry; missing cards block; current assignments/conflicts and frozen source enforced; category tie policy follows the eventual owner decision, never inferred from a prior merge |
+| L13 Independent judging | Synthetic practice before live, actual live checkpoints, cutoff final mentor cards where applicable, signed qualification, fresh required judge cards and recorded decisions | Both templates, no practice/checkpoint accumulation or mentor carry; missing cards block; current assignments/conflicts and frozen source enforced; category adjudication requires every judge's ballot and a strict judge-only majority, mentor input is advisory, unresolved splits block |
 | L14 Awards and feedback | Deliberate private result preparation/confirmation, separate finalist/award announcements, organiser report preview/release/amendment, native feedback survey | Embargo across both portals, room, inbox and exports; explicit own-team score selection; amended history/audience/author retained; no raw assessment or unpublished rank leakage; current role/member loss removes access |
 | L15 Reviewed nonwinner showcase | Explicitly select/review/publish a non-winning project's approved fields/media; search/filter/page across both events; revoke consent/audience or withdraw/correct | Publication independent of submission/awards/archive; no private tally/award inference; approved resource permissions; guessed route/thumbnail/cache denial, correct current status and authorised published awards only |
 | L16 Archive and owned outcomes | Archive competition, execute only explicitly approved retained follow-up, record owned 30/60/90-day estimates versus evidenced outcomes | Frozen submission/team/rubric/score/result hash/version unchanged; rejected competition mutations; auditable current authorised outcome changes; unapproved operational work cannot continue; relevant native archive/export contains intended evidence without private leaks |
@@ -180,18 +186,21 @@ component passes are supporting evidence only.
 The synthetic OIDC provider and native authenticated HTTP client compile at the
 initial checkpoint (`go test ./internal/app -run '^$'`, 0.541s). This starts no
 database/provider/browser and proves neither OIDC execution nor any lifecycle
-criterion. Native/Compose/browser execution has not yet occurred for #120.
+criterion. At that initial checkpoint, native/Compose/browser execution had not
+yet occurred; later partial evidence is recorded above.
 
-Current execution gates include the completed #163 showcase and Fleet cutover,
-results/report and scoring prerequisite merges, the unanswered all-team category
-decision and exact-source final CI. Approved live GitHub/Teams observations are
+Current execution gates include final showcase/Fleet ownership, execution
+against the final merged results/report/scoring owners, the missing native
+mentor advisory-input capability and exact-source final CI. Approved live GitHub/Teams observations are
 separate unavailable external acceptances; they do not excuse omission of the
 deterministic provider-fault paths in this rehearsal.
 
 Second local checkpoint: the shared private worker factory and isolated
 Compose process entrypoint compile, and both independent DST-fixture cases
-passed in 0.598s. No Docker, PostgreSQL, worker, OIDC or browser execution is
-claimed. Compose image/configuration, actual scenario phases and final evidence
-remain to be implemented. The bounded DomainNow eligibility seam needs its
-real queued-worker RED/GREEN regression before any production jobs change;
-leases, transport/auth expiry and River scheduling must retain wall time.
+passed in 0.598s. At that checkpoint no Docker, PostgreSQL, worker, OIDC or browser
+execution was claimed; Compose packaging and the bounded eligibility seam were
+still pending. Subsequent real queued-worker RED/GREEN, explicit policy and
+native partial Compose evidence are linked above. The complete integrated
+scenario, independent browser journeys, normal production-image proof and final
+evidence remain unfinished. Leases, transport/auth expiry and River scheduling
+retain wall time.
