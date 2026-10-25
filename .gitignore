@@ -99,3 +99,6 @@ web/test-results-qualification/
 web/test-results-qualification-guide/
 web/test-results-qualification-native/
 web/test-results-qualification-public/
+
+# Issue 113 synthetic private browser traces.
+web/test-results-reports*/

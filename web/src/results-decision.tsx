@@ -22,24 +22,24 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
 }) {
  const identity = useIdentity(), commands = useCommunicationCommands(options.owner), scope = usePrivateRequestScope(`${options.owner}:editor`, options.parent)
- const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
+ const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failure, setFailure] = useState<unknown>(), [failureStage, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
  const sending = useRef(false), opener = useRef<HTMLElement | null>(null), baseOpener = useRef<HTMLElement | null>(null), fallback = useRef<HTMLHeadingElement | null>(null)
  const pending = preparing || commands.pending, stale = !!review && (options.version(options.page) !== review.intent.version || options.revision(options.page) !== review.intent.revision), blocked = options.paused || pending || commands.unconfirmed || stale
  usePlanningDepartureBarrier(pending)
  async function prepare(body: B, summary: ReactNode, source: HTMLElement) {
   if (blocked || sending.current) return
-  const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined); setNotice('')
+  const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined); setFailureStage(undefined); setNotice('')
   try {
    ticket.assert(); options.ready(options.page, body)
    const captured = structuredClone(body), revision = options.revision(options.page), fingerprint = await options.fingerprint(captured, revision); ticket.assert()
    opener.current = source
    setReview({ body: captured, summary, intent: { requestID: captured.request_id, actorID: identity.person.id, action: captured.action, revision, version: options.version(options.page), fingerprint, ...options.metadata?.(captured, options.page) } })
-  } catch (error) { if (ticket.current()) setFailure(error) }
+  } catch (error) { if (ticket.current()) { setFailure(error); setFailureStage('before_write') } }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  async function confirm() {
   if (!review || blocked || sending.current) return
-  const captured = review, ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined)
+  const captured = review, ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined); setFailureStage(undefined)
   let attempt: string | undefined
   try {
    const current = await options.read(ticket.signal); ticket.assert()
@@ -53,7 +53,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) {
    const rejected = error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408
    if (attempt) { if (rejected) commands.complete(attempt); else commands.uncertain(attempt) }
-   if (ticket.current()) { setFailure(error); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { scope.invalidate(); await options.refresh() } }
+   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { scope.invalidate(); await options.refresh() } }
   } finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  async function readBase(source: HTMLElement) {
@@ -74,10 +74,10 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  const focus = (source: HTMLElement | null) => source?.isConnected && !source.matches(':disabled') && source.getClientRects().length ? source : fallback.current ?? false
- return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
+ return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
 }
-export function ResultDecisionState({ failure, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {
- return <div className="fleet-result-history"><h3 ref={headingRef} tabIndex={-1}>Decision status</h3>{!!failure && <Failure error={failure} />}{notice && <p role="status">{notice}</p>}{stale && <p role="status">The starting point changed. Cancel this review, read current facts and review a fresh decision.</p>}{unknown && <><p role="status">The original outcome is unknown. Read its original acknowledgement below. A current read does not establish success or failure.</p><Button icon="refresh" variant="outline" disabled={pending} onClick={event => void readBase(event.currentTarget)}>Review a fresh starting point</Button></>}{base && <ConfirmationDialog open title="Review a fresh starting point" description="Permit a different deliberate request while retaining the earlier unknown request in history." confirmLabel="Use reviewed current starting point" pending={pending} onConfirm={() => void chooseBase()} onOpenChange={open => { if (!open) cancelBase() }} finalFocus={returnBaseFocus} printExcluded><p>Version {base.version} · Source revision {base.revision}</p><p>This clears unsent private inputs. It does not acknowledge or replay the earlier request.</p></ConfirmationDialog>}</div>
+export function ResultDecisionState({ failure, failureStage, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'failureStage' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {
+ return <div className="fleet-result-history"><h3 ref={headingRef} tabIndex={-1}>Decision status</h3>{failureStage === 'before_write' && <p role="alert">Current access, source or starting point could not be confirmed. Nothing was sent. Read current facts and review again.</p>}{!!failure && <Failure error={failure} />}{notice && <p role="status">{notice}</p>}{stale && <p role="status">The starting point changed. Cancel this review, read current facts and review a fresh decision.</p>}{unknown && <><p role="status">The original outcome is unknown. Read its original acknowledgement below. A current read does not establish success or failure.</p><Button icon="refresh" variant="outline" disabled={pending} onClick={event => void readBase(event.currentTarget)}>Review a fresh starting point</Button></>}{base && <ConfirmationDialog open title="Review a fresh starting point" description="Permit a different deliberate request while retaining the earlier unknown request in history." confirmLabel="Use reviewed current starting point" pending={pending} onConfirm={() => void chooseBase()} onOpenChange={open => { if (!open) cancelBase() }} finalFocus={returnBaseFocus} printExcluded><p>Version {base.version} · Source revision {base.revision}</p><p>This clears unsent private inputs. It does not acknowledge or replay the earlier request.</p></ConfirmationDialog>}</div>
 }
 export function OriginalResultHistory<R>({ owner, read, matches }: { owner: string; read: (requestID: string, signal: AbortSignal) => Promise<R>; matches: (result: R, intent: DecisionMetadata) => boolean }) {
  const identity = useIdentity(), commands = useCommunicationCommands(owner), scope = usePrivateRequestScope(`${owner}:history`)

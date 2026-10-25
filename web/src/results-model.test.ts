@@ -1,3 +1,4 @@
+import { matchesBallotReceipt } from './result-ballot-model'
 import { describe, expect, it } from 'vitest'
 import { matchesResultReceipt, nilUUID } from './results-model'
 import { matchesTeamFeedbackReceipt } from './team-feedback-model'
@@ -15,4 +16,11 @@ describe('original result acknowledgement ownership', () => {
   expect(matchesTeamFeedbackReceipt(original, target, team)).toBe(true)
   for (const change of [{ actor_id: team }, { team_id: actor }, { request_id: team }, { action: 'save' as const }, { expected_version: 4 }, { version: 5 }, { fingerprint: 'b'.repeat(64) }]) expect(matchesTeamFeedbackReceipt({ ...original, ...change }, target, team)).toBe(false)
  })
+})
+
+it('final vote receipts bind the exact native run, tie and candidate set without retaining vote prose', () => {
+ const target = { ...intent, action: 'vote', resourceID: actor, subjectID: team, intentID: JSON.stringify({ tie: 'native-tie', teams: [team, request] }) }
+ const value = { ...receipt, action: 'vote' as const, run_id: actor, tie_id: 'native-tie', team_ids: [team, request], publication_id: null }
+ expect(matchesBallotReceipt(value, target)).toBe(true)
+ for (const change of [{ actor_id: team }, { run_id: team }, { tie_id: 'another-tie' }, { team_ids: [team] }, { team_ids: [request, team] }, { publication_id: request }, { expected_version: 8 }, { fingerprint: 'b'.repeat(64) }]) expect(matchesBallotReceipt({ ...value, ...change }, target)).toBe(false)
 })

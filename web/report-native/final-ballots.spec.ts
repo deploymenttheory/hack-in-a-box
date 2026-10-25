@@ -1,6 +1,7 @@
+import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from '@playwright/test'
 import { actor, native } from './native'
-test('native assigned overall tie requires all judges, keeps own prose private and resolves only after an explicit revote', async ({ browser }) => {
+test('native assigned overall tie requires all judges, keeps own prose private and resolves only after an explicit revote', async ({ browser }, testInfo) => {
  const first = await actor(browser, 'public', 'judge', 'ballots'), second = await actor(browser, 'admin', 'judge2', 'ballots'), owner = await actor(browser, 'admin', 'owner', 'ballots')
  const a = await first.newPage(), b = await second.newPage(), path = `/events/${native.ballot_event_id}/results/ballots`
  async function vote(page: typeof a, winner: string, note: string) {
@@ -23,6 +24,7 @@ test('native assigned overall tie requires all judges, keeps own prose private a
   await a.getByRole('button', { name: 'Read current tie ballots', exact: true }).click(); expect(await a.locator('body').innerText()).not.toContain('PRIVATE-SECOND-SPLIT-VOTE-NATIVE')
   await vote(b, native.ballot_team_id, 'Explicit reviewed native replacement after split'); await expect(b.getByText('Recorded winner:', { exact: false })).toBeVisible()
   const denied = await owner.request.get(native.ballot_admin + privatePath); expect(denied.status()).toBe(403)
+  for (const scheme of ['light', 'dark'] as const) { await b.emulateMedia({ colorScheme: scheme }); const audit = await new AxeBuilder({ page: b }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([]); expect(await b.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false); await b.screenshot({ path: testInfo.outputPath(`final-ballots-${scheme}.png`), fullPage: true }) }
   await b.emulateMedia({ media: 'print' }); await expect(b.getByRole('heading', { name: 'Review final ties' })).not.toBeVisible(); await b.emulateMedia({ media: 'screen' }); await expect(b.getByRole('heading', { name: 'Review final ties' })).toBeVisible()
  } finally { await Promise.all([first.close(), second.close(), owner.close()]) }
 })
