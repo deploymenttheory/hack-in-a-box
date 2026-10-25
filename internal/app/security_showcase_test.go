@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"testing"
@@ -40,9 +41,15 @@ func TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority(t 
 				t.Fatal("read-only project reader acquired restricted object", status)
 			}
 		}
-		status, _ = request(surface, s.outsider, "GET", public, nil, 0, false)
-		if status != 401 {
-			t.Fatal("anonymous reader acquired organisation card", status)
+		anonymous, err := http.NewRequestWithContext(t.Context(), http.MethodGet, surface.server.URL+public, nil)
+		resultsSourceRequire(t, err)
+		response, err := surface.server.Client().Do(anonymous)
+		resultsSourceRequire(t, err)
+		if err := response.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+		if response.StatusCode != 401 {
+			t.Fatal("anonymous reader acquired organisation card", response.StatusCode)
 		}
 		status, raw = request(surface, s.outsider, "GET", "/api/v1/projects?search="+url.QueryEscape("' OR true; -- PRIVATE-"), nil, 0, true)
 		if status != 200 {
