@@ -22,7 +22,7 @@ cookies, signed tokens, credentials or private payloads. Native tests require
 | Direct early-theme URLs; roster freeze; premature submission/review/scoring | Canonical HTTP embargo/privileged exclusion, native registration freeze serialization, submission, scorecard and judge guards | Native matrix PASS |
 | Help claiming/access and private-to-common Q&A | Native help concurrent claims/revocation and canonical clarification publication, private attachment and current audience assertions | Native matrix PASS |
 | Goal/rubric early disclosure; practice isolation | Native objectives/rubric common publication and exact-version correction, both-mode practice and current independent judge authority | Native matrix PASS |
-| Showcase search/media leakage | New #163 projection/browser proof must be integrated; current main lacks that completed dependency | Dependency pending; no substitute proof claimed |
+| Showcase search/media leakage | Merged #163 source is integrated from main076f; new native read/source-authority abuse fixture and existing publication/search/consent owner are explicitly manifested | New exact-source execution pending; no substitute proof claimed |
 | Post-archive follow-up | Native audited outcome/review/reminder path with ordinary competition writes denied, current-source cancellation and retention enforced | Native matrix PASS |
 | Credential encryption, log redaction, retention | Native credential reveal/rotation/key-fault/audit-failure and context-bound encryption; new request/provider error redaction, retention and archived consent assertions | Native matrix PASS |
 | New mentor contribution | Follow-up feature is owned separately; assess its implemented authority, private evidence and publication boundary after integration | Dependency pending |
@@ -138,9 +138,8 @@ builds and advisory/dependency-graph log digests are retained separately in
 
 ## Remaining delivery gates
 
-- Integrate the completed #163 showcase source, then execute its native
-  search/direct-route/current-consent/current-audience/stale-response abuse proof
-  as part of this release verification, not as an unexecuted reference.
+- Execute and record the integrated #163 showcase native abuse manifest on the
+  rebased source; historical evidence remains attributed to its original source.
 - Integrate the separately owned mentor-contribution feature and verify its
   current authority, original private evidence, tie/confirmation and publication
   boundaries. The absent feature cannot be certified by current judge tests.
@@ -150,3 +149,36 @@ builds and advisory/dependency-graph log digests are retained separately in
 - Obtain independent reviews and complete final current-head required CI. Keep
   this PR Draft and #121 open; no critical/high-severity release sign-off or full
   release completion is claimed by these scoped results.
+
+## Isolated normal-command manual walkthrough
+
+`compose.yaml` derives its private network/provider composition from #291's
+normal-image probe. Both portals run the production `/app/api` command, normal
+migrations and real time. The independent Python probe signs in through actual
+RS256 discovery/token exchange and browser-bound PKCE callbacks; no SQL, test
+clock or fabricated application cookie supplies authority. Only the explicitly
+synthetic provider offers actor selection.
+
+Pin the normal public/admin images built from the stated application source,
+the reviewed synthetic provider image and the Python runner by immutable image
+ID. Set `HACKBOX_SECURITY_SOURCE` and a private absolute
+`HACKBOX_SECURITY_ARTIFACTS` directory; `compose.yaml` requires those values.
+Use a unique Compose project name and never an existing user deployment:
+
+```sh
+docker compose -p YOUR_UNIQUE_SYNTHETIC_PROJECT \
+  -f docs/verification/security/compose.yaml up -d --wait public admin
+docker compose -p YOUR_UNIQUE_SYNTHETIC_PROJECT \
+  -f docs/verification/security/compose.yaml run --rm probe
+docker compose -p YOUR_UNIQUE_SYNTHETIC_PROJECT \
+  -f docs/verification/security/compose.yaml down --volumes --remove-orphans
+```
+
+The agent-executed walkthrough covers privileged/ordinary identities, exact
+CSRF and Origin rejection, cross-event files/exports, active MIME spoofing,
+unreleased content/preview URLs, current role grants and revocation with the
+same authenticated session, and independent portal logout. Its JSON receipt
+retains scenario labels, statuses and source only. It explicitly excludes future
+competition progression, showcase browser rendering and the unintegrated mentor
+feature; those retain their separate native/browser/integration gates. A script
+or successful image build is not a recorded execution result.
