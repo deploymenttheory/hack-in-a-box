@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -159,6 +160,7 @@ type CardInput struct {
 	Scores  []scorecards.CategoryScore `json:"scores"`
 }
 type Command struct {
+	FreezeBinding        string                         `json:"freeze_binding"`
 	RepositoryDecisionID *uuid.UUID                     `json:"repository_decision_id"`
 	Version              int64                          `json:"version"`
 	Action               string                         `json:"action"`
@@ -177,4 +179,11 @@ func digest(value any) string {
 	raw, _ := json.Marshal(value)
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:])
+}
+
+func failure(operation string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("qualification %s: %w", operation, err)
 }

@@ -11,18 +11,33 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 )
 
-func (s Service) ballots(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v scope, tie Tie, seat int, remaining []uuid.UUID) ([]uuid.UUID, bool) {
+func (s Service) ballots(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	v scope,
+	tie Tie,
+	seat int,
+	remaining []uuid.UUID,
+) ([]uuid.UUID, bool) {
 	counts := map[uuid.UUID]int{}
 	seen := map[uuid.UUID]bool{}
 	for _, vote := range v.round.Votes {
 		if vote.TieID != tie.ID || vote.Seat != seat {
 			continue
 		}
-		if !slices.Contains(v.round.Panel.MentorIDs, vote.ActorID) || seen[vote.ActorID] || !slices.Contains(remaining, vote.TeamID) {
+		if !slices.Contains(v.round.Panel.MentorIDs, vote.ActorID) || seen[vote.ActorID] ||
+			!slices.Contains(remaining, vote.TeamID) {
 			return nil, false
 		}
 		for _, id := range remaining {
-			if err := mentors.AuthorizeQualificationPanelInTransaction(ctx, tx, vote.ActorID, eventID, id); err != nil {
+			if err := mentors.AuthorizeQualificationPanelInTransaction(
+				ctx,
+				tx,
+				vote.ActorID,
+				eventID,
+				id,
+			); err != nil {
 				return nil, false
 			}
 		}
@@ -34,7 +49,15 @@ func (s Service) ballots(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v sc
 		if err != nil || team.source == nil {
 			return nil, false
 		}
-		if err = s.Cards.AuthorizeModerationEvidenceInTransaction(ctx, tx, vote.ActorID, eventID, vote.TeamID, vote.Evidence, &team.source.SubmissionRevision); err != nil {
+		if err = s.Cards.AuthorizeModerationEvidenceInTransaction(
+			ctx,
+			tx,
+			vote.ActorID,
+			eventID,
+			vote.TeamID,
+			vote.Evidence,
+			&team.source.SubmissionRevision,
+		); err != nil {
 			return nil, false
 		}
 		counts[vote.TeamID]++
@@ -57,21 +80,38 @@ func (s Service) ballots(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v sc
 	return winners, highest > 0
 }
 
-func (s Service) resolved(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v scope, tie Tie) ([]uuid.UUID, bool) {
+func (s Service) resolved(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	v scope,
+	tie Tie,
+) ([]uuid.UUID, bool) {
 	result := []uuid.UUID{}
 	for seat := 1; seat <= tie.Seats; seat++ {
-		index := slices.IndexFunc(v.round.Decisions, func(d TieDecision) bool { return d.TieID == tie.ID && d.Seat == seat })
+		index := slices.IndexFunc(
+			v.round.Decisions,
+			func(d TieDecision) bool { return d.TieID == tie.ID && d.Seat == seat },
+		)
 		if index < 0 {
 			return nil, false
 		}
 		decision := v.round.Decisions[index]
 		remaining := without(tie.TeamIDs, result)
 		winners, valid := s.ballots(ctx, tx, eventID, v, tie, seat, remaining)
-		if !valid || decision.ActorID != v.round.Panel.OrganiserID || !slices.Contains(winners, decision.TeamID) || decision.Casting != (len(winners) > 1) {
+		if !valid || decision.ActorID != v.round.Panel.OrganiserID ||
+			!slices.Contains(winners, decision.TeamID) ||
+			decision.Casting != (len(winners) > 1) {
 			return nil, false
 		}
 		for _, id := range remaining {
-			if err := mentors.AuthorizeQualificationPanelInTransaction(ctx, tx, decision.ActorID, eventID, id); err != nil {
+			if err := mentors.AuthorizeQualificationPanelInTransaction(
+				ctx,
+				tx,
+				decision.ActorID,
+				eventID,
+				id,
+			); err != nil {
 				return nil, false
 			}
 		}
@@ -83,7 +123,15 @@ func (s Service) resolved(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 		if err != nil || team.source == nil {
 			return nil, false
 		}
-		if err = s.Cards.AuthorizeModerationEvidenceInTransaction(ctx, tx, decision.ActorID, eventID, decision.TeamID, decision.Evidence, &team.source.SubmissionRevision); err != nil {
+		if err = s.Cards.AuthorizeModerationEvidenceInTransaction(
+			ctx,
+			tx,
+			decision.ActorID,
+			eventID,
+			decision.TeamID,
+			decision.Evidence,
+			&team.source.SubmissionRevision,
+		); err != nil {
 			return nil, false
 		}
 		result = append(result, decision.TeamID)
@@ -91,13 +139,19 @@ func (s Service) resolved(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 	return result, true
 }
 
-func (s Service) changeTie(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID, v *scope, input Command) error {
+func (s Service) changeTie(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	v *scope,
+	input Command,
+) error {
 	if v.round.Proposal == nil {
 		return access.ErrConflict
 	}
 	fresh, err := s.proposal(ctx, tx, eventID, *v)
 	if err != nil {
-		return err
+		return failure("ties", err)
 	}
 	if fresh.Binding != v.round.Proposal.Binding || !unresolvedOnly(fresh) {
 		return access.ErrConflict
@@ -122,29 +176,57 @@ func (s Service) changeTie(ctx context.Context, tx pgx.Tx, actor, eventID uuid.U
 		return access.ErrInvalid
 	}
 	for _, id := range remaining {
-		if err = mentors.AuthorizeQualificationPanelInTransaction(ctx, tx, actor, eventID, id); err != nil {
-			return err
+		if err = mentors.AuthorizeQualificationPanelInTransaction(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			id,
+		); err != nil {
+			return failure("ties", err)
 		}
 	}
 	teams, err := s.cohort(ctx, tx, eventID, *v)
 	if err != nil {
-		return err
+		return failure("ties", err)
 	}
 	team, err := findTeam(teams, input.TeamID)
 	if err != nil || team.source == nil {
 		return access.ErrConflict
 	}
-	if err = s.Cards.AuthorizeModerationEvidenceInTransaction(ctx, tx, actor, eventID, input.TeamID, input.Evidence, &team.source.SubmissionRevision); err != nil {
-		return err
+	if err = s.Cards.AuthorizeModerationEvidenceInTransaction(
+		ctx,
+		tx,
+		actor,
+		eventID,
+		input.TeamID,
+		input.Evidence,
+		&team.source.SubmissionRevision,
+	); err != nil {
+		return failure("ties", err)
 	}
 	if input.Action == "vote_tie" {
 		if !slices.Contains(v.round.Panel.MentorIDs, actor) {
 			return access.ErrForbidden
 		}
-		if slices.ContainsFunc(v.round.Votes, func(vote Vote) bool { return vote.TieID == tie.ID && vote.Seat == seat && vote.ActorID == actor }) {
+		if slices.ContainsFunc(
+			v.round.Votes,
+			func(vote Vote) bool { return vote.TieID == tie.ID && vote.Seat == seat && vote.ActorID == actor },
+		) {
 			return access.ErrConflict
 		}
-		v.round.Votes = append(v.round.Votes, Vote{TieID: tie.ID, Seat: seat, TeamID: input.TeamID, ActorID: actor, Reason: input.Reason, Evidence: input.Evidence, At: s.now()})
+		v.round.Votes = append(
+			v.round.Votes,
+			Vote{
+				TieID:    tie.ID,
+				Seat:     seat,
+				TeamID:   input.TeamID,
+				ActorID:  actor,
+				Reason:   input.Reason,
+				Evidence: input.Evidence,
+				At:       s.now(),
+			},
+		)
 	} else {
 		if actor != v.round.Panel.OrganiserID {
 			return access.ErrForbidden
@@ -153,11 +235,23 @@ func (s Service) changeTie(ctx context.Context, tx pgx.Tx, actor, eventID uuid.U
 		if !valid || !slices.Contains(winners, input.TeamID) {
 			return access.ErrConflict
 		}
-		v.round.Decisions = append(v.round.Decisions, TieDecision{TieID: tie.ID, Seat: seat, TeamID: input.TeamID, ActorID: actor, Casting: len(winners) > 1, Reason: input.Reason, Evidence: input.Evidence, At: s.now()})
+		v.round.Decisions = append(
+			v.round.Decisions,
+			TieDecision{
+				TieID:    tie.ID,
+				Seat:     seat,
+				TeamID:   input.TeamID,
+				ActorID:  actor,
+				Casting:  len(winners) > 1,
+				Reason:   input.Reason,
+				Evidence: input.Evidence,
+				At:       s.now(),
+			},
+		)
 	}
 	fresh, err = s.proposal(ctx, tx, eventID, *v)
 	if err != nil {
-		return err
+		return failure("ties", err)
 	}
 	v.round.Proposal = &fresh
 	return nil

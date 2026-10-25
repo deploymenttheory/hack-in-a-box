@@ -71,3 +71,39 @@ Rebase preserves actual migration51 and does not replay a squashed parent.
 Qualification/moderation/mentor/rubric/HTTP/application compile checks pass after
 that rebase; earlier native timings remain attributed to the actual ae24005
 parent on which they executed. Canonical sqlc models include migration52.
+
+## Durable corrected-parent recovery and bounded integrity corrections
+
+The recovered clean checkpoint `383edaef2ed9aa56aaf67c02427288d0e80b2606`
+is stacked on actual corrected #108 `b57d0829ca8c13d0f23ab0573161f1966373e2f5`,
+including its complete factual-summary migration51 and recipient-filtered evidence
+projections. Bounded HTTP/application compilation passed0.371s/0.387s, with no
+tests selected. Earlier native timings above retain their original attribution.
+
+Actual new real PostgreSQL/race regressions on the owned extension reproduced:
+
+- Direct qualification-source TRUNCATE was accepted (RED2.585s). Statement
+  UPDATE/DELETE/TRUNCATE guards then rejected both direct sources truncation and
+  rounds truncation with CASCADE (GREEN3.225s). These use actual51→52 migrations.
+- A named qualification-panel mentor without native observation access received
+  a private observation UUID and its attached note (RED3.116s; native notes read
+  was independently403). Per-recipient copied evidence projections removed both,
+  retained the separately authored panel-facing note and preserved the owner's
+  full authored references (GREEN4.483s). This does not claim full mixed-document
+  history/eligibility/vote privacy coverage yet.
+- A mismatched captured freeze identity was accepted for a new moderated card
+  (RED6.123s). Card save/sign and eligibility decisions now require the exact
+  captured opaque freeze binding, separately from native decision UUID/head
+  checks. The bounded owned native suite passed20.918s before the subsequent
+  behavior-preserving lint refactor; final post-refactor proof remains separate.
+
+All owned test PostgreSQL containers terminated normally. Logs are task-owned
+`/private/tmp/hackbox110-{panel-privacy-red,panel-privacy-green,binding-red,owner-green}.log`.
+These are synthetic native owners, not providers or a completed HTTP deliverable.
+
+The actual published383 CI lint job121112516827 identified formatting, error
+wrapping and two oversized methods. Scoped native owner refactoring and contextual
+error wrapping corrected them; configured local golangci-lint2.14.0 reports0issues
+for qualification/moderation/mentor/rubric packages. Full API/runtime/history,
+tied-cutoff/category votes, managed-amendment, concurrency and migration preservation
+proof remain required; no acceptance scope has been narrowed.

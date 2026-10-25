@@ -149,20 +149,65 @@ func setupPool(t *testing.T, pool *pgxpool.Pool, counts ...int) *fixture {
 	if len(counts) > 0 {
 		count = counts[0]
 	}
-	f.teams = append(f.teams, fixtureTeam{team: f.team, entry: f.entry, member: f.member, other: f.other})
+	f.teams = append(
+		f.teams,
+		fixtureTeam{team: f.team, entry: f.entry, member: f.member, other: f.other},
+	)
 	for index := 1; index < count; index++ {
-		team := fixtureTeam{team: uuid.New(), entry: uuid.New(), member: testdb.Person(t, pool), other: testdb.Person(t, pool)}
-		f.exec("INSERT INTO hack_teams(event_id,id,name,state,frozen)VALUES($1,$2,$3,'published',true)", f.event, team.team, fmt.Sprintf("Synthetic qualification team %d", index+1))
-		f.exec("INSERT INTO competition_entries(id,event_id,team_id)VALUES($1,$2,$3)", team.entry, f.event, team.team)
-		for _, person := range []dbgen.Person{team.member, team.other} {
-			f.exec("INSERT INTO competition_claims(event_id,person_id,state)VALUES($1,$2,'confirmed')", f.event, person.ID)
-			f.exec("INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot)VALUES($1,$2,$3,'published')", f.event, team.team, person.ID)
+		team := fixtureTeam{
+			team:   uuid.New(),
+			entry:  uuid.New(),
+			member: testdb.Person(t, pool),
+			other:  testdb.Person(t, pool),
 		}
-		f.exec("INSERT INTO policy_resources(event_id,id,kind)VALUES($1,$2,'team'),($1,$3,'assessment')", f.event, team.team, team.entry)
-		f.exec("INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,'primary','published',$5,$6),($1,$2,$4,'second','published',$5,$6)", f.event, team.team, f.primary.ID, f.second.ID, f.config.LiveStart, f.config.LiveEnd)
+		f.exec(
+			"INSERT INTO hack_teams(event_id,id,name,state,frozen)VALUES($1,$2,$3,'published',true)",
+			f.event,
+			team.team,
+			fmt.Sprintf("Synthetic qualification team %d", index+1),
+		)
+		f.exec(
+			"INSERT INTO competition_entries(id,event_id,team_id)VALUES($1,$2,$3)",
+			team.entry,
+			f.event,
+			team.team,
+		)
+		for _, person := range []dbgen.Person{team.member, team.other} {
+			f.exec(
+				"INSERT INTO competition_claims(event_id,person_id,state)VALUES($1,$2,'confirmed')",
+				f.event,
+				person.ID,
+			)
+			f.exec(
+				"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot)VALUES($1,$2,$3,'published')",
+				f.event,
+				team.team,
+				person.ID,
+			)
+		}
+		f.exec(
+			"INSERT INTO policy_resources(event_id,id,kind)VALUES($1,$2,'team'),($1,$3,'assessment')",
+			f.event,
+			team.team,
+			team.entry,
+		)
+		f.exec(
+			"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,'primary','published',$5,$6),($1,$2,$4,'second','published',$5,$6)",
+			f.event,
+			team.team,
+			f.primary.ID,
+			f.second.ID,
+			f.config.LiveStart,
+			f.config.LiveEnd,
+		)
 		f.teams = append(f.teams, team)
 	}
-	f.exec("UPDATE event_gate_facts SET total_teams=$2,frozen_teams=$2,assigned_attendees=$3 WHERE event_id=$1", f.event, count, count*2)
+	f.exec(
+		"UPDATE event_gate_facts SET total_teams=$2,frozen_teams=$2,assigned_attendees=$3 WHERE event_id=$1",
+		f.event,
+		count,
+		count*2,
+	)
 	f.exec("UPDATE mentor_profiles SET maximum_teams=$2 WHERE event_id=$1", f.event, count)
 	f.s = scorecards.Service{Pool: pool, Now: func() time.Time { return f.now }}
 	f.rubric = rubric.Service{Pool: pool, Clock: func() time.Time { return f.now }}
@@ -335,7 +380,14 @@ func (f *fixture) freeze() {
 }
 
 func (f *fixture) huddles() *moderation.Service {
-	return &moderation.Service{Pool: f.pool, Clock: func() time.Time { return f.now }, Cards: &f.s, Actions: moderation.FeedbackActions{Service: &feedback.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}}}
+	return &moderation.Service{
+		Pool:  f.pool,
+		Clock: func() time.Time { return f.now },
+		Cards: &f.s,
+		Actions: moderation.FeedbackActions{
+			Service: &feedback.Service{Pool: f.pool, Clock: func() time.Time { return f.now }},
+		},
+	}
 }
 
 func (f *fixture) create(s *moderation.Service, cp scorecards.Checkpoint) moderation.Huddle {
@@ -367,7 +419,12 @@ func (f *fixture) create(s *moderation.Service, cp scorecards.Checkpoint) modera
 	return h
 }
 
-func (f *fixture) change(s *moderation.Service, h moderation.Huddle, actor uuid.UUID, command moderation.Command) moderation.Huddle {
+func (f *fixture) change(
+	s *moderation.Service,
+	h moderation.Huddle,
+	actor uuid.UUID,
+	command moderation.Command,
+) moderation.Huddle {
 	f.t.Helper()
 	command.Version = h.Version
 	if command.Reason == "" {

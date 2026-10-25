@@ -30,8 +30,8 @@ BEGIN
 END;
 $$;
 -- +goose StatementEnd
-CREATE TRIGGER qualification_rounds_immutable BEFORE UPDATE OR DELETE ON mentor_qualification_rounds FOR EACH ROW EXECUTE FUNCTION reject_qualification_mutation();
-CREATE TRIGGER qualification_sources_immutable BEFORE UPDATE OR DELETE ON mentor_qualification_sources FOR EACH ROW EXECUTE FUNCTION reject_qualification_mutation();
+CREATE TRIGGER qualification_rounds_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_qualification_rounds FOR EACH STATEMENT EXECUTE FUNCTION reject_qualification_mutation();
+CREATE TRIGGER qualification_sources_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_qualification_sources FOR EACH STATEMENT EXECUTE FUNCTION reject_qualification_mutation();
 -- +goose Down
 -- +goose StatementBegin
 DO $$ BEGIN

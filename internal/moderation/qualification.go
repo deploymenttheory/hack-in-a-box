@@ -29,7 +29,11 @@ type QualificationSource struct {
 // QualificationSourceInTransaction revalidates the canonical signed final as
 // its original intended moderator. It cannot substitute a checkpoint, another
 // huddle, an incomplete review or a broader caller's evidence permission.
-func (s Service) QualificationSourceInTransaction(ctx context.Context, tx pgx.Tx, eventID, teamID, runID uuid.UUID) (QualificationSource, error) {
+func (s Service) QualificationSourceInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, teamID, runID uuid.UUID,
+) (QualificationSource, error) {
 	var out QualificationSource
 	decision, err := finalDecision(ctx, tx, eventID, teamID, runID)
 	if err != nil {
@@ -39,17 +43,32 @@ func (s Service) QualificationSourceInTransaction(ctx context.Context, tx pgx.Tx
 	if err != nil {
 		return out, err
 	}
-	if h.State != "signed" || h.Checkpoint.Purpose != "mentor_final" || h.Checkpoint.Definition.RunID != runID || h.Version != decision.HuddleVersion || h.SignoffID == nil || *h.SignoffID != decision.SignoffID || h.SignoffContext == nil || h.SignoffContext.Version != decision.ContextVersion {
+	if h.State != "signed" || h.Checkpoint.Purpose != "mentor_final" ||
+		h.Checkpoint.Definition.RunID != runID ||
+		h.Version != decision.HuddleVersion ||
+		h.SignoffID == nil ||
+		*h.SignoffID != decision.SignoffID ||
+		h.SignoffContext == nil ||
+		h.SignoffContext.Version != decision.ContextVersion {
 		return out, access.ErrConflict
 	}
-	proof, err := s.ResolveScorecardContextInTransaction(ctx, tx, h.Definition.ModeratorID, eventID, teamID, h.Definition.ID)
+	proof, err := s.ResolveScorecardContextInTransaction(
+		ctx,
+		tx,
+		h.Definition.ModeratorID,
+		eventID,
+		teamID,
+		h.Definition.ID,
+	)
 	if err != nil {
 		return out, err
 	}
-	if proof.UnresolvedGaps != 0 || proof.SubmissionRevision < 1 || binding(proof) != binding(*h.SignoffContext) {
+	if proof.UnresolvedGaps != 0 || proof.SubmissionRevision < 1 ||
+		binding(proof) != binding(*h.SignoffContext) {
 		return out, access.ErrConflict
 	}
-	row, err := dbgen.New(tx).MentorScorecardSignoff(ctx, dbgen.MentorScorecardSignoffParams{EventID: eventID, ContextID: h.Definition.ID, ContextVersion: decision.ContextVersion})
+	row, err := dbgen.New(tx).
+		MentorScorecardSignoff(ctx, dbgen.MentorScorecardSignoffParams{EventID: eventID, ContextID: h.Definition.ID, ContextVersion: decision.ContextVersion})
 	if err != nil {
 		return out, fmt.Errorf("read canonical qualification proof: %w", err)
 	}
@@ -57,8 +76,17 @@ func (s Service) QualificationSourceInTransaction(ctx context.Context, tx pgx.Tx
 	if err = json.Unmarshal(row.Proof, &signed); err != nil {
 		return out, fmt.Errorf("decode canonical qualification proof: %w", err)
 	}
-	if signed.ID != decision.SignoffID || signed.TeamID != teamID || signed.RunID != runID || signed.ActorID != h.Definition.ModeratorID || binding(signed.Context) != binding(proof) {
+	if signed.ID != decision.SignoffID || signed.TeamID != teamID || signed.RunID != runID ||
+		signed.ActorID != h.Definition.ModeratorID ||
+		binding(signed.Context) != binding(proof) {
 		return out, access.ErrConflict
 	}
-	return QualificationSource{HuddleID: h.Definition.ID, HuddleVersion: h.Version, ModeratorID: h.Definition.ModeratorID, SubmissionRevision: proof.SubmissionRevision, Rubric: h.Checkpoint.Rubric, Signoff: signed}, nil
+	return QualificationSource{
+		HuddleID:           h.Definition.ID,
+		HuddleVersion:      h.Version,
+		ModeratorID:        h.Definition.ModeratorID,
+		SubmissionRevision: proof.SubmissionRevision,
+		Rubric:             h.Checkpoint.Rubric,
+		Signoff:            signed,
+	}, nil
 }

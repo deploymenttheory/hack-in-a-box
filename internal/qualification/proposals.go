@@ -13,13 +13,26 @@ import (
 )
 
 func emptyProposal() Proposal {
-	return Proposal{Rankings: []Ranking{}, FinalistIDs: []uuid.UUID{}, ReserveIDs: []uuid.UUID{}, Categories: []CategoryProposal{}, Ties: []Tie{}, Blockers: []string{}}
+	return Proposal{
+		Rankings:    []Ranking{},
+		FinalistIDs: []uuid.UUID{},
+		ReserveIDs:  []uuid.UUID{},
+		Categories:  []CategoryProposal{},
+		Ties:        []Tie{},
+		Blockers:    []string{},
+	}
 }
-func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v scope) (Proposal, error) {
+
+func (s Service) proposal(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	v scope,
+) (Proposal, error) {
 	p := emptyProposal()
 	teams, err := s.cohort(ctx, tx, eventID, v)
 	if err != nil {
-		return p, err
+		return p, failure("proposals", err)
 	}
 	signatures := []any{v.reference, v.round.Panel, v.round.Eligibility}
 	cards := map[uuid.UUID]FinalCard{}
@@ -39,19 +52,35 @@ func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 		}
 		p.Blockers = append(p.Blockers, team.status.Blockers...)
 		for _, member := range append(slices.Clone(v.round.Panel.MentorIDs), v.round.Panel.OrganiserID) {
-			if err := mentors.AuthorizeQualificationPanelInTransaction(ctx, tx, member, eventID, team.status.TeamID); err != nil {
+			if err := mentors.AuthorizeQualificationPanelInTransaction(
+				ctx,
+				tx,
+				member,
+				eventID,
+				team.status.TeamID,
+			); err != nil {
 				p.Blockers = append(p.Blockers, "panel_conflict_or_scope_changed")
 			}
 		}
-		index := slices.IndexFunc(v.round.Cards, func(c FinalCard) bool { return c.TeamID == team.status.TeamID })
+		index := slices.IndexFunc(
+			v.round.Cards,
+			func(c FinalCard) bool { return c.TeamID == team.status.TeamID },
+		)
 		if index < 0 {
-			p.Blockers = append(p.Blockers, "signed_final_card_required:"+team.status.TeamID.String())
+			p.Blockers = append(
+				p.Blockers,
+				"signed_final_card_required:"+team.status.TeamID.String(),
+			)
 			continue
 		}
 		card := v.round.Cards[index]
 		signatures = append(signatures, card)
-		if card.State != "signed" || !complete(card, v.criteria.Categories) || !s.cardCurrent(ctx, tx, eventID, card, team) {
-			p.Blockers = append(p.Blockers, "current_complete_final_card_required:"+team.status.TeamID.String())
+		if card.State != "signed" || !complete(card, v.criteria.Categories) ||
+			!s.cardCurrent(ctx, tx, eventID, card, team) {
+			p.Blockers = append(
+				p.Blockers,
+				"current_complete_final_card_required:"+team.status.TeamID.String(),
+			)
 			continue
 		}
 		cards[card.TeamID] = card
@@ -60,6 +89,89 @@ func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 	if len(p.Blockers) > 0 {
 		return p, nil
 	}
+	s.resolveTotals(ctx, tx, eventID, v, &p, cards)
+	s.resolveCategories(ctx, tx, eventID, v, &p, cards)
+	if len(p.Blockers) == 0 {
+		for index, ranking := range p.Rankings {
+			if index < v.criteria.FinalistCount {
+				p.FinalistIDs = append(p.FinalistIDs, ranking.TeamID)
+			} else if index < v.criteria.FinalistCount+v.criteria.ReserveCount {
+				p.ReserveIDs = append(p.ReserveIDs, ranking.TeamID)
+			}
+		}
+		if len(p.FinalistIDs) != v.criteria.FinalistCount ||
+			len(p.ReserveIDs) != v.criteria.ReserveCount {
+			p.Blockers = append(p.Blockers, "insufficient_eligible_teams")
+			p.FinalistIDs = []uuid.UUID{}
+			p.ReserveIDs = []uuid.UUID{}
+		}
+	}
+	return p, nil
+}
+
+func compareID(a, b uuid.UUID) int {
+	if a.String() < b.String() {
+		return -1
+	}
+	if a == b {
+		return 0
+	}
+	return 1
+}
+
+func tieID(binding string, tie Tie) string {
+	return digest(struct {
+		Binding string
+		Tie     Tie
+	}{binding, tie})
+}
+
+func without(ids, exclude []uuid.UUID) []uuid.UUID {
+	out := []uuid.UUID{}
+	for _, id := range ids {
+		if !slices.Contains(exclude, id) {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+func unresolvedOnly(p Proposal) bool {
+	for _, block := range p.Blockers {
+		if len(block) < len("unresolved_tie:") ||
+			block[:len("unresolved_tie:")] != "unresolved_tie:" {
+			return false
+		}
+	}
+	return true
+}
+
+func signedBinding(p Proposal, r Round) string {
+	return digest(struct {
+		Proposal  Proposal
+		Votes     []Vote
+		Decisions []TieDecision
+	}{p, r.Votes, r.Decisions})
+}
+
+func nextSeat(round Round, tie Tie) int {
+	seat := 1
+	for _, decision := range round.Decisions {
+		if decision.TieID == tie.ID && decision.Seat == seat {
+			seat++
+		}
+	}
+	return seat
+}
+
+func (s Service) resolveTotals(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	v scope,
+	p *Proposal,
+	cards map[uuid.UUID]FinalCard,
+) {
 	for id, card := range cards {
 		var total int64
 		for _, category := range v.criteria.Categories {
@@ -86,7 +198,7 @@ func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 			p.Rankings[index].Rank = start + 1
 		}
 		if end-start > 1 {
-			ids := []uuid.UUID{}
+			ids := make([]uuid.UUID, 0, end-start)
 			for _, r := range p.Rankings[start:end] {
 				ids = append(ids, r.TeamID)
 			}
@@ -118,6 +230,16 @@ func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 		}
 		start = end
 	}
+}
+
+func (s Service) resolveCategories(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	v scope,
+	p *Proposal,
+	cards map[uuid.UUID]FinalCard,
+) {
 	for _, category := range v.criteria.Categories {
 		var max *int
 		winners := []uuid.UUID{}
@@ -147,69 +269,9 @@ func (s Service) proposal(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, v s
 				p.Blockers = append(p.Blockers, "unresolved_tie:"+tie.ID)
 			}
 		}
-		p.Categories = append(p.Categories, CategoryProposal{CategoryID: category.ID, TeamIDs: winners})
+		p.Categories = append(
+			p.Categories,
+			CategoryProposal{CategoryID: category.ID, TeamIDs: winners},
+		)
 	}
-	if len(p.Blockers) == 0 {
-		for index, ranking := range p.Rankings {
-			if index < v.criteria.FinalistCount {
-				p.FinalistIDs = append(p.FinalistIDs, ranking.TeamID)
-			} else if index < v.criteria.FinalistCount+v.criteria.ReserveCount {
-				p.ReserveIDs = append(p.ReserveIDs, ranking.TeamID)
-			}
-		}
-		if len(p.FinalistIDs) != v.criteria.FinalistCount || len(p.ReserveIDs) != v.criteria.ReserveCount {
-			p.Blockers = append(p.Blockers, "insufficient_eligible_teams")
-			p.FinalistIDs = []uuid.UUID{}
-			p.ReserveIDs = []uuid.UUID{}
-		}
-	}
-	return p, nil
-}
-func compareID(a, b uuid.UUID) int {
-	if a.String() < b.String() {
-		return -1
-	}
-	if a == b {
-		return 0
-	}
-	return 1
-}
-func tieID(binding string, tie Tie) string {
-	return digest(struct {
-		Binding string
-		Tie     Tie
-	}{binding, tie})
-}
-func without(ids, exclude []uuid.UUID) []uuid.UUID {
-	out := []uuid.UUID{}
-	for _, id := range ids {
-		if !slices.Contains(exclude, id) {
-			out = append(out, id)
-		}
-	}
-	return out
-}
-func unresolvedOnly(p Proposal) bool {
-	for _, block := range p.Blockers {
-		if len(block) < len("unresolved_tie:") || block[:len("unresolved_tie:")] != "unresolved_tie:" {
-			return false
-		}
-	}
-	return true
-}
-func signedBinding(p Proposal, r Round) string {
-	return digest(struct {
-		Proposal  Proposal
-		Votes     []Vote
-		Decisions []TieDecision
-	}{p, r.Votes, r.Decisions})
-}
-func nextSeat(round Round, tie Tie) int {
-	seat := 1
-	for _, decision := range round.Decisions {
-		if decision.TieID == tie.ID && decision.Seat == seat {
-			seat++
-		}
-	}
-	return seat
 }
