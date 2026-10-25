@@ -28,7 +28,8 @@ export function JudgeEditor(props:Props){
  const dirty=JSON.stringify(inputs)!==baseline,stale=version!==baseVersion,locked=card?.state==='submitted'&&version===baseVersion,pending=preparing||commands.pending
  const blocked=paused||pending||commands.unconfirmed||stale||card?.state==='source_changed'
  const depart=()=>{if(!scope.capture().current())return true;if(pending)return false;return !(dirty||commands.unconfirmed)||window.confirm(commands.unconfirmed?'Leave this original outcome unresolved? Only safe request metadata will remain; it will not be replayed.':'Discard your private unsent judge scores?')}
- useBlocker({shouldBlockFn:()=>!depart(),enableBeforeUnload:dirty||pending||commands.unconfirmed})
+ // Sent-command departure belongs to the surviving metadata history.
+ useBlocker({shouldBlockFn:()=>commands.pending||commands.unconfirmed?false:!depart(),enableBeforeUnload:dirty||pending||commands.unconfirmed})
  usePlanningDepartureBarrier(pending)
  useLayoutEffect(()=>{registerDeparture?.(depart);return()=>registerDeparture?.(()=>true)})
  useEffect(()=>{if(Object.keys(errors).length&&form.current)focusFirstInvalid(form.current)},[errors])
@@ -65,7 +66,7 @@ export function JudgeEditor(props:Props){
    commands.complete(attemptID) // exact safe metadata may settle after private teardown
    if(ticket.current()){setReceipt(result);setReview(undefined);setBaseVersion(result.revision);setBaseline(JSON.stringify(target.inputs));if(target.intent.action==='reset'){const empty=scoreInputs(criteria);setInputs(empty);setBaseline(JSON.stringify(empty))}await refresh()}
   }catch(error){
-   if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500)commands.complete(attemptID);else commands.uncertain(attemptID)}
+   if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408)commands.complete(attemptID);else commands.uncertain(attemptID)}
    if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
   }finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }

@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useBlocker } from '@tanstack/react-router'
+import { usePlanningDepartureBarrier } from './planning-operations'
 import { useIdentity } from './session'
 import { useCommunicationCommands, useCommunicationCommandNamespace } from './communication-tests'
 import { usePrivateRequestScope } from './private-request-scope'
@@ -8,11 +10,25 @@ import { matchJudgeReceipt, type JudgeIntent } from './judge-model'
 import { Button } from './components/ui/button'
 import { Failure } from './components/states'
 
+const confirmDeparture=()=>window.confirm('Leave this judge workspace with an original command outcome still unconfirmed? Safe request metadata remains for this signed-in session; no request will be replayed.')
+
 // Session-level fixed-label metadata survives private task teardown. It stores
 // no scores, notes, team names, reasons or captured retry body.
 export function JudgeCommandHistory({eventID}:{eventID:string}){
  const identity=useIdentity(),prefix=judgeNamespace(identity.person.id,identity.draft_scope,eventID),attempts=useCommunicationCommandNamespace(prefix)
  const scope=usePrivateRequestScope(`${prefix}:original-recovery`),[error,setError]=useState<unknown>(),[message,setMessage]=useState<{text:string;requestID:string}>()
+ const pending=attempts.some(attempt=>attempt.state==='pending'),unknown=attempts.some(attempt=>attempt.state==='unknown')
+
+ // This metadata-only owner survives native role/assignment denial. Private
+ // task disposal must not release a sent command's departure protection.
+ usePlanningDepartureBarrier(pending)
+ useBlocker({shouldBlockFn:()=>pending||unknown&&!confirmDeparture(),enableBeforeUnload:attempts.length>0})
+ useLayoutEffect(()=>{
+  if(!unknown||pending)return
+  const guard=(event:Event)=>{if(!confirmDeparture())event.preventDefault()}
+  window.addEventListener('planning-departure',guard)
+  return()=>window.removeEventListener('planning-departure',guard)
+ },[unknown,pending])
  const [reading,setReading]=useState(false),origin=useRef<HTMLButtonElement|null>(null),outcome=useRef<HTMLParagraphElement|null>(null)
  useEffect(()=>{if(!message)return;const frame=requestAnimationFrame(()=>{const source=origin.current;(source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:outcome.current)?.focus()});return()=>cancelAnimationFrame(frame)},[message])
  return <>{attempts.length>0&&<aside className="fleet-judge-section" aria-label="Original judge command history"><h2>Earlier unconfirmed judge commands</h2><p>Only original request metadata survives a closed or denied task. Current reads and new commands never confirm an earlier outcome.</p>{attempts.map(a=><JudgeHistoryRow key={a.id} eventID={eventID} prefix={prefix} attempt={a} reading={reading} recover={async button=>{

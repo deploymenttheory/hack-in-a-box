@@ -7,7 +7,7 @@ export const teamA='3f8af336-a168-47ed-b67c-cba51d530413',teamB='e6bcb64c-8c03-4
 export const criteria:components['schemas']['PublicRubricDefinition']={...judgeGuideCriteria,categories:['Demo','Technical approach','UX','Feature fit','Innovation'].map((label,i)=>({...judgeGuideCriteria.categories[0],label,id:`8ffbb915-b8cc-439b-b025-00ca75dcf07${i}`}))}
 export function judgeFixture(){
  const make=(id:string,name:string):components['schemas']['JudgeBrief']=>({...structuredClone(judgeGuideBrief),team_id:id,team_name:name,criteria,reference:{...judgeGuideBrief.reference,digest:'a'.repeat(64)},submission:{definitions:[],evidence:[{...judgeGuideBrief.submission.evidence[0],label:'Frozen demonstration',url:'https://example.test/synthetic-frozen-build'}]}})
- return {briefs:{[teamA]:make(teamA,'Synthetic Aurora build'),[teamB]:make(teamB,'Synthetic Beacon build')} as Record<string,components['schemas']['JudgeBrief']>,assignments:[teamA,teamB],authorized:true,gate:false,failBrief:false,loseNext:false,corruptReceipt:false,organiser:false,practiceDenied:false,receiptAvailable:true,stateReads:0,requests:[] as {body:Record<string,unknown>;revision:string;path:string}[],receipts:new Map<string,components['schemas']['JudgeReceipt']>(),practice:{fictional_entry_id:'8afac138-307a-4bf8-8e04-4ad02dd57977',name:'Fictional practice robot — synthetic entry',criteria,rubric:judgeGuideBrief.reference,card:null} as components['schemas']['JudgePractice'],states:[] as components['schemas']['JudgeCardState'][]}
+ return {briefs:{[teamA]:make(teamA,'Synthetic Aurora build'),[teamB]:make(teamB,'Synthetic Beacon build')} as Record<string,components['schemas']['JudgeBrief']>,assignments:[teamA,teamB],authorized:true,gate:false,failBrief:false,loseNext:false,timeoutNext:false,responseGate:undefined as Promise<void>|undefined,corruptReceipt:false,organiser:false,practiceDenied:false,receiptAvailable:true,stateReads:0,requests:[] as {body:Record<string,unknown>;revision:string;path:string}[],receipts:new Map<string,components['schemas']['JudgeReceipt']>(),practice:{fictional_entry_id:'8afac138-307a-4bf8-8e04-4ad02dd57977',name:'Fictional practice robot — synthetic entry',criteria,rubric:judgeGuideBrief.reference,card:null} as components['schemas']['JudgePractice'],states:[] as components['schemas']['JudgeCardState'][]}
 }
 export async function prepareJudging(page:Page,data=judgeFixture(),practice=false){
  const workspace=await mockWorkspace(page),event=workspace.events[0];event.stage='assessment';event.can_edit=data.organiser;event.can_read_staff=data.organiser;event.can_present=false;event.can_transition=data.organiser
@@ -48,6 +48,8 @@ export async function prepareJudging(page:Page,data=judgeFixture(),practice=fals
  const fingerprint=await judgeFingerprint(body,expected,isPractice?undefined:runID,isPractice?undefined:team)
  const receipt={request_id:body.request_id,actor_id:person.id,run_id:isPractice?'00000000-0000-0000-0000-000000000000':runID,team_id:isPractice?data.practice.fictional_entry_id:team,action:isPractice?`practice_${body.action}`:body.action,revision:expected+1,state,fingerprint}
  data.receipts.set(body.request_id,receipt)
+ if(data.responseGate)await data.responseGate
+ if(data.timeoutNext){data.timeoutNext=false;return reject(408)}
  if(data.loseNext){data.loseNext=false;return route.abort('failed')}
  return route.fulfill({json:data.corruptReceipt?{...receipt,actor_id:otherJudge}:receipt})
  }

@@ -58,3 +58,13 @@ The desk uses actual event branding and event-local cutoff context. Its frozen
 build destination is the independently authorised submitted-build reader with
 `judge_run` context. The reader performs its own exact-team and native artifact
 reads; a desk link does not transfer authority or score data.
+
+A sent command's pending/unknown departure protection belongs to the surviving
+metadata history, above private role/assignment-bound owners. Pending originals
+block route and planning departure; unknown originals require explicit departure
+acknowledgement, retaining metadata for this signed-in session. Before-unload
+protection remains while any original is unconfirmed. Private draft guards still
+own unsent/preflight work and internal build movement, without a second prompt
+for the same sent command. Matching original acknowledgements can settle this
+metadata after private access is lost; current GETs cannot. HTTP408 remains an
+uncertain sent outcome for final scoring, practice and reasoned reopening.
