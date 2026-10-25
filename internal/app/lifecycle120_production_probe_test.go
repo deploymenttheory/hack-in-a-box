@@ -43,7 +43,7 @@ func TestLifecycleNormalImageCalendarAPI(t *testing.T) {
 	var preview struct {
 		ChallengePublication *time.Time `json:"challenge_publication"`
 	}
-	if err := owner.call(t.Context(), http.MethodPost, "/api/v1/events/preview", -1, input, &preview, http.StatusOK); err != nil {
+	if err := owner.call(t.Context(), http.MethodPost, "/api/v1/event-preview", -1, input, &preview, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
 	var created event.View
