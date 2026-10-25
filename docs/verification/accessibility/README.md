@@ -131,7 +131,18 @@ because an Enter after native select type-ahead had already submitted to review.
 The corrected keyboard sequence continues by Tab to the explicit review control.
 Registration-only retest passed 1/1 (8.7s), test owner 67.52s/package 69.585s.
 These are separate dirty diagnostic runs, not a combined clean seven-case pass.
-The full new native configuration and exact source proof remain to be executed.
+The clean combined configuration subsequently passed **7/7, 70.8s** at source
+`9285577d3a19efa883711c37128f6c69714242ce`; native race test owner **111.97s**,
+package **113.860s**. [Combined source/environment/clock/scan proof](admission-and-live-native-proof.json)
+records seven passed cases, 23 unsuppressed state scans, matching clean start/end
+source, unset selection filters and the admission clock unchanged at its own
+pre-gate instant. Browser/axe versions, viewports and incomplete rules are retained.
+These timings describe the executed verification host, not product latency targets.
+The guide's unchanged two-case proof remains at its previously attributed source.
+
+Criterion 1 and full #122 remain incomplete: final judge/practice/showcase,
+additional critical states and manual/current-stable-browser/device/assistive
+technology review are still required. No broad row is marked passed.
 
 ## Current diagnostic checkpoint
 

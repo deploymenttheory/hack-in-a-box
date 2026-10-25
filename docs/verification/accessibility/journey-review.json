@@ -16,7 +16,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -33,7 +35,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -50,7 +54,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -88,7 +94,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -104,7 +112,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -120,7 +130,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -136,7 +148,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
@@ -152,7 +166,9 @@
       ],
       "status": "not_evaluated",
       "environments": [],
-      "automated_evidence": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
       "manual_evidence": [],
       "defects": []
     },
