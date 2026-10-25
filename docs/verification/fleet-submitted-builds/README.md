@@ -73,3 +73,30 @@ Durable job leases/due checks use actual wall time, so the future-dated inherite
 live rehearsal cannot honestly supply a due capture operation. No existing clock
 is rewound and no operation deadline, native policy or receipt is changed. Its
 production HTTP surfaces still reuse the merged private runtime/static harness.
+
+## Actual native RED on clean 855cb17
+
+The first real PostgreSQL/HTTP/browser run reached native branch configuration
+and immutable original lookup, then failed both desktop/mobile receipt recovery
+(**package23.778s**, `/private/tmp/hackbox97-native-855.log`). The server returned
+the correct original200 receipt. The client mirror placed `native_revision`
+before `submission_revision`; the actual Go Command has the opposite field order.
+The mocked transport used the same frontend encoder and therefore missed this.
+The earlier manual mirror-struct vector is not valid proof of native parity.
+
+The correction checks a shared corpus through the **actual native Command and
+private fingerprint function** and through the frontend encoder. It covers nil
+versus empty slices, HTML escaping, Unicode line separators, non-ASCII text and
+Go White_Space trimming (U+0085 is trimmed; FEFF is retained). Both codec suites
+pass. The real browser decision now contains those text classes too; unchanged
+receipt matching remains mandatory. Native execution after correction is pending.
+
+The same race-enabled run exposed a fixture-only captured outer `err` assignment
+in the private session issuer. That error is now request-local. This changes no
+production authentication. Both test-owned PostgreSQL containers were terminated;
+failed native artifacts remain at `/private/tmp/hackbox97-native-855-red`.
+
+Repository invitation acceptance guidance was checked against the primary
+[GitHub collaborator API documentation](https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28): invitees accept through their notifications,
+email or API. The UI sends no acceptance on their behalf and retains current
+verified-account and provider-uncertainty distinctions.

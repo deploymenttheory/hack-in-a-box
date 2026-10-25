@@ -135,12 +135,12 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 				http.Error(w, "unknown surface", 400)
 				return
 			}
-			actor, err = q.Person(request.Context(), actor.ID)
-			if err != nil {
+			currentActor, loadErr := q.Person(request.Context(), actor.ID)
+			if loadErr != nil {
 				http.Error(w, "current actor unavailable", 500)
 				return
 			}
-			cookie, cookieErr := surface.sessionCookie(request.Context(), actor)
+			cookie, cookieErr := surface.sessionCookie(request.Context(), currentActor)
 			if cookieErr != nil {
 				http.Error(w, "fixture authentication failed", 500)
 				return

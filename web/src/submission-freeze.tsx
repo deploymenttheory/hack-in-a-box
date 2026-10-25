@@ -12,7 +12,7 @@ import { Button } from './components/ui/button'
 import { Field, Input, Textarea, Checkbox } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
 import { FreezeEvidence, FreezeReview } from './submission-freeze-view'
-import { freezeFingerprint, matchesFreezeReceipt, type FreezePage, type FreezeIntent, type FreezeAcknowledgement, type FreezeCommand } from './submission-freeze-model'
+import { freezeFingerprint, trimFreezeEvidence, matchesFreezeReceipt, type FreezePage, type FreezeIntent, type FreezeAcknowledgement, type FreezeCommand } from './submission-freeze-model'
 import { localDate } from './event-time'
 import { useRepositoryDraft } from './repository-drafts'
 
@@ -58,7 +58,7 @@ function FreezeEditor({page,eventID,teamID,timezone,parent,paused,refresh,comman
  async function prepare(action:FreezeCommand['action'],button:HTMLElement){
   if(disabled||lock.current)return
   const ticket=scope.capture();opener.current=button;setFailure(undefined)
-  const command:FreezeCommand=action==='configure'?{request_id:crypto.randomUUID(),action,branch}:{request_id:crypto.randomUUID(),action,source_id:page.source!.id,sha,reason:reason.trim(),external_evidence:external.trim(),observation_ids:[...observations],push_ids:[...pushIDs],native_revision:page.native_revision,submission_revision:page.current_submission_revision!,prior_decision_id:action==='amend'?page.current?.id??null:null}
+  const command:FreezeCommand=action==='configure'?{request_id:crypto.randomUUID(),action,branch}:{request_id:crypto.randomUUID(),action,source_id:page.source!.id,sha,reason:trimFreezeEvidence(reason),external_evidence:trimFreezeEvidence(external),observation_ids:[...observations],push_ids:[...pushIDs],native_revision:page.native_revision,submission_revision:page.current_submission_revision!,prior_decision_id:action==='amend'?page.current?.id??null:null}
   try{ticket.assert();const fingerprint=await freezeFingerprint(command,page.revision);ticket.assert();setReview({command,revision:page.revision,fingerprint})}catch(error){if(ticket.current())setFailure(error)}
  }
  async function confirm(){

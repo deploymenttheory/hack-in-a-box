@@ -6,8 +6,9 @@ export type FreezeIntent = { command: FreezeCommand; revision: number; fingerpri
 export type FreezeAcknowledgement = { requestID: string; action: string; revision: number; bodyAvailable: boolean }
 // Match the native Go command encoding, including zero values and reviewed head.
 // This is intent identity, not a signature or a permission decision.
+export const trimFreezeEvidence = (value:string) => value.replace(/^\p{White_Space}+|\p{White_Space}+$/gu,'')
 export async function freezeFingerprint(c: FreezeCommand, revision: number) {
-  const bytes = new TextEncoder().encode(JSON.stringify({ native_revision:c.native_revision??0,submission_revision:c.submission_revision??0,request_id:c.request_id,action:c.action,source_id:c.source_id??'00000000-0000-0000-0000-000000000000',branch:c.branch??'',sha:c.sha??'',reason:(c.reason??'').trim(),observation_ids:c.observation_ids??null,push_ids:c.push_ids??null,external_evidence:(c.external_evidence??'').trim(),prior_decision_id:c.prior_decision_id??null,expected_revision:revision }).replace(/[<>&]/g, char=>({'<':'\\u003c','>':'\\u003e','&':'\\u0026'}[char]!)).replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029'))
+  const bytes = new TextEncoder().encode(JSON.stringify({ submission_revision:c.submission_revision??0,native_revision:c.native_revision??0,request_id:c.request_id,action:c.action,source_id:c.source_id??'00000000-0000-0000-0000-000000000000',branch:c.branch??'',sha:c.sha??'',reason:trimFreezeEvidence(c.reason??''),observation_ids:c.observation_ids??null,push_ids:c.push_ids??null,external_evidence:trimFreezeEvidence(c.external_evidence??''),prior_decision_id:c.prior_decision_id??null,expected_revision:revision }).replace(/[<>&]/g, char=>({'<':'\\u003c','>':'\\u003e','&':'\\u0026'}[char]!)).replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029'))
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('')
 }
 export function matchesFreezeReceipt(receipt: FreezeReceipt, original: { requestID:string; action:string; revision:number; fingerprint:string }) {
