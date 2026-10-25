@@ -20,6 +20,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
+	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
 func TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope(t *testing.T) {
@@ -165,7 +166,9 @@ func TestProductionTeamsExpectedChallengeWaitsForGuardedCommonPublication(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg.LiveStart = f.now.Add(time.Minute).In(zone).AddDate(0, 0, 7)
+	publication := f.now.Add(time.Minute)
+	cfg.LiveStart = publication.In(zone).AddDate(0, 0, 7)
+	_, cfg.DSTChoice = testdb.WallTimeForInstant(t, publication, cfg.Timezone)
 	cfg.LiveEnd = cfg.LiveStart.Add(8 * time.Hour)
 	cfg.SubmissionCutoff = cfg.LiveEnd.Add(-time.Hour)
 	cfg.TeamFreeze = f.now.Add(-time.Hour)

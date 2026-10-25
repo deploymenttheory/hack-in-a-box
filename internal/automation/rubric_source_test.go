@@ -121,7 +121,9 @@ func prepareNativeCommonChallenge(
 	rubrics := rubric.Service{Pool: f.pool, Clock: func() time.Time { return f.now }}
 	cfg := event.DefaultConfiguration()
 	zone, _ := time.LoadLocation(cfg.Timezone)
-	cfg.LiveStart = f.now.In(zone).AddDate(0, 0, 7).Add(time.Minute)
+	publication := f.now.Add(time.Minute)
+	cfg.LiveStart = publication.In(zone).AddDate(0, 0, 7)
+	_, cfg.DSTChoice = testdb.WallTimeForInstant(t, publication, cfg.Timezone)
 	cfg.LiveEnd = cfg.LiveStart.Add(8 * time.Hour)
 	cfg.SubmissionCutoff = cfg.LiveEnd.Add(-time.Hour)
 	cfg.TeamFreeze = f.now.Add(-time.Hour)

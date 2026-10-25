@@ -354,20 +354,23 @@ func TestReschedulingAndCancellationInvalidateQueuedAutomation(t *testing.T) {
 				}
 				if !cancel {
 					definition := c.Campaign.Campaign.Definition
-					definition.Timing.WallTime = f.now.Add(10 * time.Minute).
-						Format("2006-01-02T15:04:05")
+					definition.Timing.WallTime, definition.Timing.DSTChoice = testdb.WallTimeForInstant(t, f.now.Add(10*time.Minute), c.Timezone)
 					command.Action = "save"
 					command.Definition = &definition
 				}
-				if _, err = f.s.Composer.ChangeCampaign(
+				changed, err := f.s.Composer.ChangeCampaign(
 					t.Context(),
 					f.owner.ID,
 					f.id,
 					f.campaignID,
 					f.revision(),
 					command,
-				); err != nil {
+				)
+				if err != nil {
 					t.Fatal(err)
+				}
+				if !cancel && (changed.Campaign.DueAt == nil || !changed.Campaign.DueAt.Equal(f.now.Add(10*time.Minute))) {
+					t.Fatalf("reschedule changed exact target %s: %+v", f.now.Add(10*time.Minute), changed.Campaign.DueAt)
 				}
 				f.now = f.now.Add(time.Minute)
 				invalidated := f.maintain()

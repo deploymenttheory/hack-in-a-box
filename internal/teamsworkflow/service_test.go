@@ -391,10 +391,7 @@ func (f *fixture) campaign(purpose, body string) uuid.UUID {
 			f.t.Fatal(err)
 		}
 	}
-	loc, err := time.LoadLocation("Europe/London")
-	if err != nil {
-		f.t.Fatal(err)
-	}
+	wall, choice := testdb.WallTimeForInstant(f.t, f.now.Add(time.Minute), "Europe/London")
 	definition := communications.CampaignDefinition{
 		ID:         uuid.New(),
 		Name:       "Synthetic event broadcast",
@@ -402,8 +399,9 @@ func (f *fixture) campaign(purpose, body string) uuid.UUID {
 		AudienceID: audience.ID,
 		Channels:   []string{"teams"},
 		Timing: communications.CampaignTiming{
-			Kind:     "fixed",
-			WallTime: f.now.Add(time.Minute).In(loc).Format("2006-01-02T15:04:05"),
+			Kind:      "fixed",
+			WallTime:  wall,
+			DSTChoice: choice,
 		},
 	}
 	var version int64
@@ -425,12 +423,45 @@ func (f *fixture) campaign(purpose, body string) uuid.UUID {
 			input,
 		)
 		if err != nil {
+			var blocked *event.Blocked
+			if errors.As(err, &blocked) {
+				f.t.Fatalf("%v: %+v", err, blocked.Issues)
+			}
 			f.t.Fatal(err)
 		}
 		version = detail.Campaign.Campaign.Version
 	}
 	f.now = f.now.Add(2 * time.Minute)
 	return definition.ID
+}
+
+func TestCampaignFixturePreservesBothRepeatedHourInstants(t *testing.T) {
+	for _, tc := range []struct {
+		name, instant, choice string
+	}{
+		{"earlier", "2026-10-25T00:30:00Z", "earlier"},
+		{"later", "2026-10-25T01:30:00Z", "later"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newFixture(t)
+			target, err := time.Parse(time.RFC3339, tc.instant)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.now = target.Add(-time.Minute)
+			id := f.campaign("reminder", "Synthetic repeated-hour reminder")
+			current, err := f.s.Composer.Campaign(t.Context(), f.owner.ID, f.id, id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			campaign := current.Campaign.Campaign
+			if current.Campaign.DueAt == nil || !current.Campaign.DueAt.Equal(target) ||
+				campaign.Approval == nil || !campaign.Approval.DueAt.Equal(target) ||
+				campaign.Definition.Timing.DSTChoice != tc.choice {
+				t.Fatalf("campaign changed the intended repeated-hour instant: %+v", current.Campaign)
+			}
+		})
+	}
 }
 
 func TestOnlyCurrentApprovedPublicCampaignCanReachChannel(t *testing.T) {

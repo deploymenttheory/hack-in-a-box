@@ -94,13 +94,11 @@ func TestHistoryUsesActualSelectionKeysetsOmissionsAndInboxPersistenceWithoutPri
 	definition.ID = uuid.New()
 	definition.Channels = []string{"in_app"}
 	definition.IncludeCalendar = false
-	zone, err := time.LoadLocation("Europe/London")
-	if err != nil {
-		t.Fatal(err)
-	}
+	wall, choice := testdb.WallTimeForInstant(t, f.now.Add(time.Minute), "Europe/London")
 	definition.Timing = communications.CampaignTiming{
-		Kind:     "fixed",
-		WallTime: f.now.Add(time.Minute).In(zone).Format("2006-01-02T15:04:05"),
+		Kind:      "fixed",
+		WallTime:  wall,
+		DSTChoice: choice,
 	}
 	var campaign communications.Campaign
 	for _, action := range []string{"save", "preview", "approve"} {
