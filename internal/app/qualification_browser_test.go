@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -161,7 +162,7 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport, scenario strin
 	})}
 	go func() { _ = control.Serve(listener) }()
 	t.Cleanup(func() { _ = control.Close() })
-	manifest := map[string]any{"event_id": r.eventID, "run_id": run, "team_id": r.teamID, "run_name": page.Criteria.Name, "owner_id": r.owner.ID, "mentor_name": r.mentor.DisplayName, "origin": surface.server.URL, "socket": socket, "surface": surfaceName, "viewport": viewport}
+	manifest := map[string]any{"event_id": r.eventID, "run_id": run, "team_id": r.teamID, "run_name": page.Criteria.Name, "owner_id": r.owner.ID, "mentor_name": r.mentor.DisplayName, "origin": surface.server.URL, "socket": socket, "surface": surfaceName, "viewport": viewport, "command_metadata_path": filepath.Join(private, "last-command.json")}
 	manifest["scenario"] = scenario
 	if scenario == "final" {
 		ids := []uuid.UUID{}
@@ -197,6 +198,25 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport, scenario strin
 	runErr := command.Run()
 	end, statusEnd := git("rev-parse", "HEAD"), git("status", "--porcelain", "--untracked-files=normal")
 	proof := map[string]any{"source_commit": head, "source_tree": tree, "source_commit_end": end, "source_worktree_clean": status == "" && statusEnd == "", "surface": surfaceName, "viewport": viewport, "event_id": r.eventID, "run_id": run, "browser_command_succeeded": runErr == nil, "scope": scenario + " native panel journey; exact browser assertions define exercised acceptance"}
+	if runErr != nil {
+		// Inspect only test-owned safe original identity after a genuine failure.
+		// This diagnostic cannot retry, acknowledge in the UI or change an outcome.
+		var metadata struct {
+			RequestID uuid.UUID `json:"request_id"`
+			Action    string    `json:"action"`
+		}
+		if raw, readErr := os.ReadFile(filepath.Join(private, "last-command.json")); readErr == nil && json.Unmarshal(raw, &metadata) == nil && metadata.RequestID != uuid.Nil {
+			diagnostic, cancel := context.WithTimeout(t.Context(), 3*time.Second)
+			recovered, receiptErr := admin.deps.Qualification.OriginalReceipt(diagnostic, r.owner.ID, r.eventID, run, metadata.RequestID)
+			proof["last_owner_request_action"], proof["last_owner_request_id"] = metadata.Action, metadata.RequestID
+			proof["diagnostic_original_ack_available"] = receiptErr == nil && recovered.Receipt != nil
+			if receiptErr != nil {
+				proof["diagnostic_original_ack_error"] = receiptErr.Error()
+			}
+			proof["diagnostic_pool_acquired"], proof["diagnostic_pool_idle"] = r.pool.Stat().AcquiredConns(), r.pool.Stat().IdleConns()
+			cancel()
+		}
+	}
 	proofJSON, err := json.MarshalIndent(proof, "", "  ")
 	if err != nil {
 		t.Fatal(err)

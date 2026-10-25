@@ -1,3 +1,4 @@
+import {writeFileSync} from 'node:fs'
 import {expect,test,type Page} from '@playwright/test'
 import {native,owner,control} from './native'
 import type {QualificationPage} from '../src/qualification-model'
@@ -13,6 +14,11 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  test.skip(native.scenario!=='final','Separate initial no-final journey')
  test.setTimeout(180_000)
  const context=await owner(browser),page=await context.newPage()
+ page.on('request',request=>{
+  if(request.method()!=='POST'||!request.url().endsWith(`/mentor-qualification/${native.run_id}`))return
+  const body=request.postDataJSON() as {request_id:string;action:string}
+  writeFileSync(native.command_metadata_path,JSON.stringify({request_id:body.request_id,action:body.action}),{mode:0o600})
+ })
  await page.goto(`/events/${native.event_id}/panel/${native.run_id}`)
  await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter')
  await page.getByLabel('Organising lead',{exact:true}).selectOption(native.owner_id)

@@ -9,3 +9,10 @@
 @media print{[data-private-qualification]{display:none!important;}}
 .fleet-qualification-score-category,.fleet-qualification-history { min-inline-size:0;overflow-wrap:anywhere;border-block-start:1px solid var(--border);padding-block:var(--space-4); }
 .fleet-qualification-history details { padding-block:var(--space-3);border-block-end:1px solid var(--border); }
+
+/* A full evidence comparison owns the canvas; the compact generic inspector
+   column cannot contain two readable assessment sources. Back returns to the
+   actual collection row at every width. */
+.fleet-qualification-workspace .fleet-detail-workspace[data-detail-open] { grid-template-columns:minmax(0,1fr); }
+.fleet-qualification-workspace .fleet-detail-workspace[data-detail-open] .fleet-detail-collection { display:none; }
+.fleet-qualification-workspace .fleet-detail-region { border-inline-start:0;padding-inline:0; }
