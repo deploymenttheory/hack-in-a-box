@@ -56,3 +56,36 @@ portals and the independent guide build; configured affected Go lint reports zer
 issues and frontend ESLint reports zero issues. Native and browser commands above
 are **pending** at this checkpoint. Their presence is not proof of execution.
 Exact tested source refs/results will be appended after terminal runs.
+
+
+## Native publication and retention proof
+
+The first composed run at `64ca8fbb` reached actual archive and correctly exposed
+a fixture mismatch: two actual settled submissions but the original lifecycle
+team count remained one. The fixture now derives facts from the actual frozen
+roster through `event.RecordTeamFacts`; it never bypasses the lifecycle transition.
+The targeted diagnostic recorded exactly `total teams=1 settled=2`.
+
+The next run at `8431c91f` reached actual archive and exposed a separate native
+clock mismatch: `SetEventStage` used database wall time for `completed_at`, while
+retention reads used the injected domain clock. Native lifecycle completion and
+cancellation regressions reproduced that mismatch (**RED 4.518s**).
+
+At `f96fb69af58076bbd1747de25c06a736d84e5d9c`, one trusted transition clock now
+sets the first completion/cancellation timestamp, preserves existing retention
+origins, clears on explicit assessment reopen, and leaves database audit/update
+timestamps unchanged. No public time input, retention grant or schema migration
+is added. Results:
+
+- Native lifecycle package: **8.806s**, injected completion/cancellation and
+  default server-time cases; stale transitions, explicit reopen, subsequent
+  cancellation and archive retain the appropriate origin.
+- Composed native showcase: **8.897s** (test **7.35s**), actual two-event search,
+  cursor pages, independent non-winner publication, private versus released awards,
+  narrower result/media/source audience, correction/withdrawal with safe retained
+  versions, actual archive, consent decline, current audience loss and the exact
+  unchanged 90-day retention boundary.
+
+The shared CI-only commits through `67ca74a3` preserve those Go/API source bytes.
+The four-case browser matrix and independent guide browser checks remain pending.
+Earlier duplicate red fixture invocations are not counted as passing proof.
