@@ -143,6 +143,7 @@ type Round struct {
 	ChangedAt   time.Time     `json:"changed_at"`
 }
 type Page struct {
+	Receipt  *Receipt                `json:"receipt"`
 	Preview  *Proposal               `json:"preview"`
 	Revision int64                   `json:"revision"`
 	Round    Round                   `json:"round"`
@@ -160,6 +161,7 @@ type CardInput struct {
 	Scores  []scorecards.CategoryScore `json:"scores"`
 }
 type Command struct {
+	RequestID            uuid.UUID                      `json:"request_id"`
 	FreezeBinding        string                         `json:"freeze_binding"`
 	RepositoryDecisionID *uuid.UUID                     `json:"repository_decision_id"`
 	Version              int64                          `json:"version"`
@@ -186,4 +188,17 @@ func failure(operation string, err error) error {
 		return nil
 	}
 	return fmt.Errorf("qualification %s: %w", operation, err)
+}
+
+type Receipt struct {
+	RequestID        uuid.UUID `json:"request_id"`
+	RunID            uuid.UUID `json:"run_id"`
+	Action           string    `json:"action"`
+	ExpectedRevision int64     `json:"expected_revision"`
+	ExpectedVersion  int64     `json:"expected_version"`
+	Version          int64     `json:"version"`
+	Fingerprint      string    `json:"fingerprint"`
+}
+type Recovery struct {
+	Receipt *Receipt `json:"receipt"`
 }

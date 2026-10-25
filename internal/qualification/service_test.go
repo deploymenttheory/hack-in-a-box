@@ -54,9 +54,10 @@ func TestNonFinalistCanWinCategoryAndOneTeamCanWinMultipleWithoutCarryingCheckpo
 		cp.Definition.RunID,
 		f.revision(),
 		Command{
-			Version: page.Round.Version,
-			Action:  "sign_off",
-			Reason:  "Panel signs exact current proposal; no award publication",
+			RequestID: uuid.New(),
+			Version:   page.Round.Version,
+			Action:    "sign_off",
+			Reason:    "Panel signs exact current proposal; no award publication",
 		},
 	)
 	if err != nil {
@@ -101,8 +102,9 @@ func TestModeratedCardRequiresNativeSignedFinalAndExplicitCompleteEvidence(t *te
 		run,
 		f.revision(),
 		Command{
-			Action: "configure_panel",
-			Reason: "Explicit current mentor selection panel",
+			RequestID: uuid.New(),
+			Action:    "configure_panel",
+			Reason:    "Explicit current mentor selection panel",
 			Panel: &Panel{
 				MentorIDs:   []uuid.UUID{f.primary.ID, f.second.ID},
 				OrganiserID: f.owner.ID,
@@ -127,6 +129,7 @@ func TestModeratedCardRequiresNativeSignedFinalAndExplicitCompleteEvidence(t *te
 		)
 	}
 	command := Command{
+		RequestID:     uuid.New(),
 		Version:       page.Round.Version,
 		FreezeBinding: qualificationBinding(page, f.team),
 		Action:        "save_card",
@@ -180,6 +183,7 @@ func TestModeratedCardRequiresNativeSignedFinalAndExplicitCompleteEvidence(t *te
 		run,
 		f.revision(),
 		Command{
+			RequestID:     uuid.New(),
 			Version:       page.Round.Version,
 			FreezeBinding: qualificationBinding(page, f.team),
 			Action:        "sign_card",
@@ -232,8 +236,9 @@ func signedQualificationCohort(
 		cp.Definition.RunID,
 		f.revision(),
 		Command{
-			Action: "configure_panel",
-			Reason: "All eligible competing teams",
+			RequestID: uuid.New(),
+			Action:    "configure_panel",
+			Reason:    "All eligible competing teams",
 			Panel: &Panel{
 				MentorIDs:   []uuid.UUID{f.primary.ID, f.second.ID},
 				OrganiserID: f.owner.ID,
@@ -281,6 +286,7 @@ func signedQualificationCohort(
 			cp.Definition.RunID,
 			f.revision(),
 			Command{
+				RequestID:     uuid.New(),
 				Version:       page.Round.Version,
 				FreezeBinding: qualificationBinding(page, team.team),
 				Action:        "save_card",
@@ -299,6 +305,7 @@ func signedQualificationCohort(
 			cp.Definition.RunID,
 			f.revision(),
 			Command{
+				RequestID:     uuid.New(),
 				Version:       page.Round.Version,
 				FreezeBinding: qualificationBinding(page, team.team),
 				Action:        "sign_card",
@@ -318,9 +325,10 @@ func signedQualificationCohort(
 		cp.Definition.RunID,
 		f.revision(),
 		Command{
-			Version: page.Round.Version,
-			Action:  "propose",
-			Reason:  "Compare complete final mentor cards",
+			RequestID: uuid.New(),
+			Version:   page.Round.Version,
+			Action:    "propose",
+			Reason:    "Compare complete final mentor cards",
 		},
 	)
 	if err != nil {

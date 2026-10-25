@@ -936,6 +936,15 @@ type MentorProfile struct {
 	MaximumTeams pgtype.Int4
 }
 
+type MentorQualificationCommand struct {
+	EventID   uuid.UUID
+	RequestID uuid.UUID
+	ActorID   uuid.UUID
+	RunID     uuid.UUID
+	Version   int64
+	Receipt   []byte
+}
+
 type MentorQualificationRound struct {
 	EventID   uuid.UUID
 	RunID     uuid.UUID

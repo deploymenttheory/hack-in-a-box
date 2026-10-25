@@ -135,3 +135,23 @@ required ballots, duplicate rejection and casting checks remain. No cross-comman
 cross-reader or cross-transaction cache exists. This is a bounded full five-team
 all-ties workflow proof, not an event-scale performance certification. The actual
 300.329s RED and sample retain their original source attribution.
+
+## Exact original qualification commands
+
+Before exposing the new API, migration52 now retains an immutable metadata-only
+request ledger. A client-authored request UUID and reviewed event/round revisions
+bind a native command fingerprint; exact repeated requests return their original
+ACK metadata with a separately current private page. A fresh read carries no ACK.
+Recovery returns only request/run/action/expected revisions/result version/hash,
+under current event/panel/actor authority, never authored reasons/cards/code.
+
+The real PostgreSQL/-race request suite passed **11.460s** on the owned extension
+of main-based25deb7c before the subsequent command-dispatch refactor. It proves
+immutable original lookup across a later round, same UUID/different intent denial,
+missing original remaining unknown, actor/role-loss privacy, duplicate concurrent
+requests producing one retained effect, and distinct competing heads producing
+one success/one conflict. Actual native schema52 is used; no synthetic receipt
+projection, HTTP success claim or provider effect is inferred. Log:
+`/private/tmp/hackbox110-receipts.log`. Canonical sqlc regeneration includes the
+real complete migration51 and additive52 command table. Public API/runtime/history
+and current-source broad proof remain pending.

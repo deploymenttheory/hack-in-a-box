@@ -23,6 +23,16 @@ CREATE TABLE mentor_qualification_sources (
  FOREIGN KEY(event_id,team_id,run_id,signoff_id) REFERENCES moderation_final_decisions(event_id,team_id,run_id,signoff_id),
  FOREIGN KEY(event_id,signoff_id) REFERENCES mentor_scorecard_signoffs(event_id,id)
 );
+CREATE TABLE mentor_qualification_commands (
+ event_id uuid NOT NULL,
+ request_id uuid NOT NULL,
+ actor_id uuid NOT NULL REFERENCES people(id),
+ run_id uuid NOT NULL,
+ version bigint NOT NULL,
+ receipt jsonb NOT NULL,
+ PRIMARY KEY(event_id,request_id),
+ FOREIGN KEY(event_id,run_id,version) REFERENCES mentor_qualification_rounds(event_id,run_id,version)
+);
 -- +goose StatementBegin
 CREATE FUNCTION reject_qualification_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -32,6 +42,7 @@ $$;
 -- +goose StatementEnd
 CREATE TRIGGER qualification_rounds_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_qualification_rounds FOR EACH STATEMENT EXECUTE FUNCTION reject_qualification_mutation();
 CREATE TRIGGER qualification_sources_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_qualification_sources FOR EACH STATEMENT EXECUTE FUNCTION reject_qualification_mutation();
+CREATE TRIGGER qualification_commands_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON mentor_qualification_commands FOR EACH STATEMENT EXECUTE FUNCTION reject_qualification_mutation();
 -- +goose Down
 -- +goose StatementBegin
 DO $$ BEGIN
@@ -40,6 +51,7 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- +goose StatementEnd
+DROP TABLE mentor_qualification_commands;
 DROP TABLE mentor_qualification_sources;
 DROP TABLE mentor_qualification_rounds;
 ALTER TABLE moderation_final_decisions DROP CONSTRAINT qualification_exact_final_source;

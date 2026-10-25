@@ -35,6 +35,9 @@ func (s Service) Change(
 	input Command,
 ) (Page, error) {
 	var out Page
+	if input.RequestID == uuid.Nil || expected < 0 || input.Version < 0 {
+		return out, access.ErrInvalid
+	}
 	if strings.TrimSpace(input.Reason) == "" || len(input.Reason) > 2000 {
 		return out, access.ErrInvalid
 	}
@@ -43,74 +46,52 @@ func (s Service) Change(
 		if err != nil {
 			return failure("service", err)
 		}
+		fingerprint := digest(struct {
+			Command          Command
+			ExpectedRevision int64
+		}{input, expected})
+		original, err := originalReceipt(ctx, tx, actor, eventID, runID, input.RequestID)
+		if err != nil {
+			return err
+		}
+		if original != nil {
+			if original.Fingerprint != fingerprint {
+				return access.ErrConflict
+			}
+			out, err = s.page(ctx, tx, actor, eventID, v)
+			out.Receipt = original
+			return err
+		}
 		if v.row.Revision != expected || v.round.Version != input.Version {
 			return access.ErrConflict
 		}
 		if v.round.Signoff != nil {
 			return access.ErrConflict
 		}
-		switch input.Action {
-		case "configure_panel":
-			if !v.organiser || input.Panel == nil {
-				return access.ErrForbidden
-			}
-			if err = (access.EventPolicy{Queries: dbgen.New(tx)}).Authorize(
-				ctx,
-				actor,
-				eventID,
-				eventID,
-				access.EventEdit,
-			); err != nil {
-				return failure("service", err)
-			}
-			if err = validatePanel(ctx, dbgen.New(tx), eventID, *input.Panel); err != nil {
-				return failure("service", err)
-			}
-			v.round.Panel = *input.Panel
-			invalidate(&v.round)
-		case "save_card", "sign_card":
-			if err = s.changeCard(ctx, tx, actor, eventID, &v, input); err != nil {
-				return failure("service", err)
-			}
-			invalidate(&v.round)
-		case "decide_eligibility":
-			if err = s.decideEligibility(ctx, tx, actor, eventID, &v, input); err != nil {
-				return failure("service", err)
-			}
-			invalidate(&v.round)
-		case "propose":
-			if actor != v.round.Panel.OrganiserID {
-				return access.ErrForbidden
-			}
-			if err = validatePanel(ctx, dbgen.New(tx), eventID, v.round.Panel); err != nil {
-				return failure("service", err)
-			}
-			proposal, err := s.proposal(ctx, tx, eventID, v)
-			if err != nil {
-				return failure("service", err)
-			}
-			v.round.Proposal = &proposal
-			v.round.Votes = []Vote{}
-			v.round.Decisions = []TieDecision{}
-		case "vote_tie", "resolve_tie":
-			if err = s.changeTie(ctx, tx, actor, eventID, &v, input); err != nil {
-				return failure("service", err)
-			}
-		case "sign_off":
-			if err = s.signOff(ctx, tx, actor, eventID, &v, input); err != nil {
-				return failure("service", err)
-			}
-		default:
-			return access.ErrInvalid
+		if err = s.applyCommand(ctx, tx, actor, eventID, &v, input); err != nil {
+			return err
 		}
 		if err = s.retain(ctx, tx, eventID, actor, v.row.Revision, &v.round, input); err != nil {
 			return failure("service", err)
+		}
+		receipt := Receipt{
+			RequestID:        input.RequestID,
+			RunID:            runID,
+			Action:           input.Action,
+			ExpectedRevision: expected,
+			ExpectedVersion:  input.Version,
+			Version:          v.round.Version,
+			Fingerprint:      fingerprint,
+		}
+		if err = retainReceipt(ctx, tx, actor, eventID, receipt); err != nil {
+			return err
 		}
 		v.row, err = dbgen.New(tx).Event(ctx, eventID)
 		if err != nil {
 			return failure("service", err)
 		}
 		out, err = s.page(ctx, tx, actor, eventID, v)
+		out.Receipt = &receipt
 		return failure("service", err)
 	})
 	if err != nil {
@@ -221,4 +202,69 @@ func clearPrivate(round *Round) {
 	round.Decisions = []TieDecision{}
 	round.Signoff = nil
 	round.Reason = ""
+}
+
+func (s Service) applyCommand(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	v *scope,
+	input Command,
+) error {
+	var err error
+	switch input.Action {
+	case "configure_panel":
+		if !v.organiser || input.Panel == nil {
+			return access.ErrForbidden
+		}
+		if err = (access.EventPolicy{Queries: dbgen.New(tx)}).Authorize(
+			ctx,
+			actor,
+			eventID,
+			eventID,
+			access.EventEdit,
+		); err != nil {
+			return failure("service", err)
+		}
+		if err = validatePanel(ctx, dbgen.New(tx), eventID, *input.Panel); err != nil {
+			return failure("service", err)
+		}
+		v.round.Panel = *input.Panel
+		invalidate(&v.round)
+	case "save_card", "sign_card":
+		if err = s.changeCard(ctx, tx, actor, eventID, v, input); err != nil {
+			return failure("service", err)
+		}
+		invalidate(&v.round)
+	case "decide_eligibility":
+		if err = s.decideEligibility(ctx, tx, actor, eventID, v, input); err != nil {
+			return failure("service", err)
+		}
+		invalidate(&v.round)
+	case "propose":
+		if actor != v.round.Panel.OrganiserID {
+			return access.ErrForbidden
+		}
+		if err = validatePanel(ctx, dbgen.New(tx), eventID, v.round.Panel); err != nil {
+			return failure("service", err)
+		}
+		proposal, err := s.proposal(ctx, tx, eventID, *v)
+		if err != nil {
+			return failure("service", err)
+		}
+		v.round.Proposal = &proposal
+		v.round.Votes = []Vote{}
+		v.round.Decisions = []TieDecision{}
+	case "vote_tie", "resolve_tie":
+		if err = s.changeTie(ctx, tx, actor, eventID, v, input); err != nil {
+			return failure("service", err)
+		}
+	case "sign_off":
+		if err = s.signOff(ctx, tx, actor, eventID, v, input); err != nil {
+			return failure("service", err)
+		}
+	default:
+		return access.ErrInvalid
+	}
+	return nil
 }

@@ -26,6 +26,7 @@ func TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecisi
 	}
 	change := func(actor uuid.UUID, c Command) error {
 		t.Helper()
+		c.RequestID = uuid.New()
 		c.Version = p.Round.Version
 		c.Reason = "Reviewed exact frozen final evidence for tied selection"
 		next, err := s.Change(t.Context(), actor, f.event, run, f.revision(), c)
@@ -34,7 +35,13 @@ func TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecisi
 		}
 		return err
 	}
-	if err := change(f.owner.ID, Command{Action: "sign_off"}); !errors.Is(err, access.ErrConflict) {
+	if err := change(
+		f.owner.ID,
+		Command{RequestID: uuid.New(), Action: "sign_off"},
+	); !errors.Is(
+		err,
+		access.ErrConflict,
+	) {
 		t.Fatal("unresolved tied cutoff signed off", err)
 	}
 	for _, tie := range p.Round.Proposal.Ties {
@@ -52,11 +59,12 @@ func TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecisi
 				{Kind: "note", Note: "Explicit tied frozen-final evidence review"},
 			}
 			resolve := Command{
-				Action:   "resolve_tie",
-				TieID:    tie.ID,
-				Seat:     seat,
-				TeamID:   first,
-				Evidence: evidence,
+				RequestID: uuid.New(),
+				Action:    "resolve_tie",
+				TieID:     tie.ID,
+				Seat:      seat,
+				TeamID:    first,
+				Evidence:  evidence,
 			}
 			if err := change(f.owner.ID, resolve); !errors.Is(err, access.ErrConflict) {
 				t.Fatal("tie resolved without complete native mentor ballots", err)
@@ -67,11 +75,12 @@ func TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecisi
 					choice = second
 				}
 				vote := Command{
-					Action:   "vote_tie",
-					TieID:    tie.ID,
-					Seat:     seat,
-					TeamID:   choice,
-					Evidence: evidence,
+					RequestID: uuid.New(),
+					Action:    "vote_tie",
+					TieID:     tie.ID,
+					Seat:      seat,
+					TeamID:    choice,
+					Evidence:  evidence,
 				}
 				if err := change(mentor, vote); err != nil {
 					t.Fatal("native mentor vote", err)
@@ -98,7 +107,11 @@ func TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecisi
 		len(p.Round.Proposal.ReserveIDs) != 1 {
 		t.Fatal("recorded ties did not resolve configured selection", p.Round.Proposal)
 	}
-	if err := change(f.owner.ID, Command{Action: "sign_off"}); err != nil || !p.Current {
+	if err := change(
+		f.owner.ID,
+		Command{RequestID: uuid.New(), Action: "sign_off"},
+	); err != nil ||
+		!p.Current {
 		t.Fatal("resolved exact panel selection not current", err, p)
 	}
 }

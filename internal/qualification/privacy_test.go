@@ -84,8 +84,9 @@ func TestPanelMembershipDoesNotDisclosePrivateObservationReferenceOrAttachedNote
 		cp.Definition.RunID,
 		f.revision(),
 		Command{
-			Action: "configure_panel",
-			Reason: "Named result panel does not grant observation access",
+			RequestID: uuid.New(),
+			Action:    "configure_panel",
+			Reason:    "Named result panel does not grant observation access",
 			Panel: &Panel{
 				MentorIDs:   []uuid.UUID{f.primary.ID, f.second.ID, outsider.ID},
 				OrganiserID: f.owner.ID,
@@ -118,6 +119,7 @@ func TestPanelMembershipDoesNotDisclosePrivateObservationReferenceOrAttachedNote
 		cp.Definition.RunID,
 		f.revision(),
 		Command{
+			RequestID:     uuid.New(),
 			Version:       p.Round.Version,
 			FreezeBinding: qualificationBinding(p, f.team),
 			Action:        "save_card",
