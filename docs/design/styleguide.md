@@ -293,3 +293,10 @@ receipt lookup or deliberate fresh-base review without replay. Current role,
 assignment or audience loss clears held private reviews and late continuations.
 Use native fields, a named confirmation and actual opener focus; preserve unsent
 inputs on cancelled review/departure. The guide uses synthetic callbacks only.
+
+Editable submitted-build forms allow invalid submission attempts while current
+permission, pending and unresolved-command locks still disable unavailable work.
+Use associated Field errors for branch/SHA/reason and the supporting-evidence
+alternatives, then focus the first invalid control before opening a review.
+Fresh-base recovery captures its own opener; cancellation returns there or to
+the connected local controls fallback without releasing the unknown barrier.

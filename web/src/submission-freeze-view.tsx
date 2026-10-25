@@ -15,6 +15,10 @@ export function FreezeEvidence({page,timezone}:{page:FreezePage;timezone:string}
     {!!page.decisions.length&&<details><summary>Authorised immutable decision history</summary><ol className="fleet-freeze-history">{page.decisions.map(d=><li key={d.id}>{d.action==='amend'?'Separate amendment':'Organiser reconciliation'} · Formal version {d.submission_revision} · Recorded {localDate(d.at,timezone)}<br/><code>{d.sha}</code>{d.reason&&<p>{d.reason}</p>}{d.external_evidence&&<p>{d.external_evidence}</p>}<p>Decision {d.id}{d.prior_decision_id&&` · Prior decision ${d.prior_decision_id}`}</p></li>)}</ol></details>}
   </section>
 }
-export function FreezeReview({title,pending,disabled,confirm,cancel,opener,children}:{title:string;pending:boolean;disabled:boolean;confirm:()=>void;cancel:()=>void;opener:RefObject<HTMLElement|null>;children:ReactNode}) {
- return <ConfirmationDialog open title={title} description="Review the exact current source and effect. The server checks current authority and revisions again at confirmation." confirmLabel="Confirm reviewed code change" pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open=>{if(!open)cancel()}} finalFocus={()=>opener.current??false} printExcluded>{children}</ConfirmationDialog>
+export function FreezeReview({title,pending,disabled,confirm,cancel,opener,fallback,children}:{title:string;pending:boolean;disabled:boolean;confirm:()=>void;cancel:()=>void;opener:RefObject<HTMLElement|null>;fallback?:RefObject<HTMLElement|null>;children:ReactNode}) {
+ // Base UI restores focus after removing modal inertness; the source form is
+ // also temporarily hidden while this review is mounted. Check the lasting
+ // target's connection/availability, not those transient overlay ancestors.
+ const returnFocus=()=>{const usable=(node:HTMLElement|null|undefined)=>node?.isConnected&&!node.matches(':disabled');return usable(opener.current)?opener.current:usable(fallback?.current)?fallback!.current:false}
+ return <ConfirmationDialog open title={title} description="Review the exact current source and effect. The server checks current authority and revisions again at confirmation." confirmLabel="Confirm reviewed code change" pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open=>{if(!open)cancel()}} finalFocus={returnFocus} printExcluded>{children}</ConfirmationDialog>
 }

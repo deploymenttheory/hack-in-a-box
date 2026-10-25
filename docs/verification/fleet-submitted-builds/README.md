@@ -239,3 +239,31 @@ This remains Draft pending parent #277 merge/rebase, independent complete-scope
 review and exact final Linux CI. The UI adds no policy/migration or live provider
 effects. Current proof is scoped Chromium desktop/narrow emulation, not a full
 accessibility/stable-engine/manual-device release certification.
+
+## Independent review corrections — focus and editable validation
+
+The full Standards review of published ebdf63bc found two P2 defects. Six new
+keyboard/browser regressions against its unchanged production bundles reproduced
+both across desktop/narrow: editable invalid branch/code forms disabled submit,
+and fresh-base cancellation did not restore the actual recovery opener. Genuine
+RED traces are retained in `work/evidence/97-standards-red` outside tracked code.
+An initial command selected no tests before the added file was written; it is
+not RED evidence. The subsequent six-case execution is the actual reproduction.
+
+Fresh-base review now captures its own initiating button. Dialog return uses a
+connected enabled opener or a focusable local controls fallback. Editable invalid
+forms permit submission attempts, render associated field errors (including the
+supporting-evidence alternatives), and focus the first correction before review
+or write. Permission, pending, unknown and revision barriers remain. The native
+server still owns branch/evidence validity and exact receipt acceptance.
+
+An initial correction passed all new cases but the complete owned suites found
+an introduced original-dialog focus regression (26/28 per portal): the guard
+rejected transient modal-inert/hidden ancestors. The corrected guard respects
+Base UI teardown timing while checking lasting target availability. Assertions
+and keyboard traversal were unchanged. After fresh TypeScript, affected lint and
+both production builds passed, complete owned scenarios passed **28/28 admin in
+16.7s and 28/28 regular in 15.9s**, each one worker/no retries, on this working-tree
+correction of ebdf63bc. This includes original keyboard return plus Escape and
+explicit Cancel recovery return with the unknown barrier and no extra writes.
+Parent metadata integration and exact-source native/guide follow-up remain open.

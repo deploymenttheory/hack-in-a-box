@@ -29,3 +29,24 @@ test('current200 organiser capability loss erases a private held review while re
 test('missing original ACK requires deliberate fresh-base review and never replays or clears prior unknown',async({page})=>{
  const f=await freezeFixture(page);Object.assign(f.frozen,{can_configure:true,can_reconcile:false,status:'pending',source:null,observations:[]});f.lostBefore=true;f.missing=true;await page.goto(path);await page.getByRole('textbox',{name:'Submission branch'}).fill('release/unknown');await page.getByRole('button',{name:'Review submission branch'}).click();await review(page).getByRole('button',{name:'Confirm reviewed code change'}).click();await page.getByRole('button',{name:'Read original code acknowledgement'}).click();await expect(page.getByRole('alert').filter({hasText:'No original acknowledgement'})).toBeVisible();await page.getByRole('button',{name:'Review a fresh code starting point'}).click();await expect(review(page)).toContainText('earlier request remains unknown');await review(page).getByRole('button',{name:'Confirm reviewed code change'}).click();await expect(page.getByRole('button',{name:'Review submission branch'})).toBeEnabled();await expect(page.getByRole('button',{name:'Read original code acknowledgement'})).toBeVisible();expect(f.writes).toHaveLength(1)
 })
+
+test('editable branch validation offers an attempted submit and associated corrective focus',async({page})=>{
+ const f=await freezeFixture(page);Object.assign(f.frozen,{can_configure:true,can_reconcile:false,status:'pending',source:null,observations:[]});await page.goto(path)
+ const branch=page.getByRole('textbox',{name:'Submission branch'}),submit=page.getByRole('button',{name:'Review submission branch',exact:true})
+ await branch.fill('');await expect(submit).toBeEnabled();await activateFreezeControl(page,submit)
+ await expect(branch).toBeFocused();await expect(branch).toHaveAttribute('aria-invalid','true');await expect(branch).toHaveAccessibleDescription(/Enter a submission branch/);await expect(review(page)).toHaveCount(0);expect(f.writes).toHaveLength(0)
+})
+test('editable code validation reports all missing requirements and focuses the first correction',async({page})=>{
+ const f=await freezeFixture(page);await page.goto(path)
+ const sha=page.getByRole('textbox',{name:'Reviewed commit SHA'}),reason=page.getByRole('textbox',{name:'Decision reason',exact:true}),support=page.getByRole('textbox',{name:'Independent supporting evidence'}),submit=page.getByRole('button',{name:'Review code reconciliation',exact:true})
+ await expect(submit).toBeEnabled();await activateFreezeControl(page,submit)
+ await expect(sha).toBeFocused();await expect(sha).toHaveAttribute('aria-invalid','true');await expect(sha).toHaveAccessibleDescription(/40 or 64 lowercase hexadecimal/);await expect(reason).toHaveAccessibleDescription(/Enter a decision reason/);await expect(support).toHaveAccessibleDescription(/Provide independent supporting evidence or select/);await expect(review(page)).toHaveCount(0);expect(f.writes).toHaveLength(0)
+ await sha.fill('a'.repeat(40));await reason.fill('Synthetic deliberate review');await activateFreezeControl(page,submit);await expect(support).toBeFocused();await expect(review(page)).toHaveCount(0)
+ await support.fill('Synthetic independent cutoff record');await activateFreezeControl(page,submit);await expect(review(page)).toBeVisible();expect(f.writes).toHaveLength(0)
+})
+test('fresh-base keyboard cancellation returns to its own enabled opener with the unknown barrier intact',async({page})=>{
+ const f=await freezeFixture(page);Object.assign(f.frozen,{can_configure:true,can_reconcile:false,status:'pending',source:null,observations:[]});f.lostBefore=true;await page.goto(path)
+ await page.getByRole('textbox',{name:'Submission branch'}).fill('release/unknown');await activateFreezeControl(page,page.getByRole('button',{name:'Review submission branch',exact:true}));await activateFreezeControl(page,review(page).getByRole('button',{name:'Confirm reviewed code change'}));await expect(page.getByRole('button',{name:'Read original code acknowledgement'})).toBeVisible()
+ const opener=page.getByRole('button',{name:'Review a fresh code starting point',exact:true});await activateFreezeControl(page,opener);await expect(review(page)).toContainText('earlier request remains unknown');await page.keyboard.press('Escape');await expect(opener).toBeFocused();await expect(page.getByRole('button',{name:'Review submission branch',exact:true})).toBeDisabled();expect(f.writes).toHaveLength(1)
+ await activateFreezeControl(page,opener);await activateFreezeControl(page,review(page).getByRole('button',{name:'Cancel',exact:true}));await expect(opener).toBeFocused();expect(f.writes).toHaveLength(1)
+})
