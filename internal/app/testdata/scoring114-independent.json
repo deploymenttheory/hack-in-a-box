@@ -1,0 +1,14 @@
+{
+  "weights": [2, 3, 4, 1, 4],
+  "judge_cards": [[9, 2, 7, 4, 8], [4, 8, 3, 9, 6], [7, 7, 8, 2, 5]],
+  "category_means": [
+    {"numerator": "20", "denominator": "3", "display": "6.67"},
+    {"numerator": "17", "denominator": "3", "display": "5.67"},
+    {"numerator": "6", "denominator": "1", "display": "6.00"},
+    {"numerator": "5", "denominator": "1", "display": "5.00"},
+    {"numerator": "19", "denominator": "3", "display": "6.33"}
+  ],
+  "weighted_total": {"numerator": "254", "denominator": "3", "display": "84.67"},
+  "mentor_final_total": 42,
+  "provisional_values": [9, 10]
+}

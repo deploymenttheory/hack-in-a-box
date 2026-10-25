@@ -1,0 +1,169 @@
+{
+  "tested_head": "a277b3d4aa44c6ce91458f5749812a0f53592e12",
+  "ci_only_rebase_head": "92c7a56869eb2ba8f7c2674839a5970b8e164bc9",
+  "go_api_source_byte_equal": true,
+  "command": "HACKBOX_INTEGRATION=1 go test -v -race -p 1 -parallel 1 ./internal/rubric ./internal/scorecards ./internal/moderation ./internal/qualification ./internal/judging ./internal/results ./internal/archives -count=1 -timeout=10m",
+  "log_sha256": "5e702d81befcf2b2ae55834f5a43e0cd24ce7032f12645e5ee0f92e83bdb7e40",
+  "skips": 0,
+  "failures": 0,
+  "packages": [
+    {
+      "package": "internal/rubric",
+      "seconds": 17.082,
+      "passed_top_level_tests": [
+        "TestDefaultsProvideBothModesAndSeparatePrivateInstructions",
+        "TestInvalidRubricsCannotIntroduceUnboundedScoresOrBrokenAwardReferences",
+        "TestAssessmentConsumerFreezesExactRunOnlyWithActualLiveAuthorityAndAtomicConsumerCommit",
+        "TestFinalAssessmentConsumerUsesCutoffFrozenEntryRequiredJudgesAndFreshQualificationPolicy",
+        "TestRubricNotificationSourceRequiresActualCurrentPublicationAndCurrentAudience",
+        "TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically",
+        "TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover",
+        "TestRubricUpgradePreservesPriorChallengeDefinitionsCiphertextAndAudit",
+        "TestReleasedQuestionSourceUsesActualCommonPublicationAndCurrentReader",
+        "TestClonedRubricDefaultsPreserveQualificationAndRemainUnapproved"
+      ]
+    },
+    {
+      "package": "internal/scorecards",
+      "seconds": 25.864,
+      "passed_top_level_tests": [
+        "TestCurrentAuthorityAndRecordedPanelNeverExposeIndependentDrafts",
+        "TestConfiguredWindowAndEvidenceReferencesCannotBypassNativeOwnership",
+        "TestScoreWriterWaitingBehindAssignmentRemovalRechecksAfterEventLock",
+        "TestCoordinationMetadataDoesNotDiscloseAnotherIndependentCard",
+        "TestCoordinationReadDoesNotStartOrFreezeNativeAssessment",
+        "TestFinalCardSubmissionEvidenceMustIdentifyExactCurrentFrozenOutput",
+        "TestPendingIsNotZeroAndBoundsComeFromExactRubric",
+        "TestObservationEvidenceUsesItsNativeCurrentOwnerPolicy",
+        "TestSignoffObservationEvidenceRechecksEachAuthorsNativeGrant",
+        "TestPublishedCriteriaRestartPreservesHistoricalCardsAndRequiresFreshCheckpointBinding",
+        "TestScorecardMigrationPreservesPopulated32AndGuardedRollback",
+        "TestIndependentCheckpointLifecycleUsesNativeRubricAndKeepsPendingPrivate",
+        "TestCardConcurrentRevisionsAndNativeFreezeAreAtomic",
+        "TestFinalSignoffNeedsCompleteExactFrozenCardsAndCurrentRecordedOwner"
+      ]
+    },
+    {
+      "package": "internal/moderation",
+      "seconds": 82.885,
+      "passed_top_level_tests": [
+        "TestActualFeedbackSourceOrOwnerLossInvalidatesFormalGapCompletion",
+        "TestNativeRetainedActionReaderAllowsAdvancementButDeniesWithdrawal",
+        "TestAgendaMetadataDoesNotJoinPrivatePanelOrExposeAssessment",
+        "TestArchivedAssessmentExportUsesActualRecordedHuddleAndCurrentAuthors",
+        "TestArchivedAssessmentExportRejectsSupersededSubmittedContext",
+        "TestNativeSignoffAndHuddleDecisionRollbackAtomically",
+        "TestConcurrentSignoffHasOneNativeProofAndOneDecision",
+        "TestPendingIndependentFinalCardCannotBeCompletedByModerationProposal",
+        "TestSubmittedCardChangeAndCurrentRoleLossInvalidatePanelContext",
+        "TestInactiveDisbandedOrWithdrawnFrozenOutputCannotFinalise",
+        "TestDelivery38PreservesNative37HuddleCardsFeedbackAndPrivateQuestion",
+        "TestDifferentHuddlesCannotCompeteForOneNativeFinalRun",
+        "TestExplicitNewNativeRunPreservesOriginalCanonicalFinalDecision",
+        "TestHistoryDoesNotGrantNewModeratorAccessToFormerPanelSnapshots",
+        "TestPlannedReplacementFiltersRetainedSecondReviewAfterNativeAuthorRevocation",
+        "TestHuddleAndDecisionHistoryKeysetsBeyondOneThousandRecheckCurrentPanel",
+        "TestQualificationConsumesOnlyCanonicalCurrentSignedFinalSource",
+        "TestReopenedNativeActionRemainsReadableButNeedsExplicitFormalReResolution",
+        "TestModeration37PreservesAllPopulated36TablesAndGuardsCanonicalHistory",
+        "TestModeration37EmptyRollbackRestoresNormalLatest",
+        "TestHuddleRequiresIndependentSubmittedReviewsAndIntendedCurrentPanel",
+        "TestHuddlePreliveDistinctReviewerAndAbsentActionOwnerFailClosed",
+        "TestFrozenFinalSignoffRequiresExplicitGapAndProposalDecisions",
+        "TestSurvey40PreservesActual39ObjectiveAndModerationHistory"
+      ]
+    },
+    {
+      "package": "internal/qualification",
+      "seconds": 292.141,
+      "passed_top_level_tests": [
+        "TestDiscoveryAndActionProjectionUseActualCurrentRunAndRecordedPanel",
+        "TestTieReadinessProjectsNativeRequiredVotesAndCastingChoices",
+        "TestPendingIndependentReviewGapAndIncompleteExplicitValuesCannotSignFinalCard",
+        "TestActualFreshJudgeConsumerUsesOnlyCurrentSelectedFinalistsAndNoMentorPayload",
+        "TestCurrentConflictWithExcludedTeamScrubsEligibilityAndRoundProseWithoutChangingHistory",
+        "TestFrontendQualificationCodecUsesActualAcceptedOriginalReceipts",
+        "TestQualificationHistoryKeepsOriginalAudienceAndExclusiveVersionPages",
+        "TestFiveMentorPluralityCannotResolveQualificationAsPanelMajority",
+        "TestManagedFreezeRequiresExplicitEligibilityAndFreshProofAfterAmendment",
+        "TestNativeURLAndFileFinalsAreNotApplicableWhileMissingWithdrawnInactiveAndDisbandedAreUnscored",
+        "TestPanelMembershipDoesNotDisclosePrivateObservationReferenceOrAttachedNote",
+        "TestCurrentPanelConflictClearsWholePrivateCohortAndStoredSelection",
+        "TestOriginalQualificationReceiptIsImmutablePrivateFreeAndNotAReadProjection",
+        "TestConcurrentQualificationCommandsRetainOneOriginalAndFenceStaleHeads",
+        "TestQualificationHistoryRejectsTruncateIncludingCascade",
+        "TestQualification52PopulatedRollbackAndMutationCannotEraseOriginalDecisions",
+        "TestNonFinalistCanWinCategoryAndOneTeamCanWinMultipleWithoutCarryingCheckpointScores",
+        "TestModeratedCardRequiresNativeSignedFinalAndExplicitCompleteEvidence",
+        "TestTiedCutoffAndCategoriesRequireEveryMentorBallotAndRecordedCastingDecision"
+      ]
+    },
+    {
+      "package": "internal/judging",
+      "seconds": 91.201,
+      "passed_top_level_tests": [
+        "TestOrganiserReopenUsesCurrentMetadataWithoutPrivateCardAccess",
+        "TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode",
+        "TestApprovedMentorSummaryUsesRecipientDeliverableAudience",
+        "TestJudgeCardProjectionsRecheckEachDeliverableAfterPartialRoleLoss",
+        "TestQualification52PreservesCompleteActual51DataAndEmptyRollback",
+        "TestRepositoryRecoveryNeverMakesUnresolvedOrDisbandedBuildScoreable",
+        "TestJudgeHistoryPreventsPopulatedRollback",
+        "TestIndependentVisibilityIncompleteLockDeliberationAndReopen",
+        "TestConcurrentVersionFenceAndDeclaredConflictRevocation",
+        "TestPracticeIsolatedAndRealFinalGate",
+        "TestUnresolvedManagedRepositoryCannotStartJudgeScoring",
+        "TestSameFinalRepositoryAmendmentCannotRetargetSubmittedJudgeCards",
+        "TestCurrentNativeFinalReplacementScrubsOldJudgeCodeAndRequiresReviewedReopen",
+        "TestCurrentAssignmentLossRevokesNativeSubmissionAndAuthoredHistoryReads",
+        "TestFactualBriefDoesNotImportPrivateNativeMentorEvidence",
+        "TestFactualMentorBriefRequiresExplicitReviewAndCurrentSourceAuthority"
+      ]
+    },
+    {
+      "package": "internal/results",
+      "seconds": 23.252,
+      "passed_top_level_tests": [
+        "TestAwardDecisionAllowsOneExactWinnerSeveralConfiguredPrizes",
+        "TestAwardDecisionUsesFullPrecisionAndNeverPrizeNameOrArrayPlacement",
+        "TestAwardDecisionRejectsIncompleteOrChangedPrizeMetadata",
+        "TestAwardDecisionPreservesTheMaximumExactPublishedAmount",
+        "TestAwardDecisionRequiresExactNativeStrictMajorityAndEveryRequiredJudge",
+        "TestAwardDecisionSplitNativeFinalVotesRemainUnresolved",
+        "TestAwardDecisionUsesSignedQualificationCategoryWinnerOutsideFreshFinal",
+        "TestAwardDecisionBlocksIncompleteSourceAndDoesNotMutateInputs",
+        "TestCategoryAveragesAndWeightsRetainExactRecurringValues",
+        "TestRoundedNearTiesRemainDistinct",
+        "TestExactTiesRemainTiesRegardlessOfUUIDOrder",
+        "TestIncompleteSourcesNeverReduceTheRequiredDenominator",
+        "TestPrivatePreparationRequiresCurrentOrganiserAndReportsMissingNativeRun",
+        "TestPopulatedParentUpgradeAndRetainedResultHistory",
+        "TestEmptyResultSchemaCanRollBack",
+        "TestCategoryAwardsKeepIndependentAllTeamWinners",
+        "TestQualificationCategorySourceRetainsANonFinalistWinner",
+        "TestTieIdentityBindsExactSourceAndKeepsNoImplicitWinner",
+        "TestFinalTieRequiresEveryJudgeBeforeStrictMajorityCanResolve",
+        "TestSplitFinalVotesStayUnresolvedUntilANewRecordedVote",
+        "TestPartialAssignmentsCannotSilentlyReduceFinalVotingPanel",
+        "TestFinalVoteRejectsDuplicateOutsiderStaleAndUnreasonedBallots"
+      ]
+    },
+    {
+      "package": "internal/archives",
+      "seconds": 37.313,
+      "passed_top_level_tests": [
+        "TestArchiveExportsPreserveNativeRoleAndUnavailableSources",
+        "TestArchiveExportRejectsMisleadingScopeBeforeAudit",
+        "TestArchiveEvidenceRetainsExactDefinitionsAndDoesNotInventAdoption",
+        "TestArchivePublishedProjectExportUsesEventCursorAndCurrentWithdrawal",
+        "TestArchiveFeedbackExportRetainsOnlyPublishedSuppressedSnapshot",
+        "TestArchiveExporterWaitingBehindRoleLossRechecksAfterEventLock",
+        "TestOperationalArchiveReadsRespectRetentionBeforeWorkerDeletion",
+        "TestArchivedMetadataAndExportRecheckActualRoleWithoutCompetitionWrites",
+        "TestArchiveCountsDistinguishApplicationsPeopleAttendanceAndUnusedEntries",
+        "TestArchivedReportCursorIsPerAuthorisedEventNotGlobalPopulation"
+      ]
+    }
+  ],
+  "scoped_app_status": "pending"
+}

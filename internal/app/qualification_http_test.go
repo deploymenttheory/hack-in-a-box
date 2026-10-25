@@ -56,6 +56,17 @@ func qualificationHTTPFixtureConfigured(
 	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
 ) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
 	t.Helper()
+	return qualificationHTTPFixturePhased(t, configure, initialise, nil, beforeCutoff...)
+}
+
+func qualificationHTTPFixturePhased(
+	t *testing.T,
+	configure func(*rubric.Definition),
+	initialise func(*liveRehearsal),
+	beforeLive func(*liveRehearsal, rehearsalSurface),
+	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
+) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
+	t.Helper()
 	r := newLiveRehearsal(t, true)
 	if initialise != nil {
 		initialise(r)
@@ -179,6 +190,9 @@ func qualificationHTTPFixtureConfigured(
 	}
 	if runID == uuid.Nil {
 		t.Fatal("no actual mentor-final run")
+	}
+	if beforeLive != nil {
+		beforeLive(r, admin)
 	}
 	page, err = admin.deps.Events.Read(t.Context(), r.owner.ID, r.eventID)
 	if err != nil {

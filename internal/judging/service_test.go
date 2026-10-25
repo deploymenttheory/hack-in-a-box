@@ -43,6 +43,11 @@ type fixture struct {
 
 func setup(t *testing.T, managed ...bool) *fixture {
 	t.Helper()
+	return setupMode(t, rubric.AllTeams, managed...)
+}
+
+func setupMode(t *testing.T, mode string, managed ...bool) *fixture {
+	t.Helper()
 	pool := testdb.New(t, true)
 	f := &fixture{
 		t:           t,
@@ -101,7 +106,7 @@ func setup(t *testing.T, managed ...bool) *fixture {
 		)
 	}
 	r := rubric.Service{Pool: pool, Clock: f.s.now}
-	d := rubric.Default(rubric.AllTeams, f.event)
+	d := rubric.Default(mode, f.event)
 	d.RequiredJudgeCount = 2
 	d.PrivateJudgeGuidance = "Judge-specific common instructions"
 	v, err := r.Change(
