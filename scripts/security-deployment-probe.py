@@ -155,6 +155,21 @@ def main():
     stranger.call('GET', base, 403, 'existing-session-current-role-revocation')
     stranger = Client.login('http://admin:8080', 'stranger')
     stranger.call('GET', base, 403, 'fresh-login-cannot-resurrect-revoked-role')
+    # Establish positive private-file/draft access before revocation, then reuse
+    # that same valid identity session: denial must come from current authority.
+    current = owner.call('GET', base, 200, 'read-organiser-grant-base')
+    organiser = {'person_id': stranger.person, 'role': 'organiser', 'active': True, 'acknowledge_competition_restriction': True}
+    owner.call('PUT', base + '/staff', 200, 'explicit-native-organiser-grant', organiser, revision=current['revision'])
+    require(stranger.call('GET', private_file, 200, 'organiser-private-file-positive-control') == b'PRIVATE-SECURITY121-MANUAL-FILE', 'organiser file positive bytes')
+    stranger.call('GET', base + '/content/' + content_id + '?preview=true', 200, 'organiser-private-draft-positive-control')
+    current = owner.call('GET', base, 200, 'read-organiser-revocation-base')
+    organiser['active'] = False
+    owner.call('PUT', base + '/staff', 200, 'explicit-native-organiser-revocation', organiser, revision=current['revision'])
+    stranger.call('GET', private_file, 403, 'same-session-revoked-organiser-file')
+    stranger.call('GET', base + '/content/' + content_id + '?preview=true', 404, 'same-session-revoked-organiser-draft')
+    stranger.call('GET', base, 403, 'same-session-revoked-organiser-event')
+    stranger = Client.login('http://admin:8080', 'stranger')
+    stranger.call('GET', private_file, 403, 'fresh-login-cannot-resurrect-organiser-file')
     public.call('POST', '/api/v1/logout', 204, 'logout-public-session-only')
     public.call('GET', '/api/v1/session', 401, 'logged-out-cookie-denied')
     owner.call('GET', base, 200, 'independent-admin-session-survives-public-logout')
