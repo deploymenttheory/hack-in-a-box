@@ -1,8 +1,8 @@
 # Recovery verification — issue #124
 
-The full implementation is a review candidate in Draft PR #269. Both independent
-reviews of recovery head `156e343` reported zero findings. The bounded security-gate
-correction below requires delta review and all exact-head CI checks before merge. The executed
+The full implementation is a review candidate in PR #269. Both independent
+reviews of recovery head `156e343` reported zero findings. The bounded CI
+corrections below require delta review and all exact-head checks before merge. The executed
 native and packaged proofs below are distinct; neither is represented as a broad
 production security/release certification.
 
@@ -169,3 +169,19 @@ flags deliberately imported OpenPGP without calling a function: it returned
 exit **3**, proving the gate rejects that affected package. The temporary module
 was removed. These checks changed no application/runtime or cryptographic code;
 full exact-head CI remains required.
+
+## Migration-guard verification diagnosis
+
+The full native job at rebased head `eec5b83` passed the recovery and credential
+packages, but failed the existing repository-access migration test. Goose safely
+removed empty migration 48 before migration 47 rejected rollback of retained
+repository history. The test incorrectly expected the database to remain at the
+latest schema rather than the migration whose guard it was testing.
+
+The exact real-PostgreSQL/race case reproduced that failure locally (3.242s).
+Its populated-guard phase now explicitly installs and expects migration 47.
+The initial upgrade to the latest schema and empty rollback still run, and all
+native-registry, immutable-history and uncertain-effect assertions remain intact.
+The same case passed after correction (3.270s). No production migration or
+rollback guard changed. Independent delta review and fresh final-head CI remain
+required; the earlier failed aggregate is not represented as a pass.

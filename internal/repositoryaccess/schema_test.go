@@ -15,6 +15,7 @@ import (
 )
 
 func TestRepositoryAccessMigrationPreservesNativeRegistryAndRetainsEffects(t *testing.T) {
+	const accessSchema = int64(47)
 	pool := testdb.New(t, false)
 	ctx := t.Context()
 	// Final ordinal is deliberately resolved against actual merged webhook 46.
@@ -51,7 +52,9 @@ func TestRepositoryAccessMigrationPreservesNativeRegistryAndRetainsEffects(t *te
 	if err != nil || !reflect.DeepEqual(before, after) {
 		t.Fatal("empty rollback altered native registry", err)
 	}
-	if err = database.Migrate(ctx, pool, 0); err != nil {
+	// Isolate this populated guard: Goose may roll back later empty migrations
+	// in separate transactions before reaching the repository access history.
+	if err = database.Migrate(ctx, pool, accessSchema); err != nil {
 		t.Fatal(err)
 	}
 	f.publish()
@@ -74,7 +77,7 @@ func TestRepositoryAccessMigrationPreservesNativeRegistryAndRetainsEffects(t *te
 	if version, versionErr := migrator.GetDBVersion(
 		ctx,
 	); versionErr != nil ||
-		version != database.SchemaVersion {
+		version != accessSchema {
 		t.Fatal("failed rollback changed schema", version, versionErr)
 	}
 	if !f.view().Grants[0].Uncertain || f.provider.writes != 1 {
