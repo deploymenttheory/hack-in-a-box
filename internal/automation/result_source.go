@@ -8,12 +8,31 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
-	"github.com/deploymenttheory/hack-in-a-box/internal/results"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 )
 
 // ResultSource consumes actual current result publications.
 // Private assessments, preparation and ballots never enter automation.
-type ResultSource struct{ Results *results.Service }
+type ResultSource struct{ Results ResultPublicationOwner }
+
+// ResultPublicationOwner returns only published-event metadata and current readers.
+type ResultPublicationOwner interface {
+	DiscoverNotificationSourcesPageInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		*uuid.UUID,
+		uuid.UUID,
+		int32,
+	) ([]resultpublication.Source, *uuid.UUID, error)
+	ResolveNotificationAudienceInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		uuid.UUID,
+		int64,
+	) ([]uuid.UUID, error)
+}
 
 func (s ResultSource) DiscoverInTransaction(
 	ctx context.Context,

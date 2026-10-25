@@ -21,7 +21,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
-	"github.com/deploymenttheory/hack-in-a-box/internal/results"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
@@ -39,7 +39,7 @@ type ResultAuthority interface {
 		context.Context,
 		pgx.Tx,
 		uuid.UUID,
-	) ([]results.Announcement, error)
+	) ([]resultpublication.Announcement, error)
 }
 
 func (s Service) now() time.Time {
@@ -449,7 +449,7 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		if err != nil {
 			return err
 		}
-		result.Results = []results.Announcement{}
+		result.Results = []resultpublication.Announcement{}
 		if s.Results != nil {
 			result.Results, err = s.Results.RoomAnnouncementsInTransaction(ctx, tx, eventID)
 			if err != nil {

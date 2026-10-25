@@ -8,6 +8,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
@@ -87,39 +88,21 @@ type Round struct {
 	Reason       string        `json:"reason"`
 	ChangedAt    time.Time     `json:"changed_at"`
 }
-type NamedTeam struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
+type (
+	NamedTeam      = resultpublication.NamedTeam
+	Announcement   = resultpublication.Announcement
+	AnnouncedAward = resultpublication.AnnouncedAward
+	Page           struct {
+		TieStates     []TieState     `json:"tie_states"`
+		Receipt       *Receipt       `json:"receipt"`
+		Revision      int64          `json:"revision"`
+		Round         Round          `json:"round"`
+		Preview       Preview        `json:"preview"`
+		Current       bool           `json:"current"`
+		Announcements []Announcement `json:"announcements"`
+	}
+)
 
-// Announcement contains only a deliberately released snapshot. Its type cannot
-// carry private preparation, raw assessments, votes, evidence or draft prose.
-type Announcement struct {
-	ID          uuid.UUID        `json:"id"`
-	Kind        string           `json:"kind"`
-	Version     int64            `json:"version"`
-	Finalists   []NamedTeam      `json:"finalists"`
-	Reserves    []NamedTeam      `json:"reserves"`
-	Awards      []AnnouncedAward `json:"awards"`
-	PublishedAt time.Time        `json:"published_at"`
-}
-type AnnouncedAward struct {
-	PrizeID    uuid.UUID  `json:"prize_id"`
-	Name       string     `json:"name"`
-	CategoryID *uuid.UUID `json:"category_id"`
-	Team       NamedTeam  `json:"team"`
-	Amount     string     `json:"amount"`
-	Currency   string     `json:"currency"`
-}
-type Page struct {
-	TieStates     []TieState     `json:"tie_states"`
-	Receipt       *Receipt       `json:"receipt"`
-	Revision      int64          `json:"revision"`
-	Round         Round          `json:"round"`
-	Preview       Preview        `json:"preview"`
-	Current       bool           `json:"current"`
-	Announcements []Announcement `json:"announcements"`
-}
 type Command struct {
 	RequestID     uuid.UUID      `json:"request_id"`
 	Version       int64          `json:"version"`

@@ -1,115 +1,104 @@
 # Final tally and deliberate publication (#112) — in progress
 
-This is the full #112 backend deliverable, stacked on actual #110 checkpoint
-`2abe330050f1ef8511dbe7f8626fcea5b7014c2b` (native schema 52). It is not
-complete and must not close #112 or become Ready merely because CI passes.
-Migration 53 is reserved for this owner. No publication endpoint, UI success,
-award confirmation or external message is implied by the initial checkpoint.
+This PR owns the complete backend deliverable in #112. It is rebased onto
+merged main `fcbfe038` and adds native schema 53 above the merged qualification
+owner's schema 52. Passing a checkpoint's CI does not complete this issue.
 
-## Current arithmetic and native source
+## Implemented behavior
 
-The calculator consumes the exact required assignment set, immutable published
-rubric reference and submitted independent cards from native judge completion.
-That source now returns its public criteria/reference and required assignments in
-the same transaction, retaining the original frozen-source and approval guards.
-Missing/extra authors, missing/null/duplicate categories, drafts, invalid values,
-duplicate entries and wrong run/rubric references fail closed.
+The calculator consumes native published criteria, current frozen submissions,
+required assignments and independently submitted final judge cards in one event
+transaction. Missing cards, invalid categories, revoked/conflicted assignments,
+stale rubric/source references and unresolved repository freezes block results.
+Disbanded and non-submitted entries do not enter the native completion source.
+Qualification mode uses the actual signed #110 selection and fresh finalist-only
+judge assessments; mentor totals and ranks never enter final judge arithmetic.
+Category contenders retain the native signed all-entry qualification selection,
+including non-finalists; all-team mode uses exact judge category means.
 
-All arithmetic uses exact base-10 stored integer score coefficients and rational
-averages, preserving their integer numerator and denominator even for recurring
-averages. Weighted totals and comparisons never pass through binary floating
-point or rounded display text. The two-decimal display is a separate projection.
-Equal values retain equal ranks; UUID ordering is a stable display order and
-cannot select an award winner or resolve a tie.
+Arithmetic preserves integer numerator/denominator pairs with `math/big.Rat`.
+Full precision determines ranking; two-decimal display text cannot create or
+resolve a tie. Cases include recurring 19/3 and a near tie of 246/49 versus
+251/50, whose distinct values both display as 5.02.
 
-A near-tie case uses 246/49 versus 251/50: both display as 5.02, but the first
-retains the higher rank. A recurring weighted result retains 19/3 independently
-of its displayed 6.33. The initial calculator suite passes (0.299s), including
-thirteen incomplete-source subcases. A first judge package run omitted the
-integration environment flag and therefore skipped its database test; it is
-compile evidence only. The corrected actual command was:
+Preparation, judge ballots, confirmation, finalist publication and award
+publication are separate commands. Every required final judge must vote; a
+strict majority is required after all ballots are recorded. A split stays
+unresolved until an explicit replacement vote. Partial assignment sets never
+silently reduce the panel. Each vote checks the caller's current native target
+and frozen-evidence authority. Judge views contain their own evidence only.
+Previous ballots remain in immutable versions.
 
-```sh
-HACKBOX_INTEGRATION=1 go test -race ./internal/judging \
-  -run '^TestIndependentVisibilityIncompleteLockDeliberationAndReopen$' -count=1 -v
-```
+Confirmation records a real native judge result approval after source, tie and
+award validation. Reopening an independent card invalidates the current source
+and approval. Stale current projections withhold private scores, ballots,
+confirmation and decision prose while immutable storage remains intact.
 
-It passed its real PostgreSQL scenario in 2.62s (package 3.845s), checking the
-transactional assignment/reference projection alongside native independent
-cards, missing judges, deliberation, approval invalidation and reasoned reopen.
-Its own container was stopped and removed. This is a narrow source test, not a
-complete #112 PostgreSQL/API/publication proof.
+Awards match every configured prize's identity, name and category. Category-less
+prizes target the overall winner; neither array order nor prize names invent a
+placement. One team can receive several prizes. Amount/currency are explicit
+exact decimal metadata, including noncash awards; no payment is executed.
 
-## Full acceptance still to deliver
+Finalists can be announced while the fresh final is pending. Confirmation alone
+announces nothing. A separate award command releases only reviewed award/team
+metadata. Released DTOs cannot carry raw cards, mentor rankings, ballots,
+private evidence, preparation reasons or unannounced awards. Current audience
+checks exclude outsiders and withdrawn competitors. Original-command receipts
+remain actor/event/request scoped and exact retries do not repeat publications.
+Distinct request IDs cannot announce an identical reviewed source twice.
 
-- Native, versioned result review with all-team versus fresh finalist-only judge
-  source selection; all eligible competing entries remain eligible for category
-  awards through their actual owning mode. Disbanded and non-submitted entries
-  cannot enter scoring. Consume #110's real transactional signed-selection seam.
-- Required judge completion and recorded final judge votes, with exact source
-  binding and stale/current authority checks. Qualification/category tie decisions
-  remain the actual native #110 signed panel source; no recomputed checkpoint sum.
-- Separate reasoned award/prize confirmation and versioned immutable history,
-  source invalidation, exact original-command recovery and concurrency protection.
-  A team may win several awards. Amount/currency are metadata, never a payment.
-- Explicit independent finalist and award publication gates; safe released
-  projections for #111/#113, one durable downstream event per actual publication,
-  current source/recipient checks and integration with approved automation/display.
-  Feedback release remains separately owned by #113.
-- Versioned OpenAPI, generated clients and actual runtime wiring. Native database,
-  HTTP, authorization, privacy, receipt, missing-judge, near-tie, repeated publication
-  and separate embargo tests. Normal 52→53 migration and guarded rollback proof.
-- Independent full Standards/Spec review, final-head CI and equal-tree merge audit
-  before any ticket/epic closure.
+One immutable publication row is the authoritative communication/display event.
+The actual `results.published` automation adapter discovers only announced
+metadata and rechecks current recipients, with superseded same-kind releases
+excluded from new dispatch. Paired display integration reads only safe announced
+snapshots after the presentation owner validates its token. Safe passive DTOs
+live in `internal/resultpublication`, keeping consumer imports independent from
+private assessment services.
 
-## Native result retention schema checkpoint
+Schema 53 retains immutable versioned decisions, exact request receipts and
+separate typed announcements. Same-event foreign keys bind native qualification
+versions and judge approvals. Direct/cascade truncate and updates/deletes fail;
+populated rollback is refused and empty rollback is supported.
 
-Schema 53 now adds immutable versioned decisions, original-command receipts and
-separately typed finalist/award publications. Composite native source references
-bind judge approvals and qualification versions to the same event. Publication
-identity is unique per event, kind and exact source binding, retaining independent
-finalist and award embargoes. Update, delete and direct/cascade truncate are
-rejected; populated rollback is refused, while empty rollback is supported.
-Generated SQL models and the required application schema version are updated.
+## Verification evidence and limits
 
-The actual PostgreSQL/race results package passed in 5.570 seconds, including
-existing exact arithmetic, populated parent-schema 52→53 upgrade, prior approved
-rubric preservation, incomplete native-reference rejection, duplicate publication
-source rejection, independent publication kinds, cross-event foreign keys,
-retention mutation checks and both guarded/empty rollback cases. These are schema
-fixtures, not proof that a service command authorised or published an award.
-Configured Go lint for results/database/judging passes with zero issues. A first
-source-only insertion helper command failed before writing its new assertions;
-those assertions were then inserted and passed in the recorded final run.
+- Initial source/arithmetic/schema proof is recorded in `source-read-proof.json`.
+  Native storage proof includes populated 52→53 upgrade, retained rubric data,
+  composite keys, independent kinds, duplicate source and rollback guards.
+- Rebased preparation/finalist publication proof passed in 26.340s: current
+  confirmed audience and withdrawal, private preparation, explicit release,
+  exact original receipt, duplicate-source rejection and concurrent same-key
+  requests. Pure arithmetic/decision tests also passed.
+- Native result evidence helper proof passed in 25.865s: actual visible versus
+  hidden frozen references, note/reference bounds, current assignment, conflict,
+  role loss, withdrawal and open-deliberation checks in both modes.
+- Native composed decisions passed in 24.625s: both modes' private confirmation,
+  separate finalist/award embargoes, exact money/multiple awards, repeated
+  release and approval invalidation; actual two-team split, missing ballots,
+  explicit revote, original receipts and immutable vote history.
+- After handler extraction and stale-prose redaction, the composed app tests
+  passed in 181.860s. The complete results package with PostgreSQL enabled passed
+  in 16.353s. Database tests use `HACKBOX_INTEGRATION=1` and `-race`; source-only
+  runs that omit the integration flag are unit/compile evidence only.
+- All affected backend packages passed configured lint. The subsequent exact
+  repository-wide CI command exposed a test import cycle through moderation,
+  archives, outcomes and automation. Publication DTOs were moved to the passive
+  package; every application/test package now compiles. The exact whole-repository CI
+  lint command passes with zero issues; new-head CI remains required.
 
-The full native command, actual qualification handoff, HTTP/runtime/API, vote,
-confirmation and downstream publication acceptance above remain required.
+## Remaining acceptance gates
 
-## Private current-source reader checkpoint
+- Versioned OpenAPI, generated Go/TypeScript clients, actual runtime composition
+  and native HTTP proof are being completed in the API lane. They are not yet
+  part of the published checkpoint.
+- Native approved automation/in-app delivery, recipient revocation and paired
+  display privacy proofs are in progress. Adapter existence alone is not proof
+  of delivery, worker leases or provider behavior.
+- Full independent Standards/Spec reviews, green final-head CI and equal-tree
+  merge audit remain mandatory before closing #112 or its epic child.
+- Feedback report preview/release and Fleet results screens remain separate
+  frontend #113 work. Broader independently calculated lifecycle/privacy
+  verification remains #114; neither is claimed complete by these tests.
 
-The results owner now composes the actual published current run, native required
-judge completion and #110 `SelectionInTransaction` in one event transaction.
-Only a current organiser can read private preparation. Tallies are withheld
-until native deliberation is open; missing runs, incomplete judges and missing
-current signed qualification have explicit blockers. Stale stored preparation is
-redacted from the current projection, retaining its immutable storage. The public
-announcement type is separate and cannot carry raw cards, mentor ranks, votes or
-evidence. No result HTTP endpoint or runtime composition is wired yet.
-
-Exact category contenders use all required native judge averages in all-team
-mode, and the actual signed panel category IDs in qualification mode, including
-non-finalists. Ties retain every candidate and derive their identity from exact
-source binding; stable UUID order does not select a winner. The full selection
-metadata (including run/version/reference/signoff) participates in source binding.
-
-The real PostgreSQL/race results package passed in 6.764 seconds: schema and
-arithmetic scenarios plus a current organiser/missing-run reader, judge/outsider
-denials and foreign-event denial. Its role fixture deliberately tests the reader
-boundary; it is not a full lifecycle rehearsal or a completed qualified tally.
-The existing native judge scenario also passed with the new explicit deliberation
-source assertion in 2.59 seconds (package 3.996s). Configured source lint passed
-after replacing a category-contender allocation with bounded slice reuse.
-
-Full actual signed-selection → result preparation → judge ballots → confirmation
-→ separate publication/native HTTP/runtime/provider integration remains required.
-No successful UI publication or external message is simulated by these readers.
+Only synthetic data and test-owned PostgreSQL resources were used. No real
+messages, provider effects, payments or user container changes were performed.

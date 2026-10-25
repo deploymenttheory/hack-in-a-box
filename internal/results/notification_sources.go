@@ -2,22 +2,18 @@ package results
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 )
 
 // NotificationSource is one durable explicitly released event. No private
 // decision, ballot, raw card or prose enters communication source discovery.
-type NotificationSource struct {
-	ID          uuid.UUID
-	Version     int64
-	PublishedAt time.Time
-}
+type NotificationSource = resultpublication.Source
 
 func (s Service) DiscoverNotificationSourcesPageInTransaction(
 	ctx context.Context,
