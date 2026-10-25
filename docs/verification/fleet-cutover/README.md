@@ -50,6 +50,25 @@ replaced by a visual migration.
 | Versioned production guide, contribution rules, independent availability | Existing independent production host/build and contribution rules are retained. A current isolated image and separately browsed guide must be proved; an already running guide at 8082 is not candidate-release evidence. |
 | Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #164/#165 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
 
+## Production caller and legacy selector audit
+
+`node scripts/audit-presentation-callers.mjs` follows static imports, reexports,
+literal dynamic imports and CSS imports from the normal portal/display entry and
+both independent guide entries. At source5d8fd041, all314 source modules are
+reachable; no relative import is unresolved. The only Tailwind `@theme` owner is
+`design-system/tokens.css`; event palette adapters retain native branding authority.
+Reachability does not prove every export/selector is useful or every route works.
+
+The bounded [caller record](presentation-caller-audit.json) identifies retired
+card-grid, preparation-board, attendance-tile, credential-table, old media/survey
+and other migrated layouts with no complete class token in any reachable TS/TSX.
+Their100 simple selector arms and matching responsive/print overrides are removed.
+Mixed live arms, current private data-attribute print protection, shared semantic
+aliases and dynamically constructed connection-state classes are preserved.
+The checker refuses if a retired class gains a possible caller or another token
+owner appears. Current CSS/browser/native integration and the full reference
+quality audit remain separate gates; this record does not certify full245.
+
 ## Reproducible normal-image runtime and browser probe
 
 `python3 scripts/verify-fleet-runtime.py --artifacts /PRIVATE/NEW/ARTIFACT-DIRECTORY`
