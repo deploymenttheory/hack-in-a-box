@@ -7,3 +7,5 @@
 .fleet-qualification-evidence li { padding-block:var(--space-2); }
 @media(min-width:72rem){.fleet-qualification-comparison { grid-template-columns:repeat(2,minmax(0,1fr)); }}
 @media print{[data-private-qualification]{display:none!important;}}
+.fleet-qualification-score-category,.fleet-qualification-history { min-inline-size:0;overflow-wrap:anywhere;border-block-start:1px solid var(--border);padding-block:var(--space-4); }
+.fleet-qualification-history details { padding-block:var(--space-3);border-block-end:1px solid var(--border); }

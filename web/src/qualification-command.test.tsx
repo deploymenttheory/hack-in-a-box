@@ -77,3 +77,23 @@ test('changed current base prevents POST and explains the unsent result inside t
  fireEvent.click(screen.getByRole('button',{name:'Cancel'}))
  await waitFor(()=>expect(screen.queryByRole('alertdialog')).toBeNull())
 })
+
+test('reviewing a new current base preserves the original unknown identity and cancelling restores its real opener',async()=>{
+ setup();vi.mocked(sendQualification).mockRejectedValueOnce(new TypeError('Synthetic lost response'))
+ await confirm();await screen.findByText('Original panel outcome unknown')
+ const opener=screen.getByRole('button',{name:'Review current panel starting point'})
+ fireEvent.click(opener)
+ const review=await screen.findByRole('alertdialog',{name:'Review current panel starting point'})
+ expect(review).toHaveTextContent('Earlier original requests remain unknown in history')
+ fireEvent.click(screen.getByRole('button',{name:'Cancel'}))
+ // JSDOM has no visible layout rectangles, so this exercises the enabled fallback.
+ await waitFor(()=>expect(screen.getByRole('heading',{name:'Reviewed panel commands'})).toHaveFocus())
+ expect(screen.getByLabelText('Original panel command history')).toHaveTextContent('Outcome unknown')
+ fireEvent.click(opener);expect(await screen.findByRole('alertdialog',{name:'Review current panel starting point'})).toHaveTextContent('Earlier original requests remain unknown in history')
+ fireEvent.click(screen.getByRole('button',{name:'Use reviewed current panel starting point'}))
+ await waitFor(()=>expect(screen.queryByRole('alertdialog')).toBeNull())
+ expect(screen.getByLabelText('Original panel command history')).toHaveTextContent('Outcome unknown')
+ expect(screen.queryByText(/acknowledged at panel version/)).toBeNull()
+ expect(sendQualification).toHaveBeenCalledOnce()
+ expect(originalQualificationReceipt).not.toHaveBeenCalled()
+})

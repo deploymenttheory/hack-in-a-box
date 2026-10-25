@@ -1,0 +1,21 @@
+import {useCallback,useState} from 'react'
+import {Button} from './components/ui/button'
+import {Failure,Loading} from './components/states'
+import type {PrivateRequestScope} from './private-request-scope'
+import {useTodayRead} from './today-read'
+import {readQualificationHistory} from './qualification-api'
+import {QualificationEvidenceList} from './qualification-view'
+import {qualificationWords} from './qualification-model'
+
+export function QualificationHistory({eventID,runID,parent,paused}:{eventID:string;runID:string;parent:PrivateRequestScope;paused:boolean}){
+ const [open,setOpen]=useState(false)
+ return <section className="fleet-qualification-history"><h3>Recorded panel history</h3><p>History is read again under current native audience and source permissions. Earlier private records do not grant current actions or acknowledge an unknown request.</p><Button icon="book" variant="outline" disabled={paused} onClick={()=>setOpen(value=>!value)}>{open?'Close':'Read'} recorded panel history</Button>{open&&<HistoryReader eventID={eventID} runID={runID} parent={parent} paused={paused}/>}</section>
+}
+function HistoryReader({eventID,runID,parent,paused}:{eventID:string;runID:string;parent:PrivateRequestScope;paused:boolean}){
+ const [before,setBefore]=useState<number>()
+ const load=useCallback((signal:AbortSignal)=>readQualificationHistory(eventID,runID,signal,before),[eventID,runID,before])
+ const read=useTodayRead(`${eventID}:${runID}:${before??'latest'}:qualification-history`,load,parent)
+ if(read.error)return <Failure error={read.error} retry={()=>void read.refresh()}/>
+ if(!read.data)return <Loading/>
+ return <section aria-label="Currently authorised panel history" inert={paused||read.pending}><p>Current page: {read.data.items.length} disclosed records. Missing fields or evidence are not zero scores and do not establish a current selection.</p>{read.data.items.map(item=><details key={item.snapshot.version}><summary>Panel version {item.snapshot.version} · {qualificationWords(item.snapshot.action)} · {item.current?'Current native source binding':'Historical source; not current selection authority'}</summary><p>Recorded reason: {item.snapshot.reason}</p>{item.snapshot.cards.map(card=><section key={card.team_id}><h4>Team {card.team_id} · Card version {card.version} · {qualificationWords(card.state)}</h4><p>Recorded reason: {card.reason}</p><p>Frozen submission {card.source.submission_revision} · Huddle version {card.source.huddle_version} · Rubric version {card.source.rubric.version}</p><dl>{card.scores.map(score=><div key={score.category_id}><dt>Recorded category {score.category_id}</dt><dd>{score.pending||score.value===null?'Pending/unobserved':score.value}<QualificationEvidenceList items={score.evidence}/></dd></div>)}</dl></section>)}{item.snapshot.eligibility.map(decision=><section key={decision.team_id}><h4>Team {decision.team_id} · {qualificationWords(decision.decision)}</h4><p>Reason: {decision.reason}</p><QualificationEvidenceList items={decision.evidence}/></section>)}{item.snapshot.votes.map((vote,index)=><section key={index}><h4>Recorded ballot · Seat {vote.seat}</h4><p>Team {vote.team_id} · Reason: {vote.reason}</p><QualificationEvidenceList items={vote.evidence}/></section>)}{item.snapshot.decisions.map((decision,index)=><section key={index}><h4>{decision.casting?'Recorded casting decision':'Recorded tie resolution'} · Seat {decision.seat}</h4><p>Team {decision.team_id} · Reason: {decision.reason}</p><QualificationEvidenceList items={decision.evidence}/></section>)}{item.snapshot.signoff&&<p>Recorded private signoff reason: {item.snapshot.signoff.reason}. Current authority and source freshness must be read independently.</p>}</details>)}{!read.data.items.length&&<p>No recorded panel snapshots are disclosed under current native authority.</p>}<div className="fleet-pattern-actions">{before!==undefined&&<Button icon="refresh" variant="outline" disabled={read.pending||paused} onClick={()=>setBefore(undefined)}>Latest disclosed history</Button>}{read.data.next_cursor!==null&&<Button icon="nextPage" variant="outline" disabled={read.pending||paused} onClick={()=>setBefore(read.data!.next_cursor!)}>Older disclosed history</Button>}</div></section>
+}

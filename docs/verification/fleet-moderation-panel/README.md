@@ -147,3 +147,27 @@ The final bounded controller/shared-metadata/codec checkpoint passes **9/9 in
 case verifies that current revision drift prevents POST, leaves no fabricated
 original attempt and explains the unsent result inside the open review. This is
 transport-double controller verification, not native transaction acceptance.
+
+## History, deliberate current-base review and native browser harness
+
+The working-tree extension of `f85c81156bd7888c60272ec78c1ac6cdc4e04010`
+adds the actual current-audience paginated history endpoint and deliberate
+current-base review. The earlier unknown request remains in safe history even
+after selecting current facts; no original body is replayed or acknowledgement
+invented. Bounded controller/metadata/codec checks pass **10/10 in 2.53s** and
+actual keyboard current-base cancel/real opener return, explicit selection and
+original recovery pass **2/2 in 5.9s**. JSDOM has no layout rectangles, so the
+unit case verifies the enabled fallback; the actual browser independently proves
+the initiating button. Both production portal builds pass; focused types/ESLint
+and native app Go lint pass with zero issues.
+
+An additive native browser harness now uses the actual app qualification HTTP
+fixture, real PostgreSQL and both compiled portals with test-owned Unix IPC.
+Initial scope is actual native panel configuration/lost response/original ACK,
+not-submitted blockers, current history and native session expiry. Its four
+portal/viewport cases are **not yet executed at this checkpoint**. It does not
+claim full five-team final-card, tie/casting or private signoff acceptance. That
+larger scope remains mandatory. The native owner is adding a before-cutoff test
+seam for real formal URL submissions; no clock rewind or settled-fact rewrite is
+used. Browser evidence records start/end commit/tree and cleanliness; no public
+fixture controls or external sends are introduced.
