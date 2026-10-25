@@ -53,9 +53,8 @@ fencing after withdrawal/navigation.
 
 Initial static checks: affected Go packages compile, TypeScript compiles, both
 portals and the independent guide build; configured affected Go lint reports zero
-issues and frontend ESLint reports zero issues. Native and browser commands above
-are **pending** at this checkpoint. Their presence is not proof of execution.
-Exact tested source refs/results will be appended after terminal runs.
+issues and frontend ESLint reports zero issues. This paragraph records the initial static checkpoint, before the terminal native
+runs documented below. Test presence alone was never treated as execution proof.
 
 
 ## Native publication and retention proof
@@ -87,5 +86,87 @@ is added. Results:
   unchanged 90-day retention boundary.
 
 The shared CI-only commits through `67ca74a3` preserve those Go/API source bytes.
-The four-case browser matrix and independent guide browser checks remain pending.
 Earlier duplicate red fixture invocations are not counted as passing proof.
+All Go/API/database source remains byte-identical from `f96fb69a` through the
+final browser source `755d16f0`; later production corrections are frontend only.
+
+
+## Native owner regression suites
+
+At `4f0d163336710400d1f6f285968845a3552b0176`, all affected native owner suites
+passed with `HACKBOX_INTEGRATION=1 GOMAXPROCS=2 go test -v -race -p 1 -parallel 1
+./internal/event ./internal/outcomes ./internal/results -count=1 -timeout=10m`:
+
+| Package | Terminal result |
+| --- | --- |
+| `internal/event` | PASS, 16.384s |
+| `internal/outcomes` | PASS, 17.469s |
+| `internal/results` | PASS, 6.326s |
+
+These suites ran against real PostgreSQL with no skipped native cases. Their
+production Go/API/SQL source is unchanged in the final browser checkpoint.
+
+## Browser corrections and independent guide
+
+The original four-case browser pass at `3e79a02f` (116.154s) preceded stronger
+same-document cache navigation and directory accessibility assertions; it is
+historical evidence. The stronger run exposed an actual row-action accessible
+name mismatch. `1bab14cc` corrected the production accessible name to include its
+visible “Open project” text. A subsequent audit caught a sample during the finite
+160ms theme transition: the browser harness now awaits actual finite animation
+completion, following the existing native pattern. No colors, axe rules,
+assertion/action timeouts or retries were relaxed. The resulting complete run at
+`5f83a90d` passed all four cases (52.632s), before the final search privacy change.
+
+Typed search text now lives only in memory beneath the existing identity/session
+private cache. Only event UUID/status remain document URL context. Current denial,
+identity/session disposal or session invalidation clears remembered text. The
+final native matrix also asserts that query text is absent from document URLs and
+survives the same-session detail/back journey. No local/session storage or cookie
+stores the query.
+
+The independently hosted guide passed **2/2** desktop/mobile checks at
+`d56dac1c8f87cc3583971f0218fe5fe72de2666f` (**1.6s**). The guide imports the actual
+production collection/reading exports, uses distinct synthetic event/team facts,
+restores the actual connected opener, and makes no private API/storage request.
+An earlier guide-only failure was a strict locator matching the deliberately
+retained hidden collection as well as the active article; the corrected locator
+scopes the reading assertion to its active article without changing focus behavior.
+
+Configured affected Go lint and frontend ESLint report zero issues. Both portal
+builds and TypeScript pass. Canonical SQL/OpenAPI/Go/TypeScript regeneration is
+clean at `557a0101`; subsequent changes through `755d16f0` are guide documentation
+and one old presentation-label assertion only.
+
+
+## Final actual browser matrix
+
+At `755d16f0`, the complete strengthened matrix passed **4/4**, no retries,
+flaky cases or skipped cases: Go package **50.225s**, test **48.66s**.
+
+| Portal / viewport | Native case duration |
+| --- | --- |
+| Administration / desktop | 13.81s |
+| Administration / mobile | 11.82s |
+| Participant / desktop | 11.51s |
+| Participant / mobile | 11.52s |
+
+Each scope starts a fresh actual PostgreSQL/native-owner fixture. All cases prove
+same-document back navigation, actual formerly authorised late response fencing,
+search text absent from document URLs and retained on ordinary detail/back,
+current publication/audience/award/media/consent checks, archive/correction and
+light/dark directory plus reading accessibility. All assertions retain the native
+configured bounds and zero retries. Screenshots were visually inspected at desktop
+and mobile widths. The 16 original rendered PNGs and SHA-256 hashes are indexed in
+[`native-browser-evidence.json`](native-browser-evidence.json); scope directories
+contain their unedited screenshots.
+
+Existing outcome regression coverage initially passed 46/48 administration cases;
+the remaining desktop/mobile cases completed consent removal correctly and then
+failed only on the previous “Separately reviewed publication” scope label. The
+assertion now matches the rebuilt visible “Reviewed publication” label without
+changing its consent/version/no-write assertions. At the unchanged production/test source `755d16f0`, both full portal reruns
+passed: **48/48 administration (1.3m)** and **48/48 participant (1.3m)**, desktop
+and mobile, no retries or skips. These synthetic API regressions cover command
+receipt recovery, private read/navigation lifetimes and media-projection removal;
+they supplement, rather than substitute for, the actual native matrix.
