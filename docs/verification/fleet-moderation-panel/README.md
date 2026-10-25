@@ -1,27 +1,33 @@
 # Fleet moderation and selection workspace — issue 111
 
-This is a full-scope work-in-progress UI delivery, stacked on actual native #110
-PR #279. The initial source was `2abe330050f1ef8511dbe7f8626fcea5b7014c2b`; current integration consumes actual producer `ee980c31c75b10032579009323af00c431a13b21`. The parent owns
-migration52, private qualification authority and actual FinalistPolicy. This UI
-adds no migration and cannot make a local selection authoritative. #109 is a
-separate real judge interface dependency; #112/#113 retain final award
-confirmation/publication and feedback release. No live provider effects occur.
+This is the full-scope issue111 follow-up in Draft PR285, based on main
+`fcbfe038f669df74a73d51ec7f160c222c859397` after the partial PR283 merge. Native
+#110 qualification and #109 judging are merged real dependencies. The UI adds no
+migration, publication API, native scoring policy or provider effect. Final
+award confirmation/publication and feedback remain owned by #112/#113.
+
+The current implementation is complete for independent review; acceptance stays
+open until both full review axes and final-head CI pass. Historical sections
+below retain their original source hashes and failures rather than relabelling
+older runs as current. The final checkpoint section supersedes their open-work
+notes. Local browser evidence is Chromium at desktop/narrow viewports, not a
+physical-device or full issue122 accessibility certification.
 
 ## Complete acceptance ledger
 
-| Required behavior | Current implementation and remaining proof |
+| Required behavior | Implementation and evidence |
 | --- | --- |
-| Current actor-permitted discovery and native action readiness | Actual actor-permitted collection discovery and generated native page/team/tie readiness are consumed from ee980c31. Both portal entry routes exist; deterministic keyboard discovery/configuration proof passes. Full native discovery/role-loss journey remains pending. |
-| Evidence side by side with reasoned amended final cards | Actual current panel reader and source-specific huddle reauthorization beside current moderated scores/reasons exist. Native-gated reasoned final-card fields, separately authorised evidence selection and exact save/sign review are implemented. Real native card browser proof remains pending. |
-| Required reviews, evidence, eligibility, absent judges and timing blockers | Current native team/proposal blockers and formal/code outcomes are visible. Actual native readiness/source/card version fields are consumed; independent judge-completion metadata must come from its actual permitted owner. No missing value becomes a zero score. |
-| All eligible category candidates versus finalists/reserve and ties | Pure production views render the native separate lists and unresolved-tie blockers. Native reasoned ballot/casting commands consume exact native candidate sets/readiness. Complete tie/configured-count/non-finalist category browser and native proof remain pending. |
-| Versioned panel signoff | Native current-signoff state and exact prepare/review/confirm use actual readiness; original-ACK recovery is implemented. Full signoff native browser proof remains pending. No current GET can acknowledge an earlier command. |
-| Separate finalist/category announcement preparation | Separate explicitly private local previews require current native signed source; finalist preview omits categories. This is preparation only, not approval/send/publication. No publication endpoint is invented; later owners retain that boundary. |
-| Not-submitted/withdrawn/disbanded unused outputs | Current native status is shown distinctly, without a score entry action. Actual retired-source writer denial and corresponding browser/native proof remain required. |
-| Current authority, history and privacy lifetimes | Actor/session/event/run keys plus parent event/private read scopes fence native panel and huddle reads. Current denial and changed-source tests clear inspector/private preview. Exact command identity, safe version0 metadata, unknown history and original-receipt recovery have bounded actual controller/browser proof. Full native session/role-loss and command history presentation proof remain pending. |
-| Keyboard/mobile action → review → result → next action | Existing Fleet primitives, flat responsive side-by-side composition, actual organiser submitted-build link (without judge_run), source/review next actions and production guide views exist. Full command keyboard/correction/focus/native narrow journey and final inspected visuals remain pending. |
-| Independently hosted published production guide | Actual pure production view example runs standalone/embedded, with storage/cookie/API traps. Editors/review/unknown lifecycle examples and usage/accessibility documentation must follow in the same delivery. |
-| Integration with real predecessors and final source verification | Existing #105 review/evidence routes are retained. Actual #109 routes are `/events/{event_id}/judging` and `/judging/practice`; link only against real integrated sources. Parent merge/rebase, full independent reviews and final CI remain gates. |
+| Current actor-permitted discovery and native readiness | Real actor-permitted collection and page/team/tie capabilities drive both portal routes; no client role or repository-list inference grants a scoring action. Four original native discovery/configuration/lost-ACK/session journeys passed at e9a7a561. |
+| Evidence beside reasoned final cards | Separately authorised exact huddle and original-card API reads validate team/run/rubric/frozen version/reference correspondence. Real five-team native journeys save and sign every final card with observed evidence and reasons; old originals remain unchanged. |
+| Required reviews, evidence, eligibility and timing blockers | Native blockers and action capabilities control display and preflight. Common-cutoff/frozen/reconciliation policy stays with merged native owners; missing evidence never becomes a zero score. The managed-code eligibility form consumes the real native decision/evidence contract rather than inventing a SHA or approval. |
+| All eligible category candidates, finalists/reserve and ties | Actual five-team native selection retains the non-finalist Technical/UX winner and multiple categories for another team. Two independent mentor ballots split UX; the organiser records the actual permitted casting decision. No unresolved tie is inferred from retained historical tie records. |
+| Exact versioned private signoff | Real native review, original ACK and separately read current signoff are exercised. Pending/unknown/current GET never substitutes for an original receipt. |
+| Separate finalist/category preparation | Current exact private signoff enables separate labelled local preparations; finalist preparation excludes category selections. No approval, send or publication is simulated. |
+| Not-submitted/withdrawn/disbanded unused outputs | Original native cases prove not-submitted/no score; final cases use actual organiser withdrawal and explicit test-only disbanded/unused-repository facts. Current-card rendering requires the native current-source flag; historical cards cannot score retired output. |
+| Current authority, history and privacy lifetimes | Structured current visibility disposes open private history before its poll; current denial removes private sources. Native cases open the exact immutable snapshot and revoke the actual session, then require real native denial and private-history disposal. Only safe matching card-ack coordinates cross disposed editors. |
+| Keyboard/narrow action → review → result → next action | Bounded actual Tab traversal, native select type-ahead, keyboard text entry, exact review and next-team return run on both real portal builds. Pending controls retain focus while activation stays blocked. |
+| Independent interactive production guide | Standalone/embedded production views/fields, invalid input retention, correction/cancel-to-actual-opener focus and unknown metadata after private disposal pass8/8 on919b01ef. The guide publishes pending focus, exact ACK and next-team ownership rules. |
+| Final source acceptance | Local full native proof is source-attributed across e6a19b63 plus the affected919b01ef regular-desktop retest; current component suites passed26/26 each portal. The final retained-tie copy correction has RED2→GREEN2 and affected visual/native assertions are running. Independent full Standards/Spec and exact-head CI remain mandatory. |
 
 ## Source contracts and known boundary
 
@@ -246,3 +252,166 @@ The complete bounded moderation browser suite passes administrator **16/16 in
 transport cases retain their separate scope from the cb417 native four-case
 matrix. The full five-team frozen-source final-card/tie/signoff proof, completed
 visual captures and final reviews/current CI remain mandatory open gates.
+
+## Issue 111 follow-up after the merged checkpoint
+
+PR283 was merged as `fcbfe038f669df74a73d51ec7f160c222c859397`; that checkpoint
+was not full issue111 acceptance. The follow-up branch starts from that actual
+main and applies only the two preserved privacy edits, without replaying merged
+implementation commits. Original native/source receipts above remain historical.
+
+The previously unpublished excluded-target regression failed both widths before
+the correction: an open history retained private decision/round prose after an
+authoritative current panel read removed its target, until the history poll.
+The lifetime fence now includes structured decision/reference visibility and
+presence flags for withheld prose; private text is never placed in scope keys.
+Against the current main working-tree extension, unchanged cases pass **2/2 in
+4.6s**, with TypeScript/focused lint and both production builds passing. The
+independent write guide passes **8/8 in4.6s**, including unchanged standalone and
+embedded cancel-to-actual-opener assertions, retained validation and unknown
+metadata after private disposal. This is not new native transaction evidence.
+
+Remaining mandatory scope stays in one follow-up PR for existing111: real
+five-team frozen-source card/eligibility/tie/signoff journeys, complete current
+history/capability/privacy/recovery hardening, native/visual proof across both
+portals, independent reviews and final current CI. Final award confirmation,
+publication and feedback release remain separate112/113 responsibilities. No
+local preview or UI receipt invents those APIs or released results.
+
+### Follow-up native checkpoints and current open gates
+
+The five-team source fixture passed real PostgreSQL/race at clean `23478c4e`
+(6.934s), using formal live submissions, a monotonic cutoff, independent submitted
+final cards, real second-review completion and exact signed huddles. Its first
+attempt correctly failed invalid mentor capacity; the fixture now declares the
+actual five-team coverage and configures a native panel rather than bypassing
+that policy. No production authority was changed.
+
+The real save-card journey exposed lost inspector/next-action continuity in both
+admin layouts at `f9f565d7`. It passed both at clean `b12ac3d3` (Go/race68.592s)
+after carrying only exact acknowledgement/navigation metadata to a matching fresh
+native card. A separate test-only `Draft` versus native `draft` capitalization
+correction is not a product fix. A second actual keyboard regression identified
+the inspector heading stealing next-action focus; explicit owner focus preserves
+the shared default and is documented in the interactive guide.
+
+At clean `dc52ad54c463beadd70281a9cec338b712d94417`, the full admin desktop
+browser passed in35.8s: original authorised evidence, five reasoned save/sign
+pairs, split ballots from two independent mentors, organiser casting, exact
+versioned signoff, a non-finalist Technical/UX category winner, and separate
+private preparations. `native-complete-admin-desktop-dc52.json` records its exact
+source/tree. Its mobile attempt stopped at a test trying to press the hidden
+collection without Back to panel. The follow-up now uses the real return action
+and verifies same-row keyboard focus through the existing coverage focus owner.
+
+A real production-component regression also showed a retained historical card
+as current after native `card_source_current=false`/withdrawal (RED2/2). The
+current inspector now requires the native current-source flag and labels
+withdrawn/disbanded/inactive outcomes distinctly; the affected retired-card and
+back-focus cases passed4/4 in3.6s. Source was the working-tree extension on dc52;
+these are component checks, not native outcome proof.
+
+Clean `f619f9e5dc4f26a06d26a4921b70afb191018891` extends the native journey
+with an actual organiser withdrawal, explicitly test-only disbanded/unused-repo
+lifecycle facts, no current score/actions after retirement, and light/dark
+captures. The full admin mobile journey PASSED (2.1m browser). Admin desktop
+stopped at its second card confirmation: a real native request became unknown
+and the dialog remained; the UI retained the unknown barrier. This is an OPEN
+proof failure, not a pass or evidence that the command failed. No retry,
+assertion weakening, timing-policy change or fabricated receipt was introduced.
+The complete run therefore FAILED (Go/race222.116s). Independent guide build and
+all8 real standalone/embedded guide checks passed in8.8s on the same source.
+
+Still mandatory: diagnose and resolve the desktop native failure, complete both
+regular-portal native layouts and current visual inspection, remaining
+privacy/recovery cases, independent full reviews and final CI. All issue111
+acceptance stays open until those gates complete; #112/#113 still own final
+award publication and feedback release.
+
+
+## Final follow-up checkpoint
+
+The safe late-original-card acknowledgement race was reproduced in both widths:
+a current poll disposed the private sender before its matching reply and lost
+the result/next action. RED2 became GREEN2; the complete affected denial,
+HTTP408, history-visibility and pending checks passed10/10 in6.8s. No captured
+scores/reason/evidence crosses that boundary. A one-time navigation handoff
+requires current panel/card/freeze/version authority and never reopens a manual
+selection after departure. Signed cards expose the explicit **Review another
+team** action.
+
+The full original/final matrix at e9a7a561 passed the four original native
+journeys and exposed only a new history-test locator ambiguity in final cases:
+the same retained reason legitimately existed in multiple immutable snapshots.
+The selector now binds to the exact explicitly opened panel version. Actual Tab
+traversal and native-select type-ahead replaced implicit locator focus; browser
+pages activate once when changing actors. Native session expiry now asserts the
+actual denied response and immediate disposal, allowing the real current check
+to win the race rather than trying to activate an already removed control.
+
+At clean e6a19b63 the final native admin desktop, admin narrow and regular narrow
+journeys passed. The aggregate four-case run failed only regular-desktop saved
+confirmation focus during a pending poll. That real focus defect was reproduced
+RED2 and fixed GREEN2 while activation stayed disabled. Related regressions
+passed6/6 in12.3s. The affected complete native regular-desktop journey then
+passed at clean919b01ef (Go/race172.462s). Neither the earlier genuine unknown
+HTTP outcome nor failed aggregate runs are reclassified as passes.
+
+Both complete portal component suites passed26/26 (admin41.4s, regular40.3s).
+Controller/codec/shared metadata tests passed10/10 in3.91s. Types, focused lint,
+both portal builds and native app Go lint passed. The independently hosted guide
+build and all8 standalone/embedded checks passed at919b01ef in6.0s.
+
+Visual inspection found and corrected one final contradiction: a signed panel
+still warned of an unresolved tie by counting retained tie contexts. Native
+`unresolved_tie:` blockers now exclusively control that message; tie history is
+unchanged. This was RED2→GREEN2 in4.0s. Current native visual/assertion proof and
+source-attributed captures will be appended without altering the frozen
+production implementation. All8 native cases remain required in CI; its10m
+aggregate budget accounts for four full five-team journeys plus the original
+four, with no global retry, assertion relaxation or native request-timeout change.
+
+Remaining acceptance gates: independent full Standards/Spec, final-head CI and
+review of the final source-attributed guide/visual record. Issue111 remains open
+until the parent completes those gates. #112/#113 publication and feedback are
+separate; no live provider effect or external acceptance is claimed here.
+
+### Frozen implementation: final native and guide evidence
+
+At exact clean `a6f5e447dff0726f3f709eb9741131f4e9a25f5e`, **all four final
+native portal/width journeys PASSED in one Go/race run (289.107s)**. This includes
+the resolved-tie warning assertion, actual keyboard/native-select flow, every
+card/ballot/casting/signoff step, separate preparations, retired-output checks,
+exact history and real denied-session disposal. This supersedes the earlier
+partial final runs without changing their historical outcomes. The original
+four initial cases remain attributed to e9a7a561 and all eight are mandatory in
+current-head CI.
+
+The independent production guide build and all8 checks passed on that frozen
+implementation in4.1s. `final-native/artifacts.json` records exact source/tree
+and SHA256 for four successful native records and12 genuine PNG captures.
+All8 signed light/dark portal/width captures and four comparison captures were
+visually inspected: no horizontal clipping, labels/actions remain readable,
+separate category preparation stays private and the false tie warning is absent.
+The event's configured light canvas remains its actual branding in a dark shell;
+these images reflect that existing branding contract.
+
+One comparison element capture could clip its lower boundary if its independently
+loaded original-evidence panel grew after screenshot measurement. A test-only
+readiness assertion now waits for all10 actual independent observations before
+measuring that capture. Its affected regular-narrow visual retest is recorded
+separately; no production implementation, authority or assertion is weakened.
+
+Only independent full reviews and final-head CI remain acceptance gates. No
+physical-device, screen-reader or full issue122 certification is claimed.
+
+The screenshot-readiness-only retest completed at exact clean
+`f7681392f0a319178d52dcc310f3de8e2d17f4e0`: the actual regular-narrow native
+journey passed (70.562s browser, zero retries/skips). Its fixture records matching
+start/end commit and successful browser exit. The original tool's terminal output
+was truncated, so no separate Go duration is asserted for this retest; subsequent
+process inspection confirmed no live owned native/browser process. Only this
+scope's four artifacts were refreshed with their actual source/tree and hashes;
+the other three retain a6f5 attribution. The refreshed comparison was visually
+inspected with its complete original-evidence and moderated-card contents.
+Production source is unchanged from the four-scope a6f5 native pass.

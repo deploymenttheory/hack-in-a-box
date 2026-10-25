@@ -9,7 +9,9 @@ export type QualificationProposal=Schemas['QualificationProposal']
 export type QualificationEvidence=Schemas['ScorecardEvidence']
 export const qualificationWords=(value:string)=>value.replaceAll('_',' ')
 export function qualificationOutcome(team:QualificationTeam){
- if(team.outcome==='withdrawn'||team.outcome==='disbanded'||team.outcome==='inactive')return 'Unused entry · excluded from scoring'
+ if(team.outcome==='withdrawn')return 'Withdrawn entry · excluded from scoring'
+ if(team.outcome==='disbanded')return 'Disbanded team · repository unused; excluded from scoring'
+ if(team.outcome==='inactive')return 'Inactive entry · excluded from scoring'
  if(team.outcome==='not_submitted')return 'Not submitted · no formal final to score'
  if(team.outcome!=='frozen')return 'Formal final is not frozen'
  return team.eligible?'Eligible competing entry':'Not currently eligible for selection; inspect native blockers'
@@ -17,6 +19,7 @@ export function qualificationOutcome(team:QualificationTeam){
 export function currentPrivateSelection(page:QualificationPage){return page.current&&page.round.signoff&&page.round.proposal?page.round.proposal:undefined}
 
 export type QualificationIntent={requestID:string;runID:string;action:string;revision:number;version:number;fingerprint:string}
+export type QualificationCardAcknowledgement={requestID:string;action:string;version:number;teamID:string;cardVersion:number;freezeBinding:string}
 const nilUUID='00000000-0000-0000-0000-000000000000'
 const nativeUUID=(value:string|undefined)=>value?.toLowerCase()??nilUUID
 const nativeEvidence=(e:QualificationEvidence)=>({kind:e.kind,id:e.id?nativeUUID(e.id):null,version:e.version,note:e.note})

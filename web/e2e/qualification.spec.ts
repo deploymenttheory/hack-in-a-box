@@ -16,6 +16,7 @@ test('native panel reader separates source-specific authority and uses organiser
  await expect(page.getByText('This source is not disclosed under current source-specific authority. A panel selection does not grant private huddle access.',{exact:true})).toBeVisible()
  await expect(page.getByRole('link',{name:'Inspect formal build and frozen code',exact:true})).toHaveAttribute('href',`/events/${firstID}/teams/${team}/build`)
  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Synthetic recorded moderation reason')
+ await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:`Inspect Team ${team}`,exact:true})).toBeFocused()
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
 test('finalist preparation is private and independent from category preview',async({page})=>{
@@ -100,4 +101,85 @@ for(const response of ['ack','408'] as const)test(`sent panel metadata protects 
   page.removeAllListeners('dialog');page.once('dialog',dialog=>void dialog.accept());await page.getByRole('link',{name:test.info().project.metadata.portal==='regular'?'Hack in a Box home':'Hack in a Box · Admin home',exact:true}).click();await expect(page).toHaveURL(/\/$/)
   task.state.denied=false;await page.goBack();await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown');expect(task.writes).toHaveLength(1)
  }finally{task.release()}
+})
+test('authoritative excluded-target visibility change disposes already-open private history before its next poll',async({page})=>{
+ const state=await fixture(page),excluded=state.page.teams[0],visible=state.page.teams[1],canary='EXCLUDED-TARGET-PRIVATE-DECISION-CANARY'
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities.record_locked=false;excluded.eligible=false;excluded.freeze_status='unresolved';state.page.round.cards=state.page.round.cards.filter(card=>card.team_id===visible.team_id)
+ state.page.round.reason=canary;state.page.round.eligibility=[{team_id:excluded.team_id,binding:excluded.freeze_binding,decision:'ineligible',reason:canary,evidence:[{kind:'note',id:null,version:null,note:'Private supporting exclusion note'}],actor_id:state.page.round.panel.organiser_id,at:'2027-06-20T16:00:00Z'}]
+ const original=structuredClone(state.page.round);let withheld=false,historyReads=0
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/history*`,route=>{historyReads++;return route.fulfill({json:{items:[{snapshot:withheld?state.page.round:original,current:false}],next_cursor:null}})})
+ await page.goto(path);await page.getByRole('button',{name:'Read recorded panel history',exact:true}).press('Enter');const history=page.getByRole('region',{name:'Currently authorised panel history',exact:true});await history.getByText(/Panel version 4 · sign off/).press('Enter');await expect(history.getByText(`Reason: ${canary}`,{exact:true})).toBeVisible();expect(historyReads).toBe(1)
+ withheld=true;state.page.round.eligibility=[];state.page.round.reason='';await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
+ await expect(page.getByText(canary,{exact:false})).toHaveCount(0);expect(historyReads).toBe(1)
+ await page.getByRole('button',{name:'Read recorded panel history',exact:true}).press('Enter');await history.getByText(/Panel version 4 · sign off/).press('Enter');await expect(history).not.toContainText(canary);await expect(history).toContainText(`Team ${visible.team_id} · Card version 2`)
+})
+test('retired formal output never presents a retained historical card as current scoring evidence',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0]
+ team.outcome='withdrawn';team.eligible=false;team.card_source_current=false;team.can_save_card=false;team.can_sign_card=false;team.source=null;state.page.current=false;state.page.round.signoff=null;state.page.preview=null
+ await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter')
+ await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('No current moderated card is disclosed. Missing evidence is not a zero score.')
+ await expect(page.getByText('Recorded reason: Synthetic recorded moderation reason',{exact:true})).toHaveCount(0)
+ await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toHaveCount(0)
+})
+test('pending current read preserves keyboard return to the same team without permitting an action',async({page})=>{
+ const state=await fixture(page),team=initial.teams[0].team_id;let hold=false,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{if(hold)await gate;return route.fulfill({json:state.page})})
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team}`,exact:true}).press('Enter')
+  hold=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter')
+  const source=page.getByRole('button',{name:`Inspect Team ${team}`,exact:true});await expect(source).toBeDisabled();await expect(source).toBeFocused()
+  await source.press('Enter');await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toHaveCount(0)
+  release();await expect(source).toBeEnabled();await expect(source).toBeFocused();await source.press('Enter')
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Synthetic recorded moderation reason')
+ }finally{release()}
+})
+test('matching late original acknowledgement preserves the next action after current polling disposes its private editor',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0],card=state.page.round.cards[0]
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities={can_read_panel:true,can_configure_panel:false,can_propose:false,can_sign_off:false,record_locked:false,read_only:false}
+ card.version=1;card.state='draft';team.card_version=1;team.card_state='draft';team.can_sign_card=true;team.source=card.source
+ let posted=false,release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  if(route.request().method()!=='POST')return route.fulfill({json:state.page})
+  const body=route.request().postDataJSON() as QualificationCommand,revision=state.page.revision
+  const receipt={request_id:body.request_id,run_id:run,action:body.action,expected_revision:revision,expected_version:body.version,version:body.version+1,fingerprint:await qualificationFingerprint(body,revision)}
+  state.page.revision++;state.page.round.version++;card.version=2;card.state='signed';team.card_version=2;team.card_state='signed';team.can_sign_card=false;posted=true
+  await gate;return route.fulfill({json:{...state.page,receipt}})
+ })
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter');await page.getByRole('button',{name:'Review saved final card confirmation',exact:true}).press('Enter')
+  await page.getByLabel('Recorded panel reason',{exact:true}).fill('Private captured confirmation reason')
+  await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter');await page.getByRole('alertdialog',{name:'Review private panel command',exact:true}).getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
+  await expect.poll(()=>posted).toBe(true);await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toHaveCount(0);await expect(page.getByLabel('Original panel command history')).toContainText('Awaiting acknowledgement')
+  release()
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
+  await expect(page.getByRole('status').filter({hasText:'Original sign card acknowledged for request'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Review another team',exact:true})).toBeFocused()
+ }finally{release()}
+})
+test('pending current reads retain saved-card keyboard focus while confirmation stays blocked',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0],card=state.page.round.cards[0]
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities.record_locked=false;card.state='draft';team.can_sign_card=true;team.source=card.source
+ let hold=false,release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{if(hold)await gate;return route.fulfill({json:state.page})})
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter')
+  const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true})
+  await confirm.press('Tab');await page.keyboard.press('Shift+Tab');await expect(confirm).toBeFocused()
+  hold=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect(confirm).toBeDisabled();await expect(confirm).toBeFocused();await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toHaveCount(0)
+  release();await expect(confirm).toBeEnabled();await expect(confirm).toBeFocused();await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toBeVisible()
+ }finally{release()}
+})
+test('resolved retained tie records do not report an unresolved tie after exact panel signoff',async({page})=>{
+ const state=await fixture(page)
+ state.page.preview!.ties=[{id:'retained-category-tie',kind:'category',category_id:state.page.criteria.categories[0].id,team_ids:state.page.teams.map(team=>team.team_id),seats:1}]
+ state.page.preview!.blockers=[];state.page.round.proposal=structuredClone(state.page.preview)
+ await page.goto(path);await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
+ await expect(page.getByText(/ties require evidence review and recorded panel decisions/)).toHaveCount(0)
+ await page.getByRole('button',{name:'Preview category preparation',exact:true}).press('Enter');await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toBeVisible()
 })

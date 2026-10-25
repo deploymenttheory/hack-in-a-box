@@ -1,6 +1,7 @@
 import {expect,test} from '@playwright/test'
-import {native,owner,control} from './native'
+import {native,owner,control,teamLabel} from './native'
 test('actual initial native panel captures exact lost ACK, retains blockers/history and clears on real session expiry',async({browser})=>{
+ test.skip(native.scenario!=='initial','Separate real final cohort journey')
  const context=await owner(browser),page=await context.newPage(),errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
  await page.goto(`/events/${native.event_id}/panel`);await page.getByRole('link',{name:`Open ${native.run_name}`,exact:true}).press('Enter')
  await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter')
@@ -16,7 +17,7 @@ test('actual initial native panel captures exact lost ACK, retains blockers/hist
  await page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}).press('Enter')
  await expect(page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true})).toBeVisible()
  await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
- await expect(page.getByRole('button',{name:`Inspect Team ${native.team_id}`,exact:true})).toBeVisible()
+ await expect(page.getByRole('button',{name:`Inspect ${teamLabel(native.team_id)}`,exact:true})).toBeVisible()
  await expect(page.getByText('Not submitted · no formal final to score',{exact:true})).toBeVisible()
  await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
  await expect(page.getByRole('button',{name:'Review exact panel signoff',exact:true})).toHaveCount(0)

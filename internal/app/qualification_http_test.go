@@ -26,18 +26,40 @@ func qualificationHTTPFixture(
 	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
 ) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
 	t.Helper()
-	return qualificationHTTPFixtureWithCriteria(t, nil, beforeCutoff...)
+	return qualificationHTTPFixtureConfigured(t, nil, nil, beforeCutoff...)
 }
 
-// Criteria are configured before approval/common publication; the original
-// fixture keeps its exact mentor-qualification defaults.
+// Criteria are configured before approval/common publication.
 func qualificationHTTPFixtureWithCriteria(
 	t *testing.T,
 	configure func(*rubric.Definition),
 	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
 ) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
 	t.Helper()
+	return qualificationHTTPFixtureConfigured(t, configure, nil, beforeCutoff...)
+}
+
+// initialise establishes the frozen cohort before publication and live.
+func qualificationHTTPFixtureInitialised(
+	t *testing.T,
+	initialise func(*liveRehearsal),
+	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
+) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
+	t.Helper()
+	return qualificationHTTPFixtureConfigured(t, nil, initialise, beforeCutoff...)
+}
+
+func qualificationHTTPFixtureConfigured(
+	t *testing.T,
+	configure func(*rubric.Definition),
+	initialise func(*liveRehearsal),
+	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
+) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
+	t.Helper()
 	r := newLiveRehearsal(t, true)
+	if initialise != nil {
+		initialise(r)
+	}
 	admin, public := r.surface(t, "admin"), r.surface(t, "public")
 	criteria, err := admin.deps.Rubrics.Configuration(t.Context(), r.owner.ID, r.eventID, 0)
 	if err != nil {

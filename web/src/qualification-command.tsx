@@ -9,12 +9,12 @@ import {ConfirmationDialog} from './components/ui/dialog'
 import {Button} from './components/ui/button'
 import {Failure} from './components/states'
 import {originalQualificationReceipt,readQualification,sendQualification} from './qualification-api'
-import {matchesQualificationReceipt,qualificationFingerprint,type QualificationCommand,type QualificationIntent,type QualificationPage} from './qualification-model'
+import {matchesQualificationReceipt,qualificationFingerprint,type QualificationCommand,type QualificationIntent,type QualificationCardAcknowledgement,type QualificationPage} from './qualification-model'
 
 const confirmPanelDeparture=()=>window.confirm('Leave this panel with an original command outcome still unconfirmed? Safe request metadata remains for this signed-in session; no request will be replayed.')
 export const qualificationNamespace=(actor:string,session:string,eventID:string,runID:string)=>`${actor}:${session}:${eventID}:qualification:${runID}`
 type Reviewed={body:QualificationCommand;intent:QualificationIntent;summary:ReactNode}
-type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:()=>void;onNewBase?:()=>void}
+type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:()=>void;onCardAcknowledged?:(value:QualificationCardAcknowledgement)=>void;onNewBase?:()=>void}
 
 // This owner handles request identity and private lifetimes only. Native
 // capability/source readiness remains with its caller and is rechecked against
@@ -54,7 +54,13 @@ export function useQualificationCommand(options:Options){
    attemptID=commands.begin({operation:'Private qualification panel command',revision:target.intent.revision,command:{action:target.intent.action,requestID:target.intent.requestID,revision:target.intent.revision,expectedVersion:target.intent.version,resourceID:runID,intentFingerprint:target.intent.fingerprint}},existing)
    const result=await sendQualification(eventID,runID,target.intent.revision,identity.csrf_token,target.body)
    if(!result.receipt||!matchesQualificationReceipt(result.receipt,target.intent))throw new Error('The response did not match this exact original request. Its outcome remains unknown.')
+
    commands.complete(attemptID)
+   // Only safe exact original identity may cross a disposed private editor.
+   // A separately authorised current page still owns every displayed field
+   // and action. Never hand the captured scores/reason/evidence to that owner.
+   const body=target.body,teamID=body.card?.team_id??body.team_id
+   if(['save_card','sign_card'].includes(body.action)&&teamID&&body.freeze_binding)options.onCardAcknowledged?.({requestID:target.intent.requestID,action:target.intent.action,version:target.intent.version,teamID,cardVersion:(body.card?.version??body.card_version??0)+1,freezeBinding:body.freeze_binding})
    if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);options.onAcknowledged?.();await refresh()}
   }catch(error){
    if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500&&error.status!==408)commands.complete(attemptID);else commands.uncertain(attemptID)}

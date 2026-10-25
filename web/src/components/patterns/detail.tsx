@@ -10,9 +10,9 @@ export function ContextLink({ target, back = false }: { target: NavigationTarget
 export function Breadcrumbs({ items }: { items: readonly NavigationTarget[] }) {
   return <nav aria-label="Breadcrumb"><ol className="fleet-breadcrumbs">{items.map((item, index) => <li key={item.href}>{index > 0 && <span aria-hidden="true">/</span>}<ContextLink target={item} /></li>)}</ol></nav>
 }
-export function Inspector({ identity, title, scope, back, children }: { identity: string; title: string; scope: ScopeLabel; back: NavigationTarget; children: ReactNode }) {
+export function Inspector({ identity, title, scope, back, children, focusOnOpen = true }: { identity: string; title: string; scope: ScopeLabel; back: NavigationTarget; children: ReactNode; focusOnOpen?: boolean }) {
   const heading = useRef<HTMLHeadingElement>(null)
-  useEffect(() => { heading.current?.focus() }, [identity])
+  useEffect(() => { if (focusOnOpen) heading.current?.focus() }, [identity, focusOnOpen])
   return <section className="fleet-inspector" aria-label={title}><ContextLink target={back} back /><p className="fleet-scope-label">{scope.event && <>{scope.event} · </>}{scope.entity}</p><h2 tabIndex={-1} ref={heading}>{title}</h2>{children}</section>
 }
 // Selection and URLs are supplied by the router/domain owner. At narrow widths

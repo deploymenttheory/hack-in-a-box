@@ -1,4 +1,4 @@
-import {useCallback,useRef,useState} from 'react'
+import {useCallback,useLayoutEffect,useRef,useState} from 'react'
 import {useParams} from '@tanstack/react-router'
 import {api,unwrap} from './api/client'
 import {useIdentity} from './session'
@@ -11,11 +11,12 @@ import {ActionLink,Button} from './components/ui/button'
 import {Failure,Loading} from './components/states'
 import {readHuddle} from './review-huddle-api'
 import {QualificationOverview,QualificationCardComparison,QualificationSelection,QualificationPreparationPreview,QualificationEvidenceList,QualificationEvidenceDestination} from './qualification-view'
-import type {QualificationPage as PanelPage,QualificationCard} from './qualification-model'
+import type {QualificationPage as PanelPage,QualificationCard,QualificationCardAcknowledgement} from './qualification-model'
 import {QualificationCommandHistory} from './qualification-command'
 import {CollectionHeading,CollectionRecords} from './components/patterns'
 import {Link} from '@tanstack/react-router'
 import {QualificationEditor} from './qualification-editor'
+import {useCoverageFocus} from './coverage-navigation'
 import {QualificationHistory} from './qualification-history'
 
 export function QualificationDirectoryPage(){
@@ -43,26 +44,62 @@ function QualificationEvent({eventID,runID}:{eventID:string;runID:string}){
 }
 function QualificationReader({eventID,runID,eventName,timezone}:{eventID:string;runID:string;eventName:string;timezone:string}){
  const identity=useIdentity(),boundary=useEventReadBoundary(eventID)
+ const [continuation,setContinuation]=useState<QualificationCardAcknowledgement&{generation:number}>()
+
  const load=useCallback(async(signal:AbortSignal)=>{const value=unwrap(await api.GET('/api/v1/events/{event_id}/mentor-qualification/{run_id}',{signal,cache:'no-store',params:{path:{event_id:eventID,run_id:runID}}}));if(value.round.run_id!==runID)throw new Error('The current native panel did not match this requested run.');return value},[eventID,runID])
- const signature=useCallback((page:PanelPage)=>JSON.stringify([page.round.panel,page.capabilities,page.tie_actions,page.current,page.teams.map(t=>[t.team_id,t.eligible,t.outcome,t.freeze_binding,t.blockers,t.source?.binding,t.can_save_card,t.can_sign_card,t.can_decide_eligibility]),page.round.cards.map(c=>[c.team_id,c.version,c.source.binding,c.scores.map(s=>s.evidence.map(e=>[e.kind,e.id,e.version]))])]),[])
+ const signature=useCallback((page:PanelPage)=>JSON.stringify([page.round.panel,page.capabilities,page.tie_actions,page.current,!!page.round.reason,!!page.round.signoff?.reason,page.round.eligibility.map(value=>[value.team_id,value.binding,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.round.votes.map(value=>[value.tie_id,value.seat,value.team_id,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.round.decisions.map(value=>[value.tie_id,value.seat,value.team_id,value.actor_id,value.evidence.map(reference=>[reference.kind,reference.id,reference.version])]),page.teams.map(t=>[t.team_id,t.eligible,t.outcome,t.freeze_binding,t.blockers,t.source?.binding,t.can_save_card,t.can_sign_card,t.can_decide_eligibility]),page.round.cards.map(c=>[c.team_id,c.version,c.source.binding,c.scores.map(s=>s.evidence.map(e=>[e.kind,e.id,e.version]))])]),[])
  const read=useTodayRead(`${identity.person.id}:${identity.draft_scope}:${eventID}:${runID}:qualification`,load,boundary?.scope,signature)
- if(read.denied)return <section><p>Current panel access is unavailable. Private selections, evidence and earlier review context have been cleared.</p><ActionLink icon="back" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink><Button icon="refresh" onClick={()=>void read.refresh()}>Check current panel access</Button></section>
+ if(read.denied)return <section><p>Current panel access is unavailable. Private selections, evidence and earlier review context have been cleared.</p><ActionLink icon="back" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink><Button icon="refresh" onClick={()=>{setContinuation(undefined);void read.refresh()}}>Check current panel access</Button></section>
  if(!read.data)return read.error?<Failure error={read.error} retry={()=>void read.refresh()}/>:<Loading/>
- return <QualificationWorkspace key={read.generation} eventID={eventID} eventName={eventName} timezone={timezone} page={read.data} parent={read.authority} paused={read.pending||!!read.error||!!boundary?.paused} refresh={()=>read.refresh()} failure={read.error}/>
+
+ const next=read.data.capabilities.can_read_panel&&continuation?.generation===read.generation&&read.data.round.version===continuation.version+1&&read.data.teams.some(team=>team.team_id===continuation.teamID&&team.card_source_current&&team.freeze_binding===continuation.freezeBinding)&&read.data.round.cards.some(card=>card.team_id===continuation.teamID&&card.version===continuation.cardVersion)?continuation:undefined
+ const acknowledged=(value:QualificationCardAcknowledgement)=>setContinuation({...value,generation:read.generation+1})
+
+ return <QualificationWorkspace initialSelected={next?.teamID} acknowledgement={next} onAcknowledged={acknowledged} key={read.generation} eventID={eventID} eventName={eventName} timezone={timezone} page={read.data} parent={read.authority} paused={read.pending||!!read.error||!!boundary?.paused} refresh={()=>read.refresh()} failure={read.error}/>
 }
-function QualificationWorkspace({eventID,eventName,timezone,page,parent,paused,refresh,failure}:{eventID:string;eventName:string;timezone:string;page:PanelPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;failure:unknown}){
- const [selected,select]=useState<string>()
+function QualificationWorkspace({eventID,eventName,timezone,page,parent,paused,refresh,failure,initialSelected,acknowledgement,onAcknowledged}:{eventID:string;eventName:string;timezone:string;page:PanelPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;failure:unknown;initialSelected?:string;acknowledgement?:{requestID:string;action:string;version:number};onAcknowledged:(value:QualificationCardAcknowledgement)=>void}){
+
+ const disclosedIDs=page.teams.map(team=>team.team_id).join('|')
+ const loadNames=useCallback(async(signal:AbortSignal)=>{
+  const roster=unwrap(await api.GET('/api/v1/events/{event_id}/teams',{signal,cache:'no-store',params:{path:{event_id:eventID}}}))
+  const disclosed=new Set(disclosedIDs.split('|'))
+  // The teams owner separately authorises labels. Retain no roster, requests,
+  // invitation codes or names for targets absent from this native panel.
+  return Object.fromEntries(roster.teams.filter(team=>disclosed.has(team.id)).map(team=>[team.id,team.name]))
+ },[eventID,disclosedIDs])
+ const names=useTodayRead(`${eventID}:${page.round.run_id}:qualification-labels`,loadNames,parent)
+ const [selection,select]=useState<{id?:string;ackID?:string}>(()=>paused?{}:{id:initialSelected,ackID:initialSelected?acknowledgement?.requestID:undefined})
+ // A matched reply can arrive after a current poll already replaced this task.
+ // Apply that one safe navigation event once, only after current authority is
+ // verified. Manual navigation wins thereafter; no private draft is restored.
+ if(!paused&&initialSelected&&acknowledgement&&selection.ackID!==acknowledgement.requestID)select({id:initialSelected,ackID:acknowledgement.requestID})
+ const selected=selection.id
+ const root=useRef<HTMLElement>(null),navigation=useCoverageFocus(root)
+ const focusedAcknowledgement=useRef<string>(undefined)
+ useLayoutEffect(()=>{
+  if(!acknowledgement||paused||focusedAcknowledgement.current===acknowledgement.requestID)return
+  const frame=requestAnimationFrame(()=>{(root.current?.querySelector<HTMLElement>('[data-qualification-next]')??root.current?.querySelector<HTMLElement>('h3[tabindex="-1"]'))?.focus();focusedAcknowledgement.current=acknowledgement.requestID})
+  return()=>cancelAnimationFrame(frame)
+ },[acknowledgement,paused,selected])
  const risk=useRef<()=>boolean>(()=>true)
- const change=(id?:string)=>{if(risk.current())select(id)}
- const team=page.teams.find(value=>value.team_id===selected),card=page.round.cards.find(value=>value.team_id===selected),teamName=(id:string)=>`Team ${id}`,categoryName=(id:string)=>page.criteria.categories.find(value=>value.id===id)?.label??`Category ${id}`
- return <section data-private-qualification><ActionLink icon="back" variant="ghost" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink>{!!failure&&<Failure error={failure} retry={refresh}/>}<DetailWorkspace collection={<QualificationOverview page={page} eventName={eventName} teamName={teamName} disabled={paused} inspect={id=>change(id)} actions={<Button icon="refresh" variant="outline" disabled={paused} onClick={refresh}>Read current panel source</Button>}/>} detail={team&&<Inspector identity={team.team_id} title={teamName(team.team_id)} scope={{event:eventName,entity:'Current native qualification evidence'}} back={{href:`/events/${eventID}/panel/${page.round.run_id}`,label:'Back to panel',onNavigate:()=>change(undefined)}}><QualificationEvidenceDestination eventID={eventID} teamID={team.team_id}/><ActionLink icon="book" href={`/events/${eventID}/review/${team.team_id}`}>Inspect required reviews and evidence gaps</ActionLink><QualificationCardComparison card={card} page={page} timezone={timezone} source={(card?.source??team.source)?<QualificationSourceEvidence eventID={eventID} teamID={team.team_id} sourceRef={(card?.source??team.source)!} parent={parent}/>:<p>No current canonical source is disclosed here. Open the permitted team review to inspect required evidence and blockers.</p>}/></Inspector>}/><QualificationEditor key={selected??'panel'} eventID={eventID} page={page} teamID={selected} parent={parent} paused={paused} refresh={refresh} registerDeparture={fn=>{risk.current=fn}}/>{page.preview&&<QualificationSelection proposal={page.preview} teamName={teamName} categoryName={categoryName}/>}<QualificationHistory eventID={eventID} runID={page.round.run_id} parent={parent} paused={paused}/><QualificationPreparationPreview key={`${page.round.run_id}:${page.round.signoff?.binding??'unsigned'}`} page={page} teamName={teamName} categoryName={categoryName}/></section>
+ const change=(id?:string)=>{
+  if(!risk.current())return
+  const closing=selected;select(previous=>({...previous,id}))
+  if(!id&&closing)navigation.restore({attribute:'data-record-focus',value:closing})
+ }
+ const team=page.teams.find(value=>value.team_id===selected),card=team?.card_source_current?page.round.cards.find(value=>value.team_id===selected):undefined,teamName=(id:string)=>names.data?.[id]||`Team ${id}`,categoryName=(id:string)=>page.criteria.categories.find(value=>value.id===id)?.label??`Category ${id}`
+ return <section ref={root} className="fleet-qualification-workspace" tabIndex={-1} data-private-qualification>{acknowledgement&&<p role="status">Original {acknowledgement.action.replaceAll('_',' ')} acknowledged for request {acknowledgement.requestID}, expected panel version {acknowledgement.version}. The displayed card is separately read current state; no announcement was released.</p>}<ActionLink icon="back" variant="ghost" href={`/events/${eventID}/review`}>Back to support and review coverage</ActionLink>{!!failure&&<Failure error={failure} retry={refresh}/>}<DetailWorkspace collection={<QualificationOverview page={page} eventName={eventName} teamName={teamName} disabled={paused} inspect={id=>change(id)} actions={<Button icon="refresh" variant="outline" disabled={paused} onClick={refresh}>Read current panel source</Button>}/>} detail={team&&<Inspector focusOnOpen={!acknowledgement} identity={team.team_id} title={teamName(team.team_id)} scope={{event:eventName,entity:'Current native qualification evidence'}} back={{href:`/events/${eventID}/panel/${page.round.run_id}`,label:'Back to panel',onNavigate:()=>change(undefined)}}><QualificationEvidenceDestination eventID={eventID} teamID={team.team_id}/><ActionLink icon="book" href={`/events/${eventID}/review/${team.team_id}`}>Inspect required reviews and evidence gaps</ActionLink><QualificationCardComparison card={card} page={page} timezone={timezone} source={(card?.source??team.source)?<QualificationSourceEvidence eventID={eventID} teamID={team.team_id} sourceRef={(card?.source??team.source)!} parent={parent}/>:<p>No current canonical source is disclosed here. Open the permitted team review to inspect required evidence and blockers.</p>}/></Inspector>}/>{team&&card?.state==='signed'&&<Button data-qualification-next icon="team" focusableWhenDisabled disabled={paused} onClick={()=>change(undefined)}>Review another team</Button>}<QualificationEditor onAcknowledged={onAcknowledged} key={selected??'panel'} eventID={eventID} page={page} teamID={selected} parent={parent} paused={paused} refresh={refresh} registerDeparture={fn=>{risk.current=fn}}/>{page.preview&&<QualificationSelection proposal={page.preview} teamName={teamName} categoryName={categoryName}/>}<QualificationHistory eventID={eventID} runID={page.round.run_id} parent={parent} paused={paused}/><QualificationPreparationPreview key={`${page.round.run_id}:${page.round.signoff?.binding??'unsigned'}`} page={page} teamName={teamName} categoryName={categoryName}/></section>
 }
 function QualificationSourceEvidence({eventID,teamID,sourceRef,parent}:{eventID:string;teamID:string;sourceRef:QualificationCard['source'];parent:PrivateRequestScope}){
- const load=useCallback(async(signal:AbortSignal)=>readHuddle(eventID,teamID,sourceRef.huddle_id,signal),[eventID,teamID,sourceRef.huddle_id])
+ const load=useCallback(async(signal:AbortSignal)=>{
+  const huddle=await readHuddle(eventID,teamID,sourceRef.huddle_id,signal)
+  const originals=unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/scorecards/panel',{signal,cache:'no-store',params:{path:{event_id:eventID,team_id:teamID},query:{context_id:sourceRef.huddle_id}}}))
+  return {huddle,originals}
+ },[eventID,teamID,sourceRef.huddle_id])
  const read=useTodayRead(`${eventID}:${teamID}:${sourceRef.huddle_id}:panel-source`,load,parent)
  if(read.denied)return <p>This source is not disclosed under current source-specific authority. A panel selection does not grant private huddle access.</p>
  if(!read.data)return read.error?<Failure error={read.error} retry={()=>void read.refresh()}/>:<Loading/>
- const source=read.data
- if(source.version!==sourceRef.huddle_version||source.signoff_id!==sourceRef.signoff_id)return <p>The native huddle changed after this card source was selected. Read the current panel before another decision.</p>
- return <section><p>Signed huddle version {source.version} · Required second review {source.second_review.completed_at?'completed':'not recorded'}</p>{source.gaps.map(gap=><section key={gap.id}><h4>{gap.resolved_at?'Resolved evidence gap':'Unresolved evidence gap'}</h4><p>{gap.reason}</p>{gap.resolution&&<p>Resolution: {gap.resolution}</p>}<QualificationEvidenceList items={gap.evidence}/></section>)}{source.proposals.map(proposal=><section key={proposal.id}><h4>Recorded score change · {proposal.state}</h4><p>Original {proposal.original.pending?'pending':proposal.original.value??'unscored'} → Proposed {proposal.proposed_value}</p><p>Reason: {proposal.reason}</p><p>Decision: {proposal.decision_reason||'No recorded decision'}</p><QualificationEvidenceList items={proposal.evidence}/></section>)}</section>
+ const {huddle:source,originals}=read.data
+ if(source.version!==sourceRef.huddle_version||source.signoff_id!==sourceRef.signoff_id||source.team_id!==teamID||source.submission_revision!==sourceRef.submission_revision||source.checkpoint.rubric.id!==sourceRef.rubric.id||source.checkpoint.rubric.version!==sourceRef.rubric.version||source.checkpoint.rubric.digest!==sourceRef.rubric.digest||!source.signoff_context||source.signoff_context.cards.length!==originals.length||originals.some(card=>card.team_id!==teamID||card.run_id!==source.signoff_context!.run_id||card.purpose!=='mentor_final'||card.state!=='submitted'||card.submission_revision!==sourceRef.submission_revision||card.rubric.digest!==sourceRef.rubric.digest||!source.signoff_context!.cards.some(ref=>ref.id===card.reference.id&&ref.version===card.reference.version)))return <p>The native huddle changed after this card source was selected. Read the current panel before another decision.</p>
+ return <section><section aria-label="Independent original final evidence"><h4>Independent original final evidence</h4>{originals.map(card=><section key={card.reference.id}><h5>Reviewer {card.author_id} · Original card version {card.reference.version}</h5>{card.scores.map(score=><section key={score.category_id}><h6>{card.criteria.categories.find(category=>category.id===score.category_id)?.label??score.category_id}</h6><p>{score.pending?'Pending/unobserved; no numeric score':`Original score ${score.value}`}</p><QualificationEvidenceList items={score.evidence}/></section>)}</section>)}</section><p>Signed huddle version {source.version} · Required second review {source.second_review.completed_at?'completed':'not recorded'}</p>{source.gaps.map(gap=><section key={gap.id}><h4>{gap.resolved_at?'Resolved evidence gap':'Unresolved evidence gap'}</h4><p>{gap.reason}</p>{gap.resolution&&<p>Resolution: {gap.resolution}</p>}<QualificationEvidenceList items={gap.evidence}/></section>)}{source.proposals.map(proposal=><section key={proposal.id}><h4>Recorded score change · {proposal.state}</h4><p>Original {proposal.original.pending?'pending':proposal.original.value??'unscored'} → Proposed {proposal.proposed_value}</p><p>Reason: {proposal.reason}</p><p>Decision: {proposal.decision_reason||'No recorded decision'}</p><QualificationEvidenceList items={proposal.evidence}/></section>)}</section>
 }
