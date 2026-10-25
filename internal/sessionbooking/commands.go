@@ -17,6 +17,7 @@ import (
 )
 
 type Command struct {
+	SessionRevision  int64     `json:"session_revision"`
 	RequestID        uuid.UUID `json:"request_id"`
 	Action           string    `json:"action"`
 	ExpectedRevision int64     `json:"expected_revision"`
@@ -54,7 +55,11 @@ func (s Service) Change(
 		if !st.actorMayBook() {
 			return access.ErrForbidden
 		}
-		if err = s.reconcile(ctx, tx, actor, st); err != nil {
+		if c.SessionRevision != st.revision {
+			return access.ErrConflict
+		}
+		changes := map[uuid.UUID]bool{}
+		if err = s.reconcile(ctx, tx, actor, st, changes); err != nil {
 			return err
 		}
 		var state string
@@ -84,13 +89,13 @@ func (s Service) Change(
 			if count < st.definition.Capacity {
 				state = "booked"
 			}
-			err = tx.QueryRow(ctx, `INSERT INTO session_bookings(event_id,session_id,person_id,state) VALUES($1,$2,$3,$4) ON CONFLICT(event_id,session_id,person_id) DO UPDATE SET state=EXCLUDED.state,queue_sequence=nextval('session_bookings_queue_sequence_seq'),revision=session_bookings.revision+1,updated_at=now() RETURNING revision`, eventID, id, actor, state).
+			err = tx.QueryRow(ctx, `INSERT INTO session_bookings(event_id,session_id,person_id,state,calendar_sequence) VALUES($1,$2,$3,$4,$5+1) ON CONFLICT(event_id,session_id,person_id) DO UPDATE SET state=EXCLUDED.state,queue_sequence=nextval('session_bookings_queue_sequence_seq'),revision=session_bookings.revision+1,calendar_sequence=$5+session_bookings.revision+1,updated_at=now() RETURNING revision`, eventID, id, actor, state, st.sequence).
 				Scan(&revision)
 		case "cancel":
 			if state != "booked" && state != "waitlisted" {
 				return access.ErrConflict
 			}
-			err = tx.QueryRow(ctx, `UPDATE session_bookings SET state='cancelled',revision=revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3 RETURNING revision`, eventID, id, actor).
+			err = tx.QueryRow(ctx, `UPDATE session_bookings SET state='cancelled',revision=revision+1,calendar_sequence=$4+revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3 RETURNING revision`, eventID, id, actor, st.sequence).
 				Scan(&revision)
 			state = "cancelled"
 		}
@@ -100,7 +105,13 @@ func (s Service) Change(
 		if err = history(ctx, tx, actor, eventID, id, &actor, c.Action, st.revision); err != nil {
 			return err
 		}
-		if err = s.reconcile(ctx, tx, actor, st); err != nil {
+		if c.Action == "cancel" {
+			changes[actor] = true
+		}
+		if err = s.reconcile(ctx, tx, actor, st, changes); err != nil {
+			return err
+		}
+		if err = s.queueUpdates(ctx, tx, actor, st, changes); err != nil {
 			return err
 		}
 		result = Receipt{
@@ -133,7 +144,13 @@ func (s Service) Change(
 // reconcile is called only with the locked event and session. It never changes
 // competition claims or team membership. Current ineligible waitlistees cannot
 // consume a session place; existing eligible bookings survive capacity reduction.
-func (s Service) reconcile(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st scope) error {
+func (s Service) reconcile(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor uuid.UUID,
+	st scope,
+	changes map[uuid.UUID]bool,
+) error {
 	rows, err := tx.Query(
 		ctx,
 		`SELECT b.person_id,b.state,p.active,COALESCE(c.state,'') FROM session_bookings b JOIN people p ON p.id=b.person_id LEFT JOIN competition_claims c ON c.event_id=b.event_id AND c.person_id=b.person_id WHERE b.event_id=$1 AND b.session_id=$2 AND b.state IN ('booked','waitlisted') ORDER BY b.queue_sequence`,
@@ -177,13 +194,15 @@ func (s Service) reconcile(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st s
 		if !eligible {
 			if _, err = tx.Exec(
 				ctx,
-				`UPDATE session_bookings SET state='ineligible',revision=revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3`,
+				`UPDATE session_bookings SET state='ineligible',revision=revision+1,calendar_sequence=$4+revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3`,
 				st.row.ID,
 				st.item.ID,
 				v.id,
+				st.sequence,
 			); err != nil {
 				return contextError("reconcile", err)
 			}
+			changes[v.id] = true
 			if err = history(
 				ctx,
 				tx,
@@ -214,10 +233,11 @@ func (s Service) reconcile(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st s
 		}
 		if _, err = tx.Exec(
 			ctx,
-			`UPDATE session_bookings SET state='booked',revision=revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3`,
+			`UPDATE session_bookings SET state='booked',revision=revision+1,calendar_sequence=$4+revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND person_id=$3`,
 			st.row.ID,
 			st.item.ID,
 			person,
+			st.sequence,
 		); err != nil {
 			return contextError("reconcile", err)
 		}
@@ -256,7 +276,8 @@ func eligibleAudience(ctx context.Context, tx pgx.Tx, st scope, person uuid.UUID
 }
 
 func commandFingerprint(c Command) (string, error) {
-	if c.RequestID == uuid.Nil || (c.Action != "reserve" && c.Action != "cancel") ||
+	if c.RequestID == uuid.Nil || c.SessionRevision < 1 ||
+		(c.Action != "reserve" && c.Action != "cancel") ||
 		c.ExpectedRevision < 0 {
 		return "", access.ErrInvalid
 	}

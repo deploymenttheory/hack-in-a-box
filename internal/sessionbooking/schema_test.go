@@ -36,7 +36,11 @@ func TestSessionMigrationRejectsLossOfOriginalReceipts(t *testing.T) {
 	t.Run("retained original acknowledgement", func(t *testing.T) {
 		f := setup(t, 1, []string{"attendee"})
 		person := f.attendee(t)
-		command := sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"}
+		command := sessionbooking.Command{
+			SessionRevision: 1,
+			RequestID:       uuid.New(),
+			Action:          "reserve",
+		}
 		original, err := f.s.Change(t.Context(), person, f.event, f.id, command)
 		if err != nil {
 			t.Fatal(err)

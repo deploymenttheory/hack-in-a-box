@@ -157,3 +157,99 @@ func (h handlers) RecordSessionAttendance(
 	}
 	return convertDTO[contract.RecordSessionAttendance200JSONResponse](result)
 }
+
+func (h handlers) PreviewSessionNotifications(
+	ctx context.Context,
+	r contract.PreviewSessionNotificationsRequestObject,
+) (contract.PreviewSessionNotificationsResponseObject, error) {
+	result, err := h.SessionBookings.PreviewNotifications(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.SessionId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("preview session notifications: %w", err)
+	}
+	return convertDTO[contract.PreviewSessionNotifications200JSONResponse](result)
+}
+
+func (h handlers) ConfigureSessionNotifications(
+	ctx context.Context,
+	r contract.ConfigureSessionNotificationsRequestObject,
+) (contract.ConfigureSessionNotificationsResponseObject, error) {
+	if r.Body == nil {
+		return nil, access.ErrInvalid
+	}
+	channels, err := convertDTO[[]string](r.Body.Channels)
+	if err != nil {
+		return nil, err
+	}
+	result, err := h.SessionBookings.SaveNotificationConfiguration(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.SessionId,
+		revision(r.Params.IfMatch),
+		channels,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("configure session notifications: %w", err)
+	}
+	return convertDTO[contract.ConfigureSessionNotifications200JSONResponse](result)
+}
+
+func (h handlers) ApproveSessionNotifications(
+	ctx context.Context,
+	r contract.ApproveSessionNotificationsRequestObject,
+) (contract.ApproveSessionNotificationsResponseObject, error) {
+	if r.Body == nil {
+		return nil, access.ErrInvalid
+	}
+	result, err := h.SessionBookings.ApproveNotifications(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.SessionId,
+		r.Body.Version,
+		r.Body.Fingerprint,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("approve session notifications: %w", err)
+	}
+	return convertDTO[contract.ApproveSessionNotifications200JSONResponse](result)
+}
+
+func (h handlers) GetSessionNotificationHistory(
+	ctx context.Context,
+	r contract.GetSessionNotificationHistoryRequestObject,
+) (contract.GetSessionNotificationHistoryResponseObject, error) {
+	var after int64
+	if r.Params.After != nil {
+		after = *r.Params.After
+	}
+	_, limit := page(nil, r.Params.Limit)
+	result, err := h.SessionBookings.NotificationHistory(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.SessionId,
+		after,
+		int(limit),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("session notification history: %w", err)
+	}
+	return convertDTO[contract.GetSessionNotificationHistory200JSONResponse](result)
+}
+
+func (h handlers) GetOwnSessionCancellation(
+	ctx context.Context,
+	r contract.GetOwnSessionCancellationRequestObject,
+) (contract.GetOwnSessionCancellationResponseObject, error) {
+	result, err := h.SessionBookings.OwnCancellation(ctx, actor(ctx).ID, r.EventId, r.SessionId)
+	if err != nil {
+		return nil, fmt.Errorf("own session cancellation: %w", err)
+	}
+	return convertDTO[contract.GetOwnSessionCancellation200JSONResponse](result)
+}

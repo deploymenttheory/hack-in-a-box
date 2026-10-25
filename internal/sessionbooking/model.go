@@ -2,18 +2,36 @@
 package sessionbooking
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 )
 
+type NotificationChannel interface {
+	Readiness(context.Context, uuid.UUID, uuid.UUID) (communications.ChannelReadiness, error)
+	QueueApprovedOccurrenceInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		uuid.UUID,
+		int64,
+		communications.DeliveryScope,
+	) (int, error)
+}
+
 type Service struct {
-	Pool *pgxpool.Pool
-	Now  func() time.Time
+	DeliveryChannels map[string]NotificationChannel
+	Fallback         communications.ScopePolicy
+	WorkspaceOrigin  string
+	Pool             *pgxpool.Pool
+	Now              func() time.Time
 }
 
 func (s Service) now() time.Time {
@@ -40,6 +58,7 @@ type Definition struct {
 }
 
 type Booking struct {
+	CalendarSequence int64     `json:"calendar_sequence"`
 	PersonID         uuid.UUID `json:"person_id"`
 	State            string    `json:"state"`
 	Revision         int64     `json:"revision"`

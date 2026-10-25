@@ -25,9 +25,6 @@ func (s Service) ReconcileEventInTransaction(
 	row dbgen.Event,
 	now time.Time,
 ) error {
-	if row.Stage == "archived" {
-		return nil
-	}
 	var configuration event.Configuration
 	if err := json.Unmarshal(row.Configuration, &configuration); err != nil {
 		return contextError("reconcile event configuration", err)
@@ -60,6 +57,15 @@ func (s Service) ReconcileEventInTransaction(
 		st, err := loadRecord(ctx, tx, actor, row.ID, id, false)
 		if err != nil {
 			return err
+		}
+		changes := map[uuid.UUID]bool{}
+		if row.Stage == "archived" {
+			if now.Before(st.end) {
+				if err = clock.queueUpdates(ctx, tx, actor, st, nil); err != nil {
+					return err
+				}
+			}
+			continue
 		}
 		var item event.AgendaItem
 		for _, candidate := range configuration.Schedule {
@@ -116,9 +122,12 @@ func (s Service) ReconcileEventInTransaction(
 			}
 		}
 		if now.Before(st.end) {
-			if err = clock.reconcile(ctx, tx, actor, st); err != nil {
+			if err = clock.reconcile(ctx, tx, actor, st, changes); err != nil {
 				return err
 			}
+		}
+		if err = clock.queueUpdates(ctx, tx, actor, st, changes); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -127,6 +136,16 @@ func (s Service) ReconcileEventInTransaction(
 func (s Service) cancelIn(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st scope) error {
 	if st.cancelled {
 		return nil
+	}
+	changes := map[uuid.UUID]bool{}
+	people, err := notificationRecipients(ctx, tx, st.row.ID, st.item.ID)
+	if err != nil {
+		return err
+	}
+	for _, person := range people {
+		if person.State == "booked" || person.State == "waitlisted" {
+			changes[person.PersonID] = true
+		}
 	}
 	if _, err := tx.Exec(
 		ctx,
@@ -138,13 +157,30 @@ func (s Service) cancelIn(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st sc
 	}
 	if _, err := tx.Exec(
 		ctx,
-		`UPDATE session_bookings SET state='cancelled',revision=revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND state IN ('booked','waitlisted')`,
+		`UPDATE session_bookings SET state='cancelled',revision=revision+1,calendar_sequence=$3+revision+1,updated_at=now() WHERE event_id=$1 AND session_id=$2 AND state IN ('booked','waitlisted')`,
 		st.row.ID,
 		st.item.ID,
+		st.sequence+1,
 	); err != nil {
 		return contextError("cancel session places", err)
 	}
-	return history(ctx, tx, actor, st.row.ID, st.item.ID, nil, "cancel_session", st.revision+1)
+	if err := history(
+		ctx,
+		tx,
+		actor,
+		st.row.ID,
+		st.item.ID,
+		nil,
+		"cancel_session",
+		st.revision+1,
+	); err != nil {
+		return err
+	}
+	current, err := loadRecord(ctx, tx, actor, st.row.ID, st.item.ID, false)
+	if err != nil {
+		return err
+	}
+	return s.queueUpdates(ctx, tx, actor, current, changes)
 }
 
 func (s Service) CancelSession(

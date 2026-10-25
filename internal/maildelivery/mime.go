@@ -104,7 +104,7 @@ func Build(settings Settings, message Message) ([]byte, string, error) {
 		}
 		if err = writePart(
 			outer,
-			`text/calendar; charset=UTF-8; method=PUBLISH`,
+			`text/calendar; charset=UTF-8; method=`+message.Calendar.method(),
 			calendar,
 			true,
 		); err != nil {

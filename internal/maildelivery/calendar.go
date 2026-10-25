@@ -12,14 +12,17 @@ import (
 // Calendar is an authorised, immutable event snapshot. Callers persist sequence
 // and timestamps with the attempt; retries must reuse it rather than recalculate.
 type Calendar struct {
-	EventID      uuid.UUID `json:"event_id"`
-	Test         bool      `json:"test"`
-	Sequence     int64     `json:"sequence"`
-	Start        time.Time `json:"start"`
-	End          time.Time `json:"end"`
-	Timezone     string    `json:"timezone"`
-	Summary      string    `json:"summary"`
-	WorkspaceURL string    `json:"workspace_url"`
+	EventID      uuid.UUID  `json:"event_id"`
+	SessionID    *uuid.UUID `json:"session_id,omitempty"`
+	PersonID     *uuid.UUID `json:"person_id,omitempty"`
+	Cancelled    bool       `json:"cancelled,omitempty"`
+	Test         bool       `json:"test"`
+	Sequence     int64      `json:"sequence"`
+	Start        time.Time  `json:"start"`
+	End          time.Time  `json:"end"`
+	Timezone     string     `json:"timezone"`
+	Summary      string     `json:"summary"`
+	WorkspaceURL string     `json:"workspace_url"`
 }
 
 func escapeCalendar(value string) string {
@@ -47,6 +50,9 @@ func foldCalendar(line string) string {
 }
 
 func (c Calendar) render(settings Settings, stamp time.Time) ([]byte, error) {
+	if c.SessionID != nil || c.PersonID != nil || c.Cancelled {
+		return c.renderSession(settings, stamp)
+	}
 	if c.EventID == uuid.Nil || c.Sequence < 0 || c.Sequence > 2147483647 || c.Start.IsZero() ||
 		!c.End.After(c.Start) ||
 		!header(c.Summary, 200) ||
@@ -84,6 +90,74 @@ func (c Calendar) render(settings Settings, stamp time.Time) ([]byte, error) {
 		"END:VEVENT",
 		"END:VCALENDAR",
 	}
+	var result strings.Builder
+	for _, line := range lines {
+		result.WriteString(foldCalendar(line))
+	}
+	return []byte(result.String()), nil
+}
+
+func (c Calendar) method() string {
+	if c.Cancelled {
+		return "CANCEL"
+	}
+	return "PUBLISH"
+}
+
+// A session calendar identity is per-person and stable across booking changes.
+// Cancellation deliberately carries only that identity and its sequence, never
+// old private session titles, times, meeting URLs or current event branding.
+func (c Calendar) renderSession(settings Settings, stamp time.Time) ([]byte, error) {
+	if c.EventID == uuid.Nil || c.SessionID == nil || *c.SessionID == uuid.Nil ||
+		c.PersonID == nil ||
+		*c.PersonID == uuid.Nil ||
+		c.Sequence < 0 ||
+		c.Sequence > 2147483647 {
+		return nil, ErrMessage
+	}
+	prefix := "session-"
+	if c.Test {
+		prefix = "test-session-"
+	}
+	lines := []string{
+		"BEGIN:VCALENDAR",
+		"VERSION:2.0",
+		"PRODID:-//Hack in a Box//Personal Session Calendar//EN",
+		"CALSCALE:GREGORIAN",
+		"METHOD:" + c.method(),
+		"BEGIN:VEVENT",
+		"UID:" + prefix + c.EventID.String() + "-" + c.SessionID.String() + "-" + c.PersonID.String() + "@" + settings.MessageDomain,
+		fmt.Sprintf("SEQUENCE:%d", c.Sequence),
+		"DTSTAMP:" + stamp.UTC().Format("20060102T150405Z"),
+		"ORGANIZER:mailto:" + settings.From,
+	}
+	if c.Cancelled {
+		if !c.Start.IsZero() || !c.End.IsZero() || c.Timezone != "" || c.Summary != "" ||
+			c.WorkspaceURL != "" {
+			return nil, ErrMessage
+		}
+		lines = append(lines, "STATUS:CANCELLED")
+	} else {
+		if c.Start.IsZero() || !c.End.After(c.Start) || !header(c.Summary, 200) ||
+			strings.TrimSpace(c.Summary) == "" ||
+			!header(c.Timezone, 100) ||
+			!safeWorkspace(c.WorkspaceURL) {
+			return nil, ErrMessage
+		}
+		if _, err := time.LoadLocation(c.Timezone); err != nil {
+			return nil, ErrMessage
+		}
+		lines = append(
+			lines,
+			"DTSTART:"+c.Start.UTC().Format("20060102T150405Z"),
+			"DTEND:"+c.End.UTC().Format("20060102T150405Z"),
+			"SUMMARY:"+escapeCalendar(c.Summary),
+			"DESCRIPTION:"+escapeCalendar("Event timezone: "+c.Timezone+"\n"+c.WorkspaceURL),
+			"URL:"+c.WorkspaceURL,
+			"STATUS:CONFIRMED",
+		)
+	}
+	lines = append(lines, "END:VEVENT", "END:VCALENDAR")
 	var result strings.Builder
 	for _, line := range lines {
 		result.WriteString(foldCalendar(line))

@@ -52,7 +52,7 @@ func TestNativeAgendaEditsKeepCalendarIdentityAndCancelRemovedSession(t *testing
 		person,
 		f.event,
 		f.id,
-		sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"},
+		sessionbooking.Command{SessionRevision: 1, RequestID: uuid.New(), Action: "reserve"},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,12 @@ func TestNativeAgendaEditsKeepCalendarIdentityAndCancelRemovedSession(t *testing
 		person,
 		f.event,
 		f.id,
-		sessionbooking.Command{RequestID: uuid.New(), Action: "reserve", ExpectedRevision: 2},
+		sessionbooking.Command{
+			SessionRevision:  1,
+			RequestID:        uuid.New(),
+			Action:           "reserve",
+			ExpectedRevision: 2,
+		},
 	); !errors.Is(
 		err,
 		access.ErrForbidden,
@@ -178,7 +183,7 @@ func TestNativeWithdrawalAndSessionCancellationSerializeWithoutAdmissionBypass(t
 			person,
 			f.event,
 			f.id,
-			sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"},
+			sessionbooking.Command{SessionRevision: 2, RequestID: uuid.New(), Action: "reserve"},
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -194,7 +199,12 @@ func TestNativeWithdrawalAndSessionCancellationSerializeWithoutAdmissionBypass(t
 			a.ID,
 			f.event,
 			f.id,
-			sessionbooking.Command{RequestID: uuid.New(), Action: "cancel", ExpectedRevision: 1},
+			sessionbooking.Command{
+				SessionRevision:  2,
+				RequestID:        uuid.New(),
+				Action:           "cancel",
+				ExpectedRevision: 1,
+			},
 		)
 	})
 	wg.Wait()
@@ -238,7 +248,7 @@ func TestScheduleConflictsAreWarningsAndPersonalAgendaIsPrivate(t *testing.T) {
 			person,
 			f.event,
 			id,
-			sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"},
+			sessionbooking.Command{SessionRevision: 1, RequestID: uuid.New(), Action: "reserve"},
 		); err != nil {
 			t.Fatal("warning became invented booking gate", err)
 		}
@@ -318,5 +328,27 @@ func TestBookingWindowsUseNativeDSTGapAndFoldChoices(t *testing.T) {
 		schedule.ErrLocalTime,
 	) {
 		t.Fatal("DST gap normalized silently", err)
+	}
+}
+
+func TestReservationCannotSilentlyBookAChangedSessionDate(t *testing.T) {
+	f := setup(t, 1, []string{"attendee"})
+	person := f.attendee(t)
+	ctx := t.Context()
+	captured := sessionbooking.Command{RequestID: uuid.New(), Action: "reserve", SessionRevision: 1}
+	f.editEvent(t, func(input *event.Input) {
+		input.Configuration.LiveStart = input.Configuration.LiveStart.AddDate(0, 0, 8)
+	})
+	if _, err := f.s.Change(
+		ctx,
+		person,
+		f.event,
+		f.id,
+		captured,
+	); !errors.Is(
+		err,
+		access.ErrConflict,
+	) {
+		t.Fatal("captured reservation silently targeted a changed date", err)
 	}
 }

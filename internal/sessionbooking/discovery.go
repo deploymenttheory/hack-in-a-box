@@ -3,6 +3,7 @@ package sessionbooking
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -42,14 +43,28 @@ func (s Service) List(
 		); err != nil {
 			return contextError("authorize discovery", err)
 		}
+		roles, err := q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
+		if err != nil {
+			return contextError("read discovery roles", err)
+		}
+		claim, err := q.CompetitionState(
+			ctx,
+			dbgen.CompetitionStateParams{EventID: eventID, PersonID: actor},
+		)
+		if err != nil {
+			return contextError("read discovery competition scope", err)
+		}
 		rows, err := tx.Query(
 			ctx,
-			`SELECT s.id FROM bookable_sessions s WHERE s.event_id=$1 AND s.id>$2 AND (NOT $3 OR EXISTS(SELECT 1 FROM session_bookings b WHERE b.event_id=s.event_id AND b.session_id=s.id AND b.person_id=$4)) ORDER BY s.id LIMIT $5`,
+			`SELECT s.id FROM bookable_sessions s WHERE s.event_id=$1 AND s.id>$2 AND (NOT $3 OR EXISTS(SELECT 1 FROM session_bookings b WHERE b.event_id=s.event_id AND b.session_id=s.id AND b.person_id=$4)) AND ($6 OR s.definition->'facilitator_ids' ? ($4::uuid)::text OR s.source_snapshot->'item'->'audience' ?| $7::text[] OR ($8 AND s.source_snapshot->'item'->'audience' ? 'attendee') OR (($8 OR cardinality($7::text[])>0) AND s.source_snapshot->'item'->'audience' ? 'all')) ORDER BY s.id LIMIT $5`,
 			eventID,
 			cursor,
 			own,
 			actor,
 			limit+1,
+			slices.Contains(roles, "organiser") || slices.Contains(roles, "logistics"),
+			roles,
+			claim == "confirmed",
 		)
 		if err != nil {
 			return contextError("discover sessions", err)

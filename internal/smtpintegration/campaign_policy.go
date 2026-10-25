@@ -95,5 +95,20 @@ func (s Service) withCurrentCampaign(
 	if !campaignProjectionMatches(snapshot, approved.ScopeApproval, recipient, row.PersonID) {
 		return access.ErrConflict
 	}
+	if approved.SessionCalendar != nil {
+		current, encodeErr := json.Marshal(approved.SessionCalendar)
+		if encodeErr != nil {
+			return fmt.Errorf("encode current session calendar: %w", encodeErr)
+		}
+		original, encodeErr := json.Marshal(snapshot.Message.Calendar)
+		if encodeErr != nil {
+			return fmt.Errorf("encode original session calendar: %w", encodeErr)
+		}
+		if string(current) != string(original) {
+			return access.ErrConflict
+		}
+	} else if snapshot.Message.Calendar != nil && snapshot.Message.Calendar.SessionID != nil {
+		return access.ErrConflict
+	}
 	return apply(row, snapshot)
 }

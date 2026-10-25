@@ -89,7 +89,11 @@ func TestConcurrentSessionPlacesHaveIndependentFIFOAndOriginalReceipts(t *testin
 	for range 16 {
 		person := f.attendee(t)
 		people = append(people, person)
-		commands[person] = sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"}
+		commands[person] = sessionbooking.Command{
+			SessionRevision: 1,
+			RequestID:       uuid.New(),
+			Action:          "reserve",
+		}
 	}
 	var wg sync.WaitGroup
 	failures := make(chan error, len(people))
@@ -138,7 +142,12 @@ func TestConcurrentSessionPlacesHaveIndependentFIFOAndOriginalReceipts(t *testin
 		bookedPerson,
 		f.event,
 		f.id,
-		sessionbooking.Command{RequestID: uuid.New(), Action: "cancel", ExpectedRevision: 1},
+		sessionbooking.Command{
+			SessionRevision:  1,
+			RequestID:        uuid.New(),
+			Action:           "cancel",
+			ExpectedRevision: 1,
+		},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +202,7 @@ func TestCapacityReductionAndCurrentAssignedFacilitatorScope(t *testing.T) {
 			person,
 			f.event,
 			f.id,
-			sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"},
+			sessionbooking.Command{SessionRevision: 1, RequestID: uuid.New(), Action: "reserve"},
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -271,7 +280,7 @@ func TestPromotionSkipsCurrentRoleLossAndNeverAdmitsEventWaitlistee(t *testing.T
 			person,
 			f.event,
 			f.id,
-			sessionbooking.Command{RequestID: uuid.New(), Action: "reserve"},
+			sessionbooking.Command{SessionRevision: 1, RequestID: uuid.New(), Action: "reserve"},
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -287,7 +296,12 @@ func TestPromotionSkipsCurrentRoleLossAndNeverAdmitsEventWaitlistee(t *testing.T
 		a,
 		f.event,
 		f.id,
-		sessionbooking.Command{RequestID: uuid.New(), Action: "cancel", ExpectedRevision: 1},
+		sessionbooking.Command{
+			SessionRevision:  1,
+			RequestID:        uuid.New(),
+			Action:           "cancel",
+			ExpectedRevision: 1,
+		},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -312,11 +326,78 @@ func TestPromotionSkipsCurrentRoleLossAndNeverAdmitsEventWaitlistee(t *testing.T
 		a,
 		f.event,
 		f.id,
-		sessionbooking.Command{RequestID: uuid.New(), Action: "reserve", ExpectedRevision: 2},
+		sessionbooking.Command{
+			SessionRevision:  1,
+			RequestID:        uuid.New(),
+			Action:           "reserve",
+			ExpectedRevision: 2,
+		},
 	); !errors.Is(
 		err,
 		access.ErrForbidden,
 	) {
 		t.Fatal("event waitlistee acquired session", err)
+	}
+}
+
+func TestAllSessionAudienceDoesNotGrantUnrelatedPlatformAdministrationContent(t *testing.T) {
+	f := setup(t, 1, []string{"all"})
+	admin := testdb.Person(t, f.pool)
+	ctx := t.Context()
+	if _, err := f.q.BootstrapAdmin(ctx, admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := (access.EventPolicy{Queries: f.q}).Authorize(
+		ctx,
+		admin.ID,
+		f.event,
+		f.event,
+		access.EventRead,
+	); err != nil {
+		t.Fatal("fixture metadata reader unavailable", err)
+	}
+	if _, err := f.s.Read(ctx, admin.ID, f.event, f.id); !errors.Is(err, access.ErrNotFound) {
+		t.Fatal("platform metadata authority became session content authority", err)
+	}
+	page, err := f.s.List(ctx, admin.ID, f.event, uuid.Nil, 1, false)
+	if err != nil || len(page.Items) != 0 || page.NextCursor != nil {
+		t.Fatal("unrelated platform administrator discovered private session identities", page, err)
+	}
+}
+
+func TestReceiptStoreFailureIsNotAuthoritativeAbsence(t *testing.T) {
+	f := setup(t, 1, []string{"attendee"})
+	person := f.attendee(t)
+	ctx := t.Context()
+	command := sessionbooking.Command{SessionRevision: 1, RequestID: uuid.New(), Action: "reserve"}
+	original, err := f.s.Change(ctx, person, f.event, f.id, command)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.pool.Exec(
+		ctx,
+		`ALTER TABLE session_commands RENAME TO synthetic_unavailable_commands`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.s.OriginalReceipt(
+		ctx,
+		person,
+		f.event,
+		f.id,
+		command.RequestID,
+	); err == nil ||
+		errors.Is(err, access.ErrNotFound) {
+		t.Fatal("receipt-store failure became definitive missing result", err)
+	}
+	if _, err = f.pool.Exec(
+		ctx,
+		`ALTER TABLE synthetic_unavailable_commands RENAME TO session_commands`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := f.s.OriginalReceipt(ctx, person, f.event, f.id, command.RequestID)
+	if err != nil || restored != original {
+		t.Fatal("store recovery changed original acknowledgement", err)
 	}
 }

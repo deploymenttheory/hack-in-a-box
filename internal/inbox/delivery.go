@@ -155,13 +155,18 @@ func (s Service) QueueApprovedOccurrenceInTransaction(
 		approved.Approval.ChannelRevisions["in_app"] != configRevision {
 		return 0, access.ErrForbidden
 	}
-	provenance, err := s.Communications.RetainInboxProvenanceInTransaction(
-		ctx,
-		tx,
-		eventID,
-		campaignID,
-		false,
-	)
+	var provenance communications.InboxProvenance
+	if approved.ScopeApproval != nil && approved.ScopeApproval.Kind == "native_session_booking" {
+		provenance = communications.InboxProvenance{ScopeApproval: approved.ScopeApproval}
+	} else {
+		provenance, err = s.Communications.RetainInboxProvenanceInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			false,
+		)
+	}
 	if err != nil {
 		return 0, wrap("resolve campaign delivery", err)
 	}

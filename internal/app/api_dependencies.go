@@ -32,7 +32,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
-	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -117,7 +116,7 @@ func newAPIDependencies(
 		Submissions:     submissions.Service{Pool: pool, Clock: now},
 		Archives:        archives.Service{Pool: pool},
 		Attendance:      attendance.Service{Pool: pool, Now: now},
-		SessionBookings: sessionbooking.Service{Pool: pool, Now: now},
+		SessionBookings: *communicationRuntime.SessionBookings,
 		Preparation:     preparation.Service{Pool: pool, Now: now},
 		Teams:           teams.Service{Pool: pool, Now: now},
 		GitHub:          github,
@@ -127,11 +126,11 @@ func newAPIDependencies(
 			Clock:             now,
 			Pool:              pool,
 			SettleSubmissions: (submissions.Service{Pool: pool, Clock: now}).Settle,
-			ReconcileSessions: (sessionbooking.Service{Pool: pool, Now: now}).ReconcileEventInTransaction,
+			ReconcileSessions: communicationRuntime.SessionBookings.ReconcileEventInTransaction,
 		},
 		Privacy:      privacy.Service{Pool: pool, Clock: now},
 		Templates:    templates.Service{Pool: pool},
-		Registration: registration.Service{Pool: pool, Now: now, ReconcileSessions: (sessionbooking.Service{Pool: pool, Now: now}).ReconcileEventInTransaction},
+		Registration: registration.Service{Pool: pool, Now: now, ReconcileSessions: communicationRuntime.SessionBookings.ReconcileEventInTransaction},
 		Auth:         auth,
 		Audit:        audit.Service{Queries: queries, Policy: policy},
 		Files: files.Service{

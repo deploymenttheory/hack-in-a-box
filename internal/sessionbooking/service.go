@@ -99,7 +99,7 @@ func loadRecord(
 		return result, contextError("load", err)
 	}
 	result.confirmed = claim == "confirmed"
-	result.audience = slices.Contains(result.item.Audience, "all") ||
+	result.audience = (slices.Contains(result.item.Audience, "all") && (result.confirmed || len(roles) > 0)) ||
 		(result.confirmed && slices.Contains(result.item.Audience, "attendee"))
 	for _, role := range roles {
 		result.audience = result.audience || slices.Contains(result.item.Audience, role)
@@ -260,7 +260,11 @@ func (s Service) Configure(
 		if err = history(ctx, tx, actor, eventID, id, nil, "configure", st.revision); err != nil {
 			return err
 		}
-		if err = s.reconcile(ctx, tx, actor, st); err != nil {
+		changes := map[uuid.UUID]bool{}
+		if err = s.reconcile(ctx, tx, actor, st, changes); err != nil {
+			return err
+		}
+		if err = s.queueUpdates(ctx, tx, actor, st, changes); err != nil {
 			return err
 		}
 		result, err = s.page(ctx, tx, actor, st)
@@ -336,8 +340,8 @@ func (s Service) page(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st scope)
 	p.CapacityShortfall = max(0, p.Booked-p.Capacity)
 	b := Booking{PersonID: actor}
 	var position int64
-	err := tx.QueryRow(ctx, `SELECT b.state,b.revision,(SELECT count(*) FROM session_bookings w WHERE w.event_id=b.event_id AND w.session_id=b.session_id AND w.state='waitlisted' AND w.queue_sequence<=b.queue_sequence) FROM session_bookings b WHERE event_id=$1 AND session_id=$2 AND person_id=$3`, st.row.ID, st.item.ID, actor).
-		Scan(&b.State, &b.Revision, &position)
+	err := tx.QueryRow(ctx, `SELECT b.state,b.revision,b.calendar_sequence,(SELECT count(*) FROM session_bookings w WHERE w.event_id=b.event_id AND w.session_id=b.session_id AND w.state='waitlisted' AND w.queue_sequence<=b.queue_sequence) FROM session_bookings b WHERE event_id=$1 AND session_id=$2 AND person_id=$3`, st.row.ID, st.item.ID, actor).
+		Scan(&b.State, &b.Revision, &b.CalendarSequence, &position)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return p, contextError("page", err)
 	}

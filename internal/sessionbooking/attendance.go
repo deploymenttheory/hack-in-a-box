@@ -208,7 +208,10 @@ func (s Service) OriginalReceipt(
 		var raw []byte
 		if err := tx.QueryRow(ctx, `SELECT result FROM session_commands WHERE event_id=$1 AND session_id=$2 AND request_id=$3 AND actor_id=$4`, eventID, id, request, actor).
 			Scan(&raw); err != nil {
-			return access.ErrNotFound
+			if errors.Is(err, pgx.ErrNoRows) {
+				return access.ErrNotFound
+			}
+			return contextError("read original acknowledgement", err)
 		}
 		return json.Unmarshal(raw, &result)
 	})

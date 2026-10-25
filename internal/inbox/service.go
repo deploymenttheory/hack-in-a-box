@@ -96,6 +96,10 @@ func (s Service) List(
 				item.EventName = ""
 				item.Label = label("outcome_review")
 			}
+			if destination != nil && destination.SuppressEventName {
+				item.EventName = ""
+				item.Label = "Session booking cancellation"
+			}
 			if len(result.Items) < limit {
 				result.Items = append(result.Items, item)
 			} else if result.NextCursor == nil {
@@ -158,6 +162,7 @@ func (s Service) Open(ctx context.Context, actor, id uuid.UUID, read *bool) (Det
 				return fmt.Errorf("update recipient read state: %w", err)
 			}
 		}
+		restricted := destination != nil && destination.SuppressEventName
 		if destination != nil && destination.Kind == "" {
 			destination = nil
 		}
@@ -171,6 +176,10 @@ func (s Service) Open(ctx context.Context, actor, id uuid.UUID, read *bool) (Det
 		if destination != nil && destination.Kind == "outcome_review" {
 			result.Item.EventName = ""
 			result.Item.Label = label("outcome_review")
+		}
+		if restricted {
+			result.Item.EventName = ""
+			result.Item.Label = "Session booking cancellation"
 		}
 		return nil
 	})

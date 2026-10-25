@@ -240,7 +240,7 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 			ActorID:         recipient.PersonID,
 			Subject:         recipient.Subject,
 			PlainText:       recipient.Body,
-			IncludeCalendar: approved.Definition.IncludeCalendar,
+			IncludeCalendar: approved.Definition.IncludeCalendar && approved.SessionCalendar == nil,
 		}
 		message, err := s.newMessageFor(
 			ctx,
@@ -252,6 +252,9 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 		)
 		if err != nil {
 			return QueueReport{}, fmt.Errorf("queue SMTP campaign: %w", err)
+		}
+		if err = attachSessionCalendar(&message, approved); err != nil {
+			return QueueReport{}, err
 		}
 		// A registered native outcome approval can target an owner without event
 		// read authority. Its reviewed message must not inherit an undisclosed event
@@ -300,6 +303,32 @@ func (s Service) QueueApprovedOccurrenceReportInTransaction(
 		report.Queued++
 	}
 	return report, nil
+}
+
+func attachSessionCalendar(
+	message *maildelivery.Message,
+	approved communications.ApprovedCampaign,
+) error {
+	if approved.SessionCalendar == nil {
+		return nil
+	}
+	calendar := *approved.SessionCalendar
+	message.Calendar = &calendar
+	if calendar.Cancelled {
+		message.Brand = maildelivery.Brand{
+			Name:       "Session booking",
+			Primary:    "#173a35",
+			Background: "#f8f9f5",
+			Foreground: "#173a35",
+		}
+		return nil
+	}
+	var err error
+	message.PlainText, err = bodyWithCalendar(message.PlainText, message.Calendar)
+	if err != nil {
+		return fmt.Errorf("render approved session calendar: %w", err)
+	}
+	return nil
 }
 
 func (h CampaignHandler) Eligible(ctx context.Context, d jobs.Delivery) (bool, error) {

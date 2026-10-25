@@ -29,8 +29,9 @@ type Source struct {
 }
 
 type Destination struct {
-	Kind       string    `json:"kind"`
-	ResourceID uuid.UUID `json:"resource_id"`
+	SuppressEventName bool      `json:"-"`
+	Kind              string    `json:"kind"`
+	ResourceID        uuid.UUID `json:"resource_id"`
 }
 
 // ResourceOwner must recheck the source's current audience, publication and

@@ -89,6 +89,19 @@ func (s Service) resolveApprovedScopedCampaign(
 	}
 	var approved ApprovedCampaign
 	switch {
+	case audience.Approval != nil && audience.Approval.Kind == "native_session_booking":
+		if s.SessionPlans == nil {
+			return ApprovedCampaign{}, access.ErrForbidden
+		}
+		approved, err = s.SessionPlans.ResolveSessionNotificationInTransaction(
+			ctx,
+			tx,
+			eventID,
+			campaignID,
+			version,
+			*audience.Approval,
+			projection.personID,
+		)
 	case audience.Approval != nil && audience.Approval.Kind == "native_outcome_review":
 		if s.OutcomePlans == nil {
 			return ApprovedCampaign{}, access.ErrForbidden

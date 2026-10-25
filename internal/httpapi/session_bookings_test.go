@@ -14,10 +14,12 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -84,6 +86,11 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 	}
 	now := time.Date(2027, 1, 19, 12, 0, 0, 0, time.UTC)
 	service := sessionbooking.Service{Pool: pool, Now: func() time.Time { return now }}
+	composer := &communications.Service{Pool: pool}
+	local := &inbox.Service{Pool: pool, Communications: composer, Now: service.Now}
+	service.DeliveryChannels = map[string]sessionbooking.NotificationChannel{"in_app": local}
+	composer.SessionPlans = &service
+	local.ScopePolicy = &service
 	router := NewRouter(
 		cfg,
 		slog.New(slog.NewTextHandler(io.Discard, nil)),
@@ -135,6 +142,54 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 	if w := request(owner, "PUT", path, d, 0, true); w.Code != 200 {
 		t.Fatal("native configure", w.Code, w.Body)
 	}
+	configuration := request(
+		owner,
+		"PUT",
+		path+"/notifications",
+		map[string]any{"channels": []string{"in_app"}},
+		1,
+		true,
+	)
+	if configuration.Code != 200 {
+		t.Fatal("native notification draft", configuration.Code, configuration.Body)
+	}
+	var preview sessionbooking.NotificationPreview
+	if err = json.Unmarshal(
+		configuration.Body.Bytes(),
+		&preview,
+	); err != nil || !preview.CanApprove ||
+		preview.Configuration.Approved {
+		t.Fatal("notification draft silently approved/unavailable", preview, err)
+	}
+	if w := request(facilitator, "GET", path+"/notifications", nil, 0, true); w.Code != 403 {
+		t.Fatal("facilitator inherited notification configuration authority", w.Code, w.Body)
+	}
+	if w := request(
+		owner,
+		"POST",
+		path+"/notifications/approve",
+		map[string]any{
+			"version":     preview.Configuration.Version,
+			"fingerprint": strings.Repeat("0", 64),
+		},
+		0,
+		true,
+	); w.Code != 409 {
+		t.Fatal("non-exact notification preview approved", w.Code, w.Body)
+	}
+	if w := request(
+		owner,
+		"POST",
+		path+"/notifications/approve",
+		map[string]any{
+			"version":     preview.Configuration.Version,
+			"fingerprint": preview.Fingerprint,
+		},
+		0,
+		true,
+	); w.Code != 200 {
+		t.Fatal("native explicit approval", w.Code, w.Body)
+	}
 	if w := request(
 		member,
 		"GET",
@@ -146,7 +201,11 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 		!strings.Contains(w.Header().Get("Cache-Control"), "no-store") {
 		t.Fatal("unbooked reader leaked private configuration/link", w.Code, w.Body)
 	}
-	command := map[string]any{"request_id": uuid.New(), "action": "reserve"}
+	command := map[string]any{
+		"request_id":       uuid.New(),
+		"action":           "reserve",
+		"session_revision": int64(2),
+	}
 	w := request(member, "POST", path+"/booking", command, 0, true)
 	if w.Code != 200 {
 		t.Fatal("native reserve", w.Code, w.Body)
@@ -196,7 +255,7 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 		}
 	}
 	d.FacilitatorIDs = []uuid.UUID{}
-	if w = request(owner, "PUT", path, d, 1, true); w.Code != 200 {
+	if w = request(owner, "PUT", path, d, 2, true); w.Code != 200 {
 		t.Fatal("remove exact assignment", w.Code, w.Body)
 	}
 	if w = request(facilitator, "GET", path+"/attendance", nil, 0, true); w.Code != 403 {
@@ -204,5 +263,47 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 	}
 	if w = request(member, "POST", path+"/cancel", nil, 2, true); w.Code != 403 {
 		t.Fatal("attendee cancelled session for everyone", w.Code, w.Body)
+	}
+	if w = request(owner, "POST", path+"/cancel", nil, 3, true); w.Code != 200 {
+		t.Fatal("native session cancellation", w.Code, w.Body)
+	}
+	if err = q.SetCompetitionState(
+		ctx,
+		dbgen.SetCompetitionStateParams{EventID: id, PersonID: member.ID, State: "withdrawn"},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if w = request(member, "GET", path, nil, 0, true); w.Code != 403 {
+		t.Fatal("withdrawn person retained ordinary session reader", w.Code, w.Body)
+	}
+	w = request(member, "GET", path+"/own-cancellation", nil, 0, true)
+	if w.Code != 200 || !strings.Contains(w.Header().Get("Cache-Control"), "no-store") {
+		t.Fatal("own cancellation projection", w.Code, w.Body)
+	}
+	var cancellation map[string]any
+	if err = json.Unmarshal(
+		w.Body.Bytes(),
+		&cancellation,
+	); err != nil || len(cancellation) != 3 ||
+		cancellation["person_id"] != member.ID.String() {
+		t.Fatal("cancellation projected private fields or another person", cancellation, err)
+	}
+	if w = request(outsider, "GET", path+"/own-cancellation", nil, 0, true); w.Code != 404 {
+		t.Fatal("another person read cancellation", w.Code, w.Body)
+	}
+	w = request(owner, "GET", path+"/notification-history?limit=1", nil, 0, true)
+	if w.Code != 200 || strings.Contains(w.Body.String(), "PRIVATE") {
+		t.Fatal("notification source/queue history", w.Code, w.Body)
+	}
+	var history sessionbooking.NotificationHistory
+	if err = json.Unmarshal(
+		w.Body.Bytes(),
+		&history,
+	); err != nil || len(history.Items) != 1 || history.NextCursor == nil ||
+		len(history.Items[0].Reports) != 1 {
+		t.Fatal("notification history page/provenance", history, err)
+	}
+	if w = request(member, "GET", path+"/notification-history", nil, 0, true); w.Code != 403 {
+		t.Fatal("recipient gained operational history", w.Code, w.Body)
 	}
 }
