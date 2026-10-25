@@ -102,6 +102,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.clock.set(previousClock)
+	support := seedRehearsalSupport(t, r, admin.deps)
 	proxy := newRehearsalProxy(t, public.server.URL)
 	// A Unix socket is private test IPC, never a route registered on either
 	// application listener. The browser cannot call it through the product API.
@@ -170,6 +171,11 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				}
 				_ = json.NewEncoder(w).Encode(cookie)
 				return
+			case "correct-clarification":
+				if err := support.correct(request.Context(), r, admin.deps); err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
 			case "stage-lag", "stage-live":
 				stage := "preparation"
 				if input.Action == "stage-live" {
@@ -272,14 +278,17 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	t.Cleanup(func() { _ = control.Close() })
 	// Only synthetic short-lived test sessions are passed to the node owner.
 	manifest := map[string]any{
-		"event_id":       r.eventID,
-		"team_id":        r.teamID,
-		"other_event_id": r.otherEventID,
-		"admin":          admin.server.URL,
-		"public":         public.server.URL,
-		"display":        proxy.server.URL,
-		"socket":         socket,
-		"run_id":         uuid.NewString(),
+		"answer_id":           support.answerID,
+		"help_id":             support.helpID,
+		"private_question_id": support.questionID,
+		"event_id":            r.eventID,
+		"team_id":             r.teamID,
+		"other_event_id":      r.otherEventID,
+		"admin":               admin.server.URL,
+		"public":              public.server.URL,
+		"display":             proxy.server.URL,
+		"socket":              socket,
+		"run_id":              uuid.NewString(),
 	}
 	manifestPath := filepath.Join(private, "manifest.json")
 	data, err := json.Marshal(manifest)

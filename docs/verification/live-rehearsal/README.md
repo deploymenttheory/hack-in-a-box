@@ -90,3 +90,12 @@ storage. Each context now receives a fresh native PostgreSQL-backed session over
 private IPC; the manifest contains no cookie values. Current full TypeScript and
 focused rehearsal ESLint passed before this run. Final Today journeys remain
 blocked on the actual #88 merge.
+
+Current support-fixture checkpoint is intentionally not green: the first real
+native common-answer publish reached the actual inbox owner resolver and failed
+with `AuthorizeNotificationInTransaction: resource not found`. The direct HTTP
+service clocks were controlled, but runtime owner callbacks retained value/pointer
+copies constructed with real time. The harness must inject the same native clock
+before that graph is wired; replacing the resolver or dropping notifications
+would weaken the integration and is not an acceptable correction. The new
+support browser journey is authored but has not run past this fixture failure.
