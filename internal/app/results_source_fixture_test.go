@@ -41,8 +41,13 @@ func newResultsSourceFixture(t *testing.T, mode string) *resultsSourceFixture {
 
 func newResultsSourceFixtureWithSetup(t *testing.T, mode string, configure func(*rubric.Definition), beforeCutoff func(*resultsSourceFixture, rehearsalSurface)) *resultsSourceFixture {
 	t.Helper()
+	return newResultsSourceFixtureWithLifecycle(t, mode, configure, nil, beforeCutoff)
+}
+
+func newResultsSourceFixtureWithLifecycle(t *testing.T, mode string, configure func(*rubric.Definition), beforeLive, beforeCutoff func(*resultsSourceFixture, rehearsalSurface)) *resultsSourceFixture {
+	t.Helper()
 	f := &resultsSourceFixture{}
-	r, admin, public, run := qualificationHTTPFixtureWithCriteria(t, func(d *rubric.Definition) {
+	r, admin, public, run := qualificationHTTPFixturePhased(t, func(d *rubric.Definition) {
 		d.Mode = mode
 		d.RequiredJudgeCount = 2
 		d.ReserveCount = 0
@@ -54,6 +59,18 @@ func newResultsSourceFixtureWithSetup(t *testing.T, mode string, configure func(
 		if configure != nil {
 			configure(d)
 		}
+	}, nil, func(r *liveRehearsal, surface rehearsalSurface) {
+		if beforeLive == nil {
+			return
+		}
+		f.runtime, f.admin = r, surface
+		for i := range f.judges {
+			f.judges[i] = testdb.Person(t, r.pool)
+			resultsSourceRequire(t, dbgen.New(r.pool).SetMembership(t.Context(), dbgen.SetMembershipParams{
+				EventID: r.eventID, PersonID: f.judges[i].ID, Role: "judge", Active: true,
+			}))
+		}
+		beforeLive(f, surface)
 	}, func(r *liveRehearsal, s rehearsalSurface, run uuid.UUID) {
 		f.runtime = r
 		f.admin = s
@@ -151,6 +168,9 @@ func newResultsSourceFixtureWithSetup(t *testing.T, mode string, configure func(
 		t.Fatal("actual judge-final run absent")
 	}
 	for i := range f.judges {
+		if f.judges[i].ID != uuid.Nil {
+			continue
+		}
 		f.judges[i] = testdb.Person(t, r.pool)
 		resultsSourceRequire(
 			t,

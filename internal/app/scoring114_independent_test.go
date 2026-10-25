@@ -35,11 +35,13 @@ func TestIndependentHandWorkedScoringUsesNativeSourcesInBothModes(t *testing.T) 
 	}
 	for _, mode := range []string{rubric.AllTeams, rubric.MentorQualification} {
 		t.Run(mode, func(t *testing.T) {
-			f := newResultsSourceFixtureWithSetup(t, mode, func(d *rubric.Definition) {
+			f := newResultsSourceFixtureWithLifecycle(t, mode, func(d *rubric.Definition) {
 				d.RequiredJudgeCount = 3
 				for i := range d.Categories {
 					d.Categories[i].Weight = golden.Weights[i]
 				}
+			}, func(f *resultsSourceFixture, surface rehearsalSurface) {
+				independentPracticeBeforeLive(t, f, surface, mode)
 			}, func(f *resultsSourceFixture, surface rehearsalSurface) {
 				independentLiveCheckpoints(t, f, surface, golden.ProvisionalValues)
 			})
@@ -60,6 +62,11 @@ func TestIndependentHandWorkedScoringUsesNativeSourcesInBothModes(t *testing.T) 
 				}
 			}
 			blocked("current_required_judge_assessment_needed")
+			var realCards, practiceCards int
+			resultsSourceRequire(t, r.pool.QueryRow(t.Context(), "SELECT (SELECT count(*) FROM judge_cards WHERE event_id=$1), (SELECT count(*) FROM judge_practice_cards WHERE event_id=$1)", r.eventID).Scan(&realCards, &practiceCards))
+			if realCards != 0 || practiceCards != 2 {
+				t.Fatal("perfect practice entered the actual composed final after signed selection", realCards, practiceCards)
+			}
 			independentJudgeCard(t, f, judges[0], golden.JudgeCards[0], "submit", false)
 			independentJudgeCard(t, f, judges[1], golden.JudgeCards[1], "save", true)
 			blocked("current_required_judge_assessment_needed")
@@ -104,6 +111,32 @@ func TestIndependentHandWorkedScoringUsesNativeSourcesInBothModes(t *testing.T) 
 				t.Fatal("same-day assessment changed the exact native result")
 			}
 		})
+	}
+}
+
+func independentPracticeBeforeLive(t *testing.T, f *resultsSourceFixture, surface rehearsalSurface, mode string) {
+	t.Helper()
+	r := f.runtime
+	event, err := surface.deps.Events.Read(t.Context(), r.owner.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if !r.clock.read().Before(event.Configuration.LiveStart) {
+		t.Fatal("practice test requires the actual pre-live clock")
+	}
+	for _, judge := range f.judges {
+		practice, err := surface.deps.Judging.Practice(t.Context(), judge.ID, r.eventID)
+		resultsSourceRequire(t, err)
+		if practice.Criteria.Mode != mode || practice.FictionalEntryID == r.teamID {
+			t.Fatal("composed practice lost the actual mode or used a real entry", practice)
+		}
+		scores := make([]judging.Score, len(practice.Criteria.Categories))
+		for i, category := range practice.Criteria.Categories {
+			value := 10
+			scores[i] = judging.Score{CategoryID: category.ID, Value: &value,
+				Evidence: []judging.Evidence{{Note: "PRIVATE-PERFECT-FICTIONAL-PRACTICE"}}}
+		}
+		_, err = surface.deps.Judging.ChangePractice(t.Context(), judge.ID, r.eventID, 0,
+			judging.PracticeCommand{RequestID: uuid.New(), Action: "submit", Scores: scores})
+		resultsSourceRequire(t, err)
 	}
 }
 

@@ -32,3 +32,9 @@ Other hand-worked exact/near-tie fixtures remain in
 `internal/results/calculation_test.go`: 246/49 and 251/50 both display 5.02,
 yet the former is strictly larger because `246×50 = 12300 > 12299 = 251×49`.
 Exact equal totals retain equal ranks; UUID order cannot decide a winner.
+
+The composed fixture first submits perfect fictional practice for two actual
+judges before the real live-start instant. After actual native qualification
+signoff (where applicable), the same event still has two isolated practice rows
+and zero real judge cards. Missing required final cards block the result. The
+subsequent254/3 comes only from the three separately submitted real cards.

@@ -11,6 +11,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -40,14 +41,20 @@ func newQualificationFinalFixture(t *testing.T) qualificationFinalFixture {
 
 func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixture {
 	t.Helper()
+	return newQualificationFinalCohortWithCriteria(t, count, nil)
+}
+
+func newQualificationFinalCohortWithCriteria(t *testing.T, count int, configure func(*rubric.Definition)) qualificationFinalFixture {
+	t.Helper()
 	if count < 1 || count > 5 {
 		t.Fatal("bounded fixture cohort must contain one to five teams")
 	}
 	var teams []qualificationFinalTeam
 	var cp scorecards.Checkpoint
 	var second dbgen.Person
-	r, admin, public, run := qualificationHTTPFixtureInitialised(
+	r, admin, public, run := qualificationHTTPFixturePhased(
 		t,
+		configure,
 		func(r *liveRehearsal) {
 			r.mentor.DisplayName = "Native primary mentor"
 			if _, err := r.pool.Exec(
@@ -104,6 +111,7 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 				t.Fatal(err)
 			}
 		},
+		nil,
 		func(r *liveRehearsal, surface rehearsalSurface, run uuid.UUID) {
 			page, err := surface.deps.Events.Read(t.Context(), r.owner.ID, r.eventID)
 			if err != nil {

@@ -40,17 +40,29 @@ func TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode(t *testing.T) {
 				CardCommand{RequestID: uuid.New(), Action: "submit", SubmissionRevision: 1, Scores: scores}); !errors.Is(err, access.ErrForbidden) {
 				t.Fatal("practice scores entered a real pre-live card", err)
 			}
-			var cards int
-			if err = f.pool.QueryRow(t.Context(), "SELECT count(*) FROM judge_cards WHERE event_id=$1", f.event).Scan(&cards); err != nil || cards != 0 {
-				t.Fatal("practice wrote real cards", cards, err)
+			var cards, practiceCards int
+			if err = f.pool.QueryRow(t.Context(), "SELECT (SELECT count(*) FROM judge_cards WHERE event_id=$1), (SELECT count(*) FROM judge_practice_cards WHERE event_id=$1)", f.event).Scan(&cards, &practiceCards); err != nil || cards != 0 || practiceCards != 1 {
+				t.Fatal("practice did not persist exclusively in its isolated owner", cards, practiceCards, err)
 			}
 			f.now = f.dates.SubmissionCutoff
+			var completion Completion
 			err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-				_, err := f.s.CompletionInTransaction(t.Context(), tx, f.owner.ID, f.event, f.run)
+				var err error
+				completion, err = f.s.CompletionInTransaction(t.Context(), tx, f.owner.ID, f.event, f.run)
 				return err
 			})
-			if !errors.Is(err, access.ErrConflict) {
-				t.Fatal("fictional perfect practice satisfied real final source", err)
+			want := access.ErrConflict // No real submitted judge cards exist.
+			if mode == rubric.MentorQualification {
+				// This isolated owner fixture intentionally has no finalist-policy
+				// adapter. Practice cannot invent the required signed selection.
+				// The app golden fixture exercises actual native selection/cards.
+				if f.s.Finalists != nil {
+					t.Fatal("practice fixture unexpectedly acquired a finalist policy")
+				}
+				want = access.ErrForbidden
+			}
+			if !errors.Is(err, want) || completion.Criteria.Mode != mode || len(completion.Cards) != 0 || completion.Binding != "" {
+				t.Fatal("fictional practice bypassed the required real final gate", completion, err)
 			}
 		})
 	}
