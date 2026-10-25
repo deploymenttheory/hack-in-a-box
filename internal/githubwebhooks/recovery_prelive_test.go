@@ -62,8 +62,8 @@ func TestRecoveryActualPreliveReceiptAllowsWorkButNeverFormalSubmissionOrReview(
 		t.Fatal(err)
 	}
 	delivery := f.delivery(id)
-	if !delivery.ReceivedAt.Time.Before(config.LiveStart) || delivery.ReceivedAt.Time.Before(publication) || !delivery.ProviderAt.Valid || !delivery.ProviderAt.Time.Before(config.LiveStart) {
-		t.Fatal("fixture was not a genuine pre-live webhook receipt", delivery.ReceivedAt.Time)
+	if !delivery.ReceivedAt.Before(config.LiveStart) || delivery.ReceivedAt.Before(publication) || !delivery.ProviderAt.Valid || !delivery.ProviderAt.Time.Before(config.LiveStart) {
+		t.Fatal("fixture was not a genuine pre-live webhook receipt", delivery.ReceivedAt)
 	}
 	f.execute(id)
 	page, err := native.Read(t.Context(), member.ID, f.event, f.team)

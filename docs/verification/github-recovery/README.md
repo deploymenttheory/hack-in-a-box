@@ -94,3 +94,10 @@ a private draft while formal/review/scoring records stay absent. No job due date
 is rewritten or production timing policy changed. The extra missing-permission
 fixture code is also aligned with the native `permissions_missing` diagnostic.
 Current focused execution/lint and exact-head CI remain pending for this addition.
+
+The first focused addition run exposed a test-only timestamp type mismatch:
+`GithubWebhookDelivery.ReceivedAt` is already `time.Time`, while optional
+`ProviderAt` is nullable. The fixture now uses the actual generated field type;
+this compile failure is not a product RED. The aligned native diagnostic matrix
+already passed at 178a5eb in 7.380s. The real-wall-clock receipt case and lint
+remain pending until the corrected fixture executes.
