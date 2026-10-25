@@ -64,3 +64,10 @@ cards/signoffs/selection. Native current-role/conflict/audience/lifecycle,
 historical privacy, real #108 policy wiring, strict authenticated API/generated
 contracts and actual populated51→52 preservation/guarded rollback remain part
 of the deliverable. Final CI and independent full-scope reviews remain required.
+
+The first compiling checkpoint is explicitly stacked on actual corrected #108
+`096ab6a9b06dcb928acd6ae306b2d598b8951300` (itself based on merged mainb2f7).
+Rebase preserves actual migration51 and does not replay a squashed parent.
+Qualification/moderation/mentor/rubric/HTTP/application compile checks pass after
+that rebase; earlier native timings remain attributed to the actual ae24005
+parent on which they executed. Canonical sqlc models include migration52.
