@@ -36,7 +36,8 @@ func TestMigration50PreservesFreezeFactsAndOriginalCommands(t *testing.T) {
 	if _, err = provider.DownTo(t.Context(), 49); err != nil {
 		t.Fatal("empty 50 rollback", err)
 	}
-	if err = database.Migrate(t.Context(), pool, 0); err != nil {
+	// Isolate the owned populated-50 guard from later empty migrations.
+	if err = database.Migrate(t.Context(), pool, 50); err != nil {
 		t.Fatal(err)
 	}
 	f := newFixture(t, pool)
@@ -78,6 +79,13 @@ func TestMigration50PreservesFreezeFactsAndOriginalCommands(t *testing.T) {
 		if _, err = pool.Exec(t.Context(), "TRUNCATE "+table+" CASCADE"); err == nil {
 			t.Fatal("truncatable evidence", table)
 		}
+	}
+	version, err := provider.GetDBVersion(t.Context())
+	if err != nil || version != 50 {
+		t.Fatal("populated freeze rollback changed owned schema", version, err)
+	}
+	if err = database.Migrate(t.Context(), pool, 0); err != nil {
+		t.Fatal(err)
 	}
 	if err = database.CheckSchema(t.Context(), pool); err != nil {
 		t.Fatal(err)

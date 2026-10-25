@@ -4,6 +4,43 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/judging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeRounds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging-receipts/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/judging/{run_id}": {
         parameters: {
             query?: never;
@@ -3924,6 +3961,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JudgeRounds: {
+            items: components["schemas"]["JudgeRound"][];
+        };
+        JudgeRecovery: {
+            receipt: components["schemas"]["JudgeReceipt"] | null;
+        };
         SubmissionDocument: {
             definitions: components["schemas"]["SubmissionDefinition"][];
             evidence: components["schemas"]["SubmissionEvidence"][];
@@ -3972,6 +4015,7 @@ export interface components {
             scores: components["schemas"]["JudgeScore"][];
             /** Format: date-time */
             changed_at: string;
+            repository: components["schemas"]["JudgeFreezeEvidence"];
         };
         JudgeAssignment: {
             /** Format: uuid */
@@ -4017,6 +4061,8 @@ export interface components {
             submission_revision: number;
             scores?: components["schemas"]["JudgeScore"][];
             reason?: string;
+            /** Format: uuid */
+            repository_decision_id?: string | null;
         };
         JudgeReceipt: {
             /** Format: uuid */
@@ -8535,6 +8581,53 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgeRounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current actor-authorized native source; no inferred grant or original-outcome claim. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRounds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current actor-authorized native source; no inferred grant or original-outcome claim. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getJudgeRound: {
         parameters: {
             query?: never;

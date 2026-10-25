@@ -4,16 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
-func (s Service) practice(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID) (Practice, error) {
+func (s Service) practice(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+) (Practice, error) {
 	var out Practice
 	a, err := s.guard(ctx, tx, actor, eventID, true)
 	if err != nil {
@@ -30,7 +36,14 @@ func (s Service) practice(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UU
 	if !h.ApprovedVersion.Valid {
 		return out, access.ErrForbidden
 	}
-	row, err := q.RubricVersion(ctx, dbgen.RubricVersionParams{EventID: eventID, RubricID: h.ID, Version: h.ApprovedVersion.Int64})
+	row, err := q.RubricVersion(
+		ctx,
+		dbgen.RubricVersionParams{
+			EventID:  eventID,
+			RubricID: h.ID,
+			Version:  h.ApprovedVersion.Int64,
+		},
+	)
 	if err != nil {
 		return out, failure("practice criteria", err)
 	}
@@ -38,9 +51,19 @@ func (s Service) practice(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UU
 	if err = json.Unmarshal(row.PublicDocument, &d); err != nil {
 		return out, failure("practice public criteria", err)
 	}
-	out = Practice{FictionalEntryID: uuid.NewSHA1(eventID, []byte("isolated-fictional-judge-practice")), Name: "Fictional practice robot — synthetic entry", Rubric: rubric.Reference{ID: h.ID, Version: row.Version, Digest: row.PublicDigest}, Criteria: d}
+	out = Practice{
+		FictionalEntryID: uuid.NewSHA1(eventID, []byte("isolated-fictional-judge-practice")),
+		Name:             "Fictional practice robot — synthetic entry",
+		Rubric: rubric.Reference{
+			ID:      h.ID,
+			Version: row.Version,
+			Digest:  row.PublicDigest,
+		},
+		Criteria: d,
+	}
 	var raw []byte
-	err = tx.QueryRow(ctx, "SELECT document FROM judge_practice_cards WHERE event_id=$1 AND actor_id=$2", eventID, actor).Scan(&raw)
+	err = tx.QueryRow(ctx, "SELECT document FROM judge_practice_cards WHERE event_id=$1 AND actor_id=$2", eventID, actor).
+		Scan(&raw)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return out, nil
 	}
@@ -54,6 +77,7 @@ func (s Service) practice(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UU
 	out.Card = &card
 	return out, nil
 }
+
 func (s Service) Practice(ctx context.Context, actor, eventID uuid.UUID) (Practice, error) {
 	var out Practice
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
@@ -63,7 +87,13 @@ func (s Service) Practice(ctx context.Context, actor, eventID uuid.UUID) (Practi
 	})
 	return out, failure("practice read", err)
 }
-func (s Service) ChangePractice(ctx context.Context, actor, eventID uuid.UUID, expected int64, c PracticeCommand) (Receipt, error) {
+
+func (s Service) ChangePractice(
+	ctx context.Context,
+	actor, eventID uuid.UUID,
+	expected int64,
+	c PracticeCommand,
+) (Receipt, error) {
 	var out Receipt
 	if c.RequestID == uuid.Nil || expected < 0 {
 		return out, access.ErrInvalid
@@ -102,7 +132,12 @@ func (s Service) ChangePractice(ctx context.Context, actor, eventID uuid.UUID, e
 		state := "draft"
 		switch c.Action {
 		case "save", "submit":
-			scores, err = normalize(c.Scores, p.Criteria, submissions.Document{}, c.Action == "submit")
+			scores, err = normalize(
+				c.Scores,
+				p.Criteria,
+				submissions.Document{},
+				c.Action == "submit",
+			)
 			if c.Action == "submit" {
 				state = "submitted"
 			}
@@ -119,13 +154,39 @@ func (s Service) ChangePractice(ctx context.Context, actor, eventID uuid.UUID, e
 		if err != nil {
 			return failure("practice encode", err)
 		}
-		if _, err = tx.Exec(ctx, "INSERT INTO judge_practice_cards(event_id,actor_id,version,document) VALUES($1,$2,$3,$4) ON CONFLICT(event_id,actor_id) DO UPDATE SET version=EXCLUDED.version,document=EXCLUDED.document", eventID, actor, card.Version, raw); err != nil {
+		if _, err = tx.Exec(
+			ctx,
+			"INSERT INTO judge_practice_cards(event_id,actor_id,version,document) VALUES($1,$2,$3,$4) ON CONFLICT(event_id,actor_id) DO UPDATE SET version=EXCLUDED.version,document=EXCLUDED.document",
+			eventID,
+			actor,
+			card.Version,
+			raw,
+		); err != nil {
 			return failure("practice save", err)
 		}
-		if err = history(ctx, tx, actor, eventID, uuid.Nil, uuid.Nil, "practice_"+c.Action, "Synthetic isolated practice", card, s); err != nil {
+		if err = history(
+			ctx,
+			tx,
+			actor,
+			eventID,
+			uuid.Nil,
+			uuid.Nil,
+			"practice_"+c.Action,
+			"Synthetic isolated practice",
+			card,
+			s,
+		); err != nil {
 			return err
 		}
-		out = Receipt{RequestID: c.RequestID, ActorID: actor, TeamID: p.FictionalEntryID, Action: "practice_" + c.Action, Revision: card.Version, State: card.State, Fingerprint: hash}
+		out = Receipt{
+			RequestID:   c.RequestID,
+			ActorID:     actor,
+			TeamID:      p.FictionalEntryID,
+			Action:      "practice_" + c.Action,
+			Revision:    card.Version,
+			State:       card.State,
+			Fingerprint: hash,
+		}
 		return retain(ctx, tx, eventID, out)
 	})
 	return out, failure("practice change", err)

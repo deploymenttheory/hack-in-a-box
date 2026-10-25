@@ -3,12 +3,14 @@
 package judging
 
 import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"time"
 )
 
 type Service struct {
@@ -37,6 +39,7 @@ type Evidence struct {
 	Note          string     `json:"note"`
 }
 type Card struct {
+	Repository         FreezeEvidence   `json:"repository"`
 	RunID              uuid.UUID        `json:"run_id"`
 	TeamID             uuid.UUID        `json:"team_id"`
 	AuthorID           uuid.UUID        `json:"author_id"`
@@ -71,12 +74,13 @@ type RoundCommand struct {
 	Reason       string      `json:"reason"`
 }
 type CardCommand struct {
-	RequestID          uuid.UUID `json:"request_id"`
-	Action             string    `json:"action"`
-	AuthorID           uuid.UUID `json:"author_id"`
-	SubmissionRevision int64     `json:"submission_revision"`
-	Scores             []Score   `json:"scores"`
-	Reason             string    `json:"reason"`
+	RepositoryDecisionID *uuid.UUID `json:"repository_decision_id"`
+	RequestID            uuid.UUID  `json:"request_id"`
+	Action               string     `json:"action"`
+	AuthorID             uuid.UUID  `json:"author_id"`
+	SubmissionRevision   int64      `json:"submission_revision"`
+	Scores               []Score    `json:"scores"`
+	Reason               string     `json:"reason"`
 }
 type Brief struct {
 	TeamID               uuid.UUID                 `json:"team_id"`

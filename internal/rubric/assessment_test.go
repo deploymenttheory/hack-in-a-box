@@ -284,6 +284,10 @@ func TestFinalAssessmentConsumerUsesCutoffFrozenEntryRequiredJudgesAndFreshQuali
 	for _, mode := range []string{rubric.AllTeams, rubric.MentorQualification} {
 		t.Run(mode, func(t *testing.T) {
 			f := publicationSetup(t)
+			// The current judge authorization owner requires its additive native schema.
+			if err := database.Migrate(t.Context(), f.pool, 0); err != nil {
+				t.Fatal(err)
+			}
 			definition := rubric.Default(mode, f.eventID)
 			definition.RequiredJudgeCount = 2
 			f.change(rubric.Command{Action: "save", Definition: &definition})
@@ -326,7 +330,11 @@ func TestFinalAssessmentConsumerUsesCutoffFrozenEntryRequiredJudgesAndFreshQuali
 			if err != nil || snapshot.SubmissionRevision == nil ||
 				*snapshot.SubmissionRevision != 1 ||
 				snapshot.Purpose != "judge_final" {
-				t.Fatal("post-cutoff frozen entry did not bind fresh final run/evidence")
+				t.Fatal(
+					"post-cutoff frozen entry did not bind fresh final run/evidence",
+					snapshot,
+					err,
+				)
 			}
 			f.exec(
 				"UPDATE hack_teams SET state='disbanded' WHERE event_id=$1 AND id=$2",
