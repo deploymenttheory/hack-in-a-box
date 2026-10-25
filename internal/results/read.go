@@ -3,6 +3,7 @@ package results
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,44 +22,70 @@ func (s Service) Read(ctx context.Context, actor, eventID uuid.UUID) (Page, erro
 		if err != nil {
 			return err
 		}
-		if !current.organiser {
-			return access.ErrForbidden
-		}
-		round, err := load(ctx, tx, eventID)
-		if err != nil {
-			return err
-		}
-		source, err := s.source(ctx, tx, actor, eventID)
-		if err != nil {
-			return err
-		}
-		out = Page{
-			Revision:      current.event.Revision,
-			Round:         round,
-			Preview:       source.preview,
-			Announcements: []Announcement{},
-		}
-		out.Current = round.Version > 0 && round.Source.Binding != "" &&
-			round.Source.Binding == source.preview.Binding &&
-			len(source.preview.Blockers) == 0
-		if !out.Current {
-			// Retain immutable history in storage, never stale private assessment data
-			// in the current projection after source or assignment authority changes.
-			out.Round.Source = emptyPreview()
-			out.Round.Votes = []Vote{}
-			out.Round.Confirmation = nil
-		}
-		out.Announcements, err = published(ctx, tx, eventID)
+		out, err = s.page(ctx, tx, actor, eventID, current)
 		return err
 	})
-	return out, failure("read private preparation", err)
+	if err != nil {
+		return Page{}, failure("read private preparation", err)
+	}
+	return out, nil
 }
 
-func published(ctx context.Context, tx pgx.Tx, eventID uuid.UUID) ([]Announcement, error) {
+func (s Service) page(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	current authority,
+) (Page, error) {
+	if !current.organiser {
+		return Page{}, access.ErrForbidden
+	}
+	round, err := load(ctx, tx, eventID)
+	if err != nil {
+		return Page{}, err
+	}
+	source, err := s.source(ctx, tx, actor, eventID)
+	if err != nil {
+		return Page{}, err
+	}
+	out := Page{
+		Revision:      current.event.Revision,
+		Round:         round,
+		Preview:       source.preview,
+		Announcements: []Announcement{},
+	}
+	fullCurrent := round.Source.Binding != "" && round.Source.Binding == source.preview.Binding &&
+		len(source.preview.Blockers) == 0
+	qualificationCurrent := round.Source.Binding == "" && round.Source.FinalistsBinding != "" &&
+		round.Source.FinalistsBinding == source.preview.FinalistsBinding
+	out.Current = round.Version > 0 && (fullCurrent || qualificationCurrent)
+	if !out.Current {
+		// Keep immutable storage; never refill current private preparation after its
+		// source or assignment authority changed.
+		out.Round.Source = emptyPreview()
+		out.Round.Votes = []Vote{}
+		out.Round.Confirmation = nil
+	}
+	if source.completion != nil {
+		out.TieStates, err = resolveJudgeTies(
+			source.preview.Ties,
+			source.completion.Assignments,
+			out.Round.Votes,
+		)
+		if err != nil {
+			return Page{}, err
+		}
+	}
+	out.Announcements, err = published(ctx, tx, eventID, s.now())
+	return out, err
+}
+
+func published(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, now time.Time) ([]Announcement, error) {
 	rows, err := tx.Query(
 		ctx,
-		"SELECT document FROM result_publications WHERE event_id=$1 ORDER BY published_at,id",
+		"SELECT document FROM result_publications WHERE event_id=$1 AND published_at<=$2 ORDER BY published_at,id",
 		eventID,
+		now,
 	)
 	if err != nil {
 		return nil, failure("read released announcements", err)

@@ -111,6 +111,8 @@ type AnnouncedAward struct {
 	Currency   string     `json:"currency"`
 }
 type Page struct {
+	TieStates     []TieState     `json:"tie_states"`
+	Receipt       *Receipt       `json:"receipt"`
 	Revision      int64          `json:"revision"`
 	Round         Round          `json:"round"`
 	Preview       Preview        `json:"preview"`
