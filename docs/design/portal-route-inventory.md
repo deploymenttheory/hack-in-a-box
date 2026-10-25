@@ -54,7 +54,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/register/$eventId` | `RegistrationPage` | Admin, Participant | #236 |
 | `/templates` | `TemplatesPage` | Admin | #235 |
 | `/templates/$templateId` | `TemplatePage` | Admin | #235 |
-| `/display/$pairingToken` (independent main entry) | `room-display.tsx` | Participant only | #244 |
+| `/display/$eventId` (independent main entry; key is supplied only in a bearer header) | `room-display.tsx` | Participant only | #244 |
 | Unknown/bookmarked forbidden route, login, expiry, connection and account menu/search overlays | Shell / existing auth owners | Both | #234 |
 
 ## Nested tabs, readers and overlays

@@ -1,0 +1,39 @@
+{
+  "base": "2d82ac402fc68e39af0c49708fa6f363742bbd66",
+  "kind": "bounded draft checkpoint, not full cutover/native/CI acceptance",
+  "runtime_files": [
+    {
+      "path": "web/src/team-deliverables.tsx",
+      "sha256": "ed348566fec1b1dc13e5e03aea57ba7a13e619bac2d741cad3b2f76cc9c83de6"
+    },
+    {
+      "path": "web/src/deliverable-editor.tsx",
+      "sha256": "71e770da78562a9af1ed3cfb32372558bb01d90470b31837b5bc3a02737e8992"
+    },
+    {
+      "path": "web/src/deliverable-evidence.tsx",
+      "sha256": "c3f2298b3ddbc2fcd4c7e00bcb011aa16f54b217e55318ad3fee951e98350300"
+    },
+    {
+      "path": "web/src/today-safety.tsx",
+      "sha256": "55b04cd60b78b44712b54e97a5b894a6e74a41f3305e6c2b986160ec468e9b24"
+    }
+  ],
+  "proof": {
+    "owner_safety_cases": 7,
+    "owner_safety_seconds": 3.11,
+    "original_browser_cases_passed": 84,
+    "initial_new_browser_cases_failed_harness": 8,
+    "corrected_lifetime_browser_cases_passed": 8,
+    "corrected_lifetime_seconds": 28.7,
+    "browser_retries": 0,
+    "typescript": "pass",
+    "focused_lint": "pass",
+    "production_builds": [
+      "participant",
+      "administrator"
+    ],
+    "actual_provider_delivery": "not executed",
+    "native_API_Docker_current_guide_acceptance": "pending"
+  }
+}

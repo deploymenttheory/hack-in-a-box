@@ -1,0 +1,548 @@
+{
+  "kind": "source coverage; not browser/native API proof",
+  "sources": [
+    {
+      "path": "web/src/app.tsx",
+      "sha256": "901e0cf93ccd530124cab719271e7a7bc442e27b2aa55a442e16a50999f715ad"
+    },
+    {
+      "path": "web/src/participant-app.tsx",
+      "sha256": "c749f8a3a0316370fb363f2b84eb939f4fbeba6e1712f3474057a566a8d60321"
+    },
+    {
+      "path": "web/src/main.tsx",
+      "sha256": "8528234b61805d23b52bb315e8bf968744559d11fbed0156e3c2966c0f76c4e3"
+    },
+    {
+      "path": "docs/design/portal-route-inventory.md",
+      "sha256": "347e4e5b346d2da5fc1e091a548673e82b91fab7d1aa100994eba219a8c278e5"
+    }
+  ],
+  "routes": [
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/surveys",
+      "component": "SurveyDirectoryPage",
+      "owner": "web/src/survey-directory.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/surveys/new",
+      "component": "SurveyCreatePage",
+      "owner": "web/src/survey-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/surveys/$surveyId/manage",
+      "component": "SurveyManagePage",
+      "owner": "web/src/survey-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/surveys/$surveyId/results",
+      "component": "SurveyResultsPage",
+      "owner": "web/src/survey-results.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/ideas",
+      "component": "OutcomeWorkspace",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/ideas/$outcomeId",
+      "component": "OutcomePage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/ideas/reviews/$reviewId",
+      "component": "OutcomeReviewPage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/projects",
+      "component": "PublishedProjects",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/projects/$outcomeId",
+      "component": "PublishedProjectPage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/photo-consent",
+      "component": "OwnPhotoConsentPage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/media",
+      "component": "MediaWorkspacePage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/media/$mediaId",
+      "component": "MediaWorkspacePage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/surveys/$surveyId",
+      "component": "SurveyReader",
+      "owner": "web/src/survey-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/review",
+      "component": "ReviewDashboard",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/review/$teamId",
+      "component": "TeamReviewPage",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/review/$teamId/summary-preview",
+      "component": "JudgeSummaryPreview",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/feedback/$feedbackId",
+      "component": "FeedbackReader",
+      "owner": "web/src/feedback-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/feedback-followups/$followupId",
+      "component": "FeedbackReader",
+      "owner": "web/src/feedback-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/communications/deliveries",
+      "component": "DeliveryHistoryPage",
+      "owner": "web/src/delivery-history.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/communications/deliveries/$deliveryId",
+      "component": "DeliveryHistoryPage",
+      "owner": "web/src/delivery-history.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/mentor/$teamId/scorecards",
+      "component": "ScorecardWorkspace",
+      "owner": "web/src/scorecard-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/help",
+      "component": "HelpWorkspace",
+      "owner": "web/src/help-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/mentor",
+      "component": "MentorWorkspace",
+      "owner": "web/src/mentor-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/mentor/$teamId",
+      "component": "MentorWorkspace",
+      "owner": "web/src/mentor-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/help/$requestId",
+      "component": "HelpPage",
+      "owner": "web/src/help-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/inbox",
+      "component": "InboxPage",
+      "owner": "web/src/inbox.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/resources/$resourceId",
+      "component": "ResourcePage",
+      "owner": "web/src/inbox.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/clarifications/$answerId",
+      "component": "ClarificationReader",
+      "owner": "web/src/clarification-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/clarifications",
+      "component": "ClarificationWorkspacePage",
+      "owner": "web/src/clarification-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/questions/$questionId",
+      "component": "ClarificationWorkspacePage",
+      "owner": "web/src/clarification-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/",
+      "component": "EventDirectory",
+      "owner": "web/src/events.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/new",
+      "component": "NewEvent",
+      "owner": "web/src/events.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId",
+      "component": "EventWorkspace",
+      "owner": "web/src/events.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/account",
+      "component": "AccountPage",
+      "owner": "web/src/app-shell.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/templates",
+      "component": "TemplatesPage",
+      "owner": "web/src/templates.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/templates/$templateId",
+      "component": "TemplatePage",
+      "owner": "web/src/templates.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/register",
+      "component": "RegistrationDirectory",
+      "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/register/$eventId",
+      "component": "RegistrationPage",
+      "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/surveys",
+      "component": "SurveyDirectoryPage",
+      "owner": "web/src/survey-directory.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/surveys/new",
+      "component": "SurveyCreatePage",
+      "owner": "web/src/survey-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/surveys/$surveyId/manage",
+      "component": "SurveyManagePage",
+      "owner": "web/src/survey-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/surveys/$surveyId/results",
+      "component": "SurveyResultsPage",
+      "owner": "web/src/survey-results.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/ideas",
+      "component": "OutcomeWorkspace",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/ideas/$outcomeId",
+      "component": "OutcomePage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/ideas/reviews/$reviewId",
+      "component": "OutcomeReviewPage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/projects",
+      "component": "PublishedProjects",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/projects/$outcomeId",
+      "component": "PublishedProjectPage",
+      "owner": "web/src/outcome-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/photo-consent",
+      "component": "OwnPhotoConsentPage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/media",
+      "component": "MediaWorkspacePage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/media/$mediaId",
+      "component": "MediaWorkspacePage",
+      "owner": "web/src/media-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/surveys/$surveyId",
+      "component": "SurveyReader",
+      "owner": "web/src/survey-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/review",
+      "component": "ReviewDashboard",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/review/$teamId",
+      "component": "TeamReviewPage",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/review/$teamId/summary-preview",
+      "component": "JudgeSummaryPreview",
+      "owner": "web/src/review-dashboard.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/feedback/$feedbackId",
+      "component": "FeedbackReader",
+      "owner": "web/src/feedback-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/feedback-followups/$followupId",
+      "component": "FeedbackReader",
+      "owner": "web/src/feedback-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/communications/deliveries",
+      "component": "DeliveryHistoryPage",
+      "owner": "web/src/delivery-history.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/communications/deliveries/$deliveryId",
+      "component": "DeliveryHistoryPage",
+      "owner": "web/src/delivery-history.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/mentor/$teamId/scorecards",
+      "component": "ScorecardWorkspace",
+      "owner": "web/src/scorecard-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/help",
+      "component": "HelpWorkspace",
+      "owner": "web/src/help-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/mentor",
+      "component": "MentorWorkspace",
+      "owner": "web/src/mentor-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/mentor/$teamId",
+      "component": "MentorWorkspace",
+      "owner": "web/src/mentor-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/help/$requestId",
+      "component": "HelpPage",
+      "owner": "web/src/help-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/inbox",
+      "component": "InboxPage",
+      "owner": "web/src/inbox.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/resources/$resourceId",
+      "component": "ResourcePage",
+      "owner": "web/src/inbox.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/clarifications/$answerId",
+      "component": "ClarificationReader",
+      "owner": "web/src/clarification-reader.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/clarifications",
+      "component": "ClarificationWorkspacePage",
+      "owner": "web/src/clarification-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/questions/$questionId",
+      "component": "ClarificationWorkspacePage",
+      "owner": "web/src/clarification-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/",
+      "component": "EventDirectory",
+      "owner": "web/src/participant-events.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId",
+      "component": "EventWorkspace",
+      "owner": "web/src/participant-events.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/account",
+      "component": "AccountPage",
+      "owner": "web/src/app-shell.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/register",
+      "component": "RegistrationDirectory",
+      "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/register/$eventId",
+      "component": "RegistrationPage",
+      "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    }
+  ],
+  "independentEntries": [
+    {
+      "path": "/display/$eventId",
+      "owner": "web/src/room-display.tsx",
+      "portal": "participant"
+    },
+    {
+      "path": "/",
+      "owner": "internal/styleguide/server.go",
+      "portal": "independent static guide; verify its host separately"
+    }
+  ],
+  "referenceQualities": 100,
+  "errors": []
+}
