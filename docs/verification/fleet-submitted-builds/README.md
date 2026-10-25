@@ -67,3 +67,9 @@ visuals with source provenance and real #108 assigned-judge integration. Preserv
 existing formal submission/invitation journeys. Final types/lint/builds, native
 owner checks, independent full-scope reviews and exact-head CI remain required.
 Do not mark Ready, merge or close #97 from this draft checkpoint.
+
+The native fixture uses a separate historical event from its initial construction.
+Durable job leases/due checks use actual wall time, so the future-dated inherited
+live rehearsal cannot honestly supply a due capture operation. No existing clock
+is rewound and no operation deadline, native policy or receipt is changed. Its
+production HTTP surfaces still reuse the merged private runtime/static harness.

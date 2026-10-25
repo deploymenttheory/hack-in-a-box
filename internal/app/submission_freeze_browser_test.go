@@ -16,11 +16,13 @@ import (
 	"time"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
+	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 	"github.com/google/uuid"
 )
 
@@ -51,7 +53,7 @@ func TestSubmissionFreezeBrowsers(t *testing.T) {
 func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 	t.Helper()
 	ctx := t.Context()
-	r := newLiveRehearsal(t)
+	r := newFreezeBrowserFixture(t)
 	q := dbgen.New(r.pool)
 	definitionID, demoID, provenance := uuid.New(), uuid.New(), uuid.New()
 	defs := templates.EmptyDefinitions()
@@ -232,4 +234,43 @@ func runSubmissionFreezeBrowser(t *testing.T, viewport string) {
 	if runErr != nil {
 		t.Fatal(runErr)
 	}
+}
+
+// Start with a separate historical fixture: durable jobs deliberately use real
+// lease/due time. Never rewind the existing future-dated live rehearsal or
+// rewrite an operation due date to make a cutoff job claimable.
+func newFreezeBrowserFixture(t *testing.T) *liveRehearsal {
+	t.Helper()
+	r := &liveRehearsal{pool: testdb.New(t, true), clock: &rehearsalClock{now: time.Date(2026, 6, 20, 9, 0, 0, 0, time.UTC)}}
+	r.owner = testdb.Person(t, r.pool)
+	r.mentor = testdb.Person(t, r.pool)
+	r.competitor = testdb.Person(t, r.pool)
+	r.eventID = testdb.Event(t, r.pool, r.owner.ID)
+	r.teamID = uuid.New()
+	c := event.DefaultConfiguration()
+	c.LiveStart = r.clock.read()
+	c.LiveEnd = c.LiveStart.Add(8 * time.Hour)
+	c.SubmissionCutoff = c.LiveStart.Add(7 * time.Hour)
+	c.TeamFreeze = c.LiveStart.Add(-8 * 24 * time.Hour)
+	c.AdmissionCutoff = c.TeamFreeze.Add(-time.Hour)
+	raw, err := json.Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, cmd := range []struct {
+		sql  string
+		args []any
+	}{
+		{"UPDATE events SET stage='preparation',configuration=$2,published_at=$3,team_frozen_at=$4 WHERE id=$1", []any{r.eventID, raw, c.LiveStart.Add(-7 * 24 * time.Hour), c.TeamFreeze}},
+		{"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'mentor')", []any{r.eventID, r.mentor.ID}},
+		{"INSERT INTO competition_claims(event_id,person_id,state) VALUES($1,$2,'confirmed')", []any{r.eventID, r.competitor.ID}},
+		{"INSERT INTO hack_teams(event_id,id,name,state,frozen,published_captain_id) VALUES($1,$2,'Synthetic native build team','published',true,$3)", []any{r.eventID, r.teamID, r.competitor.ID}},
+		{"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')", []any{r.eventID, r.teamID, r.competitor.ID}},
+		{"INSERT INTO competition_entries(event_id,team_id) VALUES($1,$2)", []any{r.eventID, r.teamID}},
+	} {
+		if _, err = r.pool.Exec(t.Context(), cmd.sql, cmd.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return r
 }
