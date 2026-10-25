@@ -143,7 +143,7 @@ services:
   smtp:
     <<: *fixture
     profiles: [smtp]
-    command: ['-test.run=^TestLifecycleComposeSMTP$', '-test.timeout=2m', '-test.v']
+    command: ['-test.run=^TestLifecycleComposeSMTP$', '-test.timeout=3m', '-test.v']
     volumes: ['control:/control:ro', 'artifacts:/artifacts']
     depends_on:
       public: {condition: service_healthy}

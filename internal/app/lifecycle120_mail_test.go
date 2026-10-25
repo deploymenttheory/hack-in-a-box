@@ -217,6 +217,8 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 		t.Fatal(err)
 	}
 	exerciseLifecycleUnknownCampaign(t, control, owner, current.ID, campaignPath, detail)
+	exerciseLifecycleDefiniteCampaign(t, control, owner, current.ID, definition, "permanent", -14)
+	exerciseLifecycleDefiniteCampaign(t, control, owner, current.ID, definition, "temporary", -13)
 }
 
 func waitLifecycleSMTP(
@@ -269,76 +271,13 @@ func exerciseLifecycleUnknownCampaign(
 	t.Helper()
 	ctx := t.Context()
 	base := "/api/v1/events/" + eventID.String() + "/communications"
-	for _, action := range []string{"preview", "approve"} {
-		var next communications.CampaignDetail
-		if err := owner.call(
-			ctx,
-			http.MethodPost,
-			campaignPath,
-			campaign.Revision,
-			communications.CampaignCommand{
-				Action:  action,
-				Version: campaign.Campaign.Campaign.Version,
-				Reason:  "Explicit synthetic campaign audience and schedule review",
-			},
-			&next,
-			http.StatusOK,
-		); err != nil {
-			t.Fatal(err)
-		}
-		campaign = next
-	}
-	if campaign.Preview == nil || len(campaign.Preview.Recipients) != 1 ||
-		campaign.Preview.Recipients[0].PersonID != owner.person ||
-		campaign.Campaign.Campaign.Approval == nil ||
-		campaign.Campaign.DueAt == nil {
-		t.Fatal("campaign did not bind the exact current organiser audience")
-	}
-	definition := automation.Definition{
-		ID:                     uuid.New(),
-		CampaignID:             campaign.Campaign.Campaign.Definition.ID,
-		CampaignVersion:        campaign.Campaign.Campaign.Version,
-		Trigger:                "scheduled",
-		MaximumLatenessSeconds: 60,
-	}
-	var changed struct {
-		Page automation.Page `json:"page"`
-	}
-	if err := owner.call(
-		ctx,
-		http.MethodPost,
-		base+"/automation",
-		campaign.Revision,
-		map[string]any{
-			"action":     "save",
-			"definition": definition,
-			"version":    0,
-			"reason":     "Explicit real queued synthetic schedule",
-		},
-		&changed,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
-	}
-	if len(changed.Page.Bindings) != 1 || changed.Page.Bindings[0].Definition.ID != definition.ID {
-		t.Fatal("native scheduled binding was not retained")
-	}
-	if err := owner.call(
-		ctx,
-		http.MethodPost,
-		base+"/automation",
-		changed.Page.Revision,
-		map[string]any{
-			"action":     "approve",
-			"binding_id": definition.ID,
-			"version":    changed.Page.Bindings[0].Version,
-			"reason":     "Approve exact native synthetic dispatch",
-		},
-		&changed,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
-	}
+	campaign, definition := approveLifecycleCampaignSchedule(
+		t,
+		owner,
+		eventID,
+		campaignPath,
+		campaign,
+	)
 	if err := control.call(
 		ctx,
 		http.MethodPost,
@@ -511,4 +450,343 @@ func exerciseLifecycleUnknownCampaign(
 	); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func approveLifecycleCampaignSchedule(
+	t *testing.T,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	campaignPath string,
+	campaign communications.CampaignDetail,
+) (communications.CampaignDetail, automation.Definition) {
+	t.Helper()
+	ctx := t.Context()
+	base := "/api/v1/events/" + eventID.String() + "/communications"
+	for _, action := range []string{"preview", "approve"} {
+		var next communications.CampaignDetail
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			campaignPath,
+			campaign.Revision,
+			communications.CampaignCommand{
+				Action:  action,
+				Version: campaign.Campaign.Campaign.Version,
+				Reason:  "Explicit synthetic campaign audience and schedule review",
+			},
+			&next,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		campaign = next
+	}
+	if campaign.Preview == nil || len(campaign.Preview.Recipients) != 1 ||
+		campaign.Preview.Recipients[0].PersonID != owner.person ||
+		campaign.Campaign.Campaign.Approval == nil ||
+		campaign.Campaign.DueAt == nil {
+		t.Fatal("campaign did not bind the exact current organiser audience")
+	}
+	definition := automation.Definition{
+		ID:                     uuid.New(),
+		CampaignID:             campaign.Campaign.Campaign.Definition.ID,
+		CampaignVersion:        campaign.Campaign.Campaign.Version,
+		Trigger:                "scheduled",
+		MaximumLatenessSeconds: 60,
+	}
+	var changed struct {
+		Page automation.Page `json:"page"`
+	}
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		base+"/automation",
+		campaign.Revision,
+		map[string]any{
+			"action":     "save",
+			"definition": definition,
+			"version":    0,
+			"reason":     "Explicit real queued synthetic schedule",
+		},
+		&changed,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	var binding *automation.Binding
+	for i := range changed.Page.Bindings {
+		if changed.Page.Bindings[i].Definition.ID == definition.ID {
+			binding = &changed.Page.Bindings[i]
+		}
+	}
+	if binding == nil {
+		t.Fatal("native scheduled binding was not retained")
+	}
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		base+"/automation",
+		changed.Page.Revision,
+		map[string]any{
+			"action":     "approve",
+			"binding_id": definition.ID,
+			"version":    binding.Version,
+			"reason":     "Approve exact native synthetic dispatch",
+		},
+		&changed,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	return campaign, definition
+}
+
+func exerciseLifecycleDefiniteCampaign(
+	t *testing.T,
+	control *lifecycleControl,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	source communications.CampaignDefinition,
+	mode string,
+	days int,
+) {
+	t.Helper()
+	ctx := t.Context()
+	base := "/api/v1/events/" + eventID.String() + "/communications"
+	source.ID = uuid.New()
+	source.Name = "Synthetic definite " + mode
+	source.Timing.Days = days
+	var index communications.CampaignPage
+	if err := owner.call(
+		ctx,
+		http.MethodGet,
+		base+"/campaigns",
+		-1,
+		nil,
+		&index,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	path := base + "/campaigns/" + source.ID.String()
+	var campaign communications.CampaignDetail
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		path,
+		index.Revision,
+		communications.CampaignCommand{
+			Action:     "save",
+			Definition: &source,
+			Reason:     "Synthetic distinct definite SMTP failure",
+		},
+		&campaign,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	campaign, _ = approveLifecycleCampaignSchedule(t, owner, eventID, path, campaign)
+	if err := control.call(
+		ctx,
+		http.MethodPost,
+		"/mail/fault",
+		map[string]string{"recipient": "owner@example.test", "mode": mode},
+		nil,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := control.advance(ctx, *campaign.Campaign.DueAt); err != nil {
+		t.Fatal(err)
+	}
+	want := "permanent"
+	if mode == "temporary" {
+		want = "retryable"
+	}
+	first := waitLifecycleCampaign(t, owner, base, source.ID, want)
+	path = base + "/deliveries/" + first.ID.String()
+	var original deliveryhistory.Detail
+	if err := owner.call(ctx, http.MethodGet, path, -1, nil, &original, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	if len(original.Attempts) != 1 || original.Attempts[0].State != want ||
+		original.Item.RecipientID == nil ||
+		*original.Item.RecipientID != owner.person {
+		t.Fatal("definite rejection lost its exact native recipient or attempt")
+	}
+	var before struct {
+		Items []lifecycleMail `json:"items"`
+	}
+	if err := control.call(ctx, http.MethodGet, "/mail/messages", nil, &before); err != nil {
+		t.Fatal(err)
+	}
+	if len(before.Items) != 2 {
+		t.Fatal("definitely rejected RCPT unexpectedly produced DATA or a duplicate prior send")
+	}
+	command := deliveryhistory.Command{
+		RequestID: uuid.New(),
+		Action:    "retry",
+		Reason:    "Explicit synthetic retry only after definite temporary rejection",
+	}
+	final := original
+	if mode == "permanent" {
+		if original.Item.OperationState != "permanent" {
+			t.Fatal("permanent rejection did not finish its native operation")
+		}
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			path,
+			original.Item.Revision,
+			command,
+			nil,
+			http.StatusConflict,
+		); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		if original.Item.OperationState != "pending" {
+			t.Fatal("temporary rejection was not safely pending")
+		}
+		if err := control.call(
+			ctx,
+			http.MethodPost,
+			"/mail/fault",
+			map[string]string{"recipient": "owner@example.test", "mode": ""},
+			nil,
+		); err != nil {
+			t.Fatal(err)
+		}
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			path,
+			original.Item.Revision,
+			command,
+			&final,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		accepted := waitLifecycleCampaign(t, owner, base, source.ID, "provider_accepted")
+		if accepted.ID != original.Item.ID {
+			t.Fatal("safe retry invented a new delivery identity")
+		}
+		if err := owner.call(
+			ctx,
+			http.MethodGet,
+			path,
+			-1,
+			nil,
+			&final,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		if len(final.Attempts) != 2 || final.Attempts[1].ID != original.Attempts[0].ID ||
+			final.Attempts[1].State != "retryable" ||
+			final.Attempts[0].State != "provider_accepted" ||
+			len(final.Reviews) != 1 ||
+			final.Reviews[0].ID != command.RequestID {
+			t.Fatal("reviewed safe retry lost original attempt/decision evidence")
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		case <-time.After(32 * time.Second):
+		}
+		var messages struct {
+			Items []lifecycleMail `json:"items"`
+		}
+		if err := control.call(ctx, http.MethodGet, "/mail/messages", nil, &messages); err != nil {
+			t.Fatal(err)
+		}
+		if len(messages.Items) != 3 || !messages.Items[2].Accepted ||
+			len(messages.Items[2].Digest) != 64 {
+			t.Fatal("reviewed retry did not produce exactly one new accepted message")
+		}
+		if err := owner.call(
+			ctx,
+			http.MethodGet,
+			path,
+			-1,
+			nil,
+			&final,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		if len(final.Attempts) != 2 || final.Item.State != "provider_accepted" {
+			t.Fatal("old native queued work duplicated a reviewed retry")
+		}
+	}
+	receipt, err := json.MarshalIndent(
+		map[string]any{
+			"checkpoint":          "queued-smtp-definite-" + mode + "-only",
+			"complete_lifecycle":  false,
+			"event_id":            eventID,
+			"campaign_id":         source.ID,
+			"delivery_id":         original.Item.ID,
+			"original_attempt_id": original.Attempts[0].ID,
+			"initial_state":       original.Item.State,
+			"final_state":         final.Item.State,
+			"attempt_count":       len(final.Attempts),
+			"decision_count":      len(final.Reviews),
+			"assertions": []string{
+				"native-exact-audience-and-schedule-approval",
+				"real-queued-native-rcpt-rejection",
+				"no-data-after-definite-rejection",
+				"original-delivery-and-attempt-retained",
+				"native-retry-policy-enforced",
+			},
+		},
+		"",
+		"  ",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join("/artifacts", "smtp-"+mode+".json"),
+		receipt,
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func waitLifecycleCampaign(
+	t *testing.T,
+	owner *lifecycleClient,
+	base string,
+	campaignID uuid.UUID,
+	want string,
+) deliveryhistory.Item {
+	t.Helper()
+	ctx := t.Context()
+	deadline := time.Now().Add(45 * time.Second)
+	for time.Now().Before(deadline) {
+		var history deliveryhistory.Page
+		if err := owner.call(
+			ctx,
+			http.MethodGet,
+			base+"/deliveries?channel=smtp&campaign_id="+campaignID.String(),
+			-1,
+			nil,
+			&history,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		if len(history.Items) > 1 {
+			t.Fatal("native campaign unexpectedly selected additional recipients")
+		}
+		if len(history.Items) == 1 && history.Items[0].Purpose == "campaign" &&
+			history.Items[0].State == want &&
+			history.Items[0].OperationState != "running" {
+			return history.Items[0]
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatal("native campaign did not reach expected bounded receipt state: " + want)
+	return deliveryhistory.Item{}
 }
