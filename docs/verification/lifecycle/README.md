@@ -42,7 +42,18 @@ withdrawals, rejects its republication, explicitly unlocks/reassigns the pair,
 republishes six teams of four-to-six and freezes them. A post-freeze move must
 return the exact native rejection without changing the allocation projection.
 These profile names cannot be used as the final release command. Neither
-checkpoint, its image build, nor its Compose run has been executed yet.
+checkpoint nor its Compose run has been executed yet.
+
+The dedicated verification image **built successfully** from source
+`2b203526e53ec2c88e272c9890b65f473ca1aa54`:
+`hackbox-lifecycle:verification`, image ID
+`sha256:cb28085ecab6a2cbd074262857daa2c48c995183e83cde510d5a113c18768907`.
+This compiled both portal frontend bundles and the Linux test binary, migrate
+and healthcheck commands, with Go limited to `GOMAXPROCS=2` and `-p=2`.
+No runtime service, provider, PostgreSQL or browser was started by that build.
+The Compose configuration passed daemon-free `config --quiet` validation.
+The separate normal style-guide target and production application images were
+not built or executed as part of this checkpoint.
 
 The most recent verification compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
