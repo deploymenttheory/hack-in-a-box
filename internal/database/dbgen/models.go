@@ -1411,6 +1411,27 @@ type ResultCommand struct {
 	Receipt       []byte
 }
 
+type ResultMentorAdvisoryCommand struct {
+	EventID   uuid.UUID
+	RequestID uuid.UUID
+	TieID     string
+	TeamID    uuid.UUID
+	AuthorID  uuid.UUID
+	Version   int64
+	Receipt   []byte
+}
+
+type ResultMentorAdvisoryVersion struct {
+	EventID       uuid.UUID
+	TieID         string
+	TeamID        uuid.UUID
+	AuthorID      uuid.UUID
+	Version       int64
+	JudgeRunID    uuid.UUID
+	SourceBinding string
+	Document      []byte
+}
+
 type ResultPublication struct {
 	EventID       uuid.UUID
 	ID            uuid.UUID

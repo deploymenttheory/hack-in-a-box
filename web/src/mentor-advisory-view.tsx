@@ -1,0 +1,17 @@
+import type { ReactNode } from 'react'
+import type { components } from './api/schema.gen'
+import { Field, Textarea } from './components/ui/fields'
+import { ConfirmationDialog } from './components/ui/dialog'
+import { Icon } from './components/ui/icon'
+import './results.css'
+export type MentorAdvisory = components['schemas']['ResultMentorAdvisory']
+
+export function MentorAdvisoryReading({ items, teamName }: { items: MentorAdvisory[]; teamName: (id: string) => string }) {
+ return <section aria-label="Mentor advisory evidence"><h3><Icon name="info" />Mentor views · Advisory only</h3><p>Every required judge must still vote. These views add no votes, change no denominator and carry no mentor scores or ranks into final judging. This is current input: a later correction does not rewrite, or establish what was considered by, an earlier ballot or confirmation.</p>{!items.length ? <p>No currently shared mentor views for this category tie. Their absence does not block a judge ballot or award confirmation.</p> : items.map(item => <article key={`${item.tie_id}:${item.team_id}:${item.author_id}`} className="py-4 border-b border-border"><h4>{teamName(item.team_id)} · {item.author_name}</h4><p>{item.views}</p><p className="muted">Contribution version {item.version}{item.previous_version > 0 ? ` · Corrects version ${item.previous_version}` : ''} · Frozen submission {item.submission_revision} · <time dateTime={item.at}>{new Date(item.at).toLocaleString()}</time></p><details><summary>Contribution provenance</summary><p>{item.reason}</p><p>Attributed mentor: {item.author_id}. Retained corrections preserve the previous contribution; only the current contribution is used in this reading.</p></details></article>)}</section>
+}
+export function MentorAdvisoryFields({ views, reason, changeViews, changeReason, errors = {} }: { views: string; reason: string; changeViews: (text: string) => void; changeReason: (text: string) => void; errors?: Record<string,string> }) {
+ return <><Field label="Your advisory views" description="Share your own observations of this frozen team build. Do not copy private mentor scorecards, ranks or another assessor's notes. This is not a vote." error={errors.views}><Textarea maxLength={4000} value={views} onChange={event => changeViews(event.target.value)} /></Field><Field label="Reason for this contribution or correction" error={errors.reason}><Textarea maxLength={2000} value={reason} onChange={event => changeReason(event.target.value)} /></Field></>
+}
+export function MentorAdvisoryReview({ team, category, views, reason, previousVersion, pending, disabled, confirm, cancel, returnFocus, children }: { team: string; category: string; views: string; reason: string; previousVersion: number; pending: boolean; disabled: boolean; confirm: () => void; cancel: () => void; returnFocus: () => HTMLElement | false; children?: ReactNode }) {
+ return <ConfirmationDialog open title="Review mentor advisory" description="Share attributed views with the authorised judges and organiser for this exact category tie. No vote or score will be added." confirmLabel="Save advisory views" pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded><h3>{team} · {category}</h3><p>{views}</p><p>{reason}</p><p>{previousVersion ? `Corrects your contribution version ${previousVersion}; its history is retained.` : 'Your first contribution for this category tie.'}</p>{children}</ConfirmationDialog>
+}

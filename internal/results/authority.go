@@ -19,6 +19,7 @@ type authority struct {
 	event     dbgen.Event
 	organiser bool
 	judge     bool
+	mentor    bool
 }
 
 func failure(operation string, err error) error {
@@ -36,6 +37,15 @@ func (s Service) guard(
 	tx pgx.Tx,
 	actor, eventID uuid.UUID,
 	write bool,
+) (authority, error) {
+	return s.guardRoles(ctx, tx, actor, eventID, write, false)
+}
+
+func (s Service) guardRoles(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	write, allowMentor bool,
 ) (authority, error) {
 	var out authority
 	q := dbgen.New(tx)
@@ -60,8 +70,9 @@ func (s Service) guard(
 		event:     row,
 		organiser: slices.Contains(roles, "organiser"),
 		judge:     slices.Contains(roles, "judge"),
+		mentor:    slices.Contains(roles, "mentor"),
 	}
-	if !out.organiser && !out.judge {
+	if !out.organiser && !out.judge && (!allowMentor || !out.mentor) {
 		return out, access.ErrForbidden
 	}
 	var dates event.Configuration

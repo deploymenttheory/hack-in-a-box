@@ -50,3 +50,10 @@ Feedback and provisional checkpoint assessment of a team's work during the live 
 
 **Final judging**:
 Assessment of a team's frozen final submission after the submission cutoff.
+
+
+**Mentor tie advisory**:
+A hack mentor's attributed views about a team in an all-team category-tie deliberation. These views inform the judges but are not counted votes and do not carry mentor scores or ranks into final judging.
+
+**Required judge majority**:
+A tie decision supported by more than half of all required judges after every required judge has recorded a vote. A split remains unresolved until a judge deliberately records another vote.

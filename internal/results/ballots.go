@@ -25,8 +25,9 @@ type BallotPage struct {
 	Receipt       *Receipt   `json:"receipt"`
 }
 type JudgeTie struct {
-	State   TieState `json:"state"`
-	OwnVote *Vote    `json:"own_vote"`
+	State      TieState         `json:"state"`
+	OwnVote    *Vote            `json:"own_vote"`
+	Advisories []MentorAdvisory `json:"advisories"`
 }
 
 // ballotSource composes the source using the recorded preparer's current
@@ -78,6 +79,10 @@ func (s Service) ballotPage(
 	if err != nil {
 		return out, err
 	}
+	advice, err := currentAdvisories(ctx, tx, eventID, source)
+	if err != nil {
+		return out, err
+	}
 	for _, state := range states {
 		if !slices.Contains(state.RequiredJudgeIDs, actor) {
 			continue
@@ -94,7 +99,13 @@ func (s Service) ballotPage(
 				return BallotPage{}, failure("current ballot target", err)
 			}
 		}
-		item := JudgeTie{State: state}
+		item := JudgeTie{State: state, Advisories: []MentorAdvisory{}}
+		for _, a := range advice {
+			if state.Tie.Kind == "category" && a.TieID == state.Tie.ID &&
+				slices.Contains(state.Tie.TeamIDs, a.TeamID) {
+				item.Advisories = append(item.Advisories, a)
+			}
+		}
 		for _, vote := range round.Votes {
 			if vote.JudgeID == actor && vote.TieID == state.Tie.ID {
 				own := vote
