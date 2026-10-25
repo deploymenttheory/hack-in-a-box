@@ -332,3 +332,48 @@ unchanged.
   options; string accessible-name matching remains exact by default. Behavioral
   assertions were retained. Full browser/build proof still belongs to mandatory
   final-head CI; it was not rerun locally or claimed successful here.
+
+## Native CI correction: preserve fixture instants during the repeated clock hour
+
+Actual `98b5244` native CI failed before retained campaign creation completed.
+The unchanged single-test real PostgreSQL/race reproduction failed identically
+(4.21s); `/private/tmp/hackbox94-native-blocker-original.log`. Before probes, the
+ranked hypotheses were ambiguous local clock representation, provider/source
+readiness, and retained/event policy preconditions.
+
+A temporary fixture-only structured-error probe isolated the cause without
+changing behavior. Native campaign SAVE at `2026-10-25T00:21:41Z` formatted its
+known UTC target as London `2026-10-25T01:22:41`, with empty DST choice. Native
+issues were `Field=timing`, `Code=campaign_timing_invalid`, message:
+`local time occurs twice; choose earlier or later explicitly`. The same real-PG
+test remained RED (3.16s), `/private/tmp/hackbox94-native-blocker-structured.log`.
+No provider or retained-policy blocker was present.
+
+Isolated support commit `450b9ffd6ab74940118f97f5b20cec277c35c710` changes only four
+test-fixture files. `testdb.WallTimeForInstant` preserves the intended
+second-precision UTC instant, retaining an empty choice for ordinary wall times
+and selecting the explicit matching earlier/later candidate during a fold.
+Automation and native delivery HTTP fixtures use it without moving their real
+retained/job clocks. Production scheduling, DST rejection, retention deadlines,
+workers, policy and assertions are unchanged. Temporary DEBUG instrumentation
+was removed; fixture failures now retain structured blocker diagnostics.
+
+Executed proof:
+
+- Fixed ordinary, earlier-fold and later-fold vectors preserve exact instants;
+  ambiguous wall times without a choice still fail native validation.
+- Every original failing real-PG/race scenario passes: testdb **1.297s**;
+  automation **16.871s** (four affected top-level tests/five scenarios); actual
+  delivery HTTP **19.411s** (accepted and ambiguous scenarios).
+  `/private/tmp/hackbox94-native-clock-green.log`.
+- Existing production DST gap/fold/business-calendar tests pass unchanged:
+  schedule **1.194s**, communications **1.417s**;
+  `/private/tmp/hackbox94-native-clock-production-dst.log`.
+- Installed repository formatter parity passes after required formatting:
+  `/private/tmp/hackbox94-native-clock-format-green.log`. No live test processes
+  or test-owned containers remain. The pure support commit was shared with the
+  other active lanes.
+
+These executed focused results do not claim final-head CI success. Fresh review
+of the test-only correction and all actual required checks remain merge gates;
+no failed workflow or merge guard was blindly restarted.
