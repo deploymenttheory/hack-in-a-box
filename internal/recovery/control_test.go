@@ -2,10 +2,12 @@ package recovery_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -50,7 +52,7 @@ func TestRecoveryHoldFencesStartupAndRequiresCurrentReview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if held.HoldID == nil || held.Unresolved != 2 {
+	if held.HoldID == nil || held.ReviewEntries != 2 {
 		t.Fatalf("missing hold/review: %+v", held)
 	}
 	same, err := recovery.Hold(ctx, pool)
@@ -99,6 +101,74 @@ func TestRecoveryHoldFencesStartupAndRequiresCurrentReview(t *testing.T) {
 	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatalf("failed rollback changed schema: %v", err)
+	}
+
+	// Native schedules and verification attempts can precede generic job rows.
+	// Their safe review entries must change the fingerprint without disclosing
+	// command bodies or private destinations.
+	scheduleID := uuid.New()
+	if _, err = pool.Exec(
+		ctx,
+		`INSERT INTO schedule_items(id,event_id,definition,due_at,approved) VALUES($1,$2,'{"secret":"SYNTHETIC-PRIVATE-SCHEDULE"}',now(),true)`,
+		scheduleID,
+		event,
+	); err != nil {
+		t.Fatal(err)
+	}
+	scheduled, err := recovery.Read(ctx, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if scheduled.ReviewEntries != 3 || scheduled.Fingerprint == held.Fingerprint {
+		t.Fatal("new pending native schedule omitted from review")
+	}
+	if err = recovery.Resume(
+		ctx,
+		pool,
+		*held.HoldID,
+		held.Fingerprint,
+	); !errors.Is(
+		err,
+		recovery.ErrReview,
+	) {
+		t.Fatalf("new schedule did not invalidate review: %v", err)
+	}
+	person := testdb.Person(t, pool)
+	if _, err = pool.Exec(
+		ctx,
+		`INSERT INTO email_verifications(id,person_id,session_revision,mailbox,mailbox_hash,code_hash,requested_at,expires_at) VALUES($1,$2,1,'SYNTHETIC-PRIVATE-MAILBOX@example.test','\x01','\x02',now(),now()+interval '1 hour')`,
+		uuid.New(),
+		person.ID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	withVerification, err := recovery.Read(ctx, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if withVerification.ReviewEntries != 4 ||
+		withVerification.Fingerprint == scheduled.Fingerprint {
+		t.Fatal("native verification attempt omitted from review")
+	}
+	encoded, err := json.Marshal(withVerification)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"SYNTHETIC-PRIVATE", "mailbox", "code_hash", "definition", "ciphertext"} {
+		if strings.Contains(string(encoded), forbidden) {
+			t.Fatalf("private content entered deployment review: %s", forbidden)
+		}
+	}
+	if err = recovery.Resume(
+		ctx,
+		pool,
+		*held.HoldID,
+		scheduled.Fingerprint,
+	); !errors.Is(
+		err,
+		recovery.ErrReview,
+	) {
+		t.Fatalf("new native verification did not invalidate review: %v", err)
 	}
 
 	// A reviewer cannot resume a stale snapshot or another hold incarnation.
@@ -156,10 +226,34 @@ func TestRecoveryHoldFencesStartupAndRequiresCurrentReview(t *testing.T) {
 		history != 2 {
 		t.Fatalf("missing audit: %d %v", history, err)
 	}
+	if _, err = pool.Exec(ctx, "TRUNCATE recovery_history"); err == nil {
+		t.Fatal("maintenance history was truncatable")
+	}
 	if _, err = pool.Exec(ctx, "DELETE FROM recovery_history"); err == nil {
 		t.Fatal("maintenance history was mutable")
 	}
 	if _, err = migrations.DownTo(ctx, 47); err != nil {
 		t.Fatalf("reviewed rollback blocked: %v", err)
+	}
+}
+
+func TestRecoverySQLClientRollsBackIncompleteStream(t *testing.T) {
+	target := testdb.NewRecoveryTarget(t)
+	err := target.RestoreStream(
+		t.Context(),
+		strings.NewReader(
+			"CREATE TABLE synthetic_partial_restore(value text); INSERT INTO synthetic_partial_restore VALUES('synthetic'); SELECT 1/0;",
+		),
+	)
+	if err == nil {
+		t.Fatal("incomplete logical restore accepted")
+	}
+	var present bool
+	if err = target.Pool.QueryRow(t.Context(), "SELECT to_regclass('public.synthetic_partial_restore') IS NOT NULL").
+		Scan(&present); err != nil {
+		t.Fatal(err)
+	}
+	if present {
+		t.Fatal("failed SQL restore exposed partial committed data")
 	}
 }

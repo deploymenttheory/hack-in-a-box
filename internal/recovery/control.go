@@ -5,7 +5,9 @@ package recovery
 import (
 	"context"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -17,6 +19,9 @@ import (
 
 const runtimeLock int64 = 7261938402
 
+//go:embed review.sql
+var reviewSQL string
+
 var (
 	ErrBusy = errors.New(
 		"application services are still running; quiesce them before recovery capture",
@@ -24,12 +29,29 @@ var (
 	ErrReview = errors.New("recovery hold or pending operation review changed")
 )
 
+// Intent is a deployment review projection. It never contains message content,
+// destination addresses, provider secrets or mutable command bodies.
+type Intent struct {
+	Kind          string     `json:"kind"`
+	ID            uuid.UUID  `json:"id"`
+	EventID       *uuid.UUID `json:"event_id"`
+	State         string     `json:"state"`
+	Revision      int64      `json:"revision"`
+	DueAt         *time.Time `json:"due_at"`
+	Approved      *bool      `json:"approved"`
+	SourceID      *uuid.UUID `json:"source_id"`
+	SourceVersion int64      `json:"source_version"`
+	Attempts      int64      `json:"attempts"`
+	UpdatedAt     *time.Time `json:"updated_at"`
+}
+
 // Status contains safe operational metadata only, never external payloads or keys.
 type Status struct {
-	HoldID      *uuid.UUID `json:"hold_id"`
-	HeldAt      *time.Time `json:"held_at"`
-	Fingerprint string     `json:"fingerprint"`
-	Unresolved  int64      `json:"unresolved"`
+	HoldID        *uuid.UUID `json:"hold_id"`
+	HeldAt        *time.Time `json:"held_at"`
+	Fingerprint   string     `json:"fingerprint"`
+	ReviewEntries int64      `json:"review_entries"`
+	Intents       []Intent   `json:"intents"`
 }
 
 // Exclusive prevents native API/worker startup during a quiesced backup or hold.
@@ -163,10 +185,13 @@ func read(ctx context.Context, tx pgx.Tx) (Status, error) {
 		return s, fmt.Errorf("read recovery hold: %w", err)
 	}
 	var metadata []byte
-	if err := tx.QueryRow(ctx, `SELECT count(*), COALESCE(jsonb_agg(jsonb_build_array(id,event_id,kind,target_id,revision,state,approved,cancelled,due_at,attempts,lease_token,lease_until) ORDER BY id),'[]'::jsonb)::text FROM operations WHERE state IN ('pending','running','ambiguous')`).
-		Scan(&s.Unresolved, &metadata); err != nil {
-		return s, fmt.Errorf("read recovery operation metadata: %w", err)
+	if err := tx.QueryRow(ctx, reviewSQL).Scan(&metadata); err != nil {
+		return s, fmt.Errorf("read recovery intent review: %w", err)
 	}
+	if err := json.Unmarshal(metadata, &s.Intents); err != nil {
+		return s, fmt.Errorf("decode recovery intent review: %w", err)
+	}
+	s.ReviewEntries = int64(len(s.Intents))
 	digest := sha256.Sum256(metadata)
 	s.Fingerprint = hex.EncodeToString(digest[:])
 	return s, nil
@@ -186,7 +211,10 @@ func Resume(ctx context.Context, pool *pgxpool.Pool, holdID uuid.UUID, fingerpri
 	); err != nil {
 		return fmt.Errorf("lock reviewed resume: %w", err)
 	}
-	if _, err = tx.Exec(ctx, "LOCK TABLE operations IN SHARE MODE"); err != nil {
+	if _, err = tx.Exec(
+		ctx,
+		"LOCK TABLE communication_occurrences, content_items, email_verifications, operations, outcome_review_heads, outcome_review_versions, repository_access_effects, repository_access_plans, schedule_items, smtp_campaign_messages, smtp_message_snapshots, team_repositories IN SHARE MODE",
+	); err != nil {
 		return fmt.Errorf("lock recovery review: %w", err)
 	}
 	s, err := read(ctx, tx)

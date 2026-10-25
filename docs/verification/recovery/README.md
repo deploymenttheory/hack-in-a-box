@@ -81,3 +81,39 @@ An earlier successful measured 34-byte/one-attachment rehearsal captured in
 316.381ms and restored in 928.502ms. This excludes image retrieval, target startup,
 operator review and external-key retrieval; it is **not** a production RTO claim.
 A larger native-history dataset and final explicit RTO/RPO runbook remain pending.
+
+## Native history, review and custody checkpoint
+
+The current native dataset now includes 1,000 synthetic accounts, approved rubric
+and actually released common challenge/rules, resolved help with three transitions,
+a private question and native-inbox-backed approved/published answer, dated outcome
+evidence, an explicitly approved 30-day follow-up, original pending/ambiguous
+operations and attempts, plus the credential and attachment. Seventeen nonempty
+native history tables match exactly after fresh-server restoration; native owner
+reads and stranger denial are checked. This is not an empty-schema comparison.
+
+The typed safe review inventory now includes native unmaterialized schedules and
+approved outcome follow-ups as well as generic jobs, SMTP/verification/repository/
+communication/content states. Newly appearing schedules or verification attempts
+invalidate an old review. Private command text/destinations are excluded.
+`review_entries` counts records, not people or distinct effects.
+
+Executed terminal capped proof (before the packaged-image rehearsal):
+
+- Owned recovery/CLI/testdb lint: zero issues.
+- `HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test -race
+  ./internal/recovery ./internal/credentials -run
+  'TestRecovery|TestArchive|TestFreshEncryptedRecovery' -count=1 -v`:
+  recovery passed 9.951s; credentials passed 10.726s.
+- Recovery cases include ten archive scenarios, private archive-key custody,
+  actual held worker/no cleanup/reconciliation, stale typed review, immutable
+  history including TRUNCATE rejection, migration rollback protection and a
+  real PostgreSQL failed-stream rollback.
+- An unchanged-flags atomicity probe already passed; adding explicit `--file=-`
+  clarifies PostgreSQL's documented stdin/single-transaction invocation. It is not
+  evidence of a formerly reproduced atomicity defect.
+- `go mod tidy -diff` produced zero bytes after canonical normalization.
+- The isolated operator script passes Bash syntax and ShellCheck. Its actual
+  packaged execution remains pending and is not inferred from native callbacks.
+
+Full operator procedure: [recovery runbook](../../recovery-runbook.md).

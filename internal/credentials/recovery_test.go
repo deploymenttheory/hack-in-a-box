@@ -196,6 +196,7 @@ func TestFreshEncryptedRecoveryPreservesNativeCredentialAndAttachment(t *testing
 	); err != nil {
 		t.Fatal(err)
 	}
+	verifyHistories := seedRecoveryHistories(t, f)
 	archiveIdentity, err := age.GenerateHybridIdentity()
 	if err != nil {
 		t.Fatal(err)
@@ -268,6 +269,7 @@ func TestFreshEncryptedRecoveryPreservesNativeCredentialAndAttachment(t *testing
 	if restored.Hold.HoldID == nil || restored.Manifest.BackupID != backup.BackupID {
 		t.Fatal("restored environment not held/bound to snapshot")
 	}
+	verifyHistories(target.Pool)
 	actual, err := os.ReadFile(filepath.Join(targetFiles, blob.Key))
 	if err != nil || !bytes.Equal(actual, content) {
 		t.Fatal("restored attachment mismatch")

@@ -21,8 +21,8 @@ BEGIN
 END;
 $$;
 -- +goose StatementEnd
-CREATE TRIGGER recovery_history_immutable BEFORE UPDATE OR DELETE ON recovery_history
- FOR EACH ROW EXECUTE FUNCTION protect_recovery_history();
+CREATE TRIGGER recovery_history_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON recovery_history
+ FOR EACH STATEMENT EXECUTE FUNCTION protect_recovery_history();
 
 -- +goose Down
 -- Refuse to remove the only startup fence while a restore is unreviewed.

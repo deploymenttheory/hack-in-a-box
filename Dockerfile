@@ -18,8 +18,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/api ./cmd/api && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/worker ./cmd/worker && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/migrate ./cmd/migrate && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck ./cmd/healthcheck && \
-    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/styleguide ./cmd/styleguide && \
-    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/recovery ./cmd/recovery
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/styleguide ./cmd/styleguide
 
 FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8 AS runtime
 COPY --from=go /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
@@ -50,8 +49,20 @@ FROM runtime AS styleguide
 COPY --from=styleguide-web /src/web/dist-styleguide/ /app/web/
 ENTRYPOINT ["/app/styleguide"]
 
-# Operator-only target: pinned PostgreSQL clients, no public application server.
+# Operator target is independent of Node/front-end images and host PG clients.
+FROM golang:1.27.3-bookworm@sha256:21ade014faf952365b9ecbd8dbdb87176fbacb82fac9fb132d9f2a7b8cc3f132 AS recovery-build
+WORKDIR /src
+ENV GOMAXPROCS=2 GOFLAGS=-p=1
+COPY go.mod go.sum ./
+RUN go mod download
+COPY cmd/ cmd/
+COPY internal/ internal/
+RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/recovery ./cmd/recovery && \
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/migrate ./cmd/migrate && \
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/worker ./cmd/worker
+
 FROM postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd AS recovery
-COPY --from=go /out/recovery /app/recovery
+COPY --from=recovery-build /out/ /app/
+RUN mkdir -p /data/files /archives /identity /recipients && chown -R 10001:10001 /data /archives /identity /recipients && chmod 0700 /data/files /archives /identity /recipients
 USER 10001:10001
 ENTRYPOINT ["/app/recovery"]

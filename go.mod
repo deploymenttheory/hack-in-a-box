@@ -3,6 +3,7 @@ module github.com/deploymenttheory/hack-in-a-box
 go 1.27.3
 
 require (
+	filippo.io/age v1.3.2
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
 	github.com/coreos/go-oidc/v3 v3.21.0
@@ -27,7 +28,6 @@ require (
 require (
 	cel.dev/expr v0.25.2 // indirect
 	dario.cat/mergo v1.0.2 // indirect
-	filippo.io/age v1.3.2 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20261006220739-8c912ac31dd4 // indirect

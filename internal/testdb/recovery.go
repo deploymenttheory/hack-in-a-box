@@ -120,6 +120,7 @@ func (r *Recovery) RestoreStream(ctx context.Context, reader io.Reader) error {
 		"--no-psqlrc",
 		"--set=ON_ERROR_STOP=1",
 		"--single-transaction",
+		"--file=-",
 	)
 	command.Stdin = reader
 	command.Stdout = io.Discard

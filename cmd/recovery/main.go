@@ -19,7 +19,7 @@ import (
 )
 
 var errArguments = errors.New(
-	"usage: recovery -action status|hold|resume [-hold UUID -review FINGERPRINT]; configure HACKBOX_DATABASE_URL separately",
+	"usage: recovery -action keygen|backup|verify|restore|status|hold|resume; use -help for options; configure HACKBOX_DATABASE_URL separately",
 )
 
 func main() { os.Exit(exitCode()) }
@@ -47,8 +47,15 @@ func run(ctx context.Context, args []string) error {
 		return fmt.Errorf("parse recovery arguments: %w", err)
 	}
 	if flags.NArg() != 0 ||
-		(*action != "status" && *action != "hold" && *action != "resume" && *action != "backup" && *action != "verify" && *action != "restore") {
+		!supportedAction(*action) {
 		return errArguments
+	}
+	if *action == "keygen" {
+		recipient, err := recovery.InitializeArchiveIdentity(*identityFile, *recipientFile)
+		if err != nil {
+			return fmt.Errorf("initialize separate archive identity: %w", err)
+		}
+		return emit(map[string]string{"recipient": recipient})
 	}
 	var id uuid.UUID
 	if *action == "resume" {
@@ -155,4 +162,13 @@ func readIdentities(path string) ([]age.Identity, error) {
 		return nil, recovery.ErrArchive
 	}
 	return identities, nil
+}
+
+func supportedAction(action string) bool {
+	switch action {
+	case "status", "hold", "resume", "backup", "verify", "restore", "keygen":
+		return true
+	default:
+		return false
+	}
 }
