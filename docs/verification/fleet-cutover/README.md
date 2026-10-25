@@ -81,7 +81,16 @@ and other migrated layouts with no complete class token in any reachable TS/TSX.
 Their100 simple selector arms and matching responsive/print overrides are removed.
 Mixed live arms, current private data-attribute print protection, shared semantic
 aliases and dynamically constructed connection-state classes are preserved.
-The checker refuses if a retired class gains a possible caller or another token
+A second source pass removes42 additional unused selector arms from foundations,
+workspaces and migrated feature styles, including obsolete ui-* controls. Functional
+selector lists keep their live alternatives; current private print guards remain.
+The actual computed connection-state and room-image class families are preserved,
+including room-logo/room-hero even though those full names are absent as literals.
+The offline run-sheet HTML has its own inline table-scroll/print styles in
+`internal/preparation/render.go`; they remain unchanged and do not import the
+removed frontend rule. Before/after source hashes and removed selectors are recorded per file. No retained
+selector changes its declarations or enclosing media/layer context.
+The checker refuses if a retired class gains a possible literal caller or another token
 owner appears. Current CSS/browser/native integration and the full reference
 quality audit remain separate gates; this record does not certify full245.
 

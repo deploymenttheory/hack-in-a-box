@@ -15,8 +15,6 @@
 .fleet-communication-fields .check input { flex: 0 0 auto; width: 1rem; height: 1rem; margin-top: .2rem; }
 .fleet-communication-fields > .fleet-button { justify-self: start; }
 .fleet-communication-fields p { margin-block: 0; }
-.fleet-communication-nav { display: flex; flex-wrap: wrap; gap: var(--space-4); border-bottom: 1px solid var(--color-border); padding-block: var(--space-4); }
-.fleet-communication-nav a { display: inline-flex; align-items: center; gap: var(--space-2); }
 .fleet-communication-reading { max-width: 70ch; overflow-wrap: anywhere; white-space: pre-wrap; }
 @media (max-width: 48rem) { .fleet-communication-step { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); } }
 

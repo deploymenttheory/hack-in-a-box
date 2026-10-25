@@ -8,15 +8,12 @@ a, button, input { -webkit-tap-highlight-color: transparent; }
 .skip-link:focus { top: 12px; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 5vw; border-bottom: 1px solid var(--border); }
 .brand { display: flex; gap: 12px; align-items: center; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
-.brand-mark { display: grid; place-items: center; height: 36px; width: 36px; background: var(--primary); color: var(--primary-foreground); border-radius: var(--radius-control); }
 nav { display: flex; gap: 24px; align-items: center; font-size: 14px; }
-.event-context, .muted { color: var(--muted-foreground); font-size: 14px; }
+.muted { color: var(--muted-foreground); font-size: 14px; }
 .sign-in { font-size: 14px; text-decoration: underline; }
 main { min-height: 76vh; outline: none; }
-.welcome { max-width: 920px; padding: 80px 5vw 100px; margin: auto; }
 .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; font-weight: 700; margin-bottom: 24px; }
 h1 { font-size: var(--text-page); font-weight: var(--weight-emphasis); letter-spacing: -.02em; line-height: var(--line-heading); margin: 0 0 28px; }
-.welcome > p:not(.eyebrow):not(.muted) { max-width: 520px; font-size: 19px; line-height: 1.7; margin-bottom: 30px; }
 .primary-link { background: var(--primary); color: var(--primary-foreground); padding: 16px 22px; display: inline-flex; gap: 28px; border-radius: var(--radius-control); margin-bottom: 20px; }
 .event-form { display: grid; gap: 12px; max-width: 420px; }
 .field-error { color: var(--destructive); font-size: 14px; }
@@ -24,10 +21,8 @@ h1 { font-size: var(--text-page); font-weight: var(--weight-emphasis); letter-sp
 .state h2 { font-size: 24px; margin-bottom: 16px; }
 .state p { margin-bottom: 16px; }
 .menu { background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 6px; box-shadow: 0 8px 28px var(--shadow-color); min-width: 150px; }
-.menu-item { padding: 10px; border-radius: 4px; cursor: pointer; }
-.menu-item[data-highlighted] { background: var(--muted); outline: none; }
 footer { padding: 24px 5vw; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
-@media (max-width: 640px) { .header { gap: 16px; flex-wrap: wrap; padding: 18px 5vw; } nav { order: 3; width: 100%; justify-content: space-between; gap: 12px; } .welcome { padding-top: 52px; } .header > div { max-width: 45%; } }
+@media (max-width: 640px) { .header { gap: 16px; flex-wrap: wrap; padding: 18px 5vw; } nav { order: 3; width: 100%; justify-content: space-between; gap: 12px; } .header > div { max-width: 45%; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 .workspace { max-width: 1240px; margin: auto; padding: 36px 5vw 80px; }
@@ -69,7 +64,7 @@ textarea { min-height: 88px; resize: vertical; }
 
 /* Nested event themes retain their native scope and portal container. */
 .theme .theme { min-height: 76vh; }
-.primary-link, .brand-mark { color: var(--primary-foreground); }
+.primary-link { color: var(--primary-foreground); }
 .event-logo { max-width: 240px; max-height: 96px; padding-top: 24px; object-fit: contain; }
 .brand-image-preview { display: flex; align-items: center; gap: 16px; margin: 12px 0; }
 .brand-image-preview img { max-width: 140px; max-height: 80px; object-fit: contain; }
@@ -104,7 +99,7 @@ textarea { min-height: 88px; resize: vertical; }
 .content-workspace :is(article, aside, section, form) { min-width: 0; overflow-wrap: anywhere; }
 .content-editor { margin-top: 24px; }
 .content-editor .markdown-editor { min-height: 340px; font-family: ui-monospace, monospace; font-size: 14px; line-height: 1.7; }
-.content-readiness, .content-privileges { margin: 24px 0; }
+.content-readiness { margin: 24px 0; }
 .content-audiences { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .content-preview h3 { margin-top: 0; }
 .content-markdown { line-height: 1.8; overflow-wrap: anywhere; }
@@ -112,7 +107,7 @@ textarea { min-height: 88px; resize: vertical; }
 .content-markdown :is(ul, ol) { margin: 16px 0; padding-left: 24px; list-style: revert; }
 .content-markdown blockquote { border-left: 3px solid var(--border); padding-left: 16px; }
 .content-markdown pre { overflow-x: auto; padding: 14px; border: 1px solid var(--border); border-radius: 6px; white-space: pre-wrap; }
-.content-markdown a, .content-link { text-decoration: underline; }
+.content-markdown a { text-decoration: underline; }
 .content-history { margin-top: 24px; border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px; }
 .content-history summary { font-weight: 650; cursor: pointer; padding: 8px 0; }
 .content-history input { max-width: 150px; margin-right: 12px; }
@@ -126,24 +121,13 @@ textarea { min-height: 88px; resize: vertical; }
 .resource-library > .preparation-heading { margin-bottom: 1.5rem; }
 
 .team-deliverables > .personal-preparation { margin: 1.5rem 0 2rem; }
-.team-submission > .panel, .team-submission > .dates { margin: 1.5rem 0; }
 .deliverable-editor { max-width: 55rem; }
 .deliverable-editor fieldset { min-width: 0; }
 .deliverable-upload { margin-top: 1rem; }
 .deliverable-upload > button { margin-top: .75rem; }
 .submission-history { margin: 2rem 0; }
-.team-submission .evidence-links a { overflow-wrap: anywhere; }
-
-.table-scroll { max-width: 100%; overflow-x: auto; }
-.table-scroll table { width: 100%; min-width: 48rem; text-align: left; }
-.table-scroll th, .table-scroll td { padding: .75rem; vertical-align: top; }
-
-.table-scroll caption { text-align: left; }
 
 .credential-editor fieldset { display: grid; gap: .7rem; }
-@media (max-width: 700px) {
-.credential-inventory .table-scroll { overflow: visible; }
-}
 
 .credential-value { margin: 1rem 0; min-height: 3rem; padding: .75rem; border: 1px solid var(--border); border-radius: var(--radius-control); overflow-wrap: anywhere; user-select: text; }
 @media print { .private-team-access { display: none !important; } }
@@ -182,7 +166,6 @@ textarea { min-height: 88px; resize: vertical; }
 .scorecard-workspace { min-width: 0; overflow-wrap: anywhere; }
 .clarification-workspace { min-width: 0; }
 .clarification-workspace textarea { width: 100%; min-height: 8rem; resize: vertical; }
-.clarification-workspace .private-question-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .clarification-workspace .panel, .clarification-workspace a, .clarification-workspace p { overflow-wrap: anywhere; }
 .clarification-workspace fieldset { min-width: 0; }
 @media print { .clarification-private { display: none !important; } }
@@ -192,13 +175,13 @@ textarea { min-height: 88px; resize: vertical; }
 .delivery-history fieldset { min-width: 0; }
 .delivery-history textarea { width: 100%; min-height: 7rem; }
 .delivery-reason { white-space: pre-wrap; overflow-wrap: anywhere; }
-@media print { .delivery-private, .delivery-reason { display: none !important; } }
+@media print { .delivery-reason { display: none !important; } }
 
 .objective-workspace, .objective-editor, .objective-fields, .released-objective { min-width: 0; overflow-wrap: anywhere; }
 .objective-workspace fieldset, .objective-fields fieldset { min-width: 0; margin-block: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-card); }
 .objective-fields input:not([type=checkbox]), .objective-fields textarea, .objective-fields select { width: 100%; min-width: 0; }
 .objective-fields textarea, .objective-editor textarea { min-height: 6rem; }
-.objective-directory, .objective-comparison { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); margin-block: 1rem; }
+.objective-comparison { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); margin-block: 1rem; }
 .objective-comparison > section { min-width: 0; border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-card); }
 .released-objective { margin-block: 1.5rem; padding-block: 1rem; border-top: 1px solid var(--border); }
 .released-objective dl div { margin-block: .8rem; }

@@ -55,7 +55,28 @@
     "survey-bars",
     "survey-bar",
     "survey-network-scope",
-    "credential-inventory-table"
+    "credential-inventory-table",
+    "ui-alert",
+    "ui-badge",
+    "ui-card",
+    "ui-field",
+    "ui-field-description",
+    "ui-field-error",
+    "ui-label",
+    "menu-item",
+    "table-scroll",
+    "welcome",
+    "brand-mark",
+    "content-link",
+    "content-privileges",
+    "delivery-private",
+    "event-context",
+    "objective-directory",
+    "private-question-text",
+    "team-submission",
+    "fleet-guidance-records",
+    "fleet-communication-nav",
+    "fleet-outcome-references"
   ],
   "removed_selector_arms": [
     ".page-heading",
@@ -160,6 +181,215 @@
     ".survey-network-scope"
   ],
   "before_sha256": "62ec7cc8719daca90ca4c266b35138ac959f858589ed3b3f5fd164682bca75cd",
-  "after_sha256": "da545e641fc088ca9623e5354381ac35143697be82c6c6ba4b71db8bc56eb65b",
-  "remaining_gate": "Current-source browser/native/reference/quality reconciliation and final CI, plus remaining CSS review."
+  "after_sha256": "60ebbe436a443a6391bac761415178cc6c60f9b7e3c4cb2c9d83b07ecc7cb4e2",
+  "remaining_gate": "Current-source browser/native/reference/quality reconciliation and final CI, plus remaining CSS review.",
+  "remaining_selector_cleanup": {
+    "baseline": "5d8fd041",
+    "removed": [
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-card"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-badge"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-alert"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-alert[data-tone=destructive]"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-alert[data-tone=warning]"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-alert[data-tone=success]"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-field-description"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-field-error"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-field"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".ui-label"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".menu-item"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".menu-item[data-highlighted]"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".menu-item[data-disabled]"
+      },
+      {
+        "file": "web/src/design-system/foundations.css",
+        "selector": ".table-scroll"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".brand-mark"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".event-context"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".welcome"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".welcome > p:not(.eyebrow):not(.muted)"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".menu-item"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".menu-item[data-highlighted]"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".welcome"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".brand-mark"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".content-privileges"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".content-link"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".team-submission > .panel"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".team-submission > .dates"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".team-submission .evidence-links a"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".table-scroll"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".table-scroll table"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".table-scroll th"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".table-scroll td"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".table-scroll caption"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".credential-inventory .table-scroll"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace .private-question-text"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".delivery-private"
+      },
+      {
+        "file": "web/src/design-system/workspaces.css",
+        "selector": ".objective-directory"
+      },
+      {
+        "file": "web/src/design-system/event-planning.css",
+        "selector": ".fleet-guidance-records"
+      },
+      {
+        "file": "web/src/design-system/communications.css",
+        "selector": ".fleet-communication-nav"
+      },
+      {
+        "file": "web/src/design-system/communications.css",
+        "selector": ".fleet-communication-nav a"
+      },
+      {
+        "file": "web/src/design-system/outcomes.css",
+        "selector": ".fleet-outcome-references"
+      },
+      {
+        "file": "web/src/design-system/outcomes.css",
+        "selector": ".fleet-outcome-references li"
+      },
+      {
+        "file": "web/src/design-system/outcomes.css",
+        "selector": ".fleet-outcome-references a"
+      }
+    ],
+    "files": [
+      {
+        "path": "web/src/design-system/foundations.css",
+        "baseline_sha256": "ed097f376a6e1bc9562b128a7787d462339976617efb7c3ad6c9a857ffec9e0b",
+        "after_sha256": "e526111e860f06e1113a39c642495b76bcc397729b2ff83a13d8b00998f61ede"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "baseline_sha256": "62ec7cc8719daca90ca4c266b35138ac959f858589ed3b3f5fd164682bca75cd",
+        "after_sha256": "60ebbe436a443a6391bac761415178cc6c60f9b7e3c4cb2c9d83b07ecc7cb4e2"
+      },
+      {
+        "path": "web/src/design-system/event-planning.css",
+        "baseline_sha256": "b73ba32d539ade02f503c684576c95731f0759dfb66aab0aa0cb1e42e2647093",
+        "after_sha256": "31c30d9afe5f111b4fab693acf50e29abeb8aa628da4a27d4f3d803e74060260"
+      },
+      {
+        "path": "web/src/design-system/communications.css",
+        "baseline_sha256": "cb1b19d06228202f68450cbca599512d8761669d5f7f1e8223bbf7a7c96d92c1",
+        "after_sha256": "43468568d040891726a71b36f07315309878467023c9c8851dd7bd24d6b960a2"
+      },
+      {
+        "path": "web/src/design-system/outcomes.css",
+        "baseline_sha256": "4094bb3b7ddbd075929edc330f3d76d1baa62029b084d24656d274835443d1aa",
+        "after_sha256": "5a1d3235d90cdf3074c16a173c5c5f3e9d4cecbd77afc48e920a07b0dba06d9a"
+      }
+    ],
+    "dynamic_classes_preserved": [
+      "connection-${state}",
+      "room-${image.kind}"
+    ],
+    "limits": "Raw source tokens conservatively preserve possible callers; both actual computed class families remain. This is not rendered/native route acceptance.",
+    "independent_export_styles": {
+      "owner": "internal/preparation/render.go",
+      "note": "Run-sheet HTML uses table-scroll in its own complete inline stylesheet and CSP-protected offline document. It imports no frontend stylesheet; only the unused frontend rule is removed. Export markup and inline/print styles are unchanged."
+    }
+  }
 }
