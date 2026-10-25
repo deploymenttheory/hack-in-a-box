@@ -1,0 +1,19 @@
+{
+  "assertions": [
+    "normal-api-commands",
+    "configured-native-oidc",
+    "independent-portal-sessions",
+    "actual-go-preview-and-create",
+    "normal-public-projection",
+    "independent-167-hour-london-dst-example"
+  ],
+  "calendar_interval_hours": 167,
+  "checkpoint": "normal-image-calendar-api-only",
+  "complete_lifecycle": false,
+  "configured_domain_clock": false,
+  "event_id": "29ae937e-b306-4d04-be10-55ed3f594ac9",
+  "expected_publication": "2027-03-22T09:00:00Z",
+  "live_start": "2027-03-29T08:00:00Z",
+  "publication": "2027-03-22T09:00:00Z",
+  "timezone": "Europe/London"
+}

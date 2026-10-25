@@ -227,3 +227,39 @@ native partial Compose evidence are linked above. The complete integrated
 scenario, independent browser journeys, normal production-image proof and final
 evidence remain unfinished. Leases, transport/auth expiry and River scheduling
 retain wall time.
+
+
+## Normal production-image calendar checkpoint
+
+`TestLifecycleNormalImageCalendarAPI` passed in 0.51s (runner session 71084)
+against the actual normal `/app/api` commands, real PostgreSQL schema 54 and
+normally configured native OIDC. The independent London example has live start
+2027-03-29T08:00Z (09:00 BST), publication 2027-03-22T09:00Z (09:00 GMT),
+and an elapsed interval of 167 hours. Native preview, create and public read
+agreed. The normal image contains `/usr/share/zoneinfo/Europe/London`; no timezone
+packaging defect was observed.
+
+Exact normal public image: `sha256:6dac9e0b773d4d3f922ac0b3732de09258bb4cc58d31247d901a897b08fdc265`.
+Exact normal admin image: `sha256:3283e8b8139ef72ceb030bb7b74e17aedb37b50db7fa82a87a161da37c99b63d`.
+These are the separately built normal images from main `2cfbce4046625e719bfec3a442641a70fda54cdc`.
+Runner source `77849f83`, image `sha256:b4b4a0196f48681e8ac19dae5f2a8b1a9fce0c0fd63b15c1459162e1799680d8`;
+provider source `6e374ae6`, image `sha256:802f0dd429a69543526ef5cf95d30f2aec260b7eb9f35d6318f6c510c07dfbb8`.
+The provider/runtime/auth/transport source bytes were unchanged between these
+two source commits. Build session 45554 completed the tagged runner image;
+its original terminal handle was unavailable after context restoration, so
+this checkpoint relies on the inspected immutable image and executed test,
+not an invented build log.
+
+`compose.normal-probe.yaml` pins the normal API and migration images separately
+from the synthetic provider/runner. Container inspection confirmed both APIs
+ran `/app/api`, had no `HACKBOX_LIFECYCLE_*` environment names, no control
+mount, and no host port bindings. Only the test provider mounted `/control`.
+Each API/provider/runner was capped at 0.5 CPU and 256 MiB, PostgreSQL at
+0.75 CPU and 384 MiB, with GOMAXPROCS=2 and private networking. The safe receipt
+is [normal-image-calendar.json](evidence/normal-image-calendar.json).
+
+Project `hackbox-lifecycle120-normal-calendar-20261025` was removed with its
+private database, files, control and artifacts volumes and network. Other
+projects were preserved. This is production-image calendar/startup/portal
+configuration evidence only: full recovery, lifecycle and final merged-source
+acceptance remain pending, and `complete_lifecycle` remains false.
