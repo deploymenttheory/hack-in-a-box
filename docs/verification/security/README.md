@@ -182,3 +182,30 @@ retains scenario labels, statuses and source only. It explicitly excludes future
 competition progression, showcase browser rendering and the unintegrated mentor
 feature; those retain their separate native/browser/integration gates. A script
 or successful image build is not a recorded execution result.
+
+## Rebased integration checkpoint
+
+The security branch now includes merged showcase #289 through main
+`076f6162558df2ac3d7fb1ff7c23b3d35dc21784`. The original63 native proofs above
+retain their original source identities; rebasing does not re-execute them.
+`showcase-cases.json` explicitly selects the new public-reader/source/publication
+abuse case and the existing full native publication/search/consent owner.
+
+On source `a64fb6be`, the existing owner passed **86.83s**, but the package failed:
+the new abuse fixture incorrectly used POST for the actual PUT publication
+mutation, receiving405. A405 is not authority proof. The corrected fixture uses
+actual PUT, the actor's own valid session/CSRF/Origin, exact current source and
+If-Match; checks that denial changes no current/published version; then executes
+the identical command as organiser and requires real publication withdrawal.
+Its native rerun remains pending. No successful matrix artifact is published for
+this failed package execution.
+
+The separate normal-command deployment preparation built fresh public image
+`sha256:529088d0e4ee70be5e55d90a5b4d9594d724f36cd59f717ca21f560139733f90`
+from source `a64fb6be`. Its isolated PostgreSQL/provider/public startup became
+healthy. Shared Docker daemon loss then interrupted the administration image
+build with RPC EOF before the walkthrough was executed. Image build and healthy
+startup do not establish any privileged abuse result. Root coordinates shared
+Docker recovery; only this uniquely named synthetic project may subsequently be
+cleaned/restarted by this lane. The normal user deployments remain outside this
+walkthrough's mutation scope.
