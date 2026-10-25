@@ -36,10 +36,10 @@ No external provider worker is started and no real identity or user data is used
 | Journey | Owner / proof | Current checkpoint |
 | --- | --- | --- |
 | Native MC/current actor authority, separate portal cookies, no-store, controlled server clock, construction has no provider jobs | `TestLiveRehearsalNativeAuthority` | Real PostgreSQL/race passed, 10.025s, initial constructor source |
-| MC pairs display, native SSE, backend outage, last authorized cue, latest reconnect, no duplicate command, revocation | `web/live-rehearsal/display.spec.ts`, Chromium + Firefox | Authored; first integrated run in progress |
-| Native cue/timer controls, true browser offline, browser-clock drift and display projection/cache privacy | Integrated browser owner | Remaining |
-| Mentor local draft recovery after current authorization; role/session/account/event loss | Integrated browser owner | Remaining |
-| Preparation, T−7 release week, fixed assignments, live opening and final cutoff with lifecycle lag | Controlled native service clocks | Remaining |
+| MC pairs display, native SSE, backend outage, last authorized cue, latest reconnect, no duplicate command, revocation | `web/live-rehearsal/display.spec.ts`, Chromium + Firefox | Chromium native production journey passed; Firefox local launch fails before page creation |
+| Native cue/timer controls, true browser offline, browser-clock drift and display projection/cache privacy | Integrated browser owner | Chromium passed with actual native private observation and unreleased cue canaries |
+| Mentor local draft recovery after current authorization; role/session/account/event loss | Integrated browser owner | Offline deliberate recovery and current mentor-role-loss purge passed; account/event journeys remain |
+| Preparation, T−7 release week, fixed assignments, live opening and final cutoff with lifecycle lag | Controlled native service clocks + actual team dashboard | Chromium passed; frozen writes rejected by actual native POST, cutoff settles before stage advances |
 | Today readiness, rules, contacts, help links and corrected clarifications across current account/event/role | Final native #88 implementation | Dependency pending; no substitute route |
 | Production independent guide and matched screenshots | Existing actual production guide consumers | Remaining |
 
@@ -52,3 +52,33 @@ This checkpoint does not complete #90. In particular, final Today acceptance
 and merging depend on the completed #88 implementation being merged first.
 
 Initial full TypeScript, focused rehearsal ESLint and both production portal builds passed before the first browser run. Browser outcomes are not yet claimed.
+
+## Executed second checkpoint
+
+The current real-PostgreSQL/race browser owner passed all three Chromium
+journeys in 16.9s (Go owner 22.891s): clock/production team dashboard, independent
+MC/display interruption, and mentor offline/current-authority recovery.
+Current full TypeScript and focused harness ESLint also passed. Both production
+portal builds passed before these test-only additions; no runtime web source
+has changed.
+
+Fixtures create an approved rubric and challenge through native services,
+explicit review/approval and actual common dispatch. T−7 uses
+`schedule.ChallengePublication`: the spring-DST scenario releases at
+22 March 2027 10:00 UTC for a 29 March 09:00 UTC live start, preserving local
+calendar time. It does not replace the calendar rule with 168 elapsed hours.
+The native `can_create` flag is actor eligibility; the separate frozen gate is
+proved by an actual reviewed/CSRF-bound command rejection, not by reinterpreting
+that flag as write permission.
+
+Local Firefox 1555 installed successfully but exits before page creation with
+`Could not find profile folder`, including a direct binary probe against a
+confirmed existing mode-0700 directory and canonical temporary paths. No Firefox
+pass is claimed. The committed Linux workflow runs both engines against the
+same real native harness without skips, retries or mocked APIs; its actual
+result remains required evidence. Default execution always includes both engines.
+`HACKBOX_REHEARSAL_PROJECT=chromium` is an explicit local diagnostic selection.
+
+The independent guide remains covered by its existing production-component
+suite; final matching source/evidence and Today/account/event/clarification
+acceptance are still outstanding. This is a draft checkpoint, not completion.

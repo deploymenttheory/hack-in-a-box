@@ -16,12 +16,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/schedule"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -55,6 +59,7 @@ type liveRehearsal struct {
 	clock                         *rehearsalClock
 	owner, mc, mentor, competitor dbgen.Person
 	eventID                       uuid.UUID
+	teamID                        uuid.UUID
 }
 
 func newLiveRehearsal(t *testing.T) *liveRehearsal {
@@ -77,6 +82,7 @@ func newLiveRehearsal(t *testing.T) *liveRehearsal {
 		r.pool,
 	)
 	r.eventID = testdb.Event(t, r.pool, r.owner.ID)
+	r.teamID = uuid.New()
 	for role, person := range map[string]dbgen.Person{"mc": r.mc, "mentor": r.mentor} {
 		if _, err := r.pool.Exec(
 			t.Context(),
@@ -87,6 +93,97 @@ func newLiveRehearsal(t *testing.T) *liveRehearsal {
 		); err != nil {
 			t.Fatal(err)
 		}
+	}
+	configuration := event.DefaultConfiguration()
+	configuration.MinimumAttendance = 1
+	configuration.LiveStart = time.Date(2027, 3, 29, 9, 0, 0, 0, time.UTC)
+	configuration.LiveEnd = configuration.LiveStart.Add(8 * time.Hour)
+	configuration.SubmissionCutoff = configuration.LiveEnd.Add(-time.Hour)
+	publicationTime, err := schedule.ChallengePublication(
+		configuration.LiveStart,
+		configuration.Timezone,
+		configuration.DSTChoice,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.clock.set(publicationTime)
+	configuration.TeamFreeze = publicationTime.Add(-time.Hour)
+	configuration.AdmissionCutoff = configuration.TeamFreeze.Add(-time.Hour)
+	raw, err := json.Marshal(configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, statement := range []struct {
+		sql  string
+		args []any
+	}{
+		{"UPDATE events SET stage='preparation', configuration=$2,team_frozen_at=$3 WHERE id=$1", []any{r.eventID, raw, configuration.TeamFreeze}},
+		{"INSERT INTO competition_claims(event_id,person_id,state) VALUES($1,$2,'confirmed')", []any{r.eventID, r.competitor.ID}},
+		{"INSERT INTO hack_teams(event_id,id,name,state,frozen,published_captain_id) VALUES($1,$2,'Rehearsal team','published',true,$3)", []any{r.eventID, r.teamID, r.competitor.ID}},
+		{"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')", []any{r.eventID, r.teamID, r.competitor.ID}},
+		{"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at) VALUES($1,$2,$3,'primary','published',$4,$5)", []any{r.eventID, r.teamID, r.mentor.ID, configuration.LiveStart, configuration.LiveEnd}},
+	} {
+		if _, err := r.pool.Exec(t.Context(), statement.sql, statement.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := dbgen.New(r.pool).
+		CreateCompetitionEntry(t.Context(), dbgen.CreateCompetitionEntryParams{EventID: r.eventID, TeamID: r.teamID}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.pool.Exec(
+		t.Context(),
+		"INSERT INTO event_gate_facts(event_id,attendance_ready,teams_ready,total_teams,frozen_teams,assigned_attendees) VALUES($1,true,true,1,1,1)",
+		r.eventID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	reference := testdb.ApprovedRubric(t, r.pool, r.owner.ID, r.eventID)
+	publication := r.clock.read()
+	r.clock.set(publication.Add(-time.Minute))
+	common := content.Service{Pool: r.pool, Clock: r.clock.read}
+	challenge, err := common.Save(
+		t.Context(),
+		r.owner.ID,
+		r.eventID,
+		uuid.New(),
+		0,
+		content.Input{
+			Kind: "challenge",
+			Document: content.Document{
+				Title:    "Rehearsal shared challenge",
+				Markdown: "Approved synthetic challenge for the integrated rehearsal.",
+				Audience: access.ContentAudience{Confirmed: true},
+				Rubric:   &reference,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, action := range []string{"review", "approve"} {
+		challenge, err = common.Action(
+			t.Context(),
+			r.owner.ID,
+			r.eventID,
+			challenge.ID,
+			challenge.Revision,
+			action,
+			"Synthetic native common release review",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.clock.set(publication)
+	if err := common.Dispatch(
+		t.Context(),
+		r.eventID,
+		challenge.ID,
+		challenge.Revision,
+	); err != nil {
+		t.Fatal(err)
 	}
 	return r
 }
@@ -143,6 +240,7 @@ func (r *liveRehearsal) surface(t *testing.T, surface string) rehearsalSurface {
 	}
 	deps.Events.Clock, deps.Presentation.Clock, deps.Submissions.Clock = r.clock.read, r.clock.read, r.clock.read
 	deps.Preparation.Now, deps.Teams.Now = r.clock.read, r.clock.read
+	deps.Observations.Now, deps.Content.Clock = r.clock.read, r.clock.read
 	deps.Help.Clock, deps.Clarifications.Clock = r.clock.read, r.clock.read
 	server.Config.Handler = httpapi.NewRouter(
 		cfg,

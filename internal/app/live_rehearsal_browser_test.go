@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 )
 
@@ -69,6 +70,38 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			t.Fatal("build both production portals before the integrated rehearsal")
 		}
 	}
+	// Seed actual native private evidence before any display is connected.
+	previousClock := r.clock.read()
+	r.clock.set(time.Date(2027, 3, 29, 9, 0, 0, 0, time.UTC))
+	current, err := admin.deps.Observations.Read(
+		t.Context(),
+		r.mentor.ID,
+		r.eventID,
+		r.teamID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := admin.deps.Observations.Change(
+		t.Context(),
+		r.mentor.ID,
+		r.eventID,
+		r.teamID,
+		current.Revision,
+		observations.Command{
+			Action: "observation",
+			ID:     uuid.New(),
+			Evidence: observations.Evidence{
+				Category:          "PRIVATE-MENTOR-CATEGORY",
+				Evidence:          "PRIVATE-MENTOR-EVIDENCE",
+				Outcome:           "PRIVATE-MENTOR-OUTCOME",
+				FeedbackReference: "PRIVATE-FEEDBACK-REFERENCE",
+			},
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	r.clock.set(previousClock)
 	proxy := newRehearsalProxy(t, public.server.URL)
 	// A Unix socket is private test IPC, never a route registered on either
 	// application listener. The browser cannot call it through the product API.
@@ -78,6 +111,10 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(private) })
+	private, err = filepath.EvalSymlinks(private)
+	if err != nil {
+		t.Fatal(err)
+	}
 	socket := filepath.Join(private, "control.sock")
 	listener, err := net.Listen("unix", socket)
 	if err != nil {
@@ -100,7 +137,42 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				http.Error(w, "invalid control", 400)
 				return
 			}
+			var err error
 			switch input.Action {
+			case "stage-lag", "stage-live":
+				stage := "preparation"
+				if input.Action == "stage-live" {
+					stage = "live"
+				}
+				if _, err := r.pool.Exec(
+					request.Context(),
+					"UPDATE events SET stage=$2 WHERE id=$1",
+					r.eventID,
+					stage,
+				); err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
+			case "mentor-role-remove", "mentor-role-restore":
+				if input.Action == "mentor-role-remove" {
+					_, err = r.pool.Exec(
+						request.Context(),
+						"DELETE FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND role='mentor'",
+						r.eventID,
+						r.mentor.ID,
+					)
+				} else {
+					_, err = r.pool.Exec(
+						request.Context(),
+						"INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'mentor') ON CONFLICT DO NOTHING",
+						r.eventID,
+						r.mentor.ID,
+					)
+				}
+				if err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
 			case "reset-room":
 				service := admin.deps.Presentation
 				index := 0
@@ -108,6 +180,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 					{Action: "save", Cues: []presentation.Cue{{ID: uuid.New(), Title: "Rehearsal opening", Text: "Approved public opening", DurationSeconds: 120}, {ID: uuid.New(), Title: "Rehearsal building", Text: "Approved public building", DurationSeconds: 60}}},
 					{Action: "publish"},
 					{Action: "activate", Index: &index},
+					{Action: "save", Cues: []presentation.Cue{{ID: uuid.New(), Title: "PRIVATE-UNRELEASED-CUE", Text: "PRIVATE-REHEARSAL-ONLY", DurationSeconds: 120}}},
 				} {
 					page, err := service.Read(request.Context(), r.owner.ID, r.eventID)
 					if err != nil {
@@ -138,7 +211,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			case "restore":
 				proxy.outage.Store(false)
 			case "evidence":
-				var revision, jobs int64
+				var revision, presentationRevision, jobs int64
 				if err := r.pool.QueryRow(request.Context(), "SELECT revision FROM events WHERE id=$1", r.eventID).
 					Scan(&revision); err != nil {
 					http.Error(w, err.Error(), 500)
@@ -149,8 +222,13 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 					http.Error(w, err.Error(), 500)
 					return
 				}
+				if err := r.pool.QueryRow(request.Context(), "SELECT revision FROM presentation_states WHERE event_id=$1", r.eventID).
+					Scan(&presentationRevision); err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
 				_ = json.NewEncoder(w).
-					Encode(map[string]any{"event_revision": revision, "provider_jobs": jobs})
+					Encode(map[string]any{"event_revision": revision, "presentation_revision": presentationRevision, "provider_jobs": jobs})
 				return
 			default:
 				http.Error(w, "unknown control", 400)
@@ -164,6 +242,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	// Only synthetic short-lived test sessions are passed to the node owner.
 	manifest := map[string]any{
 		"event_id": r.eventID,
+		"team_id":  r.teamID,
 		"admin":    admin.server.URL,
 		"public":   public.server.URL,
 		"display":  proxy.server.URL,
@@ -192,8 +271,18 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"--config",
 		"playwright.live.config.ts",
 	)
+	if project := os.Getenv("HACKBOX_REHEARSAL_PROJECT"); project != "" {
+		if project != "chromium" && project != "firefox-display" {
+			t.Fatal("unknown rehearsal project")
+		}
+		command.Args = append(command.Args, "--project", project)
+	}
 	command.Dir = filepath.Join("..", "..", "web")
-	command.Env = append(os.Environ(), "HACKBOX_REHEARSAL_MANIFEST="+manifestPath)
+	command.Env = append(
+		os.Environ(),
+		"HACKBOX_REHEARSAL_MANIFEST="+manifestPath,
+		"TMPDIR="+private,
+	)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
 	if err := command.Run(); err != nil {
 		t.Fatal(fmt.Errorf("production browser rehearsal: %w", err))
