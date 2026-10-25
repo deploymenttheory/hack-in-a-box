@@ -16,7 +16,7 @@ import { usePrivateRequestScope, type PrivateRequestScope } from './private-requ
 import { resourceDenied, ResourceOperationResult, useResourceOperation } from './resource-operation'
 
 type Page = import('./content-model').ContentPage
-type ReaderProps = { parentScope?: PrivateRequestScope; id: string; event: EventRecord; back: () => void }
+type ReaderProps = { paused?: boolean; parentScope?: PrivateRequestScope; id: string; event: EventRecord; back: () => void }
 type ScopedReaderProps = ReaderProps & { safeCommands?: ReturnType<typeof useCommunicationCommands>; operationOwner?: string }
 export function ResourceReader(props: ReaderProps) {
   const identity = useIdentity(), key = `${identity.person.id}:${identity.draft_scope}:${props.event.id}:${props.id}`
@@ -26,7 +26,7 @@ function ScopedReader(props: ReaderProps) {
   const identity = useIdentity(), operationOwner = `${identity.person.id}:${identity.draft_scope}:${props.event.id}:resource-acknowledgement:${props.id}`, safeCommands = useCommunicationCommands(operationOwner)
   return <ReaderLifetime {...props} safeCommands={safeCommands} operationOwner={operationOwner} />
 }
-function ReaderLifetime({ id, event, back, parentScope, safeCommands, operationOwner }: ScopedReaderProps) {
+function ReaderLifetime({ id, event, back, parentScope, safeCommands, operationOwner, paused = false }: ScopedReaderProps) {
   const identity = useIdentity(), mount = useId(), [denied, setDenied] = useState<unknown>(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:reader`, parentScope)
   const cache = useQueryClient(), cleared = useRef(false), redactAcknowledgement = usePlanningUnknownRedaction(owner => owner === `${identity.person.id}:${identity.draft_scope}:${event.id}:${id}:acknowledgement`)
   // Cached private content is not authority for a new mount: every parent
@@ -57,7 +57,7 @@ function ReaderLifetime({ id, event, back, parentScope, safeCommands, operationO
   if (revoked) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Failure error={denied ?? resource.error} /></section>
   if (resource.isPending) return <section className="fleet-resource-reader"><Button icon="back" variant="ghost" onClick={back}>Back to resources</Button><Loading /></section>
   if (!resource.data) return <Failure error={resource.error} retry={() => void resource.refetch()} />
-  return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} parentScope={parentScope ? scope : undefined} safeCommands={safeCommands} operationOwner={operationOwner} acceptPage={page => cache.setQueryData(key, page)} paused={!!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
+  return <ReleasedDocument key={`${identity.person.id}:${identity.draft_scope}:${event.id}:${id}`} event={event} id={id} page={resource.data} parentScope={parentScope ? scope : undefined} safeCommands={safeCommands} operationOwner={operationOwner} acceptPage={page => cache.setQueryData(key, page)} paused={paused || !!resource.error} onDeny={setDenied} back={back} read={async () => { const result = await resource.refetch(); if (result.error) throw result.error; return result.data! }} />
 }
 function ReleasedDocument({ event, id, page, acceptPage, paused, onDeny, back, read, parentScope, safeCommands, operationOwner }: { parentScope?: PrivateRequestScope; safeCommands?: ReturnType<typeof useCommunicationCommands>; operationOwner?: string; event: EventRecord; id: string; page: Page; acceptPage: (page: Page) => void; paused: boolean; onDeny: (error: unknown) => void; back: () => void; read: () => Promise<Page> }) {
   const identity = useIdentity(), cache = useQueryClient(), heading = useRef<HTMLDivElement>(null), opener = useRef<HTMLButtonElement>(null)

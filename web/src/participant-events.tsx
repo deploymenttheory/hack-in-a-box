@@ -1,4 +1,5 @@
 import { RepositoryWorkspace } from './repository-workspace'
+import { EventReadScopeProvider, useEventAuthority } from './event-authority'
 import { TodayActionSafety } from './today-safety'
 import { initialEventSection } from './today-navigation'
 import { EventToday } from './today'
@@ -8,7 +9,7 @@ import { EventDirectoryView } from './event-directory-view'
 import { ExportDownloads } from './export-downloads'
 import { MentorRoster } from './mentor-roster'
 import { useState } from 'react'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { Link, useParams } from '@tanstack/react-router'
 import { api, privateKey, unwrap } from './api/client'
 import { useIdentity } from './session'
@@ -33,19 +34,18 @@ export function EventWorkspace() {
   return <EventBrand key={eventId} eventID={eventId}><TodayActionSafety eventID={eventId}><PlanningOperations key={`${identity.person.id}:${identity.draft_scope}:${eventId}`}><EventContent eventID={eventId} /></PlanningOperations></TodayActionSafety></EventBrand>
 }
 function EventContent({ eventID }: { eventID: string }) {
-  const identity = useIdentity()
   const [requestedTab, setTab] = useState(() => initialEventSection(window.location.search))
   const [unsaved, setUnsaved] = useState(false)
-  const query = useQuery({ queryKey: privateKey(identity.person.id, eventID, 'event'), queryFn: async () => unwrap(await api.GET('/api/v1/events/{event_id}', { params: { path: { event_id: eventID } } })), refetchOnWindowFocus: 'always' })
-  if (query.isPending) return <Loading />
-  if (query.error) return <Failure error={query.error} retry={() => void query.refetch()} />
+  const authority = useEventAuthority(eventID), query = authority.query
+  if (authority.denial || !query.data && query.error) return <Failure error={authority.denial ?? query.error} retry={() => void authority.refresh()} />
+  if (!authority.verified || !query.data) return <Loading />
   const event = query.data
   const sections = eventPlanningDestinations(['overview','today','resources','deliverables','mentors','team access','repositories'])
   const tab = sections.some(section => section.id === requestedTab) ? requestedTab : 'overview'
-  return <section className="fleet-planning"><Link to="/">← Switch event</Link><PlanningHeader title={event.name} context={`${event.stage} · ${event.configuration.timezone}`} description={event.configuration.description} />
+  return <EventReadScopeProvider value={authority.boundary}><section className="fleet-planning"><Link to="/">← Switch event</Link><PlanningHeader title={event.name} context={`${event.stage} · ${event.configuration.timezone}`} description={event.configuration.description} />
     <details className="fleet-planning-section"><summary>Related event workspaces</summary><div className="fleet-pattern-actions"><Link to="/events/$eventId/surveys" params={{ eventId: event.id }}>Surveys and feedback</Link><Link to="/ideas" search={{ event: eventID }}>Propose an idea or record current team follow-through</Link><Link to="/events/$eventId/media" params={{ eventId: event.id }}>Event media</Link><Link to="/events/$eventId/photo-consent" params={{ eventId: event.id }}>Your photo consent</Link><Link to="/events/$eventId/help" params={{ eventId: eventID }}>Ask for help or open the helper queue</Link></div></details>
-    <div className="fleet-planning-layout"><PlanningNavigation items={sections} current={tab} choose={name=>{if(planningDepartureAllowed() && (!unsaved || window.confirm('Leave this section with unsaved changes?')))setTab(name)}} /><div className="fleet-planning-canvas">
+    <div className="fleet-planning-layout"><PlanningNavigation items={sections} current={tab} choose={name=>{if(planningDepartureAllowed() && (!unsaved || window.confirm('Leave this section with unsaved changes?')))setTab(name)}} /><div className="fleet-planning-canvas">{(query.error || authority.checking) && <Failure error={query.error} retry={() => void authority.refresh()} />}<fieldset className="fleet-planning-authority" disabled={authority.boundary.paused}>
 
     {tab === 'today' ? <EventToday event={event} openSection={name => { if (planningDepartureAllowed() && (!unsaved || window.confirm('Leave this section with unsaved changes?'))) setTab(name) }} availableSections={sections.map(section => section.id)} /> : tab === 'repositories' ? <RepositoryWorkspace event={event} onDirty={setUnsaved} /> : tab === 'team access' ? <TeamAccess event={event} /> : tab === 'mentors' ? <MentorRoster event={event} /> : tab === 'resources' ? <ResourceLibrary event={event} /> : tab === 'deliverables' ? <TeamDeliverables event={event} onDirty={setUnsaved} /> : <section className="fleet-planning-section"><h2>Event dates</h2><ExportDownloads eventID={event.id} audience="participant" /><dl className="dates">{[['Challenge publication', event.challenge_publication], ['Live start', event.configuration.live_start], ['Submission cutoff', event.configuration.submission_cutoff], ['Live end', event.configuration.live_end]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{localDate(value, event.configuration.timezone)}</dd></div>)}</dl></section>}
-  </div></div></section>
+  </fieldset></div></div></section></EventReadScopeProvider>
 }

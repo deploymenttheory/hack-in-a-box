@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test'
 test('production Today guide keeps context, owner focus, observation and print boundaries explicit', async ({ page }) => {
+ await page.addInitScript(() => {
+  Object.defineProperty(Document.prototype, 'cookie', { configurable: true, get() { throw new Error('Guide read cookies') }, set() { throw new Error('Guide wrote cookies') } })
+  for (const method of ['getItem', 'setItem', 'removeItem', 'clear', 'key'] as const) Object.defineProperty(Storage.prototype, method, { value() { throw new Error('Guide accessed private storage') } })
+ })
+ const errors: string[] = []; page.on('pageerror', error => errors.push(error.message))
  const calls: string[] = []; page.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) calls.push(request.url()) })
  await page.goto('/')
- const guide = page.getByRole('region', { name: 'Role-specific Today example', exact: true })
+ await page.getByRole('link', { name: 'Task patterns', exact: true }).click()
+ const frame = page.frameLocator('iframe[title="Production task pattern examples"]')
+ const guide = frame.getByRole('region', { name: 'Role-specific Today example', exact: true })
  await guide.getByRole('combobox', { name: 'Today context' }).selectOption('judge')
  await expect(guide.getByRole('heading', { name: 'Synthetic judge preparation' })).toBeVisible()
  await guide.getByRole('button', { name: 'Open synthetic preparation owner' }).click()
@@ -20,5 +27,5 @@ test('production Today guide keeps context, owner focus, observation and print b
  await guide.getByRole('combobox', { name: 'Synthetic Today read' }).selectOption('ready')
  await page.emulateMedia({ media: 'print' })
  await expect(guide.getByRole('region', { name: 'Your event Today' })).not.toBeVisible()
- expect(calls).toEqual([])
+ expect(calls).toEqual([]); expect(errors).toEqual([])
 })
