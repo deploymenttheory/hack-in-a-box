@@ -159,3 +159,19 @@ test('matching late original acknowledgement preserves the next action after cur
   await expect(page.getByRole('button',{name:'Review another team',exact:true})).toBeFocused()
  }finally{release()}
 })
+test('pending current reads retain saved-card keyboard focus while confirmation stays blocked',async({page})=>{
+ const state=await fixture(page),team=state.page.teams[0],card=state.page.round.cards[0]
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities.record_locked=false;card.state='draft';team.can_sign_card=true;team.source=card.source
+ let hold=false,release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{if(hold)await gate;return route.fulfill({json:state.page})})
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter')
+  const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true})
+  await confirm.press('Tab');await page.keyboard.press('Shift+Tab');await expect(confirm).toBeFocused()
+  hold=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect(confirm).toBeDisabled();await expect(confirm).toBeFocused();await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toHaveCount(0)
+  release();await expect(confirm).toBeEnabled();await expect(confirm).toBeFocused();await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toBeVisible()
+ }finally{release()}
+})
