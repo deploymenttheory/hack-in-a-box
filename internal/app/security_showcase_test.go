@@ -68,9 +68,10 @@ func TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority(t 
 	}
 	view, err := f.admin.deps.Outcomes.Publication(t.Context(), r.owner.ID, s.winnerProject)
 	resultsSourceRequire(t, err)
-	status, _ := request(f.admin, s.outsider, "POST", private+"/publication", map[string]any{
+	command := map[string]any{
 		"id": uuid.New(), "action": "withdraw", "source_version": view.SourceVersion, "reason": "Synthetic read-only actor attempts privileged publication mutation",
-	}, view.CurrentVersion, true)
+	}
+	status, _ := request(f.admin, s.outsider, "PUT", private+"/publication", command, view.CurrentVersion, true)
 	if status != 403 && status != 404 {
 		t.Fatal("organisation showcase reader withdrew a publication", status)
 	}
@@ -79,8 +80,7 @@ func TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority(t 
 	if after.CurrentVersion != view.CurrentVersion || after.PublishedVersion == nil || view.PublishedVersion == nil || *after.PublishedVersion != *view.PublishedVersion {
 		t.Fatal("denied reader mutation changed reviewed history")
 	}
-	// The same known current IDs and version work for the genuine organiser;
-	// this proves the attack was denied by authority rather than malformed input.
+	// The same known current IDs and version are readable by the organiser.
 	status, raw := request(f.admin, r.owner, "GET", private+"/publication", nil, 0, true)
 	if status != 200 {
 		t.Fatal("organiser publication positive control failed", status)
@@ -88,6 +88,16 @@ func TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority(t 
 	var fields map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &fields); err != nil || fields["current_version"] == nil {
 		t.Fatal("positive control did not return actual private publication")
+	}
+	// Execute the identical command with genuine current authority: a valid
+	// mutation, not a malformed route/body, was denied to the public reader.
+	status, _ = request(f.admin, r.owner, "PUT", private+"/publication", command, view.CurrentVersion, true)
+	if status != 200 {
+		t.Fatal("organiser exact-command positive control failed", status)
+	}
+	status, _ = request(f.public, s.outsider, "GET", public, nil, 0, true)
+	if status != 404 {
+		t.Fatal("actual withdrawn publication remained discoverable", status)
 	}
 	status, _ = request(f.public, s.outsider, "GET", fmt.Sprintf("/api/v1/events/%s/results/announcements", r.eventID), nil, 0, true)
 	if status != 403 {
