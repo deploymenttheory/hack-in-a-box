@@ -383,7 +383,9 @@ native fingerprint without retaining observed evidence or reasons above the task
 `ShowcaseRecords` and `ShowcaseReading` are the production discovery and reading
 surfaces used by the independent guide. Owners supply permission-filtered search,
 approved event-name facets, reviewed follow-up status and cursor pagination.
-Links open actual project routes and preserve filter return context; a current
+Links open actual project routes and preserve filter return context. Keep typed
+search text only in the current private session memory, never document URLs or
+persistent storage; event UUID/status may remain route context. A current
 source-record link is shown only when its own native reader permits access.
 
 Award metadata requires both explicit result publication and the current native
