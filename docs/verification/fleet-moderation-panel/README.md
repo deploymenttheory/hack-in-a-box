@@ -171,3 +171,26 @@ larger scope remains mandatory. The native owner is adding a before-cutoff test
 seam for real formal URL submissions; no clock rewind or settled-fact rewrite is
 used. Browser evidence records start/end commit/tree and cleanliness; no public
 fixture controls or external sends are introduced.
+
+## Executed initial native portal matrix
+
+Actual clean source `cb41704ca5b9dce5835d0d87c7ebb0688f52bdb3`, tree
+`8f4d19b4a4674fa1cf690955d4242f6d3bacd40d`, passed all four initial native
+PostgreSQL/router/compiled-browser cases. Administrator desktop/mobile passed
+Go/race **27.057s**; regular desktop/mobile passed **21.844s**. The preserved
+`native-initial-*.json` receipts each record identical start/end commits and clean
+worktree status. Every fixture terminated its own PostgreSQL container; no user
+containers or provider effects were touched.
+
+These cases execute actual permitted discovery, generated-shape configuration
+POST with HTML/Unicode reason, a committed response deliberately lost, exact
+original receipt recovery, independent current read, honest not-submitted/no-card/
+no-signoff blockers, current history and real session-revision expiry. They do
+not use canned domain responses. They remain deliberately scoped: no complete
+five-team final-card/ballot/casting/signoff or full visual/manual-device acceptance
+is claimed. Full write-guide and broader privacy/recovery cases remain open.
+
+The independent109 correction review exposed applicable hardening to complete in
+this111 owner: HTTP408 must remain unknown, and sent-command departure barriers
+must survive private task denial in the metadata owner. Those are explicit
+remaining work, not waived by this passing initial native matrix.
