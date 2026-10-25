@@ -1,0 +1,64 @@
+# GitHub recovery verification — issue 98
+
+This is a full-scope verification delivery, not live GitHub acceptance. The
+approved organisation, App registration/installation, credentials and sandbox
+event do not exist in this environment; #91's live gate remains pending. No
+external repository/invitation was created, no attendee code was executed and no
+user container was changed. Real PostgreSQL tests use synthetic identities and
+fault only the external provider boundary. No schema or production policy change
+is planned. #94 is closed; #97's real UI exists in its reviewed separate PR and
+remains a dependency until merged. This backend test lane does not copy its UI.
+
+## Complete acceptance ledger
+
+A row is complete only when its named current-source execution is recorded.
+Existing tests are coverage sources, not claimed fresh passes until executed.
+
+| Requirement | Actual native sources and new verification | Current state |
+| --- | --- | --- |
+| Revoked App / missing permissions / rate limits | New encrypted App → durable capture fault matrix; new native provisioning fault fixture. Existing `githubapp` transport tests exercise installation/token diagnostics including actual HTTP 429. | First working-tree capture matrix passes; final current-source run pending. |
+| Invitation failure / uncertain response / no duplicates | New definitely-unsent failure requires a new reviewed plan, preserving one invitation; original lost-response, commit-failure and concurrent-worker cases in `repositoryaccess`. | New invitation/boundary cases pass on initial working tree; full current-source run pending. |
+| Uncertain create / unrelated resource collision | New encrypted App → actual provisioning queue/worker/reconcile cases; original exact provenance, numeric identity and concurrency cases in `repositories`. | New fixture written; execution pending. |
+| Forged / signed cross-event or cross-team activity cannot change submissions | New signed activity test uses two event/team/repository mappings sharing one App secret; tampered body and wrong explicit event reject, with actual submission-state/revision/decision snapshots. | Written; execution pending. |
+| Uncertainty remains unresolved; explicit audited correction; immutable original and amendment | New App recovery matrix retains original source and attempt history; later current ref never verifies historical cutoff. New signed delayed/replayed push cannot alter original completed receipt or formal records. Original `submissionfreeze` tests exercise explicit amendment and history. | Matrix initial pass; signed cross-owner and full current-source checks pending. |
+| Pre-live work versus formal submission/review | New actual private draft + signed operational push before live; native formal submit/review remain blocked. At live, actual formal submit succeeds. | Written; execution pending. |
+| Cutoff independent from lifecycle advancement | Same native flow captures/final-settles while lifecycle remains preparation, without changing the deadline. | Written; execution pending. |
+| Stale collaborator work cannot bypass current freeze/retirement | New queued approved grant is rechecked against unfrozen, disbanded and withdrawn current native facts, with zero provider writes/effect claims; original native frozen-reassignment and stale identity/mentor-window cases retained. | Initial new cases pass; final current-source run pending. |
+| Disbanded repository unused/unscored | New real judge consumer rejects unresolved source, permits only audited binding, then rejects retired-team brief/new scores/result completion while preserving authored bytes. Existing rubric, webhook and freeze owners retain their disband guards. | Written; execution pending. |
+| One approved live sandbox event | [Existing setup](../../github-app-setup.md) and [operator execution record](SANDBOX-RECORD.md), including current real UI/API source and exact evidence fields. | **Pending: approved sandbox/App not provisioned. Synthetic tests cannot satisfy this row.** |
+
+## Finite reproducible synthetic verification
+
+From the repository root, with Docker available for test-owned pinned PostgreSQL:
+
+```sh
+HACKBOX_INTEGRATION=1 go test -race -p 1 ./internal/githubapp ./internal/repositories ./internal/repositoryaccess ./internal/githubwebhooks ./internal/submissionfreeze ./internal/submissions ./internal/rubric ./internal/judging ./internal/access -count=1 -timeout=15m
+```
+
+This command explicitly enables integration tests; a run without that environment
+variable can skip PostgreSQL and is not native acceptance evidence. Provider
+transport fixtures use only local HTTP; all databases/listeners belong to the
+tests and clean up through their existing owners. No extra real provider test is
+triggered by running it. Record the executable SHA, dirty status, command, result
+and per-package output. Do not reattribute old runs after a rebase.
+
+## Source and execution ledger
+
+- Starting source: merged main `b2b09b6c35fa6cdc8ae6e9fa30acfe3ca5fbd063`.
+- Initial working-tree native `TestRecoveryFaults...` matrix passed with real
+  PostgreSQL and `-race`, package **6.053s**. It uses the actual encrypted App,
+  native final settlement, durable capture and audited correction owners.
+- Initial working-tree `repositoryaccess` `TestRecovery...` cases passed with
+  real PostgreSQL and `-race`, package **8.045s**. Retired facts are explicitly
+  fault-injected current native records; they do not claim a complete human
+  withdrawal/disband UI journey or a live provider effect.
+- Remaining new cross-owner tests, related owner suites, configured lint,
+  current-main rebase and final exact-head CI are pending.
+
+Primary references checked 25 October 2026: GitHub's [signature verification](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries),
+[template creation contract](https://docs.github.com/en/rest/repos/repos#create-a-repository-using-a-template)
+and [invitation endpoints](https://docs.github.com/en/rest/collaborators/invitations).
+HMAC authenticates the original body; it is not permission to target another
+native repository/event or to claim historical cutoff state. An invitation is
+not proof of accepted collaborator access. The existing setup document remains
+the source for approved App permissions and protected credential injection.
