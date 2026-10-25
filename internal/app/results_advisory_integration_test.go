@@ -238,6 +238,7 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 	) {
 		t.Fatal("judge read mentor editor", e)
 	}
+	assertAssignedMentorAdvisoryIsolation(t, f, outsider, c, len(own.Targets))
 	foreign := command(accepted, "Foreign team")
 	foreign.TeamID = second
 	if _, e = s.Advise(
@@ -582,5 +583,70 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 		if target.Own != nil || target.Version != 0 {
 			t.Fatal("old correction reanimated", target)
 		}
+	}
+}
+
+func assertAssignedMentorAdvisoryIsolation(
+	t *testing.T,
+	f *resultsSourceFixture,
+	other dbgen.Person,
+	original results.AdvisoryCommand,
+	targetCount int,
+) {
+	t.Helper()
+	r, ctx := f.runtime, t.Context()
+	published, err := dbgen.New(r.pool).MentorAssignments(ctx, r.eventID)
+	resultsSourceRequire(t, err)
+	for _, assignment := range published {
+		if assignment.PersonID == r.mentor.ID && assignment.Snapshot == "published" {
+			_, err = r.pool.Exec(
+				ctx,
+				"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,'second','published',$4,$5)",
+				r.eventID,
+				r.teamID,
+				other.ID,
+				assignment.StartsAt,
+				assignment.EndsAt,
+			)
+			resultsSourceRequire(t, err)
+		}
+	}
+	assigned, err := f.service.MentorAdvisories(ctx, other.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if len(assigned.Targets) != targetCount {
+		t.Fatal("current second mentor did not receive own category targets")
+	}
+	for _, target := range assigned.Targets {
+		if target.Own != nil || target.Version != 0 {
+			t.Fatal("another mentor's prose became own contribution", target)
+		}
+	}
+	encoded, err := json.Marshal(assigned)
+	resultsSourceRequire(t, err)
+	if strings.Contains(string(encoded), "ADVISORY-ORIGINAL") {
+		t.Fatal("assigned other mentor read private prose")
+	}
+	if _, err = f.service.MentorAdvisoryReceipt(
+		ctx,
+		other.ID,
+		r.eventID,
+		original.RequestID,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("assigned second mentor read another author's original ACK", err)
+	}
+	if _, err = f.service.Advise(
+		ctx,
+		other.ID,
+		r.eventID,
+		assigned.Revision,
+		original,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("assigned second mentor edited another author's contribution", err)
 	}
 }

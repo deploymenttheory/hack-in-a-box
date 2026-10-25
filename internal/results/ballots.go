@@ -14,8 +14,9 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 )
 
-// BallotPage exposes current assigned ties and only the caller's own evidence.
-// It cannot carry raw cards, qualification data or another judge's prose.
+// BallotPage exposes current assigned ties, the caller's own ballot and
+// separately authored current mentor advisory. It cannot carry raw cards,
+// qualification data or another judge's vote prose.
 type BallotPage struct {
 	JudgeRunID    uuid.UUID  `json:"judge_run_id"`
 	Revision      int64      `json:"revision"`

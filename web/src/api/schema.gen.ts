@@ -9948,7 +9948,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Only current own assigned ties and own ballots; no private mentor or other judge prose. */
+            /** @description Current assigned ties, own ballots and separately authored current mentor advisory; no raw mentor cards or another judge's vote prose. */
             200: {
                 headers: {
                     [name: string]: unknown;
