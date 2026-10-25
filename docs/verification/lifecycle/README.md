@@ -388,3 +388,44 @@ containers, volumes and networks; no user project was changed. Remaining work
 focuses on the connected business lifecycle and deterministic repository/provider
 flow, current audience/source changes and all final matrix/browser acceptance.
 Full L11 and `complete_lifecycle` remain unfinished/false.
+
+
+## Connected two-event start-to-live checkpoint
+
+`TestLifecycleComposeJourney` passed in 1.45s (runner 28744), frozen source
+`467e0b40`, image `sha256:73c325d5353b7b5e7547c6c256eeb1d4156005c5289ba591e8400cd7ef88e5f5`,
+main base `076f6162`, schema 54. Unlike independent phase checkpoints, one
+owner/control/timeline retains both actual events and their cohorts, native
+objectives, frozen teams, common challenges and rubric references throughout.
+The same 36 real OIDC participant identities applied to both events. Each
+actual native admission/FIFO/go/withdrawal/reassignment workflow produced six
+frozen teams and 32 confirmed competitors; the second event's preparation did
+not mutate the first event. Distinct native brands and planned objective owners
+were saved, with estimated baselines explicitly remaining planning inputs.
+
+The events used `all_teams` and `mentor_qualification` rubric modes. Both
+unpublished themes/rubrics were inaccessible. The native worker released both
+common challenges at the approved calendar instant; independent attendees in
+each event received identical exact public rubric bytes without private judge
+guidance and acknowledged exact released versions. Public branding stayed bound
+to its own event. Private undisclosed planning remained forbidden. Early live
+transitions were rejected for the actual scheduled-start gate without changing
+revision/state; advancing to live then allowed both actual native transitions.
+The safe [journey-start-live.json](evidence/journey-start-live.json) retains IDs,
+references, censuses and hashes. Its `complete_lifecycle` is false.
+
+The first source `3ddcb0cc`, image
+`sha256:fa1ddcf74f18519f63d94fb7bb87217a248a805223e4cb1bbc83c31b74ed7f8a`,
+failed in 3.27s (runner 85980) because the driver incorrectly expected 200 with
+an empty private planning index. The documented native attendee contract is
+403, which the actual API returned. The correction asserts 403 and absence of
+private planning prose in the response, with no production policy change.
+Corrected build 9055 and fresh startup 8272 passed before runner 28744. Both
+private projects and all labelled volumes/networks were removed. Existing user
+projects were preserved.
+
+This is the connected foundation for remaining repository/access, live support,
+cutoff census, independent judging, embargoed awards/feedback, reviewed nonwinner
+showcase, immutable archive, retained outcomes and real browser journeys. Those
+phases and the remaining negative/exception/provider variants still gate every
+final L01–L18 acceptance claim.
