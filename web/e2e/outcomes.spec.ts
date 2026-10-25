@@ -369,6 +369,6 @@ test('current released project removes a media reference omitted by the native c
  await expect(page.getByRole('link',{name:'Current reviewed recording (current authorised media)',exact:true})).toHaveCount(0,{timeout:20_000})
  expect(reads).toBeGreaterThanOrEqual(2)
  await expect(page.getByRole('heading',{name:project.problem,exact:true})).toBeVisible()
- await expect(page.getByText('Separately reviewed publication · Version 2',{exact:true})).toBeVisible()
+ await expect(page.getByText('Reviewed publication · Version 2',{exact:true})).toBeVisible()
  expect(state.requests).toHaveLength(0);expect(state.eventReads).toBe(0)
 })
