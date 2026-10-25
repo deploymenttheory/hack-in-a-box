@@ -36,6 +36,7 @@ test('native assigned overall and category ties require explicit selection, all 
   await expect(b.getByRole('region', { name: 'Selected tie', exact: true }).getByRole('heading')).toBeFocused()
   await expect(b.getByLabel('Your selected winner', { exact: true })).toHaveValue('')
   await expect(b.getByLabel('Reason for your tie vote', { exact: true })).toHaveValue('')
+  await a.getByRole('button', { name: 'Read current tie ballots', exact: true }).click()
   a.once('dialog', dialog => void dialog.accept())
   await a.getByRole('button', { name: 'Review ' + categoryLabel, exact: true }).click()
   await vote(a, native.ballot_team_id, 'PRIVATE-FIRST-CATEGORY-VOTE-NATIVE')
