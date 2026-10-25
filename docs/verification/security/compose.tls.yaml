@@ -1,0 +1,135 @@
+# Isolated supported production profile: normal binaries behind external TLS.
+# Synthetic private CA/issuer only; no host bindings, clock controls or API mocks.
+name: hackbox-security121-tls-probe
+x-normal: &normal
+  image: ${HACKBOX_NORMAL_PUBLIC_IMAGE:?Set the verified immutable normal public image ID}
+  entrypoint: [/app/api]
+  init: true
+  cpus: 0.5
+  mem_limit: 256m
+  pids_limit: 128
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [synthetic]
+  environment: &normal-environment
+    GOMAXPROCS: '2'
+    HACKBOX_ENV: production
+    HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-normal-probe-only@postgres:5432/lifecycle?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: https://security-public.test:8443
+    HACKBOX_ADMIN_ORIGIN: https://security-admin.test:8443
+    HACKBOX_WORKSPACE_ORIGIN: https://security-public.test:8443
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web
+    HACKBOX_OIDC_ISSUER: https://security-issuer.test:8443
+    HACKBOX_OIDC_CLIENT_ID: security-public
+    HACKBOX_OIDC_CLIENT_SECRET: synthetic-security-tls-only
+    HACKBOX_BOOTSTRAP_SUBJECT: owner
+    HACKBOX_METRICS_TOKEN: synthetic-security-metrics-token-at-least32
+    SSL_CERT_FILE: /tls/ca.pem
+  volumes:
+    - files:/data/files
+    - "${HACKBOX_SECURITY_TLS_DIR:?Set private synthetic TLS directory}/ca.pem:/tls/ca.pem:ro"
+  healthcheck: &healthcheck
+    test: [CMD, /app/healthcheck]
+    interval: 2s
+    timeout: 5s
+    retries: 30
+  depends_on:
+    migrate: {condition: service_completed_successfully}
+    provider: {condition: service_healthy}
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    cpus: 0.75
+    mem_limit: 384m
+    pids_limit: 128
+    networks: [synthetic]
+    environment:
+      POSTGRES_DB: lifecycle
+      POSTGRES_USER: lifecycle
+      POSTGRES_PASSWORD: synthetic-normal-probe-only
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U lifecycle -d lifecycle']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  migrate:
+    <<: *normal
+    entrypoint: [/app/migrate]
+    healthcheck: {disable: true}
+    volumes: []
+    depends_on:
+      postgres: {condition: service_healthy}
+  provider:
+    image: ${HACKBOX_LIFECYCLE_IMAGE:?Set immutable synthetic Node runtime image ID}
+    entrypoint: [node, /fixture/tls-provider.mjs]
+    user: '1000:1000'
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 64
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks:
+      synthetic:
+        aliases: [security-public.test, security-admin.test, security-issuer.test]
+    environment:
+      NODE_EXTRA_CA_CERTS: /tls/ca.pem
+    volumes:
+      - ./tls-provider.mjs:/fixture/tls-provider.mjs:ro
+      - "${HACKBOX_SECURITY_TLS_DIR:?Set private synthetic TLS directory}/ca.pem:/tls/ca.pem:ro"
+      - "${HACKBOX_SECURITY_TLS_DIR:?Set private synthetic TLS directory}/leaf.pem:/tls/leaf.pem:ro"
+      - "${HACKBOX_SECURITY_TLS_DIR:?Set private synthetic TLS directory}/leaf.key:/tls/leaf.key:ro"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('https://security-issuer.test:8443/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  public:
+    <<: *normal
+  admin:
+    <<: *normal
+    image: ${HACKBOX_NORMAL_ADMIN_IMAGE:?Set the verified immutable normal admin image ID}
+    environment:
+      <<: *normal-environment
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: https://security-admin.test:8443
+      HACKBOX_OIDC_CLIENT_ID: security-admin
+  probe:
+    image: ${HACKBOX_SECURITY_PYTHON_IMAGE:?Set immutable Python runner image ID}
+    entrypoint: [python3, /probe/security-deployment-probe.py]
+    profiles: [probe]
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 64
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [synthetic]
+    environment:
+      HACKBOX_SECURITY_ISOLATED: synthetic-only
+      HACKBOX_SECURITY_TLS: '1'
+      HACKBOX_SECURITY_PUBLIC_ORIGIN: https://security-public.test:8443
+      HACKBOX_SECURITY_ADMIN_ORIGIN: https://security-admin.test:8443
+      HACKBOX_SECURITY_ISSUER: https://security-issuer.test:8443
+      SSL_CERT_FILE: /tls/ca.pem
+      HACKBOX_SECURITY_SOURCE: ${HACKBOX_SECURITY_SOURCE:?Set exact normal API source}
+      HACKBOX_SECURITY_VERIFICATION_SOURCE: ${HACKBOX_SECURITY_VERIFICATION_SOURCE:-unrecorded}
+    volumes:
+      - "${HACKBOX_SECURITY_TLS_DIR:?Set private synthetic TLS directory}/ca.pem:/tls/ca.pem:ro"
+      - ../../../scripts/security-deployment-probe.py:/probe/security-deployment-probe.py:ro
+      - ${HACKBOX_SECURITY_ARTIFACTS:?Set private artifact directory}:/artifacts
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+
+volumes:
+  database:
+  files:
+networks:
+  synthetic: {internal: true}

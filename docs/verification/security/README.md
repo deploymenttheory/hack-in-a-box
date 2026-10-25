@@ -290,3 +290,27 @@ configuration. It does not prove the production HTTPS issuer/origin or Secure
 cookie transport profile. #120's SMTP TLS proof is a different boundary and is
 not substituted for browser/API HTTPS. That supported-profile execution is an
 explicit remaining #121 gate.
+
+## Supported HTTPS/Secure-cookie profile preparation
+
+The same driver accepts `--tls` with `compose.tls.yaml`; its provider image must
+be an immutable Node22 runtime ID. It keeps the same normal application binaries
+but sets `HACKBOX_ENV=production`, HTTPS portal origins and HTTPS issuer. The
+external verification-only Node process terminates real TLS and proxies every
+application request to the normal API; it separately implements synthetic RS256
+OIDC discovery/JWKS, confidential clients, one-use codes, PKCE and userinfo. No
+application API200 response, session or clock is fabricated.
+
+Each execution generates an ephemeral synthetic CA/server certificate with exact
+private DNS names. The normal Go API and Python client use ordinary trusted-CA
+verification. The probe requires untrusted-CA and wrong-hostname certificate
+rejection, actual Secure/HttpOnly/SameSite=Lax/host-only application cookies,
+and401 when the same cookie jar visits the same hostname through a private
+cleartext proxy. No verification-disable switch is used. Private signing/server
+keys remain in a temporary directory and are removed after scoped teardown;
+only public-certificate hashes and scenario outcomes enter evidence.
+
+At preparation, Python/Node syntax and local certificate generation/CA loading/
+correct-host verification/wrong-host rejection checks pass. These checks do not
+establish actual deployment HTTPS, OIDC or cookie success. The isolated supported
+profile walkthrough is **unexecuted** until its own measured receipt is recorded.

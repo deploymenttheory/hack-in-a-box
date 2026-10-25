@@ -8,10 +8,12 @@ Session/callback/response payloads remain in memory; evidence contains labels on
 import base64
 from datetime import datetime, timedelta, timezone
 import http.cookiejar
+from http.cookies import SimpleCookie
 import json
 import os
 from pathlib import Path
 import sys
+import ssl
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -24,6 +26,34 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 observations = []
+transport_assertions = []
+secure_cookie_names = set()
+TLS = os.environ.get('HACKBOX_SECURITY_TLS') == '1'
+PUBLIC = os.environ.get('HACKBOX_SECURITY_PUBLIC_ORIGIN', 'http://public:8080')
+ADMIN = os.environ.get('HACKBOX_SECURITY_ADMIN_ORIGIN', 'http://admin:8080')
+ISSUER = os.environ.get('HACKBOX_SECURITY_ISSUER', 'http://provider:8080')
+
+
+def cookies_are_safe(response):
+    if not TLS:
+        return
+    for header in response.headers.get_all('Set-Cookie', []):
+        parsed = SimpleCookie(); parsed.load(header)
+        for name, cookie in parsed.items():
+            if name.startswith('hackbox_'):
+                require(cookie['secure'] and cookie['httponly'] and cookie['samesite'].lower() == 'lax' and not cookie['domain'], 'production cookie flags and host-only scope')
+                secure_cookie_names.add(name)
+
+
+def rejected_certificate(url, context, label):
+    client = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context), urllib.request.ProxyHandler({}))
+    try:
+        client.open(url, timeout=15).close()
+    except urllib.error.URLError as error:
+        require(isinstance(error.reason, ssl.SSLCertVerificationError), label + ': failure must be certificate verification')
+        transport_assertions.append(label)
+        return
+    raise AssertionError(label + ': untrusted certificate accepted')
 
 
 def require(condition, label):
@@ -35,7 +65,7 @@ class Client:
     def __init__(self, origin):
         self.origin, self.csrf, self.person = origin, None, None
         self.cookies = http.cookiejar.CookieJar()
-        self.http = urllib.request.build_opener(NoRedirect(), urllib.request.HTTPCookieProcessor(self.cookies), urllib.request.ProxyHandler({}))
+        self.http = urllib.request.build_opener(NoRedirect(), urllib.request.HTTPCookieProcessor(self.cookies), urllib.request.HTTPSHandler(context=ssl.create_default_context()), urllib.request.ProxyHandler({}))
 
     def call(self, method, path, want, label, body=None, revision=None, origin=None, csrf=True, key=None):
         require(path.startswith('/api/v1/'), 'native API path required')
@@ -55,6 +85,7 @@ class Client:
         except urllib.error.HTTPError as error:
             response = error
         with response:
+            cookies_are_safe(response)
             require(response.status == want, label + ': unexpected status ' + str(response.status))
             require('no-store' in response.headers.get('Cache-Control', ''), label + ': cache policy')
             require(response.headers.get('X-Content-Type-Options') == 'nosniff', label + ': sniffing policy')
@@ -71,6 +102,7 @@ class Client:
         except urllib.error.HTTPError as error:
             response = error
         with response:
+            cookies_are_safe(response)
             require(response.status == expected, 'configured OIDC redirect status')
             location = response.headers.get('Location')
             require(bool(location), 'configured OIDC redirect location')
@@ -81,7 +113,7 @@ class Client:
         client = cls(origin)
         authorize = client.redirect(origin + '/auth/login?return_to=%2Fevents', 302)
         parsed = urllib.parse.urlsplit(authorize)
-        require(parsed.scheme + '://' + parsed.netloc + parsed.path == 'http://provider:8080/authorize', 'exact configured synthetic issuer')
+        require(parsed.scheme + '://' + parsed.netloc + parsed.path == ISSUER + '/authorize', 'exact configured synthetic issuer')
         query = urllib.parse.parse_qs(parsed.query)
         require(query.get('code_challenge_method') == ['S256'] and bool(query.get('nonce')), 'real PKCE/nonce request')
         query['actor'] = [actor]
@@ -107,20 +139,24 @@ def event_input(name):
 
 def main():
     require(os.environ.get('HACKBOX_SECURITY_ISOLATED') == 'synthetic-only', 'isolated synthetic deployment flag required')
-    for portal in ('admin', 'public'):
-        anonymous = Client('http://' + portal + ':8080')
+    if TLS:
+        require(all(value.startswith('https://') for value in (ADMIN, PUBLIC, ISSUER)), 'production profile HTTPS origins and issuer')
+        rejected_certificate(PUBLIC + '/api/v1/session', ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT), 'untrusted-private-CA-rejected')
+        rejected_certificate('https://provider:8443/health', ssl.create_default_context(), 'trusted-CA-wrong-hostname-rejected')
+    for portal, origin in (('admin', ADMIN), ('public', PUBLIC)):
+        anonymous = Client(origin)
         for route in ('session', 'events', 'projects'):
             anonymous.call('GET', '/api/v1/' + route, 401, 'anonymous-' + portal + '-' + route, origin='https://attacker.invalid')
-    owner = Client.login('http://admin:8080', 'owner')
-    public = Client.login('http://public:8080', 'owner')
-    stranger = Client.login('http://admin:8080', 'stranger')
+    owner = Client.login(ADMIN, 'owner')
+    public = Client.login(PUBLIC, 'owner')
+    stranger = Client.login(ADMIN, 'stranger')
     require(owner.person == public.person and owner.csrf != public.csrf, 'independent portals retain one identity with distinct session contexts')
     events = [owner.call('POST', '/api/v1/events', 200, 'native-create-' + name, event_input(name)) for name in ('Harbour', 'Orchard')]
     first, second = events
     base = '/api/v1/events/' + first['id']
     stranger.call('GET', base, 403, 'guessed-private-event')
     stranger.call('POST', '/api/v1/events', 403, 'unprivileged-event-creation', event_input('Denied'))
-    for name, origin, csrf, expected in (('missing-csrf', None, False, 400), ('invalid-csrf', None, 'x' * 32, 403), ('foreign-origin', 'https://attacker.invalid', True, 403), ('origin-suffix', 'http://admin:8080.attacker.invalid', True, 403)):
+    for name, origin, csrf, expected in (('missing-csrf', None, False, 400), ('invalid-csrf', None, 'x' * 32, 403), ('foreign-origin', 'https://attacker.invalid', True, 403), ('origin-suffix', ADMIN + '.attacker.invalid', True, 403)):
         owner.call('POST', '/api/v1/events', expected, name, event_input('Unsent'), origin=origin, csrf=csrf)
     require(len(owner.call('GET', '/api/v1/events', 200, 'denied-commands-created-no-events')['items']) == 2, 'denied mutation persisted no event')
     forged = event_input('Forged'); forged['platform_admin'] = True
@@ -153,7 +189,7 @@ def main():
     owner.call('PUT', base + '/staff', 200, 'explicit-native-role-revocation', grant, revision=current['revision'])
     stranger.call('GET', '/api/v1/session', 200, 'revoked-role-is-independent-of-identity-session')
     stranger.call('GET', base, 403, 'existing-session-current-role-revocation')
-    stranger = Client.login('http://admin:8080', 'stranger')
+    stranger = Client.login(ADMIN, 'stranger')
     stranger.call('GET', base, 403, 'fresh-login-cannot-resurrect-revoked-role')
     # Establish positive private-file/draft access before revocation, then reuse
     # that same valid identity session: denial must come from current authority.
@@ -168,12 +204,26 @@ def main():
     stranger.call('GET', private_file, 403, 'same-session-revoked-organiser-file')
     stranger.call('GET', base + '/content/' + content_id + '?preview=true', 404, 'same-session-revoked-organiser-draft')
     stranger.call('GET', base, 403, 'same-session-revoked-organiser-event')
-    stranger = Client.login('http://admin:8080', 'stranger')
+    stranger = Client.login(ADMIN, 'stranger')
     stranger.call('GET', private_file, 403, 'fresh-login-cannot-resurrect-organiser-file')
+    if TLS:
+        for actor, origin, label in ((owner, ADMIN, 'admin'), (public, PUBLIC, 'public')):
+            parsed = urllib.parse.urlsplit(origin)
+            cleartext = 'http://' + parsed.hostname + ':8080/api/v1/session'
+            try:
+                response = actor.http.open(urllib.request.Request(cleartext), timeout=15)
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                require(response.status == 401, 'Secure cookie withheld on same-host HTTP downgrade: ' + label)
+                observations.append({'scenario': 'secure-cookie-not-sent-over-http-' + label, 'status': response.status})
+        require({'hackbox_admin_session', 'hackbox_public_session'}.issubset(secure_cookie_names), 'both production session-cookie flags observed')
+        transport_assertions.append('secure-httponly-samesite-lax-host-only-cookies-observed-on-both-portals')
     public.call('POST', '/api/v1/logout', 204, 'logout-public-session-only')
     public.call('GET', '/api/v1/session', 401, 'logged-out-cookie-denied')
     owner.call('GET', base, 200, 'independent-admin-session-survives-public-logout')
     receipt = {'scope': 'agent-executed private normal-command deployment abuse; future/live competition, showcase browser and mentor feature retain separate proofs',
+               'transport_profile': 'production HTTPS with private trusted CA and real external TLS termination' if TLS else 'private-network HTTP/development', 'transport_assertions': transport_assertions, 'observed_cookie_names': sorted(secure_cookie_names),
                'normal_api_commands': True, 'configured_oidc_pkce': True, 'test_clock_or_sql_or_fabricated_session': False,
                'application_source': os.environ['HACKBOX_SECURITY_SOURCE'], 'verification_source': os.environ.get('HACKBOX_SECURITY_VERIFICATION_SOURCE', 'unrecorded'), 'observations': observations, 'complete_release_security': False}
     Path('/artifacts/security-deployment.json').write_text(json.dumps(receipt, indent=2) + '\n')

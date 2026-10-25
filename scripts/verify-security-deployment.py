@@ -2,6 +2,7 @@
 """Execute the private normal-command security walkthrough with pinned images."""
 import argparse
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -42,11 +43,35 @@ def production_changes(application_source, verification_source):
     return [path for path in paths if not path.endswith(('_test.go', '.test.ts', '.test.tsx'))]
 
 
+
+def synthetic_tls(directory):
+    directory.mkdir(mode=0o700)
+    ca_config = directory / 'ca.conf'
+    ca_config.write_text("[req]\ndistinguished_name=dn\nx509_extensions=ca\nprompt=no\n[dn]\nCN=Isolated security121 synthetic CA\n[ca]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,keyCertSign,cRLSign\nsubjectKeyIdentifier=hash\n")
+    extensions = directory / 'leaf.conf'
+    extensions.write_text("basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\nsubjectAltName=DNS:security-public.test,DNS:security-admin.test,DNS:security-issuer.test\n")
+    commands = [
+        ['openssl', 'genrsa', '-out', str(directory / 'ca.key'), '2048'],
+        ['openssl', 'req', '-new', '-x509', '-key', str(directory / 'ca.key'), '-sha256', '-days', '1', '-config', str(ca_config), '-out', str(directory / 'ca.pem')],
+        ['openssl', 'req', '-new', '-newkey', 'rsa:2048', '-nodes', '-keyout', str(directory / 'leaf.key'), '-out', str(directory / 'leaf.csr'), '-subj', '/CN=security-public.test'],
+        ['openssl', 'x509', '-req', '-in', str(directory / 'leaf.csr'), '-CA', str(directory / 'ca.pem'), '-CAkey', str(directory / 'ca.key'), '-CAcreateserial', '-out', str(directory / 'leaf.pem'), '-days', '1', '-sha256', '-extfile', str(extensions)],
+        ['openssl', 'verify', '-CAfile', str(directory / 'ca.pem'), '-verify_hostname', 'security-public.test', str(directory / 'leaf.pem')],
+    ]
+    for command in commands:
+        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Individual read-only mounts expose only these synthetic files to the
+    # nonroot fixture. Their private parent and the signing key never leave tmp.
+    for name in ['ca.pem', 'leaf.pem', 'leaf.key']:
+        (directory / name).chmod(0o444)
+    return {name: hashlib.sha256((directory / name).read_bytes()).hexdigest() for name in ['ca.pem', 'leaf.pem']}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for kind in ['public', 'admin', 'provider', 'python']:
         parser.add_argument('--' + kind + '-image', required=True, help='Immutable sha256 image ID, never a mutable tag')
     parser.add_argument('--application-source', required=True, help='Full source SHA from the independently retained image build record')
+    parser.add_argument('--tls', action='store_true', help='Production HTTPS issuer/origins, external synthetic TLS termination and actual Secure-cookie assertions; provider image must contain Node22')
     parser.add_argument('--artifacts', type=Path, required=True, help='New private directory outside this repository')
     args = parser.parse_args()
     if output(['git', 'status', '--porcelain']):
@@ -87,12 +112,18 @@ def main():
                'image_source_attribution': 'Supplied independently retained build record; production source equivalence checked by this runner. Empty embedded labels are not claimed as independent source verification.',
                'embedded_application_sources': embedded_sources, 'images': images, 'project': project,
                'scope': 'Agent-executed normal API/OIDC abuse walkthrough; not future competition, complete security certification or full CI',
+               'transport_profile': 'production HTTPS/external TLS and actual Secure cookies' if args.tls else 'private HTTP/development; not production TLS proof',
                'passed': False, 'complete_release_security': False}
     with tempfile.TemporaryDirectory(prefix='hackbox-security121-source-') as directory:
         snapshot = Path(directory)
         with tarfile.open(fileobj=io.BytesIO(subprocess.check_output(['git', 'archive', source], cwd=ROOT))) as archive:
             archive.extractall(snapshot, filter='data')
-        compose = ['docker', 'compose', '-p', project, '-f', str(snapshot / 'docs/verification/security/compose.yaml')]
+        config = 'compose.tls.yaml' if args.tls else 'compose.yaml'
+        if args.tls:
+            runtime_tls = snapshot / 'synthetic-tls-runtime'
+            summary['public_certificate_pem_sha256'] = synthetic_tls(runtime_tls)
+            env['HACKBOX_SECURITY_TLS_DIR'] = str(runtime_tls)
+        compose = ['docker', 'compose', '-p', project, '-f', str(snapshot / 'docs/verification/security' / config)]
         deployed = False
         try:
             run(compose + ['config', '--quiet'], artifacts / 'configuration.log', env)
@@ -105,6 +136,9 @@ def main():
             if receipt['application_source'] != args.application_source or receipt['verification_source'] != source:
                 raise RuntimeError('Walkthrough source receipt did not match the frozen execution')
             summary['observed_api_outcomes'] = len(receipt['observations'])
+            summary['transport_assertions'] = receipt.get('transport_assertions', [])
+            if args.tls and len(summary['transport_assertions']) != 3:
+                raise RuntimeError('Supported TLS/cookie transport assertions did not all execute')
             summary['passed'] = True
         finally:
             if deployed:
