@@ -1,6 +1,7 @@
 # Scoring, privacy and publication verification (#114)
 
-Base: corrected #113 candidate `b77dbd111687acdc6462716e1fefb1e220d31708`.
+Base: corrected #113 candidate plus measured CI job budget
+`908a69f8b0b01b39cda87f759530667a9fc7c4cb`.
 This delivery remains incomplete until native verification, independent review,
 prerequisite corrections and exact-head CI are green. Compilation alone proves
 neither the assertions below nor completion of the issue.
@@ -41,7 +42,7 @@ HACKBOX_INTEGRATION=1 go test -v -race -p 1 -parallel 1 \
   ./internal/qualification ./internal/judging ./internal/results \
   ./internal/archives -count=1 -timeout=10m
 HACKBOX_INTEGRATION=1 go test -v -race -p 1 -parallel 1 ./internal/app \
-  -run '^Test(IndependentHandWorkedScoringUsesNativeSourcesInBothModes|IndependentFiveTeamQualificationToNonFinalistCategoryAwardPublication|Results.*|ResultPublicationAndOfficialFactRollbackTogetherOnNativeFactFailure|FinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote|JudgePublishedOrderUsesNativeReleaseAndAssignmentAuthority)$' \
+  -run '^Test(IndependentHandWorkedScoringUsesNativeSourcesInBothModes|IndependentFiveTeamQualificationToNonFinalistCategoryAwardPublication|QualificationFiveTeamNativeFinalFixture|QualificationHTTP.*|Results.*|ResultPublicationAndOfficialFactRollbackTogetherOnNativeFactFailure|FinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote|JudgePublishedOrderUsesNativeReleaseAndAssignmentAuthority)$' \
   -count=1 -timeout=10m
 ```
 
@@ -65,7 +66,17 @@ Stronger composed proof then added actual pre-live perfect practice to the same
 lifetime as genuine signed qualification and fresh final cards. This complete
 focused run passed: judging5.792s and app12.950s (golden11.33s, both modes). The
 complete five-team publication regression passed44.76s (Go package46.279s).
-The broader scoped suite remains pending at this checkpoint. No production code has been changed.
+All seven full native owner packages passed on a277b3d4: rubric17.082s,
+scorecards25.864s, moderation82.885s, qualification292.141s, judging91.201s,
+results23.252s and archives37.313s. No failures or skips. Exact passed test names,
+source references, command and log digest are retained in
+[native-owner-summary.json](native-owner-summary.json). The native app suite is
+still pending at this checkpoint.
+
+The two owned commits were then rebased onto908a69f8, which only adds the
+independently reviewed measured Go CI job-budget correction. New head92c7a568
+has byte-identical Go/API/module source to testeda277b3d4 (git diff passed);
+owner tests were not unnecessarily repeated for a workflow budget alone. No production code has been changed.
 
 Remaining gates: actual native runs and any genuine failures; full independent
 Standards/Spec reviews; #111 focus correction and #113 archive correction; clear
