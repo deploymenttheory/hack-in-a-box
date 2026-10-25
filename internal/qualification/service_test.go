@@ -21,39 +21,6 @@ import (
 func TestNonFinalistCanWinCategoryAndOneTeamCanWinMultipleWithoutCarryingCheckpointScores(
 	t *testing.T,
 ) {
-	f := setupPool(t, testdb.New(t, true), 5)
-	huddles := f.huddles()
-	cp := f.configure("mentor_final")
-	f.now = f.config.SubmissionCutoff
-	service := Service{
-		Pool:       f.pool,
-		Now:        func() time.Time { return f.now },
-		Cards:      &f.s,
-		Moderation: huddles,
-		Freeze:     &submissionfreeze.Service{Pool: f.pool, Now: func() time.Time { return f.now }},
-	}
-	for _, team := range f.teams {
-		f.useTeam(team)
-		f.freeze()
-	}
-	page, err := service.Change(
-		t.Context(),
-		f.owner.ID,
-		f.event,
-		cp.Definition.RunID,
-		f.revision(),
-		Command{
-			Action: "configure_panel",
-			Reason: "All eligible competing teams",
-			Panel: &Panel{
-				MentorIDs:   []uuid.UUID{f.primary.ID, f.second.ID},
-				OrganiserID: f.owner.ID,
-			},
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	values := [][]int{
 		{10, 9, 10, 9, 9},
 		{9, 8, 9, 8, 8},
@@ -61,88 +28,8 @@ func TestNonFinalistCanWinCategoryAndOneTeamCanWinMultipleWithoutCarryingCheckpo
 		{7, 6, 7, 6, 6},
 		{1, 10, 1, 1, 1},
 	}
-	for index, team := range f.teams {
-		f.useTeam(team)
-		f.submit(cp, f.primary.ID, true)
-		f.submit(cp, f.second.ID, true)
-		h := f.create(huddles, cp)
-		h = f.change(huddles, h, f.second.ID, moderation.Command{Action: "complete_second_review"})
-		h = f.change(huddles, h, f.owner.ID, moderation.Command{Action: "open"})
-		f.change(
-			huddles,
-			h,
-			f.owner.ID,
-			moderation.Command{
-				Action: "sign_off",
-				Reason: "Complete actual independent frozen final source",
-			},
-		)
-		scores := []scorecards.CategoryScore{}
-		for categoryIndex, category := range cp.Criteria.Categories {
-			value := values[index][categoryIndex]
-			scores = append(
-				scores,
-				scorecards.CategoryScore{
-					CategoryID: category.ID,
-					Value:      &value,
-					Evidence: []scorecards.EvidenceReference{
-						{Kind: "note", Note: "Explicit moderated frozen-final category evidence"},
-					},
-				},
-			)
-		}
-		page, err = service.Change(
-			t.Context(),
-			f.owner.ID,
-			f.event,
-			cp.Definition.RunID,
-			f.revision(),
-			Command{
-				Version:       page.Round.Version,
-				FreezeBinding: qualificationBinding(page, team.team),
-				Action:        "save_card",
-				Reason:        "Explicit moderated values, not checkpoint aggregation",
-				Card:          &CardInput{TeamID: team.team, Scores: scores},
-			},
-		)
-		if err != nil {
-			t.Fatal(err)
-		}
-		card := page.Round.Cards[slices.IndexFunc(page.Round.Cards, func(card FinalCard) bool { return card.TeamID == team.team })]
-		page, err = service.Change(
-			t.Context(),
-			f.owner.ID,
-			f.event,
-			cp.Definition.RunID,
-			f.revision(),
-			Command{
-				Version:       page.Round.Version,
-				FreezeBinding: qualificationBinding(page, team.team),
-				Action:        "sign_card",
-				TeamID:        team.team,
-				CardVersion:   card.Version,
-				Reason:        "Explicit complete final mentor signoff",
-			},
-		)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	page, err = service.Change(
-		t.Context(),
-		f.owner.ID,
-		f.event,
-		cp.Definition.RunID,
-		f.revision(),
-		Command{
-			Version: page.Round.Version,
-			Action:  "propose",
-			Reason:  "Compare complete final mentor cards",
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	f, service, cp, page := signedQualificationCohort(t, values)
+	var err error
 	p := page.Round.Proposal
 	if p == nil || len(p.Blockers) > 0 || len(p.FinalistIDs) != 3 || len(p.ReserveIDs) != 1 ||
 		p.Rankings[0].Total != 47 {
@@ -316,4 +203,129 @@ func qualificationBinding(page Page, team uuid.UUID) string {
 		}
 	}
 	return ""
+}
+
+func signedQualificationCohort(
+	t *testing.T,
+	values [][]int,
+) (*fixture, Service, scorecards.Checkpoint, Page) {
+	t.Helper()
+	f := setupPool(t, testdb.New(t, true), len(values))
+	huddles := f.huddles()
+	cp := f.configure("mentor_final")
+	f.now = f.config.SubmissionCutoff
+	service := Service{
+		Pool:       f.pool,
+		Now:        func() time.Time { return f.now },
+		Cards:      &f.s,
+		Moderation: huddles,
+		Freeze:     &submissionfreeze.Service{Pool: f.pool, Now: func() time.Time { return f.now }},
+	}
+	for _, team := range f.teams {
+		f.useTeam(team)
+		f.freeze()
+	}
+	page, err := service.Change(
+		t.Context(),
+		f.owner.ID,
+		f.event,
+		cp.Definition.RunID,
+		f.revision(),
+		Command{
+			Action: "configure_panel",
+			Reason: "All eligible competing teams",
+			Panel: &Panel{
+				MentorIDs:   []uuid.UUID{f.primary.ID, f.second.ID},
+				OrganiserID: f.owner.ID,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for index, team := range f.teams {
+		f.useTeam(team)
+		f.submit(cp, f.primary.ID, true)
+		f.submit(cp, f.second.ID, true)
+		h := f.create(huddles, cp)
+		h = f.change(huddles, h, f.second.ID, moderation.Command{Action: "complete_second_review"})
+		h = f.change(huddles, h, f.owner.ID, moderation.Command{Action: "open"})
+		f.change(
+			huddles,
+			h,
+			f.owner.ID,
+			moderation.Command{
+				Action: "sign_off",
+				Reason: "Complete actual independent frozen final source",
+			},
+		)
+		scores := []scorecards.CategoryScore{}
+		for categoryIndex, category := range cp.Criteria.Categories {
+			value := values[index][categoryIndex]
+			scores = append(
+				scores,
+				scorecards.CategoryScore{
+					CategoryID: category.ID,
+					Value:      &value,
+					Evidence: []scorecards.EvidenceReference{
+						{Kind: "note", Note: "Explicit moderated frozen-final category evidence"},
+					},
+				},
+			)
+		}
+		page, err = service.Change(
+			t.Context(),
+			f.owner.ID,
+			f.event,
+			cp.Definition.RunID,
+			f.revision(),
+			Command{
+				Version:       page.Round.Version,
+				FreezeBinding: qualificationBinding(page, team.team),
+				Action:        "save_card",
+				Reason:        "Explicit moderated values, not checkpoint aggregation",
+				Card:          &CardInput{TeamID: team.team, Scores: scores},
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		card := page.Round.Cards[slices.IndexFunc(page.Round.Cards, func(card FinalCard) bool { return card.TeamID == team.team })]
+		page, err = service.Change(
+			t.Context(),
+			f.owner.ID,
+			f.event,
+			cp.Definition.RunID,
+			f.revision(),
+			Command{
+				Version:       page.Round.Version,
+				FreezeBinding: qualificationBinding(page, team.team),
+				Action:        "sign_card",
+				TeamID:        team.team,
+				CardVersion:   card.Version,
+				Reason:        "Explicit complete final mentor signoff",
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	page, err = service.Change(
+		t.Context(),
+		f.owner.ID,
+		f.event,
+		cp.Definition.RunID,
+		f.revision(),
+		Command{
+			Version: page.Round.Version,
+			Action:  "propose",
+			Reason:  "Compare complete final mentor cards",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return f, service, cp, page
 }

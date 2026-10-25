@@ -107,3 +107,21 @@ error wrapping corrected them; configured local golangci-lint2.14.0 reports0issu
 for qualification/moderation/mentor/rubric packages. Full API/runtime/history,
 tied-cutoff/category votes, managed-amendment, concurrency and migration preservation
 proof remain required; no acceptance scope has been narrowed.
+
+The clean immutable `781619483e82bdb5000e6e98042a08e0d77a1043` owned suite
+passed16.838s with actual PostgreSQL/-race after the lint refactor.
+
+## Actual tied-selection performance RED
+
+Production7816194 plus the exact new tied-cutoff/category regression and shared
+native fixture helper (retained in the next test commit after execution) reached
+the fixed five-minute timeout: FAIL300.329s, handle79770. It uses five real native
+independent/huddle/moderated final cards, four selected total-tie seats and five
+category ties, including missing/duplicate ballot and casting-authority checks.
+The source was unchanged during execution. No timeout/assertion was increased.
+Actual Go stacks identify `cohort → ballots → resolved → resolveTotals → proposal
+→ page → Change` while recording an organiser casting resolution. A bounded1s
+process sample and timeout stacks remain at `/private/tmp/hackbox110-ties-actual.sample.txt`
+and `/private/tmp/hackbox110-ties.log`. Testcontainers' reaper removed owned
+PostgreSQL3583405e62cd; no labelled testcontainers remained at the post-run check.
+This is a native validation-performance failure, not successful tie acceptance.
