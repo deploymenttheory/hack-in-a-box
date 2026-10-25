@@ -150,6 +150,7 @@ func (s Service) cohort(
 func sourceReference(team nativeTeam) FinalSource {
 	h := team.source
 	return FinalSource{
+		ModeratorID:          h.ModeratorID,
 		HuddleID:             h.HuddleID,
 		HuddleVersion:        h.HuddleVersion,
 		SignoffID:            h.Signoff.ID,

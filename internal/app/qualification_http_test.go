@@ -206,7 +206,27 @@ func TestQualificationHTTPStrictNativeRuntimeOriginalReceiptsAndRoleLoss(t *test
 		}
 		return response.StatusCode, raw
 	}
-	status, raw := request(admin, r.owner, "GET", base, nil, 0, true)
+	collection := fmt.Sprintf("/api/v1/events/%s/mentor-qualification", r.eventID)
+	status, raw := request(admin, r.owner, "GET", collection, nil, 0, true)
+	if status != 200 {
+		t.Fatal("actual organiser run discovery", status, string(raw))
+	}
+	var discovered qualification.Rounds
+	if err := json.Unmarshal(
+		raw,
+		&discovered,
+	); err != nil || len(discovered.Items) != 1 || discovered.Items[0].RunID != run ||
+		!discovered.Items[0].CanConfigurePanel {
+		t.Fatal("native discovery source metadata", discovered, err)
+	}
+	status, raw = request(public, r.mentor, "GET", collection, nil, 0, true)
+	if status != 200 {
+		t.Fatal("private pre-panel discovery", status, string(raw))
+	}
+	if err := json.Unmarshal(raw, &discovered); err != nil || len(discovered.Items) != 0 {
+		t.Fatal("unrecorded mentor saw private run context", discovered, err)
+	}
+	status, raw = request(admin, r.owner, "GET", base, nil, 0, true)
 	if status != 200 {
 		t.Fatal("current native qualification read", status, string(raw))
 	}
@@ -285,6 +305,22 @@ func TestQualificationHTTPStrictNativeRuntimeOriginalReceiptsAndRoleLoss(t *test
 	var current qualification.Page
 	if err := json.Unmarshal(raw, &current); err != nil || current.Receipt != nil {
 		t.Fatal("fresh public portal read became an ACK", err)
+	}
+	if !current.Capabilities.CanReadPanel || current.Capabilities.CanConfigurePanel ||
+		current.Capabilities.CanPropose ||
+		current.Capabilities.CanSignOff {
+		t.Fatal("HTTP action projection inferred organiser rights", current.Capabilities)
+	}
+	status, raw = request(public, r.mentor, "GET", collection, nil, 0, true)
+	if status != 200 {
+		t.Fatal("intended mentor run discovery", status, string(raw))
+	}
+	if err := json.Unmarshal(
+		raw,
+		&discovered,
+	); err != nil || len(discovered.Items) != 1 || discovered.Items[0].RunID != run ||
+		discovered.Items[0].CanConfigurePanel {
+		t.Fatal("intended native discovery capabilities", discovered, err)
 	}
 	receiptPath := base + "/commands/" + accepted.Receipt.RequestID.String()
 	if status, raw = request(admin, r.owner, "GET", receiptPath, nil, 0, true); status != 200 {

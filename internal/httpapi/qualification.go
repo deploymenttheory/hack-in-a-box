@@ -95,3 +95,17 @@ func (h handlers) GetQualificationHistory(
 	}
 	return convertDTO[contract.GetQualificationHistory200JSONResponse](history)
 }
+
+func (h handlers) GetQualificationRounds(
+	ctx context.Context,
+	r contract.GetQualificationRoundsRequestObject,
+) (contract.GetQualificationRoundsResponseObject, error) {
+	if h.Qualification.Pool == nil {
+		return nil, access.ErrForbidden
+	}
+	rounds, err := h.Qualification.Rounds(ctx, actor(ctx).ID, r.EventId)
+	if err != nil {
+		return nil, fmt.Errorf("discover current qualification panel: %w", err)
+	}
+	return convertDTO[contract.GetQualificationRounds200JSONResponse](rounds)
+}

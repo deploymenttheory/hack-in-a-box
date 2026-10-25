@@ -63,6 +63,26 @@ func TestNonFinalistCanWinCategoryAndOneTeamCanWinMultipleWithoutCarryingCheckpo
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !page.Capabilities.RecordLocked || page.Capabilities.CanConfigurePanel ||
+		page.Capabilities.CanPropose ||
+		page.Capabilities.CanSignOff {
+		t.Fatal("signed record advertised further mutations", page.Capabilities)
+	}
+	var handoff Selection
+	if err = database.Within(t.Context(), f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		var err error
+		handoff, err = service.SelectionInTransaction(t.Context(), tx, f.event)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if handoff.RunID != cp.Definition.RunID || handoff.RoundVersion != page.Round.Version ||
+		handoff.Reference != page.Round.Cards[0].Source.Rubric ||
+		handoff.SignedBinding != page.Round.Signoff.Binding ||
+		!slices.Equal(handoff.FinalistIDs, page.Round.Proposal.FinalistIDs) ||
+		len(handoff.Categories) != 5 {
+		t.Fatal("results handoff did not bind the exact native selection", handoff)
+	}
 	if !page.Current || page.Round.Signoff == nil {
 		t.Fatal("exact selection not current")
 	}
@@ -170,6 +190,13 @@ func TestModeratedCardRequiresNativeSignedFinalAndExplicitCompleteEvidence(t *te
 	page, err = service.Change(t.Context(), f.owner.ID, f.event, run, f.revision(), command)
 	if err != nil {
 		t.Fatal(err)
+	}
+	teamStatus := page.Teams[0]
+	if teamStatus.Source == nil || teamStatus.Source.ModeratorID != f.owner.ID ||
+		!teamStatus.CanSaveCard ||
+		!teamStatus.CanSignCard ||
+		teamStatus.CardVersion != 1 {
+		t.Fatal("current canonical draft action projection", teamStatus)
 	}
 	if len(page.Round.Cards) != 1 || page.Round.Cards[0].State != "draft" ||
 		page.Round.Cards[0].Source.SignoffID != *h.SignoffID ||

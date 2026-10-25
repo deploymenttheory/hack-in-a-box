@@ -42,6 +42,7 @@ type Panel struct {
 	OrganiserID uuid.UUID   `json:"organiser_id"`
 }
 type FinalSource struct {
+	ModeratorID          uuid.UUID        `json:"moderator_id"`
 	FreezeBinding        string           `json:"freeze_binding"`
 	FreezeStatus         string           `json:"freeze_status"`
 	RepositoryDecisionID *uuid.UUID       `json:"repository_decision_id"`
@@ -72,13 +73,20 @@ type Eligibility struct {
 	At       time.Time                      `json:"at"`
 }
 type TeamStatus struct {
-	TeamID        uuid.UUID `json:"team_id"`
-	EntryID       uuid.UUID `json:"entry_id"`
-	Outcome       string    `json:"outcome"`
-	FreezeStatus  string    `json:"freeze_status"`
-	FreezeBinding string    `json:"freeze_binding"`
-	Eligible      bool      `json:"eligible"`
-	Blockers      []string  `json:"blockers"`
+	Source               *FinalSource `json:"source"`
+	CardVersion          int64        `json:"card_version"`
+	CardState            string       `json:"card_state"`
+	CardSourceCurrent    bool         `json:"card_source_current"`
+	CanSaveCard          bool         `json:"can_save_card"`
+	CanSignCard          bool         `json:"can_sign_card"`
+	CanDecideEligibility bool         `json:"can_decide_eligibility"`
+	TeamID               uuid.UUID    `json:"team_id"`
+	EntryID              uuid.UUID    `json:"entry_id"`
+	Outcome              string       `json:"outcome"`
+	FreezeStatus         string       `json:"freeze_status"`
+	FreezeBinding        string       `json:"freeze_binding"`
+	Eligible             bool         `json:"eligible"`
+	Blockers             []string     `json:"blockers"`
 }
 type Ranking struct {
 	TeamID uuid.UUID `json:"team_id"`
@@ -146,13 +154,15 @@ type Round struct {
 	ChangedAt   time.Time     `json:"changed_at"`
 }
 type Page struct {
-	Receipt  *Receipt                `json:"receipt"`
-	Preview  *Proposal               `json:"preview"`
-	Revision int64                   `json:"revision"`
-	Round    Round                   `json:"round"`
-	Criteria rubric.PublicDefinition `json:"criteria"`
-	Teams    []TeamStatus            `json:"teams"`
-	Current  bool                    `json:"current"`
+	Capabilities Capabilities            `json:"capabilities"`
+	TieActions   []TieAction             `json:"tie_actions"`
+	Receipt      *Receipt                `json:"receipt"`
+	Preview      *Proposal               `json:"preview"`
+	Revision     int64                   `json:"revision"`
+	Round        Round                   `json:"round"`
+	Criteria     rubric.PublicDefinition `json:"criteria"`
+	Teams        []TeamStatus            `json:"teams"`
+	Current      bool                    `json:"current"`
 }
 type History struct {
 	Items      []HistoricalRound `json:"items"`

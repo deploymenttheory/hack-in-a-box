@@ -201,3 +201,35 @@ read-only with matching lockfile; no global dependency install. The complete
 managed amendment/history/native fresh-final integration, excluded outcomes,
 required-review/gap/concurrency and actual populated51→52/rollback cases remain
 owned here before final source-wide verification, CI and independent reviews.
+
+## Required native consumer projections and results source
+
+The #111 consumer preflight identified genuine read gaps: panel mentors could
+not use an organiser-only rubric catalogue as run discovery, and action authority
+must not be inferred from roles or an old signed projection. The additive native
+collection now discovers actual current published mentor-final runs under the
+actor's organiser/intended-panel authority. Exact readers remain authoritative.
+Native per-page/per-team/tie readiness mirrors existing command checks, including
+record lock, current canonical moderator/source, captured card version, eligibility
+review, complete required ballots and organiser casting choices. No new write
+policy or schema52 change is introduced. Source IDs never grant source access.
+
+`SelectionInTransaction(ctx,tx,eventID)` supplies #112 a revalidated exact current
+private signoff's run/round version, rubric reference, signed binding, signer/time,
+finalist/reserve/category IDs only. It returns no mentor total/rank/prose and grants
+no publication. The results owner must enforce its current actor/recipient/command
+authority in that same transaction. The existing real finalist policy now delegates
+to that same source, retaining its selected-team membership check.
+
+Working-tree native proof on the owned extension of2abe: discovery/current panel/
+read-only3.609s; canonical moderator/draft/signed-record and exact five-team metadata
+handoff14.667s; affected total-tie required ballots/duplicate prevention/casting
+readiness22.461s; strict authenticated runtime discovery/capabilities5.501s, all
+PostgreSQL/-race. A handoff extraction compile-only failure was corrected before
+execution; it is not a product RED. Current generated TypeScript/no-emit and six-
+package configured lint pass0issues. The first lint attempt encountered another
+lane's process lock; the successful run uses a private task cache, leaving shared
+caches untouched. Existing reader scope was extracted unchanged for lint.
+
+Full remaining source/managed amendment/history/fresh-judge/schema acceptance
+proof and final integrated verification/reviews/CI remain required.

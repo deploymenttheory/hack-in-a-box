@@ -61,6 +61,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}/mentor-qualification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getQualificationRounds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/mentor-qualification/{run_id}/history": {
         parameters: {
             query?: never;
@@ -4093,6 +4111,8 @@ export interface components {
             organiser_id: string;
         };
         QualificationFinalSource: {
+            /** Format: uuid */
+            moderator_id: string;
             freeze_binding: string;
             freeze_status: string;
             /** Format: uuid */
@@ -4135,6 +4155,14 @@ export interface components {
             at: string;
         };
         QualificationTeamStatus: {
+            source: components["schemas"]["QualificationFinalSource"] | null;
+            /** Format: int64 */
+            card_version: number;
+            card_state: string;
+            card_source_current: boolean;
+            can_save_card: boolean;
+            can_sign_card: boolean;
+            can_decide_eligibility: boolean;
             /** Format: uuid */
             team_id: string;
             /** Format: uuid */
@@ -4227,6 +4255,8 @@ export interface components {
             changed_at: string;
         };
         QualificationPage: {
+            capabilities: components["schemas"]["QualificationCapabilities"];
+            tie_actions: components["schemas"]["QualificationTieAction"][];
             receipt: components["schemas"]["QualificationReceipt"] | null;
             preview: components["schemas"]["QualificationProposal"] | null;
             /** Format: int64 */
@@ -4291,6 +4321,40 @@ export interface components {
         QualificationHistoricalRound: {
             snapshot: components["schemas"]["QualificationRound"];
             current: boolean;
+        };
+        QualificationCapabilities: {
+            can_read_panel: boolean;
+            can_configure_panel: boolean;
+            can_propose: boolean;
+            can_sign_off: boolean;
+            read_only: boolean;
+            record_locked: boolean;
+        };
+        QualificationTieAction: {
+            tie_id: string;
+            seat: number;
+            candidate_team_ids: string[];
+            can_vote: boolean;
+            has_voted: boolean;
+            can_resolve: boolean;
+            resolve_team_ids: string[];
+            casting: boolean;
+            required_votes: number;
+            votes_complete: boolean;
+        };
+        QualificationRun: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            previous_run_id: string | null;
+            name: string;
+            /** Format: int64 */
+            version: number;
+            can_configure_panel: boolean;
+            record_locked: boolean;
+        };
+        QualificationRounds: {
+            items: components["schemas"]["QualificationRun"][];
         };
         JudgeCardState: {
             /** Format: uuid */
@@ -9068,6 +9132,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QualificationRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getQualificationRounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current native private projection; original request metadata is distinct from current state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationRounds"];
                 };
             };
             default: components["responses"]["Error"];

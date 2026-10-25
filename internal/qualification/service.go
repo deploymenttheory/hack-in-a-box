@@ -2,7 +2,6 @@ package qualification
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -119,11 +118,17 @@ func (s Service) page(
 	v scope,
 ) (Page, error) {
 	out := Page{
-		Revision: v.row.Revision,
-		Round:    v.round,
-		Criteria: v.criteria,
-		Teams:    []TeamStatus{},
+		Revision:   v.row.Revision,
+		Round:      v.round,
+		Criteria:   v.criteria,
+		Teams:      []TeamStatus{},
+		TieActions: []TieAction{},
 	}
+	capabilities, err := s.baseCapabilities(ctx, tx, actor, eventID, v)
+	if err != nil {
+		return Page{}, err
+	}
+	out.Capabilities = capabilities
 	if v.round.Version == 0 {
 		return out, nil
 	}
@@ -138,33 +143,20 @@ func (s Service) page(
 	if err != nil {
 		return Page{}, err
 	}
-	if panelReader(actor, v.round) {
-		for _, team := range teams {
-			if !team.status.Eligible {
-				continue
-			}
-			err := mentors.AuthorizeQualificationPanelInTransaction(
-				ctx,
-				tx,
-				actor,
-				eventID,
-				team.status.TeamID,
-			)
-			if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrNotFound) ||
-				errors.Is(err, access.ErrConflict) {
-				clearPrivate(&out.Round)
-				preview := emptyProposal()
-				preview.Blockers = append(preview.Blockers, "current_panel_scope_required")
-				out.Preview = &preview
-				return out, nil
-			}
-			if err != nil {
-				return Page{}, failure("current cohort reader", err)
-			}
-		}
+	readable, err := s.cohortReadable(ctx, tx, actor, eventID, v, teams)
+	if err != nil {
+		return Page{}, err
 	}
+	if !readable {
+		clearPrivate(&out.Round)
+		preview := emptyProposal()
+		preview.Blockers = append(preview.Blockers, "current_panel_scope_required")
+		out.Preview = &preview
+		return out, nil
+	}
+
 	for _, team := range teams {
-		out.Teams = append(out.Teams, team.status)
+		out.Teams = append(out.Teams, s.teamActions(ctx, tx, actor, eventID, v, team))
 	}
 	cards := []FinalCard{}
 	for _, card := range v.round.Cards {
@@ -204,6 +196,12 @@ func (s Service) page(
 		return Page{}, err
 	}
 	out.Preview = &fresh
+	out.Capabilities.CanReadPanel = true
+	out.Capabilities.CanPropose = writable(v) && actor == v.round.Panel.OrganiserID
+	out.Capabilities.CanSignOff = out.Capabilities.CanPropose && v.round.Proposal != nil &&
+		v.round.Proposal.Binding == fresh.Binding &&
+		len(fresh.Blockers) == 0
+	out.TieActions = s.tieActions(ctx, tx, actor, eventID, v, fresh, teams)
 	if v.round.Proposal != nil {
 		sourcesCurrent := fresh.Binding == v.round.Proposal.Binding
 		out.Current = sourcesCurrent && len(fresh.Blockers) == 0 && v.round.Signoff != nil &&
