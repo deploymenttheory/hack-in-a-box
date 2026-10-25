@@ -30,6 +30,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositoryaccess"
+	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -161,6 +162,7 @@ func newCommunicationRuntime(
 	}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
+		"results.published":       automation.ResultSource{Results: &results.Service{Pool: pool, Now: now}},
 		"outcome.follow_up":       outcomes.ReviewSources{Service: followThrough},
 		"survey.open":             automation.SurveySource{Surveys: questionnaires},
 		"help.updated":            automation.HelpSource{Help: helpProvider},

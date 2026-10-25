@@ -70,11 +70,36 @@ func (s Service) OriginalReceipt(
 		if err != nil {
 			return err
 		}
-		if !current.organiser {
+		out.Receipt, err = originalReceipt(ctx, tx, actor, eventID, requestID)
+		if err != nil {
+			return err
+		}
+		if out.Receipt == nil {
+			return nil
+		}
+		if out.Receipt.Action == "vote" {
+			if !current.judge || s.Judging == nil || len(out.Receipt.TeamIDs) < 2 {
+				return access.ErrForbidden
+			}
+			for _, team := range out.Receipt.TeamIDs {
+				if err := s.Judging.AuthorizeResultTargetInTransaction(
+					ctx,
+					tx,
+					actor,
+					eventID,
+					out.Receipt.RunID,
+					team,
+				); err != nil {
+					return err
+				}
+			}
+		} else if !current.organiser {
 			return access.ErrForbidden
 		}
-		out.Receipt, err = originalReceipt(ctx, tx, actor, eventID, requestID)
-		return err
+		return nil
 	})
-	return out, failure("recover original metadata", err)
+	if err != nil {
+		return Recovery{}, failure("recover original metadata", err)
+	}
+	return out, nil
 }

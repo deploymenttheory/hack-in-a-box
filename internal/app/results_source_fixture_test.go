@@ -36,6 +36,10 @@ type resultsSourceFixture struct {
 }
 
 func newResultsSourceFixture(t *testing.T, mode string) *resultsSourceFixture {
+	return newResultsSourceFixtureWithSetup(t, mode, nil, nil)
+}
+
+func newResultsSourceFixtureWithSetup(t *testing.T, mode string, configure func(*rubric.Definition), beforeCutoff func(*resultsSourceFixture, rehearsalSurface)) *resultsSourceFixture {
 	t.Helper()
 	f := &resultsSourceFixture{}
 	r, admin, public, run := qualificationHTTPFixtureWithCriteria(t, func(d *rubric.Definition) {
@@ -47,6 +51,9 @@ func newResultsSourceFixture(t *testing.T, mode string) *resultsSourceFixture {
 			d.FinalistCount = 1
 		}
 		d.Categories[0].Weight = 2
+		if configure != nil {
+			configure(d)
+		}
 	}, func(r *liveRehearsal, s rehearsalSurface, run uuid.UUID) {
 		f.runtime = r
 		f.admin = s
@@ -89,6 +96,9 @@ func newResultsSourceFixture(t *testing.T, mode string) *resultsSourceFixture {
 			},
 		)
 		resultsSourceRequire(t, err)
+		if beforeCutoff != nil {
+			beforeCutoff(f, s)
+		}
 		if mode == rubric.MentorQualification {
 			f.prepareMentors(t, s, run)
 		}
@@ -240,6 +250,23 @@ func (f *resultsSourceFixture) complete(t *testing.T) {
 	f.card(t, 0, 6, "submit")
 	f.card(t, 1, 8, "submit")
 	f.round(t, judging.RoundCommand{Action: "open_deliberation"})
+}
+
+func (f *resultsSourceFixture) reopen(t *testing.T, index int) {
+	t.Helper()
+	r := f.runtime
+	states, err := f.admin.deps.Judging.CardStates(t.Context(), r.owner.ID, r.eventID, f.judgeRun, r.teamID)
+	resultsSourceRequire(t, err)
+	for _, state := range states.Items {
+		if state.AuthorID != f.judges[index].ID {
+			continue
+		}
+		_, err = f.admin.deps.Judging.ChangeCard(t.Context(), r.owner.ID, r.eventID, f.judgeRun, r.teamID, state.Version,
+			judging.CardCommand{RequestID: uuid.New(), Action: "reopen", AuthorID: state.AuthorID, SubmissionRevision: state.SubmissionRevision, RepositoryDecisionID: state.RepositoryDecisionID, Reason: "Reviewed correction invalidates the exact independent result source"})
+		resultsSourceRequire(t, err)
+		return
+	}
+	t.Fatal("actual current card unavailable for reopen")
 }
 
 func (f *resultsSourceFixture) prepareMentors(t *testing.T, s rehearsalSurface, run uuid.UUID) {

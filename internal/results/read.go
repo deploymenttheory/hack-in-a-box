@@ -49,6 +49,7 @@ func (s Service) page(
 		return Page{}, err
 	}
 	out := Page{
+		TieStates:     []TieState{},
 		Revision:      current.event.Revision,
 		Round:         round,
 		Preview:       source.preview,
@@ -80,7 +81,12 @@ func (s Service) page(
 	return out, err
 }
 
-func published(ctx context.Context, tx pgx.Tx, eventID uuid.UUID, now time.Time) ([]Announcement, error) {
+func published(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	now time.Time,
+) ([]Announcement, error) {
 	rows, err := tx.Query(
 		ctx,
 		"SELECT document FROM result_publications WHERE event_id=$1 AND published_at<=$2 ORDER BY published_at,id",

@@ -77,6 +77,7 @@ type Preview struct {
 	Blockers         []string                 `json:"blockers"`
 }
 type Round struct {
+	PreparedBy   uuid.UUID     `json:"prepared_by"`
 	Version      int64         `json:"version"`
 	Source       Preview       `json:"source"`
 	Votes        []Vote        `json:"votes"`
@@ -131,14 +132,17 @@ type Command struct {
 	Reason        string         `json:"reason"`
 }
 type Receipt struct {
-	RequestID        uuid.UUID  `json:"request_id"`
-	ActorID          uuid.UUID  `json:"actor_id"`
-	Action           string     `json:"action"`
-	ExpectedRevision int64      `json:"expected_revision"`
-	ExpectedVersion  int64      `json:"expected_version"`
-	Version          int64      `json:"version"`
-	Fingerprint      string     `json:"fingerprint"`
-	PublicationID    *uuid.UUID `json:"publication_id"`
+	RunID            uuid.UUID   `json:"run_id"`
+	TieID            string      `json:"tie_id"`
+	TeamIDs          []uuid.UUID `json:"team_ids"`
+	RequestID        uuid.UUID   `json:"request_id"`
+	ActorID          uuid.UUID   `json:"actor_id"`
+	Action           string      `json:"action"`
+	ExpectedRevision int64       `json:"expected_revision"`
+	ExpectedVersion  int64       `json:"expected_version"`
+	Version          int64       `json:"version"`
+	Fingerprint      string      `json:"fingerprint"`
+	PublicationID    *uuid.UUID  `json:"publication_id"`
 }
 type Recovery struct {
 	Receipt *Receipt `json:"receipt"`

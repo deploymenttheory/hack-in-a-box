@@ -65,6 +65,40 @@ func namedTeams(
 	return out, nil
 }
 
+func (s Service) awardAnnouncement(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	awards []Award,
+) (*Announcement, error) {
+	out := &Announcement{
+		ID:          uuid.New(),
+		Kind:        "awards",
+		Finalists:   []NamedTeam{},
+		Reserves:    []NamedTeam{},
+		Awards:      []AnnouncedAward{},
+		PublishedAt: s.now(),
+	}
+	for _, award := range awards {
+		teams, err := namedTeams(ctx, tx, eventID, []uuid.UUID{award.TeamID})
+		if err != nil {
+			return nil, err
+		}
+		out.Awards = append(
+			out.Awards,
+			AnnouncedAward{
+				PrizeID:    award.PrizeID,
+				Name:       award.Name,
+				CategoryID: award.CategoryID,
+				Team:       teams[0],
+				Amount:     award.Amount,
+				Currency:   award.Currency,
+			},
+		)
+	}
+	return out, nil
+}
+
 func retainPublication(
 	ctx context.Context,
 	tx pgx.Tx,

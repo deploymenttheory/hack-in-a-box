@@ -19,15 +19,31 @@ func (s Service) Released(ctx context.Context, actor, eventID uuid.UUID) ([]Anno
 		if _, err := q.LockEvent(ctx, eventID); err != nil {
 			return failure("lock released event", err)
 		}
-		if err := (access.EventPolicy{Queries: q, Clock: s.now}).Authorize(ctx, actor, eventID, eventID, access.EventRead); err != nil {
+		if err := (access.EventPolicy{Queries: q, Clock: s.now}).Authorize(
+			ctx,
+			actor,
+			eventID,
+			eventID,
+			access.EventRead,
+		); err != nil {
 			return failure("released event access", err)
 		}
 		roles, confirmed, err := access.ContentReader(ctx, q, actor, eventID)
 		if err != nil {
 			return failure("released audience", err)
 		}
-		allowed, err := access.ContentAudienceAllows(ctx, q, actor, eventID,
-			access.ContentAudience{Confirmed: true, Roles: []string{"organiser", "mentor", "judge", "mc"}}, roles, confirmed)
+		allowed, err := access.ContentAudienceAllows(
+			ctx,
+			q,
+			actor,
+			eventID,
+			access.ContentAudience{
+				Confirmed: true,
+				Roles:     []string{"organiser", "mentor", "judge", "mc"},
+			},
+			roles,
+			confirmed,
+		)
 		if err != nil {
 			return failure("released audience policy", err)
 		}
@@ -41,4 +57,21 @@ func (s Service) Released(ctx context.Context, actor, eventID uuid.UUID) ([]Anno
 		return nil, failure("read announced results", err)
 	}
 	return out, nil
+}
+
+// RoomAnnouncementsInTransaction is called only after presentation validates
+// its scoped display pairing. It has no private round or controller projection.
+func (s Service) RoomAnnouncementsInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+) ([]Announcement, error) {
+	e, err := dbgen.New(tx).LockEvent(ctx, eventID)
+	if err != nil {
+		return nil, failure("room event", err)
+	}
+	if !e.PublishedAt.Valid || s.now().Before(e.PublishedAt.Time) {
+		return []Announcement{}, nil
+	}
+	return published(ctx, tx, eventID, s.now())
 }

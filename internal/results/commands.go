@@ -2,6 +2,7 @@ package results
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/google/uuid"
@@ -12,9 +13,8 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
-// Change currently implements private preparation and explicit finalist release.
-// Vote, award confirmation and award release are separate unfinished commands;
-// unsupported actions fail instead of pretending that publication succeeded.
+// Change keeps preparation, confirmation and each announcement independent.
+// Final judges record their own ballots through Vote, never organiser authority.
 func (s Service) Change(
 	ctx context.Context,
 	actor, eventID uuid.UUID,
@@ -61,6 +61,7 @@ func (s Service) Change(
 			return err
 		}
 		var announcement *Announcement
+		publicationBinding := input.SourceBinding
 		switch input.Action {
 		case "prepare":
 			full := source.preview.Binding != "" && len(source.preview.Blockers) == 0 &&
@@ -71,6 +72,7 @@ func (s Service) Change(
 				return access.ErrConflict
 			}
 			round.Source = source.preview
+			round.PreparedBy = actor
 			round.Votes = []Vote{}
 			round.Confirmation = nil
 		case "publish_finalists":
@@ -90,6 +92,90 @@ func (s Service) Change(
 				round.Confirmation = nil
 			}
 			round.Source = source.preview
+		case "confirm":
+			if !readyPreparedSource(round, source, input.SourceBinding) {
+				return access.ErrConflict
+			}
+			states, err := resolveJudgeTies(
+				source.preview.Ties,
+				source.completion.Assignments,
+				round.Votes,
+			)
+			if err != nil {
+				return err
+			}
+			if err := ValidateAwards(source.preview, states, input.Awards); err != nil {
+				if errors.Is(err, ErrIncomplete) {
+					return access.ErrConflict
+				}
+				return err
+			}
+			id := uuid.New()
+			if err := s.Judging.RecordResultApprovalInTransaction(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				source.preview.JudgeRunID,
+				id,
+				source.completion.Binding,
+				input.Reason,
+			); err != nil {
+				return err
+			}
+			round.Confirmation = &Confirmation{
+				ID:              id,
+				JudgeApprovalID: id,
+				SourceBinding:   source.preview.Binding,
+				DecisionBinding: decisionBinding(source.preview.Binding, round.Votes, input.Awards),
+				Awards:          input.Awards,
+				ActorID:         actor,
+				Reason:          input.Reason,
+				At:              s.now(),
+			}
+		case "publish_awards":
+			if !readyPreparedSource(round, source, input.SourceBinding) ||
+				round.Confirmation == nil {
+				return access.ErrConflict
+			}
+			confirmation := round.Confirmation
+			if confirmation.SourceBinding != source.preview.Binding ||
+				confirmation.DecisionBinding != decisionBinding(
+					source.preview.Binding,
+					round.Votes,
+					confirmation.Awards,
+				) {
+				return access.ErrConflict
+			}
+			states, err := resolveJudgeTies(
+				source.preview.Ties,
+				source.completion.Assignments,
+				round.Votes,
+			)
+			if err != nil {
+				return err
+			}
+			if err := ValidateAwards(source.preview, states, confirmation.Awards); err != nil {
+				if errors.Is(err, ErrIncomplete) {
+					return access.ErrConflict
+				}
+				return err
+			}
+			if err := s.Judging.ResultApprovalCurrentInTransaction(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				source.preview.JudgeRunID,
+				confirmation.JudgeApprovalID,
+			); err != nil {
+				return err
+			}
+			announcement, err = s.awardAnnouncement(ctx, tx, eventID, confirmation.Awards)
+			if err != nil {
+				return err
+			}
+			publicationBinding = confirmation.DecisionBinding
 		}
 		if err = s.retain(
 			ctx,
@@ -118,7 +204,7 @@ func (s Service) Change(
 				tx,
 				eventID,
 				actor,
-				input.SourceBinding,
+				publicationBinding,
 				*announcement,
 			); err != nil {
 				return err
@@ -146,14 +232,34 @@ func validateCommand(expected int64, input Command) error {
 	if input.RequestID == uuid.Nil || input.Version < 0 || expected < 0 ||
 		strings.TrimSpace(input.Reason) == "" ||
 		len(input.Reason) > 2000 ||
-		len(input.Awards) > 0 ||
+		len(input.Awards) > 50 ||
 		len(input.Evidence) > 0 ||
 		input.TieID != "" ||
 		input.TeamID != uuid.Nil {
 		return access.ErrInvalid
 	}
-	if input.Action != "prepare" && input.Action != "publish_finalists" {
+	if input.Action != "prepare" && input.Action != "publish_finalists" &&
+		input.Action != "confirm" &&
+		input.Action != "publish_awards" {
+		return access.ErrInvalid
+	}
+	if input.Action != "confirm" && len(input.Awards) != 0 {
 		return access.ErrInvalid
 	}
 	return nil
+}
+
+func readyPreparedSource(round Round, source assessmentSource, binding string) bool {
+	return round.PreparedBy != uuid.Nil && source.completion != nil && len(source.preview.Blockers) == 0 &&
+		binding != "" &&
+		binding == source.preview.Binding &&
+		round.Source.Binding == binding
+}
+
+func decisionBinding(binding string, votes []Vote, awards []Award) string {
+	return digest(struct {
+		SourceBinding string
+		Votes         []Vote
+		Awards        []Award
+	}{binding, votes, awards})
 }
