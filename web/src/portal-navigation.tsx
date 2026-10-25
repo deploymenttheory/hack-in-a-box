@@ -42,14 +42,17 @@ function EventSwitcher({ session, event }: { session: Session; event: EventRecor
 export function PortalNavigation({ session, pathname, account }: { session: Session; pathname: string; account: ReactNode }) {
   const admin = import.meta.env.MODE === 'admin'
   const eventID = /^\/events\/([a-f0-9-]{36})(?:\/|$)/i.exec(pathname)?.[1]
-  const query = useQuery({ queryKey: privateKey(session.person.id, eventID ?? '', 'event'), enabled: !!eventID,
+  const query = useQuery<EventRecord | null>({ queryKey: privateKey(session.person.id, eventID ?? '', 'event'), enabled: !!eventID,
     queryFn: async ({ signal }) => unwrap(await api.GET('/api/v1/events/{event_id}', { params: { path: { event_id: eventID! } }, signal })), refetchOnWindowFocus: 'always', retry: false })
-  // A failed current read withdraws the contextual destinations, even if a prior
-  // response remains cached. A hostname or old role never grants navigation.
-  const event = eventID && !query.error ? query.data : undefined
+  // The canonical event owner scrubs definite denial to null. That accepted
+  // marker clears Query.error but is still unavailable, not an unread event.
+  // Undefined is the initial checking state. Neither an error nor null grants
+  // contextual destinations, even when an earlier response was authorised.
+  const unavailable = !!query.error || query.data === null
+  const event = eventID && !unavailable ? query.data ?? undefined : undefined
   const destinations = permittedDestinations(session, admin, event)
   const top = destinations.filter(item => ['/', '/ideas', '/inbox', '/register'].includes(item.href))
-  return <><header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-navigation"><nav aria-label="Main navigation">{top.map(item => item.href === '/inbox' ? <InboxLink key={item.href} active={pathname === '/inbox'} /> : <Link key={item.href} to={item.href} activeOptions={{ exact: item.href === '/' }} activeProps={{ 'aria-current': 'page', className: 'fleet-nav-active' }}><Icon name={item.icon} />{item.label}</Link>)}</nav></div><DestinationSearch key={`${session.person.id}:${eventID ?? ''}`} destinations={destinations} /><div className="fleet-shell-account">{account}</div></header><div className="fleet-shell-context"><span>{admin ? 'Administration' : 'Participant portal'}</span>{event ? <><EventSwitcher key={event.id} session={session} event={event} /><strong>{event.name}</strong><span>{event.stage}</span><span>{event.can_edit ? 'Event editor access' : event.can_read_staff ? 'Staff access' : 'Event access'}</span></> : <span>{eventID ? query.error ? 'Event access unavailable' : 'Checking event access…' : 'No event selected'}</span>}</div></>
+  return <><header className="fleet-shell-header"><PortalBrand /><div className="fleet-shell-navigation"><nav aria-label="Main navigation">{top.map(item => item.href === '/inbox' ? <InboxLink key={item.href} active={pathname === '/inbox'} /> : <Link key={item.href} to={item.href} activeOptions={{ exact: item.href === '/' }} activeProps={{ 'aria-current': 'page', className: 'fleet-nav-active' }}><Icon name={item.icon} />{item.label}</Link>)}</nav></div><DestinationSearch key={`${session.person.id}:${eventID ?? ''}`} destinations={destinations} /><div className="fleet-shell-account">{account}</div></header><div className="fleet-shell-context"><span>{admin ? 'Administration' : 'Participant portal'}</span>{event ? <><EventSwitcher key={event.id} session={session} event={event} /><strong>{event.name}</strong><span>{event.stage}</span><span>{event.can_edit ? 'Event editor access' : event.can_read_staff ? 'Staff access' : 'Event access'}</span></> : <span>{eventID ? unavailable ? 'Event access unavailable' : 'Checking event access…' : 'No event selected'}</span>}</div></>
 }
 function PortalBrand() { return <Link className="fleet-shell-brand" to="/" aria-label="Hack in a Box home"><Icon name="layout" />Hack in a Box{import.meta.env.MODE === 'admin' ? ' · Admin' : ''}</Link> }
 export function PortalFrame({ account, navigation, children }: { account: ReactNode; navigation?: ReactNode; children: ReactNode }) {
