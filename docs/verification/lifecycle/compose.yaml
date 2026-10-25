@@ -140,6 +140,16 @@ services:
       public: {condition: service_healthy}
       admin: {condition: service_healthy}
       worker: {condition: service_started}
+  smtp:
+    <<: *fixture
+    profiles: [smtp]
+    command: ['-test.run=^TestLifecycleComposeSMTP$', '-test.timeout=2m', '-test.v']
+    volumes: ['control:/control:ro', 'artifacts:/artifacts']
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+      worker: {condition: service_started}
+
 volumes:
   database:
   files:
