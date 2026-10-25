@@ -107,7 +107,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
 
  await activate(page.getByRole('button',{name:'Read recorded panel history',exact:true}))
  await history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)).press('Enter')
- await expect(history.getByText('Recorded private signoff reason: Exact versioned private panel approval after all native blockers are resolved. Current authority and source freshness must be read independently.',{exact:true})).toBeVisible()
+ await expect(history.getByText('Recorded reason: Confirm exact reviewed final card 3',{exact:true})).toBeVisible()
  await control('expire');await activate(page.getByRole('button',{name:'Read current panel source',exact:true}))
  await expect(history).toHaveCount(0);await expect(page.getByRole('heading',{name:'Moderation and selections',exact:true})).toHaveCount(0)
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
