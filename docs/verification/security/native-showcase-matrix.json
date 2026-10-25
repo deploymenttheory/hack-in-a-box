@@ -1,0 +1,40 @@
+{
+  "source_commit": "9d787fe231e599803cdd7ff07fba1f1582b06070",
+  "source_worktree_clean": true,
+  "scope": "explicit native security matrix; not full repository CI, browser, deployed manual abuse or pending feature verification",
+  "manifest": "docs/verification/security/showcase-cases.json",
+  "groups": [
+    {
+      "criterion": "native showcase source/publication privilege escalation, literal search and exact current audiences",
+      "package": "app",
+      "tests": [
+        "TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority",
+        "TestShowcaseNativePublicationFiltersAwardsAndCurrentAudience"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/app",
+        "-run",
+        "^(TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority|TestShowcaseNativePublicationFiltersAwardsAndCurrentAudience)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority",
+        "TestShowcaseNativePublicationFiltersAwardsAndCurrentAudience"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "beb6019c0492dec696b933802095a5b99384e21e11ffe7e42031c6b75df7bfec"
+    }
+  ],
+  "complete": true
+}

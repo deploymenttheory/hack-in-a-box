@@ -22,11 +22,11 @@ cookies, signed tokens, credentials or private payloads. Native tests require
 | Direct early-theme URLs; roster freeze; premature submission/review/scoring | Canonical HTTP embargo/privileged exclusion, native registration freeze serialization, submission, scorecard and judge guards | Native matrix PASS |
 | Help claiming/access and private-to-common Q&A | Native help concurrent claims/revocation and canonical clarification publication, private attachment and current audience assertions | Native matrix PASS |
 | Goal/rubric early disclosure; practice isolation | Native objectives/rubric common publication and exact-version correction, both-mode practice and current independent judge authority | Native matrix PASS |
-| Showcase search/media leakage | Merged #163 source is integrated from main076f; new native read/source-authority abuse fixture and existing publication/search/consent owner are explicitly manifested | New exact-source execution pending; no substitute proof claimed |
+| Showcase search/media leakage | Merged #163 source is integrated; exact native public-reader/source/publication abuse and native publication/search/consent owner | PASS2 exact parents at9d787fe2; scope/source below |
 | Post-archive follow-up | Native audited outcome/review/reminder path with ordinary competition writes denied, current-source cancellation and retention enforced | Native matrix PASS |
 | Credential encryption, log redaction, retention | Native credential reveal/rotation/key-fault/audit-failure and context-bound encryption; new request/provider error redaction, retention and archived consent assertions | Native matrix PASS |
 | New mentor contribution | Follow-up feature is owned separately; assess its implemented authority, private evidence and publication boundary after integration | Dependency pending |
-| Manual local synthetic deployment; automated advisories and full required checks | Actual configured deployment abuse scenarios and current-head required checks must be recorded separately | Pending |
+| Manual local synthetic deployment; automated advisories and full required checks | Actual configured normal-command abuse:55 API outcomes, immutable main076 images, exact OIDC/PKCE, private current-role controls and zero-resource cleanup | PASS atc2f7c69d; final integrated feature/current-head checks remain pending |
 | Findings with reproduction, boundary and remediation | Findings ledger will distinguish reproduced issues, fixes, remaining risks and untested boundaries; sensitive values excluded | No findings conclusion yet |
 
 ## Initial native checkpoint
@@ -138,14 +138,18 @@ builds and advisory/dependency-graph log digests are retained separately in
 
 ## Remaining delivery gates
 
-- Execute and record the integrated #163 showcase native abuse manifest on the
-  rebased source; historical evidence remains attributed to its original source.
+- Preserve the now-executed integrated #163 native abuse evidence and its exact
+  source; validate any later production changes against that bounded proof.
 - Integrate the separately owned mentor-contribution feature and verify its
   current authority, original private evidence, tie/confirmation and publication
   boundaries. The absent feature cannot be certified by current judge tests.
-- Execute privileged abuse scenarios against the final integrated local
-  synthetic deployment. Historical anonymous-only preview observations and
-  native HTTP fixtures retain their actual narrower scope.
+- Preserve the now-executed55-outcome normal-command privileged walkthrough
+  against main076. Reconcile final integrated feature changes with this scope;
+  the future/live competition and mentor boundaries still require their native
+  owners. Historical preview observations retain their narrower source/scope.
+- Execute the supported production HTTPS/Secure-cookie profile with a local
+  trusted synthetic issuer/proxy; the completed private HTTP/development walk
+  does not establish that transport scope.
 - Obtain independent reviews and complete final current-head required CI. Keep
   this PR Draft and #121 open; no critical/high-severity release sign-off or full
   release completion is claimed by these scoped results.
@@ -233,3 +237,56 @@ The walkthrough separately asserts missing required CSRF header400, invalid
 32-byte token403 and invalid Origin403. The driver itself is not an execution
 result; publish its measured receipt and zero-resource cleanup before claiming
 that scope passed.
+
+## Executed showcase abuse and normal-command walkthrough
+
+At clean verification source `9d787fe231e599803cdd7ff07fba1f1582b06070`, both
+exact showcase manifest parents passed with the race detector, **16.263s**,
+no skips/failures. The corrected native request is actual PUT with current source,
+If-Match and the actor's own session/CSRF/Origin. The outsider denial changes no
+publication version; the identical organiser command succeeds and really removes
+the published card. Both portal reads, literal adversarial search, restricted
+media/source separation and native consent/withdrawal/archive assertions pass.
+The source/commands/parent names/log digest are retained in
+[native-showcase-matrix.json](native-showcase-matrix.json).
+
+At clean verification source `c2f7c69db067ef5fd350323a7dcb1b358355a77b`, the
+agent-executed normal-command walkthrough passed **55 observed API outcomes**.
+Application images are independently built from clean tracked main
+`076f6162558df2ac3d7fb1ff7c23b3d35dc21784`; the runner verified their exact
+immutable IDs, embedded source labels and production-code equivalence. Both
+portals use normal `/app/api`, actual RS256 discovery/token exchange, browser-bound
+PKCE/nonce callbacks and native PostgreSQL sessions. No SQL, test clock, invented
+application cookie or successful mocked application response supplies authority.
+
+The observed outcomes include unauthenticated reads on both portals; real owner
+and stranger logins; native event/file/draft positive controls; missing/invalid
+CSRF and invalid Origin; guessed/private/foreign-event file and export denials;
+active MIME spoofing415; direct unreleased content and preview denial; self-grant
+rejection; same-session mentor and organiser access/revocation; fresh-login
+revocation persistence; and public logout401 with the admin session still valid.
+Only labels/statuses and source are retained in
+[normal-deployment-observations.json](normal-deployment-observations.json).
+[normal-deployment-summary.json](normal-deployment-summary.json) records pinned
+images, log digests and zero remaining project containers/volumes/networks.
+Normal user deployments were untouched.
+
+The first walkthrough at9d787fe2 failed because its script expected400 for the
+correct canonical unsupported-MIME415. That failed attempt remains separately
+retained with `passed:false` and zero-resource cleanup. Only the expected exact
+status changed; no application behavior, timeout or broad accepted-status range
+was changed. It is not an application security finding or successful full run.
+
+These proofs remain scoped: future/live progression, standalone showcase browser
+rendering and the separately owned mentor feature are not inferred from this
+normal-command walkthrough. `mentor-advisory-cases.json` specifies the actual
+new owner assertion to execute after #292 merges and is explicitly **pending**;
+its absent test on an older source must fail the runner rather than count as a
+pass. Final integrated source, independent review and latest-head required CI
+remain release-signoff gates.
+
+The completed55-outcome deployment used private-network HTTP and development
+configuration. It does not prove the production HTTPS issuer/origin or Secure
+cookie transport profile. #120's SMTP TLS proof is a different boundary and is
+not substituted for browser/API HTTPS. That supported-profile execution is an
+explicit remaining #121 gate.
