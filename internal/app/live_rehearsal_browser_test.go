@@ -323,13 +323,30 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"TMPDIR="+private,
 	)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
-	result := command.Run()
 	source, err := exec.CommandContext(t.Context(), "git", "rev-parse", "HEAD").Output()
 	if err != nil {
 		t.Fatal(err)
 	}
+	statusBefore, err := exec.CommandContext(t.Context(), "git", "status", "--porcelain", "--untracked-files=normal").
+		Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := command.Run()
+	sourceAfter, err := exec.CommandContext(t.Context(), "git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusAfter, err := exec.CommandContext(t.Context(), "git", "status", "--porcelain", "--untracked-files=normal").
+		Output()
+	if err != nil {
+		t.Fatal(err)
+	}
 	proof := map[string]any{
-		"source_commit":             strings.TrimSpace(string(source)),
+		"source_commit":     strings.TrimSpace(string(source)),
+		"source_commit_end": strings.TrimSpace(string(sourceAfter)),
+		"source_worktree_clean": len(strings.TrimSpace(string(statusBefore))) == 0 &&
+			len(strings.TrimSpace(string(statusAfter))) == 0,
 		"fixture_run_id":            manifest["run_id"],
 		"event_id":                  r.eventID,
 		"team_id":                   r.teamID,

@@ -1,125 +1,114 @@
 # Native live rehearsal (#90)
 
-This is an integrated verification owner, not another API-mocked browser suite.
-It uses an isolated real PostgreSQL database, the API dependency constructor
-shared with `RunAPI`, native session/CSRF/current-role policy, actual routers and
-the separately built administrator and regular portal assets.
+The rehearsal runs the production administrator and regular portals against
+isolated real PostgreSQL, native HTTP/SSE, native sessions/current permissions,
+and the service graph shared with `RunAPI`. Today #88 is merged in the current
+base `c0c8b21`; no placeholder or mocked Today route is used.
+
+## Acceptance matrix
+
+| Issue #90 criterion | Actual owners and assertions | Current evidence |
+| --- | --- | --- |
+| Disconnected displays retain only their last authorized cue and report stale status | Production MC pairing, display SSE, forwarding outage, visible last-known opening, native advance and reconnect to the building cue | Current `15e9f6c` integrated display case passed |
+| Display responses/caches exclude mentor observations, secrets and embargoed output | Actual native private observation, private question/help and unreleased cue fixtures; complete snapshot key allowlist; bearer-only display GETs; account-controller denial; no-store; URL/storage/cache scans | Current `15e9f6c` integrated display case passed |
+| Late reconnect and clock drift converge without duplicate cues/actions | True browser offline, incorrect client wall clock, controlled native time, current SSE snapshot, native presentation revision delta, held countdown and revocation | Current `15e9f6c` integrated display case passed |
+| Preparation/build week, live submission/review opening, fixed roster and final cutoff with lifecycle lag | Native calendar-derived T−7 release; actual team dashboard and frozen command rejection; mentor `can_record` versus operational status; cutoff settles while event remains preparation | Original submission/freeze/cutoff journey passed. Corrected canonical `mentor-observations` exact clock/review case passed (1/1, 1.5s). A fresh combined current-source pass is still required |
+| Today/readiness/rules/contacts/help/corrected clarifications across roles/events/accounts | Mobile keyboard rules opening and exact native acknowledgement/focus return; actual personal task PUT versus unchanged formal submission; admin Today→MC; Today→help→common answer→native correction; native mentor-role loss; other-event denial; actual logout and different account | These six browser cases passed together at `15e9f6c`; no complete seven-case combined pass is claimed yet |
+| Completed Fleet screens/guide and action-to-next-action continuity | Both built production portals, native MC/display/mentor/competitor contexts; production reader/navigation/confirmation controls; unchanged independent guide consumers and their normal suite | Native consumer evidence above. Current `15e9f6c` full guide CI is pending; no duplicate local guide run is substituted |
+
+## Proof and remaining work
+
+- Current combined local run at `15e9f6c`: six of seven Chromium browser cases
+  passed; the added clock review GET used `/observations` instead of the actual
+  generated/native `/mentor-observations` route and correctly failed its strict
+  200 assertion. The correction preserves every native status/window/freeze
+  assertion and its exact tight case passed (1/1, 1.5s). Native authority passed 6.18s and shared-clock owning-resource
+  regression passed 4.71s. This is not a completed combined browser pass.
+- Linux native rehearsal at `f57fa17` passed with both configured engines:
+  [run 40151899729](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40151899729).
+  This proves actual Firefox execution, not a claimed local Firefox run.
+  The newer `15e9f6c` Linux workflow is active and remains independently required.
+- Current full TypeScript and focused rehearsal ESLint passed. Both production
+  portal builds passed after rebasing onto merged Today. Native runtime clock
+  defaults and the ordinary guide remain subject to final-head CI.
+
+Finite remaining work: finish the exact clock/review case and a fresh combined
+current-source run; inspect and publish its matching synthetic images and
+non-secret provenance; complete the current-head Linux/ordinary/guide checks;
+obtain independent Standards and Spec reviews. The PR remains Draft / Refs #90.
+
+## Architecture and safety boundaries
+
+```text
+RunAPI → newAPIDependencies → newCommunicationRuntime
+Go test owner → same constructors + one pre-wiring domain clock
+  real PostgreSQL + native routers + PostgreSQL-backed sessions
+  production admin / regular assets
+  MC + independent display + mentor + competitor browser contexts
+```
+
+`RunAPI` retains infrastructure/startup/shutdown ownership. Its omitted optional
+clock keeps every service's existing real-time fallback. The test clock is
+initialized before shared service instances are copied or captured by callbacks.
+Identity expiry and transport timers retain real time.
+
+The test owner controls time/fixture transitions through a Unix socket inside a
+mode-0700 temporary directory. Neither production HTTP listener registers a
+clock, outage, session-issuance or fixture control route. Synthetic sessions are
+issued through native PostgreSQL-backed SCS over that private channel; the
+manifest contains no cookies. Available proxy requests and SSE frames reach the
+native router unchanged. An outage closes proxy connections and returns 503 for
+new API requests. Browser offline mode is a separate interruption.
+
+Fixtures use an actually approved rubric, reviewed/approved challenge and native
+common dispatch. `schedule.ChallengePublication` derives T−7 across spring DST:
+22 March 2027 10:00 UTC for a 29 March 09:00 UTC live start, preserving local
+calendar time. The small fixture explicitly configures its minimum attendance;
+production defaults and lifecycle rules are unchanged. Native `can_create` is
+actor eligibility; the distinct frozen gate is proved by actual CSRF/If-Match
+command refusal. Private drafts never count as formal output.
+
+No provider worker starts and no real identity/provider/user data is used. Only
+test-owned database containers, listeners and temporary files are cleaned up.
+The native fixture sidecar and Playwright JSON report identify the actual run,
+source and selected engines; screenshots exclude display keys. Final artifacts
+must be attributed to the source and selection actually executed.
 
 ## Run
 
-From `web`, install the locked dependencies and Chromium/Firefox using the
-project's normal tooling, then run `npm run build`. From the repository root:
+Install the locked dependencies and pinned Chromium/Firefox with the normal
+project tooling, then build both production portals with `npm --prefix web run
+build`. From the repository root:
 
 ```sh
 HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 \
   go test -race -p 1 -parallel 1 ./internal/app \
-  -run '^TestLiveRehearsalNativeAuthority$' -count=1
+  -run '^TestLiveRehearsal(NativeAuthority|SupportClockPropagation)$' -count=1
 
 HACKBOX_INTEGRATION=1 HACKBOX_LIVE_REHEARSAL=1 GOMAXPROCS=2 GOFLAGS=-p=1 \
-  go test -race -p 1 -parallel 1 ./internal/app \
-  -run '^TestLiveRehearsalBrowsers$' -count=1 -timeout=10m
+  go test -v -race -p 1 -parallel 1 ./internal/app \
+  -run '^TestLiveRehearsal(NativeAuthority|Browsers|SupportClockPropagation)$' \
+  -count=1 -timeout=10m
 ```
 
-The Go owner creates and removes only its own database/container, temporary
-files, browser subprocess and listeners. The private control channel is a
-mode-0700 temporary directory containing a Unix socket; neither production
-portal registers a clock, fixture or outage control route. Session expiry and
-transport timers retain real time. Only domain-service clocks are controlled.
+Default execution includes Chromium and Firefox. `HACKBOX_REHEARSAL_PROJECT`
+and `HACKBOX_REHEARSAL_GREP` are explicit local diagnostic selections and must
+not be represented as a full default run. Linux CI runs the default selection
+without skips/retries and uploads `web/test-results-live` as actual proof.
+Local macOS Firefox exits before page creation on this host; actual Linux
+Firefox results are the authoritative engine proof.
 
-Available proxy requests reach the actual native router unchanged. Outages
-close existing proxy connections and return 503 for new API requests. Browser
-offline interruptions are separate from this backend availability control.
-No external provider worker is started and no real identity or user data is used.
+## Historical regression evidence
 
-## Acceptance and current checkpoint
-
-| Journey | Owner / proof | Current checkpoint |
-| --- | --- | --- |
-| Native MC/current actor authority, separate portal cookies, no-store, controlled server clock, construction has no provider jobs | `TestLiveRehearsalNativeAuthority` | Real PostgreSQL/race passed, 10.025s, initial constructor source |
-| MC pairs display, native SSE, backend outage, last authorized cue, latest reconnect, no duplicate command, revocation | `web/live-rehearsal/display.spec.ts`, Chromium + Firefox | Chromium native production journey passed; Firefox local launch fails before page creation |
-| Native cue/timer controls, true browser offline, browser-clock drift and display projection/cache privacy | Integrated browser owner | Chromium passed with actual native private observation and unreleased cue canaries |
-| Mentor local draft recovery after current authorization; role/session/account/event loss | Integrated browser owner | Offline deliberate recovery and current mentor-role-loss purge passed; account/event journeys remain |
-| Preparation, T−7 release week, fixed assignments, live opening and final cutoff with lifecycle lag | Controlled native service clocks + actual team dashboard | Chromium passed; frozen writes rejected by actual native POST, cutoff settles before stage advances |
-| Today readiness, rules, contacts, help links and corrected clarifications across current account/event/role | Final native #88 implementation | Dependency pending; no substitute route |
-| Production independent guide and matched screenshots | Existing actual production guide consumers | Remaining |
-
-The constructor extraction preserves the existing `RunAPI` ownership of schema
-checks, storage/authentication creation and shutdown. Future entrypoint recovery
-gates remain before provider/runtime construction. The browser owner cannot
-bypass production request authorization or synthesize successful API responses.
-
-This checkpoint does not complete #90. In particular, final Today acceptance
-and merging depend on the completed #88 implementation being merged first.
-
-Initial full TypeScript, focused rehearsal ESLint and both production portal builds passed before the first browser run. Browser outcomes are not yet claimed.
-
-## Executed second checkpoint
-
-The current real-PostgreSQL/race browser owner passed all three Chromium
-journeys in 16.9s (Go owner 22.891s): clock/production team dashboard, independent
-MC/display interruption, and mentor offline/current-authority recovery.
-Current full TypeScript and focused harness ESLint also passed. Both production
-portal builds passed before these test-only additions; no runtime web source
-has changed.
-
-Fixtures create an approved rubric and challenge through native services,
-explicit review/approval and actual common dispatch. T−7 uses
-`schedule.ChallengePublication`: the spring-DST scenario releases at
-22 March 2027 10:00 UTC for a 29 March 09:00 UTC live start, preserving local
-calendar time. It does not replace the calendar rule with 168 elapsed hours.
-The native `can_create` flag is actor eligibility; the separate frozen gate is
-proved by an actual reviewed/CSRF-bound command rejection, not by reinterpreting
-that flag as write permission.
-
-Local Firefox 1555 installed successfully but exits before page creation with
-`Could not find profile folder`, including a direct binary probe against a
-confirmed existing mode-0700 directory and canonical temporary paths. No Firefox
-pass is claimed. The committed Linux workflow runs both engines against the
-same real native harness without skips, retries or mocked APIs; its actual
-result remains required evidence. Default execution always includes both engines.
-`HACKBOX_REHEARSAL_PROJECT=chromium` is an explicit local diagnostic selection.
-
-The independent guide remains covered by its existing production-component
-suite; final matching source/evidence and Today/account/event/clarification
-acceptance are still outstanding. This is a draft checkpoint, not completion.
-
-The next current-source Chromium run passed four journeys in 17.7s (Go owner
-24.255s), adding actual other-event denial, deliberate original-event recovery,
-UI sign-out/native logout, and a different account entering the same browser
-storage. Each context now receives a fresh native PostgreSQL-backed session over
-private IPC; the manifest contains no cookie values. Current full TypeScript and
-focused rehearsal ESLint passed before this run. Final Today journeys remain
-blocked on the actual #88 merge.
-
-Current support-fixture checkpoint is intentionally not green: the first real
-native common-answer publish reached the actual inbox owner resolver and failed
-with `AuthorizeNotificationInTransaction: resource not found`. The direct HTTP
-service clocks were controlled, but runtime owner callbacks retained value/pointer
-copies constructed with real time. The harness must inject the same native clock
-before that graph is wired; replacing the resolver or dropping notifications
-would weaken the integration and is not an acceptable correction. The new
-support browser journey is authored but has not run past this fixture failure.
-
-The captured-runtime clock regression is now proved red→green at the native
-seam: `TestLiveRehearsalSupportClockPropagation` passed real PostgreSQL/race
-3.22s after constructing all shared clock-aware runtime instances with the same
-optional domain clock before callback/value wiring. Native inbox List/Open
-resolved the exact common-answer UUID and mentor-only source access remained
-denied. Omitted production clocks stay nil and use their existing real-time
-fallbacks. The original failed source is f5d04e4; its Linux failure matches the
-same resolver chain. The full support browser reproof and new Today fixtures
-remain pending; no old-head CI rerun is used as evidence.
-
-Today #88 merged at c0c8b21 and the rehearsal is rebased onto that native source.
-Both actual production portals rebuilt successfully. A whole native Chromium
-run passed six of seven cases, including actual Today→help→published common
-answer→native correction→account/event denial and administrator Today→MC.
-The seventh mobile rules/contact/personal-progress journey passed its exact
-corrected tight loop (1/1, 2.0s): it now waits for the actual owner-visible
-`Preparation progress saved.` acknowledgement before navigating, rather than
-mistaking response headers for completed acknowledgement handling. Keyboard
-rule opening, actual version acknowledgement, opener focus return, personal
-completion versus unchanged native formal output, and mobile overflow assertions
-are retained. No production navigation change or timeout relaxation was made.
-The current combined run, explicit early/live mentor flags, matching evidence and
-final independent reviews/CI remain pending.
+1. **Captured service clocks:** native common-answer publication failed through
+   `ActAnswer → Inbox → AuthorizeNotificationInTransaction: resource not found`.
+   Direct handler copies used 2027 while captured runtime owners still used real
+   2026. Initializing the shared clock before wiring fixed the actual resolver;
+   the isolated real-PG/race regression passed 3.22s and current combined native
+   regression passed 4.71s. Mentor-only common-source denial remains exact.
+2. **Acknowledgement completion:** the mobile harness selected Today after PUT
+   headers arrived, before the accepted save callback completed its current Event
+   read. The existing planning gate retained Deliverables. Waiting for the
+   owner's visible `Preparation progress saved.` result fixed the exact case
+   (1/1, 2.0s), followed by a pass in the current combined run. No production
+   navigation change, blind retry or timeout relaxation was made.

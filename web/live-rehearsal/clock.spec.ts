@@ -26,7 +26,7 @@ test('production team dashboard follows native release/live/cutoff clocks while 
         expect(current.can_draft).toBe(phase.draft)
         expect(current.can_submit).toBe(phase.submit)
         expect(current.outcome).toBe(phase.outcome)
-        const observation = await mentor.request.get(`${base}/teams/${native.team_id}/observations`)
+        const observation = await mentor.request.get(`${base}/teams/${native.team_id}/mentor-observations`)
         expect(observation.status()).toBe(200)
         const review = await observation.json()
         expect(review.can_record).toBe(phase.name === 'live opening' || phase.name === 'exact final cutoff')
