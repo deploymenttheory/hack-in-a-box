@@ -33,6 +33,8 @@ class RuntimeGuards(unittest.TestCase):
         self.addCleanup(patch.stopall)
         patch.object(sys, 'argv', ['verify-fleet-runtime.py', '--artifacts', str(self.artifacts)]).start()
         patch.object(runner, 'output', side_effect=self.output).start()
+        # Port availability is tested by the native probe, not these two guards.
+        patch.object(runner.socket, 'socket').start()
 
     def test_residual_volume_or_network_stops_before_build_and_cleanup(self):
         for resource in ['volume', 'network']:
