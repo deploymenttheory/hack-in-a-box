@@ -325,11 +325,8 @@ func (s Service) page(ctx context.Context, q *dbgen.Queries, v scope) (Page, err
 func (s Service) Read(ctx context.Context, actor, eventID, teamID uuid.UUID) (Page, error) {
 	var result Page
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
-		v, err := s.scoped(ctx, tx, actor, eventID, teamID)
-		if err != nil {
-			return err
-		}
-		result, err = s.page(ctx, q, v)
+		var err error
+		result, err = s.ReadInTransaction(ctx, tx, actor, eventID, teamID)
 		return err
 	})
 	if err != nil {
@@ -438,4 +435,18 @@ func (s Service) SaveDraft(
 		return result, fmt.Errorf("save working draft: %w", err)
 	}
 	return result, nil
+}
+
+// ReadInTransaction preserves the native current-role, timing and audience
+// projection for owners attaching evidence to the same event-locked submission.
+func (s Service) ReadInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID uuid.UUID,
+) (Page, error) {
+	v, err := s.scoped(ctx, tx, actor, eventID, teamID)
+	if err != nil {
+		return Page{}, err
+	}
+	return s.page(ctx, dbgen.New(tx), v)
 }

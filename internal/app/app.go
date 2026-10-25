@@ -154,6 +154,9 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 		if err := communicationRuntime.Repositories.Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain repository intents: %w", err)
 		}
+		if err := communicationRuntime.SubmissionFreeze.Maintain(ctx); err != nil {
+			return fmt.Errorf("maintain submission capture: %w", err)
+		}
 		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
 			return fmt.Errorf("maintain submission outcomes: %w", err)
 		}

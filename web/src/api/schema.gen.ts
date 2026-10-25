@@ -4,6 +4,68 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current native team/submission audience only. Current GET is not an original command acknowledgement. Observation time is distinct from cutoff. Private reconciliation prose is organiser-only. */
+        get: operations["getSubmissionFreeze"];
+        put?: never;
+        /** @description Configure the managed branch before cutoff, or explicitly reconcile/amend an immutable cutoff source. No automatic historical proof, external writes or submission acceptance. Exact request_id replay returns the original acknowledgement under current read authority; new commands require current write authority and matching revision. */
+        post: operations["changeSubmissionFreeze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze/commands/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current-authorised actor-bound exact original command lookup. Null means unknown, never failure or permission to replay. */
+        get: operations["getSubmissionFreezeReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze/push-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser only. Exact retained authenticated repository/ref evidence, cursor-paged in UUID storage order. Not a complete history or chronological ordering guarantee; author dates are not retained or sufficient proof. */
+        get: operations["getSubmissionFreezePushEvidence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/sessions/{session_id}/notifications": {
         parameters: {
             query?: never;
@@ -3805,6 +3867,150 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SubmissionFreezeSource: {
+            managed_evidence_ids: string[];
+            uncaptured_evidence_ids: string[];
+            audiences: string[];
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            entry_id: string;
+            /** Format: int64 */
+            submission_revision: number | null;
+            native_outcome: string;
+            /** Format: date-time */
+            cutoff: string;
+            /** Format: date-time */
+            recorded_at: string;
+            /** Format: int64 */
+            repository_id: number;
+            repository_url: string;
+            branch: string;
+            /** Format: int64 */
+            configuration_revision: number;
+            /** Format: uuid */
+            repository_provenance: string;
+            status: string;
+        };
+        SubmissionFreezeObservation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            source_id: string;
+            /** Format: date-time */
+            observed_at: string;
+            sha: string;
+            status: string;
+            provenance: string;
+        };
+        SubmissionFreezeDecision: {
+            managed_evidence_ids: string[];
+            uncaptured_evidence_ids: string[];
+            audiences: string[];
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: int64 */
+            native_revision: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            source_id: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            action: "reconcile" | "amend";
+            sha: string;
+            reason: string;
+            observation_ids: string[];
+            push_ids: string[];
+            external_evidence: string;
+            /** Format: uuid */
+            prior_decision_id: string | null;
+        };
+        SubmissionFreezePage: {
+            current_reference_status: string;
+            /** Format: int64 */
+            native_revision: number;
+            /** Format: int64 */
+            revision: number;
+            native_outcome: string;
+            /** Format: int64 */
+            current_submission_revision: number | null;
+            binding_current: boolean;
+            branch: string;
+            /** Format: int64 */
+            repository_id: number;
+            repository_url: string;
+            /** Format: date-time */
+            cutoff: string;
+            can_configure: boolean;
+            can_reconcile: boolean;
+            can_amend: boolean;
+            status: string;
+            source: components["schemas"]["SubmissionFreezeSource"] | null;
+            observations: components["schemas"]["SubmissionFreezeObservation"][];
+            decisions: components["schemas"]["SubmissionFreezeDecision"][];
+            current: components["schemas"]["SubmissionFreezeDecision"] | null;
+        };
+        SubmissionFreezeCommand: {
+            /** Format: int64 */
+            native_revision?: number;
+            /** Format: int64 */
+            submission_revision?: number;
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "configure" | "reconcile" | "amend";
+            /** Format: uuid */
+            source_id?: string;
+            branch?: string;
+            sha?: string;
+            reason?: string;
+            observation_ids?: string[];
+            push_ids?: string[];
+            external_evidence?: string;
+            /** Format: uuid */
+            prior_decision_id?: string | null;
+        };
+        SubmissionFreezeReceipt: {
+            branch: string;
+            /** Format: int64 */
+            expected_revision: number;
+            /** Format: uuid */
+            request_id: string;
+            fingerprint: string;
+            action: string;
+            /** Format: int64 */
+            revision: number;
+            decision: components["schemas"]["SubmissionFreezeDecision"] | null;
+        };
+        SubmissionFreezeRecovery: {
+            receipt: components["schemas"]["SubmissionFreezeReceipt"] | null;
+        };
+        SubmissionFreezePush: {
+            /** Format: uuid */
+            id: string;
+            sha: string;
+            ref: string;
+            /** Format: date-time */
+            provider_at: string | null;
+            /** Format: date-time */
+            received_at: string;
+            payload_hash: string;
+        };
+        SubmissionFreezePushPage: {
+            items: components["schemas"]["SubmissionFreezePush"][];
+            /** Format: uuid */
+            next_cursor: string | null;
+        };
         SessionNotificationConfiguration: {
             /** Format: uuid */
             id: string;
@@ -8106,6 +8312,114 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getSubmissionFreeze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authorised repository freeze evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionFreezePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSubmissionFreeze: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Observed repository freeze revision. */
+                "If-Match": string;
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionFreezeCommand"];
+            };
+        };
+        responses: {
+            /** @description Current-authorised repository freeze evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionFreezeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSubmissionFreezeReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authorised repository freeze evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionFreezeRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSubmissionFreezePushEvidence: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authorised repository freeze evidence. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionFreezePushPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     previewSessionNotifications: {
         parameters: {
             query?: never;

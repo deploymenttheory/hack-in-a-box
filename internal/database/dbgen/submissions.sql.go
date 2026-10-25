@@ -245,6 +245,35 @@ func (q *Queries) SubmissionChanges(ctx context.Context, arg SubmissionChangesPa
 	return items, nil
 }
 
+const submissionCutoffOutcome = `-- name: SubmissionCutoffOutcome :one
+SELECT event_id, team_id, revision, actor_id, action, active_revision, review_status, reason, occurred_at FROM submission_changes WHERE event_id=$1 AND team_id=$2
+AND actor_id IS NULL AND action IN ('frozen','not_submitted','withdrawn') AND occurred_at >= $3
+ORDER BY revision LIMIT 1
+`
+
+type SubmissionCutoffOutcomeParams struct {
+	EventID    uuid.UUID
+	TeamID     uuid.UUID
+	OccurredAt time.Time
+}
+
+func (q *Queries) SubmissionCutoffOutcome(ctx context.Context, arg SubmissionCutoffOutcomeParams) (SubmissionChange, error) {
+	row := q.db.QueryRow(ctx, submissionCutoffOutcome, arg.EventID, arg.TeamID, arg.OccurredAt)
+	var i SubmissionChange
+	err := row.Scan(
+		&i.EventID,
+		&i.TeamID,
+		&i.Revision,
+		&i.ActorID,
+		&i.Action,
+		&i.ActiveRevision,
+		&i.ReviewStatus,
+		&i.Reason,
+		&i.OccurredAt,
+	)
+	return i, err
+}
+
 const submissionDraft = `-- name: SubmissionDraft :one
 SELECT event_id, team_id, revision, actor_id, updated_at, evidence FROM submission_drafts WHERE event_id=$1 AND team_id=$2
 `
