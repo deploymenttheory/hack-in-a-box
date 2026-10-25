@@ -117,3 +117,15 @@ Executed terminal capped proof (before the packaged-image rehearsal):
   packaged execution remains pending and is not inferred from native callbacks.
 
 Full operator procedure: [recovery runbook](../../recovery-runbook.md).
+
+The first actual packaged command rehearsal exposed a connection integration
+failure before completing capture: libpq does not expand a URI supplied only as
+its `PGDATABASE` default, and UID 10001 has no implicit database username. A tight
+own-database probe confirmed the binary existed and explicit PGHOST/PGUSER/
+PGDATABASE/PGPORT/PGPASSWORD/PGSSLMODE succeeded where URI-only PGDATABASE failed.
+The command now maps the explicit deployment URI to fixed documented libpq
+variables, preserving encoded credentials and TLS settings without password argv.
+Unsupported/ambiguous options fail closed. The pure connection regression passed
+under race detection (1.448s), with bounded native/CLI lint zero issues.
+The packaged rehearsal is being rebuilt; no successful packaged result is claimed
+from the initial failing image.

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 )
 
@@ -42,6 +41,7 @@ func (p PostgresClient) Restore(ctx context.Context, input io.Reader) error {
 		"--no-psqlrc",
 		"--set=ON_ERROR_STOP=1",
 		"--single-transaction",
+		"--file=-",
 	)
 }
 
@@ -52,13 +52,12 @@ func (p PostgresClient) run(
 	output io.Writer,
 	args ...string,
 ) error {
-	command := exec.CommandContext(ctx, program, args...)
-	command.Env = []string{
-		"PATH=" + os.Getenv("PATH"),
-		"LANG=C.UTF-8",
-		"PGDATABASE=" + p.Connection,
-		"PGAPPNAME=hackbox_recovery",
+	environment, err := postgresEnvironment(p.Connection)
+	if err != nil {
+		return err
 	}
+	command := exec.CommandContext(ctx, program, args...)
+	command.Env = environment
 	command.Stdin = input
 	command.Stdout = output
 	command.Stderr = io.Discard

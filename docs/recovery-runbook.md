@@ -27,7 +27,10 @@ identity (0700 directories/0600 artifacts). Use a dedicated private environment
 file containing `HACKBOX_DATABASE_URL`, supplied with Docker `--env-file`; never
 put a credential value in command arguments, shell history or a report. Mount the
 correct existing native files volume, archive destination and recipient file
-explicitly. A PostgreSQL connection string is passed to its clients through
+explicitly. The operator connection must be an explicit single-host PostgreSQL URI (the
+existing Compose format), including host, user and database. Unsupported/repeated
+client options and keyword-style DSNs fail closed; no TLS mode is approximated.
+URI fields are decoded into documented PostgreSQL client variables through
 [libpq's environment](https://www.postgresql.org/docs/17/libpq-envars.html), not
 arguments; raw client stderr is not printed.
 
