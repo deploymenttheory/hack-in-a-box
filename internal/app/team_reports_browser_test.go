@@ -31,15 +31,20 @@ func TestTeamReportsUIBrowsers(t *testing.T) {
 
 func runTeamReportsBrowser(t *testing.T, viewport string) {
 	ctx := t.Context()
-	f := newResultsSourceFixtureWithSetup(t, rubric.AllTeams, func(d *rubric.Definition) {
-		d.Prizes = []rubric.Prize{
-			{
-				ID:          uuid.New(),
-				Name:        "Native outcome award",
-				Description: "Explicit overall winner award",
-			},
-		}
-	}, nil)
+	f := newResultsSourceFixtureWithSetup(
+		t,
+		rubric.MentorQualification,
+		func(d *rubric.Definition) {
+			d.Prizes = []rubric.Prize{
+				{
+					ID:          uuid.New(),
+					Name:        "Native outcome award",
+					Description: "Explicit overall winner award",
+				},
+			}
+		},
+		nil,
+	)
 	f.complete(t)
 	r := f.runtime
 	ballots, secondTeam := newTiedResultsFixture(t)

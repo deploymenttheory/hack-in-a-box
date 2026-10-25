@@ -46,7 +46,7 @@ function ResultsReader({ eventID, name, timezone, parent, paused }: { eventID: s
   const [page, roster] = await Promise.all([privateRead(eventID, signal), api.GET('/api/v1/events/{event_id}/teams', { signal, cache: 'no-store', params: { path: { event_id: eventID } } }).then(unwrap)])
   return { page, names: Object.fromEntries(roster.teams.map(t => [t.id, t.name])) }
  }, [eventID])
- const signature = useCallback((value: Awaited<ReturnType<typeof load>>) => JSON.stringify([value.page.preview.binding, value.page.preview.finalists_binding, value.page.current, value.names]), [])
+ const signature = useCallback((value: Awaited<ReturnType<typeof load>>) => JSON.stringify([value.page.preview.binding, value.page.preview.finalists_binding, value.names]), [])
  const read = useTodayRead(`${eventID}:private-results`, load, parent, signature)
  if (read.denied) return <section className="fleet-results"><h1>Results preparation unavailable</h1><p>Current organiser access is required. Private results and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />

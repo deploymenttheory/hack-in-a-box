@@ -73,7 +73,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) { if (ticket.current()) setFailure(error) }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
- const focus = (source: HTMLElement | null) => source?.isConnected && !source.matches(':disabled') && source.getClientRects().length ? source : fallback.current ?? false
+ const focus = (source: HTMLElement | null) => source?.isConnected && !source.matches(':disabled') ? source : fallback.current ?? false
  return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
 }
 export function ResultDecisionState({ failure, failureStage, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'failureStage' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {
