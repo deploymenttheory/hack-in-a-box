@@ -130,3 +130,11 @@ mocked-screen check.
 - Full existing web units/lint/builds/guide, generated parity, relevant native
   integration, independent reviews and every exact-head repository CI check remain
   required before Ready/merge/closure.
+
+## Existing unit-fixture integration correction
+
+The first published checkpoint 204ec348 failed full web-quality CI in two existing team-deliverables unit cases. They mounted the editor without its new authenticated CommunicationSafety owner, then simulated authority loss by updating an obsolete exact cache key. The new private owner intentionally adds a mount lifetime to its query keys. Root reproduced both failures locally, including the missing-provider error.
+
+Only the existing test fixture was corrected: use the actual authenticated safety provider, return changed permission facts from the mocked native read, invalidate the active submission query by its stable prefix, and inspect all descendant draft cache entries. The held-response case still requires the actual read signal to abort before its deferred response arrives. Existing DOM clearing, disabled formal submission and no-private-canary cache assertions remain intact. No production owner, permission, cache policy or assertion was weakened.
+
+The two original cases plus seven adjacent owner/safety cases passed together: four files, nine tests, no unhandled errors, 8.41 seconds. Focused ESLint and diff checks passed. This local proof ran on the working-tree fixture correction before its commit; fresh final-head CI remains required. This fixes the checkpoint's unit-fixture integration and does not establish full #245 acceptance, native Docker proof or missing-route completion.
