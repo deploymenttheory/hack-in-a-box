@@ -17,6 +17,8 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/` | `EventDirectory` | Admin, Participant | #234 |
 | `/account` | `AccountPage` | Admin, Participant | #234 |
 | `/events/$eventId` | `EventWorkspace` | Admin, Participant | #235–244 (nested ownership below) |
+| `/events/$eventId/builds` | `AssignedBuildsPage` | Admin, Participant | #97 |
+| `/events/$eventId/teams/$teamId/build` | `SubmittedBuildPage` | Admin, Participant | #97 |
 | `/events/$eventId/clarifications` | `ClarificationWorkspacePage` | Admin, Participant | #240 |
 | `/events/$eventId/clarifications/$answerId` | `ClarificationReader` | Admin, Participant | #240 |
 | `/events/$eventId/communications/deliveries` | `DeliveryHistoryPage` | Admin, Participant | #239 |
@@ -54,7 +56,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/register/$eventId` | `RegistrationPage` | Admin, Participant | #236 |
 | `/templates` | `TemplatesPage` | Admin | #235 |
 | `/templates/$templateId` | `TemplatePage` | Admin | #235 |
-| `/display/$pairingToken` (independent main entry) | `room-display.tsx` | Participant only | #244 |
+| `/display/$eventId` (independent main entry; key is supplied only in a bearer header) | `room-display.tsx` | Participant only | #244 |
 | Unknown/bookmarked forbidden route, login, expiry, connection and account menu/search overlays | Shell / existing auth owners | Both | #234 |
 
 ## Nested tabs, readers and overlays
@@ -63,6 +65,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 |---|---|---|
 | Event overview / setup | Dates, blockers, stage transition reason/attendance exception, event form, preview, schedule, branding editor, objectives, staff/ownership transfers, template editor/import/publish/clone, configuration inventory, venue/logistics/check-in, staff planning/preparation/readiness/export composition | #235 |
 | Event repositories | `RepositoryWorkspace`: current repository collection and team/numeric-repository inspector; App configuration, installation review, published-team initial queue, selected lookup-only recovery, exact access planning/approval/original receipts, own invitation status; fresh private ownership and safe original-command metadata | #94; regular portal exposes only current own-team status, administration stays in the admin portal |
+| Submitted builds / code cutoff | `AssignedBuildsPage` and `SubmittedBuildPage`: current own-team or assigned reviewer discovery; protected formal evidence, immutable code receipt versus mutable demo, unresolved provider state and reasoned organiser reconciliation; native authority/CSRF/revision/receipt boundaries | #97 |
 | Event Today | Current event guidance; complete readiness and action ownership remains #88 | #235 admin chrome/readiness composition, #238 participant preparation evidence/checklists, #88 full Today/live aggregation |
 | Registration / applicants | Application chooser, branching questions, offers/deadlines, withdrawals, applicant review/detail/reasons, form editor/preview/publish acknowledgement | #236 |
 | Teams / mentors / team access | Team requests/roster, allocation/freeze, team member readers, mentor roster/coverage/conflicts, retained repository/access status | #237 |

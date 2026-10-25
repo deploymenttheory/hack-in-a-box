@@ -3,6 +3,8 @@ import { useBlocker } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
 import { useIdentity } from './session'
+import { type PrivateRequestScope } from './private-request-scope'
+import { useCommunicationCommands } from './communication-tests'
 import { useCurrentTime } from './use-current-time'
 import { Button } from './components/ui/button'
 import { Input, Textarea, Select, Label, Checkbox } from './components/ui/fields'
@@ -15,12 +17,13 @@ import { evidenceProblems, missingRequirements, sameEvidence, words, type Draft,
 
 type Latest = { page: SubmissionPage; draft?: Draft }
 type Review = { kind: 'draft' | 'formal'; evidence: Evidence[]; reason: string; revision: number }
-export function DeliverableEditor({ event, team, page, initialDraft, organiser, onDirty, onDeny, paused = false }: { event: EventRecord; team: Team; page: SubmissionPage; initialDraft?: Draft; organiser: boolean; onDirty: (dirty: boolean) => void; onDeny?: (error: unknown) => void; paused?: boolean }) {
+export function DeliverableEditor({ event, team, page, initialDraft, organiser, onDirty, onDeny, paused = false, parentScope, pageKey, draftKey }: { parentScope: PrivateRequestScope; pageKey: readonly unknown[]; draftKey: readonly unknown[]; event: EventRecord; team: Team; page: SubmissionPage; initialDraft?: Draft; organiser: boolean; onDirty: (dirty: boolean) => void; onDeny?: (error: unknown) => void; paused?: boolean }) {
   const identity = useIdentity(), cache = useQueryClient(), now = useCurrentTime()
   const initialEvidence = initialDraft?.revision ? initialDraft.evidence : page.final?.evidence ?? []
   const [items, setItems] = useState<Evidence[]>(initialEvidence), [saved, setSaved] = useState(initialEvidence), [draftRevision, setDraftRevision] = useState(initialDraft?.revision ?? 0), [formalRevision, setFormalRevision] = useState(page.revision)
   const [reason, setReason] = useState(''), [uploading, setUploading] = useState(false), [latest, setLatest] = useState<Latest>(), [reviewed, setReviewed] = useState(false), [review, setReview] = useState<Review>(), [selected, setSelected] = useState(page.definitions[0]?.id ?? '')
-  const operation = useResourceOperation(`${identity.person.id}:${identity.draft_scope}:${event.id}:${team.id}:evidence:${page.can_read_draft ? 'team-draft' : 'formal-amendment'}`, onDeny)
+  const owner = `${identity.person.id}:${identity.draft_scope}:${event.id}:team-deliverables:${team.id}:${page.can_read_draft ? 'team-draft' : 'formal-amendment'}`, safeCommands = useCommunicationCommands(owner)
+  const operation = useResourceOperation(owner, onDeny, { parentScope, safeCommands, resourceID: team.id })
   const dirty = !sameEvidence(items, saved) || !!reason || !!review, busy = operation.pending || uploading
   const locked = paused || operation.blocked || (!page.can_draft && !page.can_submit), problems = evidenceProblems(items), missing = missingRequirements(page.definitions, items)
   const lateChange = page.definitions.some(definition => now >= new Date(definition.due_at).getTime() && JSON.stringify(items.find(item => item.deliverable_id === definition.id)) !== JSON.stringify(page.final?.evidence.find(item => item.deliverable_id === definition.id)))
@@ -46,15 +49,15 @@ export function DeliverableEditor({ event, team, page, initialDraft, organiser, 
       return { kind: 'formal' as const, value: result }
     }, async (result, current) => {
       setReview(undefined); setSaved(intent.evidence)
-      if (result.kind === 'draft') { setDraftRevision(result.value.revision); cache.setQueryData(privateKey(identity.person.id, event.id, `submission-draft-${team.id}`), result.value); return 'Private draft saved. No formal submission was accepted or reviewed.' }
-      setFormalRevision(result.value.revision); setReason(''); cache.setQueryData(privateKey(identity.person.id, event.id, `submission-${team.id}`), result.value); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, `submission-history-${team.id}`) }); current.assert(); return `Formal version ${result.value.final!.revision} submitted. Completion review is pending.`
+      if (result.kind === 'draft') { setDraftRevision(result.value.revision); cache.setQueryData(draftKey, result.value); return 'Private draft saved. No formal submission was accepted or reviewed.' }
+      setFormalRevision(result.value.revision); setReason(''); cache.setQueryData(pageKey, result.value); await cache.invalidateQueries({ queryKey: privateKey(identity.person.id, event.id, `submission-history-${team.id}`) }); current.assert(); return `Formal version ${result.value.final!.revision} submitted. Completion review is pending.`
     }, async (error, current) => {
       // A definite window/cutoff rejection permits only a current-state read.
       // Keep unsaved evidence; never turn that read into a submission receipt.
       if (error.code !== 'event_blocked') return
       const fresh = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission', { signal: current.signal, params: { path: { event_id: event.id, team_id: team.id } } }))
       current.assert()
-      cache.setQueryData(privateKey(identity.person.id, event.id, `submission-${team.id}`), fresh)
+      cache.setQueryData(pageKey, fresh)
     })
     if (ticket.current()) setReview(undefined)
   }
@@ -62,7 +65,7 @@ export function DeliverableEditor({ event, team, page, initialDraft, organiser, 
     const fresh = unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission', { signal, params: { path: { event_id: event.id, team_id: team.id } } }))
     const draft = fresh.can_read_draft ? unwrap(await api.GET('/api/v1/events/{event_id}/teams/{team_id}/submission/draft', { signal, params: { path: { event_id: event.id, team_id: team.id } } })) : undefined
     return { page: fresh, draft }
-  }, fresh => { setLatest(fresh); setReviewed(false); cache.setQueryData(privateKey(identity.person.id, event.id, `submission-${team.id}`), fresh.page) }) }
+  }, fresh => { setLatest(fresh); setReviewed(false); cache.setQueryData(pageKey, fresh.page) }) }
   function acceptLatest(keep: boolean) {
     if (!latest || (keep && !reviewed)) return
     const fresh = latest.draft?.revision ? latest.draft.evidence : latest.page.final?.evidence ?? []
@@ -79,6 +82,6 @@ export function DeliverableEditor({ event, team, page, initialDraft, organiser, 
     {staleFormal && !operation.blocked && <section className="fleet-resource-section"><p>The formal submission changed. Your working fields are retained; read and review current evidence before submitting.</p><Button icon="refresh" onClick={reviewLatest}>Review latest evidence</Button></section>}
     {latest && <section className="fleet-resource-section" aria-label="Latest saved evidence"><p>Outcome: {words(latest.page.outcome)} · Formal version {latest.page.final?.revision ?? 'none'} · Private draft {latest.draft?.revision ?? 'unavailable'}</p><h4>Current formal evidence</h4><EvidenceList eventID={event.id} items={latest.page.final?.evidence ?? []} />{latest.draft && <><h4>Private draft</h4><EvidenceList eventID={event.id} items={latest.draft.evidence} /></>}<Label className="check"><Checkbox checked={reviewed} onChange={event => setReviewed(event.target.checked)} />I reviewed the latest saved evidence</Label><div className="fleet-pattern-actions"><Button icon="check" disabled={!reviewed || busy} onClick={() => acceptLatest(true)}>Keep my evidence edits</Button><Button variant="outline" disabled={busy} onClick={() => acceptLatest(false)}>Discard my edits and load latest</Button></div></section>}
     <ResourceOperationResult hideCurrentChoice operation={operation} read={reviewLatest} acceptCurrent={{ label: 'Keep my evidence edits', disabled: !reviewed || !latest || busy, onSelect: () => acceptLatest(true) }} />
-    <ConfirmationDialog open={!!review} onOpenChange={open => { if (!open && !operation.pending) setReview(undefined) }} title={review?.kind === 'draft' ? 'Review private evidence draft' : 'Review formal submission'} description={review?.kind === 'draft' ? 'This saves a private team draft. It is not a formal submission and will not be scored or completion reviewed.' : 'Confirm the named team evidence against the current formal state revision. The server decides whether the live window and cutoff allow acceptance.'} confirmLabel={review?.kind === 'draft' ? 'Confirm private draft' : 'Confirm formal submission'} pending={operation.pending} disabled={operation.blocked || paused || uploading} onConfirm={() => void confirm()}><p>{team.name} · Expected revision {review?.revision}</p><EvidenceList eventID={event.id} items={review?.evidence ?? []} />{review?.reason && <p>{review.reason}</p>}</ConfirmationDialog>
+    <ConfirmationDialog printExcluded open={!!review} onOpenChange={open => { if (!open && !operation.pending) setReview(undefined) }} title={review?.kind === 'draft' ? 'Review private evidence draft' : 'Review formal submission'} description={review?.kind === 'draft' ? 'This saves a private team draft. It is not a formal submission and will not be scored or completion reviewed.' : 'Confirm the named team evidence against the current formal state revision. The server decides whether the live window and cutoff allow acceptance.'} confirmLabel={review?.kind === 'draft' ? 'Confirm private draft' : 'Confirm formal submission'} pending={operation.pending} disabled={operation.blocked || paused || uploading} onConfirm={() => void confirm()}><p>{team.name} · Expected revision {review?.revision}</p><EvidenceList eventID={event.id} items={review?.evidence ?? []} />{review?.reason && <p>{review.reason}</p>}</ConfirmationDialog>
   </section>
 }

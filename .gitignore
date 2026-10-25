@@ -92,3 +92,6 @@ web/test-results-freeze-native/
 
 # Owned synthetic judge browser artifacts; never commit authenticated traces.
 web/test-results-judging-*/
+
+# Isolated cutover browser proof
+web/test-results-cutover/

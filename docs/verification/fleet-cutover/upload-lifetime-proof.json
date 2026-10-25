@@ -1,0 +1,82 @@
+{
+  "kind": "local working-tree verification before checkpoint commit",
+  "base": "92ff688ace7c42204596dc48e93a04a340a169a2",
+  "sources": [
+    {
+      "path": "web/src/protected-upload.tsx",
+      "sha256": "f8cd995c340d58ccea65292fa06d03ee8d61c11decd9f0f72a25cf8fcc899c99"
+    },
+    {
+      "path": "web/src/protected-upload-safety.tsx",
+      "sha256": "53817f32058f3b438438f327bbab62a1bd2890356ed09865c555bc6b1e498561"
+    },
+    {
+      "path": "web/src/app-shell.tsx",
+      "sha256": "dc290ab0a86d5c4c0285f316f0e59243be59306ff0491649f1b8133ce5653096"
+    },
+    {
+      "path": "web/src/protected-upload.lifetime.test.tsx",
+      "sha256": "83264d39eab4dc41dce8280f4a83bd7277be10697411b17b43e0b4aff5cdb619"
+    },
+    {
+      "path": "web/e2e/team-deliverable-lifetimes.spec.ts",
+      "sha256": "f00fe8bc734213ad06a7a71b5f05f322fe0ab788301b55e8ca418de62da9713c"
+    },
+    {
+      "path": "web/src/styleguide/protected-upload.tsx",
+      "sha256": "e950cb443f930110c72a395b93b50524e6effa0ea4e9d6fd1e3e4da299f07178"
+    }
+  ],
+  "red": {
+    "command": "node node_modules/vitest/vitest.mjs run src/protected-upload.lifetime.test.tsx",
+    "production": "unchanged protected-upload.tsx from base; additive test only",
+    "failed": 3,
+    "seconds": 1.05,
+    "signal": "no safe original upload metadata before or after private owner teardown"
+  },
+  "green": [
+    {
+      "command": "node node_modules/vitest/vitest.mjs run",
+      "passed": 224,
+      "seconds": 8.69
+    },
+    {
+      "command": "npm run lint",
+      "exit": 0
+    },
+    {
+      "command": "npm run build",
+      "exit": 0
+    },
+    {
+      "command": "npm run build:styleguide",
+      "exit": 0
+    },
+    {
+      "command": "playwright test --config playwright.cutover.config.ts team-deliverable-lifetimes.spec.ts",
+      "passed": 16,
+      "seconds": 11.4,
+      "retries": 0,
+      "portals": [
+        "administrator",
+        "regular"
+      ],
+      "viewports": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "command": "playwright test --config playwright.cutover-guide.local.ts --grep \"production upload controls\"",
+      "passed": 2,
+      "seconds": 9.1,
+      "retries": 0,
+      "host": "test-owned Go styleguide host on 127.0.0.1:4179; temporary configuration removed after terminal run"
+    }
+  ],
+  "limitations": [
+    "synthetic native-shaped browser transports, no live provider effects",
+    "not full issue245 acceptance or final-head CI",
+    "other first-release UI routes and runtime/guide availability proof remain separate acceptance work"
+  ]
+}

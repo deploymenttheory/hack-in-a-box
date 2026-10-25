@@ -1,4 +1,5 @@
 import { useBlocker } from '@tanstack/react-router'
+import { useCommunicationCommands } from './communication-tests'
 import { useEffect, useRef, useState } from 'react'
 import { api, APIError, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
@@ -9,7 +10,7 @@ import { ProtectedUploadControls } from './protected-upload-controls'
 import { resourceDenied } from './resource-operation'
 
 type UploadBody = { filename: string; media_type: 'application/pdf' | 'image/png' | 'image/jpeg' | 'text/plain'; content: string; team_id?: string; reason?: string }
-type Attempt = { id: string; body: UploadBody; revision: number; file: File }
+type Attempt = { id: string; body: UploadBody; revision: number; file: File; trackingID?: string }
 type Props = { eventID: string; revision?: number; teamID?: string; reason?: string; id: string; label: string; inputLabel?: string; action: string; disabled: boolean; busy: (value: boolean) => void; accepted: (value: components['schemas']['File'], file: File) => void; failed?: (error: unknown) => void }
 export function ProtectedUpload(props: Props) {
   const identity = useIdentity()
@@ -18,7 +19,7 @@ export function ProtectedUpload(props: Props) {
 // The only replay path repeats the native actor/event/key fingerprint contract.
 // Captured bytes, metadata, team, reason and expected revision never follow later edits.
 function UploadLifetime({ eventID, revision, teamID, reason, id, label, inputLabel, action, disabled, busy, accepted, failed }: Props) {
-  const identity = useIdentity(), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${teamID ?? ''}:${id}:upload`)
+  const identity = useIdentity(), commands = useCommunicationCommands(`${identity.person.id}:${identity.draft_scope}:protected-uploads:${eventID}:${teamID ?? 'event'}:${id}`), scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:${eventID}:${teamID ?? ''}:${id}:upload`)
   const [file, setFile] = useState<File>(), [pending, setPending] = useState(false), [unknown, setUnknown] = useState(false), [failure, setFailure] = useState<unknown>(), [notice, setNotice] = useState(''), [denied, setDenied] = useState(false)
   const input = useRef<HTMLInputElement>(null), captured = useRef<Attempt | undefined>(undefined), running = useRef(false)
   usePlanningDepartureBarrier(pending || unknown)
@@ -31,7 +32,7 @@ function UploadLifetime({ eventID, revision, teamID, reason, id, label, inputLab
     if (!['application/pdf', 'image/png', 'image/jpeg', 'text/plain'].includes(selected.type) || selected.size > 8 * 1024 * 1024) { setNotice('Choose a PDF, PNG, JPEG or text file up to 8 MiB.'); return }
     const ticket = scope.capture(); if (!ticket.current()) return
     running.current = true; setPending(true); setFailure(undefined); setNotice('')
-    let sent = false
+    let sent = false, trackingID: string | undefined
     try {
       let attempt = captured.current
       if (!attempt) {
@@ -42,13 +43,23 @@ function UploadLifetime({ eventID, revision, teamID, reason, id, label, inputLab
         attempt = { id: crypto.randomUUID(), revision: expected, file: selected, body: { filename: selected.name, media_type: selected.type as UploadBody['media_type'], content, ...(teamID ? { team_id: teamID, reason: reason ?? '' } : {}) } }
         captured.current = attempt
       }
-      ticket.assert(); sent = true
-      const result = unwrap(await api.POST('/api/v1/events/{event_id}/files', { params: { path: { event_id: eventID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${attempt.revision}"`, 'Idempotency-Key': attempt.id } }, body: attempt.body }))
       ticket.assert()
+      trackingID = commands.begin({ operation: 'Protected file upload', revision: attempt.revision, command: { action: 'upload', intentID: attempt.id, revision: attempt.revision, resourceID: eventID, subjectID: teamID } }, attempt.trackingID)
+      attempt.trackingID = trackingID
+      sent = true
+      const result = unwrap(await api.POST('/api/v1/events/{event_id}/files', { params: { path: { event_id: eventID }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${attempt.revision}"`, 'Idempotency-Key': attempt.id } }, body: attempt.body }))
       if (!result.id || result.filename !== attempt.body.filename || result.media_type !== attempt.body.media_type || result.size_bytes !== attempt.file.size || result.event_id !== eventID || result.owner_id !== identity.person.id) throw new Error('Unexpected upload response')
+      commands.complete(trackingID)
+      ticket.assert()
       accepted(result, attempt.file); captured.current = undefined; setUnknown(false); setFile(undefined); if (input.current) input.current.value = ''
       setNotice(`File ${result.id} uploaded. Save the owning page or evidence to attach it; this is not a formal submission.`)
     } catch (error) {
+      // Settle only the captured request's validated response, even if its
+      // private owner ended. Never copy its private payload into safe memory.
+      if (trackingID) {
+        if (error instanceof APIError && error.status < 500 && error.status !== 408) commands.complete(trackingID)
+        else commands.uncertain(trackingID)
+      }
       if (!ticket.current()) return
       setFailure(error); failed?.(error)
       const uncertain = sent && (!(error instanceof APIError) || error.status >= 500 || error.status === 408)
