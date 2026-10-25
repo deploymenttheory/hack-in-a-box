@@ -149,6 +149,40 @@ test('capacity review corrects without dropping the typed value and success rest
   expect(state.commands.map(command => command.action)).toEqual(['settings'])
 })
 
+test('capacity success restores its source after the closing commit', async ({ page }) => {
+  await page.addInitScript(() => {
+    // Fault injection models a deferred React commit. It does not claim native
+    // browser microtasks ordinarily run after an animation-frame checkpoint.
+    const original = window.queueMicrotask.bind(window)
+    const commit = { hold: false, queued: [] as VoidFunction[], release() { this.hold = false; for (const callback of this.queued.splice(0)) callback() } }
+    Object.assign(window, { __capacityCommit: commit })
+    window.queueMicrotask = callback => original(() => { if (commit.hold) commit.queued.push(callback); else callback() })
+  })
+  const { state } = await mockMentors(page)
+  await page.route(`**/events/${firstID}/mentor-coverage`, async route => {
+    if (route.request().method() === 'POST') await page.evaluate(() => { (window as unknown as { __capacityCommit: { hold: boolean } }).__capacityCommit.hold = true })
+    await route.fallback()
+  })
+  await page.goto(`/events/${firstID}`); await openEventSection(page, 'Mentors')
+  await page.getByLabel('Mentor decision reason').fill('Review event capacity')
+  const source = page.getByRole('button', { name: 'Edit event mentor capacity', exact: true })
+  await source.click(); await page.getByLabel('Default maximum assigned teams per mentor').fill('3')
+  await page.getByRole('button', { name: 'Review mentor capacity', exact: true }).click()
+  try {
+    await page.getByRole('button', { name: 'Confirm mentor change', exact: true }).click()
+    await page.waitForFunction(() => (window as unknown as { __capacityCommit: { queued: VoidFunction[] } }).__capacityCommit.queued.length > 0, undefined, { timeout: 5000 })
+    // Exercise the ordering boundary: an animation frame can precede the closing
+    // React commit. This is not a delay of the source-focus assertion.
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    await page.evaluate(() => (window as unknown as { __capacityCommit: { release: VoidFunction } }).__capacityCommit.release())
+    await expect(source).toBeFocused()
+    await expect(page.getByRole('form', { name: 'Mentor capacity editor' })).toHaveCount(0)
+    expect(state.commands.map(command => command.action)).toEqual(['settings'])
+  } finally {
+    await page.evaluate(() => (window as unknown as { __capacityCommit: { release: VoidFunction } }).__capacityCommit.release())
+  }
+})
+
 test('a held time resolution cannot prepare or send an old profile after projection downgrade', async ({ page }) => {
   const { state } = await mockMentors(page)
   await page.clock.install({ time: new Date('2026-10-23T12:00:00Z') })
