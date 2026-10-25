@@ -50,6 +50,22 @@ replaced by a visual migration.
 | Versioned production guide, contribution rules, independent availability | Existing independent production host/build and contribution rules are retained. A current isolated image and separately browsed guide must be proved; an already running guide at 8082 is not candidate-release evidence. |
 | Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #164/#165 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
 
+## Reference quality applicability
+
+`quality-evidence.csv` retains all100 ordered reference identities and gives each
+its own current source paths and applicability statement. The statements describe
+both shared implementation and intentional task variations, rather than claiming
+that every feature belongs on every screen. Comparable records may be tabular;
+room display, evidence reading, queues and media retain suitable compositions.
+Sort, eligible selection, optional columns and export must come from meaningful
+owning capabilities. Guide examples of these controls are explicitly distinguished
+from native domain operations; no bulk/export API is invented to populate a toolbar.
+
+The map is a source/applicability review. It does not relabel historical captures,
+certify current browser results, or waive a required first-release workflow. Final
+cross-domain/reference/actual-API reconciliation and independent review remain
+required before245 closes. The normal-image captures retain source11375165.
+
 ## Production caller and legacy selector audit
 
 `node scripts/audit-presentation-callers.mjs` follows static imports, reexports,
