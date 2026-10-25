@@ -20,7 +20,7 @@ func (s Service) PublishedEventProjectsInTransaction(
 	actor, eventID, after uuid.UUID,
 	limit int32,
 ) (ProjectPage, error) {
-	out := ProjectPage{Items: []Project{}}
+	out := ProjectPage{Items: []Project{}, Events: []ProjectEvent{}}
 	if limit < 1 || limit > 100 {
 		return out, access.ErrInvalid
 	}
