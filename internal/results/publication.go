@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
 
@@ -126,5 +127,18 @@ func retainPublication(
 	if errors.As(err, &pgError) && pgError.Code == "23505" {
 		return access.ErrConflict
 	}
-	return failure("retain one released source event", err)
+	if err != nil {
+		return failure("retain one released source event", err)
+	}
+	// Publication and its metadata-only routing fact commit or roll back together.
+	return failure(
+		"retain released communication fact",
+		communications.RecordOfficialFact(ctx, tx, dbgen.SaveCommunicationFactParams{
+			EventID:  eventID,
+			ID:       value.ID,
+			Kind:     "results",
+			Revision: value.Version,
+			Status:   "published",
+		}),
+	)
 }

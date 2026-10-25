@@ -156,14 +156,16 @@ func newCommunicationRuntime(
 		"help":              helpInboxOwner{Help: helpProvider},
 		"clarification":     clarificationInboxOwner{Answers: answers},
 	}
+	announcedResults := &results.Service{Pool: pool, Now: now}
 	composer.FactOwners = map[string]communications.FactOwner{
+		"results":        announcedResults,
 		"help":           helpProvider,
 		"outcome_review": followThrough,
 	}
 	helpProvider.Notifications = helpInboxSink{Inbox: local}
 	auto.Sources = map[string]automation.SourcePolicy{
 		"results.published": automation.ResultSource{
-			Results: &results.Service{Pool: pool, Now: now},
+			Results: announcedResults,
 		},
 		"outcome.follow_up":       outcomes.ReviewSources{Service: followThrough},
 		"survey.open":             automation.SurveySource{Surveys: questionnaires},
