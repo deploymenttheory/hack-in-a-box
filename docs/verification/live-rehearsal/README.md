@@ -109,3 +109,17 @@ denied. Omitted production clocks stay nil and use their existing real-time
 fallbacks. The original failed source is f5d04e4; its Linux failure matches the
 same resolver chain. The full support browser reproof and new Today fixtures
 remain pending; no old-head CI rerun is used as evidence.
+
+Today #88 merged at c0c8b21 and the rehearsal is rebased onto that native source.
+Both actual production portals rebuilt successfully. A whole native Chromium
+run passed six of seven cases, including actual Today→help→published common
+answer→native correction→account/event denial and administrator Today→MC.
+The seventh mobile rules/contact/personal-progress journey passed its exact
+corrected tight loop (1/1, 2.0s): it now waits for the actual owner-visible
+`Preparation progress saved.` acknowledgement before navigating, rather than
+mistaking response headers for completed acknowledgement handling. Keyboard
+rule opening, actual version acknowledgement, opener focus return, personal
+completion versus unchanged native formal output, and mobile overflow assertions
+are retained. No production navigation change or timeout relaxation was made.
+The current combined run, explicit early/live mentor flags, matching evidence and
+final independent reviews/CI remain pending.

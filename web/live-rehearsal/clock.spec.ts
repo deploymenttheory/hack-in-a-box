@@ -4,11 +4,12 @@ import { openEventSection } from '../e2e/event-navigation-fixture'
 
 test('production team dashboard follows native release/live/cutoff clocks while lifecycle lags and assignments stay frozen', async ({ browser }, info) => {
   const context = await actor(browser, 'public', 'competitor'), page = await context.newPage()
+  const mentor = await actor(browser, 'public', 'mentor')
   await control('stage-lag')
   const base = `/api/v1/events/${native.event_id}`
   try {
     const phases = [
-      { name: 'preparation', instant: '2027-03-21T09:00:00Z', draft: false, submit: false, outcome: 'open' },
+      { name: 'preparation', instant: '2027-03-22T09:30:00Z', draft: false, submit: false, outcome: 'open' },
       { name: 'released build week', instant: '2027-03-22T10:00:00Z', draft: true, submit: false, outcome: 'open' },
       { name: 'live opening', instant: '2027-03-29T09:00:00Z', draft: true, submit: true, outcome: 'open' },
       { name: 'exact final cutoff', instant: '2027-03-29T16:00:00Z', draft: false, submit: false, outcome: 'not_submitted' },
@@ -25,6 +26,11 @@ test('production team dashboard follows native release/live/cutoff clocks while 
         expect(current.can_draft).toBe(phase.draft)
         expect(current.can_submit).toBe(phase.submit)
         expect(current.outcome).toBe(phase.outcome)
+        const observation = await mentor.request.get(`${base}/teams/${native.team_id}/observations`)
+        expect(observation.status()).toBe(200)
+        const review = await observation.json()
+        expect(review.can_record).toBe(phase.name === 'live opening' || phase.name === 'exact final cutoff')
+        expect(review.can_change_status).toBe(true)
         if (phase.outcome === 'not_submitted') expect(current.frozen_at).not.toBeNull()
         const teams = await context.request.get(`${base}/teams`)
         expect(teams.status()).toBe(200)
@@ -52,6 +58,7 @@ test('production team dashboard follows native release/live/cutoff clocks while 
     }
   } finally {
     await context.close()
+    await mentor.close()
     await control('stage-live')
     await control('clock', { instant: '2027-03-29T09:00:00Z' })
   }

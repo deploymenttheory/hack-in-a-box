@@ -1,15 +1,22 @@
 import { test, expect } from '@playwright/test'
 import { actor, control, native } from './native'
+import { openEventSection } from '../e2e/event-navigation-fixture'
 
 test('native help and corrected common answers preserve current account/event grants and never disclose the private source question', async ({ browser }, info) => {
   await control('clock', { instant: '2027-03-29T09:00:00Z' })
   const context = await actor(browser, 'public', 'competitor'), page = await context.newPage()
   const answerPath = `/api/v1/events/${native.event_id}/clarifications/${native.answer_id}`
   try {
-    await page.goto(`/events/${native.event_id}/help/${native.help_id}`)
+    await page.goto(`/events/${native.event_id}`)
+    await openEventSection(page, 'Today')
+    await page.getByRole('button', { name: 'Open the current help request', exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/events/${native.event_id}/help/${native.help_id}$`))
     await expect(page.getByRole('heading', { name: 'Team help request', exact: true })).toBeVisible()
     await expect(page.getByRole('region', { name: 'Private request context', exact: true })).toContainText('PRIVATE-HELP-DESCRIPTION')
-    await page.goto(`/events/${native.event_id}/clarifications/${native.answer_id}`)
+    await page.getByRole('link', { name: 'Back to event', exact: true }).click()
+    await openEventSection(page, 'Today')
+    await page.getByRole('button', { name: 'Open official clarifications', exact: true }).click()
+    await page.getByRole('link', { name: 'Rehearsal official answer', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Rehearsal official answer', exact: true })).toBeVisible()
     await expect(page.getByText('Initial approved common answer.', { exact: true })).toBeVisible()
     expect(await page.locator('body').textContent()).not.toContain('PRIVATE-QUESTION-ORIGIN')

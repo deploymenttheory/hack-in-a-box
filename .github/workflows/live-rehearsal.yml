@@ -30,7 +30,7 @@ jobs:
         working-directory: web
       - run: npm --prefix web run build
       - name: Real PostgreSQL, native HTTP and production browsers
-        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestLiveRehearsal(NativeAuthority|Browsers)$' -count=1 -timeout=10m
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestLiveRehearsal(NativeAuthority|Browsers|SupportClockPropagation)$' -count=1 -timeout=10m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:

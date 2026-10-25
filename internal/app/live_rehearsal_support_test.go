@@ -2,13 +2,18 @@ package app
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
+	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 )
 
 type rehearsalSupport struct {
@@ -77,6 +82,63 @@ func seedRehearsalSupport(
 			Category:    "setup",
 			Description: "PRIVATE-HELP-DESCRIPTION: synthetic team setup request",
 			Location:    "Synthetic rehearsal room",
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	for _, document := range []content.Document{
+		{Title: "Rehearsal rules", Markdown: "Synthetic rules: respect one another and use the current native submission window.", Purpose: "rules", RequireAcknowledgement: true, Audience: access.ContentAudience{Confirmed: true}},
+		{Title: "Rehearsal support", Markdown: "Synthetic approved support route for the integrated rehearsal.", Purpose: "support", Contacts: []content.Contact{{Label: "Synthetic support desk", URL: "https://support.example.test/rehearsal"}}, Audience: access.ContentAudience{Confirmed: true}},
+	} {
+		resource, err := deps.Content.Save(
+			t.Context(),
+			r.owner.ID,
+			r.eventID,
+			uuid.New(),
+			0,
+			content.Input{Kind: "page", Document: document},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, action := range []string{"review", "approve", "release"} {
+			resource, err = deps.Content.Action(
+				t.Context(),
+				r.owner.ID,
+				r.eventID,
+				resource.ID,
+				resource.Revision,
+				action,
+				"Synthetic native released guidance review",
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	tasks, err := deps.Preparation.List(t.Context(), r.owner.ID, r.eventID, preparation.Filter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	due := time.Date(2027, 3, 29, 8, 0, 0, 0, time.UTC)
+	if _, err := deps.Preparation.Save(
+		t.Context(),
+		r.owner.ID,
+		r.eventID,
+		tasks.Revision,
+		preparation.Update{
+			Reason: "Synthetic assigned preparation fixture",
+			Definition: preparation.Definition{
+				ID:         uuid.New(),
+				Title:      "Rehearsal personal setup",
+				OwnerID:    &r.competitor.ID,
+				OwnerRole:  "attendee",
+				Status:     "not_started",
+				FixedDueAt: &due,
+				Checklist: []preparation.ChecklistItem{
+					{ID: uuid.New(), Title: "Verify local setup"},
+				},
+			},
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -158,7 +220,7 @@ func TestLiveRehearsalSupportClockPropagation(t *testing.T) {
 		r.mentor.ID,
 		r.eventID,
 		support.answerID,
-	); err == nil {
-		t.Fatal("controlled clock must not grant a mentor confirmed-participant source access")
+	); !errors.Is(err, access.ErrNotFound) {
+		t.Fatalf("controlled clock changed current mentor source denial: %v", err)
 	}
 }

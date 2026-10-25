@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -312,6 +313,9 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		}
 		command.Args = append(command.Args, "--project", project)
 	}
+	if pattern := os.Getenv("HACKBOX_REHEARSAL_GREP"); pattern != "" {
+		command.Args = append(command.Args, "--grep", pattern)
+	}
 	command.Dir = filepath.Join("..", "..", "web")
 	command.Env = append(
 		os.Environ(),
@@ -319,7 +323,33 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"TMPDIR="+private,
 	)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
-	if err := command.Run(); err != nil {
-		t.Fatal(fmt.Errorf("production browser rehearsal: %w", err))
+	result := command.Run()
+	source, err := exec.CommandContext(t.Context(), "git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	proof := map[string]any{
+		"source_commit":             strings.TrimSpace(string(source)),
+		"fixture_run_id":            manifest["run_id"],
+		"event_id":                  r.eventID,
+		"team_id":                   r.teamID,
+		"publication_at":            previousClock,
+		"project_selection":         os.Getenv("HACKBOX_REHEARSAL_PROJECT"),
+		"test_selection":            os.Getenv("HACKBOX_REHEARSAL_GREP"),
+		"browser_command_succeeded": result == nil,
+	}
+	proofJSON, err := json.MarshalIndent(proof, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(command.Dir, "test-results-live", "native-fixture.json"),
+		proofJSON,
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if result != nil {
+		t.Fatal(fmt.Errorf("production browser rehearsal: %w", result))
 	}
 }

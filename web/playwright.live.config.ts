@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: './live-rehearsal',
   outputDir: 'test-results-live',
   workers: 1,
+  reporter: [['list'], ['json', { outputFile: 'test-results-live/results.json' }]],
   fullyParallel: false,
   retries: 0,
   timeout: 60_000,
