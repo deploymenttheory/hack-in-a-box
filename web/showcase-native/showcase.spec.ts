@@ -53,5 +53,8 @@ test('actual reviewed two-event discovery preserves explicit awards, consent, au
   await page.route(`**/api/v1/projects/${native.second_project}`, async route => { const response = await route.fetch(); entered(); await gate; await route.fulfill({ response }) }, { times: 1 })
   const pending = page.goto(cached).catch(error => { if (!/interrupted|ERR_ABORTED/i.test(String(error))) throw error }); await reached; const sameRealmDocuments = documents; await control('withdraw-cache-project'); await page.getByRole('link', { name: 'Reviewed projects', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible(); await page.goBack(); await expect(page.getByRole('heading', { name: 'Project unavailable', exact: true })).toBeVisible(); expect(documents).toBe(sameRealmDocuments); release(); await pending; await expect(page.getByText('Explore work across events', { exact: true })).toHaveCount(0)
   expect(await page.locator('body').innerText()).not.toContain('PRIVATE-')
+ } catch (error) {
+  await page.screenshot({ path: testInfo.outputPath('native-journey-failure.png'), fullPage: true }).catch(() => {})
+  throw error
  } finally { await Promise.all([reader.close(), outsider.close()]) }
 })
