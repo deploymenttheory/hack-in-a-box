@@ -456,3 +456,50 @@ read locks, denied-private-reader departure and original HTTP408 unknown state.
 No native fixture was started while the root-owned PR286 matrix was active.
 The follow-up remains draft; updated native focus proof and independent bounded
 correction reviews/final CI remain required.
+
+### CI2093: read-interrupted confirmation and obsolete focus restoration
+
+CI run40218455895 at PR head `2093b0c3919de8b389e5a6e94526c39242c206e3`
+failed only admin/desktop/final (seven other native cases passed;468.72s total).
+This does not invalidate the earlier f559 eight-case PASS499.16s, and neither
+result is relabelled as current correction proof. The failed artifact shows the
+reader GET beginning at76828.133ms between the last Confirm focus check
+(76815.434ms) and trusted Enter (76837.948ms). The Enter snapshot has Confirm
+natively disabled without command aria-busy, enabled Cancel, no stale error and
+no casting POST. The recorded prior acknowledged owner request was `propose`;
+it was not a casting acknowledgement. The same cause reproduced deterministically
+RED2 at both widths by starting a genuine read at that input boundary: zero
+POSTs and the exact review stayed open after the disabled key.
+
+The test-only reviewed-confirmation helper now observes actual trusted keydown
+and click acceptance. Only positive disabled-key evidence, zero accepted clicks
+and zero POSTs permits one explicit new gesture after the same captured review
+is enabled. There is no loop, sent-command replay, DOM focus/click mutation,
+blanket polling suppression, test retry or timeout increase. Other focus
+anomalies fail. Exactly one accepted click and one POST are required; the real
+response must match the exact original command/fingerprint before the unchanged
+dialog-disappearance assertion. Lost, HTTP408 or mismatched receipts remain
+unknown and never trigger another gesture. The native journey's final signoff
+uses this same reviewed-confirmation seam.
+
+The broader affected checks exposed another real owner race: a delayed closing
+collection-return frame could steal focus after a newer manual inspector opened.
+A deterministic scheduling test holds that real frame, opens the inspector using
+trusted Enter and observes its real autofocus, then releases the obsolete frame.
+The2093 production baseline failed RED2 at both widths (5.9s each). The only new
+production change opts this closing caller into the existing
+`navigation.restore(target,true)` guard, yielding to a newer connected focus
+owner. Generic restoration, ACK next-action focus and normal collection return
+are unchanged. Setup cases now await the actual inspector heading owner before
+attempting a later input. Earlier broader attempts genuinely failed
+(admin22/24, regular23/24) and are not treated as passes.
+
+With these corrections, bounded affected suites passed **28/28 admin(11.3s)**
+and **28/28 regular(11.6s)** at both layouts. They include normal acceptance,
+read interruption/resumption, changed source, current denial, HTTP408, lost
+response, mismatched receipt, wrong focus target, original unknown barriers,
+ACK continuation and the deterministic obsolete-frame sequence. Types, focused
+ESLint and both production builds passed on the owned correction overlay.
+No native policy, receipt matcher, API or schema changed; all eight native CI
+cases and the40m Go CI budget remain required. Affected clean-source native
+proof and new independent correction reviews/current-head CI remain pending.

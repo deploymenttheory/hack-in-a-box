@@ -2,14 +2,14 @@ import {writeFileSync} from 'node:fs'
 import {expect,test,type Page} from '@playwright/test'
 import {native,owner,control,teamLabel} from './native'
 import {activate,typeInto,selectNative,reach} from './keyboard'
+import {confirmReviewedDialog} from './confirmation'
 import type {QualificationPage} from '../src/qualification-model'
 async function accept(page:Page,reason:string){
  await typeInto(page.getByLabel('Recorded panel reason',{exact:true}),reason)
  const submit=page.getByRole('button',{name:'Review entered panel decision',exact:true});await activate(submit)
  const dialog=page.getByRole('alertdialog',{name:'Review private panel command',exact:true})
  await expect(dialog).toContainText(reason)
- const confirm=dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true});await activate(confirm)
- await expect(dialog).toHaveCount(0)
+ await confirmReviewedDialog(dialog,`/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`)
 }
 test('real five-team evidence, final cards, split tie ballots, casting signoff and separate preparation',async({browser})=>{
  test.skip(native.scenario!=='final','Separate initial no-final journey')
@@ -71,7 +71,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await typeInto(page.getByLabel('Recorded panel reason',{exact:true}),'Exact versioned private panel approval after all native blockers are resolved')
  const submitSignoff=page.getByRole('button',{name:'Review entered panel decision',exact:true});await activate(submitSignoff)
  const review=page.getByRole('alertdialog',{name:'Review private panel command',exact:true});await expect(review).toContainText('Proposed finalists');await expect(review).toContainText('Reserve');await expect(review).toContainText('All eligible teams remain category candidates')
- await activate(review.getByRole('button',{name:'Confirm reviewed panel command',exact:true}))
+ await confirmReviewedDialog(review,`/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`)
  await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
  await expect(page.getByText(/ties require evidence review and recorded panel decisions/)).toHaveCount(0)
  proof=await control<typeof proof>('evidence');expect(proof).toMatchObject({cards:5,current:true,signoff:true})

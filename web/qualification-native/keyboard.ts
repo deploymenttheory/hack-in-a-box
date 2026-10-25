@@ -22,3 +22,23 @@ export async function selectNative(control:Locator,value:string){
  if(!label)throw new Error('Requested native select option is not currently disclosed')
  await control.page().keyboard.type(label);await control.page().keyboard.press('Tab');await expect(control).toHaveValue(value)
 }
+
+// Observe actual trusted input acceptance, rather than treating an enabled
+// check before a later global key as proof that the key activated its target.
+export async function observeActivation(control:Locator){
+ await reach(control)
+ const page=control.page(),key=`__nativeActivation_${Date.now()}_${Math.random()}`
+ await control.evaluate((element,key)=>{
+  const state={keys:0,clicks:0,paused:false,focused:false,connected:true}
+  const keydown=(event:KeyboardEvent)=>{if(event.isTrusted&&event.key==='Enter'){state.keys++;state.connected=element.isConnected;state.paused=element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]');state.focused=element===element.ownerDocument.activeElement}}
+  const click=(event:MouseEvent)=>{if(event.isTrusted&&event.target instanceof Node&&element.contains(event.target))state.clicks++}
+  element.ownerDocument.addEventListener('keydown',keydown,true);element.ownerDocument.addEventListener('click',click,true)
+  Object.assign(window,{[key]:{state,dispose:()=>{element.ownerDocument.removeEventListener('keydown',keydown,true);element.ownerDocument.removeEventListener('click',click,true)}}})
+ },key)
+ try{
+  await page.keyboard.press('Enter')
+  return await page.evaluate(key=>{const value=(window as unknown as Record<string,{state:{keys:number;clicks:number;paused:boolean;focused:boolean;connected:boolean}}>)[key];return value.state},key)
+ }finally{
+  await page.evaluate(key=>{const values=window as unknown as Record<string,{dispose:()=>void}>;values[key]?.dispose();delete values[key]},key)
+ }
+}
