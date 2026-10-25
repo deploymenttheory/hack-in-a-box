@@ -62,3 +62,15 @@ export function createExampleTransport(mode: () => ExampleMode, delay = 120): Ex
     },
   }
 }
+
+// The judging example uses fictional fixed identities and no production owner.
+export const judgeGuideCriteria: import('../../judge-model').JudgeCriteria = {
+ name:'Synthetic judging rubric',mode:'all_teams',required_judge_count:2,finalist_count:3,reserve_count:1,prizes:[],side_quests:[],
+ categories:[{id:'8ffbb915-b8cc-439b-b025-00ca75dcf07a',label:'Demonstration',min_score:1,max_score:10,weight:1,guidance:'Explain the observed fictional workflow.',anchors:[{score:1,description:'No working demonstration.'},{score:5,description:'Main workflow has gaps.'},{score:10,description:'Complete demonstrated workflow.'}]}],
+}
+export const judgeGuideBrief: import('../../judge-model').JudgeBrief = {
+ team_id:'3f8af336-a168-47ed-b67c-cba51d530413',team_name:'Fictional practice robot',run_id:'02054da1-8a61-496b-9f97-ff0fc7e1ca61',criteria:judgeGuideCriteria,reference:{id:'d05048ab-0b3e-4dbb-beb6-4371d589e543',version:2,digest:'synthetic-guide-only'},private_judge_guidance:'Use only your independently observed synthetic evidence.',submission_revision:3,
+ submission:{definitions:[],evidence:[{deliverable_id:'dfb65eec-fc77-4e7b-86e6-ecb349db03e0',kind:'url',label:'Fictional demonstration',url:'',file_id:null}]},
+ repository:{source_id:'00000000-0000-0000-0000-000000000000',status:'not_applicable',sha:'',decision_id:null},own_card:null,submitted_cards:[],deliberation:false,mentor_summary:null,
+ output:{team_id:'3f8af336-a168-47ed-b67c-cba51d530413',entry_id:'5fe196de-a63c-4542-93da-4ad4d27299dc',outcome:'frozen',frozen_at:'2027-06-20T15:00:00Z',submitted_at:'2027-06-20T14:00:00Z',frozen_revision:3,artifacts:[]},
+}

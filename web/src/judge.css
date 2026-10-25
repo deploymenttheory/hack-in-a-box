@@ -1,0 +1,15 @@
+@layer components {
+ .fleet-judge-workspace {--collection-inspector-width:min(58rem,64vw);padding:var(--space-6);max-width:96rem;margin-inline:auto;}
+ .fleet-judge-section,.fleet-judge-category {padding-block:var(--space-6);border-block-end:1px solid var(--border);}
+ .fleet-judge-fields {border:0;padding:0;margin:0;min-width:0;}
+ .fleet-judge-fields legend {font-weight:600;padding-block:var(--space-4);}
+ .fleet-judge-category {display:grid;gap:var(--space-3);}
+ .fleet-judge-category input[type=number] {max-width:12rem;}
+ .fleet-judge-section dl>div {padding-block:var(--space-2);}
+ .fleet-judge-section dt {font-weight:600;}
+ .fleet-judge-section dd {margin-inline-start:0;}
+ .fleet-judge-workspace code {overflow-wrap:anywhere;}
+ @media (min-width:48rem){.fleet-judge-category{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.fleet-judge-category>h3,.fleet-judge-category>p,.fleet-judge-evidence-note{grid-column:1/-1}}
+ @media print {.fleet-judge-workspace,.fleet-judge-private{display:none!important}}
+ @media (max-width:40rem){.fleet-judge-workspace{padding:var(--space-4)}}
+}

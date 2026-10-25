@@ -300,3 +300,15 @@ Use associated Field errors for branch/SHA/reason and the supporting-evidence
 alternatives, then focus the first invalid control before opening a review.
 Fresh-base recovery captures its own opener; cancellation returns there or to
 the connected local controls fallback without releasing the unknown barrier.
+
+## Independent judging
+
+The judging example imports production `JudgeBriefing`, `JudgeRubric`,
+`JudgeScoreFields`, `JudgeScoreSummary` and `JudgeReview` with fixtures from the
+shared synthetic scenario module. It demonstrates retained field input, captured
+review/correction and opener focus, pending dismissal locks, lost original
+callback versus current observations, explicit synthetic original completion and
+private denial/print teardown. It has no account, API, storage or file transport.
+The usage snippet documents current native source/version/UUID/fingerprint
+ownership, isolated practice, exact receipts and metadata-only organiser reopen.
+See [judging workflows](judging-workflows.md) for the production boundary.

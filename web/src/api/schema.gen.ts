@@ -4,6 +4,24 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/judging/presentation-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgePresentationOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}/states": {
         parameters: {
             query?: never;
@@ -4000,6 +4018,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JudgePresentationOrderItem: {
+            ordinal: number;
+            title: string;
+            current: boolean;
+        };
+        JudgePresentationOrder: {
+            /** Format: int64 */
+            revision: number;
+            override_active: boolean;
+            items: components["schemas"]["JudgePresentationOrderItem"][];
+        };
         JudgeCardState: {
             /** Format: uuid */
             run_id: string;
@@ -8677,6 +8706,29 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgePresentationOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current judge/organiser authorised public published titles and ordinals only. No draft, private content, control or team association. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgePresentationOrder"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getJudgeCardStates: {
         parameters: {
             query?: never;
