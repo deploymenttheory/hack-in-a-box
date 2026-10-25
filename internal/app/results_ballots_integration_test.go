@@ -105,7 +105,8 @@ func TestFinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote(t *
 		t.Fatal("assigned final tie absent")
 		return results.JudgeTie{}
 	}
-	first := find(vote(0, f.runtime.teamID, "first"))
+	firstAccepted := vote(0, f.runtime.teamID, "first")
+	first := find(firstAccepted)
 	if first.State.WinnerID != nil || first.State.Blocker != "all_required_judge_votes_required" {
 		t.Fatal("partial panel resolved tie", first)
 	}
@@ -134,5 +135,14 @@ func TestFinalJudgeBallotsRequireEveryoneThenStrictMajorityAndExplicitRevote(t *
 	}
 	if page, err := f.service.Ballots(ctx, f.judges[1].ID, eventID); err == nil || len(page.Ties) != 0 {
 		t.Fatal("stale private ballot source survived reopen", page, err)
+	}
+	recovered, err := f.service.OriginalReceipt(ctx, f.judges[0].ID, eventID, firstAccepted.Receipt.RequestID)
+	resultsSourceRequire(t, err)
+	if !reflect.DeepEqual(recovered.Receipt, firstAccepted.Receipt) {
+		t.Fatal("private source teardown lost exact safe original acknowledgement", recovered)
+	}
+	f.round(t, judging.RoundCommand{Action: "assign", TeamID: f.runtime.teamID, JudgeIDs: []uuid.UUID{f.judges[1].ID}})
+	if recovered, err := f.service.OriginalReceipt(ctx, f.judges[0].ID, eventID, firstAccepted.Receipt.RequestID); !errors.Is(err, access.ErrForbidden) || recovered.Receipt != nil {
+		t.Fatal("revoked target assignment retained original metadata", recovered, err)
 	}
 }

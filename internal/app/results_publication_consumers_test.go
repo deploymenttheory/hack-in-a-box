@@ -593,6 +593,16 @@ func TestResultsPublicationConsumersKeepPrivatePreparationAndIndependentReleaseB
 	if p.Receipt.PublicationID == nil || *p.Receipt.PublicationID == *awardReceipt.PublicationID {
 		t.Fatal("native correction reused an earlier publication")
 	}
+	snapshot, err = room.Snapshot(ctx, eventID, paired.Token)
+	resultsSourceRequire(t, err)
+	if len(snapshot.Results) != 2 || slices.ContainsFunc(snapshot.Results, func(a results.Announcement) bool { return a.ID == *awardReceipt.PublicationID }) {
+		t.Fatal("room accumulated superseded announcements instead of the latest release per kind", snapshot.Results)
+	}
+	retained, err := f.service.Released(ctx, f.runtime.competitor.ID, eventID)
+	resultsSourceRequire(t, err)
+	if len(retained) != 3 {
+		t.Fatal("bounded live room erased deliberately published history", retained)
+	}
 	allFacts := resultsConsumerOfficialFacts(t, f, 3)
 	err = database.Within(ctx, f.runtime.pool, func(_ pgx.Tx, q *dbgen.Queries) error {
 		for _, fact := range allFacts {

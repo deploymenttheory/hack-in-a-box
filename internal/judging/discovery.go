@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
@@ -78,27 +77,17 @@ func (s Service) OriginalReceipt(
 			return failure("decode original acknowledgement", err)
 		}
 		if r.RunID != uuid.Nil && !a.organiser {
-			ids, err := assigned(ctx, tx, eventID, r.TeamID)
-			if err != nil {
+			if err := s.AuthorizeResultReceiptInTransaction(
+				ctx,
+				tx,
+				actor,
+				eventID,
+				r.TeamID,
+			); err != nil {
 				return err
-			}
-			allowed := false
-			for _, id := range ids {
-				if id == actor {
-					allowed = true
-				}
-			}
-			if !allowed {
-				return access.ErrForbidden
-			}
-			ok, err := eligibleJudge(ctx, tx, eventID, r.TeamID, actor)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				return access.ErrForbidden
 			}
 		}
+
 		out.Receipt = &r
 		return nil
 	})

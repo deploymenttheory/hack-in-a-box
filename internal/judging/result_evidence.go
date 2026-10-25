@@ -2,6 +2,7 @@ package judging
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -10,6 +11,38 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 )
+
+// AuthorizeResultReceiptInTransaction protects immutable acknowledgement
+// metadata under current role, assignment and conflict authority. It does not
+// reopen a private source or require the old deliberation to remain writable.
+func (s Service) AuthorizeResultReceiptInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, teamID uuid.UUID,
+) error {
+	a, err := s.guard(ctx, tx, actor, eventID, false)
+	if err != nil {
+		return err
+	}
+	if !a.judge {
+		return access.ErrForbidden
+	}
+	ids, err := assigned(ctx, tx, eventID, teamID)
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(ids, actor) {
+		return access.ErrForbidden
+	}
+	ok, err := eligibleJudge(ctx, tx, eventID, teamID, actor)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return access.ErrForbidden
+	}
+	return nil
+}
 
 // AuthorizeResultTargetInTransaction checks current judge/assignment/conflict,
 // selected frozen final and open deliberation in the caller's transaction.

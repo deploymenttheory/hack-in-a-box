@@ -88,12 +88,38 @@ func published(
 	eventID uuid.UUID,
 	now time.Time,
 ) ([]Announcement, error) {
-	rows, err := tx.Query(
+	return publishedDocuments(
 		ctx,
-		"SELECT document FROM result_publications WHERE event_id=$1 AND published_at<=$2 ORDER BY published_at,id",
+		tx,
 		eventID,
 		now,
+		"SELECT document FROM result_publications WHERE event_id=$1 AND published_at<=$2 ORDER BY published_at,id",
 	)
+}
+
+func latestPublished(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	now time.Time,
+) ([]Announcement, error) {
+	return publishedDocuments(
+		ctx,
+		tx,
+		eventID,
+		now,
+		"SELECT document FROM (SELECT DISTINCT ON (kind) document,result_version,id FROM result_publications WHERE event_id=$1 AND published_at<=$2 ORDER BY kind,result_version DESC) latest ORDER BY result_version,id",
+	)
+}
+
+func publishedDocuments(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	now time.Time,
+	query string,
+) ([]Announcement, error) {
+	rows, err := tx.Query(ctx, query, eventID, now)
 	if err != nil {
 		return nil, failure("read released announcements", err)
 	}

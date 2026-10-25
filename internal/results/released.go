@@ -73,5 +73,5 @@ func (s Service) RoomAnnouncementsInTransaction(
 	if !e.PublishedAt.Valid || s.now().Before(e.PublishedAt.Time) {
 		return []Announcement{}, nil
 	}
-	return published(ctx, tx, eventID, s.now())
+	return latestPublished(ctx, tx, eventID, s.now())
 }

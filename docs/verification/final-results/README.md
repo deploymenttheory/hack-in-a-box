@@ -50,8 +50,12 @@ Distinct request IDs cannot announce an identical reviewed source twice.
 One immutable publication row is the authoritative communication/display event.
 The actual `results.published` automation adapter discovers only announced
 metadata and rechecks current recipients, with superseded same-kind releases
-excluded from new dispatch. Paired display integration reads only safe announced
-snapshots after the presentation owner validates its token. Safe passive DTOs
+excluded from new dispatch. Paired display integration reads only the latest safe announced snapshot of each
+kind after the presentation owner validates its token. Superseded releases remain
+in the separately authorised results history; they do not accumulate in the room
+feed. The typed room consumer retains only safe announcement fields and rejects
+private/extra result properties. Its512 KiB ceiling includes the actual 391,766-byte
+Go-escaped maximum of two cues, 100 finalists, 100 reserves and50 awards. Safe passive DTOs
 live in `internal/resultpublication`, keeping consumer imports independent from
 private assessment services.
 
@@ -86,19 +90,56 @@ populated rollback is refused and empty rollback is supported.
   package; every application/test package now compiles. The exact whole-repository CI
   lint command passes with zero issues; new-head CI remains required.
 
+## Native API, consumer and recovery proof
+
+The versioned contract now defines six typed organiser/judge/announcement/receipt
+operations, generated Go/TypeScript models and the real API composition. Private
+organiser operations require the separate admin surface. Judge ballots retain
+native assignment authority on both surfaces; announced snapshots use current
+confirmed-attendee/staff authority. Missing private rubric sources are explicit
+nulls, never invented approved defaults.
+
+Actual HTTP/PostgreSQL/race proof passed in 45.429s. It validates successful responses
+against the authoritative schemas, strict body/header/CSRF boundaries, public
+organiser denials, actor-exact receipts, both-mode source/ballot behavior, 409
+before all required votes and after split votes, finalist-first publication,
+exact monetary confirmation and separate award embargo/release. The integrated
+canonical generation check, both portal builds and repository-wide Go lint pass.
+Distinct captured request IDs racing the same release passed in 6.384s: exactly one
+publication/version/receipt commits and the other command conflicts.
+
+The native publication consumer test first proved that using the real results
+message purpose had no official source fact (RED in 6.210s). Publication now records
+its typed official fact in the same transaction. The registered native owner
+checks actual latest-kind/event/version/time and current audience; missing owners
+fail closed. Actual results-purpose/in-app, supersession, revocation and injected
+fact-write rollback controls passed in 17.530s. This uses the actual approved campaign,
+occurrences and registered handlers. The fixture clock is 2027, so this is not a
+wall-clock worker-lease or SMTP/Teams delivery claim.
+
+A recovery regression first failed in 30.761s: private source teardown blocked the
+judge's immutable original acknowledgement. A shared native receipt authority
+now checks current role, assignment and conflicts without reopening raw evidence
+or requiring the old deliberation to remain writable. Exact recovery and current
+assignment revocation pass in 11.103s. Current-state GETs do not become original-command ACKs.
+
+A real corrected-publication regression initially exposed three releases in a
+live room (RED in 13.696s). Live rooms now select at most one latest publication per
+kind; all three historical releases remain retained/readable through the results
+API. The original 128 KiB client ceiling also rejected a legal escaped maximum
+result payload. The Go encoder measures 391,766 bytes; the 512 KiB ceiling passes
+that legal payload and retains an explicit oversize rejection. Typed protocol
+coverage passes 6/6. The combined actual PostgreSQL/race consumer, original-recovery
+and transactional fact rollback scenarios pass in 31.530s. These are backend/protocol
+proofs; visible results presentation remains frontend #113 work.
+
 ## Remaining acceptance gates
 
-- Versioned OpenAPI, generated Go/TypeScript clients, actual runtime composition
-  and native HTTP proof are being completed in the API lane. They are not yet
-  part of the published checkpoint.
-- Native approved automation/in-app delivery, recipient revocation and paired
-  display privacy proofs are in progress. Adapter existence alone is not proof
-  of delivery, worker leases or provider behavior.
-- Full independent Standards/Spec reviews, green final-head CI and equal-tree
+- Independent full Standards/Spec reviews, green final-head CI and equal-tree
   merge audit remain mandatory before closing #112 or its epic child.
-- Feedback report preview/release and Fleet results screens remain separate
-  frontend #113 work. Broader independently calculated lifecycle/privacy
-  verification remains #114; neither is claimed complete by these tests.
+- Feedback report preview/release, Fleet results screens and visible room results
+  remain separate frontend #113 work. Broader independently calculated lifecycle/
+  privacy verification remains #114; neither is claimed complete by these tests.
 
 Only synthetic data and test-owned PostgreSQL resources were used. No real
 messages, provider effects, payments or user container changes were performed.

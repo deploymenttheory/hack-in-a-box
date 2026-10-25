@@ -82,12 +82,11 @@ func (s Service) OriginalReceipt(
 				return access.ErrForbidden
 			}
 			for _, team := range out.Receipt.TeamIDs {
-				if err := s.Judging.AuthorizeResultTargetInTransaction(
+				if err := s.Judging.AuthorizeResultReceiptInTransaction(
 					ctx,
 					tx,
 					actor,
 					eventID,
-					out.Receipt.RunID,
 					team,
 				); err != nil {
 					return failure("current receipt target", err)

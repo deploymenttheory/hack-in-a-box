@@ -12677,7 +12677,7 @@ components:
       additionalProperties: false
       required: [assets, event_id, event_name, timezone, sequence, server_now, current, next, mode, remaining_seconds, timer_ends_at, primary_colour, background_colour, foreground_colour, override_active]
       properties:
-        results: {type: array, items: {$ref: '#/components/schemas/ResultAnnouncement'}}
+        results: {type: array, maxItems: 2, description: Latest explicitly released snapshot per announcement kind; historical releases remain available through the results API., items: {$ref: '#/components/schemas/ResultAnnouncement'}}
         assets: {type: array, maxItems: 3, items: {$ref: '#/components/schemas/DisplayAsset'}}
         override_active: {type: boolean}
         event_id: {type: string, format: uuid}

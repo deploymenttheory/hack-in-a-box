@@ -94,7 +94,8 @@ func validAwardMoney(amount, currency string) bool {
 	if amount == "" && currency == "" {
 		return true
 	}
-	return awardAmount.MatchString(amount) && awardCurrency.MatchString(currency)
+	return len(amount) <= 64 && awardAmount.MatchString(amount) &&
+		awardCurrency.MatchString(currency)
 }
 
 func sameAwardCategory(a, b *uuid.UUID) bool {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -125,6 +126,7 @@ func TestAwardDecisionRejectsIncompleteOrChangedPrizeMetadata(t *testing.T) {
 		"negative":              func(a []Award) []Award { a[0].Amount = "-1"; return a },
 		"exponent":              func(a []Award) []Award { a[0].Amount = "1e3"; return a },
 		"not a decimal":         func(a []Award) []Award { a[0].Amount = "NaN"; return a },
+		"oversized amount":      func(a []Award) []Award { a[0].Amount = strings.Repeat("9", 65); return a },
 		"missing amount":        func(a []Award) []Award { a[0].Amount = ""; return a },
 		"missing currency":      func(a []Award) []Award { a[0].Currency = ""; return a },
 		"noncanonical currency": func(a []Award) []Award { a[0].Currency = "gbp"; return a },
@@ -136,6 +138,14 @@ func TestAwardDecisionRejectsIncompleteOrChangedPrizeMetadata(t *testing.T) {
 				t.Fatal("invalid complete decision accepted")
 			}
 		})
+	}
+}
+
+func TestAwardDecisionPreservesTheMaximumExactPublishedAmount(t *testing.T) {
+	source, awards := awardDecisionFixture()
+	awards[0].Amount = strings.Repeat("9", 64)
+	if err := ValidateAwards(source, nil, awards); err != nil {
+		t.Fatal("bounded exact metadata was rounded or rejected", err)
 	}
 }
 

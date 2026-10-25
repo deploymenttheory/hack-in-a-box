@@ -7881,6 +7881,7 @@ export interface components {
             digest: string;
         };
         DisplaySnapshot: {
+            /** @description Latest explicitly released snapshot per announcement kind; historical releases remain available through the results API. */
             results?: components["schemas"]["ResultAnnouncement"][];
             assets: components["schemas"]["DisplayAsset"][];
             override_active: boolean;
