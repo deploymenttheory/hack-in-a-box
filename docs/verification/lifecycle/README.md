@@ -41,8 +41,8 @@ It then publishes teams of five, depletes a published team to two through real
 withdrawals, rejects its republication, explicitly unlocks/reassigns the pair,
 republishes six teams of four-to-six and freezes them. A post-freeze move must
 return the exact native rejection without changing the allocation projection.
-These profile names cannot be used as the final release command. Neither
-checkpoint nor its Compose run has been executed yet.
+These profile names cannot be used as the final release command. The admission
+checkpoint has not been executed yet.
 
 The dedicated verification image **built successfully** from source
 `2b203526e53ec2c88e272c9890b65f473ca1aa54`:
@@ -55,7 +55,19 @@ The Compose configuration passed daemon-free `config --quiet` validation.
 The separate normal style-guide target and production application images were
 not built or executed as part of this checkpoint.
 
-The most recent verification compiled both checkpoint drivers and passed the
+The bounded initial Compose bootstrap subsequently **passed** in 0.04 seconds
+using that exact image and Compose source `8ee123e6`. Its real PostgreSQL schema
+migration and independent public/admin/provider processes became healthy;
+normal OIDC callbacks, configured owner bootstrap, two private draft creations,
+stranger denials and independent public-only logout passed. See the
+[partial receipt](evidence/bootstrap-initial.json). The worker, admission
+cohort, browsers and separate production images were not run. SMTP and GitHub
+delivery were not exercised. The project had no host ports, each fixture
+process was capped at 0.5 CPU/256 MiB, PostgreSQL at 0.75 CPU/384 MiB, and Go at
+two processors. Only this project's services, volumes and network were removed
+after exporting its safe receipt.
+
+The most recent lightweight compile check compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
 '^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.469 seconds).
 No browser, PostgreSQL, native OIDC or queued effect is implied by that result.
