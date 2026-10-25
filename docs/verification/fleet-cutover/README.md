@@ -11,11 +11,11 @@ replaced by a visual migration.
 
 | #245 criterion | Current evidence and remaining work |
 | --- | --- |
-| Every first-release route/nested owner, actual API integration, no legacy fallback | Source inventory resolves 73 build/route registrations: 38 administrator and 35 participant, covering 38 unique registered paths. The display and static guide are separate entries. Existing domain evidence is attributed below. #97, #111, #113 and #163 are still OPEN and their missing final surfaces prevent full acceptance. Native smoke/complete final route walkthrough is pending. |
+| Every first-release route/nested owner, actual API integration, no legacy fallback | Source inventory resolves 77 build/route registrations: 40 administrator and 37 participant, covering 40 unique registered paths. The display and static guide are separate entries. Existing domain evidence is attributed below. #109, #111, #113 and #163 are still OPEN and their missing final surfaces prevent full acceptance. Native smoke/complete final route walkthrough is pending. |
 | Reference evidence across portals, mobile actions, continuity and meaningful icons | Existing domain before/after artifacts and current production components are mapped below; the 100 original quality identities retain evidence/applicability links in `quality-evidence.csv`. This is an evidence index, not a claim of 100 universal pass results. Current cutover-specific finite and native proof is recorded separately. |
 | No obsolete presentation/imports/competing tokens; generated API/invariants intact | Production import/caller audit is in progress. Existing flat semantic aliases with live callers cannot be removed merely because their name contains “card”. The bounded resource-lifetime correction preserves native endpoints, CSRF, If-Match, exact responses, cutoff and current authority. Generated contract parity and final broad checks remain gates. |
 | Versioned production guide, contribution rules, independent availability | Existing independent production host/build and contribution rules are retained. A current isolated image and separately browsed guide must be proved; an already running guide at 8082 is not candidate-release evidence. |
-| Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #165/#167 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
+| Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #164/#165 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
 
 ## Source inventory versus actual integration
 
@@ -41,7 +41,7 @@ pairing secret in the URL; the key travels only in the bearer header.
 | Media/consent, protected readers, review and release | `../fleet-media/README.md` |
 | MC/pairing/rehearsal, independent room canvas, native interruptions | `../fleet-mc-display/README.md`; `../live-rehearsal/README.md` |
 | Today role/task/readiness journeys | `../../design/today-workflows.md`; `../live-rehearsal/README.md` |
-| Repository administration and own invitations | `../fleet-repositories/contract-map.md`; #97's frozen-submission consumer is still missing |
+| Repository administration and own invitations | `../fleet-repositories/contract-map.md`; #97 delivered the actual assigned-build and submitted-build consumers in merged #278; its native evidence retains its original source attribution |
 
 Some of these records describe their original frozen checkpoint, not this
 candidate. Their dates, source hashes, synthetic transports and native/provider
@@ -120,7 +120,7 @@ mocked-screen check.
   resource/upload consumers and removal of obsolete presentation only after
   proving callers moved. Finish guide usage/example coverage for any changed
   interaction semantics.
-- Complete the actual #97/#111/#113/#163 routes through their owning tickets;
+- Complete the actual #109/#111/#113/#163 routes through their owning tickets;
   do not fabricate placeholder routes or mark source inventories as integration.
 - Capture candidate/current-source browser/native proof, complete the 100-quality
   applicability cross-domain comparison and preserve honest before/after sources.
@@ -185,3 +185,47 @@ focused ESLint passed. These results establish this integration check only.
 Fresh published-head CI and the remaining full cutover acceptance are still
 required. Issue #97 is now delivered by #278; #109, #111, #113 and #163 remain
 separate integration dependencies.
+
+## Protected upload lifetime audit
+
+The remaining protected-upload callers are content attachments, organiser task
+evidence and team deliverable evidence. They share the actual `ProtectedUpload`
+transport. Its private lifetime already fenced late attachment callbacks, but no
+safe original-attempt record existed outside that lifetime: three new focused
+cases failed on unchanged production code in 1.05 seconds. This is a separate
+missing-history defect, not evidence that late bytes were rendered.
+
+The shared transport now records only a fixed operation label, opaque original
+request/event/team IDs and expected revision in authenticated memory. File bytes,
+names, MIME metadata and reasons remain in the private owner. Its validated
+original response settles the record before checking whether the private owner
+still exists. A lost or unrelated response stays unknown; no automatic replay or
+GET acknowledgement is introduced. Deliberate recovery while the original owner
+exists repeats the same native key, bytes, metadata, team, reason and revision.
+The new actor/session observer in both shells preserves history and departure
+barriers across form, event and capability changes; expiry clears it.
+
+Five focused upload cases plus seven adjacent owner/safety cases passed in
+1.29 seconds. Both production builds, TypeScript and focused ESLint passed.
+The actual built admin and regular portals then passed sixteen browser cases
+on desktop/mobile in 11.4 seconds, zero retries: the eight existing draft
+lifetime cases plus eight held-upload membership-loss cases. These check
+matching response versus unknown outcome, no private filename revival, exactly
+one upload and no submission write. Browser transports are synthetic; this
+does not claim live provider verification or full #245 runtime acceptance.
+
+The current source audit also found both #97 build paths absent from the migration
+inventory. Their actual registered owners are now recorded and the source-only
+coverage check passes for 77 registrations, 40 paths and all 100 reference IDs.
+This updates source coverage, not native/browser proof for every route.
+
+Final local checkpoint verification also passed all 224 existing/current web unit
+tests in 8.69 seconds, full ESLint, the independently built guide and its two
+protected-upload browser journeys in 9.1 seconds. The guide ran from this
+worktree's static build through a separate test-owned Go host on port 4179; it
+did not use the existing guide service. That focused guide run proves the
+existing upload control interaction only, not every guide pattern or full
+independent production availability. The temporary local test configuration was
+removed after its process exited. Source hashes and command attribution are in
+`upload-lifetime-proof.json`. All results precede the checkpoint commit; fresh
+exact-head CI is still required.

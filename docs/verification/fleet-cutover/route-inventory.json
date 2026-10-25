@@ -3,11 +3,11 @@
   "sources": [
     {
       "path": "web/src/app.tsx",
-      "sha256": "901e0cf93ccd530124cab719271e7a7bc442e27b2aa55a442e16a50999f715ad"
+      "sha256": "1f36dd829b869158889d0e7924c42c5bc159d9b80d79decddd0f2369a1443a46"
     },
     {
       "path": "web/src/participant-app.tsx",
-      "sha256": "c749f8a3a0316370fb363f2b84eb939f4fbeba6e1712f3474057a566a8d60321"
+      "sha256": "418b17d8826dee9289edd28af17e8822962de602fbded8200d2111080bd2f301"
     },
     {
       "path": "web/src/main.tsx",
@@ -15,10 +15,24 @@
     },
     {
       "path": "docs/design/portal-route-inventory.md",
-      "sha256": "347e4e5b346d2da5fc1e091a548673e82b91fab7d1aa100994eba219a8c278e5"
+      "sha256": "1f1c87894ed06edf7edf8447bd8052a685cb59e4c6178acfefd8e63cad232826"
     }
   ],
   "routes": [
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/builds",
+      "component": "AssignedBuildsPage",
+      "owner": "web/src/assigned-builds.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/teams/$teamId/build",
+      "component": "SubmittedBuildPage",
+      "owner": "web/src/submitted-build.tsx",
+      "integration": "not established by source inventory"
+    },
     {
       "portal": "administrator",
       "path": "/events/$eventId/surveys",
@@ -283,6 +297,20 @@
       "path": "/register/$eventId",
       "component": "RegistrationPage",
       "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/builds",
+      "component": "AssignedBuildsPage",
+      "owner": "web/src/assigned-builds.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/teams/$teamId/build",
+      "component": "SubmittedBuildPage",
+      "owner": "web/src/submitted-build.tsx",
       "integration": "not established by source inventory"
     },
     {
