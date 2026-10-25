@@ -81,3 +81,46 @@ Final source checkpoint: `4941ab7b073f6c41e383249fb052bc2fea3f4897`, based on
 and frontend ESLint pass. The affected focus/current-reader/event-authority
 suites pass **10/10 (1.10s)** across three files. These are host unit/static
 checks and do not substitute for the pending actual native matrix.
+
+
+## Completed isolated native focus matrix
+
+At exact isolated source `be49f37df1f39ec8abfd92cc9ee34a08980a5cbd`, all
+four actual reports/overall-and-category ballot browser cases passed, package
+**110.351s**, test **108.76s**: desktop two cases **52.94s**, mobile two cases
+**55.82s**. The deterministic held native200 current-read/cancel overlap retained
+strict focus expectations. Fixtures cleaned up normally. This is the isolated
+focus proof; later combined PR292 corrections require their own final-source
+verification.
+
+## Separate final PR292 CI failures
+
+The final `44089cc0` native failure was a distinct input-acceptance problem,
+not the results Cancel helper. Qualification final-card save5 returned native200
+with a Technical approach score10 and no evidence, while its other four scores
+had one evidence note each. The current source correctly reported an incomplete
+card and withheld the signing action. Trace Ctrl+A at46952.745ms preceded a
+current-panel GET at46955.4ms (native200757.364ms); global insertText at46975.366ms
+ran while the field was paused. The old helper never checked the accepted value.
+
+A second actual CI source `5d8fd041`, run40244553309/job121323256896, missed
+a Pending checkbox toggle: Space started31668.432ms, current-panel GET started
+31669.666ms (native200615.677ms), then the dependent score correctly remained
+disabled. Its other seven qualification cases passed. These are trusted-input
+acceptance seams, not permission to force disabled controls or loosen domain
+readiness.
+
+The helper's deterministic synthetic browser probes reproduced both failures
+before correction: the text stayed at its earlier value and the checkbox stayed
+checked. These are browser-helper regressions, not native-domain success proof.
+The bounded correction preserves native polling and pauses, records an actual
+disabled/inert transition and trusted input-event count, and permits one local
+text/checkbox re-entry only after zero input was accepted and that exact element
+is enabled again. Replaced elements, unobserved failures and accepted-but-wrong
+values fail; command buttons never use this recovery.
+
+The mocked administrator category-source-drift assertion also expected the old
+private held dialog and retained text. It now requires disposal, zero POSTs and
+a fresh explicit selection with blank inputs, matching the independently reviewed
+P1 successful-source-disposal contract. Its responses remain explicitly mocked
+and do not substitute for native authority or domain proof.

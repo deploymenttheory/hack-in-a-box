@@ -14,8 +14,51 @@ export async function reach(control:Locator){
  }
  throw new Error(`Native keyboard focus could not reach ${control.toString()} in180 tabs`)
 }
-export async function activate(control:Locator,key:'Enter'|'Space'='Enter'){await reach(control);await control.page().keyboard.press(key)}
-export async function typeInto(control:Locator,value:string){await reach(control);await control.page().keyboard.press('ControlOrMeta+A');await control.page().keyboard.insertText(value)}
+// Recover only a positively observed rejected local input, never a command.
+// Native polling/authority checks remain enabled; replacement elements and
+// accepted-but-wrong values are genuine failures, not permission to replay.
+async function acceptedInput(control:Locator,enter:()=>Promise<void>,accepted:()=>Promise<boolean>){
+ await reach(control)
+ const original=await control.elementHandle()
+ if(!original)throw new Error('Current native input is absent')
+ const same=async()=>{
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original))throw new Error('Current native input was replaced; no input was retargeted')
+ }
+ try{
+  for(let attempt=0;attempt<2;attempt++){
+   await same();await reach(control);await same()
+   const observation=await original.evaluateHandle(element=>{
+    const paused=()=>element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]')
+    const state={paused:paused(),inputs:0}
+    const observer=new MutationObserver(()=>{if(paused())state.paused=true})
+    observer.observe(element.ownerDocument.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','aria-disabled','inert']})
+    const input=(event:Event)=>{if(event.isTrusted&&event.target===element)state.inputs++}
+    element.ownerDocument.addEventListener('input',input,true)
+    return {state,dispose:()=>{observer.disconnect();element.ownerDocument.removeEventListener('input',input,true)}}
+   })
+   let observed:{paused:boolean;inputs:number}
+   try{await enter();observed=await observation.evaluate(value=>value.state)}
+   finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
+   await same()
+   if(await accepted()){await expect(control).toBeEnabled();await same();if(await accepted())return;throw new Error('Accepted native input changed after the current read')}
+   if(!observed.paused||observed.inputs!==0||attempt!==0)throw new Error('Native input did not accept its trusted keys; no command was replayed')
+   // Only an observed pause with zero accepted input permits one deliberate
+   // text/checkbox re-entry after that same current element becomes enabled.
+   await expect(control).toBeEnabled();await same()
+  }
+ }finally{await original.dispose()}
+}
+export async function activate(control:Locator,key:'Enter'|'Space'='Enter'){
+ if(key==='Space'&&await control.evaluate(element=>element instanceof HTMLInputElement&&element.type==='checkbox')){
+  const checked=await control.isChecked()
+  await acceptedInput(control,()=>control.page().keyboard.press(key),async()=>await control.isChecked()!==checked)
+  return
+ }
+ await reach(control);await control.page().keyboard.press(key)
+}
+export async function typeInto(control:Locator,value:string){
+ await acceptedInput(control,async()=>{await control.page().keyboard.press('ControlOrMeta+A');await control.page().keyboard.insertText(value)},async()=>await control.inputValue()===value)
+}
 export async function selectNative(control:Locator,value:string){
  await reach(control)
  const label=await control.locator('option').evaluateAll((options,wanted)=>options.find(option=>option instanceof HTMLOptionElement&&option.value===wanted)?.textContent,value)
