@@ -60,6 +60,7 @@ type liveRehearsal struct {
 	owner, mc, mentor, competitor dbgen.Person
 	eventID                       uuid.UUID
 	teamID                        uuid.UUID
+	otherEventID                  uuid.UUID
 }
 
 func newLiveRehearsal(t *testing.T) *liveRehearsal {
@@ -83,6 +84,7 @@ func newLiveRehearsal(t *testing.T) *liveRehearsal {
 	)
 	r.eventID = testdb.Event(t, r.pool, r.owner.ID)
 	r.teamID = uuid.New()
+	r.otherEventID = testdb.Event(t, r.pool, r.owner.ID)
 	for role, person := range map[string]dbgen.Person{"mc": r.mc, "mentor": r.mentor} {
 		if _, err := r.pool.Exec(
 			t.Context(),
@@ -252,11 +254,13 @@ func (r *liveRehearsal) surface(t *testing.T, surface string) rehearsalSurface {
 	return rehearsalSurface{server: server, deps: deps, auth: auth}
 }
 
-func (s rehearsalSurface) cookie(t *testing.T, actor dbgen.Person) *http.Cookie {
-	t.Helper()
-	session, err := s.auth.Sessions.Load(t.Context(), "")
+func (s rehearsalSurface) sessionCookie(
+	ctx context.Context,
+	actor dbgen.Person,
+) (*http.Cookie, error) {
+	session, err := s.auth.Sessions.Load(ctx, "")
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	s.auth.Sessions.Put(session, "person_id", actor.ID.String())
 	s.auth.Sessions.Put(session, "session_revision", actor.SessionRevision)
@@ -264,9 +268,23 @@ func (s rehearsalSurface) cookie(t *testing.T, actor dbgen.Person) *http.Cookie 
 	s.auth.Sessions.Put(session, "draft_scope", uuid.NewString())
 	token, _, err := s.auth.Sessions.Commit(session)
 	if err != nil {
+		return nil, err
+	}
+	return &http.Cookie{
+		Name:     s.auth.Sessions.Cookie.Name,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+	}, nil
+}
+
+func (s rehearsalSurface) cookie(t *testing.T, actor dbgen.Person) *http.Cookie {
+	t.Helper()
+	cookie, err := s.sessionCookie(t.Context(), actor)
+	if err != nil {
 		t.Fatal(err)
 	}
-	return &http.Cookie{Name: s.auth.Sessions.Cookie.Name, Value: token, Path: "/", HttpOnly: true}
+	return cookie
 }
 
 func TestLiveRehearsalNativeAuthority(t *testing.T) {

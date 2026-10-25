@@ -82,3 +82,11 @@ result remains required evidence. Default execution always includes both engines
 The independent guide remains covered by its existing production-component
 suite; final matching source/evidence and Today/account/event/clarification
 acceptance are still outstanding. This is a draft checkpoint, not completion.
+
+The next current-source Chromium run passed four journeys in 17.7s (Go owner
+24.255s), adding actual other-event denial, deliberate original-event recovery,
+UI sign-out/native logout, and a different account entering the same browser
+storage. Each context now receives a fresh native PostgreSQL-backed session over
+private IPC; the manifest contains no cookie values. Current full TypeScript and
+focused rehearsal ESLint passed before this run. Final Today journeys remain
+blocked on the actual #88 merge.

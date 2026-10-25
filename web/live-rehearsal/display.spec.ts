@@ -3,7 +3,7 @@ import { openEventSection } from '../e2e/event-navigation-fixture'
 import { actor, control, native } from './native'
 
 test('native MC pairs an independent display; outage converges without duplicate room actions', async ({ browser }, info) => {
-  const mcContext = await actor(browser, 'admin', native.mc_cookie)
+  const mcContext = await actor(browser, 'admin', 'mc')
   const displayContext = await browser.newContext({ baseURL: native.display })
   const mc = await mcContext.newPage(), display = await displayContext.newPage()
   try {

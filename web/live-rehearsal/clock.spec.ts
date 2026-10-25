@@ -3,7 +3,7 @@ import { actor, control, native } from './native'
 import { openEventSection } from '../e2e/event-navigation-fixture'
 
 test('production team dashboard follows native release/live/cutoff clocks while lifecycle lags and assignments stay frozen', async ({ browser }, info) => {
-  const context = await actor(browser, 'public', native.competitor_cookie), page = await context.newPage()
+  const context = await actor(browser, 'public', 'competitor'), page = await context.newPage()
   await control('stage-lag')
   const base = `/api/v1/events/${native.event_id}`
   try {

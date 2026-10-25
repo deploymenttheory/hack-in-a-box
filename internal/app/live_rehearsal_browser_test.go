@@ -130,6 +130,8 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			}
 			var input struct {
 				Action  string    `json:"action"`
+				Actor   string    `json:"actor"`
+				Surface string    `json:"surface"`
 				Instant time.Time `json:"instant"`
 			}
 			if err := json.NewDecoder(http.MaxBytesReader(w, request.Body, 1024)).
@@ -139,6 +141,35 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			}
 			var err error
 			switch input.Action {
+			case "session":
+				person := r.mc
+				switch input.Actor {
+				case "mc":
+					person = r.mc
+				case "mentor":
+					person = r.mentor
+				case "competitor":
+					person = r.competitor
+				case "owner":
+					person = r.owner
+				default:
+					http.Error(w, "unknown synthetic actor", 400)
+					return
+				}
+				surface := public
+				if input.Surface == "admin" {
+					surface = admin
+				} else if input.Surface != "public" {
+					http.Error(w, "unknown surface", 400)
+					return
+				}
+				cookie, err := surface.sessionCookie(request.Context(), person)
+				if err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(cookie)
+				return
 			case "stage-lag", "stage-live":
 				stage := "preparation"
 				if input.Action == "stage-live" {
@@ -241,19 +272,14 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	t.Cleanup(func() { _ = control.Close() })
 	// Only synthetic short-lived test sessions are passed to the node owner.
 	manifest := map[string]any{
-		"event_id": r.eventID,
-		"team_id":  r.teamID,
-		"admin":    admin.server.URL,
-		"public":   public.server.URL,
-		"display":  proxy.server.URL,
-		"socket":   socket,
-		"mc_cookie": admin.cookie(
-			t,
-			r.mc,
-		),
-		"mentor_cookie":     public.cookie(t, r.mentor),
-		"competitor_cookie": public.cookie(t, r.competitor),
-		"run_id":            uuid.NewString(),
+		"event_id":       r.eventID,
+		"team_id":        r.teamID,
+		"other_event_id": r.otherEventID,
+		"admin":          admin.server.URL,
+		"public":         public.server.URL,
+		"display":        proxy.server.URL,
+		"socket":         socket,
+		"run_id":         uuid.NewString(),
 	}
 	manifestPath := filepath.Join(private, "manifest.json")
 	data, err := json.Marshal(manifest)
