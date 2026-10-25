@@ -7,28 +7,35 @@ base `c0c8b21`; no placeholder or mocked Today route is used.
 
 ## Acceptance matrix
 
-All seven native Chromium journeys passed together at clean source
-`1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2`. The PR remains Draft pending final
-the isolated preparation/live Today correction, exact-head CI and independent reviews.
+All seven native Chromium journeys, including the isolated preparation/live Today
+correction, passed together at clean source
+`a5f0278f875cf182758cd5264e3e41d7b9225eb3`. The PR remains Draft pending final
+exact-head CI and independent reviews.
 
 | Issue #90 criterion | Actual verification | Result |
 | --- | --- | --- |
 | Disconnected displays retain the last authorized cue and report stale status | Native MC pairing/SSE, forwarding outage, retained opening, native advance, latest building cue on reconnect | Combined native Chromium pass; matched three-state images |
 | No observations, secrets or embargoed output in display responses/caches | Actual private observation/question/help/unreleased cue fixtures; complete snapshot allowlist; bearer-only GETs; controller denial; no-store; URL/storage/cache scans | Combined native Chromium pass |
 | Reconnect/clock drift converge without duplicate actions | True browser offline, incorrect client clock, native snapshot/DB revision delta, held countdown and revocation | Combined native Chromium pass |
-| Preparation/build week/live review/submission/freeze/cutoff with lifecycle lag | Native calendar T−7, actual dashboard and frozen POST refusal, mentor review versus operational status, cutoff settlement before lifecycle advances | Historical combined dashboard proof; corrected isolated Today/domain journey passed 1/1 locally (17.2s); new combined run pending |
+| Preparation/build week/live review/submission/freeze/cutoff with lifecycle lag | Native calendar T−7, actual dashboard and frozen POST refusal, mentor review versus operational status, cutoff settlement before lifecycle advances | Combined native Chromium pass including isolated preparation/live Today |
 | Today/readiness/rules/contacts/help/corrections across roles/events/accounts | Mobile keyboard/version acknowledgement/focus return; real personal PUT versus unchanged formal output; admin Today→MC; Today→help→native common correction/account-event denial; mentor recovery/role loss; actual logout and another account | Combined native Chromium pass on both production portals |
 | Completed Fleet consumers/guide and action continuity | Production reader/navigation/confirmation consumers and unchanged independently published guide | Native pass plus [full guide CI at15e9f6c](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40152932109/job/121048067372); final-head guide CI remains required |
 
 ## Executed proof and merge gates
 
-- Clean `1ee0690`: **7/7 Chromium, 0 skipped, 0 flaky**,20.5s. Real-PG/race
+- Clean `a5f0278`: **7/7 Chromium, 0 skipped, 0 flaky**,41.3s. Real-PG/race
+  browser owner90.44s, owning-resource clock regression7.62s and native
+  authority8.09s; package107.746s. Provenance confirms identical start/end SHA
+  and `source_worktree_clean=true`. The phase event/team IDs are distinct from
+  the ordinary live event/team in the same run.
+
+- Historical clean `1ee0690`: **7/7 Chromium, 0 skipped, 0 flaky**,20.5s. Real-PG/race
   browser owner25.28s, owning-resource clock regression2.47s and native
   authority3.11s; package32.438s. Native provenance confirms identical start/end
   SHA and `source_worktree_clean=true`.
 - [Proof JSON](proof.json) records exact source/run/selection, actual statuses,
   dimensions and image hashes. [Visual evidence](visual-evidence.md) maps all
-  nine individually inspected screenshots to the same native run.
+  eleven individually inspected screenshots to the same native run.
 - Actual default Linux rehearsal at `f57fa17` passed Chromium and Firefox:
   [run40151899729](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40151899729).
   This is attributed older-source engine evidence. The final candidate's fresh
@@ -41,7 +48,12 @@ the isolated preparation/live Today correction, exact-head CI and independent re
   no unexecuted child verification is claimed.
 
 Remaining gates: final exact-head Linux/ordinary/guide CI and independent
-Standards/Spec reviews. Root owns merging and #90 acceptance closure. The preparation/release/live/cutoff journey now has an independent native database/runtime; its real Today next actions passed the focused journey. New combined proof including the ordinary live `open` outcome and submission eligibility is pending. Merged Today #88 is exercised here.
+Standards/Spec reviews. Root owns merging and #90 acceptance closure. The
+preparation/release/live/cutoff journey has its own native database/runtime;
+common release occurs at the actual native phase, time never rewinds, and its
+irreversible outcome cannot contaminate the ordinary live Today team. Both
+preparation/live next-action journeys and ordinary live `open` submission
+readiness passed together. Merged Today #88 is exercised directly.
 
 ## Architecture and safety boundaries
 
@@ -115,7 +127,7 @@ Firefox results are the authoritative engine proof.
    Direct handler copies used 2027 while captured runtime owners still used real
    2026. Initializing the shared clock before wiring fixed the actual resolver;
    the isolated real-PG/race regression passed 3.22s and current combined native
-   regression passed 4.71s. Mentor-only common-source denial remains exact.
+   regression passed 7.62s. Mentor-only common-source denial remains exact.
 2. **Acknowledgement completion:** the mobile harness selected Today after PUT
    headers arrived, before the accepted save callback completed its current Event
    read. The existing planning gate retained Deliverables. Waiting for the

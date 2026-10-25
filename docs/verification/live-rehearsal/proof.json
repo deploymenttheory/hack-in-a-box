@@ -1,19 +1,21 @@
 {
   "native_fixture": {
     "browser_command_succeeded": true,
-    "event_id": "904dde8c-2cba-440a-ae77-5f89c3cd4948",
-    "fixture_run_id": "cce767e9-0577-4fe4-b92a-35eae5f5fdea",
+    "event_id": "008b5304-3fd8-4a9c-8350-73d370837e5c",
+    "fixture_run_id": "e34b2e41-d98d-40cc-99ad-54118e5bb4fb",
+    "phase_event_id": "97285e5f-b320-4577-84e2-7520657dd70c",
+    "phase_team_id": "3208e7d6-a384-487f-b7a4-04270876ff3f",
     "project_selection": "chromium",
     "publication_at": "2027-03-22T10:00:00Z",
-    "source_commit": "1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2",
-    "source_commit_end": "1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2",
+    "source_commit": "a5f0278f875cf182758cd5264e3e41d7b9225eb3",
+    "source_commit_end": "a5f0278f875cf182758cd5264e3e41d7b9225eb3",
     "source_worktree_clean": true,
-    "team_id": "867dce38-79f9-4070-a023-35fda93747d3",
+    "team_id": "411884e7-7cef-47b1-b08d-99c66822917a",
     "test_selection": ""
   },
   "browser_stats": {
-    "startTime": "2026-10-25T02:14:39.183Z",
-    "duration": 20542.599,
+    "startTime": "2026-10-25T02:35:24.677Z",
+    "duration": 41278.123999999996,
     "expected": 7,
     "skipped": 0,
     "unexpected": 0,
@@ -22,13 +24,13 @@
   "tests": [
     {
       "file": "clock.spec.ts",
-      "title": "production team dashboard follows native release/live/cutoff clocks while lifecycle lags and assignments stay frozen",
+      "title": "isolated Today and team dashboard follow monotonic preparation release live and cutoff while lifecycle lags",
       "project": "chromium",
       "expected_status": "passed",
       "results": [
         {
           "status": "passed",
-          "duration_ms": 1712,
+          "duration_ms": 7687,
           "retry": 0
         }
       ]
@@ -41,7 +43,7 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 13485,
+          "duration_ms": 14490,
           "retry": 0
         }
       ]
@@ -54,7 +56,7 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 803,
+          "duration_ms": 2342,
           "retry": 0
         }
       ]
@@ -67,7 +69,7 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 825,
+          "duration_ms": 3159,
           "retry": 0
         }
       ]
@@ -80,7 +82,7 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 1102,
+          "duration_ms": 4118,
           "retry": 0
         }
       ]
@@ -93,7 +95,7 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 1276,
+          "duration_ms": 2821,
           "retry": 0
         }
       ]
@@ -106,70 +108,82 @@
       "results": [
         {
           "status": "passed",
-          "duration_ms": 625,
+          "duration_ms": 1086,
           "retry": 0
         }
       ]
     }
   ],
   "native_go_tests": {
-    "TestLiveRehearsalBrowsers_seconds": 25.28,
-    "TestLiveRehearsalSupportClockPropagation_seconds": 2.47,
-    "TestLiveRehearsalNativeAuthority_seconds": 3.11,
-    "package_seconds": 32.438
+    "TestLiveRehearsalBrowsers_seconds": 90.44,
+    "TestLiveRehearsalSupportClockPropagation_seconds": 7.62,
+    "TestLiveRehearsalNativeAuthority_seconds": 8.09,
+    "package_seconds": 107.746
   },
   "images": [
     {
       "file": "native-cutoff-before-lifecycle-transition.png",
-      "sha256": "089f6db09b142dbda7947bfd17521910c3a49cd6cbb2a0f7877262dd64fd2b5c",
+      "sha256": "7584e92730bbd4b1aea410bc2baa43c01cb80a296021f1e1ebfdcc9a8f1b09e1",
       "width": 1280,
-      "height": 1855
+      "height": 1568
+    },
+    {
+      "file": "native-isolated-today-live-opening.png",
+      "sha256": "dcf31d987f384e2e35b794d69ad40d6f28fbf11972cd1360f3f68df408ff69f9",
+      "width": 1280,
+      "height": 2794
+    },
+    {
+      "file": "native-isolated-today-preparation.png",
+      "sha256": "1a02e50dc8b52614e6543d0b8d4fa5148eafce38b0052716ae24f5618d13e47c",
+      "width": 1280,
+      "height": 2794
     },
     {
       "file": "native-connected-opening.png",
-      "sha256": "d7ee7ca35b4d87db6063d07f30376775d4f641cb17c4833c2d383432ec66bb4c",
+      "sha256": "b4763e99baeecb27af6437c393b53475fd45768d51218d019458bdce768c3a30",
       "width": 1280,
       "height": 720
     },
     {
       "file": "native-disconnected-last-authorized-opening.png",
-      "sha256": "de392579cbbe89968bca7f1cd064e95ee86d4ed80c709c01282b57b39b4ba017",
+      "sha256": "76be112de798ebf3ee2e2f129ca246f556fa4deef7f45d79c83ac84b1387c987",
       "width": 1280,
       "height": 720
     },
     {
       "file": "native-mc-approved-controls.png",
-      "sha256": "1c0ac47df03cfb09dc0ee02b00bf446a063af16f58bbaae82462967f4ef08c3b",
+      "sha256": "bcae51d6f75d6303ab305e655b1f54d5da5f250453db60570f0068dab70fdb9e",
       "width": 1280,
       "height": 1782
     },
     {
       "file": "native-reconnected-display.png",
-      "sha256": "29a7697d3dfde84a1364f9437ed968a3cb8906e54c6d50540d12c585dcce8fc3",
+      "sha256": "2498a85b05ffffaa45f0541b94b92ab004b7be9436e1b997aacca994354636f9",
       "width": 1280,
       "height": 720
     },
     {
       "file": "native-current-authorized-mentor-recovery.png",
-      "sha256": "f3551eda3065d66478471b6482f2e2bbf3f11d428de04727041da216995b6dd8",
+      "sha256": "14fe69309e097300c2a2478f92e00281309a198eb4a455efc1b407a80d15cee7",
       "width": 1280,
       "height": 2259
     },
     {
       "file": "native-current-corrected-common-answer.png",
-      "sha256": "13c89a8a787e9a27ac3fa16ebcdb90147f46b4f535244ca2d1d53e6b3a8c8432",
+      "sha256": "a02b48e52e5cb7d9411b970ed960eed6cc785de6bd8458764f02061e19ae21fa",
       "width": 1280,
       "height": 720
     },
     {
       "file": "native-today-personal-and-team-readiness.png",
-      "sha256": "122b47f8cd8dfcfad09a8f7ffdf2b2dce884344a09c2499fef6dfc936c293bc3",
+      "sha256": "b9f292c5a8a1e31267be50e94490cbabc039c8dd0809f70a010ddc8641306ae2",
       "width": 390,
       "height": 4711
     },
     {
       "file": "native-today-to-authorized-mc-console.png",
-      "sha256": "a43c08889fff721eacfe71344fdf628c334a8fd5ea2a675e10d43d196db4201c",
+      "sha256": "6b3c6f2157ecb5243894efeab100d8ec5d042372de13b9e0743cbec9cd636d9d",
       "width": 1280,
       "height": 1458
     }
