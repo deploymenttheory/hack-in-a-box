@@ -6,7 +6,7 @@ test('native explicit award announcement and amended own-team feedback remain in
  const admin = await owner.newPage(), own = await attendee.newPage(), display = await room.newPage()
  const reports = `/events/${native.event_id}/teams/${native.team_id}/feedback-report`, results = `/events/${native.event_id}/results`
  try {
-  await own.goto(results); await expect(own.getByRole('heading', { name: 'Results have not been announced' })).toBeVisible(); await expect(own.getByText('Native outcome award', { exact: true })).toHaveCount(0)
+  await own.goto(results); await expect(own.getByRole('heading', { name: 'Results have not been announced' })).toBeVisible(); await expect(own.getByText('Native outcome award', { exact: true })).toHaveCount(0); await own.goto(results + '/prepare'); await expect(own.getByRole('heading', { name: 'Page not found', exact: true })).toBeVisible(); await own.goto(results)
   const key = await control<{ token: string }>('room'); await display.goto(`/display/${native.event_id}`); await display.getByLabel('Display key', { exact: true }).fill(key.token); await display.getByRole('button', { name: 'Connect display', exact: true }).click(); await expect(display.getByText('Live room feed', { exact: false })).toBeVisible(); await expect(display.getByText('Native outcome award', { exact: true })).toHaveCount(0)
   await admin.goto(results + '/prepare'); await expect(admin.getByRole('heading', { name: 'Prepare and announce results' })).toBeVisible()
   await admin.getByLabel('Decision reason', { exact: true }).fill('Review actual signed independent final source'); await admin.getByRole('button', { name: 'Prepare results', exact: true }).click(); let review = admin.getByRole('alertdialog'); await review.getByRole('button', { name: 'Prepare results', exact: true }).click(); await expect(admin.getByText('Original prepare acknowledged.', { exact: false })).toBeVisible()
@@ -42,11 +42,14 @@ test('native explicit award announcement and amended own-team feedback remain in
   await admin.getByRole('button', { name: 'Read retained report versions', exact: true }).click(); await expect(admin.locator('summary').filter({ hasText: /^Version / })).toHaveCount(4)
   const denied = await judge.request.get(native.admin + `/api/v1/events/${native.event_id}/teams/${native.team_id}/feedback-report`); expect(denied.status()).toBe(403)
   const staffFromPublic = await attendee.request.get(native.public + `/api/v1/events/${native.event_id}/teams/${native.team_id}/feedback-report`); expect(staffFromPublic.status()).toBe(403)
+  const privateResults = await attendee.request.get(native.public + `/api/v1/events/${native.event_id}/results`); expect(privateResults.status()).toBe(403)
+  await own.goto(`/events/${native.event_id}/teams/${native.second_team_id}/feedback-report`); await expect(own.getByText('This team is unavailable under your current access.', { exact: false })).toBeVisible(); await expect(own.getByText('Amended explicit own-team wording.', { exact: true })).toHaveCount(0); await own.goto(reports)
+  
   for (const scheme of ['light', 'dark'] as const) {
    await own.emulateMedia({ colorScheme: scheme }); const audit = await new AxeBuilder({ page: own }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([]); expect(await own.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
    await own.screenshot({ path: testInfo.outputPath(`own-team-${scheme}.png`), fullPage: true })
   }
   await own.emulateMedia({ media: 'print' }); await expect(own.getByText('Amended explicit own-team wording.', { exact: true })).not.toBeVisible(); await own.emulateMedia({ media: 'screen' }); await expect(own.getByText('Amended explicit own-team wording.', { exact: true })).toBeVisible()
-  expect(await own.locator('body').innerText()).not.toContain('PRIVATE-MENTOR-FINAL-PROSE-NEVER-A-RESULT')
+  expect(await own.locator('body').innerText()).not.toContain('PRIVATE-MENTOR-FINAL-PROSE-NEVER-A-RESULT'); expect(await own.locator('body').innerText()).not.toContain('Private rank')
  } finally { await Promise.all([owner.close(), attendee.close(), judge.close(), room.close()]) }
 })
