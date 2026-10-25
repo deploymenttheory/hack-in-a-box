@@ -397,3 +397,32 @@ demonstrated adoption. Clear queries and cached content on current audience loss
 
 The synthetic showcase example imports these exports with local event and
 publication toggles. It performs no API call or private persistence.
+
+
+### Mentor category-tie advisory
+
+Use the production `MentorAdvisoryFields`, `MentorAdvisoryReview` and
+`MentorAdvisoryReading` exports for the mentor author → review → current judge
+reading journey. Every required judge still votes; a strict majority is required
+and split votes remain unresolved. Mentor views are advisory evidence only, with
+no counted vote, denominator change, confirmation gate or score/rank carryover.
+Qualification-mode categories retain their separate native panel rules.
+
+Capture the current run, source binding, exact category tie, assigned team, frozen
+submission revision and own contribution version. Newly authored text is never
+prefilled from private mentor cards or another assessor's notes. Current published
+coverage, roles/conflicts and frozen context remain native authority; current
+reading removes stale or no-longer-permitted contributions. Keep private text and
+review inside a disposable owner; only exact original request metadata survives
+within the signed-in session. Do not automatically retry an unknown write or infer
+its outcome from a later current read.
+
+Show attributed version, predecessor, reason and timestamp for corrections.
+Reading always describes current advisory input: a later correction neither
+rewrites decision history nor proves what an earlier ballot/confirmation
+considered. Keep the real initiating control mounted and hidden during review,
+lock dismissal while pending, restore its focus on cancellation, and clear private
+inputs/review on current authority or source change. Exclude private advisory from
+print, persisted caches and participant announcements. The independent synthetic
+example demonstrates these production exports without APIs, cookies or storage;
+its callbacks do not create native receipts or counted ballots.

@@ -39,7 +39,7 @@ func TestTeamReportSchemaPreservesPopulatedParentAndEmptyRollback(t *testing.T) 
 	if err != nil || version != 53 {
 		t.Fatal("empty rollback changed wrong schema", version, err)
 	}
-	if err = database.Migrate(t.Context(), pool, 54); err != nil {
+	if err = database.Migrate(t.Context(), pool, 0); err != nil {
 		t.Fatal("restore actual current schema", err)
 	}
 	if err = database.CheckSchema(t.Context(), pool); err != nil {

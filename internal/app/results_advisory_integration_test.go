@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -12,13 +13,20 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/results"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
 func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
-	f, second := newTiedResultsFixture(t)
+	f, second := newTiedResultsFixture(t, func(d *rubric.Definition) {
+		category := d.Categories[0].ID
+		d.Prizes = []rubric.Prize{
+			{ID: uuid.New(), Name: "Native category advisory award", CategoryID: &category},
+		}
+	})
 	r, ctx := f.runtime, t.Context()
 	s := f.service
 	preparations := 0
@@ -102,6 +110,46 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 	resultsSourceRequire(t, e)
 	if !reflect.DeepEqual(recovery.Receipt, accepted.Receipt) {
 		t.Fatal("safe receipt mismatch")
+	}
+	// Both independent HTTP portals retain current resource policy, strict
+	// contract validation, CSRF and no-store; API success is the native owner.
+	request := qualificationHTTPRequest(t)
+	path := fmt.Sprintf("/api/v1/events/%s/results/mentor-advisories", r.eventID)
+	for _, surface := range []rehearsalSurface{f.admin, f.public} {
+		status, raw := request(surface, r.mentor, "GET", path, nil, 0, true)
+		if status != 200 {
+			t.Fatal("native advisory HTTP read", status, string(raw))
+		}
+		resultAPIDecode[contract.ResultAdvisoryPage](t, "ResultAdvisoryPage", raw)
+		status, raw = request(surface, r.mentor, "POST", path, c, own.Revision, true)
+		if status != 200 {
+			t.Fatal("native original advisory replay HTTP", status, string(raw))
+		}
+		got := resultAPIDecode[contract.ResultAdvisoryPage](t, "ResultAdvisoryPage", raw)
+		if got.Receipt == nil || got.Receipt.RequestId != c.RequestID {
+			t.Fatal("HTTP lost original ACK")
+		}
+		status, _ = request(surface, r.mentor, "POST", path, c, own.Revision, false)
+		if status != 403 {
+			t.Fatal("advisory CSRF bypass", status)
+		}
+		status, _ = request(surface, f.judges[0], "GET", path, nil, 0, true)
+		if status != 403 {
+			t.Fatal("judge obtained mentor editor", status)
+		}
+		status, raw = request(
+			surface,
+			f.judges[0],
+			"GET",
+			fmt.Sprintf("/api/v1/events/%s/results/ballots", r.eventID),
+			nil,
+			0,
+			true,
+		)
+		if status != 200 {
+			t.Fatal("judge native advisory ballot HTTP", status, string(raw))
+		}
+		resultAPIDecode[contract.ResultBallotPage](t, "ResultBallotPage", raw)
 	}
 	changed := c
 	changed.Views = "Different advice under same request"
@@ -290,6 +338,70 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 	if successes != 1 || conflicts != 1 {
 		t.Fatal("concurrent correction escaped native revision fence", successes, conflicts)
 	}
+	// A new current conflict and loss of published coverage remove all advice
+	// access immediately; neither a role nor old source permits contribution.
+	conflict := dbgen.SetMentorConflictParams{
+		EventID:      r.eventID,
+		MentorID:     r.mentor.ID,
+		CompetitorID: r.competitor.ID,
+		Kind:         "reporting",
+	}
+	resultsSourceRequire(t, dbgen.New(r.pool).SetMentorConflict(ctx, conflict))
+	conflictPage, err := s.MentorAdvisories(ctx, r.mentor.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if len(conflictPage.Targets) != 0 {
+		t.Fatal("conflicted mentor retained target", conflictPage)
+	}
+	if _, err = s.MentorAdvisoryReceipt(
+		ctx,
+		r.mentor.ID,
+		r.eventID,
+		c.RequestID,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("conflicted original receipt read", err)
+	}
+	resultsSourceRequire(
+		t,
+		dbgen.New(r.pool).DeleteMentorConflict(ctx, dbgen.DeleteMentorConflictParams(conflict)),
+	)
+	assignments, err := dbgen.New(r.pool).MentorAssignments(ctx, r.eventID)
+	resultsSourceRequire(t, err)
+	_, err = r.pool.Exec(
+		ctx,
+		"DELETE FROM mentor_assignments WHERE event_id=$1 AND person_id=$2 AND snapshot='published'",
+		r.eventID,
+		r.mentor.ID,
+	)
+	resultsSourceRequire(t, err)
+	uncovered, err := s.MentorAdvisories(ctx, r.mentor.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if len(uncovered.Targets) != 0 {
+		t.Fatal("removed coverage retained target")
+	}
+	without, err := s.Read(ctx, r.owner.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if len(without.Advisories) != 0 {
+		t.Fatal("removed coverage advisory remained current")
+	}
+	for _, a := range assignments {
+		if a.PersonID == r.mentor.ID && a.Snapshot == "published" {
+			_, err = r.pool.Exec(
+				ctx,
+				"INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,$4,$5,$6,$7)",
+				a.EventID,
+				a.TeamID,
+				a.PersonID,
+				a.Slot,
+				a.Snapshot,
+				a.StartsAt,
+				a.EndsAt,
+			)
+			resultsSourceRequire(t, err)
+		}
+	}
 	// Only actual judge ballots settle the tie: one ballot is incomplete; a
 	// full split stays unresolved; a deliberate replacement yields strict majority.
 	vote := func(judge int, team uuid.UUID) results.JudgeTie {
@@ -334,6 +446,82 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 	if majority.State.WinnerID == nil || *majority.State.WinnerID != r.teamID ||
 		majority.State.VotesReceived != 2 {
 		t.Fatal("independent majority absent", majority)
+	}
+	// Complete every required judge ballot while the other category ties have
+	// no mentor advisory. Optional input absence cannot gate actual confirmation.
+	for _, tie := range initial.Preview.Ties {
+		if tie.ID == target.TieID {
+			continue
+		}
+		for i := range f.judges {
+			ballots, err := s.Ballots(ctx, f.judges[i].ID, r.eventID)
+			resultsSourceRequire(t, err)
+			_, err = s.Vote(
+				ctx,
+				f.judges[i].ID,
+				r.eventID,
+				ballots.Revision,
+				results.Command{
+					RequestID:     uuid.New(),
+					Version:       ballots.Version,
+					Action:        "vote",
+					SourceBinding: ballots.SourceBinding,
+					TieID:         tie.ID,
+					TeamID:        r.teamID,
+					Evidence: []results.VoteEvidence{
+						{TeamID: r.teamID, DeliverableID: &f.deliverable},
+					},
+					Reason: "All required judges independently resolve each category",
+				},
+			)
+			resultsSourceRequire(t, err)
+		}
+	}
+	confirmPage, err := s.Read(ctx, r.owner.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	prize := confirmPage.Preview.Criteria.Prizes[0]
+	confirmed, err := s.Change(
+		ctx,
+		r.owner.ID,
+		r.eventID,
+		confirmPage.Revision,
+		results.Command{
+			RequestID:     uuid.New(),
+			Version:       confirmPage.Round.Version,
+			Action:        "confirm",
+			SourceBinding: confirmPage.Preview.Binding,
+			Awards: []results.Award{
+				{
+					PrizeID:    prize.ID,
+					Name:       prize.Name,
+					CategoryID: prize.CategoryID,
+					TeamID:     r.teamID,
+				},
+			},
+			Reason: "Native confirmation without mandatory mentor input",
+		},
+	)
+	resultsSourceRequire(t, err)
+	currentOwn, err := s.MentorAdvisories(ctx, r.mentor.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	later, err := s.Advise(
+		ctx,
+		r.mentor.ID,
+		r.eventID,
+		currentOwn.Revision,
+		command(
+			currentOwn,
+			"Later attributed advisory correction, never a rewrite of the earlier decision.",
+		),
+	)
+	resultsSourceRequire(t, err)
+	unchanged, err := s.Read(ctx, r.owner.ID, r.eventID)
+	resultsSourceRequire(t, err)
+	if !reflect.DeepEqual(confirmed.Round, unchanged.Round) ||
+		unchanged.Round.Confirmation == nil ||
+		unchanged.Round.Confirmation.DecisionBinding != confirmed.Round.Confirmation.DecisionBinding ||
+		later.Receipt.Version < 4 {
+		t.Fatal("later optional views rewrote confirmed history", unchanged)
 	}
 	// Current author role loss removes advisory from every native current read.
 	resultsSourceRequire(
