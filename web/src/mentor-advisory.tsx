@@ -42,7 +42,7 @@ function AdvisoryEvent({ eventID }: { eventID: string }) {
  return <AdvisoryReader key={event.generation} eventID={eventID} eventName={event.query.data.name} parent={event.scope} paused={event.boundary.paused} />
 }
 function AdvisoryReader({ eventID, eventName, parent, paused }: { eventID: string; eventName: string; parent: PrivateRequestScope; paused: boolean }) {
- const identity = useIdentity(), readCurrent = useCallback((signal: AbortSignal) => load(eventID, signal, identity.person.id), [eventID, identity.person.id]), signature = useCallback((p: Page) => JSON.stringify([p.run_id, p.source_binding, p.targets]), [])
+ const identity = useIdentity(), readCurrent = useCallback((signal: AbortSignal) => load(eventID, signal, identity.person.id), [eventID, identity.person.id]), signature = useCallback((p: Page) => JSON.stringify([p.run_id, p.source_binding, p.targets.map(t => [t.tie_id, t.category_id, t.category_name, t.team_id, t.team_name, t.submission_revision])]), [])
  const read = useTodayRead(`${eventID}:mentor-advisories`, readCurrent, parent, signature, advisoryDenials)
  if (read.denied) return <section><h1>Mentor advisory unavailable</h1><p>Current published mentor assignment and a prepared frozen category-tie context are required. Private views and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current advisory access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
