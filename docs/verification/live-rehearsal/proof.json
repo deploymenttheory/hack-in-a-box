@@ -1,0 +1,177 @@
+{
+  "native_fixture": {
+    "browser_command_succeeded": true,
+    "event_id": "904dde8c-2cba-440a-ae77-5f89c3cd4948",
+    "fixture_run_id": "cce767e9-0577-4fe4-b92a-35eae5f5fdea",
+    "project_selection": "chromium",
+    "publication_at": "2027-03-22T10:00:00Z",
+    "source_commit": "1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2",
+    "source_commit_end": "1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2",
+    "source_worktree_clean": true,
+    "team_id": "867dce38-79f9-4070-a023-35fda93747d3",
+    "test_selection": ""
+  },
+  "browser_stats": {
+    "startTime": "2026-10-25T02:14:39.183Z",
+    "duration": 20542.599,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "file": "clock.spec.ts",
+      "title": "production team dashboard follows native release/live/cutoff clocks while lifecycle lags and assignments stay frozen",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 1712,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "display.spec.ts",
+      "title": "native MC pairs an independent display; outage converges without duplicate room actions",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 13485,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "mentor.spec.ts",
+      "title": "mentor offline text is deliberately recovered only after native current authorization, then erased on role loss",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 803,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "mentor.spec.ts",
+      "title": "mentor draft stays scoped to its event and is erased by actual logout before another account enters",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 825,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "support.spec.ts",
+      "title": "native help and corrected common answers preserve current account/event grants and never disclose the private source question",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 1102,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "today.spec.ts",
+      "title": "actual Today rules, contacts and personal completion remain separate from native team submission readiness",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 1276,
+          "retry": 0
+        }
+      ]
+    },
+    {
+      "file": "today.spec.ts",
+      "title": "administrator Today observes the native published program and leads current MC authority into its console",
+      "project": "chromium",
+      "expected_status": "passed",
+      "results": [
+        {
+          "status": "passed",
+          "duration_ms": 625,
+          "retry": 0
+        }
+      ]
+    }
+  ],
+  "native_go_tests": {
+    "TestLiveRehearsalBrowsers_seconds": 25.28,
+    "TestLiveRehearsalSupportClockPropagation_seconds": 2.47,
+    "TestLiveRehearsalNativeAuthority_seconds": 3.11,
+    "package_seconds": 32.438
+  },
+  "images": [
+    {
+      "file": "native-cutoff-before-lifecycle-transition.png",
+      "sha256": "089f6db09b142dbda7947bfd17521910c3a49cd6cbb2a0f7877262dd64fd2b5c",
+      "width": 1280,
+      "height": 1855
+    },
+    {
+      "file": "native-connected-opening.png",
+      "sha256": "d7ee7ca35b4d87db6063d07f30376775d4f641cb17c4833c2d383432ec66bb4c",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "native-disconnected-last-authorized-opening.png",
+      "sha256": "de392579cbbe89968bca7f1cd064e95ee86d4ed80c709c01282b57b39b4ba017",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "native-mc-approved-controls.png",
+      "sha256": "1c0ac47df03cfb09dc0ee02b00bf446a063af16f58bbaae82462967f4ef08c3b",
+      "width": 1280,
+      "height": 1782
+    },
+    {
+      "file": "native-reconnected-display.png",
+      "sha256": "29a7697d3dfde84a1364f9437ed968a3cb8906e54c6d50540d12c585dcce8fc3",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "native-current-authorized-mentor-recovery.png",
+      "sha256": "f3551eda3065d66478471b6482f2e2bbf3f11d428de04727041da216995b6dd8",
+      "width": 1280,
+      "height": 2259
+    },
+    {
+      "file": "native-current-corrected-common-answer.png",
+      "sha256": "13c89a8a787e9a27ac3fa16ebcdb90147f46b4f535244ca2d1d53e6b3a8c8432",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "native-today-personal-and-team-readiness.png",
+      "sha256": "122b47f8cd8dfcfad09a8f7ffdf2b2dce884344a09c2499fef6dfc936c293bc3",
+      "width": 390,
+      "height": 4711
+    },
+    {
+      "file": "native-today-to-authorized-mc-console.png",
+      "sha256": "a43c08889fff721eacfe71344fdf628c334a8fd5ea2a675e10d43d196db4201c",
+      "width": 1280,
+      "height": 1458
+    }
+  ]
+}

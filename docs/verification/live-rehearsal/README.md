@@ -7,35 +7,42 @@ base `c0c8b21`; no placeholder or mocked Today route is used.
 
 ## Acceptance matrix
 
-| Issue #90 criterion | Actual owners and assertions | Current evidence |
+All seven native Chromium journeys passed together at clean source
+`1ee06906fcbe6a28b8e29be1ce36d200ca87fcd2`. The PR remains Draft pending final
+exact-head CI and independent reviews.
+
+| Issue #90 criterion | Actual verification | Result |
 | --- | --- | --- |
-| Disconnected displays retain only their last authorized cue and report stale status | Production MC pairing, display SSE, forwarding outage, visible last-known opening, native advance and reconnect to the building cue | Current `15e9f6c` integrated display case passed |
-| Display responses/caches exclude mentor observations, secrets and embargoed output | Actual native private observation, private question/help and unreleased cue fixtures; complete snapshot key allowlist; bearer-only display GETs; account-controller denial; no-store; URL/storage/cache scans | Current `15e9f6c` integrated display case passed |
-| Late reconnect and clock drift converge without duplicate cues/actions | True browser offline, incorrect client wall clock, controlled native time, current SSE snapshot, native presentation revision delta, held countdown and revocation | Current `15e9f6c` integrated display case passed |
-| Preparation/build week, live submission/review opening, fixed roster and final cutoff with lifecycle lag | Native calendar-derived T−7 release; actual team dashboard and frozen command rejection; mentor `can_record` versus operational status; cutoff settles while event remains preparation | Original submission/freeze/cutoff journey passed. Corrected canonical `mentor-observations` exact clock/review case passed (1/1, 1.5s). A fresh combined current-source pass is still required |
-| Today/readiness/rules/contacts/help/corrected clarifications across roles/events/accounts | Mobile keyboard rules opening and exact native acknowledgement/focus return; actual personal task PUT versus unchanged formal submission; admin Today→MC; Today→help→common answer→native correction; native mentor-role loss; other-event denial; actual logout and different account | These six browser cases passed together at `15e9f6c`; no complete seven-case combined pass is claimed yet |
-| Completed Fleet screens/guide and action-to-next-action continuity | Both built production portals, native MC/display/mentor/competitor contexts; production reader/navigation/confirmation controls; unchanged independent guide consumers and their normal suite | Native consumer evidence above. Current `15e9f6c` full guide CI is pending; no duplicate local guide run is substituted |
+| Disconnected displays retain the last authorized cue and report stale status | Native MC pairing/SSE, forwarding outage, retained opening, native advance, latest building cue on reconnect | Combined native Chromium pass; matched three-state images |
+| No observations, secrets or embargoed output in display responses/caches | Actual private observation/question/help/unreleased cue fixtures; complete snapshot allowlist; bearer-only GETs; controller denial; no-store; URL/storage/cache scans | Combined native Chromium pass |
+| Reconnect/clock drift converge without duplicate actions | True browser offline, incorrect client clock, native snapshot/DB revision delta, held countdown and revocation | Combined native Chromium pass |
+| Preparation/build week/live review/submission/freeze/cutoff with lifecycle lag | Native calendar T−7, actual dashboard and frozen POST refusal, mentor review versus operational status, cutoff settlement before lifecycle advances | Combined native Chromium pass across all four phases |
+| Today/readiness/rules/contacts/help/corrections across roles/events/accounts | Mobile keyboard/version acknowledgement/focus return; real personal PUT versus unchanged formal output; admin Today→MC; Today→help→native common correction/account-event denial; mentor recovery/role loss; actual logout and another account | Combined native Chromium pass on both production portals |
+| Completed Fleet consumers/guide and action continuity | Production reader/navigation/confirmation consumers and unchanged independently published guide | Native pass plus [full guide CI at15e9f6c](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40152932109/job/121048067372); final-head guide CI remains required |
 
-## Proof and remaining work
+## Executed proof and merge gates
 
-- Current combined local run at `15e9f6c`: six of seven Chromium browser cases
-  passed; the added clock review GET used `/observations` instead of the actual
-  generated/native `/mentor-observations` route and correctly failed its strict
-  200 assertion. The correction preserves every native status/window/freeze
-  assertion and its exact tight case passed (1/1, 1.5s). Native authority passed 6.18s and shared-clock owning-resource
-  regression passed 4.71s. This is not a completed combined browser pass.
-- Linux native rehearsal at `f57fa17` passed with both configured engines:
-  [run 40151899729](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40151899729).
-  This proves actual Firefox execution, not a claimed local Firefox run.
-  The newer `15e9f6c` Linux workflow is active and remains independently required.
-- Current full TypeScript and focused rehearsal ESLint passed. Both production
-  portal builds passed after rebasing onto merged Today. Native runtime clock
-  defaults and the ordinary guide remain subject to final-head CI.
+- Clean `1ee0690`: **7/7 Chromium, 0 skipped, 0 flaky**,20.5s. Real-PG/race
+  browser owner25.28s, owning-resource clock regression2.47s and native
+  authority3.11s; package32.438s. Native provenance confirms identical start/end
+  SHA and `source_worktree_clean=true`.
+- [Proof JSON](proof.json) records exact source/run/selection, actual statuses,
+  dimensions and image hashes. [Visual evidence](visual-evidence.md) maps all
+  nine individually inspected screenshots to the same native run.
+- Actual default Linux rehearsal at `f57fa17` passed Chromium and Firefox:
+  [run40151899729](https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40151899729).
+  This is attributed older-source engine evidence. The final candidate's fresh
+  default seven-Chromium-plus-Firefox run must pass independently.
+- Full TypeScript/focused rehearsal ESLint and both post-Today production builds
+  passed. Ordinary/guide checks run normally again at the final candidate.
+- Parent-provided pure test support `f92443e` preserves exact UTC campaign/common
+  publication fixture instants through the autumn fold. It changes no production,
+  shared helper or rehearsal/browser runtime. Parent supplied its native proof;
+  no unexecuted child verification is claimed.
 
-Finite remaining work: finish the exact clock/review case and a fresh combined
-current-source run; inspect and publish its matching synthetic images and
-non-secret provenance; complete the current-head Linux/ordinary/guide checks;
-obtain independent Standards and Spec reviews. The PR remains Draft / Refs #90.
+Remaining gates: final exact-head Linux/ordinary/guide CI and independent
+Standards/Spec reviews. Root owns merging and #90 acceptance closure. No feature
+or dependency work is left pending; merged Today #88 is exercised here.
 
 ## Architecture and safety boundaries
 
