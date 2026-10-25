@@ -20,6 +20,17 @@ no host binding, and provider clock control uses only the owner-private Unix
 socket. The provider refuses to reuse an existing control clock, so each
 independent rehearsal requires a fresh isolated project/volumes.
 
+The verification relay is configured through the normal SMTP settings and uses
+real authenticated TLS, with an ephemeral synthetic CA trusted through the
+standard `SSL_CERT_FILE` mechanism. Temporary/permanent recipient rejection
+and an unknown DATA acknowledgement can be selected only through the private
+socket. Mailbox content (including account-confirmation links) remains in
+fixture memory; release artifacts must record bounded assertions and hashes,
+never raw tokens or message bodies. Its real queued native effects are pending
+execution. GitHub transport redirection is likewise confined to the test
+entrypoint and a fixed provider-host allowlist; it does not verify a production
+GitHub account, TLS connection, installation or live sandbox.
+
 The `bootstrap` profile runs only normal OIDC, configured admin bootstrap,
 draft-event creation, private/unprivileged denials and independent portal
 session/logout assertions. Its `bootstrap-only.json` receipt explicitly sets
@@ -35,7 +46,7 @@ checkpoint, its image build, nor its Compose run has been executed yet.
 
 The most recent verification compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
-'^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.493 seconds).
+'^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.469 seconds).
 No browser, PostgreSQL, native OIDC or queued effect is implied by that result.
 
 ## Execution boundary

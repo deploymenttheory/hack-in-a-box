@@ -23,6 +23,15 @@ x-fixture: &fixture
     HACKBOX_OIDC_CLIENT_ID: lifecycle-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
     HACKBOX_BOOTSTRAP_SUBJECT: owner
+    HACKBOX_SMTP_HOST: provider
+    HACKBOX_SMTP_PORT: '2525'
+    HACKBOX_SMTP_TLS_MODE: tls
+    HACKBOX_SMTP_USERNAME: lifecycle
+    HACKBOX_SMTP_PASSWORD: synthetic-relay-secret
+    HACKBOX_SMTP_FROM: lifecycle@example.test
+    HACKBOX_SMTP_MESSAGE_DOMAIN: example.test
+    HACKBOX_SMTP_TIMEOUT: 10s
+    SSL_CERT_FILE: /control/ca.pem
     HACKBOX_LIFECYCLE_ISOLATED: synthetic-only
     HACKBOX_LIFECYCLE_CONTROL: /control
   command: ['-test.run=^TestLifecycleComposeProcess$', '-test.timeout=60m', '-test.v']
@@ -84,6 +93,21 @@ services:
     environment:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: worker
+  styleguide:
+    image: hackbox-lifecycle:styleguide-verification
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+      target: styleguide
+      args:
+        STYLEGUIDE_REVISION: lifecycle-verification
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [synthetic]
+    healthcheck: *healthcheck
   bootstrap:
     <<: *fixture
     profiles: [bootstrap]

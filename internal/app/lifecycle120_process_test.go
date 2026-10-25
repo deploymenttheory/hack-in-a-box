@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
@@ -38,9 +40,18 @@ func TestLifecycleComposeProcess(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_ISOLATED") != "synthetic-only" {
 		t.Fatal("the lifecycle fixture requires an explicit isolated synthetic project")
 	}
+	transport, err := newLifecycleProviderTransport()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := http.DefaultTransport
+	http.DefaultTransport = transport
+	defer func() {
+		http.DefaultTransport = previous
+		transport.base.CloseIdleConnections()
+	}()
 	ctx, stop := signal.NotifyContext(t.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	var err error
 	if role == "provider" {
 		err = runLifecycleProvider(ctx)
 	} else if role == "public" || role == "admin" || role == "worker" {
@@ -86,11 +97,17 @@ func runLifecycleNativeProcess(ctx context.Context, role string) error {
 	defer func() { _ = storage.Close() }()
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil)).With("fixture_role", role)
 	if role == "worker" {
+		if err := storage.Cleanup(ctx, dbgen.New(pool).ObjectExists); err != nil {
+			return err
+		}
 		runtime, err := newWorkerRuntime(pool, cfg, logger, storage, clock.read)
 		if err != nil {
 			return err
 		}
 		return runtime.Jobs.Run(ctx, cfg.ShutdownTimeout)
+	}
+	if err := storage.Ready(ctx); err != nil {
+		return err
 	}
 	auth, err := identity.New(ctx, pool, identity.Settings{
 		CookiePrefix: "hackbox_" + cfg.Surface, Issuer: cfg.OIDCIssuer,
@@ -174,6 +191,11 @@ func runLifecycleProvider(ctx context.Context) error {
 	if err = writeLifecycleClock(directory, timeline.Initial); err != nil {
 		return err
 	}
+	relay, err := newLifecycleRelay(ctx, directory)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = relay.close() }()
 	provider, err := newLifecycleOIDC("http://provider:8080", map[string]string{
 		"lifecycle-public": "http://public:8080/auth/callback", "lifecycle-admin": "http://admin:8080/auth/callback",
 	})
@@ -194,7 +216,11 @@ func runLifecycleProvider(ctx context.Context) error {
 		_ = listener.Close()
 		return err
 	}
-	control := &http.Server{ReadHeaderTimeout: 5 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	control := &http.Server{ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/mail/") {
+			relay.control(w, r)
+			return
+		}
 		if r.URL.Path != "/clock" {
 			http.NotFound(w, r)
 			return

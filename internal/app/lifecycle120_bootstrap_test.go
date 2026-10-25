@@ -35,13 +35,14 @@ func TestLifecycleComposeBootstrap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	clock, err := newLifecycleFileClock(os.Getenv("HACKBOX_LIFECYCLE_CONTROL"))
+	control, err := newLifecycleControl(os.Getenv("HACKBOX_LIFECYCLE_CONTROL"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	timeline, err := newLifecycleTimeline(time.Now().UTC())
-	if err != nil || !clock.read().Equal(timeline.Initial) {
-		t.Fatal("bootstrap requires the fresh isolated provider timeline")
+	defer control.close()
+	timeline, err := control.initialTimeline(ctx)
+	if err != nil {
+		t.Fatal(err)
 	}
 	events := make([]event.View, 0, 2)
 	for _, name := range []string{"Harbour", "Orchard"} {

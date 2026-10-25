@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -226,7 +225,12 @@ func TestLifecycleComposeAdmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	timeline, err := newLifecycleTimeline(time.Now().UTC())
+	control, err := newLifecycleControl(os.Getenv("HACKBOX_LIFECYCLE_CONTROL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer control.close()
+	timeline, err := control.initialTimeline(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}

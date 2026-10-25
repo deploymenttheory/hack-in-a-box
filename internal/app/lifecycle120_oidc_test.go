@@ -185,5 +185,6 @@ func (p *lifecycleOIDC) token(w http.ResponseWriter, r *http.Request) {
 
 func lifecycleJSON(w http.ResponseWriter, value any) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
 	_ = json.NewEncoder(w).Encode(value)
 }
