@@ -1,6 +1,8 @@
 # Submission cutoff repository evidence — issue #96
 
-Implementation in progress against main `2d82ac402fc68e39af0c49708fa6f363742bbd66`.
+Backend implementation has a complete local verification checkpoint against main
+`2d82ac402fc68e39af0c49708fa6f363742bbd66`. Draft #276 remains held for
+independent final review and all actual final-head CI.
 This is backend work; #97 owns the Fleet journey and #108 owns final judge
 assignment/scoring. Neither consumer is represented as complete by this work.
 No real GitHub, SMTP or Teams operations are used by the proof.
@@ -254,3 +256,39 @@ provider transport remains the separately attributed deterministic HTTP fixture.
 Only tests/docs changed after 29372ac for this correction; production/API/SQL
 behaviour is unchanged. A complete run of the final published head and actual
 final-head CI/independent reviews remain required before Ready or merge.
+
+
+## Complete local checkpoint — frozen dc9e522
+
+Exact source: `dc9e522496a52afdc4dc0702abe9432c7d9314f6`.
+All commands below completed successfully; all test-owned containers and tool
+handles are terminal. No user Docker resources or real provider effects were used.
+
+| Required behaviour | Meaningful proof |
+| --- | --- |
+| Immutable completed receipt and separately audited amendments | Native before/at/after cutoff, later commits, concurrent decisions, original ACK storage, native replacement before worker and after completed receipt, stale/racing target rejection, immutable SQL history |
+| Outage-delayed capture stays unresolved | Actual late current-ref observation, retained failed/successful attempts, held-provider publish denial, differing before/after-cutoff SHAs, no automatic historical guarantee |
+| Explicit evidence-bound reconciliation | Exact retained signed-delivery query beyond latest-100 staff status, delayed/out-of-order arrivals, selected evidence IDs, reason and provenance, current source/head/native/final versions, actor-bound recovery/replay with per-target privacy |
+| Honest exceptions without automatic repository writes | Branch-missing, empty/inaccessible repository and missing managed identity; native not-submitted/withdrawn/disbanded outcomes; file/URL applicability; exact repository identity and Contents-read token; native encrypted App/credential-clear graph |
+| Shared cutoff, live opening and native ownership | Preparation-stage cutoff freezes; early formal acceptance/reconciliation rejected; original settlement survives native replacements; exact-final access rejects inactive/unscoped callers; original native submissions suite remains green |
+
+- All issue #96 owner tests, real PostgreSQL/race: **32.877 s**,
+  `/private/tmp/hackbox96-dc9-owner-full.log`.
+- All original native submissions tests, real PostgreSQL/race: **20.681 s**,
+  `/private/tmp/hackbox96-dc9-native-submissions.log`.
+- Configured focused Go lint: **0 issues**,
+  `/private/tmp/hackbox96-dc9-lint.log`.
+- Canonical SQL/Go/TypeScript generation parity: **passed, zero generated diff**,
+  `/private/tmp/hackbox96-dc9-parity.log`.
+- Whole-tree `gofmt -l cmd internal`: empty output. TypeScript type checking passed;
+  no TypeScript/API schema changed after that check.
+- Production-equivalent exact 29372ac proof passed provider transport **1.377 s**,
+  authenticated HTTP **6.676 s**, registered runtime **3.746 s**, recovery 48
+  **4.687 s**, repository access 47 **4.170 s**, session 49 **6.727 s**. Only
+  tests/docs changed between that source and dc9e522.
+
+This ledger update changes documentation only. Local success does not claim that
+current GitHub CI, independent final review, Ready, merge or issue closure has
+occurred. Root owns those gates. #97 remains the separate Fleet UI consumer and
+#108 remains the separate final judging owner; neither is complete through this
+backend ticket.
