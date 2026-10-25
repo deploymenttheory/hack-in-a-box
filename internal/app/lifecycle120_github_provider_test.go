@@ -1,21 +1,28 @@
 package app
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"io"
+	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 )
 
 const (
@@ -249,4 +256,104 @@ func (g *lifecycleGitHub) control(w http.ResponseWriter, r *http.Request) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	lifecycleJSON(w, g.proof)
+}
+
+// This bounded component check proves fixture authentication/protocol fidelity,
+// not native App attachment, queued repositories or the integrated lifecycle.
+func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
+	directory := t.TempDir()
+	fixture, err := newLifecycleGitHub(directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewServer(fixture)
+	defer server.Close()
+	target, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	transport, err := newLifecycleProviderTransport()
+	if err != nil {
+		t.Fatal(err)
+	}
+	transport.base.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		if network != "tcp" || address != "provider:8080" {
+			return nil, errors.New("unexpected fixture REST destination")
+		}
+		var dial net.Dialer
+		return dial.DialContext(ctx, network, target.Host)
+	}
+	previous := http.DefaultTransport
+	http.DefaultTransport = transport
+	defer func() { http.DefaultTransport = previous; transport.base.CloseIdleConnections() }()
+	key, err := os.ReadFile(filepath.Join(directory, "github-app.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clear(key)
+	native := githubapp.NewProvider()
+	configuration := githubapp.Configuration{
+		AppID:              lifecycleGitHubAppID,
+		AppSlug:            lifecycleGitHubAppSlug,
+		OrganizationID:     lifecycleGitHubOrganizationID,
+		Organization:       lifecycleGitHubOrganization,
+		TemplateRepository: lifecycleGitHubTemplate,
+	}
+	if value := native.Inspect(
+		t.Context(),
+		configuration,
+		key,
+		lifecycleGitHubInstallationID,
+	); value.Code != "healthy" {
+		t.Fatalf("native REST inspection: %s", value.Code)
+	}
+	fixture.mu.Lock()
+	proof := fixture.proof
+	fixture.mu.Unlock()
+	if proof.AppJWTsVerified < 3 || proof.InstallationTokensMinted != 1 ||
+		proof.TemplateReads != 1 {
+		t.Fatal("native REST did not exercise verified JWT and scoped token ownership")
+	}
+	wrongKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrong := pem.EncodeToMemory(
+		&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(wrongKey)},
+	)
+	defer clear(wrong)
+	if value := native.Inspect(
+		t.Context(),
+		configuration,
+		wrong,
+		lifecycleGitHubInstallationID,
+	); value.Code != "credentials_invalid" {
+		t.Fatalf("unverified App JWT accepted: %s", value.Code)
+	}
+	unrelated := configuration
+	unrelated.OrganizationID++
+	if value := native.Inspect(
+		t.Context(),
+		unrelated,
+		key,
+		lifecycleGitHubInstallationID,
+	); value.Code != "organization_mismatch" {
+		t.Fatalf("native organization identity not checked: %s", value.Code)
+	}
+	outsideScope := configuration
+	outsideScope.TemplateRepository = "uninstalled-template"
+	if value := native.Inspect(
+		t.Context(),
+		outsideScope,
+		key,
+		lifecycleGitHubInstallationID,
+	); value.Code != "template_inaccessible" {
+		t.Fatalf("unselected repository token minted: %s", value.Code)
+	}
+	fixture.mu.Lock()
+	defer fixture.mu.Unlock()
+	if fixture.proof.InstallationTokensMinted != proof.InstallationTokensMinted ||
+		fixture.proof.TemplateReads != proof.TemplateReads {
+		t.Fatal("rejected identity/scope created an additional provider token or template read")
+	}
 }
