@@ -154,8 +154,8 @@ evidence; production source remains the published native/API candidate.
 
 ## Remaining completion gates
 
-Integrate actual recovery/notification-clock upstream merges, obtain independent
-Standards/Spec reviews and pass every exact-head CI check. Frontend keyboard/mobile
+Obtain independent integration Standards/Spec reviews and pass every exact-head
+CI check. Recovery and notification-clock upstream merges are now inherited. Frontend keyboard/mobile
 workflows and interactive guide composition remain owned by #167. No merge or
 broad release-certification claim is made here.
 
@@ -224,3 +224,26 @@ The actual recovery hold/startup/review test passed after that test-only correct
 (**GREEN 4.277s**). Rebased session migration proof passed **6.080s** and the two
 archive/unknown-SMTP cases passed **6.108s**. This is bounded integration evidence;
 prior full-owner and API proof remains attributed to its original source head.
+
+
+## Shared API composition integration
+
+Rebased onto merged live-rehearsal main `c7971052a2c2d22eece4487c07b4926bff42791a`.
+The extracted `newAPIDependencies` now receives the shared runtime session owner
+and its event/registration reconciliation callbacks. The session clock is set in
+`newCommunicationRuntime` before the API value copy and callback capture.
+Production still omits the optional clock. `app.go`, including API/worker recovery
+startup gates before storage/provider work, is unchanged from this base.
+
+A new actual PostgreSQL test exercises the composed session reader at its open
+and exact closing instants, then a native event update through its captured
+reconciliation callback. The bounded real-PG/race app selection, including this
+case, existing native authority/shared-clock cases and session lifecycle/SMTP
+journeys, passed in **40.908s**. Session rollback passed **6.018s** and the recovery
+hold/startup/rollback case passed **3.278s**. These are integration selections,
+not a rerun of the complete prior owner or browser campaign.
+
+Canonical `check-generated.sh` completed cleanly. Focused lint across app,
+session booking and recovery owners reports **zero issues** after the required
+composition formatting correction. Independent integration review and fresh
+exact-head CI remain required; no merge is claimed by this rebase.
