@@ -13,11 +13,7 @@ export async function keyboardEventSection(page:Page,label:string,value:string){
  const nav=page.getByRole('navigation',{name:'Event sections',exact:true}),select=nav.getByRole('combobox',{name:'Event section',exact:true})
  await expect(nav).toBeVisible()
  if(await select.isVisible()){
-  await tabTo(page,select);await page.keyboard.press('Space');await page.keyboard.press('Home')
-  const index=await select.evaluate((element,requested)=>[...(element as HTMLSelectElement).options].findIndex(option=>option.value===requested),value)
-  expect(index).toBeGreaterThanOrEqual(0)
-  for(let step=0;step<index;step++)await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('Enter');await expect(select).toHaveValue(value)
+  await tabTo(page,select);await page.keyboard.type(label);await page.keyboard.press('Tab');await expect(select).toHaveValue(value)
  }else{await tabTo(page,nav.getByRole('button',{name:label,exact:true}));await page.keyboard.press('Enter')}
 }
 export async function keyboardActivate(page:Page,target:Locator,key:'Enter'|'Space'='Enter'){
