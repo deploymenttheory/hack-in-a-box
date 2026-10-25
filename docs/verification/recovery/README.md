@@ -37,3 +37,47 @@ Bounded compile/lint: `GOMAXPROCS=2 GOFLAGS=-p=1 golangci-lint run
 completed with zero issues. An initial CLI exit/defer lint finding was corrected
 before this checkpoint. No full-suite, encrypted-backup or timed-restore proof is
 claimed yet.
+
+## Encrypted archive and fresh-target checkpoint
+
+`filippo.io/age` v1.3.2 is pinned after checking the current Go module proxy and
+[maintained release](https://github.com/FiloSottile/age/releases/tag/v1.3.2).
+The [age streaming API](https://pkg.go.dev/filippo.io/age#Encrypt) owns encryption
+and authenticated framing; this implementation does not design its own framing.
+A private bundle contains `database.age`, `files.age` and `manifest.age` only.
+Native file identities/checksums and the two ciphertext hashes are bound by the
+encrypted manifest. There are no plaintext dump/archive scratch artifacts.
+
+Verification consumes all authenticated streams to EOF, validates the exact
+inventory and rejects paths/symlinks/extra objects/checksum inconsistencies.
+Restore first copies ciphertext into an owned private directory and verifies the
+whole bundle; it refuses existing database relations/storage, streams into a
+fresh target and commits a new hold with the SQL restore. Raw keys remain outside
+both source database and archive. An operator-only Docker target includes the
+existing pinned PostgreSQL 17.7 clients.
+
+Executed terminal proof after correction:
+
+- Bounded archive/CLI/testdb lint: zero issues.
+- `GOMAXPROCS=2 GOFLAGS=-p=1 go test -race ./internal/recovery
+  ./internal/credentials -run 'TestArchive|TestFreshEncryptedRecovery' -count=1`:
+  recovery passed 1.556s; native credentials passed 7.362s (integration enabled).
+- Ten deterministic archive cases cover valid data, wrong identity, truncated DB
+  and file ciphertext, unsafe tar path, symlink header/artifact, wrong native
+  checksum, unexpected artifact and public artifact permissions.
+- Fresh-server proof creates separate source/target PostgreSQL containers and a
+  fresh native storage directory. A wrong archive identity exposes neither
+  database schema nor restored files. Missing, wrong-material, new-only and retained
+  old deployment keys retain native credential semantics. A subsequent source
+  replacement is absent from the recovered credential; existing target overwrite
+  is refused. All containers are fixture-owned and removed afterward.
+
+The original exact rehearsal failed because `pg_dump` clears the session search
+path; the appended hold statement was unqualified. Qualifying its two native
+recovery tables fixed that observed failure. Temporary stderr instrumentation was
+removed; diagnostics never included the plaintext dump or deployment keys.
+
+An earlier successful measured 34-byte/one-attachment rehearsal captured in
+316.381ms and restored in 928.502ms. This excludes image retrieval, target startup,
+operator review and external-key retrieval; it is **not** a production RTO claim.
+A larger native-history dataset and final explicit RTO/RPO runbook remain pending.

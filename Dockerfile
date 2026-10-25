@@ -18,7 +18,8 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/api ./cmd/api && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/worker ./cmd/worker && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/migrate ./cmd/migrate && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck ./cmd/healthcheck && \
-    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/styleguide ./cmd/styleguide
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/styleguide ./cmd/styleguide && \
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/recovery ./cmd/recovery
 
 FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8 AS runtime
 COPY --from=go /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
@@ -48,3 +49,9 @@ RUN npm run build:styleguide
 FROM runtime AS styleguide
 COPY --from=styleguide-web /src/web/dist-styleguide/ /app/web/
 ENTRYPOINT ["/app/styleguide"]
+
+# Operator-only target: pinned PostgreSQL clients, no public application server.
+FROM postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd AS recovery
+COPY --from=go /out/recovery /app/recovery
+USER 10001:10001
+ENTRYPOINT ["/app/recovery"]
