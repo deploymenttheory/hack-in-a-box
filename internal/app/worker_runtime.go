@@ -41,7 +41,9 @@ func newWorkerRuntime(
 	worker.FastMaintenance = func(ctx context.Context) error {
 		// Guarded common publication has a bounded release window. Run it
 		// before support sweeps so their work or errors cannot delay release.
-		if err := (content.Service{Pool: pool, Storage: storage, Clock: now}).Maintain(ctx); err != nil {
+		if err := (content.Service{Pool: pool, Storage: storage, Clock: now}).Maintain(
+			ctx,
+		); err != nil {
 			return fmt.Errorf("maintain actual content release: %w", err)
 		}
 		if err := runtime.maintainSupport(ctx); err != nil {

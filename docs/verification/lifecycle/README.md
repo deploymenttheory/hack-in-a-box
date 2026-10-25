@@ -263,3 +263,34 @@ private database, files, control and artifacts volumes and network. Other
 projects were preserved. This is production-image calendar/startup/portal
 configuration evidence only: full recovery, lifecycle and final merged-source
 acceptance remain pending, and `complete_lifecycle` remains false.
+
+
+## Queued SMTP acceptance checkpoint
+
+`TestLifecycleComposeSMTP` passed in 6.78s (runner 6641) from frozen source
+`0a21f4a6`, image `sha256:3fd3cd2b1d615d071f1cf0cc8ab25695618f4e6380bd19bf1caf29305a5ec3ef`,
+based on main `076f6162558df2ac3d7fb1ff7c23b3d35dc21784`, PostgreSQL schema 54.
+The real native OIDC claim owner supplied the verified account contact. Native
+HTTP saved the message/audience/campaign, rendered an exact organiser-only
+review, and queued the reviewed intent. The actual River worker used native
+SMTP with certificate verification, TLS and AUTH against the isolated relay.
+The native bounded receipt was `accepted/relay_accepted`; the private relay
+contained exactly one matching synthetic message. A read-only PostgreSQL query
+confirmed one `communication_test_smtp` operation, one delivered attempt,
+accepted snapshot and released lease. Acceptance does not establish mailbox
+delivery or reading. The safe receipt exports only IDs, digest and bounded
+state, never message contents, mailbox, token or credentials.
+
+The first attempt, source `c414aeb0`, image `sha256:e7f71c6ee7796d0c7725dc7e53e4fb6d5d953d6fdb9c872132e42f38075d67d0`,
+failed in 0.05s before queueing at the first communication-source HTTP save.
+The driver incorrectly serialized an absent optional object as null; the native
+wire contract correctly rejected it with 400. The corrected driver omits absent
+objects. No production validation was weakened. Build 52850 and corrected build
+65060 both terminated successfully; corrected fresh startup 55736 passed.
+Both private projects and all their labelled volumes/networks were removed,
+including the profile-only artifacts volume. Other user projects were preserved.
+
+This proves accepted organiser-only transport, not the campaign current-audience,
+failure/unknown reconciliation or full lifecycle requirements. `complete_lifecycle`
+remains false. A later formatting-only commit resolves the CI golines finding;
+the historical execution remains attributed to the frozen source above.
