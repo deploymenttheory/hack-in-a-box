@@ -246,3 +246,28 @@ The complete bounded moderation browser suite passes administrator **16/16 in
 transport cases retain their separate scope from the cb417 native four-case
 matrix. The full five-team frozen-source final-card/tie/signoff proof, completed
 visual captures and final reviews/current CI remain mandatory open gates.
+
+## Issue 111 follow-up after the merged checkpoint
+
+PR283 was merged as `fcbfe038f669df74a73d51ec7f160c222c859397`; that checkpoint
+was not full issue111 acceptance. The follow-up branch starts from that actual
+main and applies only the two preserved privacy edits, without replaying merged
+implementation commits. Original native/source receipts above remain historical.
+
+The previously unpublished excluded-target regression failed both widths before
+the correction: an open history retained private decision/round prose after an
+authoritative current panel read removed its target, until the history poll.
+The lifetime fence now includes structured decision/reference visibility and
+presence flags for withheld prose; private text is never placed in scope keys.
+Against the current main working-tree extension, unchanged cases pass **2/2 in
+4.6s**, with TypeScript/focused lint and both production builds passing. The
+independent write guide passes **8/8 in4.6s**, including unchanged standalone and
+embedded cancel-to-actual-opener assertions, retained validation and unknown
+metadata after private disposal. This is not new native transaction evidence.
+
+Remaining mandatory scope stays in one follow-up PR for existing111: real
+five-team frozen-source card/eligibility/tie/signoff journeys, complete current
+history/capability/privacy/recovery hardening, native/visual proof across both
+portals, independent reviews and final current CI. Final award confirmation,
+publication and feedback release remain separate112/113 responsibilities. No
+local preview or UI receipt invents those APIs or released results.

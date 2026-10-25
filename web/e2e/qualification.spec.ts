@@ -101,3 +101,14 @@ for(const response of ['ack','408'] as const)test(`sent panel metadata protects 
   task.state.denied=false;await page.goBack();await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown');expect(task.writes).toHaveLength(1)
  }finally{task.release()}
 })
+test('authoritative excluded-target visibility change disposes already-open private history before its next poll',async({page})=>{
+ const state=await fixture(page),excluded=state.page.teams[0],visible=state.page.teams[1],canary='EXCLUDED-TARGET-PRIVATE-DECISION-CANARY'
+ state.page.current=false;state.page.round.signoff=null;state.page.preview=null;state.page.capabilities.record_locked=false;excluded.eligible=false;excluded.freeze_status='unresolved';state.page.round.cards=state.page.round.cards.filter(card=>card.team_id===visible.team_id)
+ state.page.round.reason=canary;state.page.round.eligibility=[{team_id:excluded.team_id,binding:excluded.freeze_binding,decision:'ineligible',reason:canary,evidence:[{kind:'note',id:null,version:null,note:'Private supporting exclusion note'}],actor_id:state.page.round.panel.organiser_id,at:'2027-06-20T16:00:00Z'}]
+ const original=structuredClone(state.page.round);let withheld=false,historyReads=0
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/history*`,route=>{historyReads++;return route.fulfill({json:{items:[{snapshot:withheld?state.page.round:original,current:false}],next_cursor:null}})})
+ await page.goto(path);await page.getByRole('button',{name:'Read recorded panel history',exact:true}).press('Enter');const history=page.getByRole('region',{name:'Currently authorised panel history',exact:true});await history.getByText(/Panel version 4 · sign off/).press('Enter');await expect(history.getByText(`Reason: ${canary}`,{exact:true})).toBeVisible();expect(historyReads).toBe(1)
+ withheld=true;state.page.round.eligibility=[];state.page.round.reason='';await page.getByRole('button',{name:'Read current panel source',exact:true}).press('Enter')
+ await expect(page.getByText(canary,{exact:false})).toHaveCount(0);expect(historyReads).toBe(1)
+ await page.getByRole('button',{name:'Read recorded panel history',exact:true}).press('Enter');await history.getByText(/Panel version 4 · sign off/).press('Enter');await expect(history).not.toContainText(canary);await expect(history).toContainText(`Team ${visible.team_id} · Card version 2`)
+})
