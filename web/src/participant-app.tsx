@@ -1,3 +1,4 @@
+import { QualificationPanelPage } from './qualification'
 import { JudgeWorkspacePage, JudgePracticePage } from './judge-workspace'
 import { AssignedBuildsPage } from './assigned-builds'
 import { SubmittedBuildPage } from './submitted-build'
@@ -47,6 +48,7 @@ const mediaGallery = createRoute({ getParentRoute: () => root, path: '/events/$e
 const mediaDetail = createRoute({ getParentRoute: () => root, path: '/events/$eventId/media/$mediaId', component: MediaWorkspacePage })
 const assignedBuilds = createRoute({ getParentRoute: () => root, path: '/events/$eventId/builds', component: AssignedBuildsPage })
 const submittedBuild = createRoute({ getParentRoute: () => root, path: '/events/$eventId/teams/$teamId/build', component: SubmittedBuildPage, validateSearch: (s:Record<string,unknown>):{judge_run?:string}=>({judge_run:typeof s.judge_run==='string'&&/^[a-f0-9-]{36}$/i.test(s.judge_run)?s.judge_run:undefined}) })
+const qualificationPanel = createRoute({ getParentRoute: () => root, path: '/events/$eventId/panel/$runId', component: QualificationPanelPage })
 const judgeDesk = createRoute({ getParentRoute: () => root, path: '/events/$eventId/judging', component: JudgeWorkspacePage })
 const judgePractice = createRoute({ getParentRoute: () => root, path: '/events/$eventId/judging/practice', component: JudgePracticePage })
 const home = createRoute({ getParentRoute: () => root, path: '/', component: EventDirectory })
@@ -64,5 +66,5 @@ const help = createRoute({ getParentRoute: () => root, path: '/events/$eventId/h
 const registration = createRoute({ getParentRoute: () => root, path: '/register/$eventId', component: RegistrationPage })
 const registrations = createRoute({ getParentRoute: () => root, path: '/register', component: RegistrationDirectory })
 const account = createRoute({ getParentRoute: () => root, path: '/account', component: AccountPage })
-export const router = createRouter({ routeTree: root.addChildren([judgeDesk, judgePractice, assignedBuilds, submittedBuild, surveyDirectory, surveyCreate, surveyManage, surveyResults, ideas, idea, outcomeReview, projects, project, ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
+export const router = createRouter({ routeTree: root.addChildren([qualificationPanel, judgeDesk, judgePractice, assignedBuilds, submittedBuild, surveyDirectory, surveyCreate, surveyManage, surveyResults, ideas, idea, outcomeReview, projects, project, ownPhotoConsent, mediaGallery, mediaDetail, survey, reviewDashboard, teamReview, judgeSummaryPreview, feedback, feedbackFollowup, deliveryHistory, deliveryReview, scorecards, helpQueue, mentor, mentorTeam, help, inbox, resource, clarification, clarificationWorkspace, privateQuestion, home, event, account, registrations, registration]), defaultPendingComponent: Loading })
 export function App() { return <QueryClientProvider client={sessionCache}><RouterProvider router={router} /></QueryClientProvider> }

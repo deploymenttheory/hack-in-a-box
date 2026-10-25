@@ -1,0 +1,10 @@
+import {test,expect} from '@playwright/test'
+test('production private selection guide keeps preparation separate and clears changed source',async({page})=>{
+ const calls:string[]=[];page.on('request',request=>{if(/^\/(api|auth)\//.test(new URL(request.url()).pathname))calls.push(request.url())})
+ await page.goto('/patterns.html');const example=page.getByRole('region',{name:'Moderation and private selection example',exact:true});await example.getByRole('button',{name:'Preview finalist preparation',exact:true}).press('Enter');await expect(example.getByRole('region',{name:'Private finalist preparation',exact:true})).toContainText('Synthetic Cedar');await expect(example.getByRole('region',{name:'Private category preparation',exact:true})).toHaveCount(0)
+ await example.getByRole('button',{name:'Change synthetic source',exact:true}).click();await expect(example.getByRole('region',{name:'Private finalist preparation',exact:true})).toHaveCount(0);await expect(example.getByText(/unresolved tie/).first()).toBeVisible();expect(calls).toEqual([])
+})
+test('embedded production panel guide runs without cookies or private storage',async({page})=>{
+ await page.addInitScript(()=>{Object.defineProperty(Document.prototype,'cookie',{get(){throw new Error('Guide read cookies')},set(){throw new Error('Guide wrote cookies')}});for(const method of ['getItem','setItem','removeItem','clear','key'])Object.defineProperty(Storage.prototype,method,{value(){throw new Error('Guide accessed private storage')}})})
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));await page.goto('/');await page.getByRole('link',{name:'Task patterns',exact:true}).click();const example=page.frameLocator('iframe[title="Production task pattern examples"]').getByRole('region',{name:'Moderation and private selection example',exact:true});await example.getByRole('button',{name:'Preview category preparation',exact:true}).click();await expect(example.getByRole('region',{name:'Private category preparation',exact:true})).toContainText('Synthetic Elm');expect(errors).toEqual([])
+})

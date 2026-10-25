@@ -312,3 +312,20 @@ private denial/print teardown. It has no account, API, storage or file transport
 The usage snippet documents current native source/version/UUID/fingerprint
 ownership, isolated practice, exact receipts and metadata-only organiser reopen.
 See [judging workflows](judging-workflows.md) for the production boundary.
+
+## Moderation and private selection
+
+The production `QualificationCardComparison` keeps current native source
+references and recorded reasons beside the moderated card. Source-specific
+huddle/build reads retain their own authority; panel membership does not confer
+private observation or submission access. Treat absent/withheld evidence as
+unavailable, never as a zero score. Current-source changes clear selected private
+inspectors and preparation views before another deliberate action.
+
+`QualificationPreparationPreview` displays separate finalist or category local
+preparation only from an actual current signed private source. Omit category
+selections from finalist preparation. This example has no approval, send or
+publication capability; #112/#113 own later result/publication/feedback actions.
+Use the actual native discovery/action capabilities before enabling commands,
+keep editable invalid forms actionable, preserve exact version/request recovery,
+and return focus to the actual review opener or an enabled local fallback.
