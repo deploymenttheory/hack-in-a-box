@@ -153,3 +153,44 @@ func TestConcurrentFinalistPublicationHasOneDurableSourceEvent(t *testing.T) {
 		t.Fatal("same captured concurrent request emitted duplicate event", count)
 	}
 }
+
+func TestCompetingFinalistPublicationRequestsCannotBothCommit(t *testing.T) {
+	f := newResultsSourceFixture(t, rubric.MentorQualification)
+	ctx := t.Context()
+	actor, eventID := f.runtime.owner.ID, f.runtime.eventID
+	p, err := f.service.Read(ctx, actor, eventID)
+	resultsSourceRequire(t, err)
+	start := make(chan struct{})
+	resultsCh := make(chan error, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		command := results.Command{RequestID: uuid.New(), Version: p.Round.Version, Action: "publish_finalists", SourceBinding: p.Preview.FinalistsBinding, Reason: "Independently captured release of the same reviewed source"}
+		wg.Go(func() {
+			<-start
+			_, changeErr := f.service.Change(ctx, actor, eventID, p.Revision, command)
+			resultsCh <- changeErr
+		})
+	}
+	close(start)
+	wg.Wait()
+	close(resultsCh)
+	accepted, conflicted := 0, 0
+	for changeErr := range resultsCh {
+		switch {
+		case changeErr == nil:
+			accepted++
+		case errors.Is(changeErr, access.ErrConflict):
+			conflicted++
+		default:
+			t.Fatal("unexpected competing publication failure", changeErr)
+		}
+	}
+	if accepted != 1 || conflicted != 1 {
+		t.Fatal("competing reviewed commands were not serialized", accepted, conflicted)
+	}
+	var publications, commands, versions int
+	resultsSourceRequire(t, f.runtime.pool.QueryRow(ctx, "SELECT (SELECT count(*) FROM result_publications WHERE event_id=$1),(SELECT count(*) FROM result_commands WHERE event_id=$1),(SELECT count(*) FROM result_versions WHERE event_id=$1)", eventID).Scan(&publications, &commands, &versions))
+	if publications != 1 || commands != 1 || versions != 1 {
+		t.Fatal("losing command left a partial publication effect", publications, commands, versions)
+	}
+}
