@@ -56,12 +56,16 @@ replaced by a visual migration.
 builds only tracked, committed HEAD into uniquely named normal public/admin/guide
 images. Install the locked frontend dependencies and Playwright Chromium first.
 The four fixed loopback ports18180/18181/18182/19190 must be free; an existing
-project or artifact directory fails preflight instead of being overwritten.
+project container, volume, network or artifact directory fails preflight instead
+of being overwritten. Every run gets a distinct project suffix.
 
 The probe uses a private PostgreSQL database and a verification-only external
 OIDC provider on loopback. The application images run their normal commands,
 OIDC/PKCE/nonce/signature/session checks and bootstrap flow. They have no test
-clock, test entrypoint, seeded session or successful mocked API response. Real
+clock, test entrypoint, seeded session or successful mocked API response. The
+Compose/provider/browser fixture files execute from the same archived source
+until cleanup; the normal image revision and locked browser dependency versions
+are checked against that archive. Real
 browser form → review → native event creation → both portal readers is followed
 by independent logout, an unauthenticated guide and scoped public-process
 failure while administration/guide continue. Desktop/mobile, light/dark,

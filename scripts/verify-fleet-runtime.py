@@ -10,9 +10,9 @@ import socket
 import subprocess
 import tarfile
 import tempfile
+import uuid
 
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG = ROOT / 'docs/verification/fleet-cutover/compose.native.yaml'
 
 
 def output(args, **kwargs):
@@ -32,6 +32,13 @@ def logged(args, path, env):
         raise RuntimeError(f'{args[0]} command failed ({result.returncode}); inspect {path}')
 
 
+def project_resources(project):
+    remaining = {}
+    for kind, command in [('containers', ['docker', 'ps', '-aq']), ('volumes', ['docker', 'volume', 'ls', '-q']), ('networks', ['docker', 'network', 'ls', '-q'])]:
+        remaining[kind] = output(command + ['--filter', f'label=com.docker.compose.project={project}'])
+    return remaining
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifacts', type=Path, required=True, help='New private directory outside the repository')
@@ -45,38 +52,44 @@ def main():
         with socket.socket() as probe:
             probe.bind(('127.0.0.1', port))
     revision = output(['git', 'rev-parse', 'HEAD'])
-    project = 'hackbox-fleet245-' + revision[:12]
-    if output(['docker', 'ps', '-aq', '--filter', f'label=com.docker.compose.project={project}']):
-        parser.error('This exact private project already exists; inspect it rather than overwrite its proof')
+    project = 'hackbox-fleet245-' + revision[:12] + '-' + uuid.uuid4().hex[:8]
+    if any(project_resources(project).values()):
+        parser.error('Private project resources already exist; inspect them rather than overwrite their proof')
     artifacts.mkdir(parents=True, mode=0o700)
-    env = dict(os.environ, FLEET_UI_PROJECT=project, FLEET_UI_ARTIFACTS=str(artifacts))
+    env = dict(os.environ, FLEET_UI_PROJECT=project, FLEET_UI_ARTIFACTS=str(artifacts), FLEET_UI_SOURCE_REVISION=revision)
     for kind in ['PUBLIC', 'ADMIN', 'GUIDE']:
         env[f'FLEET_UI_{kind}_IMAGE'] = f'hackbox-fleet245-{kind.lower()}:{revision[:12]}'
-    compose = ['docker', 'compose', '-p', project, '-f', str(CONFIG)]
-    deployed = False
-    try:
-        with tempfile.TemporaryDirectory(prefix='hackbox-fleet245-source-') as temporary:
-            archive = subprocess.check_output(['git', 'archive', revision], cwd=ROOT)
-            with tarfile.open(fileobj=io.BytesIO(archive)) as tracked:
-                tracked.extractall(temporary, filter='data')
+    # Keep every executable fixture and bind mount in the same tracked snapshot
+    # until services are removed; live worktree edits cannot alter this run.
+    with tempfile.TemporaryDirectory(prefix='hackbox-fleet245-source-') as temporary:
+        snapshot = Path(temporary)
+        archive = subprocess.check_output(['git', 'archive', revision], cwd=ROOT)
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tracked:
+            tracked.extractall(snapshot, filter='data')
+        if (snapshot / 'web/package-lock.json').read_bytes() != (ROOT / 'web/package-lock.json').read_bytes():
+            raise RuntimeError('Installed frontend dependency source differs from archived HEAD')
+        (snapshot / 'web/node_modules').symlink_to(ROOT / 'web/node_modules', target_is_directory=True)
+        compose = ['docker', 'compose', '-p', project, '-f', str(snapshot / 'docs/verification/fleet-cutover/compose.native.yaml')]
+        deployed = False
+        try:
             for kind, target in [('PUBLIC', 'public'), ('ADMIN', 'admin'), ('GUIDE', 'styleguide')]:
                 print(f'Build normal {target} image from {revision[:12]}', flush=True)
-                logged(['docker', 'build', '--target', target, '--label', f'org.opencontainers.image.revision={revision}', '--build-arg', 'VITE_STYLEGUIDE_URL=http://127.0.0.1:18182', '--build-arg', f'STYLEGUIDE_REVISION={revision}', '-t', env[f'FLEET_UI_{kind}_IMAGE'], temporary], artifacts / f'build-{target}.log', env)
-        logged(compose + ['config', '--quiet'], artifacts / 'compose-validation.log', env)
-        deployed = True
-        print(f'Start isolated {project}; existing user projects are untouched', flush=True)
-        logged(compose + ['up', '-d', '--wait', '--wait-timeout', '120', 'public', 'admin', 'styleguide'], artifacts / 'startup.log', env)
-        print('Verify real OIDC, native create/review/read, themes/widths and independent failure', flush=True)
-        logged(['node', str(ROOT / 'docs/verification/fleet-cutover/native-browser.mjs')], artifacts / 'browser.log', env)
-    finally:
-        if deployed:
-            logged(compose + ['down', '--volumes', '--remove-orphans'], artifacts / 'cleanup.log', env)
-            remaining = {}
-            for kind, command in [('containers', ['docker', 'ps', '-aq']), ('volumes', ['docker', 'volume', 'ls', '-q']), ('networks', ['docker', 'network', 'ls', '-q'])]:
-                remaining[kind] = output(command + ['--filter', f'label=com.docker.compose.project={project}'])
-            if any(remaining.values()):
-                raise RuntimeError('Private project cleanup is incomplete: ' + json.dumps(remaining))
-            (artifacts / 'cleanup.json').write_text(json.dumps({'project': project, 'remaining': remaining, 'source': revision}, indent=2) + '\n')
+                logged(['docker', 'build', '--target', target, '--label', f'org.opencontainers.image.revision={revision}', '--build-arg', 'VITE_STYLEGUIDE_URL=http://127.0.0.1:18182', '--build-arg', f'STYLEGUIDE_REVISION={revision}', '-t', env[f'FLEET_UI_{kind}_IMAGE'], str(snapshot)], artifacts / f'build-{target}.log', env)
+            logged(compose + ['config', '--quiet'], artifacts / 'compose-validation.log', env)
+            if any(project_resources(project).values()):
+                raise RuntimeError('Private project appeared during build; no deployment/cleanup attempted')
+            deployed = True
+            print(f'Start isolated {project}; existing user projects are untouched', flush=True)
+            logged(compose + ['up', '-d', '--wait', '--wait-timeout', '120', 'public', 'admin', 'styleguide'], artifacts / 'startup.log', env)
+            print('Verify real OIDC, native create/review/read, themes/widths and independent failure', flush=True)
+            logged(['node', str(snapshot / 'docs/verification/fleet-cutover/native-browser.mjs')], artifacts / 'browser.log', env)
+        finally:
+            if deployed:
+                logged(compose + ['down', '--volumes', '--remove-orphans'], artifacts / 'cleanup.log', env)
+                remaining = project_resources(project)
+                if any(remaining.values()):
+                    raise RuntimeError('Private project cleanup is incomplete: ' + json.dumps(remaining))
+                (artifacts / 'cleanup.json').write_text(json.dumps({'project': project, 'remaining': remaining, 'source': revision}, indent=2) + '\n')
     print(f'PASS: normal-image browser/runtime proof and scoped cleanup: {artifacts}', flush=True)
 
 

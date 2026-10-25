@@ -18,7 +18,12 @@ const compose = ['compose', '-p', project, '-f', join(root, 'docs/verification/f
 const output = process.env.FLEET_UI_ARTIFACTS
 assert.ok(output, 'Choose a private artifact directory outside the repository')
 mkdirSync(output, { recursive: true, mode: 0o700 })
-const source = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
+const source = process.env.FLEET_UI_SOURCE_REVISION
+assert.match(source ?? '', /^[a-f0-9]{40}$/)
+for (const module of ['@playwright/test', '@axe-core/playwright']) {
+  const wanted = JSON.parse(readFileSync(join(root, 'web/package.json'), 'utf8')).devDependencies[module]
+  assert.equal(JSON.parse(readFileSync(join(root, 'web/node_modules', module, 'package.json'), 'utf8')).version, wanted, `${module} must match the archived lockfile install`)
+}
 const cases = [], images = []
 for (const kind of ['PUBLIC', 'ADMIN', 'GUIDE']) {
   const image = process.env[`FLEET_UI_${kind}_IMAGE`]
