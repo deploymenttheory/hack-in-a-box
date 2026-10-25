@@ -54,7 +54,8 @@ test('native MC pairs an independent display; outage converges without duplicate
     expect(snapshotResponse.status()).toBe(200)
     expect(snapshotResponse.headers()['cache-control']).toContain('no-store')
     const snapshot = await snapshotResponse.json()
-    expect(Object.keys(snapshot).sort()).toEqual(['assets', 'override_active', 'event_id', 'event_name', 'timezone', 'sequence', 'server_now', 'current', 'next', 'mode', 'remaining_seconds', 'timer_ends_at', 'primary_colour', 'background_colour', 'foreground_colour'].sort())
+    expect(Object.keys(snapshot).sort()).toEqual(['assets', 'results', 'override_active', 'event_id', 'event_name', 'timezone', 'sequence', 'server_now', 'current', 'next', 'mode', 'remaining_seconds', 'timer_ends_at', 'primary_colour', 'background_colour', 'foreground_colour'].sort())
+    expect(snapshot.results).toEqual([]) // No deliberate finalist or award release occurred.
     expect(JSON.stringify(snapshot)).not.toContain('PRIVATE-')
     expect(snapshot.sequence).toBe(after.presentation_revision)
     const privateController = await displayContext.request.get(`/api/v1/events/${native.event_id}/presentation`, { headers: { Authorization: `Bearer ${token}` } })

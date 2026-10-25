@@ -21,13 +21,25 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 type Service struct {
+	Results        ResultAuthority
 	OrderAuthority JudgeOrderAuthority
 	Pool           *pgxpool.Pool
 	Clock          func() time.Time
+}
+
+// ResultAuthority supplies only explicitly announced, safe room projections.
+// Pairing validation stays with presentation and never uses controller roles.
+type ResultAuthority interface {
+	RoomAnnouncementsInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+	) ([]resultpublication.Announcement, error)
 }
 
 func (s Service) now() time.Time {
@@ -424,7 +436,7 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		return Snapshot{}, database.ErrDatabase
 	}
 	var result Snapshot
-	err := database.Within(ctx, s.Pool, func(_ pgx.Tx, q *dbgen.Queries) error {
+	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		e, err := s.displayEvent(ctx, q, eventID, token)
 		if err != nil {
 			return err
@@ -436,6 +448,13 @@ func (s Service) Snapshot(ctx context.Context, eventID uuid.UUID, token string) 
 		result, err = s.programSnapshot(ctx, q, e, row)
 		if err != nil {
 			return err
+		}
+		result.Results = []resultpublication.Announcement{}
+		if s.Results != nil {
+			result.Results, err = s.Results.RoomAnnouncementsInTransaction(ctx, tx, eventID)
+			if err != nil {
+				return fmt.Errorf("read announced room results: %w", err)
+			}
 		}
 		if err = displayBranding(ctx, q, eventID, &result); err != nil {
 			return err

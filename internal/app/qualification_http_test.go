@@ -26,6 +26,17 @@ func qualificationHTTPFixture(
 	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
 ) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
 	t.Helper()
+	return qualificationHTTPFixtureWithCriteria(t, nil, beforeCutoff...)
+}
+
+// Criteria are configured before approval/common publication; the original
+// fixture keeps its exact mentor-qualification defaults.
+func qualificationHTTPFixtureWithCriteria(
+	t *testing.T,
+	configure func(*rubric.Definition),
+	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
+) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
+	t.Helper()
 	r := newLiveRehearsal(t, true)
 	admin, public := r.surface(t, "admin"), r.surface(t, "public")
 	criteria, err := admin.deps.Rubrics.Configuration(t.Context(), r.owner.ID, r.eventID, 0)
@@ -33,6 +44,9 @@ func qualificationHTTPFixture(
 		t.Fatal(err)
 	}
 	definition := rubric.Default(rubric.MentorQualification, r.eventID)
+	if configure != nil {
+		configure(&definition)
+	}
 	criteria, err = admin.deps.Rubrics.Change(
 		t.Context(),
 		r.owner.ID,
@@ -114,6 +128,12 @@ func qualificationHTTPFixture(
 	if err != nil {
 		t.Fatal(err)
 	}
+	purpose := "mentor_final"
+	runReason := "Actual current mentor final run"
+	if definition.Mode == rubric.AllTeams {
+		purpose = "judge_final"
+		runReason = "Actual current judge final run"
+	}
 	criteria, err = admin.deps.Rubrics.Change(
 		t.Context(),
 		r.owner.ID,
@@ -121,9 +141,9 @@ func qualificationHTTPFixture(
 		criteria.Revision,
 		rubric.Command{
 			Action:  "create_run",
-			Purpose: "mentor_final",
+			Purpose: purpose,
 			Version: criteria.Reference.Version,
-			Reason:  "Actual current mentor final run",
+			Reason:  runReason,
 		},
 	)
 	if err != nil {
@@ -131,7 +151,7 @@ func qualificationHTTPFixture(
 	}
 	var runID uuid.UUID
 	for _, run := range criteria.Runs {
-		if run.Purpose == "mentor_final" {
+		if run.Purpose == purpose {
 			runID = run.ID
 		}
 	}

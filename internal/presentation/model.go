@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 )
 
 type Cue struct {
@@ -80,21 +81,22 @@ type DisplayAsset struct {
 	Digest    string    `json:"digest"`
 }
 type Snapshot struct {
-	Assets           []DisplayAsset `json:"assets"`
-	OverrideActive   bool           `json:"override_active"`
-	EventID          uuid.UUID      `json:"event_id"`
-	EventName        string         `json:"event_name"`
-	Timezone         string         `json:"timezone"`
-	Sequence         int64          `json:"sequence"`
-	ServerNow        time.Time      `json:"server_now"`
-	Current          *DisplayCue    `json:"current"`
-	Next             *DisplayCue    `json:"next"`
-	Mode             string         `json:"mode"`
-	RemainingSeconds int            `json:"remaining_seconds"`
-	TimerEndsAt      *time.Time     `json:"timer_ends_at"`
-	PrimaryColour    string         `json:"primary_colour"`
-	BackgroundColour string         `json:"background_colour"`
-	ForegroundColour string         `json:"foreground_colour"`
+	Results          []resultpublication.Announcement `json:"results"`
+	Assets           []DisplayAsset                   `json:"assets"`
+	OverrideActive   bool                             `json:"override_active"`
+	EventID          uuid.UUID                        `json:"event_id"`
+	EventName        string                           `json:"event_name"`
+	Timezone         string                           `json:"timezone"`
+	Sequence         int64                            `json:"sequence"`
+	ServerNow        time.Time                        `json:"server_now"`
+	Current          *DisplayCue                      `json:"current"`
+	Next             *DisplayCue                      `json:"next"`
+	Mode             string                           `json:"mode"`
+	RemainingSeconds int                              `json:"remaining_seconds"`
+	TimerEndsAt      *time.Time                       `json:"timer_ends_at"`
+	PrimaryColour    string                           `json:"primary_colour"`
+	BackgroundColour string                           `json:"background_colour"`
+	ForegroundColour string                           `json:"foreground_colour"`
 }
 
 func validate(c Command) error {

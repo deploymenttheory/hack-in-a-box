@@ -1403,6 +1403,39 @@ type ResourceAssignment struct {
 	PersonID   uuid.UUID
 }
 
+type ResultCommand struct {
+	EventID       uuid.UUID
+	RequestID     uuid.UUID
+	ActorID       uuid.UUID
+	ResultVersion int64
+	Receipt       []byte
+}
+
+type ResultPublication struct {
+	EventID       uuid.UUID
+	ID            uuid.UUID
+	Kind          string
+	ResultVersion int64
+	SourceBinding string
+	Document      []byte
+	ActorID       uuid.UUID
+	PublishedAt   time.Time
+}
+
+type ResultVersion struct {
+	EventID              uuid.UUID
+	Version              int64
+	JudgeRunID           *uuid.UUID
+	JudgeApprovalID      *uuid.UUID
+	QualificationRunID   *uuid.UUID
+	QualificationVersion pgtype.Int8
+	ActorID              uuid.UUID
+	Action               string
+	Reason               string
+	Document             []byte
+	ChangedAt            time.Time
+}
+
 type RubricApproval struct {
 	EventID    uuid.UUID
 	RubricID   uuid.UUID

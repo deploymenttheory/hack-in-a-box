@@ -394,6 +394,13 @@ func TestIndependentVisibilityIncompleteLockDeliberationAndReopen(t *testing.T) 
 		if e != nil {
 			return e
 		}
+		if !c.Deliberation || c.Reference != f.criteria.Reference ||
+			len(c.Criteria.Categories) != len(f.criteria.Definition.Categories) ||
+			len(c.Assignments) != 1 ||
+			c.Assignments[0].TeamID != f.team ||
+			len(c.Assignments[0].JudgeIDs) != 2 {
+			return errors.New("completion lost exact required assignment/criteria source")
+		}
 		return f.s.RecordResultApprovalInTransaction(
 			ctx,
 			tx,

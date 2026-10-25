@@ -52,6 +52,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositoryaccess"
+	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
@@ -67,6 +68,8 @@ import (
 )
 
 type Dependencies struct {
+	Results              results.Service
+	ResultsAdminSurface  bool
 	Qualification        qualification.Service
 	Judging              judging.Service
 	SubmissionFreeze     submissionfreeze.Service

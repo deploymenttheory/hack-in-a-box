@@ -19,6 +19,10 @@ import (
 // It is not a public tally, qualification result or announcement. The caller
 // holds this event transaction while retaining its own approval/reference.
 type Completion struct {
+	Deliberation       bool
+	Criteria           rubric.PublicDefinition
+	Reference          rubric.Reference
+	Assignments        []Assignment
 	RunID              uuid.UUID
 	Binding            string
 	Cards              []Card
@@ -42,10 +46,21 @@ func (s Service) CompletionInTransaction(
 	if !a.organiser {
 		return out, access.ErrForbidden
 	}
-	_, d, err := loadRun(ctx, tx, eventID, runID)
+	run, d, err := loadRun(ctx, tx, eventID, runID)
 	if err != nil {
 		return out, err
 	}
+	_, out.Deliberation, err = round(ctx, tx, eventID, runID)
+	if err != nil {
+		return out, err
+	}
+	out.Criteria = d.PublicDefinition
+	out.Reference = rubric.Reference{
+		ID:      run.RubricID,
+		Version: run.RubricVersion,
+		Digest:  d.PublicDigest(),
+	}
+	out.Assignments = []Assignment{}
 	if s.now().Before(a.dates.SubmissionCutoff) {
 		return out, access.ErrForbidden
 	}
@@ -101,6 +116,7 @@ func (s Service) CompletionInTransaction(
 			return out, err
 		}
 		out.Cards = append(out.Cards, cards...)
+		out.Assignments = append(out.Assignments, Assignment{TeamID: entry.TeamID, JudgeIDs: ids})
 		evidence, err := (submissionfreeze.Service{Pool: s.Pool, Now: s.now}).EvidenceForFinalInTransaction(
 			ctx,
 			tx,
