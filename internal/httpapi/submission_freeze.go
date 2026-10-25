@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -33,7 +35,10 @@ func (h handlers) ChangeSubmissionFreeze(
 	if err != nil {
 		return nil, err
 	}
-	c.ExpectedRevision = revision(r.Params.IfMatch)
+	c.ExpectedRevision, err = strconv.ParseInt(strings.Trim(r.Params.IfMatch, "\""), 10, 64)
+	if err != nil || c.ExpectedRevision < 0 {
+		return nil, access.ErrInvalid
+	}
 	p, err := h.SubmissionFreeze.Change(ctx, actor(ctx).ID, r.EventId, r.TeamId, c)
 	if err != nil {
 		return nil, fmt.Errorf("submission freeze change: %w", err)

@@ -2,13 +2,18 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/jobs"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
+	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 	"github.com/google/uuid"
 	"io"
@@ -107,6 +112,10 @@ func TestSubmissionFreezeHTTPAuthorityAllowlistsAndOriginalReceipt(t *testing.T)
 	if w := request(member, "POST", path, body, "garbage", true); w.Code != 400 {
 		t.Fatal("malformed reviewed revision accepted", w.Code, w.Body)
 	}
+	if response := request(member, "POST", path, body, "\"9223372036854775808\"", true); response.Code != 400 {
+		t.Fatal("overflowed reviewed revision accepted as zero", response.Code, response.Body)
+	}
+
 	w := request(member, "POST", path, body, "\"0\"", true)
 	if w.Code != 200 {
 		t.Fatal(w.Code, w.Body)
@@ -134,7 +143,7 @@ func TestSubmissionFreezeHTTPAuthorityAllowlistsAndOriginalReceipt(t *testing.T)
 		t.Fatal(err)
 	}
 	allowed := map[string]bool{}
-	for _, key := range []string{"current_reference_status","native_revision", "native_outcome", "current_submission_revision", "binding_current", "revision", "branch", "repository_id", "repository_url", "cutoff", "can_configure", "can_reconcile", "can_amend", "status", "source", "observations", "decisions", "current"} {
+	for _, key := range []string{"current_reference_status", "native_revision", "native_outcome", "current_submission_revision", "binding_current", "revision", "branch", "repository_id", "repository_url", "cutoff", "can_configure", "can_reconcile", "can_amend", "status", "source", "observations", "decisions", "current"} {
 		allowed[key] = true
 	}
 	for key := range fields {
@@ -150,8 +159,83 @@ func TestSubmissionFreezeHTTPAuthorityAllowlistsAndOriginalReceipt(t *testing.T)
 	if w = request(member, "GET", path+"/push-evidence", nil, "\"1\"", true); w.Code != 403 {
 		t.Fatal("participant got organiser evidence", w.Code, w.Body)
 	}
+	// Real accepted native final -> queued capture -> organiser reconciliation.
+	// Recovery and identical HTTP replay must re-project current authority.
+	deliverable := uuid.New()
+	defs := templates.EmptyDefinitions()
+	defs.Deliverables = []templates.Deliverable{{ID: deliverable, Title: "Build", Required: true, EvidenceKinds: []string{"repository"}}}
+	encodedDefs, _ := json.Marshal(defs)
+	if err = q.SaveEventDefinitions(ctx, dbgen.SaveEventDefinitionsParams{EventID: id, Definitions: encodedDefs}); err != nil {
+		t.Fatal(err)
+	}
+	native := submissions.Service{Pool: pool, Clock: service.Now}
+	nativePage, err := native.Read(ctx, member.ID, id, team)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = native.Submit(ctx, member.ID, id, team, nativePage.Revision, submissions.Command{Evidence: []submissions.Evidence{{DeliverableID: deliverable, Kind: "repository", Label: "Managed build", URL: "https://github.com/synthetic-org/synthetic-" + team.String()}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec("INSERT INTO github_app_integrations(event_id,app_id,app_slug,organization_id,organization,template_repository,credential_version,key_id,private_key_encrypted,installation_id) VALUES($1,42,'synthetic-app',99,'synthetic-org','template',1,'synthetic',decode('00','hex'),55)", id)
+	service.App = freezeHTTPObserver{}
+	queue, err := jobs.New(pool, slog.New(slog.NewTextHandler(io.Discard, nil)), map[string]jobs.Handler{submissionfreeze.HandlerKind: &service})
+	if err != nil {
+		t.Fatal(err)
+	}
+	service.Jobs = queue
+	now = c.SubmissionCutoff
+	if err = service.Schedule(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	var operation uuid.UUID
+	if err = pool.QueryRow(ctx, "SELECT id FROM operations WHERE event_id=$1 AND kind=$2", id, submissionfreeze.HandlerKind).Scan(&operation); err != nil {
+		t.Fatal(err)
+	}
+	if err = queue.Execute(ctx, operation); err != nil {
+		t.Fatal(err)
+	}
+	current, err := service.Read(ctx, owner.ID, id, team)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decisionID := uuid.New()
+	decisionBody := map[string]any{"request_id": decisionID, "action": "reconcile", "source_id": current.Source.ID, "native_revision": current.NativeRevision, "submission_revision": *current.CurrentSubmissionRevision, "sha": strings.Repeat("a", 40), "reason": "PRIVATE-HTTP-ORGANISER-REASON", "external_evidence": "PRIVATE-HTTP-PROVENANCE", "observation_ids": []uuid.UUID{current.Observations[0].ID}}
+	reviewedVersion := fmt.Sprintf("\"%d\"", current.Revision)
+	w = request(owner, "POST", path, decisionBody, reviewedVersion, true)
+	if w.Code != 200 {
+		t.Fatal(w.Code, w.Body)
+	}
+	var originalDecision submissionfreeze.Receipt
+	if err = json.Unmarshal(w.Body.Bytes(), &originalDecision); err != nil {
+		t.Fatal(err)
+	}
+	exec("INSERT INTO event_memberships(event_id,person_id,role) VALUES($1,$2,'mentor')", id, owner.ID)
+	exec("INSERT INTO policy_resources(event_id,id,kind) VALUES($1,$2,'team')", id, team)
+	exec("INSERT INTO resource_assignments(event_id,resource_id,person_id) VALUES($1,$2,$3)", id, team, owner.ID)
+	exec("UPDATE event_memberships SET active=false WHERE event_id=$1 AND person_id=$2 AND role='organiser'", id, owner.ID)
+	for _, response := range []*httptest.ResponseRecorder{request(owner, "GET", path+"/commands/"+decisionID.String(), nil, reviewedVersion, true), request(owner, "POST", path, decisionBody, reviewedVersion, true)} {
+		if response.Code != 200 || strings.Contains(response.Body.String(), "PRIVATE-HTTP-") {
+			t.Fatal("current mentor recovered private original HTTP decision", response.Code, response.Body)
+		}
+	}
+	var count int
+	if err = pool.QueryRow(ctx, "SELECT count(*) FROM submission_freeze_decisions d JOIN submission_freeze_sources s ON s.id=d.source_id WHERE s.event_id=$1", id).Scan(&count); err != nil || count != 1 {
+		t.Fatal("HTTP recovery/replay created a new decision", count, err)
+	}
+	var retained []byte
+	if err = pool.QueryRow(ctx, "SELECT result FROM submission_freeze_commands WHERE event_id=$1 AND request_id=$2", id, decisionID).Scan(&retained); err != nil || !strings.Contains(string(retained), "PRIVATE-HTTP-ORGANISER-REASON") {
+		t.Fatal("projection erased immutable original command", err)
+	}
+
 	exec("UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2", id, member.ID)
 	if w = request(member, "GET", path+"/commands/"+requestID.String(), nil, "\"1\"", true); w.Code != 403 {
 		t.Fatal("lost authority recovered private ACK", w.Code, w.Body)
 	}
+}
+
+type freezeHTTPObserver struct{}
+
+func (freezeHTTPObserver) ObserveBranch(context.Context, *dbgen.Queries, uuid.UUID, githubapp.RepositoryRequest, int64, string) (githubapp.BranchObservation, error) {
+	return githubapp.BranchObservation{SHA: strings.Repeat("a", 40), Status: "current_ref"}, nil
 }

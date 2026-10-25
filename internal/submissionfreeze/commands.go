@@ -66,12 +66,15 @@ func (s Service) Change(
 			if original.ActorID != actor || original.TeamID != teamID || original.Fingerprint != f {
 				return access.ErrConflict
 			}
-			return failure("decode original receipt", json.Unmarshal(original.Result, &out))
+			if err = json.Unmarshal(original.Result, &out); err != nil {
+				return failure("decode original receipt", err)
+			}
+			return s.projectReceipt(ctx, tx, actor, eventID, teamID, v, &out)
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return failure("Change", err)
 		}
-		p, err := s.page(ctx, q, v, eventID, teamID)
+		p, err := s.page(ctx, tx, actor, v, eventID, teamID)
 		if err != nil {
 			return failure("Change", err)
 		}
@@ -137,7 +140,7 @@ func (s Service) Change(
 		); err != nil {
 			return failure("Change", err)
 		}
-		return audit.Append(
+		err = audit.Append(
 			ctx,
 			q,
 			audit.Record{
@@ -149,6 +152,10 @@ func (s Service) Change(
 				Metadata: audit.Metadata{ReferenceID: &c.RequestID},
 			},
 		)
+		if err != nil {
+			return failure("audit command", err)
+		}
+		return s.projectReceipt(ctx, tx, actor, eventID, teamID, v, &out)
 	})
 	return out, failure("change", err)
 }
@@ -161,7 +168,8 @@ func (s Service) OriginalReceipt(
 ) (Recovery, error) {
 	var out Recovery
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
-		if _, err := s.scoped(ctx, tx, actor, eventID, teamID); err != nil {
+		v, err := s.scoped(ctx, tx, actor, eventID, teamID)
+		if err != nil {
 			return failure("OriginalReceipt", err)
 		}
 		row, err := q.SubmissionFreezeCommand(
@@ -178,7 +186,10 @@ func (s Service) OriginalReceipt(
 			return nil
 		}
 		out.Receipt = &Receipt{}
-		return failure("decode original receipt", json.Unmarshal(row.Result, out.Receipt))
+		if err = json.Unmarshal(row.Result, out.Receipt); err != nil {
+			return failure("decode original receipt", err)
+		}
+		return s.projectReceipt(ctx, tx, actor, eventID, teamID, v, out.Receipt)
 	})
 	return out, failure("original receipt", err)
 }

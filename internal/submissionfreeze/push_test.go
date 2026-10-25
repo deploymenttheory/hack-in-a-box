@@ -28,6 +28,7 @@ func TestSignedDelayedOutOfOrderEvidenceIsExactPagedAndNeverAutomaticProof(t *te
 	f := newFixture(t, pool)
 	f.submit("repository")
 	f.now = f.cfg.SubmissionCutoff.Add(time.Hour)
+	f.provider.value.SHA = strings.Repeat("b", 40)
 	f.capture()
 	p := f.read(f.owner)
 	keys, err := secretbox.Parse(
@@ -71,9 +72,11 @@ func TestSignedDelayedOutOfOrderEvidenceIsExactPagedAndNeverAutomaticProof(t *te
 		if i == 0 {
 			id = oldID
 		}
+		sha := strings.Repeat("a", 40)
 		at := f.cfg.SubmissionCutoff.Add(-time.Minute)
 		if i == 103 {
 			at = f.cfg.SubmissionCutoff.Add(time.Minute)
+			sha = strings.Repeat("b", 40)
 		}
 		if i == 104 {
 			at = f.cfg.SubmissionCutoff.Add(-5 * time.Minute)
@@ -87,7 +90,7 @@ func TestSignedDelayedOutOfOrderEvidenceIsExactPagedAndNeverAutomaticProof(t *te
 					"pushed_at": at.Unix(),
 				},
 				"ref":    "refs/heads/main",
-				"after":  strings.Repeat("a", 40),
+				"after":  sha,
 				"before": strings.Repeat("b", 40),
 				"forced": true,
 				"commits": []any{
@@ -147,7 +150,8 @@ func TestSignedDelayedOutOfOrderEvidenceIsExactPagedAndNeverAutomaticProof(t *te
 		t.Fatal("exact older retained evidence lost")
 	}
 	p = f.read(f.owner)
-	if p.Status != "unresolved" || p.Current != nil {
+	if p.Status != "unresolved" || p.Current != nil ||
+		p.Observations[0].SHA != strings.Repeat("b", 40) {
 		t.Fatal("delayed/out-of-order webhook fabricated cutoff proof", p)
 	}
 	c := f.decision(p, "reconcile")
@@ -157,7 +161,9 @@ func TestSignedDelayedOutOfOrderEvidenceIsExactPagedAndNeverAutomaticProof(t *te
 		t.Fatal(err)
 	}
 	p = f.read(f.owner)
-	if p.Current == nil || p.Current.PushIDs[0] != oldID || len(p.Observations) != 1 {
+	if p.Current == nil || p.Current.SHA != strings.Repeat("a", 40) ||
+		p.Current.PushIDs[0] != oldID ||
+		len(p.Observations) != 1 {
 		t.Fatal(p)
 	}
 }

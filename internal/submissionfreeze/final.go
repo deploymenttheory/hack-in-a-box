@@ -2,125 +2,71 @@ package submissionfreeze
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
-	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 )
 
-// FinalEvidence is an exact native-final projection for trusted assessment
-// owners. No reconciliation prose or observation payload is exposed.
+// FinalEvidence is an exact current native-final projection. It contains no
+// private original revision, historical SHA, decision prose or candidate payload.
 type FinalEvidence struct {
 	SourceID           uuid.UUID
 	SubmissionRevision int64
-	CutoffSource       Source
+	RepositoryID       int64
+	RepositoryURL      string
+	Branch             string
+	Cutoff             time.Time
 	Status             string
 	DecisionID         *uuid.UUID
+	DecidedAt          *time.Time
 	SHA                string
 }
 
-// EvidenceForFinalInTransaction does not grant actor permissions. The owning
-// assessor MUST first enforce its current assignment/window/conflict policy in
-// this same event-locked transaction. No public judge shortcut calls this seam.
-// A different native final, inactive entry or unresolved evidence never returns
-// a verified code revision. File/URL-only native finals return not_applicable.
+// EvidenceForFinalInTransaction preserves actual parent/team/assignment/audience
+// policy via the native owner and contains no public judge shortcut. The owning
+// assessment module must additionally enforce its own scoring window/conflicts
+// in this same event-locked transaction. No unscoped metadata can grant access.
 func (s Service) EvidenceForFinalInTransaction(
 	ctx context.Context,
 	tx pgx.Tx,
-	eventID, teamID, entryID uuid.UUID,
+	actor, eventID, teamID, entryID uuid.UUID,
 	revision int64,
 ) (FinalEvidence, error) {
 	var out FinalEvidence
-	q := dbgen.New(tx)
-	entry, err := q.CompetitionEntry(
-		ctx,
-		dbgen.CompetitionEntryParams{EventID: eventID, TeamID: teamID},
-	)
+	v, err := s.scoped(ctx, tx, actor, eventID, teamID)
 	if err != nil {
-		return out, failure("assessment entry", err)
+		return out, err
 	}
-	if entry.ID != entryID || !entry.Active {
+	if !v.authority.Active || v.native.EntryID != entryID {
 		return out, access.ErrForbidden
 	}
-	team, err := q.HackTeam(ctx, dbgen.HackTeamParams{EventID: eventID, ID: teamID})
-	if err != nil {
-		return out, failure("assessment team", err)
-	}
-	if team.State == "disbanded" {
-		return out, access.ErrForbidden
-	}
-	state, err := q.SubmissionState(
-		ctx,
-		dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID},
-	)
-	if err != nil {
-		return out, failure("assessment final", err)
-	}
-	if state.Outcome != "frozen" || !state.ActiveRevision.Valid ||
-		state.ActiveRevision.Int64 != revision {
+	if v.native.Outcome != "frozen" || v.native.Final == nil ||
+		v.native.Final.Revision != revision {
 		return out, access.ErrConflict
 	}
-	final, err := q.SubmissionRevision(
-		ctx,
-		dbgen.SubmissionRevisionParams{EventID: eventID, TeamID: teamID, Revision: revision},
-	)
+	p, err := s.page(ctx, tx, actor, v, eventID, teamID)
 	if err != nil {
-		return out, failure("assessment native document", err)
-	}
-	var document submissions.Document
-	if err = json.Unmarshal(final.Document, &document); err != nil {
-		return out, failure("assessment applicability", err)
-	}
-	managed, uncaptured, _ := referenceFacts(document, "")
-	if len(managed) == 0 && len(uncaptured) == 0 {
-		return FinalEvidence{SubmissionRevision: revision, Status: "not_applicable"}, nil
-	}
-
-	row, err := q.SubmissionFreezeSource(
-		ctx,
-		dbgen.SubmissionFreezeSourceParams{EventID: eventID, TeamID: teamID},
-	)
-	if err != nil {
-		return out, failure("assessment source", err)
-	}
-	var src Source
-	if err = json.Unmarshal(row.Definition, &src); err != nil {
-		return out, fmt.Errorf("decode assessment source: %w", err)
+		return out, err
 	}
 	out = FinalEvidence{
-		SourceID:           src.ID,
 		SubmissionRevision: revision,
-		CutoffSource:       src,
-		Status:             src.Status,
+		Status:             p.Status,
+		Cutoff:             p.Cutoff,
+		RepositoryID:       p.RepositoryID,
+		RepositoryURL:      p.RepositoryURL,
+		Branch:             p.Branch,
 	}
-	if src.EntryID != entryID {
-		return out, access.ErrConflict
+	if p.Source != nil {
+		out.SourceID = p.Source.ID
 	}
-	target := src.SubmissionRevision
-
-	decisions, err := q.SubmissionFreezeDecisions(ctx, src.ID)
-	if err != nil {
-		return out, failure("assessment decision", err)
-	}
-	if len(decisions) > 0 {
-		var d Decision
-		if err = json.Unmarshal(decisions[len(decisions)-1].Definition, &d); err != nil {
-			return out, fmt.Errorf("decode assessment decision: %w", err)
-		}
-		target = &d.SubmissionRevision
-		out.Status = "completed"
-		out.DecisionID = &d.ID
-		out.SHA = d.SHA
-	}
-	if target == nil || *target != revision {
-		out.Status = "native_revision_mismatch"
-		out.SHA = ""
-		out.DecisionID = nil
+	if p.BindingCurrent && p.Status == "completed" && p.Current != nil &&
+		p.Current.SubmissionRevision == revision {
+		out.SHA = p.Current.SHA
+		out.DecisionID = &p.Current.ID
+		out.DecidedAt = &p.Current.At
 	}
 	return out, nil
 }

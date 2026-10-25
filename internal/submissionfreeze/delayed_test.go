@@ -74,6 +74,7 @@ func TestDelayedCapturePreservesOriginalNativeSettlement(t *testing.T) {
 			e, err := f.service.EvidenceForFinalInTransaction(
 				t.Context(),
 				tx,
+				f.owner,
 				f.event,
 				f.team,
 				got.Source.EntryID,

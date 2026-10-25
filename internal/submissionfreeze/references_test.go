@@ -127,7 +127,7 @@ func TestAdditionalExternalReferencesAndPrivateOriginalHistoryStayScoped(t *test
 			ID:            extra,
 			Title:         "Other reference",
 			EvidenceKinds: []string{"repository"},
-			Audience:      []string{"organiser"},
+			Audience:      []string{"mentor"},
 		},
 	}
 	raw, _ := json.Marshal(defs)

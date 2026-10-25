@@ -532,10 +532,11 @@ func (s Service) bindSourceRepository(
 }
 
 func integrationMatches(a dbgen.GithubAppIntegration, b binding) bool {
-	return !(a.AppID != b.Request.Configuration.AppID || a.AppSlug != b.Request.Configuration.AppSlug ||
-		a.OrganizationID != b.Request.Configuration.OrganizationID ||
-		a.Organization != b.Request.Configuration.Organization ||
-		a.TemplateRepository != b.Request.Configuration.TemplateRepository ||
-		a.InstallationID != b.Request.InstallationID ||
-		a.CredentialVersion != b.CredentialVersion)
+	return a.AppID == b.Request.Configuration.AppID &&
+		a.AppSlug == b.Request.Configuration.AppSlug &&
+		a.OrganizationID == b.Request.Configuration.OrganizationID &&
+		a.Organization == b.Request.Configuration.Organization &&
+		a.TemplateRepository == b.Request.Configuration.TemplateRepository &&
+		a.InstallationID == b.Request.InstallationID &&
+		a.CredentialVersion == b.CredentialVersion
 }

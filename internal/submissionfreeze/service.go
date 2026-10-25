@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -126,15 +125,18 @@ func head(ctx context.Context, q *dbgen.Queries, eventID, teamID uuid.UUID) (int
 
 func (s Service) page(
 	ctx context.Context,
-	q *dbgen.Queries,
+	tx pgx.Tx,
+	actor uuid.UUID,
 	v scope,
 	eventID, teamID uuid.UUID,
 ) (Page, error) {
+	q := dbgen.New(tx)
 	out, err := s.configurationPage(ctx, q, v, eventID, teamID)
 	if err != nil {
 		return out, failure("page", err)
 	}
-	if out.CurrentReferenceStatus == "not_applicable" && !v.authority.Member && !v.authority.Organiser {
+	if out.CurrentReferenceStatus == "not_applicable" && !v.authority.Member &&
+		!v.authority.Organiser {
 		out.Status = "not_applicable"
 		out.RepositoryID = 0
 		out.RepositoryURL = ""
@@ -179,7 +181,7 @@ func (s Service) page(
 		return out, failure("page", err)
 	}
 	s.projectCapabilities(v, &out)
-	if err = filterAudience(v, &out); err != nil {
+	if err = s.projectPage(ctx, tx, actor, v, &out); err != nil {
 		return Page{}, err
 	}
 	return out, nil
@@ -192,7 +194,7 @@ func (s Service) Read(ctx context.Context, actor, eventID, teamID uuid.UUID) (Pa
 		if err != nil {
 			return failure("Read", err)
 		}
-		out, err = s.page(ctx, q, v, eventID, teamID)
+		out, err = s.page(ctx, tx, actor, v, eventID, teamID)
 		return failure("Read", err)
 	})
 	return out, failure("read", err)
@@ -218,7 +220,7 @@ func (s Service) PushEvidence(
 		if !v.authority.Organiser {
 			return access.ErrForbidden
 		}
-		p, err := s.page(ctx, q, v, eventID, teamID)
+		p, err := s.page(ctx, tx, actor, v, eventID, teamID)
 		if err != nil {
 			return failure("PushEvidence", err)
 		}
@@ -305,13 +307,12 @@ func (s Service) configurationPage(
 	if err == nil {
 		out.Branch = c.Branch
 	}
-	out.CurrentReferenceStatus = "no_final"
-	if v.native.Final != nil {
-		managed, uncaptured, _ := referenceFacts(v.native.Final.Document, out.RepositoryURL)
-		out.CurrentReferenceStatus = referenceStatus(managed, uncaptured)
-		if v.native.Outcome == "frozen" && out.CurrentReferenceStatus == "not_applicable" {
-			out.Status = "not_applicable"
-		}
+	out.CurrentReferenceStatus, err = currentReferences(ctx, q, v, out.RepositoryURL)
+	if err != nil {
+		return out, err
+	}
+	if v.native.Outcome == "frozen" && out.CurrentReferenceStatus == "not_applicable" {
+		out.Status = "not_applicable"
 	}
 
 	out.CanConfigure = v.event.WritesAllowed && v.event.Stage != "cancelled" &&
@@ -357,16 +358,6 @@ func (s Service) projectCapabilities(v scope, out *Page) {
 	if out.CurrentReferenceStatus == "not_applicable" && v.native.Outcome == "frozen" {
 		out.Status = "not_applicable"
 	}
-
-	if !v.authority.Organiser {
-		for i := range out.Decisions {
-			out.Decisions[i].Reason = ""
-			out.Decisions[i].ExternalEvidence = ""
-		}
-		if len(out.Decisions) > 0 {
-			out.Current = &out.Decisions[len(out.Decisions)-1]
-		}
-	}
 }
 
 func (s Service) loadHistory(ctx context.Context, q *dbgen.Queries, out *Page) error {
@@ -395,72 +386,6 @@ func (s Service) loadHistory(ctx context.Context, q *dbgen.Queries, out *Page) e
 	if len(out.Decisions) > 0 {
 		out.Current = &out.Decisions[len(out.Decisions)-1]
 		out.Status = "completed"
-	}
-	return nil
-}
-
-func audienceAllows(a access.TeamAuthority, roles []string) bool {
-	return a.Member || a.Organiser ||
-		((a.Mentor || a.Reviewer) && slices.Contains(roles, "mentor")) ||
-		(a.Judge && slices.Contains(roles, "judge"))
-}
-
-func filterAudience(v scope, out *Page) error {
-	if v.authority.Member || v.authority.Organiser {
-		return nil
-	}
-	roles := out.Source.Audiences
-	if out.Current != nil {
-		roles = out.Current.Audiences
-	}
-	if out.Source.Status != "not_applicable" && !audienceAllows(v.authority, roles) {
-		return access.ErrForbidden
-	}
-	visible := map[uuid.UUID]bool{}
-	if v.native.Final != nil {
-		for _, e := range v.native.Final.Evidence {
-			visible[e.DeliverableID] = true
-		}
-	}
-	selectIDs := func(ids []uuid.UUID) []uuid.UUID {
-		allowed := []uuid.UUID{}
-		for _, id := range ids {
-			if visible[id] {
-				allowed = append(allowed, id)
-			}
-		}
-		return allowed
-	}
-	out.Source.ManagedEvidenceIDs = selectIDs(out.Source.ManagedEvidenceIDs)
-	out.Source.UncapturedEvidenceIDs = selectIDs(out.Source.UncapturedEvidenceIDs)
-	if !audienceAllows(v.authority, out.Source.Audiences) {
-		out.Source.SubmissionRevision = nil
-	}
-	history := []Decision{}
-	for _, d := range out.Decisions {
-		if audienceAllows(v.authority, d.Audiences) {
-			d.ManagedEvidenceIDs = selectIDs(d.ManagedEvidenceIDs)
-			d.UncapturedEvidenceIDs = selectIDs(d.UncapturedEvidenceIDs)
-			history = append(history, d)
-		}
-	}
-	out.Decisions = history
-	if len(history) > 0 {
-		out.Current = &out.Decisions[len(out.Decisions)-1]
-	}
-	// Observations may reveal a private original code SHA. Only an authorised
-	// original audience sees them; a later public amendment exposes its own SHA.
-	if !audienceAllows(v.authority, out.Source.Audiences) {
-		out.Observations = []Observation{}
-	}
-	if out.Source.Status == "not_applicable" {
-		out.RepositoryID = 0
-		out.RepositoryURL = ""
-		out.Branch = ""
-		out.Source.RepositoryID = 0
-		out.Source.RepositoryURL = ""
-		out.Source.Branch = ""
-		out.Source.RepositoryProvenance = uuid.Nil
 	}
 	return nil
 }

@@ -36,7 +36,7 @@ type recordedApp struct {
 }
 
 func (p *recordedApp) ObserveBranch(
-	_ context.Context,
+	ctx context.Context,
 	_ *dbgen.Queries,
 	_ uuid.UUID,
 	_ githubapp.RepositoryRequest,
@@ -47,7 +47,11 @@ func (p *recordedApp) ObserveBranch(
 	defer p.mu.Unlock()
 	if p.entered != nil {
 		close(p.entered)
-		<-p.release
+		select {
+		case <-p.release:
+		case <-ctx.Done():
+			return githubapp.BranchObservation{}, ctx.Err()
+		}
 	}
 	p.calls++
 	p.repo = repo
@@ -492,6 +496,17 @@ func TestNativeCutoffEvidence(t *testing.T) {
 		}
 		wg.Wait()
 		close(errs)
+		success := 0
+		for err := range errs {
+			if err == nil {
+				success++
+			} else if !strings.Contains(err.Error(), "delivery already owned") {
+				t.Fatal("unexpected concurrent capture failure", err)
+			}
+		}
+		if success == 0 {
+			t.Fatal("no capture completed")
+		}
 		p := f.read(f.owner)
 		if len(p.Observations) != 1 || f.provider.calls != 1 {
 			t.Fatal(p)

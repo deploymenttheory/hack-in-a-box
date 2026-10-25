@@ -133,3 +133,45 @@ func referenceStatus(managed, uncaptured []uuid.UUID) string {
 	}
 	return "not_applicable"
 }
+
+// Applicability uses the actual native final, not an audience-filtered absence.
+// Current assessment access separately requires a visible managed reference;
+// a private or unrelated reference cannot grant even source metadata access.
+func currentReferences(
+	ctx context.Context,
+	q *dbgen.Queries,
+	v scope,
+	canonical string,
+) (string, error) {
+	privileged := v.authority.Member || v.authority.Organiser
+	if v.native.Final == nil {
+		if !privileged {
+			return "", access.ErrForbidden
+		}
+		return "no_final", nil
+	}
+	row, err := q.SubmissionRevision(
+		ctx,
+		dbgen.SubmissionRevisionParams{
+			EventID:  v.event.ID,
+			TeamID:   v.native.TeamID,
+			Revision: v.native.Final.Revision,
+		},
+	)
+	if err != nil {
+		return "", failure("current native references", err)
+	}
+	var document submissions.Document
+	if err = json.Unmarshal(row.Document, &document); err != nil {
+		return "", failure("decode current reference applicability", err)
+	}
+	managed, uncaptured, _ := referenceFacts(document, canonical)
+	status := referenceStatus(managed, uncaptured)
+	if !privileged && status != "not_applicable" {
+		visible, _, _ := referenceFacts(v.native.Final.Document, canonical)
+		if len(visible) == 0 {
+			return "", access.ErrForbidden
+		}
+	}
+	return status, nil
+}

@@ -173,3 +173,49 @@ are skipped without `HACKBOX_INTEGRATION=1` and are not claimed by that compile.
    request or automatic write replay because an acknowledgement was lost.
 6. Keep original source, receipt and amendment history. Archived competition is
    read-only; do not bypass its policy or roll back populated migration 50.
+
+## Independent preflight corrections after draft f16fc7b
+
+The exact published draft's local native run found that deriving no-repository
+applicability from an audience-filtered document could return a false
+`not_applicable` for private repository evidence. Applicability now reads the
+actual native final, separately requiring visible managed-reference
+correspondence before assessment source metadata. The original private-history,
+reference-repair and exact-final regressions passed after correction (13.614 s,
+`/private/tmp/hackbox96-applicability-green.log`).
+
+Independent Spec review identified two additional paths, both reproduced with
+actual native PostgreSQL/race (RED 5.485 s,
+`/private/tmp/hackbox96-ack-target-privacy-red.log`): organiser role loss disclosed
+private prose through original lookup/replay, and an original file-only source
+could leave a mentor-only amendment selected after a different judge-visible
+native final became current. The correction uses the native
+`VisibleEvidenceInTransaction` projection for **each decision's own exact target**
+under current authority. Existing judge history remains restricted to the
+selected native final. One shared projection governs selected/history decisions,
+new acknowledgements, identical replay and original lookup; hidden bodies may be
+null while exact safe request metadata remains. Original stored ACKs are never
+rewritten. Expanded correction cases passed (31.291 s,
+`/private/tmp/hackbox96-ack-target-privacy-green.log`).
+
+Authenticated HTTP independently reproduced the prose disclosure on f16fc7b with
+only the new synthetic test overlaid in a temporary detached worktree (RED
+10.300 s, `/private/tmp/hackbox96-ack-http-red.log`). The unchanged HTTP regression
+passed with the correction (15.122 s,
+`/private/tmp/hackbox96-ack-http-green.log`), retaining one original decision and
+unchanged private original storage. The temporary worktree and its containers
+are removed; no additional implementation lane was started.
+
+The exact-final assessment seam itself now requires an actor and applies the
+same native current parent/team/assignment/audience policy. Its result contains
+only the authorised current receipt fields, not an entire historical source.
+The future scoring owner must additionally enforce its own scoring window and
+conflict rules. Strict If-Match parsing rejects integer overflow instead of
+silently treating it as version zero. The signed-push fixture distinguishes a
+before-cutoff SHA from a later currently observed SHA; neither delayed nor
+out-of-order delivery automatically chooses a historical head.
+
+Source compilation and TypeScript type checking pass. The final complete native
+run, configured lint, explicit gofmt check, generation parity and final-head CI
+are still pending; the earlier CI Go job stopped at formatting before running
+its tests. No failed CI job is represented as native-test execution or success.
