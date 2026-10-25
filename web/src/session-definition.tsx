@@ -1,0 +1,15 @@
+import './session-bookings.css'
+import { Field, Input, Select } from './components/ui/fields'
+import type { components } from './api/schema.gen'
+type Definition=components['schemas']['SessionDefinition']
+// Native wall-time resolution requires seconds. This is format normalization,
+// never a timezone conversion, device-clock gate or DST policy decision.
+export function sessionLocalWall(value:string){return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)?`${value}:00`:value}
+export function matchSessionDefinition(actual:Definition|undefined,reviewed:Definition){return !!actual&&actual.capacity===reviewed.capacity&&actual.duration_minutes===reviewed.duration_minutes&&actual.room===reviewed.room&&actual.meeting_url===reviewed.meeting_url&&actual.booking_opens.wall===reviewed.booking_opens.wall&&actual.booking_opens.dst_choice===reviewed.booking_opens.dst_choice&&actual.booking_closes.wall===reviewed.booking_closes.wall&&actual.booking_closes.dst_choice===reviewed.booking_closes.dst_choice&&actual.facilitator_ids.length===reviewed.facilitator_ids.length&&new Set(actual.facilitator_ids).size===actual.facilitator_ids.length&&actual.facilitator_ids.every(id=>reviewed.facilitator_ids.includes(id))}
+
+export function SessionWindowFields({definition,change}:{definition:Definition;change:(key:'booking_opens'|'booking_closes',value:Definition['booking_opens'])=>void}){
+ return <>{(['booking_opens','booking_closes'] as const).map(key=><div key={key}><Field label={key==='booking_opens'?'Booking opens (event-local)':'Booking closes (event-local)'}><Input type="datetime-local" step={1} required value={definition[key].wall} onChange={e=>change(key,{...definition[key],wall:sessionLocalWall(e.target.value)})}/></Field><Field label={`${key==='booking_opens'?'Opening':'Closing'} repeated-time choice`}><Select value={definition[key].dst_choice} onChange={e=>change(key,{...definition[key],dst_choice:e.target.value as ''|'earlier'|'later'})}><option value="">No repeated-time choice</option><option value="earlier">Earlier occurrence</option><option value="later">Later occurrence</option></Select></Field></div>)}</>
+}
+export function SessionDefinitionSummary({definition,people=[]}:{definition:Definition;people?:{id:string;name:string}[]}){
+ return <dl className="fleet-session-facts">{[['Capacity',definition.capacity],['Duration',`${definition.duration_minutes} minutes`],['Room',definition.room||'Not supplied'],['Meeting URL',definition.meeting_url||'Not supplied'],['Opens',definition.booking_opens.wall+' · '+(definition.booking_opens.dst_choice||'No repeated-time choice')],['Closes',definition.booking_closes.wall+' · '+(definition.booking_closes.dst_choice||'No repeated-time choice')]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}<div><dt>Facilitators</dt><dd>{definition.facilitator_ids.length?<ul>{definition.facilitator_ids.map(id=><li key={id}>{people.find(person=>person.id===id)?.name??'Retained assignment reference'} · {id}</li>)}</ul>:'None assigned'}</dd></div></dl>
+}

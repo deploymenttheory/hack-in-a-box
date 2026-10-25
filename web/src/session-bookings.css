@@ -1,0 +1,9 @@
+@layer components {
+ .fleet-session-facts { display: grid; gap: var(--space-2); margin-block: var(--space-4); min-width: 0; }
+ .fleet-session-facts > div { display: grid; grid-template-columns: minmax(6rem, 0.7fr) minmax(0, 1fr); gap: var(--space-3); border-bottom: 1px solid var(--border); padding-block: var(--space-1); }
+ .fleet-session-reference { overflow-wrap: anywhere; }
+ .fleet-session-facts dt { color: var(--muted-foreground); font-weight: var(--weight-body); }
+ .fleet-session-facts dd { margin: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 47.99rem) { .fleet-session-collection .fleet-record-heading { flex-wrap: wrap; } .fleet-session-collection .fleet-record-heading h2 { flex-basis: 100%; min-inline-size: 0; overflow-wrap: anywhere; } .fleet-session-collection .fleet-record-heading .fleet-button { max-inline-size: 100%; white-space: normal; text-align: start; } }

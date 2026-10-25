@@ -4,7 +4,7 @@ import { useIdentity } from './session'
 
 type State = components['schemas']['SMTPTestDeliveryStatus']['state']
 export type QueuedEmailTest = { testID: string; campaignID: string; campaignVersion: number; providerRevision: string; state?: State }
-type Metadata = { intentFingerprint?: string; intentID?: string; action: string; revision?: number; requestID?: string; resourceID?: string; expectedVersion?: number }
+type Metadata = { intentFingerprint?: string; intentID?: string; action: string; revision?: number; requestID?: string; resourceID?: string; subjectID?: string; expectedVersion?: number }
 type Attempt = { id: string; operation: string; revision: number; command: Metadata; state: 'pending' | 'unknown'; blocks: boolean }
 type Memory = { tests: Record<string, QueuedEmailTest[]>; commands: Record<string, Attempt[]> }
 type Store = { memory: Memory; change: (update: (value: Memory) => Memory) => boolean }
@@ -51,13 +51,15 @@ export function useCommunicationCommands(owner: string) {
       const { intentID, action, revision, requestID } = attempt.command
       const intentFingerprint = typeof attempt.command.intentFingerprint === 'string' && /^[0-9a-f]{64}$/.test(attempt.command.intentFingerprint) ? attempt.command.intentFingerprint : undefined
       const resourceID = typeof attempt.command.resourceID === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.command.resourceID) && attempt.command.resourceID !== '00000000-0000-0000-0000-000000000000' ? attempt.command.resourceID : undefined
+      const subjectID = typeof attempt.command.subjectID === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.command.subjectID) && attempt.command.subjectID !== '00000000-0000-0000-0000-000000000000' ? attempt.command.subjectID : undefined
       const expectedVersion = typeof attempt.command.expectedVersion === 'number' && Number.isSafeInteger(attempt.command.expectedVersion) && attempt.command.expectedVersion > 0 ? attempt.command.expectedVersion : undefined
-      update(previous => existing ? previous.map(item => item.id === existing ? { ...item, state: 'pending', blocks: true } : item) : [...previous, { id, operation: attempt.operation, revision: attempt.revision, command: { intentID, action, revision, requestID, resourceID, expectedVersion, intentFingerprint }, state: 'pending', blocks: true }])
+      update(previous => existing ? previous.map(item => item.id === existing ? { ...item, state: 'pending', blocks: true } : item) : [...previous, { id, operation: attempt.operation, revision: attempt.revision, command: { intentID, action, revision, requestID, resourceID, subjectID, expectedVersion, intentFingerprint }, state: 'pending', blocks: true }])
       return id
     },
     complete: (id: string) => update(previous => previous.filter(attempt => attempt.id !== id)),
     uncertain: (id: string) => update(previous => previous.map(attempt => attempt.id === id ? { ...attempt, state: 'unknown', blocks: true } : attempt)),
-    selectNewBase: () => update(previous => previous.some(attempt => attempt.state === 'pending') ? previous : previous.map(attempt => ({ ...attempt, blocks: false }))) }
+    selectNewBase: () => update(previous => previous.some(attempt => attempt.state === 'pending') ? previous : previous.map(attempt => ({ ...attempt, blocks: false }))),
+    selectResourceBase: (resourceID: string) => update(previous => previous.some(attempt => attempt.command.resourceID === resourceID && attempt.state === 'pending') ? previous : previous.map(attempt => attempt.command.resourceID === resourceID ? { ...attempt, blocks: false } : attempt)) }
 }
 // Read-only projection for an explicit actor/session/domain/event namespace.
 // It cannot complete attempts or expose another operation's private payload.

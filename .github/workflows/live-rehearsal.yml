@@ -31,9 +31,19 @@ jobs:
       - run: npm --prefix web run build
       - name: Real PostgreSQL, native HTTP and production browsers
         run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestLiveRehearsal(NativeAuthority|Browsers|SupportClockPropagation)$' -count=1 -timeout=10m
+      - name: Native optional session booking browsers
+        env:
+          HACKBOX_SESSION_BROWSER: '1'
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestSessionBookingBrowsers$' -count=1 -timeout=5m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: native-live-rehearsal-proof
           path: web/test-results-live
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: native-session-booking-proof
+          path: web/test-results-sessions-native
           retention-days: 7

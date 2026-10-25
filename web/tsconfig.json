@@ -8,5 +8,5 @@
     "baseUrl": ".", "paths": { "@/*": ["./src/*"] },
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"]
   },
-"include": ["live-rehearsal", "playwright.live.config.ts", "src", "vite.config.ts", "vite.patterns.config.ts", "vite.styleguide.config.ts", "playwright.patterns.config.ts", "playwright.styleguide.config.ts", "playwright.today.config.ts", "playwright.today-visual.config.ts", "styleguide-tests", "playwright.config.ts", "playwright.planning.config.ts", "playwright.planning.public.config.ts", "e2e"]
+"include": ["live-rehearsal", "playwright.live.config.ts", "src", "vite.config.ts", "vite.patterns.config.ts", "vite.styleguide.config.ts", "playwright.patterns.config.ts", "playwright.styleguide.config.ts", "playwright.sessions.config.ts", "playwright.sessions-native.config.ts", "playwright.sessions-visual.config.ts", "session-native", "playwright.today.config.ts", "playwright.today-visual.config.ts", "styleguide-tests", "playwright.config.ts", "playwright.planning.config.ts", "playwright.planning.public.config.ts", "e2e"]
 }

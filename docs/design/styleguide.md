@@ -256,3 +256,23 @@ actions. Native deep links and guarded local navigation preserve existing
 pending/unknown command owners; current observations do not confirm an earlier
 command. Labels communicate urgency without colour; role controls retain native
 keyboard semantics. Private Today projections are excluded from print.
+
+## Optional session places
+
+`SessionCollection`, `SessionFacts` and `SessionDecision` are production exports
+used by both portals and the independent synthetic guide. They display compact
+discovery/personal agenda facts, separate session waitlists, capacity shortfalls,
+current event-local dates and captured reviews. Keep the initiating control
+mounted/hidden and return focus on cancellation. Pending locks dismissal; unknown
+permits an explicit original-acknowledgement read without automatic write replay.
+The owner captures source revision, own booking/attendance revision, original UUID
+and exact current subject. Current reads never replace an original receipt.
+
+The native adapter derives roster visibility from `can_read_attendance` and
+attendance changes from the distinct `can_record_attendance`; neither grants
+logistics or assessment access. Current roster denial must unmount its private
+names and held review even while the general session remains readable. Calendar
+sequences, source/queue history, provider acceptance and delivery remain distinct.
+No session place grants event admission, minimum attendance or team membership.
+The static guide's callbacks are synthetic local observations, never native
+receipts, API calls, private storage or provider effects.

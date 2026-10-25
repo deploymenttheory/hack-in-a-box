@@ -63,7 +63,7 @@
 .guide-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); list-style: none; gap: 0 var(--space-4); padding: 0; margin: var(--space-4) 0; }
 .guide-icons li { display: flex; align-items: center; gap: var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--border); font-size: var(--text-caption); }
 .guide-frame-host { min-width: 0; }
-.guide-example-frame { display: block; width: 100%; height: 56rem; border: 0; outline: 1px solid var(--border); background: var(--background); }
+.guide-example-frame { display: block; width: 100%; height: min(56rem, 85dvh); border: 0; outline: 1px solid var(--border); background: var(--background); }
 .guide-frame-caption { font-size: var(--text-caption); color: var(--muted-foreground); margin-block: var(--space-3); }
 .guide-frame-content { padding: var(--space-4); min-height: 100vh; }
 .guide-frame-content > h1 { font-size: var(--text-page); margin: 0 0 var(--space-3); }
