@@ -87,6 +87,22 @@ commit; its matrix correction excludes obsolete 4.1.1 and includes current 4.1.2
 The initial extraction crossed a criterion boundary; the corrected inventory
 matches the pinned recommendation. No standard criterion is marked passed.
 
+## Extended native checkpoint
+
+Clean source `7289af26d5991d86c93859cd2ada64a0d9616737` passed **5/5 native
+keyboard journeys, 20.7s**, real-PG/race package **37.888s** (test owner 36.36s). The extension adds
+Today → private help → official answer collection/reader/return and actual native
+objective/success-measure save/version/return. The saved unknown baseline remains
+null; no achieved outcome is fabricated. Fourteen visible-state scan points are
+exercised across these five journeys. [Extended proof](extended-native-proof.json)
+records exact source and clean start/end. The separate guide proof remains at its
+original `beec062` source; it is not relabelled as a new execution.
+
+This still does not complete registration/team editing, full triage contention,
+final judge/practice/showcase, manual standards assessment or actual stable
+browser/device/screen-reader/touch/zoom acceptance. All corresponding rows remain
+pending, and full #122 stays Draft/open.
+
 ## Current diagnostic checkpoint
 
 Executed with dirty worktree diagnostics, not yet a final-source certification:

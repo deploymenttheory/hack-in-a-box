@@ -1,0 +1,47 @@
+{
+  "source_start": {
+    "commit": "7289af26d5991d86c93859cd2ada64a0d9616737",
+    "clean": true
+  },
+  "source_end": {
+    "commit": "7289af26d5991d86c93859cd2ada64a0d9616737",
+    "clean": true
+  },
+  "same_commit": true,
+  "overall": "passed",
+  "duration_ms": 20673.841,
+  "host": {
+    "os": "darwin",
+    "release": "27.0.0",
+    "architecture": "arm64",
+    "node": "v22.23.3"
+  },
+  "evidence_kind": "supplementary automated engine and keyboard checks; no manual or retail-device pass implied",
+  "tests": [
+    {
+      "title": " > chromium > native.spec.ts > native participant reaches rules, reviews and acknowledges the exact version using only the keyboard",
+      "status": "passed",
+      "duration_ms": 3949
+    },
+    {
+      "title": " > chromium > native.spec.ts > native mentor reaches private fields and reviews unsent evidence through keyboard navigation",
+      "status": "passed",
+      "duration_ms": 2095
+    },
+    {
+      "title": " > chromium > native.spec.ts > native administrator can reach MC review and correction without a pointer",
+      "status": "passed",
+      "duration_ms": 2696
+    },
+    {
+      "title": " > chromium > native.spec.ts > native participant keyboard journey reaches help context and published official answers",
+      "status": "passed",
+      "duration_ms": 4339
+    },
+    {
+      "title": " > chromium > native.spec.ts > native administrator creates an objective and success measure entirely by keyboard",
+      "status": "passed",
+      "duration_ms": 6457
+    }
+  ]
+}
