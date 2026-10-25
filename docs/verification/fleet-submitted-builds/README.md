@@ -216,3 +216,26 @@ older a242 images/proof keep their original source attribution.
 The actual existing regular-portal pending/accepted/ambiguous invitation and
 missing-verified-account scenarios also passed 4/4 in 2.1s. These HTTP-fixture tests
 verify the affected acceptance guidance without claiming a real GitHub effect.
+
+## Corrected-parent durable checkpoint — 3700f58
+
+All 11 owned commits rebased patch-equivalently onto corrected actual #108
+source b57d0829, itself based on merged main e229346b. The worktree was moved
+quiescently to `work/worktrees/submission-freeze-ui`; older temporary paths and
+source records remain historical rather than being rewritten.
+
+On clean unchanged executable 3700f58a028a62da0cebb8ed6ddb19cbb23ddf51, the
+expanded unfiltered native desktop/narrow journeys passed 2/2 with -race, package
+16.049s. Both current manifests record clean start and unchanged source. The
+independent static Go guide host passed all four owned standalone/embedded cases
+in 3.7s, retaining cookie/storage/API traps and exact original-callback checks.
+Both production portal builds, static guide build, TypeScript, affected ESLint,
+model 4/4, actual Go fingerprint corpus (0.256s) and configured Go lint (0 issues)
+also passed after integration. Prior 22/22 per-portal synthetic browser and 4/4
+invitation checks retain their earlier source attribution; they are not claimed
+as rerun here. Existing inspected visuals retain their a242/f789 source hashes.
+
+This remains Draft pending parent #277 merge/rebase, independent complete-scope
+review and exact final Linux CI. The UI adds no policy/migration or live provider
+effects. Current proof is scoped Chromium desktop/narrow emulation, not a full
+accessibility/stable-engine/manual-device release certification.
