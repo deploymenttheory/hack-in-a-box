@@ -103,6 +103,36 @@ final judge/practice/showcase, manual standards assessment or actual stable
 browser/device/screen-reader/touch/zoom acceptance. All corresponding rows remain
 pending, and full #122 stays Draft/open.
 
+## Isolated admission and draft-team extension
+
+The admission fixture creates a fresh PostgreSQL pool and API graph with its own
+fixed pre-admission domain instant. Each admission browser page starts its own
+virtual JavaScript Date at that same fixture instant, so client deadline displays
+do not depend on the host year; authentication and transport retain real time. Native event creation, form publication and
+registration transition establish the event. Team actors are confirmed through
+native applications; the browser applicant starts unregistered. The existing live
+and cutoff fixtures are never rewound or reopened. No competition publication,
+freeze, assessment or provider send is added.
+
+The 390 CSS-pixel Chromium registration journey reaches a real server field
+rejection, checks accessible error/focus, corrects and reviews the form, verifies
+one accepted native application identity/version and follows the confirmed result
+to the team workspace. This is narrow desktop-engine evidence, not an actual phone.
+
+The team journey creates/corrects a draft, explicitly joins through another
+confirmed actor, approves as the actual captain and verifies draft membership
+without publication/freeze. A third actor's native join returns 200 at the server
+but its browser response is deliberately lost. Current roster reads retain the
+unknown barrier and original metadata; exactly one command is sent, with no replay
+or inferred original acknowledgement. Current non-captains cannot approve.
+
+Initial diagnostic selection: the team case passed in 23.4s; registration failed
+because an Enter after native select type-ahead had already submitted to review.
+The corrected keyboard sequence continues by Tab to the explicit review control.
+Registration-only retest passed 1/1 (8.7s), test owner 67.52s/package 69.585s.
+These are separate dirty diagnostic runs, not a combined clean seven-case pass.
+The full new native configuration and exact source proof remain to be executed.
+
 ## Current diagnostic checkpoint
 
 Executed with dirty worktree diagnostics, not yet a final-source certification:

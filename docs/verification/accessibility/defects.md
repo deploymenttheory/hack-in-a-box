@@ -33,3 +33,14 @@ count still equalled 55. Manual identifier inspection caught this before draft
 publication. The corrected extraction bounds each criterion's level to its own
 section, excludes obsolete 4.1.1 and includes current 4.1.2. All rows remain
 not evaluated; a correct count alone is not completeness proof.
+
+## Registration native-select test sequence
+
+The new pre-admission test reached real field rejection and correction, then its
+Enter key on the team-preference select implicitly submitted the native form into
+review. Its next step incorrectly expected the earlier Review application button.
+This was a harness sequence error, not a product defect. Native type-ahead commits
+the choice, then Tab reaches the explicit review action. The targeted corrected
+registration run passed; the team case separately passed its actual native
+create/join/approval and committed-but-lost-response assertions. No assertion,
+domain gate or product authority was weakened.
