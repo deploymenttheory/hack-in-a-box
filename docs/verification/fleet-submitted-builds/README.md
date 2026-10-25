@@ -100,3 +100,27 @@ Repository invitation acceptance guidance was checked against the primary
 [GitHub collaborator API documentation](https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28): invitees accept through their notifications,
 email or API. The UI sends no acceptance on their behalf and retains current
 verified-account and provider-uncertainty distinctions.
+
+## Clean native correction GREEN — f308037
+
+Exact executable source `f308037c35bcf603c4804f3414b409b8caaa697e` passed the
+unfiltered PostgreSQL/native HTTP/production-browser suite on desktop1440×1000
+and narrow390×844 Chromium: **2/2 browser journeys; package18.271s with -race**
+(desktop8.78s/mobile7.99s Go subcases). This is desktop/narrow browser emulation,
+not stable-engine or real-device certification. Both fixture records retain clean
+start/source-end attribution and no selection filter; both owned PostgreSQL
+containers were terminated by test cleanup. Log: `/private/tmp/hackbox97-native-f308.log`.
+
+The real successful branch command's response was deliberately lost, current GET
+left its original unknown, and strict immutable original lookup acknowledged it.
+The actual durable capture used the configured `release/ui` branch and retained
+missing-branch evidence. An organiser explicitly reconciled independent evidence
+containing Go-specific whitespace, FEFF, HTML characters, Unicode separators and
+non-ASCII text. The assigned mentor saw the immutable commit without organiser
+prose; current assignment removal removed that link. Actual database assertions
+retained exactly2 commands,1 decision and1 read-only provider observation. No
+fingerprint/authority assertion or native timing policy was weakened.
+
+Remaining guide/expanded keyboard/privacy/current visual/#108 integration gates
+still apply. This successful native checkpoint does not make the draft Ready or
+close the issue.
