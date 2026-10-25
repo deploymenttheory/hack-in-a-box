@@ -5,12 +5,16 @@ x-fixture: &fixture
     context: ../../..
     dockerfile: docs/verification/lifecycle/Dockerfile
   init: true
+  cpus: 0.5
+  mem_limit: 256m
+  pids_limit: 128
   read_only: true
   tmpfs: [/tmp]
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
   networks: [synthetic]
   environment: &environment
+    GOMAXPROCS: '2'
     HACKBOX_ENV: test
     HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-lifecycle-only@postgres:5432/lifecycle?sslmode=disable
     HACKBOX_HTTP_ADDR: 0.0.0.0:8080
@@ -43,6 +47,9 @@ services:
   postgres:
     image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
     networks: [synthetic]
+    cpus: 0.75
+    mem_limit: 384m
+    pids_limit: 128
     environment:
       POSTGRES_DB: lifecycle
       POSTGRES_USER: lifecycle
