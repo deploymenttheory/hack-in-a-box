@@ -44,13 +44,29 @@ Cancelled/archived sources remain unavailable; report writers retain existing
 EventEdit/WritesAllowed authority and gain no competition mutation grant.
 
 Published teams outside the final tally may receive deliberately authored prose
-under the exact current event confirmation. Their current source explicitly has
+without a result confirmation. Their current source explicitly has
 `scores_available=false` and `final_scores=null`; choosing to include
 nonexistent final scores is rejected. No zero, rank or other-team tally is
 manufactured. Scores for a scored team still require the explicit saved choice.
 
-The accepted greenfield Fleet UI, action/review/unknown-receipt lifetimes,
-independent interactive guide, print/mobile/accessibility/browser proof and
-actual room announcement rendering are being delivered in the separate frontend
-lane. This native/API checkpoint alone does not complete #113. The separate #112
-room parser/frame-bound correction is consumed rather than duplicated here.
+The accepted Fleet frontend consumes these typed routes in both portals. It
+provides authored draft, private preview, captured review, separate release,
+correction and author/audience/version history; private payloads remain local to
+the current owner. It defaults optional scores off and captures the explicit
+confirmed score binding only when selected. Metadata-only original request
+capsules survive guarded in-app navigation, while native receipt lookup remains
+separate from current reads. Current denial clears private presentation and held
+continuations. Audit dates use the current event timezone.
+
+Announced-result pages and paired room presentation consume only the #112
+announcement projection. Finalist announcement, private award confirmation,
+award announcement and team feedback release remain independent controls. The
+assigned overall-final ballot workflow reads the exact native judge run and
+frozen candidate evidence; it exposes only the caller's vote and explicit
+replacement, with no inferred category casting permission.
+
+See [frontend browser verification](../verification/team-reports/frontend/README.md)
+for native PostgreSQL/HTTP/browser results, independent guide examples and
+synthetic visual evidence. The separate #112 room parser/frame-bound correction
+is consumed rather than duplicated. The parent delivery retains the category
+policy, required CI and integration gates; this document does not close them.

@@ -100,3 +100,8 @@ Final canonical SQL/Go/TypeScript generation is stable with no working/index
 drift. Configured affected lint is zero; TypeScript compilation passes. Final
 CI and the separate frontend's actual browser/guide/room evidence remain their
 own gates, not inferred from this backend checkpoint.
+
+
+The [frontend verification matrix](frontend/README.md) records the actual two-portal
+results/report/ballot/room journeys, independent guide, fault checks and synthetic
+visual artifacts.

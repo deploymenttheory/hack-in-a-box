@@ -1,0 +1,142 @@
+{
+  "native_source": "d9c7bf57",
+  "backend_parent": "1ace2f6091375f61b12e4cd8945862d6295ff311",
+  "command": "HACKBOX_INTEGRATION=1 HACKBOX_REPORT_BROWSER=1 go test ./internal/app -run '^TestTeamReportsUIBrowsers$' -count=1 -timeout=15m",
+  "go_total_seconds": 88.328,
+  "actual_postgresql": true,
+  "actual_http_and_production_portals": true,
+  "matrix": [
+    {
+      "viewport": "desktop",
+      "stats": {
+        "startTime": "2026-10-25T17:06:19.551Z",
+        "duration": 32154.693,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "specs": [
+        {
+          "title": "native assigned overall tie requires all judges, keeps own prose private and resolves only after an explicit revote",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration_ms": 8831
+            }
+          ]
+        },
+        {
+          "title": "native explicit award announcement and amended own-team feedback remain independent",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration_ms": 22692
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "stats": {
+        "startTime": "2026-10-25T17:06:58.379Z",
+        "duration": 40981.557,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "specs": [
+        {
+          "title": "native assigned overall tie requires all judges, keeps own prose private and resolves only after an explicit revote",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration_ms": 11560
+            }
+          ]
+        },
+        {
+          "title": "native explicit award announcement and amended own-team feedback remain independent",
+          "status": "expected",
+          "results": [
+            {
+              "status": "passed",
+              "duration_ms": 28725
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "desktop-participant-announcements.png",
+      "sha256": "175fc8f237693be0ba45258a881d8928839e23aa42b47232da1b956c1a475459"
+    },
+    {
+      "path": "desktop-own-team-dark.png",
+      "sha256": "79dec6bec4d51671127d4f1c5f88aea7bf8f93d1e4dfe82bb11f7cca40d27a52"
+    },
+    {
+      "path": "desktop-room-announcements.png",
+      "sha256": "73f2cb2320e5e945a8d514cb0b74be236861dfd9bcf327c3830d2bac6620d958"
+    },
+    {
+      "path": "desktop-own-team-light.png",
+      "sha256": "88c4f4a4f154af12920cca866e944e9ab76276240b6b37d66d164b3828094822"
+    },
+    {
+      "path": "desktop-organiser-editor-dark.png",
+      "sha256": "6b833d4f8c3a21050888c0176b51b3ef6b109b5b0c699bf9e0cab8673eede5d5"
+    },
+    {
+      "path": "desktop-organiser-editor-light.png",
+      "sha256": "9a42ebc7a6666abe7b7355c67d27bf6c98a1fe872934bf8a9dbf24a0819b4d45"
+    },
+    {
+      "path": "desktop-final-ballots-light.png",
+      "sha256": "081ed62b1c1c5d5fa3231e4fb9c8d3829da23fd1e71cccdd4dc01c2e8534f84a"
+    },
+    {
+      "path": "desktop-final-ballots-dark.png",
+      "sha256": "1b3f8a7cf189ea62dfea18384a7f809d2e600d6bc22e156a573f1581d16660a7"
+    },
+    {
+      "path": "mobile-participant-announcements.png",
+      "sha256": "5c5b6b62d68613c396f9bbf302137d5b4b0269752041e3799d0618760812c029"
+    },
+    {
+      "path": "mobile-own-team-dark.png",
+      "sha256": "b1875fb29eaeea5fa3158d4db15e7ef7110662201067eca9213924943d20f3a0"
+    },
+    {
+      "path": "mobile-room-announcements.png",
+      "sha256": "73f2cb2320e5e945a8d514cb0b74be236861dfd9bcf327c3830d2bac6620d958"
+    },
+    {
+      "path": "mobile-own-team-light.png",
+      "sha256": "fdb74d3f51a71289aada1eaf89b5ecf93511b83b7df7af247c612dc175c69691"
+    },
+    {
+      "path": "mobile-organiser-editor-dark.png",
+      "sha256": "46a8dbc7972cf53605f3908a46b57a13f788983d71cb46f7e80d04630445ca67"
+    },
+    {
+      "path": "mobile-organiser-editor-light.png",
+      "sha256": "3b7370a2168ad40176a3425cfc3b7e62879b1eb9c8d6b3d9224533f6d300c136"
+    },
+    {
+      "path": "mobile-final-ballots-light.png",
+      "sha256": "9dcd553e22eb4d64f52d0ea8af55fd4ad706fce5e26e4a30780e3d4948c075dd"
+    },
+    {
+      "path": "mobile-final-ballots-dark.png",
+      "sha256": "ed78272492763430501e9d7001c6b35d97490c29e616e7bde456578d379e7e6d"
+    }
+  ]
+}
