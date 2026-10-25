@@ -9,10 +9,10 @@ import { IdentityContext } from './session'
 vi.mock('@tanstack/react-router', () => ({ useBlocker: vi.fn() }))
 const identity: Session = { person: { id: '11111111-1111-4111-8111-111111111111', display_name: 'Synthetic mentor', platform_admin: false }, draft_scope: '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic', can_create_events: false }
 function wrapper({ children }: { children: ReactNode }) { return <IdentityContext.Provider value={identity}><CommunicationSafety>{children}</CommunicationSafety></IdentityContext.Provider> }
-function setup() {
- const error = new APIError(503, 'unavailable'), parent = new PrivateRequestScope('synthetic-current-assignment'), send = vi.fn().mockRejectedValue(error), page = { revision: 7, version: 0 }
+function setup(status = 503) {
+ const error = new APIError(status, status === 409 ? 'conflict' : 'unavailable'), parent = new PrivateRequestScope('synthetic-current-assignment'), send = vi.fn().mockRejectedValue(error), page = { revision: 7, version: 0 }
  const owner = 'synthetic-original-advisory', read = vi.fn(async () => page)
- const hook = renderHook(() => ({ decision: useResultDecision({ owner, parent, paused: false, page, revision: p => p.revision, version: p => p.version, read, fingerprint: async () => 'a'.repeat(64), ready: () => {}, send, matches: () => false, refresh: async () => page }), history: useCommunicationCommands(owner) }), { wrapper })
+ const hook = renderHook(() => ({ decision: useResultDecision({ owner, parent, paused: false, page, revision: p => p.revision, version: p => p.version, read, fingerprint: async () => 'a'.repeat(64), ready: () => {}, send, matches: () => false, contextDenied: error => error instanceof APIError && error.status === 409, refresh: async () => page }), history: useCommunicationCommands(owner) }), { wrapper })
  async function lose(request: string) {
   await act(async () => { await hook.result.current.decision.prepare({ request_id: request, action: 'advise', reason: 'Synthetic private contribution' }, null, document.createElement('button')) })
   await act(async () => { await hook.result.current.decision.confirm() })
@@ -44,4 +44,14 @@ test('acknowledging an earlier attempt cannot dismiss a later unknown failure an
  expect(result.current.decision.failure).toBe(error)
  expect(result.current.decision.failureStage).toBe('unknown')
  expect(result.current.decision.notice).not.toMatch(/acknowledged/i)
+})
+
+test('a rejected stale write refreshes current facts without ending the still-authorised private editor', async () => {
+ const { result } = setup(409)
+ const body = { request_id: '66666666-6666-4666-8666-666666666666', action: 'advise', reason: 'Synthetic stale write' }
+ await act(async () => { await result.current.decision.prepare(body, null, document.createElement('button')) })
+ await act(async () => { await result.current.decision.confirm() })
+ expect(result.current.decision.failureStage).toBe('rejected')
+ await act(async () => { await result.current.decision.prepare({ ...body, request_id: '77777777-7777-4777-8777-777777777777' }, null, document.createElement('button')) })
+ expect(result.current.decision.review?.body.request_id).toBe('77777777-7777-4777-8777-777777777777')
 })

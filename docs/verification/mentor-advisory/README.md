@@ -143,3 +143,14 @@ Both portal builds/TypeScript and ESLint pass with the UI correction. The comple
 latest native matrix with an explicit error-before-ACK/error-cleared-after-ACK
 assertion and final clean screenshots remains pending at this checkpoint. The
 previous four-case pass stays attributed to its actual source above.
+
+
+The same unit seam also exposed premature private-scope invalidation after a
+write-time 409 while the existing refresh confirmed current authority. Its
+regression failed in **1.26s** and the combined **3/3** suite passed in **1.98s**.
+A failed current preflight still ends its source context; an ordinary rejected
+write performs the same existing refresh without permanently disabling its
+still-authorised editor. If that current read proves source loss, the scoped
+reader still disposes its payload. No new network call, domain state or permission
+was introduced. TypeScript, both portal builds and ESLint pass with both bounded
+UI corrections; the latest native matrix remains required before final freeze.

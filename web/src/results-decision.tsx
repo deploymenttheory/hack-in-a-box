@@ -57,7 +57,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) {
    const rejected = error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408
    if (attempt) { if (rejected) commands.complete(attempt); else { commands.uncertain(attempt); if (ticket.current()) setUnknownAttempt(attempt) } }
-   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status) || options.contextDenied?.(error)) { scope.invalidate(); await options.refresh() } }
+   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status) || !attempt && options.contextDenied?.(error)) { scope.invalidate(); await options.refresh() } else if (attempt && options.contextDenied?.(error)) { await options.refresh() } }
   } finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  async function readBase(source: HTMLElement) {
