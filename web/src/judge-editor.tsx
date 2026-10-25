@@ -26,7 +26,7 @@ export function JudgeEditor(props:Props){
  const [errors,setErrors]=useState<Record<string,string>>({}),[review,setReview]=useState<Reviewed>(),[newBase,setNewBase]=useState(false),[preparing,setPreparing]=useState(false),[failure,setFailure]=useState<unknown>(),[receipt,setReceipt]=useState<JudgeReceipt>(),[captured,setCaptured]=useState<Reviewed>()
  const sending=useRef(false),opener=useRef<HTMLElement|null>(null),form=useRef<HTMLFormElement>(null)
  const dirty=JSON.stringify(inputs)!==baseline,stale=version!==baseVersion,locked=card?.state==='submitted'&&version===baseVersion,pending=preparing||commands.pending
- const blocked=paused||pending||commands.unconfirmed||stale
+ const blocked=paused||pending||commands.unconfirmed||stale||card?.state==='source_changed'
  const depart=()=>{if(!scope.capture().current())return true;if(pending)return false;return !(dirty||commands.unconfirmed)||window.confirm(commands.unconfirmed?'Leave this original outcome unresolved? Only safe request metadata will remain; it will not be replayed.':'Discard your private unsent judge scores?')}
  useBlocker({shouldBlockFn:()=>!depart(),enableBeforeUnload:dirty||pending||commands.unconfirmed})
  usePlanningDepartureBarrier(pending)

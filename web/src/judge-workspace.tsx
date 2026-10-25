@@ -27,7 +27,7 @@ function JudgeEvent({eventID,practice=false}:{eventID:string;practice?:boolean})
 function JudgeDesk({event,parent,paused}:{event:EventRecord;parent:PrivateRequestScope;paused:boolean}){
  const identity=useIdentity(),owner=`${identity.person.id}:${identity.draft_scope}:${event.id}:judge-discovery`
  const load=useCallback(async(signal:AbortSignal,assert:()=>void)=>{
-  const today=unwrap(await api.GET('/api/v1/events/{event_id}/today',{signal,cache:'no-store',params:{path:{event_id:event.id}}}));assert()
+  const today=unwrap(await api.GET('/api/v1/events/{event_id}/today',{signal,cache:'no-store',params:{path:{event_id:event.id}}}));assert();if(today.event.id!==event.id)throw new Error('The current event context did not match this judge workspace.')
   const rounds=unwrap(await api.GET('/api/v1/events/{event_id}/judging',{signal,cache:'no-store',params:{path:{event_id:event.id}}}));assert()
   return {today,rounds}
  },[event.id])
@@ -40,7 +40,12 @@ function JudgeDesk({event,parent,paused}:{event:EventRecord;parent:PrivateReques
 }
 const briefAuthority=(v:components['schemas']['JudgeBrief'])=>JSON.stringify([v.run_id,v.team_id,v.submission_revision,v.reference,v.repository,v.submission.evidence.map(e=>e.deliverable_id)])
 function JudgeBuild({event,runID,teamID,parent,paused,registerDeparture,next}:{event:EventRecord;runID:string;teamID:string;parent:PrivateRequestScope;paused:boolean;registerDeparture:(fn:()=>boolean)=>void;next:()=>void}){
- const load=useCallback(async(signal:AbortSignal)=>unwrap(await api.GET('/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}',{signal,cache:'no-store',params:{path:{event_id:event.id,run_id:runID,team_id:teamID}}})),[event.id,runID,teamID])
+ const identity=useIdentity()
+ const load=useCallback(async(signal:AbortSignal)=>{
+ const value=unwrap(await api.GET('/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}',{signal,cache:'no-store',params:{path:{event_id:event.id,run_id:runID,team_id:teamID}}}))
+ if(value.run_id!==runID||value.team_id!==teamID||value.own_card&&(value.own_card.author_id!==identity.person.id||value.own_card.run_id!==runID||value.own_card.team_id!==teamID)||value.submitted_cards.some(card=>card.run_id!==runID||card.team_id!==teamID)||!value.deliberation&&value.submitted_cards.length)throw new Error('The native judge brief did not match the current assigned build/author. No private scores are displayed.')
+ return value
+ },[event.id,runID,teamID,identity.person.id])
  const read=useTodayRead(`${event.id}:${runID}:${teamID}:judge-brief`,load,parent,briefAuthority)
  return <>{read.error&&<><p>Scoring is paused until current assignment, declared conflicts, cutoff and exact frozen evidence are confirmed. Unsent input stays only in this mounted task during a temporary failure; definite denial clears it.</p><Failure error={read.error} retry={()=>void read.refresh()}/></>}{!read.data?<>{!read.error&&<Loading/>}</>:<div hidden={!!read.error} inert={read.pending||!!read.error||paused}><JudgeEditor key={read.generation} eventID={event.id} brief={read.data} parent={read.authority} paused={paused||read.pending||!!read.error} refresh={()=>read.refresh()} registerDeparture={registerDeparture} next={next}/></div>}</>
 }
