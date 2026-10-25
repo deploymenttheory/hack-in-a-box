@@ -415,3 +415,109 @@ scope's four artifacts were refreshed with their actual source/tree and hashes;
 the other three retain a6f5 attribution. The refreshed comparison was visually
 inspected with its complete original-evidence and moderated-card contents.
 Production source is unchanged from the four-scope a6f5 native pass.
+
+### Post-review manual inspector focus correction (not in merged PR285)
+
+The independent Standards review found that retained original acknowledgement
+metadata disabled normal inspector focus even after manually opening another
+team. The complete actual UI sequence (matched sign ACK → Review another team
+→ inspect another team → revisit that team → reopen the original team) reproduced
+**RED2** at both layouts: the newly displayed inspector heading was inactive.
+The correction separates the current opening's focus provenance from retained
+safe ACK metadata. The ACK transition keeps its one-shot explicit next-action
+focus; a manual opening restores the normal inspector heading focus. Pending
+actions remain disabled and original unknown requests retain their barriers.
+
+At original correction checkpoint `7fd3c8a1217859a52ff214622b52daebedcfc5c5`,
+the complete sequence and related pending/private-denial/HTTP408 checks passed
+**12/12 admin (4.5s) and 12/12 regular (5.2s)**, both layouts. The correction
+transplanted cleanly as `b186fe241ce4122dd9d068666187b1c3567d11fc` onto the
+rebased PR head `10ee498923647ffeb108325bbb958a5e4c7cf638`; types, focused ESLint
+and both production portal builds passed on b186. Only the three owned
+UI/browser files changed; the shared native fixture union is untouched.
+
+The native final journey now explicitly asserts actual heading focus on each
+manual opening and a same-team revisit after a real sign acknowledgement.
+**That updated native assertion is NOT RUN locally yet.** Root requested holding
+heavy native verification while integrating PR286 after the user merged PR285.
+No source was pushed to the merged branch. This correction remains a local
+follow-up candidate; native proof, independent correction reviews and follow-up
+CI remain required. Earlier native matrix evidence retains its exact sources
+and does not establish this new focus assertion.
+
+The separate follow-up starts from authoritative merged main
+`56d00be40e098f9ab71b2387377d2ad7cd81b63c`. Only the correction and ledger were
+transplanted; exact clean implementation/checkpoint
+`09d471884ffeda7b0c2f754527587bf6481bb75f` passed types, both production portal
+builds and focused ESLint. Bounded affected browser suites passed **12/12 admin
+(8.4s) and 12/12 regular (9.6s)** at that exact source, covering both layouts,
+manual other/same/original-team openings after the matched late ACK, pending
+read locks, denied-private-reader departure and original HTTP408 unknown state.
+No native fixture was started while the root-owned PR286 matrix was active.
+The follow-up remains draft; updated native focus proof and independent bounded
+correction reviews/final CI remain required.
+
+### CI2093: read-interrupted confirmation and obsolete focus restoration
+
+CI run40218455895 at PR head `2093b0c3919de8b389e5a6e94526c39242c206e3`
+failed only admin/desktop/final (seven other native cases passed;468.72s total).
+This does not invalidate the earlier f559 eight-case PASS499.16s, and neither
+result is relabelled as current correction proof. The failed artifact shows the
+reader GET beginning at76828.133ms between the last Confirm focus check
+(76815.434ms) and trusted Enter (76837.948ms). The Enter snapshot has Confirm
+natively disabled without command aria-busy, enabled Cancel, no stale error and
+no casting POST. The recorded prior acknowledged owner request was `propose`;
+it was not a casting acknowledgement. The same cause reproduced deterministically
+RED2 at both widths by starting a genuine read at that input boundary: zero
+POSTs and the exact review stayed open after the disabled key.
+
+The test-only reviewed-confirmation helper now observes actual trusted keydown
+and click acceptance. Only positive disabled-key evidence, zero accepted clicks
+and zero POSTs permits one explicit new gesture after the same captured review
+is enabled. There is no loop, sent-command replay, DOM focus/click mutation,
+blanket polling suppression, test retry or timeout increase. Other focus
+anomalies fail. Exactly one accepted click and one POST are required; the real
+response must match the exact original command/fingerprint before the unchanged
+dialog-disappearance assertion. Lost, HTTP408 or mismatched receipts remain
+unknown and never trigger another gesture. The native journey's final signoff
+uses this same reviewed-confirmation seam.
+
+The broader affected checks exposed another real owner race: a delayed closing
+collection-return frame could steal focus after a newer manual inspector opened.
+A deterministic scheduling test holds that real frame, opens the inspector using
+trusted Enter and observes its real autofocus, then releases the obsolete frame.
+The2093 production baseline failed RED2 at both widths (5.9s each). The only new
+production change opts this closing caller into the existing
+`navigation.restore(target,true)` guard, yielding to a newer connected focus
+owner. Generic restoration, ACK next-action focus and normal collection return
+are unchanged. Setup cases now await the actual inspector heading owner before
+attempting a later input. Earlier broader attempts genuinely failed
+(admin22/24, regular23/24) and are not treated as passes.
+
+With these corrections, bounded affected suites passed **28/28 admin(11.3s)**
+and **28/28 regular(11.6s)** at both layouts. They include normal acceptance,
+read interruption/resumption, changed source, current denial, HTTP408, lost
+response, mismatched receipt, wrong focus target, original unknown barriers,
+ACK continuation and the deterministic obsolete-frame sequence. Types, focused
+ESLint and both production builds passed on the owned correction overlay.
+No native policy, receipt matcher, API or schema changed; all eight native CI
+cases and the40m Go CI budget remain required. Affected clean-source native
+proof and new independent correction reviews/current-head CI remain pending.
+
+At exact clean `95eecedf43ac705cf668987dc95d1ba0fe1e4451`, the affected actual
+**admin/desktop/final native journey PASSED** (Go/race157.971s; subtest156.24s).
+The private PostgreSQL fixture stopped and terminated normally. This covers all
+five actual final cards, independent evidence, real ballots/casting, exact
+versioned signoff, manual other/same-team focus, separate preparations, retained
+history, retired outputs and actual session denial. The copied source record
+`native-focus-correction-admin-desktop-95eecedf.json` confirms identical start/end
+HEAD, clean worktree and successful browser command. Its SHA256 is
+`dc931b5f4a6d94d084840821dc1f60b96ce01cd191080eb278326e0bcb77705c`.
+
+This was a bounded affected-scope native proof, not a new eight-case matrix.
+The precise suppressed-key race is locked down by the deterministic production
+dialog tests; no claim is made that a natural poll interrupted this successful
+native run. Prior current-CI failures and original source attribution stay
+unchanged. The production restoration correction and test-only input helper
+require independent correction reviews and all latest-head CI, including all
+eight native moderation cases, before acceptance.
