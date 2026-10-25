@@ -1,0 +1,60 @@
+import { test, expect } from '@playwright/test'
+import { openEventSection } from '../e2e/event-navigation-fixture'
+import { actor, control, native } from './native'
+
+test('native MC pairs an independent display; outage converges without duplicate room actions', async ({ browser }, info) => {
+  const mcContext = await actor(browser, 'admin', native.mc_cookie)
+  const displayContext = await browser.newContext({ baseURL: native.display })
+  const mc = await mcContext.newPage(), display = await displayContext.newPage()
+  try {
+    await control('reset-room')
+    await mc.goto(`/events/${native.event_id}`)
+    await openEventSection(mc, 'MC console')
+    await mc.getByLabel('Reason for room changes').fill('Reviewed synthetic integrated room rehearsal')
+    await mc.getByRole('button', { name: 'Manage displays', exact: true }).click()
+    const label = `Rehearsal ${info.project.name}`
+    await mc.getByLabel('Display label', { exact: true }).fill(label)
+    await mc.getByRole('button', { name: 'Pair display', exact: true }).click()
+    await mc.getByRole('button', { name: 'Confirm display pairing', exact: true }).click()
+    const token = await mc.getByLabel('New display secret', { exact: true }).inputValue()
+    expect(token.length).toBeGreaterThan(30)
+    await mc.getByRole('button', { name: 'Dismiss display secret', exact: true }).click()
+    const displayRequests: { path: string; authorization: boolean; cookie: boolean }[] = []
+    display.on('request', request => {
+      const url = new URL(request.url())
+      if (url.pathname.startsWith('/api/')) displayRequests.push({ path: url.pathname, authorization: !!request.headers().authorization, cookie: !!request.headers().cookie })
+      expect(url.search).not.toContain(token)
+    })
+    await display.goto(`/display/${native.event_id}`)
+    await display.getByLabel('Display key', { exact: true }).fill(token)
+    await display.getByRole('button', { name: 'Connect display', exact: true }).click()
+    await expect(display.getByRole('heading', { name: 'Rehearsal opening', exact: true })).toBeVisible()
+    await expect(display.getByRole('timer')).toBeVisible()
+    const before = await control<{ event_revision: number; provider_jobs: number }>('evidence')
+    await control('outage')
+    await expect(display.getByText(/Connection lost|Reconnecting|last.*known|stale/i).first()).toBeVisible()
+    await expect(display.getByRole('heading', { name: 'Rehearsal opening', exact: true })).toBeVisible()
+    await mc.getByRole('button', { name: 'Live controls', exact: true }).click()
+    await mc.getByRole('button', { name: 'Advance', exact: true }).click()
+    await mc.getByRole('button', { name: 'Confirm room change', exact: true }).click()
+    await expect(mc.getByRole('region', { name: 'Live room controls' })).toContainText('Rehearsal building')
+    await control('restore')
+    await expect(display.getByRole('heading', { name: 'Rehearsal building', exact: true })).toBeVisible()
+    const after = await control<{ event_revision: number; provider_jobs: number }>('evidence')
+    expect(after.event_revision).toBe(before.event_revision + 1)
+    expect(after.provider_jobs).toBe(0)
+    expect(displayRequests.length).toBeGreaterThan(1)
+    expect(displayRequests.every(request => /^\/api\/v1\/events\/[^/]+\/display\/(stream|snapshot|assets\/[^/]+)$/.test(request.path) && request.authorization && !request.cookie)).toBe(true)
+    expect(await display.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } }))).not.toContain(token)
+    await display.screenshot({ path: info.outputPath('native-reconnected-display.png') })
+    await mc.getByRole('button', { name: 'Manage displays', exact: true }).click()
+    await mc.getByRole('button', { name: `Revoke ${label}`, exact: true }).click()
+    await mc.getByRole('button', { name: 'Confirm display revocation', exact: true }).click()
+    await expect(display.getByRole('heading', { name: 'Connect a room display', exact: true })).toBeVisible()
+    await expect(display.getByRole('heading', { name: 'Rehearsal building', exact: true })).toHaveCount(0)
+  } finally {
+    await control('restore')
+    await mcContext.close()
+    await displayContext.close()
+  }
+})
