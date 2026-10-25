@@ -230,3 +230,19 @@ behavior, not real native domain acknowledgement or a device certification.
 The dedicated production browser configuration now supports a bounded regular
 portal run as well as administrator, preserving actual portal accessible names.
 No full ordinary browser suite is multiplied by the new configuration.
+
+## Corrected producer and merged judging integration
+
+Ten owned UI commits rebased from parent6897630 onto corrected native producer
+`414d8036d3e8894537595683abcb4fd6c72fa186`, which includes merged109 on main29948.
+Clean UI source `214c624b4bea2f79e1f3bea2606902f1fe20223a` preserves both portals'
+judging and panel routes, both guide examples, the merged guide pointer correction,
+all browser registrations and separate native proof steps/artifacts. No production
+backend, OpenAPI or generated-contract change is introduced by the UI rebase.
+
+TypeScript/focused ESLint and both production builds pass on this clean source.
+The complete bounded moderation browser suite passes administrator **16/16 in
+8.9s** and regular **16/16 in 7.3s**, each including both widths. These deterministic
+transport cases retain their separate scope from the cb417 native four-case
+matrix. The full five-team frozen-source final-card/tie/signoff proof, completed
+visual captures and final reviews/current CI remain mandatory open gates.
