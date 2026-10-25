@@ -15,7 +15,7 @@ export function resultFingerprint(body: ResultCommand, revision: number) {
 }
 export function matchesResultReceipt(receipt: S['ResultReceipt'], intent: ResultIntent) {
  const publication = intent.action === 'publish_finalists' || intent.action === 'publish_awards'
- return receipt.actor_id === intent.actorID && receipt.request_id === intent.requestID && receipt.action === intent.action && receipt.expected_revision === intent.revision && receipt.expected_version === intent.version && receipt.version === intent.version + 1 && receipt.fingerprint === intent.fingerprint && receipt.run_id === nilUUID && receipt.tie_id === '' && !receipt.team_ids?.length && (publication ? !!receipt.publication_id && receipt.publication_id !== nilUUID : receipt.publication_id === null)
+ return receipt.actor_id === intent.actorID && receipt.request_id === intent.requestID && receipt.action === intent.action && receipt.expected_revision === intent.revision && receipt.expected_version === intent.version && receipt.version === intent.version + 1 && receipt.fingerprint === intent.fingerprint && receipt.run_id === nilUUID && receipt.tie_id === '' && !receipt.team_ids?.length && (publication ? !!receipt.publication_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(receipt.publication_id) && receipt.publication_id !== nilUUID : receipt.publication_id === null)
 }
 export function resultBinding(page: ResultPage, action: ResultCommand['action']) {
  return action === 'publish_finalists' || action === 'prepare' && page.preview.blockers.length > 0 ? page.preview.finalists_binding : page.preview.binding

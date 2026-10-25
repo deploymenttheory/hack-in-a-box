@@ -22,3 +22,5 @@ export function feedbackErrors(body: TeamFeedbackBody, reason: string) {
  if (!reason.trim() || bytes(reason) > 2000) errors.reason = 'Record a reason from 1 to 2,000 bytes.'
  return errors
 }
+
+export const feedbackBodyKey = (body: TeamFeedbackBody) => JSON.stringify([body.title, body.summary, body.highlights, body.next_steps])

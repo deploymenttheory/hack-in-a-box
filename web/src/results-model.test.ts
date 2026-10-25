@@ -9,7 +9,7 @@ const receipt: components['schemas']['ResultReceipt'] = { actor_id: actor, reque
 describe('original result acknowledgement ownership', () => {
  it('requires an exact actor, intent and real publication identity', () => {
   expect(matchesResultReceipt(receipt, intent)).toBe(true)
-  for (const change of [{ actor_id: team }, { request_id: team }, { action: 'confirm' as const }, { expected_revision: 8 }, { expected_version: 1 }, { version: 4 }, { fingerprint: 'b'.repeat(64) }, { publication_id: null }, { publication_id: nilUUID }, { run_id: team }, { tie_id: 'different-tie' }, { team_ids: [team] }]) expect(matchesResultReceipt({ ...receipt, ...change }, intent)).toBe(false)
+  for (const change of [{ actor_id: team }, { request_id: team }, { action: 'confirm' as const }, { expected_revision: 8 }, { expected_version: 1 }, { version: 4 }, { fingerprint: 'b'.repeat(64) }, { publication_id: null }, { publication_id: nilUUID }, { publication_id: 'not-a-publication-uuid' }, { run_id: team }, { tie_id: 'different-tie' }, { team_ids: [team] }]) expect(matchesResultReceipt({ ...receipt, ...change }, intent)).toBe(false)
  })
  it('cannot confuse a current confirmation or another team receipt with the original report release', () => {
   const original = { request_id: request, actor_id: actor, team_id: team, action: 'release' as const, expected_version: 3, version: 4, fingerprint: 'a'.repeat(64) }, target = { ...intent, action: 'release', version: 3 }
