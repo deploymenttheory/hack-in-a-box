@@ -60,6 +60,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | Entry | Nested components / states / overlays | Presentation owner |
 |---|---|---|
 | Event overview / setup | Dates, blockers, stage transition reason/attendance exception, event form, preview, schedule, branding editor, objectives, staff/ownership transfers, template editor/import/publish/clone, configuration inventory, venue/logistics/check-in, staff planning/preparation/readiness/export composition | #235 |
+| Event repositories | `RepositoryWorkspace`: current repository collection and team/numeric-repository inspector; App configuration, installation review, published-team initial queue, selected lookup-only recovery, exact access planning/approval/original receipts, own invitation status; fresh private ownership and safe original-command metadata | #94; regular portal exposes only current own-team status, administration stays in the admin portal |
 | Event Today | Current event guidance; complete readiness and action ownership remains #88 | #235 admin chrome/readiness composition, #238 participant preparation evidence/checklists, #88 full Today/live aggregation |
 | Registration / applicants | Application chooser, branching questions, offers/deadlines, withdrawals, applicant review/detail/reasons, form editor/preview/publish acknowledgement | #236 |
 | Teams / mentors / team access | Team requests/roster, allocation/freeze, team member readers, mentor roster/coverage/conflicts, retained repository/access status | #237 |

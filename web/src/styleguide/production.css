@@ -13,3 +13,5 @@
 .skip-link:focus { position: fixed; inset: 1rem auto auto 1rem; z-index: 100; padding: var(--space-3); background: var(--background); color: var(--foreground); }
 
 @import "../design-system/presentation.css";
+
+@import "../design-system/repositories.css";

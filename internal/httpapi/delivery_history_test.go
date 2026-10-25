@@ -172,10 +172,11 @@ func TestDeliveryHistoryHTTPToActualReviewedRiverPreservesEvidenceAndFiltersCurr
 					t.Fatal(err)
 				}
 			}
-			zone, err := time.LoadLocation(dates.Timezone)
-			if err != nil {
-				t.Fatal(err)
-			}
+			wall, choice := testdb.WallTimeForInstant(
+				t,
+				time.Now().Add(-5*time.Minute),
+				dates.Timezone,
+			)
 			definition := communications.CampaignDefinition{
 				ID:         uuid.New(),
 				Name:       "Synthetic retained campaign",
@@ -183,11 +184,9 @@ func TestDeliveryHistoryHTTPToActualReviewedRiverPreservesEvidenceAndFiltersCurr
 				AudienceID: audience.ID,
 				Channels:   []string{"smtp"},
 				Timing: communications.CampaignTiming{
-					Kind: "fixed",
-					WallTime: time.Now().
-						Add(-5 * time.Minute).
-						In(zone).
-						Format("2006-01-02T15:04:05"),
+					Kind:      "fixed",
+					WallTime:  wall,
+					DSTChoice: choice,
 				},
 			}
 			var campaign communications.Campaign

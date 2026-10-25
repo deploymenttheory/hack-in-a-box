@@ -32,7 +32,7 @@ export function revealPlanningField(form: HTMLFormElement | null, name: string) 
   requestAnimationFrame(() => field?.focus())
 }
 const destinations: Record<string, {group: string; icon: IconName}> = {
- overview:{group:'Event',icon:'layout'},today:{group:'Event',icon:'check'},'review coverage':{group:'Event',icon:'shield'},
+ repositories:{group:'Workspaces',icon:'repository'},overview:{group:'Event',icon:'layout'},today:{group:'Event',icon:'check'},'review coverage':{group:'Event',icon:'shield'},
  setup:{group:'Plan',icon:'calendar'},rules:{group:'Plan',icon:'book'},schedule:{group:'Plan',icon:'calendar'},branding:{group:'Plan',icon:'palette'},objectives:{group:'Plan',icon:'list'},staff:{group:'Plan',icon:'user'},preparation:{group:'Plan',icon:'check'},inventory:{group:'Plan',icon:'columns'},
  attendance:{group:'Delivery',icon:'team'},operations:{group:'Delivery',icon:'check'},logistics:{group:'Delivery',icon:'shield'},
 }

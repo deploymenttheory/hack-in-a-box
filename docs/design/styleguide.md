@@ -227,3 +227,16 @@ starting point for a different reviewed action. Current denial clears private
 snapshots and held continuations; temporary reads retain unsent work with writes
 paused. Pairing keys are shown once in local memory and scrubbed on departure,
 hiding, print and session end; contact records never prove rendering.
+
+
+The repository workflow example imports production `RepositoryActionReview` and
+`RepositoryPlan` from the pure presentation module. Its synthetic local owner
+captures exact event/team/numeric repository, people, permission, plan and reason
+before explicit confirmation. Keep the original preparation form mounted with
+`hidden`; correction restores its actual initiating control. Pending/unknown
+locks prevent replacement. Current reads never supply an original receipt.
+The example has no API/session/storage/provider access. Production adapters retain
+only safe original metadata above private editor lifetimes, erase private options
+and credentials on authority loss, and validate CSRF/IfMatch/native receipts.
+No secret-bearing App command is automatically resent. Disbanded repositories
+remain unused and unscored; repository recovery cannot reopen frozen teams.
