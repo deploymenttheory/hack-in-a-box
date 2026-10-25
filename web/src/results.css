@@ -1,4 +1,4 @@
-.fleet-results { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.fleet-results { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; overflow-wrap: anywhere; }
 .fleet-results h1 { font-size: var(--text-page); }
 .fleet-results h2, .fleet-announcements h2 { font-size: var(--text-section); }
 .fleet-results-eyebrow { color: var(--muted-foreground); font-size: .75rem; }
