@@ -267,3 +267,14 @@ both production builds passed, complete owned scenarios passed **28/28 admin in
 correction of ebdf63bc. This includes original keyboard return plus Escape and
 explicit Cancel recovery return with the unknown barrier and no extra writes.
 Parent metadata integration and exact-source native/guide follow-up remain open.
+
+After saving the correction and moving only owned commits onto actual #108
+metadata parent 97c6a74f, clean unchanged source
+0953f63866433284c5ad9a335f1eafbb4c40d9a1 passed native 2/2 with -race
+(package 21.884s), plus independent standalone/embedded guide 4/4 in 4.7s.
+Both manifests confirm a clean unchanged source; production portal/guide builds,
+TypeScript and affected lint also passed. Full privacy, strict Unicode original
+ACK matching, actual cutoff capture and judge-conflict revocation remain in that
+run. These corrected-source results supplement rather than replace earlier
+source-attributed proof and visuals. Final immutable CI and independent bounded
+re-review remain gates; this UI PR stays Draft.
