@@ -33,20 +33,49 @@ rollback rejection with original acknowledgement preservation. The current four 
 provenance and complete issue evidence will be recorded before completion. No provider is used;
 PostgreSQL containers are test-owned and synthetic.
 
+## Native/API integration checkpoint
+
+The actual event update/transition and registration withdrawal owners now call the
+session reconciliation seam inside their event-locked transaction. Semantic
+session changes retain the ID and advance calendar sequence; an unrelated event
+rename does not. Removing an agenda item cancels its session without exposing a
+meeting link. Invalidated date/window definitions require explicit review.
+
+Discovery and personal agenda projections include warning-only conflicts. Native
+HTTP adapters and generated Go/TypeScript schemas expose current sessions,
+configuration, own reserve/cancel, original acknowledgements, cancellation and
+permission-filtered facilitator roster/attendance. The new SessionRevision header
+allows initial revision zero; the existing event revision header remains unchanged.
+
+The coherent integration run passed all **eight native top-level cases** (including
+two rollback subcases) with the race detector in **20.701s**. Its real authenticated
+HTTP case passed in **6.656s** and validates responses against OpenAPI, CSRF,
+initial revision zero, original-ACK replay, private link/configuration suppression,
+roster field allowlists, unrelated-reader denial and exact assignment removal.
+Native registration Apply/Respond and own-session cancellation race under the
+same event lock; withdrawal frees/promotes the session place without readmission.
+
+Canonical SQLC/OpenAPI/TypeScript generation completed. Bounded lint across the
+owner, HTTP, event, registration and app packages reported zero issues. The first
+HTTP probe rejected initial revision zero because the new path used the stricter
+event header; the separate session header corrects that integration defect. The
+native reschedule fixture now preserves the full preparation week rather than
+relaxing the existing event policy.
+
 ## Full remaining scope
 
-- Atomic native registration-withdrawal and event-edit/cancellation reconciliation;
-  actual concurrent role/withdrawal/promotion races and unchanged frozen-team facts.
-- Warning-only overlap projections, discovery and personal agenda; current audience,
-  visibility and archive/retention boundaries on all projections.
-- Explicit versioned approved notification configuration through current delivery
-  owners, with fresh eligibility and original ambiguous-effect handling.
+- Explicit versioned approved notification configuration through current SMTP,
+  inbox and outbox owners, with current eligibility and original ambiguous-effect
+  handling. A withdrawn person's cancellation must use a minimal own-booking
+  projection without meeting links, rosters or renewed event access.
 - Session-specific stable calendar identity, monotone sequence and cancellation
-  rendering, preserving existing event calendar behavior and retained attempts.
-- Versioned OpenAPI / HTTP adapters and generated Go/TypeScript contracts; native
-  authorization, no-store, receipt and field allowlist tests for #167 consumers.
-- Meaningful DST/window/date-edit, HTTP, migration, concurrency and delivery proof,
-  final two-axis review and exact-head CI. No completion or merge claim yet.
+  rendering, preserving existing event calendars and original attempt snapshots.
+- Parent-event no-writes remains authoritative: cancelled/archived parents retain
+  explicit suppressed/unavailable notification reasons; no job-policy exception,
+  implied send or later automatic replay.
+- Complete notification/calendar/role-loss concurrency and native HTTP evidence,
+  rollback guards for retained delivery intents, final two-axis review and every
+  exact-head CI check. No completion or merge claim yet.
 
 Migration 49 is reserved for this owner. Recovery migration 48 will be inherited
 from its independently reviewed PR #269 before final integration; no recovery

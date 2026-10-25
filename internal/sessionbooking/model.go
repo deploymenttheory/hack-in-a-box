@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 )
 
 type Service struct {
@@ -45,6 +47,8 @@ type Booking struct {
 }
 
 type Page struct {
+	Definition          *Definition `json:"definition,omitempty"`
+	NeedsReview         bool        `json:"needs_review"`
 	ID                  uuid.UUID   `json:"id"`
 	Revision            int64       `json:"revision"`
 	CalendarSequence    int64       `json:"calendar_sequence"`
@@ -89,4 +93,13 @@ func contextError(operation string, err error) error {
 		return nil
 	}
 	return fmt.Errorf("session %s: %w", operation, err)
+}
+
+type sourceSnapshot struct {
+	Item     event.AgendaItem `json:"item"`
+	Timezone string           `json:"timezone"`
+	Start    time.Time        `json:"start"`
+	End      time.Time        `json:"end"`
+	Opens    time.Time        `json:"opens"`
+	Closes   time.Time        `json:"closes"`
 }

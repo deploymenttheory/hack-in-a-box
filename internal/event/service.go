@@ -25,6 +25,7 @@ type Service struct {
 	Pool              *pgxpool.Pool
 	Clock             func() time.Time
 	SettleSubmissions func(context.Context, pgx.Tx, dbgen.Event, time.Time) error
+	ReconcileSessions func(context.Context, pgx.Tx, uuid.UUID, dbgen.Event, time.Time) error
 }
 
 func (s Service) now() time.Time {
@@ -398,6 +399,11 @@ func (s Service) Update(
 		if err := replan(ctx, q, id, input.Configuration); err != nil {
 			return err
 		}
+		if s.ReconcileSessions != nil {
+			if err := s.ReconcileSessions(ctx, tx, actor, changed, s.now()); err != nil {
+				return fmt.Errorf("reconcile edited sessions: %w", err)
+			}
+		}
 		if row.PublishedAt.Valid && !previous.LiveStart.Equal(input.Configuration.LiveStart) {
 			if err := s.decision(
 				ctx,
@@ -602,6 +608,11 @@ func (s Service) Transition(
 			}
 			if err := q.CancelEventSchedule(ctx, id); err != nil {
 				return fmt.Errorf("cancel event schedule: %w", err)
+			}
+		}
+		if s.ReconcileSessions != nil {
+			if err := s.ReconcileSessions(ctx, tx, actor, changed, s.now()); err != nil {
+				return fmt.Errorf("reconcile event sessions: %w", err)
 			}
 		}
 		if err := recordAudit(ctx, q, actor, id, "event.stage_changed", id); err != nil {

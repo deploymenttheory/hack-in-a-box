@@ -31,6 +31,9 @@ func setup(t *testing.T, capacity int, audience []string) fixture {
 	owner := testdb.Person(t, pool)
 	id := testdb.Event(t, pool, owner.ID)
 	q := dbgen.New(pool)
+	if err := q.InitializeEventFacts(t.Context(), id); err != nil {
+		t.Fatal(err)
+	}
 	session := uuid.New()
 	c := event.DefaultConfiguration()
 	c.Timezone = "Europe/London"

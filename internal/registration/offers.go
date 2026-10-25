@@ -446,8 +446,8 @@ func (s Service) Respond(
 			return err
 		}
 		if r.Kind == "attendee" && state == "withdrawn" {
-			if err := teams.Withdraw(ctx, tx, eventID, actor); err != nil {
-				return fmt.Errorf("withdraw team membership: %w", err)
+			if err := s.withdrawMemberships(ctx, tx, actor, row); err != nil {
+				return err
 			}
 		}
 		if err := s.reconcileOffers(ctx, tx, q, row); err != nil {
@@ -460,4 +460,21 @@ func (s Service) Respond(
 		return result, fmt.Errorf("respond to registration: %w", err)
 	}
 	return result, nil
+}
+
+func (s Service) withdrawMemberships(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor uuid.UUID,
+	row dbgen.Event,
+) error {
+	if s.ReconcileSessions != nil {
+		if err := s.ReconcileSessions(ctx, tx, actor, row, s.now()); err != nil {
+			return fmt.Errorf("withdraw session bookings: %w", err)
+		}
+	}
+	if err := teams.Withdraw(ctx, tx, row.ID, actor); err != nil {
+		return fmt.Errorf("withdraw team membership: %w", err)
+	}
+	return nil
 }

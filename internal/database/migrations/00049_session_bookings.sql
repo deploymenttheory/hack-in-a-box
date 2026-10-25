@@ -5,6 +5,8 @@ CREATE TABLE bookable_sessions (
  revision bigint NOT NULL DEFAULT 1,
  calendar_sequence bigint NOT NULL DEFAULT 0,
  definition jsonb NOT NULL,
+ source_snapshot jsonb NOT NULL,
+ needs_review boolean NOT NULL DEFAULT false,
  cancelled boolean NOT NULL DEFAULT false,
  PRIMARY KEY(event_id,id),
  CHECK(revision > 0 AND calendar_sequence >= 0)

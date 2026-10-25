@@ -51,7 +51,7 @@ func (s Service) Change(
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return contextError("Change", err)
 		}
-		if !st.row.WritesAllowed || st.cancelled || !st.confirmed || !st.audience {
+		if !st.actorMayBook() {
 			return access.ErrForbidden
 		}
 		if err = s.reconcile(ctx, tx, actor, st); err != nil {
@@ -204,7 +204,7 @@ func (s Service) reconcile(ctx context.Context, tx pgx.Tx, actor uuid.UUID, st s
 			waiting = append(waiting, v.id)
 		}
 	}
-	if !st.row.WritesAllowed || st.cancelled || s.now().Before(st.opens) ||
+	if !st.row.WritesAllowed || st.cancelled || st.needsReview || s.now().Before(st.opens) ||
 		!s.now().Before(st.closes) {
 		return nil
 	}
@@ -266,4 +266,8 @@ func commandFingerprint(c Command) (string, error) {
 	}
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:]), nil
+}
+
+func (st scope) actorMayBook() bool {
+	return st.row.WritesAllowed && !st.cancelled && !st.needsReview && st.confirmed && st.audience
 }

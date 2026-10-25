@@ -52,6 +52,8 @@ type BookableSession struct {
 	Revision         int64
 	CalendarSequence int64
 	Definition       []byte
+	SourceSnapshot   []byte
+	NeedsReview      bool
 	Cancelled        bool
 }
 

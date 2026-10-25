@@ -52,7 +52,22 @@ func (s Service) Roster(
 			}
 			result = append(result, entry)
 		}
-		return rows.Err()
+		if err = rows.Err(); err != nil {
+			return contextError("read roster", err)
+		}
+		rows.Close()
+		visible := result[:0]
+		for _, entry := range result {
+			eligible, err := eligibleAudience(ctx, tx, st, entry.PersonID)
+			if err != nil {
+				return err
+			}
+			if eligible {
+				visible = append(visible, entry)
+			}
+		}
+		result = visible
+		return nil
 	})
 	return result, contextError("Roster", err)
 }
@@ -104,13 +119,20 @@ func (s Service) Mark(
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return contextError("Mark", err)
 		}
-		if !st.row.WritesAllowed || st.cancelled || s.now().Before(st.start) {
+		if !st.row.WritesAllowed || st.cancelled || st.needsReview || s.now().Before(st.start) {
 			return access.ErrForbidden
 		}
 		var eligible bool
 		if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM session_bookings b JOIN people p ON p.id=b.person_id AND p.active JOIN competition_claims c ON c.event_id=b.event_id AND c.person_id=b.person_id AND c.state='confirmed' WHERE b.event_id=$1 AND b.session_id=$2 AND b.person_id=$3 AND b.state='booked')`, eventID, id, person).
 			Scan(&eligible); err != nil {
 			return contextError("Mark", err)
+		}
+		if !eligible {
+			return access.ErrForbidden
+		}
+		eligible, err = eligibleAudience(ctx, tx, st, person)
+		if err != nil {
+			return err
 		}
 		if !eligible {
 			return access.ErrForbidden
