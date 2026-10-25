@@ -64,3 +64,14 @@ The initial production reader/guide implementation was checkpointed as
 `47467be94a99d25217ef360204d374666bd3e4a0`. The following housekeeping checkpoint
 only ignores owned Playwright outputs and adds this source attribution; it does
 not claim that the earlier working-tree executions ran on a later clean commit.
+
+## Initial native-version metadata correction
+
+A new actual shared-store regression failed before the correction: a version0
+native panel command became unknown, survived task replacement, but lost its
+`expectedVersion: 0` metadata. The whitelist now admits nonnegative safe integers;
+negative, fractional, nonfinite and unsafe values remain discarded, as do private
+reason/panel payloads. This changes retained metadata only, not native authority
+or any command precondition. The full five-case communications suite passes
+(506ms), along with TypeScript and focused ESLint. Native command/browser receipt
+matching remains a separate required proof; this unit success is not that proof.

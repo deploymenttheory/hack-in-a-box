@@ -81,3 +81,26 @@ test('repository original identity digest survives sibling owners while malforme
   expect(view.container).toHaveTextContent('"state":"unknown"')
   expect(view.container).not.toHaveTextContent('RAW-PRIVATE-')
 })
+
+test('initial native version zero survives unknown outcome and task replacement without private payload or invalid versions', () => {
+  function Owner() {
+    const commands = useCommunicationCommands('actor:session:qualification:event:run')
+    return <><pre>{JSON.stringify(commands.attempts)}</pre><output>{commands.unconfirmed ? 'Initial request unknown' : 'No unknown request'}</output><button onClick={() => {
+      const id = commands.begin({ operation: 'Panel configuration', revision: 0, command: { action: 'configure_panel', requestID: '44444444-4444-4444-8444-444444444444', expectedVersion: 0, reason: 'PRIVATE-PANEL-REASON', panel: { mentor_ids: ['PRIVATE-PANEL-MEMBER'] } } as never })
+      commands.uncertain(id)
+    }}>Start initial native version</button><button onClick={() => {
+      for (const expectedVersion of [-1, Number.POSITIVE_INFINITY, Number.NaN, Number.MAX_SAFE_INTEGER + 1, 0.5]) commands.begin({ operation: 'Invalid version metadata', revision: 0, command: { action: 'configure_panel', expectedVersion } })
+    }}>Reject invalid versions</button></>
+  }
+  function Workspace() { const [generation, setGeneration] = useState(0); return <CommunicationSafety><button onClick={() => setGeneration(value => value + 1)}>Replace panel task</button><Owner key={generation}/></CommunicationSafety> }
+  const view = render(<Workspace/>)
+  fireEvent.click(screen.getByText('Start initial native version'))
+  fireEvent.click(screen.getByText('Replace panel task'))
+  expect(screen.getByText('Initial request unknown')).toBeVisible()
+  expect(view.container).toHaveTextContent('"expectedVersion":0')
+  expect(view.container).not.toHaveTextContent('PRIVATE-PANEL-')
+  fireEvent.click(screen.getByText('Reject invalid versions'))
+  const attempts = JSON.parse(view.container.querySelector('pre')!.textContent!) as { command: { expectedVersion?: number } }[]
+  expect(attempts[0].command.expectedVersion).toBe(0)
+  expect(attempts.slice(1).map(attempt => attempt.command.expectedVersion)).toEqual([undefined, undefined, undefined, undefined, undefined])
+})

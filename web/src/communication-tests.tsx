@@ -52,7 +52,7 @@ export function useCommunicationCommands(owner: string) {
       const intentFingerprint = typeof attempt.command.intentFingerprint === 'string' && /^[0-9a-f]{64}$/.test(attempt.command.intentFingerprint) ? attempt.command.intentFingerprint : undefined
       const resourceID = typeof attempt.command.resourceID === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.command.resourceID) && attempt.command.resourceID !== '00000000-0000-0000-0000-000000000000' ? attempt.command.resourceID : undefined
       const subjectID = typeof attempt.command.subjectID === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.command.subjectID) && attempt.command.subjectID !== '00000000-0000-0000-0000-000000000000' ? attempt.command.subjectID : undefined
-      const expectedVersion = typeof attempt.command.expectedVersion === 'number' && Number.isSafeInteger(attempt.command.expectedVersion) && attempt.command.expectedVersion > 0 ? attempt.command.expectedVersion : undefined
+      const expectedVersion = typeof attempt.command.expectedVersion === 'number' && Number.isSafeInteger(attempt.command.expectedVersion) && attempt.command.expectedVersion >= 0 ? attempt.command.expectedVersion : undefined
       update(previous => existing ? previous.map(item => item.id === existing ? { ...item, state: 'pending', blocks: true } : item) : [...previous, { id, operation: attempt.operation, revision: attempt.revision, command: { intentID, action, revision, requestID, resourceID, subjectID, expectedVersion, intentFingerprint }, state: 'pending', blocks: true }])
       return id
     },
