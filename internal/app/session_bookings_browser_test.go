@@ -208,6 +208,9 @@ func runSessionBookingBrowser(t *testing.T, viewport string) {
 		t.Fatal(err)
 	}
 	command := exec.CommandContext(ctx, "node", "node_modules/@playwright/test/cli.js", "test", "--config", "playwright.sessions-native.config.ts")
+	if pattern := os.Getenv("HACKBOX_SESSION_GREP"); pattern != "" {
+		command.Args = append(command.Args, "--grep", pattern)
+	}
 	command.Dir = filepath.Join("..", "..", "web")
 	command.Env = append(os.Environ(), "HACKBOX_SESSION_MANIFEST="+manifestPath, "HACKBOX_SESSION_VIEWPORT="+viewport, "TMPDIR="+private)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr

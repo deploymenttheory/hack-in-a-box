@@ -26,3 +26,10 @@ test('native concurrent bookings, own original outcomes, cancellation/promotion,
  if(journeyFailed)throw journeyFailure
  if(cleanupFailed)throw new Error('Native fixture context cleanup failed')
 })
+test('native organiser creates a session from an agenda item using event-local window controls',async({browser})=>{
+ const context=await actor(browser,'admin','owner');let failure:unknown,failed=false,cleanupFailed:boolean
+ try{const page=await context.newPage();await page.goto(`/events/${native.event_id}`);await openEventSection(page,'Sessions');await page.getByRole('combobox',{name:'Agenda item',exact:true}).selectOption(native.new_session_id);await page.getByRole('spinbutton',{name:'Session capacity'}).fill('2');await page.getByRole('textbox',{name:'Room',exact:true}).fill('Synthetic office-hour room');await page.getByRole('textbox',{name:'Authorised meeting URL'}).fill('https://meeting.example.test/synthetic-office-hour');await page.getByLabel('Booking opens (event-local)',{exact:true}).fill(native.opens.slice(0,16));await page.getByLabel('Booking closes (event-local)',{exact:true}).fill(native.closes.slice(0,16));await page.getByRole('button',{name:'Review session configuration'}).click();const response=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith(`/sessions/${native.new_session_id}`)&&r.request().method()==='PUT');await review(page).getByRole('button',{name:'Confirm reviewed change'}).click();expect((await response).status()).toBe(200);await expect(page.getByRole('button',{name:'Open Synthetic native office hour',exact:true})).toBeAttached()
+ }catch(error){failed=true;failure=error}finally{const closed=await Promise.allSettled([context.close()]);cleanupFailed=closed.some(result=>result.status==='rejected')}
+ if(failed)throw failure
+ if(cleanupFailed)throw new Error('Native setup context cleanup failed')
+})
