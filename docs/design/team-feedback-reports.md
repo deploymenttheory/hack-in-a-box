@@ -64,12 +64,23 @@ continuations. Audit dates use the current event timezone.
 Announced-result pages and paired room presentation consume only the #112
 announcement projection. Finalist announcement, private award confirmation,
 award announcement and team feedback release remain independent controls. The
-assigned overall-final ballot workflow reads the exact native judge run and
-frozen candidate evidence; it exposes only the caller's vote and explicit
-replacement, with no inferred category casting permission.
+assigned judge ballot workflow reads the exact native judge run and frozen
+candidate evidence for both returned overall and all-team category ties.
+Explicit task selection uses exact category labels from the current published
+rubric in those assigned briefs; only the caller's vote and explicit replacement
+are shown. Qualification categories remain with their separate native panel owner;
+no judge or organiser casting authority is inferred.
 
 See [frontend browser verification](../verification/team-reports/frontend/README.md)
 for native PostgreSQL/HTTP/browser results, independent guide examples and
 synthetic visual evidence. The separate #112 room parser/frame-bound correction
 is consumed rather than duplicated. The parent delivery retains the category
 policy, required CI and integration gates; this document does not close them.
+
+
+Internal delivery gate: the owner confirmed that every judge votes on all-team
+category ties and that hack mentor views are added. Whether those mentor views
+are advisory or counted votes still requires clarification and a native owned
+flow. This independent judge UI consumes current authorised native ties only;
+it neither invents the mentor contribution nor establishes full issue113
+completion. Keep the PR Draft until that dependent policy/flow is resolved.

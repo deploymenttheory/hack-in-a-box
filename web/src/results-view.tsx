@@ -1,3 +1,4 @@
+import { Button } from './components/ui/button'
 import type { ReactNode } from 'react'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { Icon } from './components/ui/icon'
@@ -20,6 +21,10 @@ export function ResultReview({ action, version, reason, children, pending, disab
  return <ConfirmationDialog open title={`Review: ${resultActionLabel[action].toLowerCase()}`} description={action.startsWith('publish_') ? 'This explicitly releases the captured announcement to the event audience and paired room screens.' : 'This records a private result decision. Announcements and team feedback require their own release.'} confirmLabel={resultActionLabel[action]} pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded><p>Result version {version}</p>{children}<p>Recorded reason: {reason}</p></ConfirmationDialog>
 }
 
-export function BallotReview({ winner, reason, children, pending, disabled, confirm, cancel, returnFocus }: { winner: string; reason: string; children: ReactNode; pending: boolean; disabled: boolean; confirm: () => void; cancel: () => void; returnFocus: () => HTMLElement | false }) {
- return <ConfirmationDialog open title="Review your final tie vote" description="Record only your own explicit ballot against these current frozen candidates. This does not confirm an award or release an announcement." confirmLabel="Record reviewed final tie vote" pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded><p>Your selected winner: {winner}</p>{children}<p>Recorded reason: {reason}</p></ConfirmationDialog>
+export function BallotReview({ tieLabel, winner, reason, children, pending, disabled, confirm, cancel, returnFocus }: { tieLabel: string; winner: string; reason: string; children: ReactNode; pending: boolean; disabled: boolean; confirm: () => void; cancel: () => void; returnFocus: () => HTMLElement | false }) {
+ return <ConfirmationDialog open title="Review your tie vote" description="Record only your own explicit ballot against these current frozen candidates. This does not confirm an award or release an announcement." confirmLabel="Record reviewed tie vote" pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded><p>Selected tie: {tieLabel}</p><p>Your selected winner: {winner}</p>{children}<p>Recorded reason: {reason}</p></ConfirmationDialog>
+}
+
+export function BallotTasks({ items, selected, disabled, choose }: { items: { id: string; label: string; progress: string; outcome: string; ownVote: boolean }[]; selected: string; disabled: boolean; choose: (id: string) => void }) {
+ return <section aria-label="Assigned tie tasks"><h2>Your assigned ties</h2><ul className="fleet-result-lines">{items.map(item => <li key={item.id}><div><h3>{item.label}</h3><p>{item.progress} · {item.outcome}</p><p>{item.ownVote ? 'Your ballot is recorded; replacement requires a new review.' : 'Your ballot is required.'}</p></div><Button icon="next" variant="outline" aria-pressed={selected === item.id} disabled={disabled} onClick={() => choose(item.id)}>Review {item.label}</Button></li>)}</ul></section>
 }

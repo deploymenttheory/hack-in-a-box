@@ -364,9 +364,14 @@ or deliberate current-base review, never an automatic replay. Current denial dis
 private report, audience and held continuation; restoring permission starts a fresh
 read. The guide distinguishes synthetic callback completion from a native receipt.
 
-`BallotReview` also demonstrates a judge's captured final tie vote and explicit
-replacement. Native ballot discovery supplies the exact current judge run and
+`BallotTasks` and `BallotReview` demonstrate a judge's explicitly selected overall
+or category tie and captured vote/replacement. No first tie or winner is selected
+automatically; task status and the next assigned tie remain visible. Selection
+focuses the current tie heading; cancel returns to the actual review opener. Category
+labels come from the same current native frozen brief's published rubric. Native ballot discovery supplies the exact current judge run and
 candidate set; names and frozen deliverables come from current assigned briefs.
+Only native-returned judge ties are offered; qualification panel categories keep
+their separate native mentor/organiser authority.
 Only the caller's vote prose is displayed. Every required judge and a strict
 majority remain native authority; a split offers another deliberate reviewed vote.
 No organiser casting action is inferred, and announcement/award confirmation stay

@@ -21,7 +21,7 @@ export function permittedDestinations(session: Pick<Session, 'can_create_events'
     ...(admin && session.can_create_events ? [{ href: '/events/new', label: 'Create event', icon: 'add' } as const, { href: '/templates', label: 'Event templates', icon: 'layout' } as const] : []),
     ...(event ? [
       { href: `/events/${event.id}`, label: event.name + ' workspace', icon: 'calendar' } as const,
-      { href: `/events/${event.id}/results/ballots`, label: 'Your final tie ballots', icon: 'check' } as const,
+      { href: `/events/${event.id}/results/ballots`, label: 'Your assigned tie ballots', icon: 'check' } as const,
       { href: `/events/${event.id}/results`, label: 'Announced results', icon: 'check' } as const,
       { href: `/events/${event.id}/team-feedback`, label: 'Team feedback reports', icon: 'book' } as const,
       ...(admin && 'can_edit' in event && event.can_edit ? [{ href: `/events/${event.id}/results/prepare`, label: 'Prepare and announce results', icon: 'send' } as const] : []),
