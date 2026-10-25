@@ -44,3 +44,33 @@ final complete native execution is running and is not claimed passed here.
 
 No provider effects, full UI completion, exact current CI or final independent
 review/acceptance is claimed by this checkpoint.
+
+
+## Independent prose and exact optional-score boundary
+
+Live #113/#7 requires deliberate optional score selection and separate feedback,
+confirmation and announcement actions; neither requires a result approval for
+prose. The original confirmed-source gate was therefore removed for prose.
+A controlled reproduction of that original dependency against a real native
+unconfirmed event failed in 6.497s. The final full native PostgreSQL/race report
+suite passed in 200.927s: both modes release prose before any result approval;
+later genuine confirmation and completed lifecycle preserve that independent
+release; unrelated judge revocation does not withdraw authored prose. Unscored
+published teams receive prose without zero scores or invented confirmation IDs.
+
+The separate score path requires an explicitly captured `score_binding` beside
+the team report binding, and stores actual confirmation/run identities only
+when scores are selected. Current scored save/release/read preserves native
+rubric/frozen-final/repository/required-judge/qualification and approval checks.
+Post-completion source reading never starts an assessment or grants scoring
+writes. Current role, assignment and declared-conflict loss masks scored staff
+previews/history and blocks scored recipient access while stored originals stay
+unchanged. Exact original receipts remain distinct from current GETs.
+
+The full suite also validates actual strict HTTP schemas/surface/CSRF/If-Match,
+private draft embargo, no implicit scores, explicit amended release, original
+receipt recovery and no implicit result announcement. Configured affected lint
+passes with zero issues; TypeScript compilation passes. Migration54
+upgrade/empty-rollback and adjacent native owner regressions are recorded after
+their separate terminal results; no pending CI or UI/browser proof is treated as
+passed here.

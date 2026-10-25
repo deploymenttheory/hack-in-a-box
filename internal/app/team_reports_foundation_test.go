@@ -53,7 +53,10 @@ func TestTeamReportNativeDraftReleaseCorrectionAudienceAndOptionalOwnScores(t *t
 			s := teamreports.Service{Pool: r.pool, Now: r.clock.read, Results: &f.service}
 			p, err := s.Read(t.Context(), r.owner.ID, r.eventID, r.teamID)
 			resultsSourceRequire(t, err)
-			if p.CurrentSource != nil || p.Latest != nil || p.Receipt != nil {
+			if p.CurrentSource == nil || p.CurrentSource.ScoresAvailable ||
+				p.CurrentSource.FinalScores != nil ||
+				p.Latest != nil ||
+				p.Receipt != nil {
 				t.Fatal("unconfirmed results fabricated report source or receipt", p)
 			}
 			body := teamreports.Body{
@@ -84,7 +87,7 @@ func TestTeamReportNativeDraftReleaseCorrectionAudienceAndOptionalOwnScores(t *t
 			confirmResultsForTeamReport(t, f)
 			p, err = s.Read(t.Context(), r.owner.ID, r.eventID, r.teamID)
 			resultsSourceRequire(t, err)
-			if p.CurrentSource == nil || p.CurrentSource.Total.Numerator != "42" ||
+			if p.CurrentSource == nil || p.CurrentSource.FinalScores.Total.Numerator != "42" ||
 				p.CurrentSource.TeamID != r.teamID {
 				t.Fatal("source is not exact independent own-team result", p)
 			}
@@ -155,6 +158,7 @@ func TestTeamReportNativeDraftReleaseCorrectionAudienceAndOptionalOwnScores(t *t
 			save.RequestID = uuid.New()
 			save.Body.Title = "Explicit corrected team report"
 			save.IncludeFinalScores = true
+			save.ScoreBinding = p.CurrentSource.FinalScores.Binding
 			save.Reason = "Explicit correction now selecting only own final scores"
 			p, err = s.Change(t.Context(), r.owner.ID, r.eventID, r.teamID, 2, save)
 			resultsSourceRequire(t, err)
@@ -273,7 +277,9 @@ func TestTeamReportNativeDraftReleaseCorrectionAudienceAndOptionalOwnScores(t *t
 			f.reopen(t, 0)
 			p, err = s.Read(t.Context(), r.owner.ID, r.eventID, r.teamID)
 			resultsSourceRequire(t, err)
-			if p.CurrentSource != nil || p.Latest.FinalScores != nil {
+			if p.CurrentSource == nil || p.CurrentSource.ScoresAvailable ||
+				p.CurrentSource.FinalScores != nil ||
+				p.Latest.FinalScores != nil {
 				t.Fatal("stale result source refilled report score preview", p)
 			}
 			if _, err = s.ReadReleased(

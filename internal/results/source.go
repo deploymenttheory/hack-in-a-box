@@ -40,7 +40,12 @@ func (s Service) source(
 	return s.sourceMode(ctx, tx, actor, eventID, false)
 }
 
-func (s Service) sourceMode(ctx context.Context, tx pgx.Tx, actor, eventID uuid.UUID, readOnly bool) (assessmentSource, error) {
+func (s Service) sourceMode(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID uuid.UUID,
+	readOnly bool,
+) (assessmentSource, error) {
 	out := assessmentSource{preview: emptyPreview()}
 	q := dbgen.New(tx)
 	runs, err := q.CurrentRubricRuns(ctx, eventID)
@@ -133,7 +138,14 @@ func (s Service) sourceMode(ctx context.Context, tx pgx.Tx, actor, eventID uuid.
 	if readOnly {
 		completionReader = s.Judging.ReadCompletionInTransaction
 	}
-	completion, tallies, err := calculateCompletion(ctx, tx, completionReader, actor, eventID, out.preview.JudgeRunID)
+	completion, tallies, err := calculateCompletion(
+		ctx,
+		tx,
+		completionReader,
+		actor,
+		eventID,
+		out.preview.JudgeRunID,
+	)
 	if err != nil {
 		if errors.Is(err, access.ErrConflict) || errors.Is(err, access.ErrForbidden) ||
 			errors.Is(err, access.ErrNotFound) ||

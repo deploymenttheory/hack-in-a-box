@@ -25,6 +25,12 @@ func (s Service) now() time.Time {
 }
 
 type (
+	CurrentSource struct {
+		Binding         string                      `json:"binding"`
+		TeamID          uuid.UUID                   `json:"team_id"`
+		ScoresAvailable bool                        `json:"scores_available"`
+		FinalScores     *results.TeamFeedbackSource `json:"final_scores"`
+	}
 	Body struct {
 		Title      string   `json:"title"`
 		Summary    string   `json:"summary"`
@@ -32,10 +38,10 @@ type (
 		NextSteps  []string `json:"next_steps"`
 	}
 	Source struct {
-		ConfirmationID uuid.UUID `json:"confirmation_id"`
-		JudgeRunID     uuid.UUID `json:"judge_run_id"`
-		Binding        string    `json:"binding"`
-		TeamID         uuid.UUID `json:"team_id"`
+		ConfirmationID *uuid.UUID `json:"confirmation_id"`
+		JudgeRunID     *uuid.UUID `json:"judge_run_id"`
+		Binding        string     `json:"binding"`
+		TeamID         uuid.UUID  `json:"team_id"`
 	}
 	Record struct {
 		Version            int64                       `json:"version"`
@@ -59,6 +65,7 @@ type (
 		RequestID          uuid.UUID `json:"request_id"`
 		Action             string    `json:"action"`
 		SourceBinding      string    `json:"source_binding"`
+		ScoreBinding       string    `json:"score_binding"`
 		Body               Body      `json:"body"`
 		IncludeFinalScores bool      `json:"include_final_scores"`
 		Reason             string    `json:"reason"`
@@ -73,10 +80,10 @@ type (
 		Fingerprint     string    `json:"fingerprint"`
 	}
 	Page struct {
-		Version       int64                       `json:"version"`
-		CurrentSource *results.TeamFeedbackSource `json:"current_source"`
-		Latest        *Record                     `json:"latest"`
-		Receipt       *Receipt                    `json:"receipt"`
+		Version       int64          `json:"version"`
+		CurrentSource *CurrentSource `json:"current_source"`
+		Latest        *Record        `json:"latest"`
+		Receipt       *Receipt       `json:"receipt"`
 	}
 	// Released cannot contain audience member lists, draft prose, rank or awards.
 	// Scores are present only after an explicit organiser choice and source check.

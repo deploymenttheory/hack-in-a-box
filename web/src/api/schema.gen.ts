@@ -4244,6 +4244,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        TeamFeedbackCurrentSource: {
+            binding: string;
+            /** Format: uuid */
+            team_id: string;
+            scores_available: boolean;
+            final_scores: components["schemas"]["TeamFeedbackScores"] | null;
+        };
         TeamFeedbackBody: {
             title: string;
             summary: string;
@@ -4252,9 +4259,9 @@ export interface components {
         };
         TeamFeedbackSource: {
             /** Format: uuid */
-            confirmation_id: string;
+            confirmation_id: string | null;
             /** Format: uuid */
-            judge_run_id: string;
+            judge_run_id: string | null;
             binding: string;
             /** Format: uuid */
             team_id: string;
@@ -4324,11 +4331,12 @@ export interface components {
             reason: string;
             body?: components["schemas"]["TeamFeedbackBody"];
             include_final_scores?: boolean;
+            score_binding?: string;
         };
         TeamFeedbackPage: {
             /** Format: int64 */
             version: number;
-            current_source: components["schemas"]["TeamFeedbackScores"] | null;
+            current_source: components["schemas"]["TeamFeedbackCurrentSource"] | null;
             latest: components["schemas"]["TeamFeedbackRecord"] | null;
             receipt: components["schemas"]["TeamFeedbackReceipt"] | null;
         };

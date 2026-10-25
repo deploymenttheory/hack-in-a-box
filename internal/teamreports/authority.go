@@ -104,13 +104,14 @@ func validate(expected int64, c Command) error {
 	}
 	switch c.Action {
 	case "save":
-		if !validateBody(c.Body) {
+		if !validateBody(c.Body) || c.IncludeFinalScores && len(c.ScoreBinding) != 64 ||
+			!c.IncludeFinalScores && c.ScoreBinding != "" {
 			return access.ErrInvalid
 		}
 	case "release":
 		if c.Body.Title != "" || c.Body.Summary != "" ||
 			len(c.Body.Highlights)+len(c.Body.NextSteps) > 0 ||
-			c.IncludeFinalScores {
+			c.IncludeFinalScores || c.ScoreBinding != "" {
 			return access.ErrInvalid
 		}
 	default:

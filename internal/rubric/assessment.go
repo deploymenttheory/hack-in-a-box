@@ -276,7 +276,10 @@ func assessmentReadable(row dbgen.Event, c event.Configuration, now time.Time, w
 	if write {
 		return assessmentOpen(row, c, now)
 	}
-	if !row.PublishedAt.Valid || now.Before(row.PublishedAt.Time) || c.LiveStart.IsZero() || !c.SubmissionCutoff.After(c.LiveStart) || now.Before(c.SubmissionCutoff) || !slices.Contains([]string{"live", "assessment", "completed"}, row.Stage) {
+	if !row.PublishedAt.Valid || now.Before(row.PublishedAt.Time) || c.LiveStart.IsZero() ||
+		!c.SubmissionCutoff.After(c.LiveStart) ||
+		now.Before(c.SubmissionCutoff) ||
+		!slices.Contains([]string{"live", "assessment", "completed"}, row.Stage) {
 		return access.ErrForbidden
 	}
 	return nil

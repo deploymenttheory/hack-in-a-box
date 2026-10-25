@@ -116,5 +116,12 @@ func (s Service) ConfirmedTeamFeedbackInTransaction(
 	}
 	// A confirmed outcome can support prose for a published unscored team.
 	// Absence of a final tally is explicit; it never manufactures zero scores.
-	return TeamFeedbackSource{ConfirmationID: round.Confirmation.ID, JudgeRunID: source.preview.JudgeRunID, Binding: source.preview.Binding, TeamID: teamID, Reference: source.preview.Reference, Categories: []TeamFeedbackCategory{}}, nil
+	return TeamFeedbackSource{
+		ConfirmationID: round.Confirmation.ID,
+		JudgeRunID:     source.preview.JudgeRunID,
+		Binding:        source.preview.Binding,
+		TeamID:         teamID,
+		Reference:      source.preview.Reference,
+		Categories:     []TeamFeedbackCategory{},
+	}, nil
 }

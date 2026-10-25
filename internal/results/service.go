@@ -26,7 +26,9 @@ func CalculateInTransaction(
 	return calculateCompletion(ctx, tx, owner.CompletionInTransaction, actor, eventID, runID)
 }
 
-func calculateCompletion(ctx context.Context, tx pgx.Tx,
+func calculateCompletion(
+	ctx context.Context,
+	tx pgx.Tx,
 	reader func(context.Context, pgx.Tx, uuid.UUID, uuid.UUID, uuid.UUID) (judging.Completion, error),
 	actor, eventID, runID uuid.UUID,
 ) (judging.Completion, []TeamTally, error) {

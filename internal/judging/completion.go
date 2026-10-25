@@ -39,11 +39,20 @@ func (s Service) CompletionInTransaction(
 
 // ReadCompletionInTransaction validates settled sources with all current native
 // authority and evidence gates, without starting assessment or permitting writes.
-func (s Service) ReadCompletionInTransaction(ctx context.Context, tx pgx.Tx, actor, eventID, runID uuid.UUID) (Completion, error) {
+func (s Service) ReadCompletionInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, runID uuid.UUID,
+) (Completion, error) {
 	return s.completion(ctx, tx, actor, eventID, runID, false)
 }
 
-func (s Service) completion(ctx context.Context, tx pgx.Tx, actor, eventID, runID uuid.UUID, write bool) (Completion, error) {
+func (s Service) completion(
+	ctx context.Context,
+	tx pgx.Tx,
+	actor, eventID, runID uuid.UUID,
+	write bool,
+) (Completion, error) {
 	out := Completion{
 		RunID:              runID,
 		Cards:              []Card{},

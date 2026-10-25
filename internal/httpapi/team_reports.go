@@ -9,7 +9,10 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamreports"
 )
 
-func (h handlers) GetTeamFeedbackReport(ctx context.Context, r contract.GetTeamFeedbackReportRequestObject) (contract.GetTeamFeedbackReportResponseObject, error) {
+func (h handlers) GetTeamFeedbackReport(
+	ctx context.Context,
+	r contract.GetTeamFeedbackReportRequestObject,
+) (contract.GetTeamFeedbackReportResponseObject, error) {
 	if !h.ResultsAdminSurface || h.TeamReports.Pool == nil {
 		return nil, access.ErrForbidden
 	}
@@ -20,7 +23,10 @@ func (h handlers) GetTeamFeedbackReport(ctx context.Context, r contract.GetTeamF
 	return convertDTO[contract.GetTeamFeedbackReport200JSONResponse](value)
 }
 
-func (h handlers) ChangeTeamFeedbackReport(ctx context.Context, r contract.ChangeTeamFeedbackReportRequestObject) (contract.ChangeTeamFeedbackReportResponseObject, error) {
+func (h handlers) ChangeTeamFeedbackReport(
+	ctx context.Context,
+	r contract.ChangeTeamFeedbackReportRequestObject,
+) (contract.ChangeTeamFeedbackReportResponseObject, error) {
 	if !h.ResultsAdminSurface || h.TeamReports.Pool == nil {
 		return nil, access.ErrForbidden
 	}
@@ -42,7 +48,10 @@ func (h handlers) ChangeTeamFeedbackReport(ctx context.Context, r contract.Chang
 	return convertDTO[contract.ChangeTeamFeedbackReport200JSONResponse](value)
 }
 
-func (h handlers) GetTeamFeedbackReportHistory(ctx context.Context, r contract.GetTeamFeedbackReportHistoryRequestObject) (contract.GetTeamFeedbackReportHistoryResponseObject, error) {
+func (h handlers) GetTeamFeedbackReportHistory(
+	ctx context.Context,
+	r contract.GetTeamFeedbackReportHistoryRequestObject,
+) (contract.GetTeamFeedbackReportHistoryResponseObject, error) {
 	if !h.ResultsAdminSurface || h.TeamReports.Pool == nil {
 		return nil, access.ErrForbidden
 	}
@@ -57,11 +66,20 @@ func (h handlers) GetTeamFeedbackReportHistory(ctx context.Context, r contract.G
 	return contract.GetTeamFeedbackReportHistory200JSONResponse{Items: items}, nil
 }
 
-func (h handlers) GetTeamFeedbackReportReceipt(ctx context.Context, r contract.GetTeamFeedbackReportReceiptRequestObject) (contract.GetTeamFeedbackReportReceiptResponseObject, error) {
+func (h handlers) GetTeamFeedbackReportReceipt(
+	ctx context.Context,
+	r contract.GetTeamFeedbackReportReceiptRequestObject,
+) (contract.GetTeamFeedbackReportReceiptResponseObject, error) {
 	if h.TeamReports.Pool == nil {
 		return nil, access.ErrForbidden
 	}
-	value, err := h.TeamReports.OriginalReceipt(ctx, actor(ctx).ID, r.EventId, r.TeamId, r.RequestId)
+	value, err := h.TeamReports.OriginalReceipt(
+		ctx,
+		actor(ctx).ID,
+		r.EventId,
+		r.TeamId,
+		r.RequestId,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("recover original team report acknowledgement: %w", err)
 	}
@@ -70,7 +88,10 @@ func (h handlers) GetTeamFeedbackReportReceipt(ctx context.Context, r contract.G
 	}{value})
 }
 
-func (h handlers) GetReleasedTeamFeedbackReport(ctx context.Context, r contract.GetReleasedTeamFeedbackReportRequestObject) (contract.GetReleasedTeamFeedbackReportResponseObject, error) {
+func (h handlers) GetReleasedTeamFeedbackReport(
+	ctx context.Context,
+	r contract.GetReleasedTeamFeedbackReportRequestObject,
+) (contract.GetReleasedTeamFeedbackReportResponseObject, error) {
 	if h.TeamReports.Pool == nil {
 		return nil, access.ErrForbidden
 	}

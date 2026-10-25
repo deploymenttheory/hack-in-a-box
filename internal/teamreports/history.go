@@ -42,8 +42,7 @@ func (s Service) History(ctx context.Context, actor, eventID, teamID uuid.UUID) 
 			if err = json.Unmarshal(raw, &record); err != nil {
 				return failure("history document", err)
 			}
-			if page.CurrentSource == nil || page.CurrentSource.Binding != record.Source.Binding ||
-				page.CurrentSource.ConfirmationID != record.Source.ConfirmationID {
+			if page.CurrentSource == nil || !currentScores(&record, *page.CurrentSource) {
 				record.FinalScores = nil
 			}
 			out = append(out, record)

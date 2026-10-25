@@ -11,19 +11,41 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
-	"github.com/deploymenttheory/hack-in-a-box/internal/results"
 )
 
+// Prose binds only to this current published team. Scores are an explicit,
+// separately current confirmed source; unavailable scores never block prose.
 func (s Service) source(
 	ctx context.Context,
 	tx pgx.Tx,
 	actor, eventID, teamID uuid.UUID,
-) (results.TeamFeedbackSource, error) {
-	if s.Results == nil {
-		return results.TeamFeedbackSource{}, access.ErrForbidden
+) (CurrentSource, error) {
+	out := CurrentSource{
+		Binding: fingerprint(struct{ EventID, TeamID uuid.UUID }{eventID, teamID}),
+		TeamID:  teamID,
 	}
-	source, err := s.Results.ConfirmedTeamFeedbackInTransaction(ctx, tx, actor, eventID, teamID)
-	return source, failure("confirmed result source", err)
+	if s.Results == nil {
+		return out, nil
+	}
+	scores, err := s.Results.ConfirmedTeamFeedbackInTransaction(ctx, tx, actor, eventID, teamID)
+	if err != nil {
+		if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrConflict) ||
+			errors.Is(err, access.ErrNotFound) {
+			return out, nil
+		}
+		return out, failure("confirmed result source", err)
+	}
+	if scores.ScoresAvailable {
+		out.ScoresAvailable = true
+		out.FinalScores = &scores
+	}
+	return out, nil
+}
+
+func currentScores(record *Record, source CurrentSource) bool {
+	return record.FinalScores != nil && source.FinalScores != nil &&
+		record.FinalScores.Binding == source.FinalScores.Binding &&
+		record.FinalScores.ConfirmationID == source.FinalScores.ConfirmationID
 }
 
 func (s Service) page(
@@ -42,20 +64,13 @@ func (s Service) page(
 	}
 	source, err := s.source(ctx, tx, actor, eventID, teamID)
 	if err != nil {
-		if errors.Is(err, access.ErrForbidden) || errors.Is(err, access.ErrConflict) ||
-			errors.Is(err, access.ErrNotFound) {
-			if record != nil {
-				record.FinalScores = nil
-			}
-			return out, nil
-		}
-		return out, failure("current confirmation", err)
+		return out, err
 	}
 	out.CurrentSource = &source
-	if record != nil &&
-		(record.Source.Binding != source.Binding || record.Source.ConfirmationID != source.ConfirmationID) {
+	if record != nil && record.IncludeFinalScores && !currentScores(record, source) {
 		record.FinalScores = nil
 	}
+
 	return out, nil
 }
 
@@ -118,7 +133,9 @@ func (s Service) Change(
 		if err != nil {
 			return err
 		}
-		if source.Binding != input.SourceBinding || input.IncludeFinalScores && !source.ScoresAvailable {
+		if source.Binding != input.SourceBinding ||
+			input.IncludeFinalScores &&
+				(source.FinalScores == nil || input.ScoreBinding != source.FinalScores.Binding) {
 			return access.ErrConflict
 		}
 		next := Record{
@@ -128,10 +145,8 @@ func (s Service) Change(
 			State:              "draft",
 			IncludeFinalScores: input.IncludeFinalScores,
 			Source: Source{
-				ConfirmationID: source.ConfirmationID,
-				JudgeRunID:     source.JudgeRunID,
-				Binding:        source.Binding,
-				TeamID:         teamID,
+				Binding: source.Binding,
+				TeamID:  teamID,
 			},
 			AuthorID:  actor,
 			ActorID:   actor,
@@ -140,12 +155,14 @@ func (s Service) Change(
 			Reason:    input.Reason,
 		}
 		if input.IncludeFinalScores {
-			next.FinalScores = &source
+			next.FinalScores = source.FinalScores
+			next.Source.ConfirmationID = &source.FinalScores.ConfirmationID
+			next.Source.JudgeRunID = &source.FinalScores.JudgeRunID
 		}
 		if input.Action == "release" {
 			if current == nil || current.State != "draft" ||
 				current.Source.Binding != source.Binding ||
-				current.Source.ConfirmationID != source.ConfirmationID {
+				current.IncludeFinalScores && !currentScores(current, source) {
 				return access.ErrConflict
 			}
 			next = *current
@@ -215,16 +232,19 @@ func (s Service) ReadReleased(
 		if !slices.Contains(record.Audience, actor) {
 			return access.ErrForbidden
 		}
-		// Current recipient scope is independent of the publisher's source check.
-		// Only this released own-team projection crosses the boundary, never Results.Read.
-		source, err := s.source(ctx, tx, record.ActorID, eventID, teamID)
-		if err != nil {
-			return err
+		// The recipient's fresh membership and captured audience are sufficient
+		// for released authored prose. Optional scores retain their exact native
+		// confirmation gate; no original publisher grant is inherited by a member.
+		if record.IncludeFinalScores {
+			source, e := s.source(ctx, tx, record.ActorID, eventID, teamID)
+			if e != nil {
+				return e
+			}
+			if !currentScores(record, source) {
+				return access.ErrConflict
+			}
 		}
-		if source.Binding != record.Source.Binding ||
-			source.ConfirmationID != record.Source.ConfirmationID {
-			return access.ErrConflict
-		}
+
 		out = &Released{
 			Version:    record.Version,
 			TeamID:     teamID,

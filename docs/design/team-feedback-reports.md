@@ -5,19 +5,27 @@ The support feedback owner intentionally cannot carry scores. This separate
 native aggregate stores explicitly authored report prose; it does not copy raw
 judge/mentor assessment, infer sanitisation or publish an event result.
 
-An organiser reads the actual current #112 confirmation and an exact own-team
-score projection in the same event transaction. The source contains the current
-confirmation/binding, public category labels and exact category averages/total;
-it has no rank, award or private assessment prose. Saving a report captures its
-source, author and explicit optional-score choice. Releasing captures that exact
-draft version and current confirmed published-team audience. Saving a correction
-keeps the prior release visible until a separate reviewed release; original
-versions and actor-exact command acknowledgements remain immutable.
+An organiser deliberately authors prose for a current published team. Prose-only
+reports do not require an event result confirmation, a scored final entry or a
+public announcement. Their source binding identifies the current event/team
+scope. Saving captures the author and explicit optional-score choice; releasing
+captures the exact draft version, releaser and current confirmed published-team
+audience. Corrections preserve the prior release until another reviewed release.
+
+Score inclusion is separate: the organiser must select and submit the captured
+`score_binding` from the current own-team confirmed result. That narrow source
+contains public category labels and exact category averages/total, with no rank,
+award or private assessment prose. Its exact confirmation and judge-run identity
+are retained only for score-bearing reports. Prose versions store SQL/JSON null
+for those absent identities; no zero score or fabricated confirmation is used.
+The native current source is revalidated before scored save, release and read.
 
 Recipient reads require both the original audience snapshot and fresh native
 confirmed published-team membership. Drafts/staff history and other recipients'
 identities never enter the participant projection. Result-source drift pauses
 current score-bearing report reads/previews without rewriting stored originals.
+Independent prose remains available to its current original recipients through
+later result confirmation, completion and unrelated judge access changes.
 Releasing a report never announces finalists/awards or triggers a provider.
 
 The versioned API exposes administrator-only GET/POST
@@ -36,8 +44,8 @@ Cancelled/archived sources remain unavailable; report writers retain existing
 EventEdit/WritesAllowed authority and gain no competition mutation grant.
 
 Published teams outside the final tally may receive deliberately authored prose
-under the exact current event confirmation. Their source explicitly has
-`scores_available=false`, `total=null` and no category scores; choosing to include
+under the exact current event confirmation. Their current source explicitly has
+`scores_available=false` and `final_scores=null`; choosing to include
 nonexistent final scores is rejected. No zero, rank or other-team tally is
 manufactured. Scores for a scored team still require the explicit saved choice.
 
