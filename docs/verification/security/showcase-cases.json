@@ -1,0 +1,3 @@
+[
+ {"criterion":"native showcase source/publication privilege escalation, literal search and exact current audiences", "package":"app", "tests":["TestSecurity121ShowcaseReadGrantCannotBecomeSourceOrPublicationAuthority","TestShowcaseNativePublicationFiltersAwardsAndCurrentAudience"]}
+]
