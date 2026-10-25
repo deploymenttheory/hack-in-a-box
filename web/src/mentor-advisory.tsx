@@ -2,8 +2,9 @@ import { useCallback, useRef, useState } from 'react'
 import { useBlocker, useParams } from '@tanstack/react-router'
 import { api, APIError, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
-import { nativeFingerprint, nilUUID } from './results-model'
-import { decisionNamespace, OriginalResultHistory, ResultDecisionState, useResultDecision, type DecisionMetadata } from './results-decision'
+import { nilUUID } from './results-model'
+import { advisoryFingerprint, matchesAdvisoryReceipt, type AdvisoryCommand as Command } from './mentor-advisory-model'
+import { decisionNamespace, OriginalResultHistory, ResultDecisionState, useResultDecision } from './results-decision'
 import { useIdentity } from './session'
 import { useEventAuthority } from './event-authority'
 import { useTodayRead } from './today-read'
@@ -15,17 +16,9 @@ import { Field, Select, focusFirstInvalid } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
 import { MentorAdvisoryFields, MentorAdvisoryReading, MentorAdvisoryReview } from './mentor-advisory-view'
 type Page = components['schemas']['ResultAdvisoryPage']
-type Command = components['schemas']['ResultAdvisoryCommand']
-type Receipt = components['schemas']['ResultAdvisoryReceipt']
 const advisoryDenials = [401, 403, 404, 409]
 const advisoryContextEnded = (error: unknown) => error instanceof APIError && advisoryDenials.includes(error.status)
 const key = (t: { tie_id: string; team_id: string }) => `${t.tie_id}:${t.team_id}`
-export function advisoryFingerprint(body: Command, revision: number) {
- return nativeFingerprint({ Command: { request_id: body.request_id.toLowerCase(), action: body.action, version: body.version, source_binding: body.source_binding, tie_id: body.tie_id, team_id: body.team_id.toLowerCase(), submission_revision: body.submission_revision, views: body.views, reason: body.reason }, ExpectedRevision: revision })
-}
-export function matchesAdvisoryReceipt(receipt: Receipt, intent: DecisionMetadata) {
- return receipt.request_id === intent.requestID && receipt.actor_id === intent.actorID && receipt.action === 'advise' && receipt.expected_revision === intent.revision && receipt.expected_version === intent.version && receipt.version === intent.version + 1 && receipt.fingerprint === intent.fingerprint && receipt.run_id === intent.resourceID && receipt.run_id !== nilUUID && receipt.team_id === intent.subjectID && receipt.tie_id === intent.intentID
-}
 async function load(eventID: string, signal: AbortSignal, actorID: string) {
  const page = unwrap(await api.GET('/api/v1/events/{event_id}/results/mentor-advisories', { signal, cache: 'no-store', params: { path: { event_id: eventID } } }))
  if (page.run_id === nilUUID || page.targets.some(t => t.own && (t.own.author_id !== actorID || t.own.tie_id !== t.tie_id || t.own.team_id !== t.team_id || t.own.run_id !== page.run_id || t.own.source_binding !== page.source_binding || t.own.submission_revision !== t.submission_revision || t.own.version !== t.version))) throw new Error('The current advisory projection did not match your own assigned frozen team.')
