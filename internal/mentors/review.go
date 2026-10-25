@@ -71,40 +71,13 @@ func ReviewCoverageInTransaction(
 
 // AuthorizeModerationPanelInTransaction checks a named panel actor without
 // granting them assignment access. Only explicit huddle membership may use it.
-func AuthorizeModerationPanelInTransaction(
-	ctx context.Context,
-	tx pgx.Tx,
-	actor, eventID, teamID uuid.UUID,
-) error {
-	q := dbgen.New(tx)
-	row, err := q.LockEvent(ctx, eventID)
+func AuthorizeModerationPanelInTransaction(ctx context.Context, tx pgx.Tx, actor, eventID, teamID uuid.UUID) error {
+	roles, page, err := panelActorInTransaction(ctx, tx, actor, eventID, teamID)
 	if err != nil {
-		return fmt.Errorf("lock moderation panel authority: %w", err)
-	}
-	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
-	if err != nil {
-		return fmt.Errorf("authorize current panel role: %w", err)
-	}
-	page, snapshot, err := load(ctx, q, row)
-	if err != nil {
-		return fmt.Errorf("authorize current panel role: %w", err)
-	}
-	var currentTeam *Team
-	for _, team := range snapshot.Teams {
-		if team.ID == teamID {
-			copy := team
-			currentTeam = &copy
-		}
-	}
-	if currentTeam == nil || !currentTeam.Published ||
-		conflicted(snapshot.Conflicts, *currentTeam, actor) {
-		return access.ErrForbidden
+		return err
 	}
 	if slices.Contains(roles, "organiser") {
 		return nil
-	}
-	if !slices.Contains(roles, "mentor") {
-		return access.ErrForbidden
 	}
 	for _, a := range page.Published {
 		if a.TeamID == teamID && a.PersonID == actor {
@@ -112,4 +85,39 @@ func AuthorizeModerationPanelInTransaction(
 		}
 	}
 	return access.ErrForbidden
+}
+
+// AuthorizeQualificationPanelInTransaction checks current role, active team and
+// declared conflicts for a separately persisted qualification-panel member. It
+// grants neither mentor assignment access nor independent-card/source reading;
+// the qualification owner must first enforce its exact recorded panel.
+func AuthorizeQualificationPanelInTransaction(ctx context.Context, tx pgx.Tx, actor, eventID, teamID uuid.UUID) error {
+	_, _, err := panelActorInTransaction(ctx, tx, actor, eventID, teamID)
+	return err
+}
+
+func panelActorInTransaction(ctx context.Context, tx pgx.Tx, actor, eventID, teamID uuid.UUID) ([]string, Page, error) {
+	var empty Page
+	q := dbgen.New(tx)
+	row, err := q.LockEvent(ctx, eventID)
+	if err != nil {
+		return nil, empty, fmt.Errorf("lock panel authority: %w", err)
+	}
+	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
+	if err != nil {
+		return nil, empty, err
+	}
+	if !slices.Contains(roles, "organiser") && !slices.Contains(roles, "mentor") {
+		return nil, empty, access.ErrForbidden
+	}
+	page, snapshot, err := load(ctx, q, row)
+	if err != nil {
+		return nil, empty, err
+	}
+	for _, team := range snapshot.Teams {
+		if team.ID == teamID && team.Published && !conflicted(snapshot.Conflicts, team, actor) {
+			return roles, page, nil
+		}
+	}
+	return nil, empty, access.ErrForbidden
 }
