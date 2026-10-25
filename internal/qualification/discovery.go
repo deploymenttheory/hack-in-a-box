@@ -46,7 +46,7 @@ func (s Service) Rounds(ctx context.Context, actor, eventID uuid.UUID) (Rounds, 
 			if run.Purpose != "mentor_final" {
 				continue
 			}
-			v, err := s.guard(ctx, tx, actor, eventID, run.ID, false)
+			v, err := s.guard(ctx, tx, actor, eventID, run.ID, currentRead)
 			if privateDenial(err) {
 				continue
 			}

@@ -63,7 +63,7 @@ func (s Service) History(
 		return out, access.ErrInvalid
 	}
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-		v, err := s.guard(ctx, tx, actor, eventID, runID, false)
+		v, err := s.guard(ctx, tx, actor, eventID, runID, historicalRead)
 		if err != nil {
 			return err
 		}

@@ -72,7 +72,7 @@ func (s Service) OriginalReceipt(
 		return out, access.ErrInvalid
 	}
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-		if _, err := s.guard(ctx, tx, actor, eventID, runID, false); err != nil {
+		if _, err := s.guard(ctx, tx, actor, eventID, runID, historicalRead); err != nil {
 			return err
 		}
 		var err error

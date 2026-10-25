@@ -22,6 +22,7 @@ import (
 // generated router; no fixture endpoint, provider operation or fabricated policy.
 func qualificationHTTPFixture(
 	t *testing.T,
+	beforeCutoff ...func(*liveRehearsal, rehearsalSurface, uuid.UUID),
 ) (*liveRehearsal, rehearsalSurface, rehearsalSurface, uuid.UUID) {
 	t.Helper()
 	r := newLiveRehearsal(t, true)
@@ -152,6 +153,9 @@ func qualificationHTTPFixture(
 	); err != nil {
 		t.Fatal(err)
 	}
+	for _, prepare := range beforeCutoff {
+		prepare(r, admin, runID)
+	}
 	r.clock.set(page.Configuration.SubmissionCutoff)
 	return r, admin, public, runID
 }
@@ -171,41 +175,7 @@ func TestQualificationHTTPStrictNativeRuntimeOriginalReceiptsAndRoleLoss(t *test
 		}
 	}
 	base := fmt.Sprintf("/api/v1/events/%s/mentor-qualification/%s", r.eventID, run)
-	request := func(surface rehearsalSurface, person dbgen.Person, method, path string, body any, revision int64, csrf bool) (int, []byte) {
-		t.Helper()
-		var reader io.Reader
-		if body != nil {
-			raw, err := json.Marshal(body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			reader = bytes.NewReader(raw)
-		}
-		req, err := http.NewRequestWithContext(t.Context(), method, surface.server.URL+path, reader)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.AddCookie(surface.cookie(t, person))
-		req.Header.Set("Origin", surface.server.URL)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision))
-		if csrf {
-			req.Header.Set("X-CSRF-Token", strings.Repeat("c", 32))
-		}
-		response, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer func() { _ = response.Body.Close() }()
-		raw, err := io.ReadAll(response.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(response.Header.Get("Cache-Control"), "no-store") {
-			t.Fatal("private qualification response was cacheable")
-		}
-		return response.StatusCode, raw
-	}
+	request := qualificationHTTPRequest(t)
 	collection := fmt.Sprintf("/api/v1/events/%s/mentor-qualification", r.eventID)
 	status, raw := request(admin, r.owner, "GET", collection, nil, 0, true)
 	if status != 200 {
@@ -380,5 +350,45 @@ func TestQualificationHTTPStrictNativeRuntimeOriginalReceiptsAndRoleLoss(t *test
 		Scan(&effects); err != nil ||
 		effects != 1 {
 		t.Fatal("denied HTTP probes mutated qualification", effects, err)
+	}
+}
+
+func qualificationHTTPRequest(
+	t *testing.T,
+) func(rehearsalSurface, dbgen.Person, string, string, any, int64, bool) (int, []byte) {
+	return func(surface rehearsalSurface, person dbgen.Person, method, path string, body any, revision int64, csrf bool) (int, []byte) {
+		t.Helper()
+		var reader io.Reader
+		if body != nil {
+			raw, err := json.Marshal(body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			reader = bytes.NewReader(raw)
+		}
+		req, err := http.NewRequestWithContext(t.Context(), method, surface.server.URL+path, reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.AddCookie(surface.cookie(t, person))
+		req.Header.Set("Origin", surface.server.URL)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision))
+		if csrf {
+			req.Header.Set("X-CSRF-Token", strings.Repeat("c", 32))
+		}
+		response, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = response.Body.Close() }()
+		raw, err := io.ReadAll(response.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(response.Header.Get("Cache-Control"), "no-store") {
+			t.Fatal("private qualification response was cacheable")
+		}
+		return response.StatusCode, raw
 	}
 }

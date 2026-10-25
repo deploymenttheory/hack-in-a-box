@@ -233,3 +233,55 @@ caches untouched. Existing reader scope was extracted unchanged for lint.
 
 Full remaining source/managed amendment/history/fresh-judge/schema acceptance
 proof and final integrated verification/reviews/CI remain required.
+
+## Final-evidence acceptance expansion and retained-run recovery
+
+This checkpoint adds real native PostgreSQL acceptance coverage; it does not add
+another schema/API/command field or change finalist/award policy. Actual protected
+file upload and formal URL submission both yield `not_applicable`, while missing,
+withdrawn, inactive-entry and disbanded teams remain unscored and distinct from
+unresolved managed code. The disbanded unused repository schedules no operation.
+The bounded URL/file outcome run passes **20.264s/-race**. Fixture-only corrections
+used the actual `pending` repository state and settled formal output before native
+independent assessment; failed fixture attempts are not product REDs.
+
+The managed-repository journey uses the real capture handler with no configured
+provider, explicit unresolved eligibility/ineligibility decisions, native freeze
+reconciliation, explicit new independent reviews/native run and new moderated
+values. It reproduced an actual recovery defect: superseding the run made its
+retained history and original ACK unreadable (**RED4.275s**). A separate historical
+read mode retains current event/actor/intended-panel/native publication/evidence
+checks, but cannot authorize current writes, current selection or scoring. The
+same journey passes **GREEN5.168s**; its expanded authority suite passes **10.999s**,
+including completed same-native-final SHA amendment, original historical values,
+exact original receipt, superseded current-read/write denial and role-loss denial.
+Logs: `/private/tmp/hackbox110-managed-history-{red,green}.log` and
+`/private/tmp/hackbox110-history-authority-green.log`.
+
+Native pending second-review, unresolved formal gap, done support action without
+formal resolution, and explicit partial/pending final values remain unable to
+produce signed final cards. The actual native case passed in the first combined
+run (whose overall result failed the separately documented outcome fixture).
+It remains included in final integrated owner verification below.
+
+Actual #107/#108 fresh-judge consumers with this real finalist policy pass
+**11.441s/-race**: selected teams get empty fresh judge cards; reserve/category-only
+teams are denied, with no mentor score/rank payload. Populated actual schema51
+(all public native tables, including retained factual summaries) survives52,
+empty52 rollback and reapply byte-for-byte (**4.095s/-race**). Populated52 rollback,
+UPDATE/DELETE/TRUNCATE rejection and exact original ACK preservation pass
+**4.822s/-race**. A fixture initially used an organiser as factual-summary author;
+the corrected proof uses its actual assigned mentor, preserving native policy.
+
+The actual authenticated generated-router positive-card journey passes
+**7.645s/-race**: formal URL final, independent native reviews and huddle signoff,
+reviewed configure/save/sign commands, exact original ACK, separate current GET,
+other-portal intended-panel read and retained history. One raw-domain test body
+serialized optional evidence as null and was correctly rejected by strict schema;
+the proof now uses the real generated request DTO, whose absent array stays
+omitted. No contract relaxation was made. The test-only before-cutoff callback
+lets #111 reuse this actual app/publication/runtime without rewinding time.
+Configured lint across qualification/rubric/judging/app passes **0 issues**.
+
+Final integrated source-wide owner/API/runtime proof, generation/type parity,
+current-head CI and independent full Spec/Standards reviews remain pending.

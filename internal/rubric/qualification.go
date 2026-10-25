@@ -25,6 +25,39 @@ func QualificationCriteriaInTransaction(
 	if err := ValidateRunPublicationInTransaction(ctx, tx, eventID, runID); err != nil {
 		return ref, out, fmt.Errorf("qualification criteria: %w", err)
 	}
+	return qualificationCriteria(ctx, tx, eventID, runID)
+}
+
+// QualificationHistoryCriteriaInTransaction permits retained-run history only
+// while its exact native common publication remains current and readable. It
+// does not authorize a reader, restore a run, or grant scoring permission.
+func QualificationHistoryCriteriaInTransaction(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, runID uuid.UUID,
+) (Reference, PublicDefinition, bool, error) {
+	q := dbgen.New(tx)
+	run, err := q.RubricRun(ctx, dbgen.RubricRunParams{EventID: eventID, ID: runID})
+	if err != nil {
+		return Reference{}, PublicDefinition{}, false, fmt.Errorf(
+			"historical qualification run: %w",
+			err,
+		)
+	}
+	if err = currentRunPublication(ctx, q, eventID, run); err != nil {
+		return Reference{}, PublicDefinition{}, false, err
+	}
+	ref, criteria, err := qualificationCriteria(ctx, tx, eventID, runID)
+	return ref, criteria, run.Status == "current", err
+}
+
+func qualificationCriteria(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, runID uuid.UUID,
+) (Reference, PublicDefinition, error) {
+	var ref Reference
+	var out PublicDefinition
 	q := dbgen.New(tx)
 	run, err := q.RubricRun(ctx, dbgen.RubricRunParams{EventID: eventID, ID: runID})
 	if err != nil {

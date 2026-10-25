@@ -89,7 +89,7 @@ func (s Service) SelectionInTransaction(
 	if round.Signoff == nil || round.Proposal == nil {
 		return Selection{}, access.ErrForbidden
 	}
-	v, err := s.guard(ctx, tx, round.Signoff.ActorID, eventID, runID, false)
+	v, err := s.guard(ctx, tx, round.Signoff.ActorID, eventID, runID, currentRead)
 	if err != nil {
 		return Selection{}, failure("signoff", err)
 	}

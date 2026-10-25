@@ -18,7 +18,7 @@ import (
 func (s Service) Read(ctx context.Context, actor, eventID, runID uuid.UUID) (Page, error) {
 	var out Page
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-		v, err := s.guard(ctx, tx, actor, eventID, runID, false)
+		v, err := s.guard(ctx, tx, actor, eventID, runID, currentRead)
 		if err != nil {
 			return failure("service", err)
 		}
@@ -42,7 +42,7 @@ func (s Service) Change(
 		return out, access.ErrInvalid
 	}
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
-		v, err := s.guard(ctx, tx, actor, eventID, runID, true)
+		v, err := s.guard(ctx, tx, actor, eventID, runID, currentWrite)
 		if err != nil {
 			return failure("service", err)
 		}
@@ -204,7 +204,8 @@ func (s Service) page(
 	out.TieActions = s.tieActions(ctx, tx, actor, eventID, v, fresh, teams)
 	if v.round.Proposal != nil {
 		sourcesCurrent := fresh.Binding == v.round.Proposal.Binding
-		out.Current = sourcesCurrent && len(fresh.Blockers) == 0 && v.round.Signoff != nil &&
+		out.Current = v.currentRun && sourcesCurrent && len(fresh.Blockers) == 0 &&
+			v.round.Signoff != nil &&
 			signedBinding(fresh, v.round) == v.round.Signoff.Binding
 		if !sourcesCurrent {
 			out.Round.Proposal = nil

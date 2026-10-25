@@ -15,19 +15,28 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
+type authorityMode uint8
+
+const (
+	currentRead authorityMode = iota
+	currentWrite
+	historicalRead
+)
+
 type scope struct {
-	row       dbgen.Event
-	round     Round
-	criteria  rubric.PublicDefinition
-	reference rubric.Reference
-	organiser bool
+	currentRun bool
+	row        dbgen.Event
+	round      Round
+	criteria   rubric.PublicDefinition
+	reference  rubric.Reference
+	organiser  bool
 }
 
 func (s Service) guard(
 	ctx context.Context,
 	tx pgx.Tx,
 	actor, eventID, runID uuid.UUID,
-	write bool,
+	mode authorityMode,
 ) (scope, error) {
 	var out scope
 	if s.Moderation == nil || s.Cards == nil || s.Freeze == nil {
@@ -65,16 +74,27 @@ func (s Service) guard(
 		s.now().Before(dates.SubmissionCutoff) {
 		return out, access.ErrForbidden
 	}
-	if write &&
+	if mode == currentWrite &&
 		(!row.WritesAllowed || !slices.Contains([]string{"live", "assessment"}, row.Stage)) {
 		return out, access.ErrForbidden
 	}
-	if out.reference, out.criteria, err = rubric.QualificationCriteriaInTransaction(
-		ctx,
-		tx,
-		eventID,
-		runID,
-	); err != nil {
+	out.currentRun = true
+	if mode == historicalRead {
+		out.reference, out.criteria, out.currentRun, err = rubric.QualificationHistoryCriteriaInTransaction(
+			ctx,
+			tx,
+			eventID,
+			runID,
+		)
+	} else {
+		out.reference, out.criteria, err = rubric.QualificationCriteriaInTransaction(
+			ctx,
+			tx,
+			eventID,
+			runID,
+		)
+	}
+	if err != nil {
 		return out, failure("authority", err)
 	}
 	if out.round, err = load(ctx, tx, eventID, runID); err != nil {

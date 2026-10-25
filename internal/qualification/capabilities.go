@@ -36,7 +36,8 @@ type TieAction struct {
 }
 
 func writable(v scope) bool {
-	return v.row.WritesAllowed && slices.Contains([]string{"live", "assessment"}, v.row.Stage) &&
+	return v.currentRun && v.row.WritesAllowed &&
+		slices.Contains([]string{"live", "assessment"}, v.row.Stage) &&
 		v.round.Signoff == nil
 }
 
@@ -47,7 +48,7 @@ func (s Service) baseCapabilities(
 	v scope,
 ) (Capabilities, error) {
 	out := Capabilities{
-		ReadOnly: !v.row.WritesAllowed ||
+		ReadOnly: !v.currentRun || !v.row.WritesAllowed ||
 			!slices.Contains([]string{"live", "assessment"}, v.row.Stage),
 		RecordLocked: v.round.Signoff != nil,
 	}
