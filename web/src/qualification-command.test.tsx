@@ -65,3 +65,15 @@ test('deliberate retry retains the original captured body key and event revision
  expect(vi.mocked(sendQualification).mock.calls[1]).toEqual(vi.mocked(sendQualification).mock.calls[0])
  expect(readQualification).toHaveBeenCalledOnce()
 })
+
+test('changed current base prevents POST and explains the unsent result inside the still-open review',async()=>{
+ const {page}=setup()
+ vi.mocked(readQualification).mockResolvedValueOnce({...page,revision:page.revision+1})
+ await confirm()
+ const review=await screen.findByRole('alertdialog',{name:'Review private panel command'})
+ await waitFor(()=>expect(review).toHaveTextContent('Current source or action readiness could not be confirmed. Nothing was sent. Cancel, read current panel facts and review again.'))
+ expect(sendQualification).not.toHaveBeenCalled()
+ expect(screen.queryByLabelText('Original panel command history')).toBeNull()
+ fireEvent.click(screen.getByRole('button',{name:'Cancel'}))
+ await waitFor(()=>expect(screen.queryByRole('alertdialog')).toBeNull())
+})

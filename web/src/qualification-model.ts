@@ -35,3 +35,22 @@ export async function qualificationFingerprint(body:QualificationCommand,revisio
 export function matchesQualificationReceipt(receipt:QualificationReceipt,intent:QualificationIntent){
  return receipt.request_id===intent.requestID&&receipt.run_id===intent.runID&&receipt.action===intent.action&&receipt.expected_revision===intent.revision&&receipt.expected_version===intent.version&&receipt.version===intent.version+1&&receipt.fingerprint===intent.fingerprint
 }
+export function assertQualificationActionReady(page:QualificationPage,body:QualificationCommand){
+ const capabilities=page.capabilities
+ if(body.version!==page.round.version||capabilities.read_only||capabilities.record_locked)throw new Error('The current native panel is read-only, locked or changed. Nothing was sent.')
+ const team=page.teams.find(value=>value.team_id===(body.card?.team_id??body.team_id))
+ let ready=false
+ switch(body.action){
+  case 'configure_panel':ready=capabilities.can_configure_panel;break
+  case 'propose':ready=capabilities.can_propose;break
+  case 'sign_off':ready=capabilities.can_sign_off;break
+  case 'save_card':ready=!!team?.can_save_card&&body.card?.version===team.card_version&&body.freeze_binding===team.freeze_binding&&(body.repository_decision_id??null)===(team.source?.repository_decision_id??null);break
+  case 'sign_card':ready=!!team?.can_sign_card&&body.card_version===team.card_version&&body.freeze_binding===team.freeze_binding&&(body.repository_decision_id??null)===(team.source?.repository_decision_id??null);break
+  case 'decide_eligibility':ready=!!team?.can_decide_eligibility&&body.freeze_binding===team.freeze_binding;break
+  case 'vote_tie':case 'resolve_tie':{
+   const tie=page.tie_actions.find(value=>value.tie_id===body.tie_id&&value.seat===body.seat)
+   ready=!!tie&&(body.action==='vote_tie'?tie.can_vote&&tie.candidate_team_ids.includes(body.team_id??''):tie.can_resolve&&tie.resolve_team_ids.includes(body.team_id??''));break
+  }
+ }
+ if(!ready)throw new Error('This action is not ready under the current native source, assignment or evidence conditions. Nothing was sent.')
+}

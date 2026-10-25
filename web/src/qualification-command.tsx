@@ -12,7 +12,7 @@ import {matchesQualificationReceipt,qualificationFingerprint,type QualificationC
 
 export const qualificationNamespace=(actor:string,session:string,eventID:string,runID:string)=>`${actor}:${session}:${eventID}:qualification:${runID}`
 type Reviewed={body:QualificationCommand;intent:QualificationIntent;summary:ReactNode}
-type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void}
+type Options={eventID:string;runID:string;page:QualificationPage;parent:PrivateRequestScope;paused:boolean;refresh:()=>Promise<unknown>;assertActionReady:(page:QualificationPage,body:QualificationCommand)=>void;onAcknowledged?:()=>void}
 
 // This owner handles request identity and private lifetimes only. Native
 // capability/source readiness remains with its caller and is rechecked against
@@ -21,23 +21,24 @@ export function useQualificationCommand(options:Options){
  const {eventID,runID,page,parent,paused,refresh,assertActionReady}=options,identity=useIdentity()
  const owner=qualificationNamespace(identity.person.id,identity.draft_scope,eventID,runID),commands=useCommunicationCommands(owner),scope=usePrivateRequestScope(`${owner}:task`,parent)
  const [review,setReview]=useState<Reviewed>(),[captured,setCaptured]=useState<Reviewed>(),[preparing,setPreparing]=useState(false),[failure,setFailure]=useState<unknown>(),[ack,setAck]=useState<QualificationIntent>()
+ const [failureStage,setFailureStage]=useState<'before_write'|'rejected'|'unknown'>()
  const sending=useRef(false),opener=useRef<HTMLElement|null>(null),fallback=useRef<HTMLHeadingElement|null>(null)
  const pending=preparing||commands.pending,blocked=paused||pending||commands.unconfirmed
  usePlanningDepartureBarrier(pending)
  async function prepare(body:QualificationCommand,summary:ReactNode,source:HTMLElement){
   if(blocked||sending.current)return
-  const ticket=scope.capture();sending.current=true;setPreparing(true);setFailure(undefined)
+  const ticket=scope.capture();sending.current=true;setPreparing(true);setFailure(undefined);setFailureStage(undefined)
   try{
    ticket.assert();assertActionReady(page,body)
    const command=structuredClone(body),fingerprint=await qualificationFingerprint(command,page.revision);ticket.assert()
    const value={body:command,intent:{requestID:command.request_id,runID,action:command.action,revision:page.revision,version:command.version,fingerprint},summary}
    opener.current=source;setCaptured(value);setReview(value)
-  }catch(error){if(ticket.current())setFailure(error)}finally{sending.current=false;if(ticket.current())setPreparing(false)}
+  }catch(error){if(ticket.current()){setFailure(error);setFailureStage('before_write')}}finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }
  async function confirm(retry=false){
   const target=retry?captured:review
   if(!target||sending.current||paused||commands.pending||!retry&&commands.unconfirmed)return
-  const ticket=scope.capture();sending.current=true;setPreparing(true);setFailure(undefined);let attemptID:string|undefined
+  const ticket=scope.capture();sending.current=true;setPreparing(true);setFailure(undefined);setFailureStage(undefined);let attemptID:string|undefined
   try{
    ticket.assert()
    if(!retry){
@@ -51,17 +52,17 @@ export function useQualificationCommand(options:Options){
    const result=await sendQualification(eventID,runID,target.intent.revision,identity.csrf_token,target.body)
    if(!result.receipt||!matchesQualificationReceipt(result.receipt,target.intent))throw new Error('The response did not match this exact original request. Its outcome remains unknown.')
    commands.complete(attemptID)
-   if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);await refresh()}
+   if(ticket.current()){setAck(target.intent);setReview(undefined);setCaptured(undefined);options.onAcknowledged?.();await refresh()}
   }catch(error){
    if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500)commands.complete(attemptID);else commands.uncertain(attemptID)}
-   if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
+   if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);setFailureStage(!attemptID?'before_write':error instanceof APIError&&error.status>=400&&error.status<500?'rejected':'unknown');if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
   }finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }
- return {prepare,pending,blocked,retryBlocked:paused||pending,unknown:commands.unconfirmed,attempts:commands.attempts,ack,failure,review,captured,headingRef:(element:HTMLHeadingElement|null)=>{fallback.current=element},returnFocus:()=>{const source=opener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},confirm,cancel:()=>{if(!pending)setReview(undefined)}}
+ return {prepare,pending,blocked,retryBlocked:paused||pending,unknown:commands.unconfirmed,attempts:commands.attempts,ack,failure,failureStage,review,captured,headingRef:(element:HTMLHeadingElement|null)=>{fallback.current=element},returnFocus:()=>{const source=opener.current;return source?.isConnected&&!source.matches(':disabled')&&source.getClientRects().length?source:fallback.current??false},confirm,cancel:()=>{if(!pending)setReview(undefined)}}
 }
 
-export function QualificationCommandReview({headingRef,failure,ack,attempts,unknown,captured,retryBlocked,confirm,review,pending,blocked,cancel,returnFocus}:ReturnType<typeof useQualificationCommand>){
- return <><h3 ref={headingRef} tabIndex={-1}>Reviewed panel commands</h3>{!!failure&&<Failure error={failure}/>} {ack&&<p role="status">Original {ack.action.replaceAll('_',' ')} acknowledged for request {ack.requestID}, expected panel version {ack.version}. Read current state separately; no announcement was released.</p>}{attempts.map(attempt=><aside key={attempt.id} role="status"><h4>{attempt.state==='pending'?'Awaiting original acknowledgement':'Original panel outcome unknown'}</h4><p>Connection loss does not establish failure or success. A current panel read cannot acknowledge this earlier request. No automatic replay occurs.</p></aside>)}{unknown&&captured&&<Button icon="refresh" variant="outline" disabled={retryBlocked} onClick={()=>void confirm(true)}>Retry captured original panel request</Button>}{review&&<ConfirmationDialog open title="Review private panel command" description="Confirm the exact captured reason, evidence, source and panel version. This does not publish an announcement." confirmLabel="Confirm reviewed panel command" pending={pending} disabled={blocked&&!pending} onConfirm={()=>void confirm()} onOpenChange={open=>{if(!open)cancel()}} finalFocus={returnFocus} printExcluded>{review.summary}<p>Action {review.intent.action.replaceAll('_',' ')} · Panel version {review.intent.version} · Event revision {review.intent.revision}</p><p>Reason: {review.body.reason}</p></ConfirmationDialog>}</>
+export function QualificationCommandReview({headingRef,failure,failureStage,ack,attempts,unknown,captured,retryBlocked,confirm,review,pending,blocked,cancel,returnFocus}:ReturnType<typeof useQualificationCommand>){
+ return <><h3 ref={headingRef} tabIndex={-1}>Reviewed panel commands</h3>{failureStage==='before_write'&&!review&&<p role="alert">Current source or action readiness could not be confirmed. Nothing was sent. Read current panel facts and review again.</p>}{!!failure&&!review&&<Failure error={failure}/>} {ack&&<p role="status">Original {ack.action.replaceAll('_',' ')} acknowledged for request {ack.requestID}, expected panel version {ack.version}. Read current state separately; no announcement was released.</p>}{attempts.map(attempt=><aside key={attempt.id} role="status"><h4>{attempt.state==='pending'?'Awaiting original acknowledgement':'Original panel outcome unknown'}</h4><p>Connection loss does not establish failure or success. A current panel read cannot acknowledge this earlier request. No automatic replay occurs.</p></aside>)}{unknown&&captured&&<Button icon="refresh" variant="outline" disabled={retryBlocked} onClick={()=>void confirm(true)}>Retry captured original panel request</Button>}{review&&<ConfirmationDialog open title="Review private panel command" description="Confirm the exact captured reason, evidence, source and panel version. This does not publish an announcement." confirmLabel="Confirm reviewed panel command" pending={pending} disabled={blocked&&!pending} onConfirm={()=>void confirm()} onOpenChange={open=>{if(!open)cancel()}} finalFocus={returnFocus} printExcluded>{failureStage==='before_write'&&<p role="alert">Current source or action readiness could not be confirmed. Nothing was sent. Cancel, read current panel facts and review again.</p>}{!!failure&&<Failure error={failure}/>} {review.summary}<p>Action {review.intent.action.replaceAll('_',' ')} · Panel version {review.intent.version} · Event revision {review.intent.revision}</p><p>Reason: {review.body.reason}</p></ConfirmationDialog>}</>
 }
 
 // Mount above the private panel reader so safe original identity survives native

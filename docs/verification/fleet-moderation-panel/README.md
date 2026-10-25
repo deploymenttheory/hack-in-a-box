@@ -1,7 +1,7 @@
 # Fleet moderation and selection workspace — issue 111
 
 This is a full-scope work-in-progress UI delivery, stacked on actual native #110
-PR #279 source `2abe330050f1ef8511dbe7f8626fcea5b7014c2b`. The parent owns
+PR #279. The initial source was `2abe330050f1ef8511dbe7f8626fcea5b7014c2b`; current integration consumes actual producer `ee980c31c75b10032579009323af00c431a13b21`. The parent owns
 migration52, private qualification authority and actual FinalistPolicy. This UI
 adds no migration and cannot make a local selection authoritative. #109 is a
 separate real judge interface dependency; #112/#113 retain final award
@@ -11,14 +11,14 @@ confirmation/publication and feedback release. No live provider effects occur.
 
 | Required behavior | Current implementation and remaining proof |
 | --- | --- |
-| Current actor-permitted discovery and native action readiness | Native producer gap reported precisely to #110 owner; actual additions are being implemented there. UI must consume generated capabilities, never infer a grant from a role or rubric listing. |
-| Evidence side by side with reasoned amended final cards | Actual current panel reader and source-specific huddle reauthorization beside current moderated scores/reasons exist. Native card editors, evidence selection/save/sign, exact receipt handling and full native browser journey remain pending. |
-| Required reviews, evidence, eligibility, absent judges and timing blockers | Current native team/proposal blockers and formal/code outcomes are visible. Add native readiness fields when published; current judge-completion metadata must come from its actual permitted owner. No missing value becomes a zero score. |
-| All eligible category candidates versus finalists/reserve and ties | Pure production views render the native separate lists and unresolved-tie blockers. Native reasoned ballots, casting resolution and full configured-count/non-finalist category browser flow remain pending. |
-| Versioned panel signoff | Native current-signoff state is displayed; prepare/review/confirm and original-ACK recovery are pending actual producer capabilities and native proof. No current GET can acknowledge an earlier command. |
+| Current actor-permitted discovery and native action readiness | Actual actor-permitted collection discovery and generated native page/team/tie readiness are consumed from ee980c31. Both portal entry routes exist; deterministic keyboard discovery/configuration proof passes. Full native discovery/role-loss journey remains pending. |
+| Evidence side by side with reasoned amended final cards | Actual current panel reader and source-specific huddle reauthorization beside current moderated scores/reasons exist. Native-gated reasoned final-card fields, separately authorised evidence selection and exact save/sign review are implemented. Real native card browser proof remains pending. |
+| Required reviews, evidence, eligibility, absent judges and timing blockers | Current native team/proposal blockers and formal/code outcomes are visible. Actual native readiness/source/card version fields are consumed; independent judge-completion metadata must come from its actual permitted owner. No missing value becomes a zero score. |
+| All eligible category candidates versus finalists/reserve and ties | Pure production views render the native separate lists and unresolved-tie blockers. Native reasoned ballot/casting commands consume exact native candidate sets/readiness. Complete tie/configured-count/non-finalist category browser and native proof remain pending. |
+| Versioned panel signoff | Native current-signoff state and exact prepare/review/confirm use actual readiness; original-ACK recovery is implemented. Full signoff native browser proof remains pending. No current GET can acknowledge an earlier command. |
 | Separate finalist/category announcement preparation | Separate explicitly private local previews require current native signed source; finalist preview omits categories. This is preparation only, not approval/send/publication. No publication endpoint is invented; later owners retain that boundary. |
 | Not-submitted/withdrawn/disbanded unused outputs | Current native status is shown distinctly, without a score entry action. Actual retired-source writer denial and corresponding browser/native proof remain required. |
-| Current authority, history and privacy lifetimes | Actor/session/event/run keys plus parent event/private read scopes fence native panel and huddle reads. Current denial and changed-source tests clear inspector/private preview. Exact command lifetime, version0 safe metadata, original receipt/history and native session/role-loss proof remain pending. |
+| Current authority, history and privacy lifetimes | Actor/session/event/run keys plus parent event/private read scopes fence native panel and huddle reads. Current denial and changed-source tests clear inspector/private preview. Exact command identity, safe version0 metadata, unknown history and original-receipt recovery have bounded actual controller/browser proof. Full native session/role-loss and command history presentation proof remain pending. |
 | Keyboard/mobile action → review → result → next action | Existing Fleet primitives, flat responsive side-by-side composition, actual organiser submitted-build link (without judge_run), source/review next actions and production guide views exist. Full command keyboard/correction/focus/native narrow journey and final inspected visuals remain pending. |
 | Independently hosted published production guide | Actual pure production view example runs standalone/embedded, with storage/cookie/API traps. Editors/review/unknown lifecycle examples and usage/accessibility documentation must follow in the same delivery. |
 | Integration with real predecessors and final source verification | Existing #105 review/evidence routes are retained. Actual #109 routes are `/events/{event_id}/judging` and `/judging/practice`; link only against real integrated sources. Parent merge/rebase, full independent reviews and final CI remain gates. |
@@ -33,8 +33,8 @@ rechecked; panel membership is not a grant to an entire private source document.
 An organiser evidence link uses `/events/{event_id}/teams/{team_id}/build`
 without `judge_run`, because that query invokes a judge-only exact context.
 
-Native #110 initially had no permitted run discovery/action-capability projection;
-the owner is implementing that actual read seam. Private Proposal/Current/Signoff
+Native #110 initially had no permitted run discovery/action-capability projection.
+Actual producer ee980c31 now supplies that seam and is consumed by this UI. Private Proposal/Current/Signoff
 are not an announcement API. The UI keeps local preparation explicit, and must
 never claim an announced result from private panel state. Early read-only source
 is intentionally not a complete scoring/signoff implementation.
@@ -112,3 +112,38 @@ acceptance run. Its initial failure expected an internal exception string that
 shared Failure deliberately sanitises; the corrected test checks the exact public
 failure, persistent unknown metadata and absence of acknowledgement before the
 subsequent genuine matching-corpus receipt. No product assertion was removed.
+
+## Actual producer readiness and first command browser integration
+
+Five owned UI commits rebased cleanly from original parent2abe onto actual
+producer `ee980c31c75b10032579009323af00c431a13b21`, reaching
+`eb158338afa371cbdc7bcdda4a50ba90496169d8` before the following working-tree
+integration. Earlier native vectors/executions retain their original attribution;
+this rebase does not relabel them as new native executions.
+
+The actual new discovery route and generated page/team/tie capabilities now drive
+both portals. Current native staff listing separately supplies panel pickers.
+Reasoned final-card save/sign, unresolved-code eligibility, proposal, mentor
+ballots/casting resolution and exact private signoff are wired to real command
+fields and preflight readiness. These are implementation, not yet full native
+browser acceptance. Reasoned final-score fields retain current references and
+source versions; no client averages or selection authority are introduced.
+
+The first new actual keyboard browser case failed on both widths while the old
+eight reader cases passed: review was available before the authorised staff read
+finished, so a later-rendered organiser error missed first-invalid focus. Review
+now waits for that actual pending read. The unchanged focus/cancel/unknown/receipt
+assertions pass **2/2 in 3.4s**, with an added deterministic held-response gate:
+review is disabled before release, then enabled before normal keyboard activation.
+A first post-fix attempt pressed the correctly disabled button before readiness;
+it made no validation attempt and is not a product pass. No force-click, timeout
+increase or global retry was used. Both portal builds/static-guide build and
+TypeScript pass for the command integration. Full native commands, remaining
+write browser cases, independent write-guide scenarios and inspected final
+visuals remain open acceptance gates.
+
+The final bounded controller/shared-metadata/codec checkpoint passes **9/9 in
+975ms**, with TypeScript and focused ESLint clean. The additional controller
+case verifies that current revision drift prevents POST, leaves no fabricated
+original attempt and explains the unsent result inside the open review. This is
+transport-double controller verification, not native transaction acceptance.
