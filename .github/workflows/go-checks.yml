@@ -34,9 +34,9 @@ jobs:
           go mod verify
       - name: Build
         run: go build ./cmd/... ./internal/...
-      - name: Review all Go module and runtime advisories
-        working-directory: cmd/api
-        run: go tool govulncheck -scan=module
+      - name: Review Go package and module advisories
+        # Fail on any imported vulnerable package, including tests; retain module findings.
+        run: go tool govulncheck -scan=package -show=verbose -test ./...
       - name: Vet
         run: go vet ./cmd/... ./internal/...
       - name: Race tests

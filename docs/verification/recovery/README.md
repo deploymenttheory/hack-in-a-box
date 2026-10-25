@@ -1,7 +1,8 @@
 # Recovery verification — issue #124
 
-The full implementation is a review candidate in Draft PR #269. Independent final
-reviews and all exact-head CI checks remain required before merge. The executed
+The full implementation is a review candidate in Draft PR #269. Both independent
+reviews of recovery head `156e343` reported zero findings. The bounded security-gate
+correction below requires delta review and all exact-head CI checks before merge. The executed
 native and packaged proofs below are distinct; neither is represented as a broad
 production security/release certification.
 
@@ -135,3 +136,36 @@ were not repeated; exact-head CI must supply those required checks before merge.
 The final documentation/generated-model commit follows the executed packaged
 source above. Generated additions are unused table types; no tested recovery
 behavior or operator script changed after that source was frozen.
+
+## Security gate diagnosis
+
+At recovery head `156e343`, actual native CI failed before tests in the existing
+module-only vulnerability scan. The exact local command reproduced exit **3**.
+The [official GO-2026-5932 advisory](https://pkg.go.dev/vuln/GO-2026-5932)
+affects seven `golang.org/x/crypto/openpgp` packages, at all versions with no known
+fix. Main and this branch already select the same `x/crypto v0.58.0`; age did not
+introduce that module version. Complete application/test dependency inventory and
+`go mod why` found no OpenPGP imports. Recovery uses age's maintained
+ChaCha20-Poly1305 primitives; existing Testcontainers imports SSH. Neither is the
+affected OpenPGP package.
+
+The corrected gate uses the official scanner's imported-package level from the
+repository root, including tests and future first-party package paths:
+
+```sh
+go tool govulncheck -scan=package -show=verbose -test ./...
+```
+
+Package-level scanning rejects any imported vulnerable package even if an
+affected function is never called. Verbose output preserves the module advisory
+for review; no advisory ID is suppressed, dependency version changed, or scanner
+exit ignored. The [official scanner documentation](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck)
+describes source patterns, inclusion of tests, and exit behavior.
+
+The full-root command completed with exit **0**, reporting no vulnerable imported
+packages while still printing GO-2026-5932 under module results. Separately, an
+isolated temporary module using the identical dependency versions and scanner
+flags deliberately imported OpenPGP without calling a function: it returned
+exit **3**, proving the gate rejects that affected package. The temporary module
+was removed. These checks changed no application/runtime or cryptographic code;
+full exact-head CI remains required.

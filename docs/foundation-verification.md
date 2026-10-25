@@ -21,7 +21,7 @@ This batch implements the ten approved foundation tickets on top of #22. The ADR
 go mod verify
 go build ./cmd/... ./internal/...
 go vet ./cmd/... ./internal/...
-(cd cmd/api && go tool govulncheck -scan=module)
+go tool govulncheck -scan=package -show=verbose -test ./...
 HACKBOX_INTEGRATION=1 go test -race -timeout 5m ./cmd/... ./internal/...
 golangci-lint run ./cmd/... ./internal/...
 npm --prefix web ci
@@ -42,3 +42,10 @@ PostgreSQL tests use isolated Testcontainers and synthetic data. Browser checks 
 - The worker has no real external integration handler yet. The execution/reconciliation protocol is tested with deterministic providers; future handlers must respect cancellation, recheck eligibility and reconcile uncertain outcomes.
 - OIDC must be configured before real sign-in. No fake login exists in production or development.
 - Run explicit migrations before starting either process. Take a matching database/file-volume backup before upgrades.
+
+The vulnerability gate runs from the repository root and includes every first-party
+package and its tests. Package-level scanning fails on imported vulnerable
+packages even when their affected functions are not called; verbose output also
+retains module-only advisories for review. It does not suppress advisory IDs.
+See [the recovery verification diagnosis](verification/recovery/README.md#security-gate-diagnosis)
+for the observed OpenPGP module-only finding and imported-package rejection proof.
