@@ -1,0 +1,16 @@
+.fleet-showcase { max-width: 90rem; margin-inline: auto; }
+.fleet-showcase .fleet-showcase-back { display: inline-flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+.fleet-showcase-filters { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: end; }
+.fleet-showcase-filters .fleet-field { min-width: 12rem; }
+.fleet-showcase-excerpt { margin: 0; max-width: 32rem; overflow-wrap: anywhere; }
+.fleet-showcase-awards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.fleet-showcase-awards li { display: flex; align-items: start; gap: var(--space-2); }
+.fleet-showcase-awards .fleet-icon { flex-shrink: 0; margin-top: .125rem; }
+.fleet-showcase-reading { max-width: 56rem; }
+.fleet-showcase-reading section { padding-block: var(--space-6); border-bottom: 1px solid var(--border); }
+.fleet-showcase-reading h2 { margin: 0 0 var(--space-3); }
+.fleet-showcase-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.fleet-showcase-byline { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; color: var(--muted-foreground); }
+.fleet-showcase-links { padding-left: var(--space-6); display: grid; gap: var(--space-3); }
+.fleet-showcase-links a { display: inline-flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+@media print { .fleet-showcase { display: none !important; } }

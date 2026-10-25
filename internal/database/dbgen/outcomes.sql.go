@@ -733,12 +733,56 @@ func (q *Queries) OutcomePublishedProject(ctx context.Context, arg OutcomePublis
 	return i, err
 }
 
+const outcomePublishedProjectEvents = `-- name: OutcomePublishedProjectEvents :many
+SELECT event_id,event_name FROM (
+SELECT DISTINCT ON (oh.event_id) oh.event_id::uuid AS event_id, COALESCE(pv.published_fields->>'event_name','')::text AS event_name
+FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
+WHERE oh.event_id IS NOT NULL AND pv.published_fields->>'event_name' IS NOT NULL
+AND outcome_project_readable(ph.outcome_id,$1::uuid,$2::timestamptz)
+ORDER BY oh.event_id,pv.created_at DESC,pv.outcome_id
+) approved_events ORDER BY event_name,event_id
+`
+
+type OutcomePublishedProjectEventsParams struct {
+	ActorID uuid.UUID
+	AtTime  time.Time
+}
+
+type OutcomePublishedProjectEventsRow struct {
+	EventID   uuid.UUID
+	EventName string
+}
+
+func (q *Queries) OutcomePublishedProjectEvents(ctx context.Context, arg OutcomePublishedProjectEventsParams) ([]OutcomePublishedProjectEventsRow, error) {
+	rows, err := q.db.Query(ctx, outcomePublishedProjectEvents, arg.ActorID, arg.AtTime)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OutcomePublishedProjectEventsRow{}
+	for rows.Next() {
+		var i OutcomePublishedProjectEventsRow
+		if err := rows.Scan(&i.EventID, &i.EventName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const outcomePublishedProjectsPage = `-- name: OutcomePublishedProjectsPage :many
 SELECT pv.outcome_id, pv.version, pv.source_version, pv.command_id, pv.actor_id, pv.expected_version, pv.command, pv.document, pv.state, pv.published_fields, pv.created_at FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
 WHERE ph.outcome_id>$1
 AND outcome_project_readable(ph.outcome_id,$2::uuid,$3::timestamptz)
 AND ($4::text='' OR position(lower($4) in lower((pv.published_fields->>'problem')||' '||(pv.published_fields->>'solution')))>0)
-ORDER BY ph.outcome_id LIMIT $5
+AND ($5::uuid='00000000-0000-0000-0000-000000000000'::uuid OR oh.event_id=$5::uuid)
+AND ($6::text='' OR pv.published_fields->>'follow_up_status'=$6::text)
+ORDER BY ph.outcome_id LIMIT $7
 `
 
 type OutcomePublishedProjectsPageParams struct {
@@ -746,6 +790,8 @@ type OutcomePublishedProjectsPageParams struct {
 	ActorID  uuid.UUID
 	AtTime   time.Time
 	Search   string
+	EventID  uuid.UUID
+	Status   string
 	PageSize int32
 }
 
@@ -755,6 +801,8 @@ func (q *Queries) OutcomePublishedProjectsPage(ctx context.Context, arg OutcomeP
 		arg.ActorID,
 		arg.AtTime,
 		arg.Search,
+		arg.EventID,
+		arg.Status,
 		arg.PageSize,
 	)
 	if err != nil {

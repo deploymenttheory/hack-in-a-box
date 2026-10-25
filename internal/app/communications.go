@@ -133,8 +133,10 @@ func newCommunicationRuntime(
 	}
 	cards.Moderation = huddles
 	questionnaires := &surveys.Service{Pool: pool, Now: now}
+	announcedResults := &results.Service{Pool: pool, Now: now}
 	followThrough := &outcomes.Service{
-		Now: now,
+		Awards: announcedResults,
+		Now:    now,
 		Media: outcomeMediaReferences{
 			Media: media.Service{
 				Clock:   now,
@@ -156,7 +158,6 @@ func newCommunicationRuntime(
 		"help":              helpInboxOwner{Help: helpProvider},
 		"clarification":     clarificationInboxOwner{Answers: answers},
 	}
-	announcedResults := &results.Service{Pool: pool, Now: now}
 	composer.FactOwners = map[string]communications.FactOwner{
 		"results":        announcedResults,
 		"help":           helpProvider,

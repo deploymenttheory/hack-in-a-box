@@ -102,3 +102,4 @@ web/test-results-qualification-public/
 
 # Issue 113 synthetic private browser traces.
 web/test-results-reports*/
+web/test-results-showcase-native/

@@ -1,6 +1,7 @@
 import { ResultsBallotsPage } from './results-ballots'
 import { TeamFeedbackPage, TeamFeedbackDirectoryPage } from './team-feedback'
 import { AnnouncedResultsPage, ResultsPreparationPage } from './results-workspace'
+import { showcaseSearch } from './showcase'
 import { QualificationPanelPage, QualificationDirectoryPage } from './qualification'
 import { JudgeWorkspacePage, JudgePracticePage } from './judge-workspace'
 import { AssignedBuildsPage } from './assigned-builds'
@@ -33,8 +34,8 @@ const root = createRootRoute({ component: Shell, notFoundComponent: NotFound, er
 const ideas = createRoute({ getParentRoute: () => root, path: '/ideas', validateSearch: (s: Record<string, unknown>): { event?: string } => ({ event: typeof s.event === 'string' && /^[a-f0-9-]{36}$/i.test(s.event) ? s.event : undefined }), component: OutcomeWorkspace })
 const idea = createRoute({ getParentRoute: () => root, path: '/ideas/$outcomeId', component: OutcomePage })
 const outcomeReview = createRoute({ getParentRoute: () => root, path: '/ideas/reviews/$reviewId', component: OutcomeReviewPage })
-const projects = createRoute({ getParentRoute: () => root, path: '/projects', component: PublishedProjects })
-const project = createRoute({ getParentRoute: () => root, path: '/projects/$outcomeId', component: PublishedProjectPage })
+const projects = createRoute({ getParentRoute: () => root, path: '/projects', validateSearch: showcaseSearch, component: PublishedProjects })
+const project = createRoute({ getParentRoute: () => root, path: '/projects/$outcomeId', validateSearch: showcaseSearch, component: PublishedProjectPage })
 const inbox = createRoute({ getParentRoute: () => root, path: '/inbox', component: InboxPage })
 const resource = createRoute({ getParentRoute: () => root, path: '/events/$eventId/resources/$resourceId', component: ResourcePage })
 const deliveryHistory = createRoute({ getParentRoute: () => root, path: '/events/$eventId/communications/deliveries', component: DeliveryHistoryPage })
