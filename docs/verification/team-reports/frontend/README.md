@@ -94,3 +94,14 @@ The all-team category tie authority decision remains with the parent delivery;
 this frontend exposes the settled overall-final judge ballot workflow and adds
 no inferred category casting action. The parent owns required CI wiring and final
 integration into draft PR #286. This evidence does not close that policy gate.
+
+
+## Integrated main rebase verification — 25 October 2026
+
+Root verified integrated `6dd4572a6c9183b1421dca4ac677bdc82b049758` after rebasing onto main `56d00be40e098f9ab71b2387377d2ad7cd81b63c` (merged #284 and #285). Both portal builds, ESLint, Go app compilation and canonical `scripts/check-generated.sh` passed. Exact-source native command:
+
+```sh
+HACKBOX_INTEGRATION=1 HACKBOX_REPORT_BROWSER=1 go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestTeamReportsUIBrowsers$' -count=1 -timeout=15m
+```
+
+Passed all four actual browser cases with two viewport subtests: Go **146.815s**, test **145.11s**, desktop **67.70s**, mobile **77.42s**. Real PostgreSQL/HTTP, both portals and actual paired room SSE; no retries or skipped cases. Later archive-only source correction has separate native RED/GREEN evidence in [archive-read.md](../archive-read.md). This matrix does not claim category-tie policy or UI completion, which remains a separate review gate.

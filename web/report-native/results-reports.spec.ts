@@ -45,7 +45,7 @@ test('native explicit award announcement and amended own-team feedback remain in
   const staffFromPublic = await attendee.request.get(native.public + `/api/v1/events/${native.event_id}/teams/${native.team_id}/feedback-report`); expect(staffFromPublic.status()).toBe(403)
   const privateResults = await attendee.request.get(native.public + `/api/v1/events/${native.event_id}/results`); expect(privateResults.status()).toBe(403)
   await own.goto(`/events/${native.event_id}/teams/${native.second_team_id}/feedback-report`); await expect(own.getByText('This team is unavailable under your current access.', { exact: false })).toBeVisible(); await expect(own.getByText('Amended explicit own-team wording.', { exact: true })).toHaveCount(0); await own.goto(reports); await expect(own.getByText('Amended explicit own-team wording.', { exact: true })).toBeVisible(); await expect(own.getByRole('heading', { name: 'Your team’s final scores' })).toBeVisible()
-  
+
   for (const scheme of ['light', 'dark'] as const) {
    await own.emulateMedia({ colorScheme: scheme }); const audit = await new AxeBuilder({ page: own }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([]); expect(await own.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
    await own.screenshot({ path: testInfo.outputPath(`own-team-${scheme}.png`), fullPage: true })
