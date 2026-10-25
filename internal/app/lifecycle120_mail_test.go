@@ -55,7 +55,7 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 	if err := owner.call(ctx, http.MethodGet, base, -1, nil, &page, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
-	for _, command := range []communications.Command{{Action: "save_template", Template: &template, Reason: "Synthetic transport source"}, {Action: "save_audience", Audience: &audience, Reason: "Synthetic transport audience"}} {
+	for _, command := range []map[string]any{{"action": "save_template", "template": template, "reason": "Synthetic transport source"}, {"action": "save_audience", "audience": audience, "reason": "Synthetic transport audience"}} {
 		var next communications.Page
 		if err := owner.call(ctx, http.MethodPost, base, page.Revision, command, &next, http.StatusOK); err != nil {
 			t.Fatal(err)

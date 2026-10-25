@@ -16,7 +16,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd/ cmd/
 COPY internal/ internal/
-RUN go test -c -trimpath -o /out/lifecycle.test ./internal/app && \
+RUN --mount=type=cache,id=hackbox-lifecycle-go-build,target=/root/.cache/go-build go test -c -trimpath -o /out/lifecycle.test ./internal/app && \
     go build -trimpath -o /out/migrate ./cmd/migrate && \
     go build -trimpath -o /out/healthcheck ./cmd/healthcheck
 
