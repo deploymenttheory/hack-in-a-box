@@ -1,7 +1,9 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -38,6 +40,14 @@ func completeReportEvent(t *testing.T, f *resultsSourceFixture) {
 }
 
 func TestTeamReportsCompletedReadNeverGrantsScoringWrites(t *testing.T) {
+	testTeamReportsClosedReadNeverGrantsWrites(t, false)
+}
+
+func TestTeamReportsArchivedReadNeverGrantsWrites(t *testing.T) {
+	testTeamReportsClosedReadNeverGrantsWrites(t, true)
+}
+
+func testTeamReportsClosedReadNeverGrantsWrites(t *testing.T, archive bool) {
 	for _, mode := range []string{rubric.AllTeams, rubric.MentorQualification} {
 		t.Run(mode, func(t *testing.T) {
 			f := newResultsSourceFixture(t, mode)
@@ -87,6 +97,80 @@ func TestTeamReportsCompletedReadNeverGrantsScoringWrites(t *testing.T) {
 			resultsSourceRequire(t, err)
 			if own == nil || own.FinalScores == nil || own.FinalScores.Total.Numerator != "42" {
 				t.Fatal("completed report missing deliberately selected own scores", own)
+			}
+			if archive {
+				event, e := f.admin.deps.Events.Read(t.Context(), r.owner.ID, r.eventID)
+				resultsSourceRequire(t, e)
+				_, e = f.admin.deps.Events.Transition(
+					t.Context(),
+					r.owner.ID,
+					r.eventID,
+					event.Revision,
+					"archived",
+					"Retain authorised released report as a read-only competition record",
+					false,
+				)
+				resultsSourceRequire(t, e)
+				archived, e := s.ReadReleased(t.Context(), r.competitor.ID, r.eventID, r.teamID)
+				resultsSourceRequire(t, e)
+				if !reflect.DeepEqual(own, archived) {
+					t.Fatal("archive changed the deliberately released report", own, archived)
+				}
+				for _, action := range []string{"save", "release"} {
+					blocked := c
+					blocked.RequestID = uuid.New()
+					blocked.Action = action
+					if action == "release" {
+						blocked.Body = teamreports.Body{}
+						blocked.IncludeFinalScores = false
+						blocked.ScoreBinding = ""
+					}
+					if _, e = s.Change(
+						t.Context(),
+						r.owner.ID,
+						r.eventID,
+						r.teamID,
+						p.Version,
+						blocked,
+					); !errors.Is(
+						e,
+						access.ErrForbidden,
+					) {
+						t.Fatal("archive permitted report write", action, e)
+					}
+				}
+				raw, e := json.Marshal(archived)
+				resultsSourceRequire(t, e)
+				for _, private := range []string{resultsMentorPrivateNote, "PRIVATE-INDEPENDENT-JUDGE-PROSE", `"rank"`, `"awards"`, `"votes"`, `"evidence"`, `"audience"`} {
+					if strings.Contains(string(raw), private) {
+						t.Fatal("archive exposed private competition data", private)
+					}
+				}
+				_, e = r.pool.Exec(
+					t.Context(),
+					"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
+					r.eventID,
+					r.competitor.ID,
+				)
+				resultsSourceRequire(t, e)
+				if _, e = s.ReadReleased(
+					t.Context(),
+					r.competitor.ID,
+					r.eventID,
+					r.teamID,
+				); !errors.Is(
+					e,
+					access.ErrForbidden,
+				) {
+					t.Fatal("archive retained withdrawn recipient", e)
+				}
+				_, e = r.pool.Exec(
+					t.Context(),
+					"UPDATE competition_claims SET state='confirmed' WHERE event_id=$1 AND person_id=$2",
+					r.eventID,
+					r.competitor.ID,
+				)
+				resultsSourceRequire(t, e)
 			}
 			_, err = f.admin.deps.Judging.ChangeCard(
 				t.Context(),
@@ -150,6 +234,8 @@ func TestTeamReportsCompletedReadNeverGrantsScoringWrites(t *testing.T) {
 				name, remove, restore string
 				args                  []any
 			}{
+				{"frozen evidence", "UPDATE submission_states SET outcome='withdrawn' WHERE event_id=$1 AND team_id=$2", "UPDATE submission_states SET outcome='frozen' WHERE event_id=$1 AND team_id=$2", []any{r.eventID, r.teamID}},
+				{"rubric publication", "UPDATE event_rubrics SET published_version=NULL WHERE event_id=$1 AND id=(SELECT rubric_id FROM rubric_assessment_runs WHERE event_id=$1 AND id=$2)", "UPDATE event_rubrics SET published_version=(SELECT rubric_version FROM rubric_assessment_runs WHERE event_id=$1 AND id=$2) WHERE event_id=$1", []any{r.eventID, f.judgeRun}},
 				{"assignment", "DELETE FROM resource_assignments WHERE event_id=$1 AND resource_id=(SELECT id FROM competition_entries WHERE event_id=$1 AND team_id=$2) AND person_id=$3", "INSERT INTO resource_assignments(event_id,resource_id,person_id)SELECT event_id,id,$3 FROM competition_entries WHERE event_id=$1 AND team_id=$2", []any{r.eventID, r.teamID, f.judges[0].ID}},
 				{"conflict", "INSERT INTO mentor_conflicts(event_id,mentor_id,competitor_id,kind)VALUES($1,$2,$3,'reporting')", "DELETE FROM mentor_conflicts WHERE event_id=$1 AND mentor_id=$2 AND competitor_id=$3", []any{r.eventID, f.judges[0].ID, r.competitor.ID}},
 			} {

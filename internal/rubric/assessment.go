@@ -43,7 +43,7 @@ func (s Service) StartAssessmentInTransaction(
 }
 
 // ReadAssessmentInTransaction revalidates current final authority without
-// starting a run or granting a scoring write after completion.
+// starting a run or granting a scoring write after completion or archive.
 func (s Service) ReadAssessmentInTransaction(ctx context.Context, tx pgx.Tx,
 	actor, eventID, teamID, runID uuid.UUID,
 ) (AssessmentSnapshot, error) {
@@ -279,7 +279,7 @@ func assessmentReadable(row dbgen.Event, c event.Configuration, now time.Time, w
 	if !row.PublishedAt.Valid || now.Before(row.PublishedAt.Time) || c.LiveStart.IsZero() ||
 		!c.SubmissionCutoff.After(c.LiveStart) ||
 		now.Before(c.SubmissionCutoff) ||
-		!slices.Contains([]string{"live", "assessment", "completed"}, row.Stage) {
+		!slices.Contains([]string{"live", "assessment", "completed", "archived"}, row.Stage) {
 		return access.ErrForbidden
 	}
 	return nil

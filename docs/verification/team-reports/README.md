@@ -105,3 +105,10 @@ own gates, not inferred from this backend checkpoint.
 The [frontend verification matrix](frontend/README.md) records the actual two-portal
 results/report/ballot/room journeys, independent guide, fault checks and synthetic
 visual artifacts.
+
+
+## Archived report read correction
+
+See [native archive RED/GREEN evidence](archive-read.md) for the bounded archived
+score-bearing report read regression, preserved current source safeguards and
+archived report/scoring write denials.

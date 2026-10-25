@@ -39,8 +39,11 @@ validation apply through the canonical HTTP runtime.
 A separate native read-assessment/completion path revalidates current published
 rubric, frozen final/repository identity, required independent cards, current
 judge roles/assignments/conflicts and genuine signed qualification. It permits
-completed-event reports without starting a run or reopening scoring writes.
-Cancelled/archived sources remain unavailable; report writers retain existing
+completed and archived report reads without starting a run or reopening scoring
+writes. Archiving alone preserves the exact deliberately released own-team report,
+including explicitly selected confirmed scores; current recipient membership,
+captured audience and all native source safeguards still apply. Cancelled sources
+remain unavailable; report writers retain existing
 EventEdit/WritesAllowed authority and gain no competition mutation grant.
 
 Published teams outside the final tally may receive deliberately authored prose
