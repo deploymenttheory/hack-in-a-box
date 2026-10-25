@@ -1,5 +1,5 @@
 {
-  "source": "0b1b70014ce0d196a90758bedded2bce3600c60e",
+  "source": "01192604eca5ff44b4088b6a094ef7b905eeaec9",
   "cases": [
     {
       "scope": "admin-desktop",
@@ -20,11 +20,11 @@
         },
         {
           "path": "admin-desktop/judge-advisory-light.png",
-          "sha256": "1499810f7a5e6e39a3091291385904dd0d1ca2f8410ea297d94acbc49fbbeaa6"
+          "sha256": "3d09c07698dcbddaea62ee3af13368dc5b55b59586de7594b55301c90821942e"
         },
         {
           "path": "admin-desktop/judge-advisory-dark.png",
-          "sha256": "bbcdeccf217e1825cebb9242f1266384f57d7bd56b81674be76346af47c56305"
+          "sha256": "556922fc30e2cfa594f068958dd303d65b89fcfbddaa4a1bbcb0aee6c35acedb"
         }
       ]
     },
@@ -101,11 +101,11 @@
         },
         {
           "path": "public-mobile/judge-advisory-light.png",
-          "sha256": "b42c45f51a3c43f32bef1d2b0953abea41b109a5862a284295753e318cfbb874"
+          "sha256": "8711e949a81a1b294b9d83795a451ad115c0095a17ae2e2e802d581228231aea"
         },
         {
           "path": "public-mobile/judge-advisory-dark.png",
-          "sha256": "40786edb14d59510906d8169ee43b28c39ce26fdbc69fc5573ab4a4048a60f75"
+          "sha256": "444dc4e5a5df9096dbeac73982069f1b27bb9fc083788b81f0042d8ed5b174df"
         }
       ]
     }

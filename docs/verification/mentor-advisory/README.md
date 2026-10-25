@@ -197,3 +197,47 @@ traces, cookies or live user data are published.
 
 The author candidate is frozen for independent full Standards and Spec reviews
 and current-head CI. It remains Draft until those final gates pass.
+
+
+## Independent review correction: authoritative successful context changes
+
+Full independent review of `8e596734` found one P1: a successful preflight
+returning narrower mentor targets or a newly prepared source could reject the
+write while retaining the old private editor until an unrelated poll. The two
+actual-reader/shared-history unit regressions reproduced this (**RED 1.03s**,
+two failures; the three earlier regressions still passed).
+
+At `01192604eca5ff44b4088b6a094ef7b905eeaec9`, successful preflight pages
+reach their owning reader before the generic revision/version guard. A changed
+existing context signature synchronously renews the private authority and
+publishes the new page, remounting its child editor. This covers confirm, fresh
+base read and base selection; it does not fabricate an HTTP denial. Ordinary
+revision/version changes preserve authorised input and conflict recovery. The
+independent original-request history remains untouched, with no inferred ACK.
+All **6/6 unit regressions pass (1.42s)**, including both positive200 changes,
+ordinary revision conflict and the existing exact-ACK/cross-owner protections.
+
+The strengthened actual native four-case browser matrix passes **83.006s**
+(test **81.37s**): administration desktop **21.75s**, administration mobile
+**20.27s**, participant desktop **19.83s**, participant mobile **19.52s**.
+Each case now proves removal of published mentor coverage while the mentor role
+remains active returns real **200 with no targets**, then clears held private
+views/contribution/review with no POST. Restored coverage starts with blank
+inputs. Both judge and mentor also hold reviews while an actual judge card is
+reopened, resubmitted, deliberation reopened and results prepared again. The new
+valid native source returns **200**; both old owners clear private inputs/reviews
+and never retarget or POST them. Existing role403, unprepared-source409, lost
+committed-response, exact receipt and non-counted advice cases remain intact.
+The immutable prior result version still contains exactly one actual judge
+ballot; the explicit re-prepare adds exactly one version and resets its current
+ballots to zero. Advisory history still contains exactly three versions.
+
+The sequential independent guide passes **2/2 (1.6s)** on that same source. Both
+portal builds/TypeScript and frontend ESLint pass. All sixteen fresh captures
+were visually inspected; the evidence index now names `01192604`. Earlier
+`0b1b7001`/`8e596734` screenshots and proof remain historically available in
+that Git revision. Production Go/API/SQL bytes remain identical to the native
+owner/schema proof at `a85f8d84`; only the browser fixture Go test changed.
+
+This corrected complete candidate awaits independent review of the P1 fix in
+full context and latest-head CI before Ready or merge.
