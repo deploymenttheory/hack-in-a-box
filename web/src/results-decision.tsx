@@ -19,7 +19,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  version: (page: P) => number; revision: (page: P) => number; read: (signal: AbortSignal) => Promise<P>;
  fingerprint: (body: B, revision: number) => Promise<string>; ready: (page: P, body: B) => void;
  send: (body: B, revision: number) => Promise<R>; matches: (result: R, intent: DecisionMetadata) => boolean;
- contextDenied?: (error: unknown) => boolean; refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
+ observeCurrent?: (page: P) => void; contextDenied?: (error: unknown) => boolean; refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
 }) {
  const identity = useIdentity(), commands = useCommunicationCommands(options.owner), scope = usePrivateRequestScope(`${options.owner}:editor`, options.parent)
  const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failureValue, setFailure] = useState<unknown>(), [unknownAttempt, setUnknownAttempt] = useState<string>(), [failureStageValue, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
@@ -46,7 +46,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   const captured = review, ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined); setFailureStage(undefined)
   let attempt: string | undefined
   try {
-   const current = await options.read(ticket.signal); ticket.assert()
+   const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert()
    if (options.revision(current) !== captured.intent.revision || options.version(current) !== captured.intent.version) throw new Error('The current starting point changed. Nothing was sent. Cancel, read current facts and review again.')
    options.ready(current, captured.body); ticket.assert()
    attempt = commands.begin({ operation: 'Reviewed ' + captured.body.action.replaceAll('_', ' '), revision: captured.intent.revision, command: { requestID: captured.intent.requestID, action: captured.intent.action, expectedVersion: captured.intent.version, intentFingerprint: captured.intent.fingerprint, resourceID: captured.intent.resourceID ?? options.resourceID, subjectID: captured.intent.subjectID, intentID: captured.intent.intentID } })
@@ -63,7 +63,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  async function readBase(source: HTMLElement) {
   if (pending || options.paused || sending.current) return
   const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined)
-  try { const current = await options.read(ticket.signal); ticket.assert(); baseOpener.current = source; setBase({ revision: options.revision(current), version: options.version(current) }) }
+  try { const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert(); baseOpener.current = source; setBase({ revision: options.revision(current), version: options.version(current) }) }
   catch (error) { if (ticket.current()) { setFailure(error); await options.refresh() } }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
@@ -71,7 +71,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   if (!base || pending || options.paused || sending.current) return
   const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined)
   try {
-   const current = await options.read(ticket.signal); ticket.assert()
+   const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert()
    if (options.revision(current) !== base.revision || options.version(current) !== base.version) throw new Error('The current starting point changed again. Review current facts.')
    commands.selectNewBase(); setBase(undefined); setReview(undefined); options.acknowledged?.(current); await options.refresh()
   } catch (error) { if (ticket.current()) setFailure(error) }

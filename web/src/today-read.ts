@@ -12,6 +12,17 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
   const life = useMemo(() => ({ scope, denied: false, ended: false, reading: false, attempt: 0, signature: undefined as string | undefined }), [scope])
   const [generation, setGeneration] = useState(0)
   const [snapshot, setSnapshot] = useState<{ key: string; data?: T; error?: unknown; pending: boolean; denied: boolean }>({ key, pending: true, denied: false })
+  // A successful command preflight is also an authoritative private read. Publish
+  // a changed context synchronously so its old child ticket cannot reach a write.
+  // Ordinary revision/content changes keep the same private editor lifetime.
+  const observeCurrent = useCallback((data: T) => {
+    const signature = identityOf?.(data)
+    if (life.ended || life.denied || life.signature === signature) return
+    scope.renew(); life.attempt++; life.reading = false
+    authority.renew(); setGeneration(value => value + 1)
+    life.signature = signature
+    setSnapshot({ key, data, pending: false, denied: false })
+  }, [key, identityOf, scope, authority, life])
   const read = useCallback(async (explicit = false) => {
     if (life.ended || life.denied && !explicit || life.reading && !explicit) return
     if (life.denied) authority.renew()
@@ -49,5 +60,5 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
     events.forEach(event => window.addEventListener(event, end))
     return () => events.forEach(event => window.removeEventListener(event, end))
   }, [scope, authority, life, key])
-  return { ...(snapshot.key === key ? snapshot : { key, pending: true, denied: false }), refresh: () => read(true), authority, generation }
+  return { ...(snapshot.key === key ? snapshot : { key, pending: true, denied: false }), refresh: () => read(true), authority, generation, observeCurrent }
 }

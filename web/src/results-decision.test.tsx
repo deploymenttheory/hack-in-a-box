@@ -1,10 +1,11 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { expect, test, vi } from 'vitest'
 import { APIError, type Session } from './api/client'
 import { CommunicationSafety, useCommunicationCommands } from './communication-tests'
 import { PrivateRequestScope } from './private-request-scope'
 import { useResultDecision } from './results-decision'
+import { useTodayRead } from './today-read'
 import { IdentityContext } from './session'
 vi.mock('@tanstack/react-router', () => ({ useBlocker: vi.fn() }))
 const identity: Session = { person: { id: '11111111-1111-4111-8111-111111111111', display_name: 'Synthetic mentor', platform_admin: false }, draft_scope: '22222222-2222-4222-8222-222222222222', csrf_token: 'synthetic', can_create_events: false }
@@ -55,4 +56,50 @@ test('a rejected stale write refreshes current facts without ending the still-au
  expect(result.current.decision.failureStage).toBe('rejected')
  await act(async () => { await result.current.decision.prepare({ ...body, request_id: '77777777-7777-4777-8777-777777777777' }, null, document.createElement('button')) })
  expect(result.current.decision.review?.body.request_id).toBe('77777777-7777-4777-8777-777777777777')
+})
+
+for (const context of ['coverage', 'source'] as const) test(`a successful ${context} preflight fences the old held review without acknowledging another owner's unknown request`, async () => {
+ type Page = { revision: number; version: number; binding: string; targets: string[] }
+ const initial: Page = { revision: 7, version: 0, binding: 'original', targets: ['own'] }, parent = new PrivateRequestScope('native-current-context')
+ let current = initial
+ const load = async () => current, signature = (p: Page) => JSON.stringify([p.binding, p.targets]), send = vi.fn()
+ const hook = renderHook(() => {
+  const reader = useTodayRead('preflight-context', load, parent, signature)
+  const decision = useResultDecision({ owner: 'held-context', parent: reader.authority, paused: false, page: initial, revision: p => p.revision, version: p => p.version, read: load, observeCurrent: reader.observeCurrent, fingerprint: async () => 'f'.repeat(64), ready: () => {}, send, matches: () => false, refresh: reader.refresh })
+  return { reader, decision, history: useCommunicationCommands('held-context') }
+ }, { wrapper })
+ await waitFor(() => expect(hook.result.current.reader.data).toEqual(initial))
+ let original = ''
+ act(() => { original = hook.result.current.history.begin({ operation: 'Earlier independent unknown', revision: 6, command: { requestID: '88888888-8888-4888-8888-888888888888', action: 'advise' } }); hook.result.current.history.uncertain(original); hook.result.current.history.selectNewBase() })
+ await act(async () => { await hook.result.current.decision.prepare({ request_id: '99999999-9999-4999-8999-999999999999', action: 'advise', reason: 'Held private prose' }, null, document.createElement('button')) })
+ expect(hook.result.current.decision.review).toBeDefined()
+ const oldOwner = hook.result.current.reader.authority.capture()
+ current = { ...initial, revision: 8, binding: context === 'source' ? 'replacement' : 'original', targets: context === 'coverage' ? [] : ['own'] }
+ await act(async () => { await hook.result.current.decision.confirm() })
+ expect(oldOwner.current()).toBe(false)
+ expect(hook.result.current.reader.data).toEqual(current)
+ expect(send).not.toHaveBeenCalled()
+ expect(hook.result.current.history.attempts).toEqual([expect.objectContaining({ id: original, state: 'unknown' })])
+ expect(hook.result.current.decision.notice).not.toContain('acknowledged')
+ hook.unmount()
+})
+
+test('a successful ordinary revision conflict preserves the authorised editor and held prose', async () => {
+ const parent = new PrivateRequestScope('ordinary-current'), initial = { revision: 7, version: 0, binding: 'same' }
+ let current = initial
+ const load = async () => current, signature = (p: typeof initial) => p.binding, send = vi.fn()
+ const hook = renderHook(() => {
+  const reader = useTodayRead('ordinary-preflight', load, parent, signature)
+  return { reader, decision: useResultDecision({ owner: 'ordinary-conflict', parent: reader.authority, paused: false, page: initial, revision: p => p.revision, version: p => p.version, read: load, observeCurrent: reader.observeCurrent, fingerprint: async () => 'a'.repeat(64), ready: () => {}, send, matches: () => false, refresh: reader.refresh }) }
+ }, { wrapper })
+ await waitFor(() => expect(hook.result.current.reader.data).toEqual(initial))
+ await act(async () => { await hook.result.current.decision.prepare({ request_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', action: 'advise', reason: 'Still authorised private prose' }, null, document.createElement('button')) })
+ const ticket = hook.result.current.reader.authority.capture()
+ current = { ...initial, revision: 8, version: 1 }
+ await act(async () => { await hook.result.current.decision.confirm() })
+ expect(ticket.current()).toBe(true)
+ expect(hook.result.current.decision.review?.body.reason).toBe('Still authorised private prose')
+ expect(hook.result.current.decision.failureStage).toBe('before_write')
+ expect(send).not.toHaveBeenCalled()
+ hook.unmount()
 })

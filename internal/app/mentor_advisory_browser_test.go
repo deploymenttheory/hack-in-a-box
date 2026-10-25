@@ -88,6 +88,8 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 		dbgen.New(r.pool).
 			SetMembership(ctx, dbgen.SetMembershipParams{EventID: r.eventID, PersonID: outsider.ID, Role: "mentor", Active: true}),
 	)
+	assignments, err := dbgen.New(r.pool).MentorAssignments(ctx, r.eventID)
+	resultsSourceRequire(t, err)
 	private, err := os.MkdirTemp("/tmp", "hackbox112-")
 	resultsSourceRequire(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(private) })
@@ -137,10 +139,21 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 				}
 				_ = json.NewEncoder(w).Encode(cookie)
 				return
+			case "remove-coverage":
+				_, actionErr = r.pool.Exec(req.Context(), "DELETE FROM mentor_assignments WHERE event_id=$1 AND person_id=$2 AND snapshot='published'", r.eventID, r.mentor.ID)
+			case "restore-coverage":
+				for _, a := range assignments {
+					if a.PersonID == r.mentor.ID && a.Snapshot == "published" {
+						_, actionErr = r.pool.Exec(req.Context(), "INSERT INTO mentor_assignments(event_id,team_id,person_id,slot,snapshot,starts_at,ends_at)VALUES($1,$2,$3,$4,$5,$6,$7)", a.EventID, a.TeamID, a.PersonID, a.Slot, a.Snapshot, a.StartsAt, a.EndsAt)
+						if actionErr != nil {
+							break
+						}
+					}
+				}
 			case "revoke-mentor", "restore-mentor":
 				actionErr = dbgen.New(r.pool).
 					SetMembership(req.Context(), dbgen.SetMembershipParams{EventID: r.eventID, PersonID: r.mentor.ID, Role: "mentor", Active: input.Action == "restore-mentor"})
-			case "reopen-source":
+			case "reopen-source", "reprepare-source":
 				states, e := surface.deps.Judging.CardStates(
 					req.Context(),
 					r.owner.ID,
@@ -177,6 +190,16 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 						actionErr = fmt.Errorf("native submitted judge card absent")
 					}
 				}
+				if actionErr == nil && input.Action == "reprepare-source" {
+					f.card(t, 0, 6, "submit")
+					f.round(t, judging.RoundCommand{Action: "open_deliberation"})
+					var current results.Page
+					current, actionErr = f.service.Read(req.Context(), r.owner.ID, r.eventID)
+					if actionErr == nil {
+						_, actionErr = f.service.Change(req.Context(), r.owner.ID, r.eventID, current.Revision, results.Command{RequestID: uuid.New(), Version: current.Round.Version, Action: "prepare", SourceBinding: current.Preview.Binding, Reason: "Native browser replacement source disposes old held reviews"})
+					}
+				}
+
 			default:
 				http.Error(w, "unknown control", 400)
 				return
@@ -235,6 +258,13 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 	if retained != 3 {
 		t.Fatal("browser replayed or wrote after current authority/source ended", retained)
 	}
+	// The explicit native re-prepare adds one result version and resets its
+	// ballots. The earlier actual vote remains in the immutable prior version.
+	var priorVotes int
+	resultsSourceRequire(t, r.pool.QueryRow(ctx, "SELECT jsonb_array_length(document->'votes') FROM result_versions WHERE event_id=$1 AND version=2", r.eventID).Scan(&priorVotes))
+	if priorVotes != 1 {
+		t.Fatal("prior judge decision history changed", priorVotes)
+	}
 	var versions, votes int
 	resultsSourceRequire(
 		t,
@@ -246,7 +276,7 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 		r.pool.QueryRow(ctx, "SELECT jsonb_array_length(document->'votes') FROM result_versions WHERE event_id=$1 ORDER BY version DESC LIMIT 1", r.eventID).
 			Scan(&votes),
 	)
-	if versions != 2 || votes != 1 {
+	if versions != 3 || votes != 0 {
 		t.Fatal(
 			"advisory changed native result decisions or counted as another vote",
 			versions,
