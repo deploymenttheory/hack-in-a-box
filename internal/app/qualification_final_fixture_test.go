@@ -114,6 +114,9 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 					t.Fatal(err)
 				}
 			}
+			if _, err = r.pool.Exec(t.Context(), "UPDATE mentor_profiles SET maximum_teams=$2 WHERE event_id=$1", r.eventID, count); err != nil {
+				t.Fatal(err)
+			}
 			for _, team := range teams {
 				if _, err = r.pool.Exec(
 					t.Context(),
