@@ -121,7 +121,8 @@ test('current role revocation fences a held old private read and partial restora
   f.state.roles = ['judge']; f.state.denied = 0; f.state.tasksDenied = 403; f.event.can_read_review_coverage = false
   await page.getByRole('button', { name: 'Try again', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Your event Today' })).toBeVisible()
-  await expect(page.getByText('Current task/readiness access is unavailable. No prior private tasks are retained.')).toBeVisible()
+  await expect(page.getByText('Preparation task access is unavailable in your current role.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Published shared room activity', { exact: true })).toBeVisible()
   await expect(page.getByText('Late private mentor canary')).toHaveCount(0)
   expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } }))).not.toContain('Late private mentor canary')
   expect(f.calls.some(c => c.path.endsWith('/mentor-coverage'))).toBe(false)
@@ -258,6 +259,7 @@ test('unchanged current-role polling preserves unsent preparation input and cont
  await page.getByRole('button', { name: 'Open Assigned mentor preparation', exact: true }).click()
  await expect(page.getByRole('heading', { name: 'Assigned mentor preparation', exact: true })).toBeFocused()
  await page.getByRole('textbox', { name: 'Progress reason', exact: true }).fill('Unsent reason stays local')
+ const other = preparation('Unrelated mentor assignment', 'mentor'); other.definition.id = '6d411fd9-6963-496b-8324-f19213fd61ba'; f.state.otherTasks = [other]
  const before = f.calls.filter(c => c.path.endsWith('/today')).length
  await page.evaluate(() => { window.dispatchEvent(new Event('focus')); window.dispatchEvent(new Event('visibilitychange')) })
  await expect.poll(() => f.calls.filter(c => c.path.endsWith('/today')).length).toBeGreaterThan(before)
@@ -336,4 +338,83 @@ for (const denied of [false, true]) test(`held old Today cannot restore ${denied
  await expect(page.getByRole('heading', { name: 'Current judge preparation', exact: true })).toBeVisible()
  expect(f.event.revision).toBe(originalRevision)
  expect(f.calls.filter(call => call.method !== 'GET')).toEqual([])
+})
+
+
+for (const remove of [false, true]) test(`unrelated assignment ${remove ? 'removal' : 'addition'} preserves a newer current page after the selected original acknowledgement`, async ({ page }) => {
+ await page.clock.install({ time: new Date('2027-06-14T12:00:00Z') })
+ const f = await todayFixture(page, ['judge'])
+ const other = preparation('Another judge assignment', 'judge'); other.definition.id = '6d411fd9-6963-496b-8324-f19213fd61ba'
+ if (remove) f.state.otherTasks = [other]
+ let release!: () => void, began!: () => void
+ f.state.taskWriteHold = new Promise<void>(resolve => { release = resolve })
+ const started = new Promise<void>(resolve => { began = resolve }); f.state.taskWriteStarted = began
+ await openToday(page)
+ await page.getByRole('combobox', { name: 'Today context' }).selectOption('judge')
+ await page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Assigned judge preparation', exact: true }) }).getByRole('button', { name: 'Open your preparation workspace', exact: true }).click()
+ await page.getByRole('button', { name: 'Open Assigned judge preparation', exact: true }).click()
+ await page.getByRole('textbox', { name: 'Progress reason', exact: true }).fill('Selected owner remains authorised')
+ await page.getByRole('button', { name: 'Save preparation progress', exact: true }).click()
+ await page.getByRole('button', { name: 'Confirm preparation progress', exact: true }).click(); await started
+ f.state.otherTasks = remove ? [] : [other]; f.state.preparationRevision++; f.event.revision = f.state.preparationRevision
+ const reads = f.calls.filter(c => c.path.endsWith('/preparation/tasks')).length
+ await page.clock.runFor(16_000)
+ await expect.poll(() => f.calls.filter(c => c.path.endsWith('/preparation/tasks')).length).toBeGreaterThan(reads)
+ await expect(page.getByRole('complementary', { name: 'Unconfirmed command history', includeHidden: true })).toContainText('Awaiting original acknowledgement')
+ release()
+ await expect(page.getByText('Preparation progress saved.', { exact: true })).toBeVisible()
+ await expect(page.getByRole('alertdialog', { name: 'Review preparation progress', includeHidden: true })).toHaveCount(0)
+ await expect(page.getByRole('button', { name: 'Close preparation task', exact: true })).toBeEnabled()
+ await page.getByRole('button', { name: 'Close preparation task', exact: true }).click()
+ await expect(page.getByRole('button', { name: 'Open Assigned judge preparation', exact: true })).toBeFocused()
+ const unrelated = page.getByRole('button', { name: 'Open Another judge assignment', exact: true })
+ if (remove) await expect(unrelated).toHaveCount(0); else await expect(unrelated).toBeVisible()
+ await page.getByRole('button', { name: 'Open Assigned judge preparation', exact: true }).click()
+ await page.getByRole('textbox', { name: 'Progress reason', exact: true }).fill('A fresh deliberate review')
+ await page.getByRole('button', { name: 'Save preparation progress', exact: true }).click()
+ await expect(page.getByRole('alertdialog', { name: 'Review preparation progress' })).toContainText('Expected revision 9')
+ await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+ await expect(page.getByRole('complementary', { name: 'Unconfirmed command history', includeHidden: true })).toHaveCount(0)
+ expect(f.calls.filter(c => c.method === 'PUT')).toHaveLength(1)
+ expect(f.calls.find(c => c.method === 'PUT')).toMatchObject({ revision: '"7"', csrf: 'synthetic-csrf-token-32-characters' })
+})
+
+test('staff attendance exception uses native reasons and scrubs after role loss', async ({ page }) => {
+ const f = await todayFixture(page, ['organiser', 'judge'])
+ f.event.confirmed_attendees = 20; f.event.configuration.minimum_attendance = 30
+ await openToday(page)
+ await page.getByRole('combobox', { name: 'Today context' }).selectOption('organiser')
+ const attendance = page.getByRole('row', { name: /Reasoned attendance exception/ })
+ await expect(attendance).toContainText('No approved attendance exception was returned')
+ f.state.decisions = [{ id: 'cfeaf816-d2ea-4761-87eb-e57e195a6b1b', actor_id: person.id, kind: 'transition_to_live', reason: 'PRIVATE approved following withdrawals', revision: 8, created_at: '2027-06-20T09:00:00Z' }]
+ await page.getByRole('button', { name: 'Refresh Today facts', exact: true }).click()
+ await expect(attendance).toContainText('Approved attendance exception recorded')
+ await expect(attendance).toContainText('PRIVATE approved following withdrawals')
+ await expect(attendance).toContainText('20 confirmed competitors · minimum 30')
+ f.state.roles = ['judge']; f.event.can_edit = false; f.event.can_read_staff = false; f.event.can_transition = false
+ await page.evaluate(() => { window.dispatchEvent(new Event('focus')); window.dispatchEvent(new Event('visibilitychange')) })
+ await expect(page.getByText(/PRIVATE approved/)).toHaveCount(0)
+ await expect(attendance).toContainText('Staff-only decision history')
+ expect(f.calls.filter(c => c.method !== 'GET')).toEqual([])
+})
+
+for (const roleLoss of [false, true]) test(`early brief access keeps programme and guidance ${roleLoss ? 'after current preparation role loss' : 'without preparation authority'}`, async ({ page }) => {
+ const f = await todayFixture(page, roleLoss ? ['judge', 'early_brief_access'] : ['early_brief_access'])
+ if (!roleLoss) f.state.tasksDenied = 403
+ await openToday(page)
+ if (roleLoss) {
+  await page.getByRole('combobox', { name: 'Today context' }).selectOption('judge')
+  await expect(page.getByRole('heading', { name: 'Assigned judge preparation', exact: true })).toBeVisible()
+  f.state.roles = ['early_brief_access']; f.state.tasksDenied = 403
+  await page.getByRole('button', { name: 'Refresh Today facts', exact: true }).click()
+ }
+ await page.getByRole('combobox', { name: 'Today context' }).selectOption('early_brief_access')
+ await expect(page.getByRole('heading', { name: 'Assigned judge preparation', exact: true })).toHaveCount(0)
+ await expect(page.getByText('Preparation task access is unavailable in your current role.', { exact: true })).toBeVisible()
+ await expect(page.getByText('Published shared room activity', { exact: true })).toBeVisible()
+ await expect(page.getByRole('heading', { name: 'Official challenge and rubric clarifications', exact: true })).toBeVisible()
+ await page.getByRole('button', { name: 'Read Released event rules', exact: true }).click()
+ await expect(page.getByRole('article', { name: 'Released resource text' })).toContainText('Read the updated synthetic rules.')
+ await expect(page.getByText(/0 complete.*0 current tasks/)).toHaveCount(0)
+ expect(f.calls.filter(c => c.method !== 'GET')).toEqual([])
 })

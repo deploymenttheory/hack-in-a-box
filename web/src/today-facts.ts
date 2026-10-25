@@ -11,7 +11,7 @@ export type PreparationFact = Pick<Schema['PreparationTask'], 'due_at' | 'blocke
 export type SubmissionFact = Pick<Schema['SubmissionPage'], 'outcome' | 'can_draft' | 'can_submit' | 'can_review' | 'cutoff' | 'live_start' | 'revision'> & { finalRevision: number | null }
 export type RequiredDocumentFact = { id: string; title: string; kind: string; version: number; acknowledged: boolean; previousVersion?: number }
 export type TodayFacts = {
-  tasks: PreparationFact[]; requiredDocuments: RequiredDocumentFact[]; nextDocumentCursor?: string; guidance: Schema['EventGuidance']; help: Schema['HelpQueue']; registrations: Schema['Registration'][]
+  preparationUnavailable?: boolean; attendanceDecisionsAvailable?: boolean; attendanceException?: Pick<Schema['EventDecision'], 'id' | 'reason' | 'revision' | 'created_at'>; tasks: PreparationFact[]; requiredDocuments: RequiredDocumentFact[]; nextDocumentCursor?: string; guidance: Schema['EventGuidance']; help: Schema['HelpQueue']; registrations: Schema['Registration'][]
   teams?: Schema['TeamPage']; ownTeam?: Schema['HackTeam']; disbandedTeamName?: string; submission?: SubmissionFact
   credentials: Schema['CredentialMetadata'][]; repository?: Schema['OwnRepositoryInvitations']; repositoryPendingRelease: boolean
   mentor?: Schema['MentorPage']; review?: Schema['ReviewCoveragePage']; schedule: Schema['ScheduleItem'][]; content?: Schema['ContentReadiness']
@@ -19,11 +19,15 @@ export type TodayFacts = {
 async function unavailable<T>(read: Promise<T>): Promise<T | undefined> {
   try { return await read } catch (error) { if (error instanceof APIError && error.status === 404) return undefined; throw error }
 }
+// A denied preparation owner does not revoke independently authorised event readers.
+async function preparationFacts(read: Promise<Schema['PreparationPage']>) {
+  try { return await read } catch (error) { if (error instanceof APIError && error.status === 403) return undefined; throw error }
+}
 export async function loadTodayFacts(page: TodayPage, context: TodayContext, personID: string, signal: AbortSignal, reviewCursor?: string, documentCursor?: string, assertCurrent: () => void = () => signal.throwIfAborted()): Promise<TodayFacts> {
   const eventID = page.event.id, path = { event_id: eventID }, options = { signal, cache: 'no-store' as const }
   assertCurrent()
   const [preparation, guidance, help, registration, documents] = await Promise.all([
-    api.GET('/api/v1/events/{event_id}/preparation/tasks', { ...options, params: { path } }).then(unwrap),
+    preparationFacts(api.GET('/api/v1/events/{event_id}/preparation/tasks', { ...options, params: { path } }).then(unwrap)),
     api.GET('/api/v1/events/{event_id}/guidance', { ...options, params: { path } }).then(unwrap),
     api.GET('/api/v1/events/{event_id}/help', { ...options, params: { path } }).then(unwrap),
     api.GET('/api/v1/events/{event_id}/registrations/mine', { ...options, params: { path } }).then(unwrap),
@@ -33,9 +37,9 @@ export async function loadTodayFacts(page: TodayPage, context: TodayContext, per
   const role = context === 'personal' ? page.participation_state === 'confirmed' ? 'attendee' : undefined : context
   const actorRoles: readonly string[] = [...page.roles, ...(page.participation_state === 'confirmed' ? ['attendee'] : [])]
   const assignedToActor = (task: Schema['PreparationTask']) => (!task.definition.owner_role || actorRoles.includes(task.definition.owner_role)) && (task.definition.owner_id ? task.definition.owner_id === personID : !!task.definition.owner_role && actorRoles.includes(task.definition.owner_role))
-  const tasks = preparation.items.filter(task => context === 'organiser' && page.event.can_read_staff || assignedToActor(task) && (!task.definition.owner_role || task.definition.owner_role === role || context === 'personal' && !!task.definition.owner_id)).map(task => ({ assignedToActor: assignedToActor(task), id: task.definition.id, title: task.definition.title, ownerID: task.definition.owner_id, ownerRole: task.definition.owner_role, status: task.definition.status, due_at: task.due_at, blocked: task.blocked, overdue: task.overdue, scheduling_issue: task.scheduling_issue, unowned: task.unowned, completeChecks: task.definition.checklist.filter(item => item.complete).length, checks: task.definition.checklist.length, dependencies: task.definition.depends_on.length }))
+  const tasks = (preparation?.items ?? []).filter(task => context === 'organiser' && page.event.can_read_staff || assignedToActor(task) && (!task.definition.owner_role || task.definition.owner_role === role || context === 'personal' && !!task.definition.owner_id)).map(task => ({ assignedToActor: assignedToActor(task), id: task.definition.id, title: task.definition.title, ownerID: task.definition.owner_id, ownerRole: task.definition.owner_role, status: task.definition.status, due_at: task.due_at, blocked: task.blocked, overdue: task.overdue, scheduling_issue: task.scheduling_issue, unowned: task.unowned, completeChecks: task.definition.checklist.filter(item => item.complete).length, checks: task.definition.checklist.length, dependencies: task.definition.depends_on.length }))
   const requiredDocuments = documents.items.filter(item => item.released_version === item.version && item.document.require_acknowledgement).map(item => ({ id: item.id, title: item.document.title, kind: item.kind, version: item.version, acknowledged: !!item.acknowledged_at, previousVersion: item.previous_acknowledgement?.version }))
-  const result: TodayFacts = { tasks, requiredDocuments, nextDocumentCursor: documents.next_cursor ?? undefined, guidance, help, registrations: registration.items, credentials: [], repositoryPendingRelease: !page.event.published_at, schedule: [] }
+  const result: TodayFacts = { preparationUnavailable: !preparation, tasks, requiredDocuments, nextDocumentCursor: documents.next_cursor ?? undefined, guidance, help, registrations: registration.items, credentials: [], repositoryPendingRelease: !page.event.published_at, schedule: [] }
   if (context === 'personal' && page.participation_state === 'confirmed') {
     const teams = unwrap(await api.GET('/api/v1/events/{event_id}/teams', { ...options, params: { path } })); assertCurrent(); result.teams = teams
     const contains = (team: Schema['HackTeam']) => team.published.some(person => person.id === personID) || team.draft.some(person => person.id === personID)
@@ -61,10 +65,15 @@ export async function loadTodayFacts(page: TodayPage, context: TodayContext, per
     ]); assertCurrent(); result.mentor = mentor; result.review = review
   }
   if (context === 'organiser' && page.event.can_read_staff) {
-    const [schedule, content] = await Promise.all([
+    const [schedule, content, decisions] = await Promise.all([
       api.GET('/api/v1/events/{event_id}/schedule', { ...options, params: { path } }).then(unwrap),
       api.GET('/api/v1/events/{event_id}/content-readiness', { ...options, params: { path } }).then(unwrap),
-    ]); assertCurrent(); result.schedule = schedule.items; result.content = content
+      api.GET('/api/v1/events/{event_id}/decisions', { ...options, params: { path } }).then(unwrap),
+    ]); assertCurrent(); result.schedule = schedule.items; result.content = content; result.attendanceDecisionsAvailable = true
+    // The native transition records transition_to_live only when its reasoned
+    // attendance-exception flag was approved. Counts alone never prove approval.
+    const exception = decisions.items.filter(item => item.kind === 'transition_to_live' && item.reason.trim()).sort((a, b) => b.revision - a.revision)[0]
+    if (exception) result.attendanceException = { id: exception.id, reason: exception.reason, revision: exception.revision, created_at: exception.created_at }
   }
   assertCurrent(); return result
 }
