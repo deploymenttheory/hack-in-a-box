@@ -133,6 +133,25 @@ coverage passes 6/6. The combined actual PostgreSQL/race consumer, original-reco
 and transactional fact rollback scenarios pass in 31.530s. These are backend/protocol
 proofs; visible results presentation remains frontend #113 work.
 
+## Frozen-candidate verification and review
+
+Candidate `ce25a2df` passes full native results/race in 12.362s, actual native HTTP
+in 83.868s, whole-repository Go lint, web ESLint, both portal builds and all six
+room-protocol tests. Independent Standards review reports 0 findings. Independent
+Spec review reports one P1 ambiguity: the general category-tie wording says a
+mentor panel with organiser casting, while all-team implementation follows the
+final judges/all-votes/strict-majority decision. The owner clarification is
+pending; this is a merge gate, not an assumed exception.
+
+The published `4038f765` CI passed Go race tests and all checks except native live
+rehearsal. Both browser failures were the exact snapshot-field allowlist omitting
+the newly specified `results` field. The corrected allowlist retains every prior
+field and now asserts no released results before a deliberate publication. A
+local native rerun passes all seven Chromium scenarios and native authority/clock
+checks; Firefox could not launch its temporary profile on the local machine, so
+its browser scenario is not claimed green locally. The unchanged Linux Firefox
+CI gate must pass on the final head.
+
 ## Remaining acceptance gates
 
 - Independent full Standards/Spec reviews, green final-head CI and equal-tree
