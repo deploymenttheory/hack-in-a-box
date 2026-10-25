@@ -11,7 +11,7 @@ RUN npm run build
 
 FROM golang:1.27.3-bookworm@sha256:21ade014faf952365b9ecbd8dbdb87176fbacb82fac9fb132d9f2a7b8cc3f132 AS build
 WORKDIR /src
-ENV GOMAXPROCS=2 GOFLAGS=-p=1 CGO_ENABLED=0
+ENV GOMAXPROCS=2 GOFLAGS=-p=2 CGO_ENABLED=0
 COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd/ cmd/
