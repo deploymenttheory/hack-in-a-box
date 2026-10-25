@@ -24,3 +24,12 @@ A separate native MC test initially omitted its mandatory room-change reason. It
 
 Full browser/device/screen-reader/zoom and other final first-release findings
 remain to be evaluated. This register is not exhaustive or a no-defects claim.
+
+## Review-inventory extraction correction
+
+The initial standards inventory parser crossed the obsolete 4.1.1 section into
+4.1.2's level marker, retaining the former and omitting the latter while its total
+count still equalled 55. Manual identifier inspection caught this before draft
+publication. The corrected extraction bounds each criterion's level to its own
+section, excludes obsolete 4.1.1 and includes current 4.1.2. All rows remain
+not evaluated; a correct count alone is not completeness proof.

@@ -483,9 +483,9 @@
       "defects": []
     },
     {
-      "criterion": "4.1.1",
+      "criterion": "4.1.2",
       "level": "A",
-      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#parsing",
+      "reference": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/#name-role-value",
       "status": "not_evaluated",
       "applicability": null,
       "evidence": [],

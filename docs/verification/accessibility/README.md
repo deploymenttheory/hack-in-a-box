@@ -76,6 +76,17 @@ worktree cleanliness, fixture identity, configuration and actual selection.
 A dirty diagnostic run is not a clean final-source proof. Screenshots must retain
 the source and environment actually executed.
 
+## Clean checkpoint proof
+
+At clean committed source `beec062ad33fcee9ee1265c84f432c3612b28593`, native
+keyboard/state checks passed **3/3, 6.6s**, real-PG/race owner **17.384s**.
+The independently hosted guide also passed its two cases. Start/end source and
+cleanliness are recorded in [checkpoint-proof.json](checkpoint-proof.json).
+Browser scenarios and production code are unchanged in the subsequent evidence
+commit; its matrix correction excludes obsolete 4.1.1 and includes current 4.1.2.
+The initial extraction crossed a criterion boundary; the corrected inventory
+matches the pinned recommendation. No standard criterion is marked passed.
+
 ## Current diagnostic checkpoint
 
 Executed with dirty worktree diagnostics, not yet a final-source certification:

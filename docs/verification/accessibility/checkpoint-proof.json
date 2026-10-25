@@ -1,0 +1,72 @@
+{
+  "native": {
+    "source_start": {
+      "commit": "beec062ad33fcee9ee1265c84f432c3612b28593",
+      "clean": true
+    },
+    "source_end": {
+      "commit": "beec062ad33fcee9ee1265c84f432c3612b28593",
+      "clean": true
+    },
+    "same_commit": true,
+    "overall": "passed",
+    "duration_ms": 6628.964999999999,
+    "host": {
+      "os": "darwin",
+      "release": "27.0.0",
+      "architecture": "arm64",
+      "node": "v22.23.3"
+    },
+    "evidence_kind": "supplementary automated engine and keyboard checks; no manual or retail-device pass implied",
+    "tests": [
+      {
+        "title": " > chromium > native.spec.ts > native participant reaches rules, reviews and acknowledges the exact version using only the keyboard",
+        "status": "passed",
+        "duration_ms": 2508
+      },
+      {
+        "title": " > chromium > native.spec.ts > native mentor reaches private fields and reviews unsent evidence through keyboard navigation",
+        "status": "passed",
+        "duration_ms": 1387
+      },
+      {
+        "title": " > chromium > native.spec.ts > native administrator can reach MC review and correction without a pointer",
+        "status": "passed",
+        "duration_ms": 2152
+      }
+    ]
+  },
+  "guide": {
+    "source_start": {
+      "commit": "beec062ad33fcee9ee1265c84f432c3612b28593",
+      "clean": true
+    },
+    "source_end": {
+      "commit": "beec062ad33fcee9ee1265c84f432c3612b28593",
+      "clean": true
+    },
+    "same_commit": true,
+    "overall": "passed",
+    "duration_ms": 4393.697,
+    "host": {
+      "os": "darwin",
+      "release": "27.0.0",
+      "architecture": "arm64",
+      "node": "v22.23.3"
+    },
+    "evidence_kind": "supplementary automated engine and keyboard checks; no manual or retail-device pass implied",
+    "tests": [
+      {
+        "title": " > chromium > guide.spec.ts > independently hosted guide navigation and no-match recovery are keyboard reachable",
+        "status": "passed",
+        "duration_ms": 1344
+      },
+      {
+        "title": " > chromium > guide.spec.ts > production guide controls expose validation, dialog and keyboard dismissal in light and dark themes",
+        "status": "passed",
+        "duration_ms": 1989
+      }
+    ]
+  },
+  "scope": "Selected existing production-state engine/keyboard checks only; not full WCAG, manual, stable retail browser or mobile-device acceptance."
+}
