@@ -5,11 +5,18 @@ import { actor, control, native } from './native'
 test('actual reviewed two-event discovery preserves explicit awards, consent, audience, archive and cache boundaries', async ({ browser }, testInfo) => {
  const reader = await actor(browser), outsider = await actor(browser, 'outsider')
  const page = await reader.newPage(), organisation = await outsider.newPage()
+ let documents = 0; page.on('request', request => { if (request.isNavigationRequest() && request.resourceType() === 'document') documents++ })
  const winner = `/projects/${native.winner_project}`, restricted = `/projects/${native.restricted_project}`, cached = `/projects/${native.second_project}`
  try {
   await page.goto('/projects'); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
   await expect(page.getByLabel('Source event')).toContainText('Synthetic autumn hack'); await expect(page.getByLabel('Source event')).toContainText('Synthetic spring hack')
   await expect(page.getByRole('button', { name: 'More records', exact: true })).toBeVisible(); await page.getByRole('button', { name: 'More records', exact: true }).click(); await expect(page.getByRole('navigation', { name: 'Showcase pages' })).toContainText('30 loaded')
+  for (const colorScheme of ['light', 'dark'] as const) {
+   await page.emulateMedia({ colorScheme }); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
+   const audit = await new AxeBuilder({ page }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([])
+   expect(await page.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+   await page.screenshot({ path: testInfo.outputPath(`showcase-discovery-${colorScheme}.png`) })
+  }
   await page.getByLabel('Source event').selectOption(native.event_id); await page.getByLabel('Reviewed follow-up', { exact: true }).selectOption('proposed')
   await expect(page.getByRole('link', { name: 'Useful work from a non-winning team', exact: true })).toBeVisible(); await expect(page.getByRole('link', { name: 'Recover services with less effort', exact: true })).toHaveCount(0)
   await page.getByRole('link', { name: 'Useful work from a non-winning team', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Useful work from a non-winning team', exact: true })).toBeVisible(); await expect(page.getByText('No published award shown', { exact: true })).toBeVisible()
@@ -44,7 +51,7 @@ test('actual reviewed two-event discovery preserves explicit awards, consent, au
   let release!: () => void, entered!: () => void
   const gate = new Promise<void>(resolve => { release = resolve }), reached = new Promise<void>(resolve => { entered = resolve })
   await page.route(`**/api/v1/projects/${native.second_project}`, async route => { const response = await route.fetch(); entered(); await gate; await route.fulfill({ response }) }, { times: 1 })
-  const pending = page.goto(cached).catch(error => { if (!/interrupted|ERR_ABORTED/i.test(String(error))) throw error }); await reached; await control('withdraw-cache-project'); await page.goto('/projects'); await page.goto(cached); await expect(page.getByRole('heading', { name: 'Project unavailable', exact: true })).toBeVisible(); release(); await pending.catch(() => {}); await expect(page.getByText('Explore work across events', { exact: true })).toHaveCount(0)
+  const pending = page.goto(cached).catch(error => { if (!/interrupted|ERR_ABORTED/i.test(String(error))) throw error }); await reached; const sameRealmDocuments = documents; await control('withdraw-cache-project'); await page.getByRole('link', { name: 'Reviewed projects', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible(); await page.goBack(); await expect(page.getByRole('heading', { name: 'Project unavailable', exact: true })).toBeVisible(); expect(documents).toBe(sameRealmDocuments); release(); await pending; await expect(page.getByText('Explore work across events', { exact: true })).toHaveCount(0)
   expect(await page.locator('body').innerText()).not.toContain('PRIVATE-')
  } finally { await Promise.all([reader.close(), outsider.close()]) }
 })
