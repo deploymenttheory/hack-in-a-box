@@ -27,6 +27,10 @@ func TestHeldProviderDoesNotBlockOtherNativeTeams(t *testing.T) {
 	f.provider.entered = make(chan struct{})
 	f.provider.release = make(chan struct{})
 	id := f.operation()
+	operation, err := f.q.Operation(t.Context(), id)
+	if err != nil || operation.TargetID != f.team {
+		t.Fatal("held-provider fixture selected another team", operation.TargetID, err)
+	}
 	done := make(chan error, 1)
 	go func() { done <- f.jobs.Execute(t.Context(), id) }()
 	select {

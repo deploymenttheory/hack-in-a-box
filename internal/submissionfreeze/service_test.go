@@ -210,7 +210,7 @@ func (f *fixture) operation() uuid.UUID {
 		f.t.Fatal(err)
 	}
 	var id uuid.UUID
-	if err := f.pool.QueryRow(f.t.Context(), "SELECT id FROM operations WHERE event_id=$1 AND kind=$2 ORDER BY due_at DESC LIMIT 1", f.event, HandlerKind).
+	if err := f.pool.QueryRow(f.t.Context(), "SELECT id FROM operations WHERE event_id=$1 AND kind=$2 AND target_id=$3 ORDER BY due_at DESC LIMIT 1", f.event, HandlerKind, f.team).
 		Scan(&id); err != nil {
 		f.t.Fatal(err)
 	}

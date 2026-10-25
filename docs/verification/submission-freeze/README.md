@@ -219,3 +219,38 @@ Source compilation and TypeScript type checking pass. The final complete native
 run, configured lint, explicit gofmt check, generation parity and final-head CI
 are still pending; the earlier CI Go job stopped at formatting before running
 its tests. No failed CI job is represented as native-test execution or success.
+
+## Frozen 29372ac checkpoint and final fixture correction
+
+On exact published `29372ac42560f50674abc73eaf117c5c9880363f`:
+
+- Configured focused Go lint: **0 issues**
+  (`/private/tmp/hackbox96-293-lint.log`); explicit whole-tree `gofmt -l cmd internal`
+  output is empty.
+- Canonical SQL/Go/TypeScript generation parity passed with no generated diff
+  (`/private/tmp/hackbox96-293-parity.log`). TypeScript type checking passed.
+- Existing PostgreSQL/race guard compatibility passed: recovery 48 **4.687 s**,
+  repository access 47 **4.170 s**, session 49 **6.727 s**
+  (`/private/tmp/hackbox96-293-prior-guards.log`). No old migration or guard changed.
+- Bounded provider transport **1.377 s**, authenticated HTTP **6.676 s**, registered
+  runtime **3.746 s** passed. The owner package run failed its held-provider
+  fixture: the operation helper selected by event/kind alone although this case
+  has two same-cutoff teams, and could execute the unsubmitted other team's job
+  instead (`/private/tmp/hackbox96-293-native.log`). This is not represented as a
+  passing complete owner run.
+
+The fixture now selects its exact target team and asserts that identity. Its
+held-provider progress assertion and timeout are unchanged. A transitional local
+edit initially omitted the new SQL argument; that failed with “expected 3
+arguments, got 2” and was corrected before any success claim. The corrected
+held-provider case and an additional actual encrypted App-owner graph pass with
+PostgreSQL/race (**12.916 s**,
+`/private/tmp/hackbox96-target-and-app-owner-corrected.log`). The App graph uses
+native configuration encryption, installed numeric repository/source checks and
+worker execution; the recording provider verifies borrowed plaintext credentials
+are cleared after observation and no key enters the source projection. Real
+provider transport remains the separately attributed deterministic HTTP fixture.
+
+Only tests/docs changed after 29372ac for this correction; production/API/SQL
+behaviour is unchanged. A complete run of the final published head and actual
+final-head CI/independent reviews remain required before Ready or merge.
