@@ -1,0 +1,6 @@
+import { expect, test } from 'vitest'
+import { sessionLocalWall, matchSessionDefinition } from './session-definition'
+import type { components } from './api/schema.gen'
+const definition:components['schemas']['SessionDefinition']={capacity:8,duration_minutes:45,room:'Synthetic room',meeting_url:'https://meeting.example.test/synthetic',facilitator_ids:['b242fb5d-66d9-45c1-a67a-0e055d03115c'],booking_opens:{wall:'2027-10-31T01:15:00',dst_choice:'earlier'},booking_closes:{wall:'2027-10-31T01:45:30',dst_choice:'later'}}
+test('browser minutes become native seconds without resolving timezone or changing explicit precision',()=>{expect(sessionLocalWall('2027-10-31T01:15')).toBe('2027-10-31T01:15:00');expect(sessionLocalWall('2027-10-31T01:45:30')).toBe('2027-10-31T01:45:30');expect(sessionLocalWall('')).toBe('');expect(sessionLocalWall('invalid')).toBe('invalid')})
+test('configuration acknowledgement must match the exact reviewed definition and facilitator references',()=>{expect(matchSessionDefinition(structuredClone(definition),definition)).toBe(true);for(const patch of [{capacity:9},{meeting_url:'https://meeting.example.test/other'},{facilitator_ids:[]},{booking_opens:{...definition.booking_opens,dst_choice:'later' as const}}])expect(matchSessionDefinition({...definition,...patch},definition)).toBe(false)})

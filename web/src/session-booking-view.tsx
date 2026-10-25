@@ -30,6 +30,7 @@ export function SessionFacts({ session }: { session: BookableSession }) {
     ['Starts', localDate(session.start, session.timezone)], ['Ends', localDate(session.end, session.timezone)], ['Timezone', session.timezone],
     ['Room', session.room || 'Not supplied'], ['Booking opens', localDate(session.booking_opens, session.timezone)], ['Booking closes', localDate(session.booking_closes, session.timezone)],
     ['Capacity', `${session.available} available · ${session.booked}/${session.capacity} booked`], ['Calendar version', `${session.calendar_sequence} · Current schedule observation`],
+    ...(session.own_booking ? [['Your calendar sequence', `${session.own_booking.calendar_sequence} · Current personal calendar observation`]] : []),
   ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
     {session.capacity_shortfall > 0 && <p className="notice">Capacity shortfall: {session.capacity_shortfall}. Existing places remain booked. An organiser must review capacity; nobody is silently removed.</p>}
     {session.conflicts.length > 0 && <p className="notice">Schedule conflict with {session.conflicts.length} other booked session(s). Review your personal agenda before reserving. A conflict is a warning, not a new admission rule.</p>}

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -214,7 +215,43 @@ func runSessionBookingBrowser(t *testing.T, viewport string) {
 	command.Dir = filepath.Join("..", "..", "web")
 	command.Env = append(os.Environ(), "HACKBOX_SESSION_MANIFEST="+manifestPath, "HACKBOX_SESSION_VIEWPORT="+viewport, "TMPDIR="+private)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
-	if err = command.Run(); err != nil {
+	source, err := exec.CommandContext(ctx, "git", "rev-parse", "HEAD").Output()
+	if err != nil {
 		t.Fatal(err)
+	}
+	tree, err := exec.CommandContext(ctx, "git", "rev-parse", "HEAD^{tree}").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := exec.CommandContext(ctx, "git", "status", "--porcelain", "--untracked-files=normal").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	runErr := command.Run()
+	sourceEnd, err := exec.CommandContext(ctx, "git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	statusEnd, err := exec.CommandContext(ctx, "git", "status", "--porcelain", "--untracked-files=normal").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	proof := map[string]any{"source_commit": strings.TrimSpace(string(source)), "source_tree": strings.TrimSpace(string(tree)), "source_commit_end": strings.TrimSpace(string(sourceEnd)), "source_worktree_clean": len(strings.TrimSpace(string(status))) == 0 && len(strings.TrimSpace(string(statusEnd))) == 0, "viewport": viewport, "fixture_run_id": manifest["run_id"], "event_id": f.eventID, "session_id": f.sessionID, "new_session_id": newID, "browser_command_succeeded": runErr == nil, "test_selection": os.Getenv("HACKBOX_SESSION_GREP")}
+	proofJSON, err := json.MarshalIndent(proof, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	proofDir := filepath.Join(command.Dir, "test-results-sessions-native", viewport)
+	if err = os.MkdirAll(proofDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(proofDir, "native-fixture.json"), proofJSON, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if string(source) != string(sourceEnd) {
+		t.Fatal("source head changed during native session proof")
+	}
+	if runErr != nil {
+		t.Fatal(runErr)
 	}
 }
