@@ -44,7 +44,7 @@ class Client:
         if raw is not None:
             headers['Content-Type'] = 'application/json'
         if method not in ('GET', 'HEAD') and csrf and self.csrf:
-            headers['X-CSRF-Token'] = self.csrf
+            headers['X-CSRF-Token'] = csrf if isinstance(csrf, str) else self.csrf
         if revision is not None:
             headers['If-Match'] = '"' + str(revision) + '"'
         if key:
@@ -120,8 +120,8 @@ def main():
     base = '/api/v1/events/' + first['id']
     stranger.call('GET', base, 403, 'guessed-private-event')
     stranger.call('POST', '/api/v1/events', 403, 'unprivileged-event-creation', event_input('Denied'))
-    for name, origin, csrf in (('missing-csrf', None, False), ('foreign-origin', 'https://attacker.invalid', True), ('origin-suffix', 'http://admin:8080.attacker.invalid', True)):
-        owner.call('POST', '/api/v1/events', 403, name, event_input('Unsent'), origin=origin, csrf=csrf)
+    for name, origin, csrf, expected in (('missing-csrf', None, False, 400), ('invalid-csrf', None, 'x' * 32, 403), ('foreign-origin', 'https://attacker.invalid', True, 403), ('origin-suffix', 'http://admin:8080.attacker.invalid', True, 403)):
+        owner.call('POST', '/api/v1/events', expected, name, event_input('Unsent'), origin=origin, csrf=csrf)
     require(len(owner.call('GET', '/api/v1/events', 200, 'denied-commands-created-no-events')['items']) == 2, 'denied mutation persisted no event')
     forged = event_input('Forged'); forged['platform_admin'] = True
     owner.call('POST', '/api/v1/events', 400, 'unknown-privilege-field', forged)
