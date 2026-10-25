@@ -4154,6 +4154,8 @@ export interface components {
             conflicts: string[];
             can_reserve: boolean;
             can_manage: boolean;
+            /** @description Current native session roster authority, independent from the attendance write window and parent write capability. */
+            can_read_attendance: boolean;
             can_record_attendance: boolean;
             definition?: components["schemas"]["SessionDefinition"];
         };

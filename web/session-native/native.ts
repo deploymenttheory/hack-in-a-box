@@ -1,0 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { request } from 'node:http'
+import type { Browser, BrowserContext } from '@playwright/test'
+const path=process.env.HACKBOX_SESSION_MANIFEST
+if(!path)throw new Error('Run through Go TestSessionBookingBrowsers; native router, production builds and PostgreSQL are required.')
+export const native=JSON.parse(readFileSync(path,'utf8')) as {event_id:string;session_id:string;new_session_id:string;admin:string;public:string;socket:string;run_id:string;viewport:'desktop'|'mobile';opens:string;closes:string;facilitator:string}
+export function control<T=unknown>(action:string,extra:Record<string,unknown>={}):Promise<T>{return new Promise((resolve,reject)=>{const body=JSON.stringify({action,...extra}),req=request({socketPath:native.socket,path:'/',method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}},response=>{let text='';response.setEncoding('utf8').on('data',chunk=>{text+=chunk});response.on('end',()=>{if(!response.statusCode||response.statusCode>=300)reject(new Error(`Private native session control: ${response.statusCode} ${text}`));else resolve((text?JSON.parse(text):undefined) as T)})});req.on('error',reject);req.end(body)})}
+export async function actor(browser:Browser,surface:'admin'|'public',role:'first'|'second'|'facilitator'|'owner'):Promise<BrowserContext>{const cookie=await control<{Name:string;Value:string}>('session',{actor:role,surface}),origin=native[surface],context=await browser.newContext({baseURL:origin,viewport:native.viewport==='mobile'?{width:390,height:844}:{width:1440,height:1000}});await context.addCookies([{name:cookie.Name,value:cookie.Value,url:origin,httpOnly:true,sameSite:'Lax'}]);return context}

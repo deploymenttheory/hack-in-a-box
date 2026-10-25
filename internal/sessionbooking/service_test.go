@@ -401,3 +401,49 @@ func TestReceiptStoreFailureIsNotAuthoritativeAbsence(t *testing.T) {
 		t.Fatal("store recovery changed original acknowledgement", err)
 	}
 }
+
+func TestRosterReadCapabilityIsIndependentFromAttendanceWriteWindow(t *testing.T) {
+	f := setup(t, 1, []string{"all"})
+	ctx := t.Context()
+	attendee := f.attendee(t)
+	facilitator := f.attendee(t)
+	d := f.definition
+	d.FacilitatorIDs = []uuid.UUID{facilitator}
+	if _, err := f.s.Configure(ctx, f.owner, f.event, f.id, 1, d); err != nil {
+		t.Fatal(err)
+	}
+	for _, actor := range []uuid.UUID{f.owner, facilitator} {
+		page, err := f.s.Read(ctx, actor, f.event, f.id)
+		if err != nil || !page.CanReadAttendance || page.CanRecordAttendance {
+			t.Fatalf("pre-start read/write capabilities: %+v %v", page, err)
+		}
+		if _, err := f.s.Roster(ctx, actor, f.event, f.id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	page, err := f.s.Read(ctx, attendee, f.event, f.id)
+	if err != nil || page.CanReadAttendance || page.CanRecordAttendance {
+		t.Fatalf("attendee inherited roster authority: %+v %v", page, err)
+	}
+	d.FacilitatorIDs = []uuid.UUID{}
+	if _, err := f.s.Configure(ctx, f.owner, f.event, f.id, 2, d); err != nil {
+		t.Fatal(err)
+	}
+	page, err = f.s.Read(ctx, facilitator, f.event, f.id)
+	if err != nil || page.CanReadAttendance || page.CanRecordAttendance {
+		t.Fatalf("removed assignment retained roster capability in otherwise readable session: %+v %v", page, err)
+	}
+	if _, err := f.s.Roster(ctx, facilitator, f.event, f.id); !errors.Is(err, access.ErrForbidden) {
+		t.Fatalf("removed assignment retained native roster: %v", err)
+	}
+	if _, err := f.pool.Exec(ctx, "UPDATE events SET stage='archived' WHERE id=$1", f.event); err != nil {
+		t.Fatal(err)
+	}
+	page, err = f.s.Read(ctx, f.owner, f.event, f.id)
+	if err != nil || !page.CanReadAttendance || page.CanRecordAttendance {
+		t.Fatalf("read-only roster diverged: %+v %v", page, err)
+	}
+	if _, err := f.s.Roster(ctx, f.owner, f.event, f.id); err != nil {
+		t.Fatal(err)
+	}
+}

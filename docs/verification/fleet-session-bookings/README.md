@@ -75,3 +75,47 @@ visuals with provenance; run final types, lint, both builds, guide checks and
 relevant owner tests. Independent Standards/Spec review and every exact-head CI
 check remain required. The draft must not be marked Ready, merged, or close #167
 until the root coordinator has completed those gates.
+
+## Review correction checkpoint
+
+The expanded synthetic administrator suite passed **28/28 in 22.8s**. It now
+includes pre-start/read-only roster visibility, roster-only denial scrubbing a
+held private attendance review while the general session remains readable,
+meeting-link withdrawal, reviewed fresh-base recovery after a lost-before-commit
+request, and mismatched notification configuration/approval 200 responses.
+
+The meeting-link test genuinely failed before correction: an old cancellation
+review retained one private meeting anchor after current link withdrawal
+(**RED 6.1s**). Reviews now capture an explicit minimal facts projection without
+meeting URL or organiser definition. Accepted current private link changes renew
+the owning scope before held child continuations can publish stale private data.
+Safe exact direct booking/attendance acknowledgements remain above private
+remounts; current reads still cannot synthesize those acknowledgements.
+
+A native read-projection gap is filled by `can_read_attendance = st.attendance`,
+the exact existing roster authority. `can_record_attendance` retains its existing
+write/window conditions. No policy, permission or migration changes. Native
+pre-start/read-only/removed-assignment proof plus the existing assigned-facilitator
+case passed with real PostgreSQL and `-race` **5.510s**. The authenticated,
+OpenAPI-validated native HTTP field-allowlist/current-scope test passed **6.249s**,
+including explicit read/write projection checks. Canonical generation completed.
+An initial fixture attempted to assign a person without event access and was
+correctly rejected; the corrected synthetic facilitator holds existing access.
+
+The actual static guide host exposed an inaccessible taller confirmation footer:
+its fixed 56rem nested viewport exceeded the outer screen. **Both desktop/mobile
+journeys initially timed out.** Bounded viewport height alone made the mobile
+journey pass **0.94s**, while desktop still failed because the iframe was only
+partially visible when the overlay locked ancestor scrolling (outer 720px; iframe
+612px at y372; footer inner y518). The guide-only focus/pointer geometry message
+then made the same real pointer/keyboard/print journey pass on desktop **1.1s**
+and mobile **0.92s** (**2 passed, 2.8s**). The bridge carries only one fixed kind,
+checks exact shape, same origin and the specific iframe source, and scrolls only
+the public preview into view. No portal bridge or domain command is introduced.
+Additional exact-shape, standalone and deliberate outer-focus checks are pending.
+
+The additive native browser harness compiles and reuses the reviewed production
+runtime/router/static surface and private Unix-socket orchestration. Its complete
+concurrency/promotion/attendance/withdrawal journey is implemented but not yet
+executed at this checkpoint. Final production guide export, broad checks, native
+browser proof, screenshots/provenance, reviews and exact-head CI remain open.

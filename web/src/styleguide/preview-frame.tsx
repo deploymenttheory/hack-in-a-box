@@ -7,8 +7,11 @@ export function PreviewFrame({ options, width, story = 'components' }: { options
   useEffect(() => { send() }, [send])
   useEffect(() => {
     const ready = (event: MessageEvent<unknown>) => {
-      if (event.origin !== location.origin || event.source !== frame.current?.contentWindow || !event.data || typeof event.data !== 'object' || !('kind' in event.data) || event.data.kind !== 'guide-preview-ready') return
-      send()
+      if (event.origin !== location.origin || event.source !== frame.current?.contentWindow || !event.data || typeof event.data !== 'object' || !('kind' in event.data) || Object.keys(event.data).length !== 1) return
+      if (event.data.kind === 'guide-preview-ready') send()
+      // The real nested viewport must fit before an overlay locks ancestor
+      // scrolling. Only our own public frame may request this geometry action.
+      if (event.data.kind === 'guide-preview-focus') frame.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
     }
     addEventListener('message', ready)
     return () => removeEventListener('message', ready)

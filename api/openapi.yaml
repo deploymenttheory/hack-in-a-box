@@ -7651,6 +7651,7 @@ components:
         "conflicts",
         "can_reserve",
         "can_manage",
+        "can_read_attendance",
         "can_record_attendance"
       ],
       "properties": {
@@ -7736,6 +7737,10 @@ components:
           "type": "boolean"
         },
         "can_manage": {
+          "type": "boolean"
+        },
+        "can_read_attendance": {
+          "description": "Current native session roster authority, independent from the attendance write window and parent write capability.",
           "type": "boolean"
         },
         "can_record_attendance": {

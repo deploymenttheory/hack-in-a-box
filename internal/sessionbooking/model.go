@@ -88,6 +88,7 @@ type Page struct {
 	Conflicts           []uuid.UUID `json:"conflicts"`
 	CanReserve          bool        `json:"can_reserve"`
 	CanManage           bool        `json:"can_manage"`
+	CanReadAttendance   bool        `json:"can_read_attendance"`
 	CanRecordAttendance bool        `json:"can_record_attendance"`
 }
 

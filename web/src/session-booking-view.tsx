@@ -1,3 +1,4 @@
+import './session-bookings.css'
 import type { ReactNode, RefObject } from 'react'
 import type { components } from './api/schema.gen'
 import { CollectionRecords } from './components/patterns'
@@ -25,7 +26,7 @@ export function SessionCollection({ sessions, open, disabled }: { sessions: Book
   ]} actions={s => <Button icon="calendar" variant="ghost" disabled={disabled} onClick={e => open(s, e.currentTarget)}>Open {s.title}</Button>} />
 }
 export function SessionFacts({ session }: { session: BookableSession }) {
-  return <><p role="status">{sessionState(session)}</p><dl className="dates">{[
+  return <><p role="status">{sessionState(session)}</p><dl className="fleet-session-facts">{[
     ['Starts', localDate(session.start, session.timezone)], ['Ends', localDate(session.end, session.timezone)], ['Timezone', session.timezone],
     ['Room', session.room || 'Not supplied'], ['Booking opens', localDate(session.booking_opens, session.timezone)], ['Booking closes', localDate(session.booking_closes, session.timezone)],
     ['Capacity', `${session.available} available · ${session.booked}/${session.capacity} booked`], ['Calendar version', `${session.calendar_sequence} · Current schedule observation`],
@@ -40,3 +41,9 @@ export function SessionDecision({ title, children, pending, disabled, confirm, c
 }
 
 export function SessionFailure({ error, retry }: { error: unknown; retry?: () => void }) { return error instanceof SessionBookingError ? <p role="alert">{error.message}</p> : <Failure error={error} retry={retry} /> }
+
+// Reviews capture only displayed session facts. A meeting-link grant and the
+// organiser's private definition are never copied into an intent snapshot.
+export function sessionReviewFacts(s: BookableSession): BookableSession {
+  return structuredClone({ id:s.id,revision:s.revision,calendar_sequence:s.calendar_sequence,title:s.title,timezone:s.timezone,start:s.start,end:s.end,booking_opens:s.booking_opens,booking_closes:s.booking_closes,capacity:s.capacity,booked:s.booked,available:s.available,capacity_shortfall:s.capacity_shortfall,cancelled:s.cancelled,needs_review:s.needs_review,room:s.room,own_booking:s.own_booking,conflicts:s.conflicts,can_reserve:s.can_reserve,can_manage:s.can_manage,can_read_attendance:s.can_read_attendance,can_record_attendance:s.can_record_attendance })
+}

@@ -201,6 +201,16 @@ func TestSessionBookingHTTPCurrentScopeReceiptsAndFieldAllowlists(t *testing.T) 
 		!strings.Contains(w.Header().Get("Cache-Control"), "no-store") {
 		t.Fatal("unbooked reader leaked private configuration/link", w.Code, w.Body)
 	}
+	for _, check := range []struct {
+		person  dbgen.Person
+		canRead bool
+	}{{member, false}, {facilitator, true}, {owner, true}} {
+		response := request(check.person, "GET", path, nil, 0, true)
+		var page sessionbooking.Page
+		if err := json.Unmarshal(response.Body.Bytes(), &page); err != nil || response.Code != 200 || page.CanReadAttendance != check.canRead || page.CanRecordAttendance {
+			t.Fatalf("native roster read/write projection diverged: %+v %v", page, err)
+		}
+	}
 	command := map[string]any{
 		"request_id":       uuid.New(),
 		"action":           "reserve",
