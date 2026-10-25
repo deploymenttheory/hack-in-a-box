@@ -72,8 +72,10 @@ func newAPIDependencies(
 	communicationRuntime.Clarifications.Storage = storage
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries, Clock: now}
+	judges := judging.Service{Pool: pool, Now: now}
+	room := presentation.Service{Pool: pool, Clock: now, OrderAuthority: judges}
 	deps := httpapi.Dependencies{
-		Judging:          judging.Service{Pool: pool, Now: now},
+		Judging:          judges,
 		Repositories:     *communicationRuntime.Repositories,
 		RepositoryAccess: *communicationRuntime.RepositoryAccess,
 		Media: media.Service{
@@ -99,7 +101,7 @@ func newAPIDependencies(
 		Help:             communicationRuntime.Help,
 		Feedback:         *communicationRuntime.Feedback,
 		Clarifications:   *communicationRuntime.Clarifications,
-		Presentation:     presentation.Service{Pool: pool, Clock: now},
+		Presentation:     room,
 		Automation:       communicationRuntime.Automation,
 		Inbox:            *communicationRuntime.Inbox,
 		Communications:   *communicationRuntime.Communications,

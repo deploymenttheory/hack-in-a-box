@@ -25,8 +25,9 @@ import (
 )
 
 type Service struct {
-	Pool  *pgxpool.Pool
-	Clock func() time.Time
+	OrderAuthority JudgeOrderAuthority
+	Pool           *pgxpool.Pool
+	Clock          func() time.Time
 }
 
 func (s Service) now() time.Time {

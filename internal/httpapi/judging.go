@@ -189,3 +189,14 @@ func (h handlers) GetJudgeCardStates(
 	}
 	return convertDTO[contract.GetJudgeCardStates200JSONResponse](v)
 }
+
+func (h handlers) GetJudgePresentationOrder(
+	ctx context.Context,
+	r contract.GetJudgePresentationOrderRequestObject,
+) (contract.GetJudgePresentationOrderResponseObject, error) {
+	value, err := h.Presentation.ReadJudgeOrder(ctx, actor(ctx).ID, r.EventId)
+	if err != nil {
+		return nil, fmt.Errorf("current public judging order: %w", err)
+	}
+	return convertDTO[contract.GetJudgePresentationOrder200JSONResponse](value)
+}
