@@ -1143,6 +1143,20 @@ type ReconciliationRun struct {
 	OccurredAt      time.Time
 }
 
+type RecoveryControl struct {
+	Singleton bool
+	HoldID    *uuid.UUID
+	HeldAt    pgtype.Timestamptz
+}
+
+type RecoveryHistory struct {
+	ID                  int64
+	HoldID              uuid.UUID
+	Action              string
+	OccurredAt          time.Time
+	ReviewedFingerprint pgtype.Text
+}
+
 type Registration struct {
 	ID                  uuid.UUID
 	EventID             uuid.UUID

@@ -1,6 +1,7 @@
 package automation
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -8,6 +9,8 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
 func TestGenericApprovedOutcomeReviewCancellationAndRescheduleRequireFreshApproval(t *testing.T) {
@@ -55,28 +58,7 @@ func TestGenericApprovedOutcomeReviewCancellationAndRescheduleRequireFreshApprov
 	if err != nil {
 		t.Fatal(err)
 	}
-	definition := current.Campaign.Campaign.Definition
-	zone, err := time.LoadLocation("Europe/London")
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition.Timing.WallTime = f.now.Add(3 * time.Minute).In(zone).Format("2006-01-02T15:04:05")
-	changed, err := f.s.Composer.ChangeCampaign(
-		t.Context(),
-		f.owner.ID,
-		f.id,
-		f.campaignID,
-		f.revision(),
-		communications.CampaignCommand{
-			Action:     "save",
-			Version:    f.campaignVersion,
-			Definition: &definition,
-			Reason:     "Propose a later follow-up without implicitly approving it",
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	changed := rescheduleOutcomeReviewCampaign(t, f, current, f.now.Add(3*time.Minute))
 	f.campaignVersion = changed.Campaign.Campaign.Version
 	updatedBinding := binding.Definition
 	updatedBinding.CampaignVersion = f.campaignVersion
@@ -178,4 +160,23 @@ func TestGenericApprovedOutcomeReviewCancellationAndRescheduleRequireFreshApprov
 		oldIntents != 0 {
 		t.Fatal("cancelled follow-up acquired a provider intent", err)
 	}
+}
+
+// rescheduleOutcomeReviewCampaign retains the original native save/approval seam.
+func rescheduleOutcomeReviewCampaign(t *testing.T, f *fixture, current communications.CampaignDetail, target time.Time) communications.CampaignDetail {
+	t.Helper()
+	definition := current.Campaign.Campaign.Definition
+	definition.Timing.WallTime, definition.Timing.DSTChoice = testdb.WallTimeForInstant(t, target, current.Timezone)
+	changed, err := f.s.Composer.ChangeCampaign(
+		t.Context(), f.owner.ID, f.id, f.campaignID, f.revision(),
+		communications.CampaignCommand{Action: "save", Version: f.campaignVersion, Definition: &definition, Reason: "Propose a later follow-up without implicitly approving it"},
+	)
+	if err != nil {
+		var blocked *event.Blocked
+		if errors.As(err, &blocked) {
+			t.Fatalf("native reschedule: %v; blockers=%+v", err, blocked.Issues)
+		}
+		t.Fatal(err)
+	}
+	return changed
 }

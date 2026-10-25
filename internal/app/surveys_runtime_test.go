@@ -171,10 +171,7 @@ func TestActualApprovedSurveyCampaignKeepsBodyAndNativeReaderAfterAnswerAndClose
 			t.Fatal(err)
 		}
 	}
-	zone, err := time.LoadLocation(dates.Timezone)
-	if err != nil {
-		t.Fatal(err)
-	}
+	wall, choice := testdb.WallTimeForInstant(t, now.Add(time.Minute), dates.Timezone)
 	campaignID := uuid.New()
 	campaign := communications.CampaignDefinition{
 		ID:         campaignID,
@@ -183,8 +180,9 @@ func TestActualApprovedSurveyCampaignKeepsBodyAndNativeReaderAfterAnswerAndClose
 		AudienceID: audience.ID,
 		Channels:   []string{"in_app"},
 		Timing: communications.CampaignTiming{
-			Kind:     "fixed",
-			WallTime: now.Add(time.Minute).In(zone).Format("2006-01-02T15:04:05"),
+			Kind:      "fixed",
+			WallTime:  wall,
+			DSTChoice: choice,
 		},
 	}
 	version := int64(0)
@@ -206,6 +204,10 @@ func TestActualApprovedSurveyCampaignKeepsBodyAndNativeReaderAfterAnswerAndClose
 			command,
 		)
 		if e != nil {
+			var blocked *event.Blocked
+			if errors.As(e, &blocked) {
+				t.Fatalf("%v: %+v", e, blocked.Issues)
+			}
 			t.Fatal(e)
 		}
 		version = result.Campaign.Campaign.Version

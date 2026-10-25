@@ -1,7 +1,10 @@
 package testdb
 
 import (
+	"context"
+	"fmt"
 	"io"
+	"os/exec"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -69,4 +72,60 @@ func (r *Recovery) Restore(t *testing.T) (*pgxpool.Pool, []byte) {
 		t.Fatal(err)
 	}
 	return restored, dump
+}
+
+// NewRecoveryTarget starts a genuinely separate, empty PostgreSQL server. It never
+// reuses or stops any existing deployment container.
+func NewRecoveryTarget(t *testing.T) *Recovery {
+	t.Helper()
+	pool, container := newInstance(t, false)
+	return &Recovery{Pool: pool, container: container}
+}
+
+// DumpStream pipes the own fixture's pg_dump stdout directly to encryption.
+func (r *Recovery) DumpStream(ctx context.Context, writer io.Writer) error {
+	// #nosec G204 -- Container identity comes only from this owned Testcontainers fixture; no shell is invoked.
+	command := exec.CommandContext(
+		ctx,
+		"docker",
+		"exec",
+		r.container.GetContainerID(),
+		"pg_dump",
+		"--username=test",
+		"--dbname=hackbox_test",
+		"--no-owner",
+		"--no-privileges",
+		"--format=plain",
+	)
+	command.Stdout = writer
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("stream synthetic database: %w", err)
+	}
+	return nil
+}
+
+// RestoreStream pipes authenticated SQL to a single transaction on the own fresh
+// fixture. No plaintext dump or deployment key is written inside the container.
+func (r *Recovery) RestoreStream(ctx context.Context, reader io.Reader) error {
+	// #nosec G204 -- Container identity comes only from this owned Testcontainers fixture; no shell is invoked.
+	command := exec.CommandContext(
+		ctx,
+		"docker",
+		"exec",
+		"-i",
+		r.container.GetContainerID(),
+		"psql",
+		"--username=test",
+		"--dbname=hackbox_test",
+		"--no-psqlrc",
+		"--set=ON_ERROR_STOP=1",
+		"--single-transaction",
+		"--file=-",
+	)
+	command.Stdin = reader
+	command.Stdout = io.Discard
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("restore synthetic database: %w", err)
+	}
+	return nil
 }

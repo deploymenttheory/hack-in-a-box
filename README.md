@@ -20,7 +20,7 @@ Open the participant app at <http://127.0.0.1:8080> and the independent admin po
 
 `init-env.sh` creates a private `.env` with random database and metrics credentials. It preserves an existing file. Credentials are supplied at runtime and are excluded from image builds. Database and file volumes survive container replacement. API and worker run as UID/GID 10001 with a read-only root filesystem. PostgreSQL is available only on the Compose network. Bind a reverse proxy to the loopback API port for HTTPS deployments.
 
-For an upgrade, back up the database and file volume together, stop public API/admin API/worker, build the new image, run the explicit `migrate` step, and restart. Migrations serialize across processes and apply the embedded Goose migrations and the pinned River schema. All processes refuse incompatible application or River schema versions. Migration failure prevents startup; restore the matching backup/image if an upgrade cannot be completed. The application never runs migrations implicitly.
+For an upgrade, stop the public API/admin API/worker and other writers, capture a consistent database and file-volume backup, build the new image, run the explicit `migrate` step, and restart. See the [encrypted recovery runbook](docs/recovery-runbook.md) for matching-schema operator images, separate archive/deployment keys, verified fresh-target restore and reviewed worker startup. Migrations serialize across processes and apply the embedded Goose migrations and the pinned River schema. All processes refuse incompatible application or River schema versions. Migration failure prevents startup; restore the matching backup/image if an upgrade cannot be completed. The application never runs migrations implicitly.
 
 ## Configure sign-in
 
@@ -93,7 +93,7 @@ The React shell uses TanStack Router/Query, React Hook Form/Zod and shadcn Base 
 ```sh
 go build ./cmd/... ./internal/...
 go vet ./cmd/... ./internal/...
-(cd cmd/api && go tool govulncheck -scan=module)
+go tool govulncheck -scan=package -show=verbose -test ./...
 HACKBOX_INTEGRATION=1 go test -race -timeout 5m ./cmd/... ./internal/...
 golangci-lint run ./cmd/... ./internal/...
 npm --prefix web run lint

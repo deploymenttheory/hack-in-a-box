@@ -35,6 +35,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/preparation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/recovery"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
@@ -68,6 +69,11 @@ func RunAPI(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if err := database.CheckSchema(ctx, pool); err != nil {
 		return fmt.Errorf("check schema: %w", err)
 	}
+	lease, err := recovery.Runtime(ctx, pool)
+	if err != nil {
+		return fmt.Errorf("recovery startup gate: %w", err)
+	}
+	defer func() { _ = lease.Close(context.WithoutCancel(ctx)) }()
 	storage, err := files.OpenLocal(cfg.StoragePath)
 	if err != nil {
 		return fmt.Errorf("open local: %w", err)
@@ -205,6 +211,11 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	if err := database.CheckSchema(ctx, pool); err != nil {
 		return fmt.Errorf("check schema: %w", err)
 	}
+	lease, err := recovery.Runtime(ctx, pool)
+	if err != nil {
+		return fmt.Errorf("recovery startup gate: %w", err)
+	}
+	defer func() { _ = lease.Close(context.WithoutCancel(ctx)) }()
 	storage, err := files.OpenLocal(cfg.StoragePath)
 	if err != nil {
 		return fmt.Errorf("open local: %w", err)

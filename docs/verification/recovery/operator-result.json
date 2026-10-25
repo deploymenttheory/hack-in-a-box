@@ -1,0 +1,21 @@
+{
+  "result": "pass",
+  "dataset": "one event, one 43-byte attachment, original pending and ambiguous intents",
+  "restore_started_at": "2026-10-25T00:50:25.140653762Z",
+  "restore_completed_at": "2026-10-25T00:50:25.625163762Z",
+  "capture_snapshot_completed_at": "2026-10-25T00:50:24.332992678Z",
+  "total_rehearsal_seconds": 11.052379667002242,
+  "held_worker_reconciliations": 0,
+  "old_orphan_preserved_while_held": true,
+  "original_intent_states_preserved_after_reviewed_resume": true,
+  "image_build_and_operator_key_retrieval_excluded": true,
+  "source_commit": "c2471d85e9af0a28acb036e378bec4f0c4130f5e",
+  "image": "hackbox-recovery:124-c2471d8",
+  "image_id": "sha256:5b07cf0d854b676110e800f5fe281e15f8fc0321d66b9004ddb1c2dc5c8cf7ec",
+  "script_sha256": "5e05a9ab0ea05f4809eabb87fffca31634654a6ac113448ad34686a16e0576eb",
+  "configuration": "existing keyword pgx primary DSNs with pool_max_conns and separately validated equivalent client URIs",
+  "own_resources_remaining_after_cleanup": 0,
+  "real_provider_effects": 0,
+  "existing_user_containers_changed": false,
+  "fresh_restore_seconds": 0.48451
+}
