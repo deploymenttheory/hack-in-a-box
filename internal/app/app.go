@@ -12,18 +12,13 @@ import (
 	"syscall"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
-	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
-	"github.com/deploymenttheory/hack-in-a-box/internal/media"
-	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/recovery"
-	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
-	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 )
 
 func Main(component string, run func(context.Context, config.Config, *slog.Logger) error) int {
@@ -127,70 +122,12 @@ func RunWorker(ctx context.Context, cfg config.Config, logger *slog.Logger) erro
 	if err := storage.Cleanup(ctx, dbgen.New(pool).ObjectExists); err != nil {
 		return fmt.Errorf("cleanup: %w", err)
 	}
-	communicationRuntime, err := newCommunicationRuntime(pool, cfg, logger)
+	communicationRuntime, err := newWorkerRuntime(pool, cfg, logger, storage)
 	if err != nil {
 		return err
 	}
 	worker := communicationRuntime.Jobs
 	logger.Info("worker started", "jobs_enabled", true)
-	worker.FastMaintenance = func(ctx context.Context) error {
-		// Guarded common publication has a bounded release window. Run it
-		// before support sweeps so their work or errors cannot delay release.
-		if err := (content.Service{Pool: pool, Storage: storage}).Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain actual content release: %w", err)
-		}
-		if err := communicationRuntime.maintainSupport(ctx); err != nil {
-			return fmt.Errorf("maintain native support sources: %w", err)
-		}
-		if err := communicationRuntime.Automation.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain reviewed communication occurrences: %w", err)
-		}
-		return nil
-	}
-	worker.Maintenance = func(ctx context.Context) error {
-		if err := communicationRuntime.RepositoryAccess.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain reviewed repository access: %w", err)
-		}
-		if err := communicationRuntime.Repositories.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain repository intents: %w", err)
-		}
-		if err := communicationRuntime.SubmissionFreeze.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain submission capture: %w", err)
-		}
-		if err := (submissions.Service{Pool: pool}).Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain submission outcomes: %w", err)
-		}
-		if err := (registration.Service{Pool: pool}).MaintainOffers(ctx); err != nil {
-			return fmt.Errorf("maintain attendee offers: %w", err)
-		}
-		if err := dbgen.New(pool).ExpireGitHubAppAttempts(ctx); err != nil {
-			return fmt.Errorf("expire GitHub App installation attempts: %w", err)
-		}
-		if err := dbgen.New(pool).ExpireGitHubLinkAttempts(ctx); err != nil {
-			return fmt.Errorf("expire GitHub verification attempts: %w", err)
-		}
-		if err := (registration.Service{Pool: pool}).Retain(ctx); err != nil {
-			return fmt.Errorf("retain registration responses: %w", err)
-		}
-		if err := communicationRuntime.SMTP.Maintain(ctx); err != nil {
-			return fmt.Errorf("maintain SMTP tests: %w", err)
-		}
-		if err := communicationRuntime.MailContacts.Maintain(ctx); err != nil {
-			return fmt.Errorf("retain email confirmations: %w", err)
-		}
-		if err := (privacy.Service{Pool: pool}).Retain(ctx); err != nil {
-			return fmt.Errorf("retain private records: %w", err)
-		}
-		if err := communicationRuntime.Surveys.Retain(ctx); err != nil {
-			return fmt.Errorf("retain private survey records: %w", err)
-		}
-		if err := (media.Service{Pool: pool, Privacy: privacy.Service{Pool: pool}}).Maintain(
-			ctx,
-		); err != nil {
-			return fmt.Errorf("reconcile current media consent: %w", err)
-		}
-		return storage.Cleanup(ctx, dbgen.New(pool).ObjectExists)
-	}
 	if err := worker.Run(ctx, cfg.ShutdownTimeout); err != nil {
 		return fmt.Errorf("run worker: %w", err)
 	}

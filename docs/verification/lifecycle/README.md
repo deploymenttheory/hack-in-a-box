@@ -106,3 +106,11 @@ results/report and scoring prerequisite merges, the unanswered all-team category
 decision and exact-source final CI. Approved live GitHub/Teams observations are
 separate unavailable external acceptances; they do not excuse omission of the
 deterministic provider-fault paths in this rehearsal.
+
+Second local checkpoint: the shared private worker factory and isolated
+Compose process entrypoint compile, and both independent DST-fixture cases
+passed in 0.598s. No Docker, PostgreSQL, worker, OIDC or browser execution is
+claimed. Compose image/configuration, actual scenario phases and final evidence
+remain to be implemented. The bounded DomainNow eligibility seam needs its
+real queued-worker RED/GREEN regression before any production jobs change;
+leases, transport/auth expiry and River scheduling must retain wall time.
