@@ -40,7 +40,7 @@ func (p *recoveryBranchProvider) ObserveBranch(ctx context.Context, c githubapp.
 }
 func TestRecoveryFaultsUseCurrentEncryptedAppAndNeverAutoVerifyLaterObservation(t *testing.T) {
 	pool := testdb.New(t, true)
-	for _, fault := range []string{"installation_removed", "rate_limited", "missing_permissions", "branch_outage"} {
+	for _, fault := range []string{"installation_removed", "rate_limited", "permissions_missing", "branch_outage"} {
 		t.Run(fault, func(t *testing.T) {
 			f := newFixture(t, pool)
 			f.submit("repository")

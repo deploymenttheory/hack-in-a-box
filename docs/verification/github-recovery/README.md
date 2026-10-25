@@ -21,7 +21,7 @@ Existing tests are coverage sources, not claimed fresh passes until executed.
 | Uncertain create / unrelated resource collision | New encrypted App → actual provisioning queue/worker/reconcile cases; original exact provenance, numeric identity and concurrency cases in `repositories`. | New native fixture passes at e61363b; full related owner run pending. |
 | Forged / signed cross-event or cross-team activity cannot change submissions | New signed activity test uses two event/team/repository mappings sharing one App secret; tampered body and wrong explicit event reject, with actual submission-state/revision/decision snapshots. | New native case passes at e61363b; full related owner run pending. |
 | Uncertainty remains unresolved; explicit audited correction; immutable original and amendment | New App recovery matrix retains original source and attempt history; later current ref never verifies historical cutoff. New signed delayed/replayed push cannot alter original completed receipt or formal records. Original `submissionfreeze` tests exercise explicit amendment and history. | New matrix and signed cross-owner cases pass at e61363b; full related owner run pending. |
-| Pre-live work versus formal submission/review | New actual private draft + signed operational push before live; native formal submit/review remain blocked. At live, actual formal submit succeeds. | New native case passes at e61363b; full related owner run pending. |
+| Pre-live work versus formal submission/review | Separate future-dated event verifies an actual pre-live webhook receipt and private draft using real wall time, with formal submit/review blocked. Historical fixture separately verifies delayed pre-live-dated commits, controlled formal gates and actual cutoff dispatch. | New native case passes at e61363b; full related owner run pending. |
 | Cutoff independent from lifecycle advancement | Same native flow captures/final-settles while lifecycle remains preparation, without changing the deadline. | New native case passes at e61363b; full related owner run pending. |
 | Stale collaborator work cannot bypass current freeze/retirement | New queued approved grant is rechecked against unfrozen, disbanded and withdrawn current native facts, with zero provider writes/effect claims; original native frozen-reassignment and stale identity/mentor-window cases retained. | New native cases pass at e61363b; full related owner run pending. |
 | Disbanded repository unused/unscored | New real judge consumer rejects unresolved source, permits only audited binding, then rejects retired-team brief/new scores/result completion while preserving authored bytes. Existing rubric, webhook and freeze owners retain their disband guards. | New native case passes at e61363b; full related owner run pending. |
@@ -74,3 +74,23 @@ githubwebhooks 9.565s and judging 4.152s. Configured lint over the four affected
 owners returned 0 issues. No production defect or RED is claimed from these
 initially passing verification additions. The complete related original owner
 suites and exact final CI remain pending, as does the genuine live sandbox gate.
+
+## Full related proof and clock-attribution correction
+
+On clean unchanged ec95b5d7851a0cfde8cf6cc7ea4da3cbffdc6739, all ten related
+original owner suites passed with real PostgreSQL and -race: githubapp 21.396s,
+repositories 7.777s, repositoryaccess 23.134s, githubwebhooks 88.185s,
+submissionfreeze 79.866s, submissions 23.071s, rubric 20.206s, judging 33.399s,
+access 4.847s and jobs 26.454s. The five actual HTTP App/repository/access/webhook/
+freeze authentication, CSRF, current-authority and original-receipt cases passed
+with PostgreSQL/-race in 50.917s. These are local results, not final Linux CI.
+
+A source/evidence audit clarified the historical combined fixture: provider
+commit time is pre-live and native submission time is controlled, while webhook
+receipt time is actual wall time. It proves delayed pre-live-dated activity, not
+a genuinely pre-live receipt. A separate future-dated scenario now checks actual
+received_at before live start with the default real submission clock, preserving
+a private draft while formal/review/scoring records stay absent. No job due date
+is rewritten or production timing policy changed. The extra missing-permission
+fixture code is also aligned with the native `permissions_missing` diagnostic.
+Current focused execution/lint and exact-head CI remain pending for this addition.
