@@ -15,7 +15,10 @@ var ErrPostgresTool = errors.New(
 // PostgresClient uses the pinned PostgreSQL client image or separately installed
 // matching client tools. The connection is passed through libpq's environment,
 // never command arguments or diagnostic output. Raw client stderr is suppressed.
-type PostgresClient struct{ Connection string }
+type PostgresClient struct {
+	Connection    string
+	EquivalentURI string
+}
 
 func (p PostgresClient) Dump(ctx context.Context, output io.Writer) error {
 	return p.run(
@@ -52,7 +55,11 @@ func (p PostgresClient) run(
 	output io.Writer,
 	args ...string,
 ) error {
-	environment, err := postgresEnvironment(p.Connection)
+	connection, err := operatorConnection(p.Connection, p.EquivalentURI)
+	if err != nil {
+		return err
+	}
+	environment, err := postgresEnvironment(connection)
 	if err != nil {
 		return err
 	}

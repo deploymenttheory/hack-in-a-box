@@ -27,10 +27,17 @@ identity (0700 directories/0600 artifacts). Use a dedicated private environment
 file containing `HACKBOX_DATABASE_URL`, supplied with Docker `--env-file`; never
 put a credential value in command arguments, shell history or a report. Mount the
 correct existing native files volume, archive destination and recipient file
-explicitly. The operator connection must be an explicit single-host PostgreSQL URI (the
-existing Compose format), including host, user and database. Unsupported/repeated
-client options and keyword-style DSNs fail closed; no TLS mode is approximated.
-URI fields are decoded into documented PostgreSQL client variables through
+explicitly. The existing `HACKBOX_DATABASE_URL` remains the pgx deployment connection string;
+ordinary keyword-style DSNs and pgx pool tuning remain supported. For a keyword
+DSN, put an explicit equivalent PostgreSQL client URI in the separate private
+`HACKBOX_RECOVERY_POSTGRES_URI` environment setting. Native pgx parsing compares
+host, database, user, password, TLS, fallback and startup configuration before any
+client is launched; a mismatch fails closed. Do not modify the deployed application
+connection merely for recovery. For existing URI deployments no second setting is
+needed; pgx-consumed pool-only parameters are validated and omitted from the libpq
+client environment. Unsupported/ambiguous client options fail closed, and no TLS
+mode or credential is approximated. URI fields are decoded into documented
+PostgreSQL client variables through
 [libpq's environment](https://www.postgresql.org/docs/17/libpq-envars.html), not
 arguments; raw client stderr is not printed.
 

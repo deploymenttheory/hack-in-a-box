@@ -129,3 +129,20 @@ Unsupported/ambiguous options fail closed. The pure connection regression passed
 under race detection (1.448s), with bounded native/CLI lint zero issues.
 The packaged rehearsal is being rebuilt; no successful packaged result is claimed
 from the initial failing image.
+
+The corrected packaged image `hackbox-recovery:124-e8ef87b` (image digest
+`sha256:653bbd9c95d9083e3e4dd365b95d1cb660e55fedc4af5146a01d25d3307a1ee8`)
+completed the actual isolated operator rehearsal: one event, one 43-byte attachment
+and original pending/ambiguous intents; 8.801448s total including fresh database
+startup, 317.783ms actual restore. The actual packaged worker remained alive and
+held with zero reconciliation and its old orphan preserved, then was stopped;
+reviewed resume preserved both original states/attempt counts. All own resources
+were removed. This result predates the following compatibility extension and is
+not attributed to that later source.
+
+Existing keyword pgx deployment DSNs are now preserved with an optional separately
+supplied, natively validated equivalent operator URI; pool-only options are
+validated/consumed by pgx before libpq conversion. Host/database/user/password/TLS/
+startup mismatches fail closed. Bounded compatibility race tests passed 1.374s and
+native/CLI lint had zero issues. The actual packaged rehearsal now exercises that
+keyword-plus-pool configuration; its new image/result are still pending.

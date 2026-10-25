@@ -86,7 +86,10 @@ func run(ctx context.Context, args []string) error {
 			return fmt.Errorf("check recovery schema: %w", err)
 		}
 	}
-	client := recovery.PostgresClient{Connection: os.Getenv("HACKBOX_DATABASE_URL")}
+	client := recovery.PostgresClient{
+		Connection:    os.Getenv("HACKBOX_DATABASE_URL"),
+		EquivalentURI: os.Getenv("HACKBOX_RECOVERY_POSTGRES_URI"),
+	}
 	if *action == "backup" {
 		recipients, err := readRecipients(*recipientFile)
 		if err != nil {

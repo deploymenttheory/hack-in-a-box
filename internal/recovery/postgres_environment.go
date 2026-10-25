@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var ErrConnection = errors.New(
@@ -72,6 +74,15 @@ func postgresEnvironment(connection string) ([]string, error) {
 		return nil, ErrConnection
 	}
 	for key, values := range query {
+		if strings.HasPrefix(key, "pool_") {
+			parsed, parseErr := pgxpool.ParseConfig(connection)
+			if parseErr != nil {
+				return nil, ErrConnection
+			}
+			if _, remaining := parsed.ConnConfig.RuntimeParams[key]; !remaining {
+				continue
+			}
+		}
 		name, ok := supported[key]
 		if !ok || len(values) != 1 {
 			return nil, ErrConnection

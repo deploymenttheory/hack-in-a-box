@@ -43,3 +43,41 @@ func TestPostgresURIBecomesExplicitLibpqEnvironmentWithoutLosingTLSOrEncoding(t 
 		}
 	}
 }
+
+func TestExistingPoolTuningAndEquivalentKeywordDeploymentRemainSupported(t *testing.T) {
+	primary := `host=db.example.test port=5432 user=operator password='synthetic \'pass' dbname='event data' sslmode=require pool_max_conns=3`
+	equivalent := "postgresql://operator:synthetic%20%27pass@db.example.test:5432/event%20data?sslmode=require"
+	actual, err := operatorConnection(primary, equivalent)
+	if err != nil || actual != equivalent {
+		t.Fatal("ordinary existing keyword DSN rejected with equivalent operator configuration")
+	}
+	for _, other := range []string{
+		"postgresql://operator:synthetic%20%27pass@other.example.test:5432/event%20data?sslmode=require",
+		"postgresql://operator:wrong@db.example.test:5432/event%20data?sslmode=require",
+		"postgresql://operator:synthetic%20%27pass@db.example.test:5432/event%20data?sslmode=disable",
+		"postgresql://operator:synthetic%20%27pass@db.example.test:5432/other?sslmode=require",
+	} {
+		if _, err = operatorConnection(primary, other); !errors.Is(err, ErrConnection) {
+			t.Fatal("changed database/credential/TLS accepted as equivalent")
+		}
+	}
+	environment, err := postgresEnvironment(
+		equivalent + "&pool_max_conns=3&pool_min_conns=1&pool_max_conn_lifetime=1h",
+	)
+	if err != nil {
+		t.Fatal("valid pgx pool-only parameters narrowed deployment compatibility")
+	}
+	for _, entry := range environment {
+		if strings.Contains(entry, "pool_") {
+			t.Fatal("pool-only tuning leaked into PostgreSQL client settings")
+		}
+	}
+	if _, err = postgresEnvironment(
+		equivalent + "&pool_max_conns=invalid",
+	); !errors.Is(
+		err,
+		ErrConnection,
+	) {
+		t.Fatal("invalid pool tuning silently ignored")
+	}
+}
