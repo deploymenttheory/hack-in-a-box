@@ -49,6 +49,10 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 	r, admin, public, run := qualificationHTTPFixtureInitialised(
 		t,
 		func(r *liveRehearsal) {
+			r.mentor.DisplayName = "Native primary mentor"
+			if _, err := r.pool.Exec(t.Context(), "UPDATE people SET display_name=$2 WHERE id=$1", r.mentor.ID, r.mentor.DisplayName); err != nil {
+				t.Fatal(err)
+			}
 			teams = append(teams, qualificationFinalTeam{id: r.teamID, member: r.competitor})
 			var configRaw []byte
 			if err := r.pool.QueryRow(t.Context(), "SELECT configuration FROM events WHERE id=$1", r.eventID).Scan(&configRaw); err != nil {
@@ -91,6 +95,10 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 				t.Fatal(err)
 			}
 			second = testdb.Person(t, r.pool)
+			second.DisplayName = "Native independent second mentor"
+			if _, err := r.pool.Exec(t.Context(), "UPDATE people SET display_name=$2 WHERE id=$1", second.ID, second.DisplayName); err != nil {
+				t.Fatal(err)
+			}
 			if _, err = r.pool.Exec(
 				t.Context(),
 				"INSERT INTO event_memberships(event_id,person_id,role)VALUES($1,$2,'mentor')",

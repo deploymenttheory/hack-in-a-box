@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/google/uuid"
 )
 
 func TestQualificationBrowsers(t *testing.T) {
@@ -24,14 +25,28 @@ func TestQualificationBrowsers(t *testing.T) {
 			continue
 		}
 		for _, viewport := range []string{"desktop", "mobile"} {
-			t.Run(surface+"/"+viewport, func(t *testing.T) { runQualificationBrowser(t, surface, viewport) })
+			for _, scenario := range []string{"initial", "final"} {
+				if selected := os.Getenv("HACKBOX_QUALIFICATION_SCENARIO"); selected != "" && selected != scenario {
+					continue
+				}
+				t.Run(surface+"/"+viewport+"/"+scenario, func(t *testing.T) { runQualificationBrowser(t, surface, viewport, scenario) })
+			}
 		}
 	}
 }
 
-func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
+func runQualificationBrowser(t *testing.T, surfaceName, viewport, scenario string) {
 	t.Helper()
-	r, admin, public, run := qualificationHTTPFixture(t)
+	var r *liveRehearsal
+	var admin, public rehearsalSurface
+	var run uuid.UUID
+	var final qualificationFinalFixture
+	if scenario == "final" {
+		final = newQualificationFinalCohort(t, 5)
+		r, admin, public, run = final.runtime, final.admin, final.public, final.run
+	} else {
+		r, admin, public, run = qualificationHTTPFixture(t)
+	}
 	surface := public
 	if surfaceName == "admin" {
 		surface = admin
@@ -67,8 +82,19 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
 		}
 		q := dbgen.New(r.pool)
 		switch input.Action {
-		case "session":
-			person, err := q.Person(request.Context(), r.owner.ID)
+		case "session", "session-primary", "session-second":
+			actor := r.owner.ID
+			if input.Action == "session-primary" {
+				actor = r.mentor.ID
+			}
+			if input.Action == "session-second" {
+				if scenario != "final" {
+					http.Error(w, "actor unavailable", 400)
+					return
+				}
+				actor = final.second.ID
+			}
+			person, err := q.Person(request.Context(), actor)
 			if err != nil {
 				http.Error(w, "current synthetic identity unavailable", 500)
 				return
@@ -91,7 +117,7 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
 				http.Error(w, "native evidence read failed", 500)
 				return
 			}
-			_ = json.NewEncoder(w).Encode(map[string]any{"version": current.Round.Version, "cards": len(current.Round.Cards), "current": current.Current, "teams": current.Teams, "signoff": current.Round.Signoff != nil})
+			_ = json.NewEncoder(w).Encode(map[string]any{"version": current.Round.Version, "cards": len(current.Round.Cards), "current": current.Current, "teams": current.Teams, "signoff": current.Round.Signoff != nil, "page": current})
 		default:
 			http.Error(w, "unknown private control", 400)
 		}
@@ -99,6 +125,17 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
 	go func() { _ = control.Serve(listener) }()
 	t.Cleanup(func() { _ = control.Close() })
 	manifest := map[string]any{"event_id": r.eventID, "run_id": run, "team_id": r.teamID, "run_name": page.Criteria.Name, "owner_id": r.owner.ID, "mentor_name": r.mentor.DisplayName, "origin": surface.server.URL, "socket": socket, "surface": surfaceName, "viewport": viewport}
+	manifest["scenario"] = scenario
+	if scenario == "final" {
+		ids := []uuid.UUID{}
+		for _, team := range final.teams {
+			ids = append(ids, team.id)
+		}
+		manifest["team_ids"] = ids
+		manifest["second_id"] = final.second.ID
+		manifest["primary_id"] = r.mentor.ID
+		manifest["categories"] = final.checkpoint.Criteria.Categories
+	}
 	raw, err := json.Marshal(manifest)
 	if err != nil {
 		t.Fatal(err)
@@ -109,7 +146,7 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
 	}
 	command := exec.CommandContext(t.Context(), "node", "node_modules/@playwright/test/cli.js", "test", "--config", "playwright.qualification-native.config.ts")
 	command.Dir = filepath.Join("..", "..", "web")
-	command.Env = append(os.Environ(), "HACKBOX_QUALIFICATION_MANIFEST="+manifestPath, "HACKBOX_QUALIFICATION_SCOPE="+surfaceName+"-"+viewport, "TMPDIR="+private)
+	command.Env = append(os.Environ(), "HACKBOX_QUALIFICATION_MANIFEST="+manifestPath, "HACKBOX_QUALIFICATION_SCOPE="+surfaceName+"-"+viewport+"-"+scenario, "TMPDIR="+private)
 	command.Stdout, command.Stderr = os.Stdout, os.Stderr
 	git := func(args ...string) string {
 		t.Helper()
@@ -122,12 +159,12 @@ func runQualificationBrowser(t *testing.T, surfaceName, viewport string) {
 	head, tree, status := git("rev-parse", "HEAD"), git("rev-parse", "HEAD^{tree}"), git("status", "--porcelain", "--untracked-files=normal")
 	runErr := command.Run()
 	end, statusEnd := git("rev-parse", "HEAD"), git("status", "--porcelain", "--untracked-files=normal")
-	proof := map[string]any{"source_commit": head, "source_tree": tree, "source_commit_end": end, "source_worktree_clean": status == "" && statusEnd == "", "surface": surfaceName, "viewport": viewport, "event_id": r.eventID, "run_id": run, "browser_command_succeeded": runErr == nil, "scope": "initial native panel; no formal final; no full card/tie/signoff acceptance"}
+	proof := map[string]any{"source_commit": head, "source_tree": tree, "source_commit_end": end, "source_worktree_clean": status == "" && statusEnd == "", "surface": surfaceName, "viewport": viewport, "event_id": r.eventID, "run_id": run, "browser_command_succeeded": runErr == nil, "scope": scenario + " native panel journey; exact browser assertions define exercised acceptance"}
 	proofJSON, err := json.MarshalIndent(proof, "", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
-	proofDir := filepath.Join(command.Dir, "test-results-qualification-native", surfaceName+"-"+viewport)
+	proofDir := filepath.Join(command.Dir, "test-results-qualification-native", surfaceName+"-"+viewport+"-"+scenario)
 	if err = os.MkdirAll(proofDir, 0o700); err != nil {
 		t.Fatal(err)
 	}

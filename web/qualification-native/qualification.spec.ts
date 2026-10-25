@@ -1,6 +1,7 @@
 import {expect,test} from '@playwright/test'
 import {native,owner,control} from './native'
 test('actual initial native panel captures exact lost ACK, retains blockers/history and clears on real session expiry',async({browser})=>{
+ test.skip(native.scenario!=='initial','Separate real final cohort journey')
  const context=await owner(browser),page=await context.newPage(),errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
  await page.goto(`/events/${native.event_id}/panel`);await page.getByRole('link',{name:`Open ${native.run_name}`,exact:true}).press('Enter')
  await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter')
