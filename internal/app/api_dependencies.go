@@ -73,10 +73,18 @@ func newAPIDependencies(
 	communicationRuntime.Clarifications.Storage = storage
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries, Clock: now}
-	judges := judging.Service{Pool: pool, Now: now}
+	owner := qualification.Service{
+		Pool:       pool,
+		Now:        now,
+		Moderation: communicationRuntime.Moderation,
+		Cards:      communicationRuntime.Scorecards,
+		Freeze:     communicationRuntime.SubmissionFreeze,
+	}
+	judges := judging.Service{Pool: pool, Now: now, Finalists: &owner}
 	room := presentation.Service{Pool: pool, Clock: now, OrderAuthority: judges}
 	deps := httpapi.Dependencies{
 		Judging:          judges,
+		Qualification:    owner,
 		Repositories:     *communicationRuntime.Repositories,
 		RepositoryAccess: *communicationRuntime.RepositoryAccess,
 		Media: media.Service{
@@ -111,7 +119,7 @@ func newAPIDependencies(
 		TeamsWorkflow:    communicationRuntime.Teams,
 		Credentials:      credentials.Service{Pool: pool, Keys: cfg.CredentialKeys, Now: now},
 		Mentors:          mentors.Service{Pool: pool},
-		Rubrics:          rubric.Service{Pool: pool, Clock: now},
+		Rubrics:          rubric.Service{Pool: pool, Clock: now, Finalists: &owner},
 		Objectives:       objectives.Service{Pool: pool, Clock: now},
 		Observations:     observations.Service{Pool: pool, Now: now},
 		Scorecards:       *communicationRuntime.Scorecards,
@@ -151,15 +159,5 @@ func newAPIDependencies(
 			EventQuota: cfg.FileEventQuota,
 		},
 	}
-	owner := qualification.Service{
-		Pool:       pool,
-		Now:        now,
-		Moderation: communicationRuntime.Moderation,
-		Cards:      communicationRuntime.Scorecards,
-		Freeze:     communicationRuntime.SubmissionFreeze,
-	}
-	deps.Qualification = owner
-	deps.Judging.Finalists = &owner
-	deps.Rubrics.Finalists = &owner
 	return deps, nil
 }

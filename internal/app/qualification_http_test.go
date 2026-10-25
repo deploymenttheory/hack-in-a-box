@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
@@ -166,6 +167,10 @@ func TestQualificationHTTPStrictNativeRuntimeOriginalReceiptsAndRoleLoss(t *test
 		judgingPolicy, ok := surface.deps.Judging.Finalists.(*qualification.Service)
 		if !ok {
 			t.Fatal("judging lacks real qualification owner")
+		}
+		orderOwner, nativeOrder := surface.deps.Presentation.OrderAuthority.(judging.Service)
+		if !nativeOrder || orderOwner.Finalists != judgingPolicy {
+			t.Fatal("presentation order did not preserve the actual configured judging graph")
 		}
 		rubricPolicy, ok := surface.deps.Rubrics.Finalists.(*qualification.Service)
 		if !ok || rubricPolicy != judgingPolicy || judgingPolicy.Pool != r.pool ||
