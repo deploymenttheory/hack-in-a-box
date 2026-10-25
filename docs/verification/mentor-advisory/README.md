@@ -98,3 +98,48 @@ uses the supported logistics role, proving that losing mentor capability clears
 its narrower private resource while independent event reading remains. No native
 authority rule was changed. Complete current-source browser and owner reruns remain
 pending at this checkpoint.
+
+
+## Complete native browser and current owner checkpoint
+
+At `a85f8d847af0960cedbe9e9be88c077b412eeb2f`, all four native browser cases
+passed on a quiet restored engine, **140.110s** (test **138.27s**): administration
+Desktop **34.78s**, administration mobile **35.65s**, participant desktop **35.43s**,
+participant mobile **32.41s**. No retries, skipped or flaky cases. Each fresh native
+fixture proved three retained advisory versions and exactly one actual judge
+ballot, current role/source disposal and real committed-response-loss recovery.
+Historical strict-locator failures were corrected to the actual named reading
+region, separating current native records from same-page controlled editor text.
+
+The earlier focused pending-POST failure at `5d6aaeda` is retained as failed
+execution (**124.817s**): GETs took 2.61s/5.26s and POST had no completed response.
+Docker Desktop subsequently exited, but that timing does not establish the cause.
+After authoritative restore, the unchanged save/receipt path at `b682f665` returned
+first POST 200 in **493ms**, correction in **453ms**, judge ballot in **1.185s**,
+and recovered original ACK in **344ms**. The original pending-save symptom did not
+recur in that baseline or the complete quiet matrix; no application fix or proven
+Docker root cause is inferred from this alone.
+
+The final current native owner/schema batch at the same `a85f8d84` source passed:
+`results` **4.232s**, `teamreports` **3.296s**, composed native/API/confirmation
+**42.123s** (test **40.52s**). It additionally proves that an actually assigned
+second mentor receives their own empty contribution stream while neither reading
+nor replacing another author's views or original acknowledgement.
+
+## Visual status correction before final freeze
+
+Visual inspection of the passing matrix found a real status defect: an exact
+original ACK was known, but the private hook retained an obsolete red transport
+failure. The unedited before screenshot and hash are retained under `history/`.
+A two-consumer shared-store regression reproduced that exact seam (**RED 1.05s**).
+The bounded UI correction tracks the uncertain attempt identity and hides its
+transport failure only after that exact metadata attempt is completed while the
+private scope remains current. Current reads, selected bases, an unrelated older
+ACK and session disposal cannot stand in for that completion. The corrected unit
+regression passes **2/2 (1.20s)**; no API call, domain record, source binding, private
+payload lifetime or successful-write inference was added.
+
+Both portal builds/TypeScript and ESLint pass with the UI correction. The complete
+latest native matrix with an explicit error-before-ACK/error-cleared-after-ACK
+assertion and final clean screenshots remains pending at this checkpoint. The
+previous four-case pass stays attributed to its actual source above.

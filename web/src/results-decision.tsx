@@ -22,8 +22,12 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  contextDenied?: (error: unknown) => boolean; refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
 }) {
  const identity = useIdentity(), commands = useCommunicationCommands(options.owner), scope = usePrivateRequestScope(`${options.owner}:editor`, options.parent)
- const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failure, setFailure] = useState<unknown>(), [failureStage, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
+ const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failureValue, setFailure] = useState<unknown>(), [unknownAttempt, setUnknownAttempt] = useState<string>(), [failureStageValue, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
  const sending = useRef(false), opener = useRef<HTMLElement | null>(null), baseOpener = useRef<HTMLElement | null>(null), fallback = useRef<HTMLHeadingElement | null>(null)
+ // A current read or selected base leaves the unknown attempt in history.
+ // Only exact completion removes it; disposal of this private scope is never ACK.
+ const recovered = failureStageValue === 'unknown' && !!unknownAttempt && scope.capture().current() && !commands.attempts.some(attempt => attempt.id === unknownAttempt)
+ const failure = recovered ? undefined : failureValue, failureStage = recovered ? undefined : failureStageValue
  const pending = preparing || commands.pending, stale = !!review && (options.version(options.page) !== review.intent.version || options.revision(options.page) !== review.intent.revision), blocked = options.paused || pending || commands.unconfirmed || stale
  usePlanningDepartureBarrier(pending)
  async function prepare(body: B, summary: ReactNode, source: HTMLElement) {
@@ -52,7 +56,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
    if (ticket.current()) { setReview(undefined); setNotice('Original ' + captured.body.action.replaceAll('_', ' ') + ' acknowledged. Read current facts for the next action.'); options.acknowledged?.(); await options.refresh() }
   } catch (error) {
    const rejected = error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408
-   if (attempt) { if (rejected) commands.complete(attempt); else commands.uncertain(attempt) }
+   if (attempt) { if (rejected) commands.complete(attempt); else { commands.uncertain(attempt); if (ticket.current()) setUnknownAttempt(attempt) } }
    if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status) || options.contextDenied?.(error)) { scope.invalidate(); await options.refresh() } }
   } finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
