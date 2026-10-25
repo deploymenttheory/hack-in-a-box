@@ -185,3 +185,41 @@ native-registry, immutable-history and uncertain-effect assertions remain intact
 The same case passed after correction (3.270s). No production migration or
 rollback guard changed. Independent delta review and fresh final-head CI remain
 required; the earlier failed aggregate is not represented as a pass.
+
+## Repeated-hour fixture verification diagnosis
+
+The next native job at `8b0bf44` passed the migration guard, but exposed older
+automation and Teams fixtures that omitted a fold choice or retained a previous
+choice after moving a known UTC target. Native timing validation rejected the
+ambiguous wall time. A deterministic reschedule also proved a silent one-hour
+error when an earlier-fold choice survived a move into the later fold.
+
+Pure test-support commit `f92443e` reuses `testdb.WallTimeForInstant` to set wall
+time and choice together. Common-publication fixtures derive the intended
+publication instant before adding seven local calendar days, retaining that
+instant's explicit fold choice. They do not substitute 168 elapsed hours or
+change production scheduling, retention, permissions, or publication gates.
+
+Executed real-PostgreSQL/race proof:
+
+- Deterministic reschedule/publication regression RED: 9.733s. The original
+  three publication failures separately reproduced in 16.088s. Strengthening the
+  existing ten-minute reschedule assertion exposed a one-hour error (RED4.880s).
+  Corrected reschedules and original approval/retention/worker journeys passed
+  10.615s; native publication regressions and all three original cases passed
+  11.824s. Earlier/later/rollback-crossing publication cases assert exact schedule,
+  no early publication, exact publication time and unchanged missing-choice denial.
+- Native Teams save/preview/approval failed for both deterministic fold instants
+  (RED4.364s, structured `campaign_timing_invalid`), then passed with the original
+  receipt/restart, reviewed resend, current authority and cancellation cases
+  (GREEN21.563s). Exact due time and retained approval time are asserted.
+- A source audit reproduced the same timing blocker in the native survey
+  runtime as its relative clock entered the fold (RED2.626s; structured repro also
+  retained). The complete original reader/delivery/privacy journey passed after
+  conversion (GREEN3.646s). The adjacent SMTP history fixture uses the same
+  conversion and its unchanged receipt/privacy journey passed3.569s; it was not
+  an observed failure in the preceding CI aggregate.
+
+Focused lint for all changed owners reports zero issues. These are bounded
+attributed results, not a full current-head CI pass. Independent delta reviews
+and a new exact-head CI run remain required before merge.
