@@ -444,3 +444,15 @@ No source was pushed to the merged branch. This correction remains a local
 follow-up candidate; native proof, independent correction reviews and follow-up
 CI remain required. Earlier native matrix evidence retains its exact sources
 and does not establish this new focus assertion.
+
+The separate follow-up starts from authoritative merged main
+`56d00be40e098f9ab71b2387377d2ad7cd81b63c`. Only the correction and ledger were
+transplanted; exact clean implementation/checkpoint
+`09d471884ffeda7b0c2f754527587bf6481bb75f` passed types, both production portal
+builds and focused ESLint. Bounded affected browser suites passed **12/12 admin
+(8.4s) and 12/12 regular (9.6s)** at that exact source, covering both layouts,
+manual other/same/original-team openings after the matched late ACK, pending
+read locks, denied-private-reader departure and original HTTP408 unknown state.
+No native fixture was started while the root-owned PR286 matrix was active.
+The follow-up remains draft; updated native focus proof and independent bounded
+correction reviews/final CI remain required.
