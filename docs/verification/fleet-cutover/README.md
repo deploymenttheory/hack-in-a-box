@@ -138,3 +138,13 @@ The first published checkpoint 204ec348 failed full web-quality CI in two existi
 Only the existing test fixture was corrected: use the actual authenticated safety provider, return changed permission facts from the mocked native read, invalidate the active submission query by its stable prefix, and inspect all descendant draft cache entries. The held-response case still requires the actual read signal to abort before its deferred response arrives. Existing DOM clearing, disabled formal submission and no-private-canary cache assertions remain intact. No production owner, permission, cache policy or assertion was weakened.
 
 The two original cases plus seven adjacent owner/safety cases passed together: four files, nine tests, no unhandled errors, 8.41 seconds. Focused ESLint and diff checks passed. This local proof ran on the working-tree fixture correction before its commit; fresh final-head CI remains required. This fixes the checkpoint's unit-fixture integration and does not establish full #245 acceptance, native Docker proof or missing-route completion.
+
+## Participant CI discovery correction
+
+At checkpoint `1c44ac4`, the ordinary participant configuration omitted
+`team-deliverable-lifetimes.spec.ts`: its focused discovery returned zero cases.
+Adding the file to the explicit allowlist discovers all four existing cases.
+The unchanged acknowledged/lost-response journeys passed on desktop and mobile
+through the actual participant configuration: four tests, 4.5 seconds, one worker.
+Focused configuration ESLint passed. This is local working-tree evidence before
+commit; fresh exact-head CI and the remaining full cutover criteria still apply.
