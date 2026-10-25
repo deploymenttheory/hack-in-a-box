@@ -10,6 +10,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/moderation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -310,6 +311,10 @@ func newQualificationFinalCohort(t *testing.T, count int) qualificationFinalFixt
 func TestQualificationFiveTeamNativeFinalFixture(t *testing.T) {
 	f := newQualificationFinalCohort(t, 5)
 	page, err := f.admin.deps.Qualification.Read(t.Context(), f.runtime.owner.ID, f.runtime.eventID, f.run)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page, err = f.admin.deps.Qualification.Change(t.Context(), f.runtime.owner.ID, f.runtime.eventID, f.run, page.Revision, qualification.Command{RequestID: uuid.New(), Version: page.Round.Version, Action: "configure_panel", Reason: "Actual intended five-team verification panel", Panel: &qualification.Panel{MentorIDs: []uuid.UUID{f.runtime.mentor.ID, f.second.ID}, OrganiserID: f.runtime.owner.ID}})
 	if err != nil {
 		t.Fatal(err)
 	}
