@@ -56,3 +56,45 @@ Canonical generation is being checked at the committed checkpoint.
   keyboard/focus/privacy checks, and final screenshots/source attribution.
 - Affected owner regressions, complete current-head CI and independent Standards
   and Spec reviews. The issue stays open and PR stays Draft until these pass.
+
+
+## Strengthened native checkpoint and main integration
+
+At `d4f129823438d6f1682c4e1e7f2aabc1d4e39c1c`, the serial native batch passed:
+
+| Native package / proof | Result |
+| --- | --- |
+| `results`: populated 54→55 upgrade, empty rollback, retained corrections/commands, cross-event FK and populated rollback protection | PASS 3.519s |
+| `teamreports`: original schema upgrade/empty rollback, then restore actual latest schema | PASS 3.054s |
+| Composed advisory native/API test | PASS 32.302s (test 30.76s) |
+
+The composed test now validates canonical HTTP responses and no-store/CSRF in both
+independent portals, current conflict and published coverage withdrawal, all
+required judge ballots, and actual award confirmation while other category ties
+have no advisory. A later advisory correction preserves the entire confirmed round
+and decision binding; corrections remain current attributed input, never a rewrite
+of what earlier ballots/confirmation considered. A first expanded HTTP assertion
+expected a missing CSRF header to return 403; the canonical required-header
+validator correctly returned 400. The final proof separately asserts missing
+header 400 and an invalid 32-byte token 403, with no accepted-status fallback.
+
+The standalone guide passed **2/2**, desktop/mobile (**5.4s**) at `af538077`,
+using production exports, actual opener restoration, retained local corrections,
+pending dismissal locks, unknown callback separation and no private APIs/storage.
+
+The branch then rebased onto merged main `076f6162558df2ac3d7fb1ff7c23b3d35dc21784`.
+Generated conflicts were resolved from canonical sources; both independent guide
+sections and the common native two-team/non-winner fixture were preserved. The
+original proof references above remain historically attributed; the rebase is not
+a retrospective claim that those runs tested a different source. Canonical
+regeneration and both portal builds pass after integration. The dedicated required
+CI native-browser step preserves all existing steps and timers and retains its
+own artifacts.
+
+The first actual browser attempt at `4c2956f3` stopped in native fixture setup,
+before Playwright: a synthetic independent-event role used the unsupported name
+“facilitator”; the real role constraint rejected it (RED 16.671s). The fixture now
+uses the supported logistics role, proving that losing mentor capability clears
+its narrower private resource while independent event reading remains. No native
+authority rule was changed. Complete current-source browser and owner reruns remain
+pending at this checkpoint.
