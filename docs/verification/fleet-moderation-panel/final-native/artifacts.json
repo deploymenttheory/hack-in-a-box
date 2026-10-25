@@ -109,36 +109,36 @@
   },
   {
     "file": "public-mobile-final-native-fixture.json",
-    "sha256": "0f3428ee062a75496412291e4be176ff4f9ce15dc9a967d7191739e38548b799",
-    "source_commit": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-    "source_tree": "036fedb1c69cc99e5385be30506df9c835f94fdf",
+    "sha256": "5b01b32e6bd38acdb36f8a66c1c7b1c03adad9f2ddde51d62211383d729c2ef4",
+    "source_commit": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+    "source_tree": "d2f4b21c44ab0c78bb5c34587e3c04d982b03d26",
     "scope": "public-mobile-final",
     "browser": "Chromium",
     "evidence": "real native PostgreSQL/router journey; desktop/narrow viewport, not physical-device certification"
   },
   {
     "file": "public-mobile-final-current-independent-and-moderated-card.png",
-    "sha256": "933c8a2417ca1efe83bc60e23cf4ce544b520079d199eef28a98ad8f171b35c5",
-    "source_commit": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-    "source_tree": "036fedb1c69cc99e5385be30506df9c835f94fdf",
+    "sha256": "ada1149b8e39af41986fd3ad5ede86c9b9874e0783c813b0c8e0cbbe53e2479b",
+    "source_commit": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+    "source_tree": "d2f4b21c44ab0c78bb5c34587e3c04d982b03d26",
     "scope": "public-mobile-final",
     "browser": "Chromium",
     "evidence": "real native PostgreSQL/router journey; desktop/narrow viewport, not physical-device certification"
   },
   {
     "file": "public-mobile-final-signed-private-preparation-light.png",
-    "sha256": "1383281e4fb7a2b0a1199e4d4fcf1e5d1d33bd82b58c128352129c2ac8529733",
-    "source_commit": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-    "source_tree": "036fedb1c69cc99e5385be30506df9c835f94fdf",
+    "sha256": "6750bae71db7df434b3a7eca29eee8947856a489d060e646441a85b8f4e93454",
+    "source_commit": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+    "source_tree": "d2f4b21c44ab0c78bb5c34587e3c04d982b03d26",
     "scope": "public-mobile-final",
     "browser": "Chromium",
     "evidence": "real native PostgreSQL/router journey; desktop/narrow viewport, not physical-device certification"
   },
   {
     "file": "public-mobile-final-signed-private-preparation-dark.png",
-    "sha256": "86f833cb55cc7540836bc8515badce1b095fe355fd6c29ae43024f0dadb5ab8d",
-    "source_commit": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-    "source_tree": "036fedb1c69cc99e5385be30506df9c835f94fdf",
+    "sha256": "e5aaf34dabd748eb612fd76428b6ec1add76f8404309598787bbd6a767f239ef",
+    "source_commit": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+    "source_tree": "d2f4b21c44ab0c78bb5c34587e3c04d982b03d26",
     "scope": "public-mobile-final",
     "browser": "Chromium",
     "evidence": "real native PostgreSQL/router journey; desktop/narrow viewport, not physical-device certification"

@@ -1,11 +1,11 @@
 {
   "browser_command_succeeded": true,
-  "event_id": "633412a3-0cec-4426-b4ee-66c58c543c85",
-  "run_id": "69877882-fedc-4305-aabe-36b4e35ba81e",
+  "event_id": "55ebaed9-4e7e-4734-8713-57286527b7b3",
+  "run_id": "683fb807-b3aa-42a7-8d99-a200e7a7077f",
   "scope": "final native panel journey; exact browser assertions define exercised acceptance",
-  "source_commit": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-  "source_commit_end": "a6f5e447dff0726f3f709eb9741131f4e9a25f5e",
-  "source_tree": "036fedb1c69cc99e5385be30506df9c835f94fdf",
+  "source_commit": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+  "source_commit_end": "f7681392f0a319178d52dcc310f3de8e2d17f4e0",
+  "source_tree": "d2f4b21c44ab0c78bb5c34587e3c04d982b03d26",
   "source_worktree_clean": true,
   "surface": "public",
   "viewport": "mobile"

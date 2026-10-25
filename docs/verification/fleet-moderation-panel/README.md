@@ -404,3 +404,14 @@ separately; no production implementation, authority or assertion is weakened.
 
 Only independent full reviews and final-head CI remain acceptance gates. No
 physical-device, screen-reader or full issue122 certification is claimed.
+
+The screenshot-readiness-only retest completed at exact clean
+`f7681392f0a319178d52dcc310f3de8e2d17f4e0`: the actual regular-narrow native
+journey passed (70.562s browser, zero retries/skips). Its fixture records matching
+start/end commit and successful browser exit. The original tool's terminal output
+was truncated, so no separate Go duration is asserted for this retest; subsequent
+process inspection confirmed no live owned native/browser process. Only this
+scope's four artifacts were refreshed with their actual source/tree and hashes;
+the other three retain a6f5 attribution. The refreshed comparison was visually
+inspected with its complete original-evidence and moderated-card contents.
+Production source is unchanged from the four-scope a6f5 native pass.
