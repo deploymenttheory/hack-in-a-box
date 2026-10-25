@@ -130,8 +130,16 @@ func TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote(t *testing.T) {
 			t.Fatal("HTTP lost original ACK")
 		}
 		status, _ = request(surface, r.mentor, "POST", path, c, own.Revision, false)
+		if status != 400 {
+			t.Fatal(
+				"missing required CSRF header was not rejected by the canonical contract",
+				status,
+			)
+		}
+		match := fmt.Sprintf("\"%d\"", own.Revision)
+		status, _ = resultAPIPost(t, surface, r.mentor, path, c, &match, strings.Repeat("x", 32))
 		if status != 403 {
-			t.Fatal("advisory CSRF bypass", status)
+			t.Fatal("invalid advisory CSRF token accepted", status)
 		}
 		status, _ = request(surface, f.judges[0], "GET", path, nil, 0, true)
 		if status != 403 {

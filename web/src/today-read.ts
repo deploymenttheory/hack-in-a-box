@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { APIError } from './api/client'
 import { usePrivateRequestScope, type PrivateRequestScope } from './private-request-scope'
 
+const ordinaryDenials = [401, 403, 404]
+
 // A mounted read lifetime only: no task store, query cache, private payload
 // persistence, inferred receipt or write replay. Definite denial stays latched.
-export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertCurrent: () => void) => Promise<T>, parent?: PrivateRequestScope, identityOf?: (value: T) => string) {
+export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertCurrent: () => void) => Promise<T>, parent?: PrivateRequestScope, identityOf?: (value: T) => string, deniedStatuses: readonly number[] = ordinaryDenials) {
   const authority = usePrivateRequestScope(`${key}:authority`, parent)
   const scope = usePrivateRequestScope(`${key}:read`, authority)
   const life = useMemo(() => ({ scope, denied: false, ended: false, reading: false, attempt: 0, signature: undefined as string | undefined }), [scope])
@@ -26,13 +28,13 @@ export function useTodayRead<T>(key: string, load: (signal: AbortSignal, assertC
       setSnapshot({ key, data, pending: false, denied: false })
     } catch (error) {
       if (ticket.current()) {
-        const denied = error instanceof APIError && [401, 403, 404].includes(error.status)
+        const denied = error instanceof APIError && deniedStatuses.includes(error.status)
         life.denied = denied
         if (denied) { authority.invalidate(); scope.invalidate() }
         setSnapshot(previous => ({ key, data: denied ? undefined : previous.key === key ? previous.data : undefined, error, pending: false, denied }))
       }
     } finally { if (attempt === life.attempt) life.reading = false }
-  }, [key, load, scope, authority, life, identityOf])
+  }, [key, load, scope, authority, life, identityOf, deniedStatuses])
   useEffect(() => {
     const refresh = () => { void read() }; refresh()
     const timer = setInterval(refresh, 15_000); window.addEventListener('focus', refresh)

@@ -19,7 +19,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  version: (page: P) => number; revision: (page: P) => number; read: (signal: AbortSignal) => Promise<P>;
  fingerprint: (body: B, revision: number) => Promise<string>; ready: (page: P, body: B) => void;
  send: (body: B, revision: number) => Promise<R>; matches: (result: R, intent: DecisionMetadata) => boolean;
- refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
+ contextDenied?: (error: unknown) => boolean; refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
 }) {
  const identity = useIdentity(), commands = useCommunicationCommands(options.owner), scope = usePrivateRequestScope(`${options.owner}:editor`, options.parent)
  const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failure, setFailure] = useState<unknown>(), [failureStage, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
@@ -53,7 +53,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) {
    const rejected = error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408
    if (attempt) { if (rejected) commands.complete(attempt); else commands.uncertain(attempt) }
-   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { scope.invalidate(); await options.refresh() } }
+   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status) || options.contextDenied?.(error)) { scope.invalidate(); await options.refresh() } }
   } finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  async function readBase(source: HTMLElement) {

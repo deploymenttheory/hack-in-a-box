@@ -1,7 +1,7 @@
 import { MentorAdvisoryReading } from './mentor-advisory-view'
 import { useCallback, useRef, useState } from 'react'
 import { useBlocker, useParams } from '@tanstack/react-router'
-import { api, unwrap } from './api/client'
+import { api, APIError, unwrap } from './api/client'
 import { useIdentity } from './session'
 import { EventBrand } from './branding'
 import { useEventAuthority } from './event-authority'
@@ -15,6 +15,8 @@ import { BallotReview, BallotTasks } from './results-view'
 import { Field, Select, Textarea, focusFirstInvalid } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
 import './results.css'
+const ballotDenials = [401, 403, 404, 409]
+const ballotContextEnded = (error: unknown) => error instanceof APIError && ballotDenials.includes(error.status)
 const loadBallots = async (eventID: string, signal: AbortSignal, actorID: string) => {
  const page = unwrap(await api.GET('/api/v1/events/{event_id}/results/ballots', { signal, cache: 'no-store', params: { path: { event_id: eventID } } }))
  if (!page.judge_run_id || page.judge_run_id === '00000000-0000-0000-0000-000000000000' || page.ties.some(t => t.own_vote && (t.own_vote.judge_id !== actorID || t.own_vote.tie_id !== t.state.tie.id || !t.state.tie.team_ids.includes(t.own_vote.team_id) || t.own_vote.evidence.some(e => !t.state.tie.team_ids.includes(e.team_id))))) throw new Error('The current ballot projection did not match your own assigned vote.')
@@ -42,8 +44,8 @@ function BallotEvent({ eventID }: { eventID: string }) {
 function BallotReader({ eventID, eventName, parent, paused }: { eventID: string; eventName: string; parent: PrivateRequestScope; paused: boolean }) {
  const identity = useIdentity(), load = useCallback((signal: AbortSignal) => loadBallots(eventID, signal, identity.person.id), [eventID, identity.person.id])
  const signature = useCallback((v: BallotState) => JSON.stringify([v.page.source_binding, v.page.judge_run_id, v.page.ties.map(t => t.state.tie), v.briefs]), [])
- const read = useTodayRead(`${eventID}:judge-ballots`, load, parent, signature)
- if (read.denied) return <section><h1>Tie ballots unavailable</h1><p>Current judge assignment is required. Private candidate evidence and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current ballot access</Button></section>
+ const read = useTodayRead(`${eventID}:judge-ballots`, load, parent, signature, ballotDenials)
+ if (read.denied) return <section><h1>Tie ballots unavailable</h1><p>Current judge assignment and a prepared frozen result source are required. Private candidate evidence, advisory views and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current ballot access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
  return <section className="fleet-results fleet-results-private"><ActionLink icon="back" href={`/events/${eventID}/judging`}>Back to judge desk</ActionLink><header><p className="fleet-results-eyebrow">{eventName} · Your assigned judge ballots</p><h1>Review assigned ties</h1><p>Every required judge must vote. A strict majority is required; a split requires an explicit reviewed replacement vote.</p></header>{!!read.error && <Failure error={read.error} retry={() => void read.refresh()} />}<BallotEditor key={read.generation} eventID={eventID} state={read.data} parent={read.authority} paused={paused || read.pending || !!read.error} refresh={() => read.refresh()} /><Button icon="refresh" variant="outline" disabled={read.pending} onClick={() => void read.refresh()}>Read current tie ballots</Button></section>
 }
@@ -61,7 +63,7 @@ function BallotEditor({ eventID, state, parent, paused, refresh }: { eventID: st
   if (!target || current.page.judge_run_id !== state.page.judge_run_id || current.page.source_binding !== body.source_binding || body.version !== current.page.version || !target.state.tie.team_ids.includes(body.team_id) || JSON.stringify(current.briefs) !== JSON.stringify(state.briefs)) throw new Error('The assigned candidates or frozen evidence changed. Nothing was sent. Read current ballots and review again.')
  }
  const owner = decisionNamespace(identity.person.id, identity.draft_scope, eventID, 'result-ballots')
- const decision = useResultDecision({ owner, parent, paused, page: state, revision: value => value.page.revision, version: value => value.page.version, read: signal => loadBallots(eventID, signal, identity.person.id), fingerprint: ballotFingerprint, ready, metadata: body => ({ resourceID: state.page.judge_run_id, subjectID: body.team_id, intentID: JSON.stringify({ tie: body.tie_id, teams: tie!.state.tie.team_ids }) }), send: async (body: BallotCommand, revision) => unwrap(await api.POST('/api/v1/events/{event_id}/results/ballots', { params: { path: { event_id: eventID }, header: { 'If-Match': `"${revision}"`, 'X-CSRF-Token': identity.csrf_token } }, body })), matches: (result, intent) => !!result.receipt && matchesBallotReceipt(result.receipt, intent), refresh, acknowledged: () => { setWinner(''); setReason(''); setNotes({}); setArtifacts({}) } })
+ const decision = useResultDecision({ owner, parent, paused, page: state, revision: value => value.page.revision, version: value => value.page.version, read: signal => loadBallots(eventID, signal, identity.person.id), fingerprint: ballotFingerprint, ready, metadata: body => ({ resourceID: state.page.judge_run_id, subjectID: body.team_id, intentID: JSON.stringify({ tie: body.tie_id, teams: tie!.state.tie.team_ids }) }), send: async (body: BallotCommand, revision) => unwrap(await api.POST('/api/v1/events/{event_id}/results/ballots', { params: { path: { event_id: eventID }, header: { 'If-Match': `"${revision}"`, 'X-CSRF-Token': identity.csrf_token } }, body })), matches: (result, intent) => !!result.receipt && matchesBallotReceipt(result.receipt, intent), contextDenied: ballotContextEnded, refresh, acknowledged: () => { setWinner(''); setReason(''); setNotes({}); setArtifacts({}) } })
  const dirty = !!winner || !!reason || Object.values(notes).some(Boolean) || Object.values(artifacts).some(Boolean)
  useBlocker({ shouldBlockFn: () => decision.pending || !decision.unknown && dirty && !window.confirm('Leave with unsent tie evidence or reason?'), enableBeforeUnload: dirty || decision.pending })
  async function review(source: HTMLElement) {

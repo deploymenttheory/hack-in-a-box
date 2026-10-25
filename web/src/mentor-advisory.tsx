@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useBlocker, useParams } from '@tanstack/react-router'
-import { api, unwrap } from './api/client'
+import { api, APIError, unwrap } from './api/client'
 import type { components } from './api/schema.gen'
 import { nativeFingerprint, nilUUID } from './results-model'
 import { decisionNamespace, OriginalResultHistory, ResultDecisionState, useResultDecision, type DecisionMetadata } from './results-decision'
@@ -17,6 +17,8 @@ import { MentorAdvisoryFields, MentorAdvisoryReading, MentorAdvisoryReview } fro
 type Page = components['schemas']['ResultAdvisoryPage']
 type Command = components['schemas']['ResultAdvisoryCommand']
 type Receipt = components['schemas']['ResultAdvisoryReceipt']
+const advisoryDenials = [401, 403, 404, 409]
+const advisoryContextEnded = (error: unknown) => error instanceof APIError && advisoryDenials.includes(error.status)
 const key = (t: { tie_id: string; team_id: string }) => `${t.tie_id}:${t.team_id}`
 export function advisoryFingerprint(body: Command, revision: number) {
  return nativeFingerprint({ Command: { request_id: body.request_id.toLowerCase(), action: body.action, version: body.version, source_binding: body.source_binding, tie_id: body.tie_id, team_id: body.team_id.toLowerCase(), submission_revision: body.submission_revision, views: body.views, reason: body.reason }, ExpectedRevision: revision })
@@ -41,8 +43,8 @@ function AdvisoryEvent({ eventID }: { eventID: string }) {
 }
 function AdvisoryReader({ eventID, eventName, parent, paused }: { eventID: string; eventName: string; parent: PrivateRequestScope; paused: boolean }) {
  const identity = useIdentity(), readCurrent = useCallback((signal: AbortSignal) => load(eventID, signal, identity.person.id), [eventID, identity.person.id]), signature = useCallback((p: Page) => JSON.stringify([p.run_id, p.source_binding, p.targets]), [])
- const read = useTodayRead(`${eventID}:mentor-advisories`, readCurrent, parent, signature)
- if (read.denied) return <section><h1>Mentor advisory unavailable</h1><p>Current published mentor assignment is required. Private views and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current advisory access</Button></section>
+ const read = useTodayRead(`${eventID}:mentor-advisories`, readCurrent, parent, signature, advisoryDenials)
+ if (read.denied) return <section><h1>Mentor advisory unavailable</h1><p>Current published mentor assignment and a prepared frozen category-tie context are required. Private views and held reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current advisory access</Button></section>
  if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
  return <section className="fleet-results fleet-results-private"><ResultsLink icon="back" href={`/events/${eventID}/mentor`}>Back to mentor workspace</ResultsLink><header><p className="fleet-results-eyebrow">{eventName} · Your current assigned category ties</p><h1>Share mentor advisory views</h1><p>Offer observations for your own assigned frozen builds. Judges all vote and need a strict majority. Your views remain advisory evidence; they never add a vote or carry mentor scores or ranks into the final result.</p></header>{!!read.error && <Failure error={read.error} retry={() => void read.refresh()} />}<AdvisoryEditor key={read.generation} eventID={eventID} page={read.data} parent={read.authority} paused={paused || read.pending || !!read.error} refresh={() => read.refresh()} /><Button icon="refresh" variant="outline" disabled={read.pending} onClick={() => void read.refresh()}>Read current advisory assignments</Button></section>
 }
@@ -54,7 +56,7 @@ function AdvisoryEditor({ eventID, page, parent, paused, refresh }: { eventID: s
   if (!target || current.run_id !== page.run_id || current.source_binding !== body.source_binding || target.submission_revision !== body.submission_revision || target.version !== body.version) throw new Error('Current coverage, frozen context or your contribution changed. Nothing was sent. Read current assignments and review again.')
  }
  const owner = decisionNamespace(identity.person.id, identity.draft_scope, eventID, 'mentor-advisories')
- const decision = useResultDecision({ owner, parent, paused, page, revision: p => p.revision, version: p => p.targets.find(t => key(t) === selected)?.version ?? 0, read: signal => load(eventID, signal, identity.person.id), fingerprint: advisoryFingerprint, ready, metadata: body => ({ resourceID: page.run_id, subjectID: body.team_id, intentID: body.tie_id }), send: async (body: Command, revision) => unwrap(await api.POST('/api/v1/events/{event_id}/results/mentor-advisories', { params: { path: { event_id: eventID }, header: { 'If-Match': `"${revision}"`, 'X-CSRF-Token': identity.csrf_token } }, body })), matches: (result, intent) => !!result.receipt && matchesAdvisoryReceipt(result.receipt, intent), refresh, acknowledged: () => { setViews(''); setReason(''); setErrors({}) } })
+ const decision = useResultDecision({ owner, parent, paused, page, revision: p => p.revision, version: p => p.targets.find(t => key(t) === selected)?.version ?? 0, read: signal => load(eventID, signal, identity.person.id), fingerprint: advisoryFingerprint, ready, metadata: body => ({ resourceID: page.run_id, subjectID: body.team_id, intentID: body.tie_id }), send: async (body: Command, revision) => unwrap(await api.POST('/api/v1/events/{event_id}/results/mentor-advisories', { params: { path: { event_id: eventID }, header: { 'If-Match': `"${revision}"`, 'X-CSRF-Token': identity.csrf_token } }, body })), matches: (result, intent) => !!result.receipt && matchesAdvisoryReceipt(result.receipt, intent), contextDenied: advisoryContextEnded, refresh, acknowledged: () => { setViews(''); setReason(''); setErrors({}) } })
  useBlocker({ shouldBlockFn: () => decision.pending || !decision.unknown && dirty && !window.confirm('Leave with unsent advisory views?'), enableBeforeUnload: dirty || decision.pending })
  async function review(source: HTMLElement) {
   if (!target) return
