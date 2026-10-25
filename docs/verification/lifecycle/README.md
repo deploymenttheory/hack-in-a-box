@@ -294,3 +294,52 @@ This proves accepted organiser-only transport, not the campaign current-audience
 failure/unknown reconciliation or full lifecycle requirements. `complete_lifecycle`
 remains false. A later formatting-only commit resolves the CI golines finding;
 the historical execution remains attributed to the frozen source above.
+
+
+## Queued campaign unknown-outcome checkpoint
+
+`TestLifecycleComposeSMTP` passed its extended accepted + scheduled-campaign
+scenario in 45.61s (runner 71050), frozen source
+`8e13c403499b1d04f63facd4a55e6bd8ed0dccca`, immutable image
+`sha256:43792266b01df15091ff2a0344e3e49f7314f02a3028be90950d47b10fa22aee`,
+main base `076f6162`, schema 54. This is separate historical evidence from the
+accepted-only 6.78s checkpoint above.
+
+Normal OIDC/native HTTP created the event, exact current-organiser audience,
+message/campaign preview and approval, and scheduled automation binding and
+approval. Only the synthetic relay fault was configured through its private
+Unix socket: consume DATA then close without the SMTP acceptance response.
+Advancing the domain eligibility clock to the approved due instant let actual
+native maintenance and River workers dispatch the campaign and attempt SMTP.
+No handler, queue retry or provider-owner success was invoked directly.
+
+Native delivery history retained one campaign recipient and one ambiguous
+attempt. The organiser deliberately recorded `resolve_no_resend`; repeating
+that exact original request ID/payload/revision returned 200 with the same one
+decision. Reusing the ID with a changed payload returned 409. The original
+operation, attempt and uncertain receipt were preserved. After 32 seconds of
+wall time, beyond the initial native retry/snooze interval, no second campaign
+send/attempt appeared. The earlier independent organiser self-test remained a
+separate history item; it was not counted as campaign evidence.
+
+A read-only PostgreSQL query confirmed one delivered self-test attempt, one
+delivered `communication.dispatch` attempt and one ambiguous
+`communication_campaign_smtp` attempt with `cancelled=true`; every lease was
+released. The relay contained two total messages: the accepted self-test and
+the one uncertain campaign DATA capture. Safe evidence is
+[smtp-unknown.json](evidence/smtp-unknown.json); no raw payload, mailbox,
+credential or provider token is exported.
+
+The initial same-source build 38097 failed with a shared Docker control-stream
+EOF after its Go stage completed (148.7s); no image/native result was claimed.
+After root restored Docker, tag inspection confirmed no image existed. Retry
+73599 exported the pinned image successfully from the same source/cache;
+fresh private startup 46209 and native run 71050 then passed. Cleanup 83451
+removed project `hackbox-lifecycle120-unknown-20261026`, all its private volumes
+and network; label queries confirmed no leftovers. Normal user projects were
+preserved.
+
+This proves the unknown/no-resend branch for a real scheduled organiser-only
+campaign. Definite temporary/permanent failures, deliberate safe retry/resend,
+changed current audiences/sources, other providers and the coherent full-event
+matrix remain required. Neither L11 nor the full lifecycle is marked complete.
