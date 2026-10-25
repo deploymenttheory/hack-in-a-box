@@ -1,6 +1,30 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page, type Locator, type Route } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { actor, control, native, settleTheme } from './native'
+
+// Gate only the first current GET issued after the trusted confirmation click,
+// while that held command is pending. Earlier/in-flight and subsequent ordinary
+// polls continue untouched; their responses may also dispose the old owner.
+async function heldPreflight(page: Page, path: string, confirm: Locator) {
+ let release!: () => void, started!: () => void, captured = false, cancelled = false
+ const resume = new Promise<void>(resolve => { release = resolve }), pending = new Promise<void>(resolve => { started = resolve }), key = `__nativePreflight_${Math.random()}`
+ await confirm.evaluate((element, key) => {
+  const state = { clickedAt: undefined as number | undefined }
+  const clicked = (event: Event) => { if (event.isTrusted) state.clickedAt = performance.timeOrigin + performance.now() }
+  element.addEventListener('click', clicked, { capture: true, once: true })
+  Object.assign(window, { [key]: { state, dispose: () => { element.removeEventListener('click', clicked, true) } } })
+ }, key)
+ const handler = async (route: Route) => {
+  if (route.request().method() !== 'GET' || captured) return route.fallback()
+  const clickedAt = await page.evaluate(key => (window as unknown as Record<string, { state: { clickedAt?: number } }>)[key]?.state.clickedAt, key)
+  if (clickedAt === undefined || route.request().timing().startTime < clickedAt || await confirm.getAttribute('aria-busy') !== 'true') return route.fallback()
+  captured = true; started(); await resume
+  if (cancelled) { await route.abort('aborted'); return }
+  const response = await route.fetch(); expect(response.status()).toBe(200); await route.fulfill({ response })
+ }
+ await page.route(path, handler)
+ return { pending, release, dispose: async () => { cancelled = true; release(); await page.unroute(path, handler); await page.evaluate(key => { const values = window as unknown as Record<string, { dispose: () => void }>; values[key]?.dispose(); delete values[key] }, key) } }
+}
 
 test('native mentor advice stays optional beside every judge ballot, with corrected provenance, original ACK and current source fences', async ({ browser }, info) => {
  const mentor = await actor(browser), judge = await actor(browser, 'judge'), outsider = await actor(browser, 'outsider'), otherJudge = await actor(browser, 'other-judge'), competitor = await actor(browser, 'competitor')
@@ -46,11 +70,21 @@ test('native mentor advice stays optional beside every judge ballot, with correc
   // A newly valid native source returns200, not409. Both owners must clear
   // their old held review without retargeting it to the replacement context.
   await judging.getByRole('button', { name: 'Read current tie ballots', exact: true }).click(); await judging.getByLabel('Your selected winner', { exact: true }).selectOption(native.team_id); await judging.getByLabel(`Your observed evidence for ${native.team_name}`, { exact: true }).fill('PRIVATE-HELD-OLD-JUDGE-EVIDENCE'); await judging.getByLabel('Reason for your tie vote', { exact: true }).fill('PRIVATE-HELD-OLD-JUDGE-REASON'); await judging.getByRole('button', { name: 'Review tie vote', exact: true }).click()
-  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-HELD-REPREPARED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must not follow a replacement source.'); await opener.click(); await control('reprepare-source')
-  const replaced = await mentor.request.get(`/api/v1/events/${native.event_id}/results/mentor-advisories`); expect(replaced.status()).toBe(200); const fresh = await replaced.json(); expect(fresh.targets.length).toBeGreaterThan(0); expect(fresh.targets.every((t: { own: unknown }) => !t.own)).toBe(true)
+  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-HELD-REPREPARED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must not follow a replacement source.'); await opener.click()
   let ballotWrites = 0; judging.on('request', request => { if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/results/ballots')) ballotWrites++ })
-  await voteReview.getByRole('button', { name: 'Record reviewed tie vote', exact: true }).click(); await expect(voteReview).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-EVIDENCE', { exact: true })).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-REASON', { exact: true })).toHaveCount(0); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0); await expect(judging.getByLabel('Your selected winner', { exact: true })).toHaveCount(0); expect(ballotWrites).toBe(0)
-  await review.getByRole('button', { name: 'Save advisory views', exact: true }).click(); await expect(review).toHaveCount(0); await expect(page.getByText('PRIVATE-HELD-REPREPARED', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(page.getByLabel('Your assigned team and category', { exact: true })).toHaveValue(''); expect(advisoryWrites).toBe(3)
+  const mentorConfirm = review.getByRole('button', { name: 'Save advisory views', exact: true }), judgeConfirm = voteReview.getByRole('button', { name: 'Record reviewed tie vote', exact: true })
+  const mentorPreflight = await heldPreflight(page, `**/api/v1/events/${native.event_id}/results/mentor-advisories`, mentorConfirm), judgePreflight = await heldPreflight(judging, `**/api/v1/events/${native.event_id}/results/ballots`, judgeConfirm)
+  try {
+   await Promise.all([mentorConfirm.click(), judgeConfirm.click()]); await Promise.all([mentorPreflight.pending, judgePreflight.pending])
+   await expect(mentorConfirm).toHaveAttribute('aria-busy', 'true'); await expect(judgeConfirm).toHaveAttribute('aria-busy', 'true')
+   await control('reprepare-source')
+   const replaced = await mentor.request.get(`/api/v1/events/${native.event_id}/results/mentor-advisories`); expect(replaced.status()).toBe(200); const fresh = await replaced.json(); expect(fresh.targets.length).toBeGreaterThan(0); expect(fresh.targets.every((t: { own: unknown }) => !t.own)).toBe(true)
+   mentorPreflight.release(); judgePreflight.release()
+   await expect(review).toHaveCount(0); await expect(voteReview).toHaveCount(0)
+  } finally { mentorPreflight.release(); judgePreflight.release(); await mentorPreflight.dispose(); await judgePreflight.dispose() }
+  const replaced = await mentor.request.get(`/api/v1/events/${native.event_id}/results/mentor-advisories`); expect(replaced.status()).toBe(200); const fresh = await replaced.json()
+  await expect(voteReview).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-EVIDENCE', { exact: true })).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-REASON', { exact: true })).toHaveCount(0); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0); await expect(judging.getByLabel('Your selected winner', { exact: true })).toHaveCount(0); expect(ballotWrites).toBe(0)
+  await expect(review).toHaveCount(0); await expect(page.getByText('PRIVATE-HELD-REPREPARED', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(page.getByLabel('Your assigned team and category', { exact: true })).toHaveValue(''); expect(advisoryWrites).toBe(3)
   await page.getByLabel('Your assigned team and category', { exact: true }).selectOption(`${fresh.targets[0].tie_id}:${fresh.targets[0].team_id}`); await expect(page.getByLabel('Your advisory views', { exact: true })).toHaveValue('')
   await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-OLD-SOURCE'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must never send after native source reopening.'); await opener.click(); await control('reopen-source'); await review.getByRole('button', { name: 'Save advisory views', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Mentor advisory unavailable', exact: true })).toBeVisible(); await expect(page.getByText('PRIVATE-UNSENT-OLD-SOURCE', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(review).toHaveCount(0)
   await judging.getByRole('button', { name: /^(Read current tie ballots|Check current ballot access)$/ }).click(); await expect(judging.getByRole('heading', { name: 'Tie ballots unavailable', exact: true })).toBeVisible(); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0); expect(advisoryWrites).toBe(3)
