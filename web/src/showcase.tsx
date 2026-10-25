@@ -49,7 +49,7 @@ function ProjectDirectory() {
   {blocked ? <><Failure error={blocked} /><Button icon="refresh" variant="outline" onClick={retry}>Check current showcase access</Button></> : <>
    <ShowcaseToolbar key={filters.search ?? ''} filters={filters} events={events} change={change} />
    {projects.isPending ? <Loading /> : projects.error ? <Failure error={projects.error} retry={() => void projects.refetch()} /> : <>
-    <ShowcaseRecords projects={rows} destination={project => ({ href: `/projects/${project.id}`, label: project.problem, onNavigate: () => void navigate({ to: '/projects/$outcomeId', params: { outcomeId: project.id }, search: filters }) })} action={project => <Link className={buttonVariants({ variant: 'ghost' })} to="/projects/$outcomeId" params={{ outcomeId: project.id }} search={filters} aria-label={`Open ${project.problem}`}><Icon name="next" />Open project</Link>} />
+    <ShowcaseRecords projects={rows} destination={project => ({ href: `/projects/${project.id}`, label: project.problem, onNavigate: () => void navigate({ to: '/projects/$outcomeId', params: { outcomeId: project.id }, search: filters }) })} action={project => <Link className={buttonVariants({ variant: 'ghost' })} to="/projects/$outcomeId" params={{ outcomeId: project.id }} search={filters} aria-label={`Open project: ${project.problem}`}><Icon name="next" />Open project</Link>} />
     {!rows.length && <p role="status">No currently permitted projects match these filters. Change the search or event to continue.</p>}
     <CollectionPagination label="Showcase pages" source={{ kind: 'cursor', loaded: rows.length, busy: projects.isFetchingNextPage, next: projects.hasNextPage ? () => void projects.fetchNextPage() : undefined }} />
    </>}
