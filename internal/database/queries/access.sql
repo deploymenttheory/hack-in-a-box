@@ -64,3 +64,7 @@ SELECT EXISTS(SELECT 1 WHERE (
 -- name: VisibleEvent :one
 SELECT EXISTS(SELECT 1 FROM event_memberships m WHERE m.event_id=$1 AND m.person_id=$2 AND m.active)
 OR EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=$1 AND c.person_id=$2 AND c.state='confirmed');
+
+-- name: CurrentJudgeAssignment :one
+SELECT COALESCE(NOT EXISTS(SELECT 1 FROM judge_rounds r WHERE r.event_id=$1)
+OR EXISTS(SELECT 1 FROM judge_assignments a WHERE a.event_id=$1 AND a.team_id=$2 AND a.person_id=$3 AND a.active),false)::boolean AS allowed;

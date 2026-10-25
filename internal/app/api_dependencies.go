@@ -22,6 +22,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubidentity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
+	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
@@ -72,6 +73,7 @@ func newAPIDependencies(
 	queries := dbgen.New(pool)
 	policy := access.EventPolicy{Queries: queries, Clock: now}
 	deps := httpapi.Dependencies{
+		Judging:          judging.Service{Pool: pool, Now: now},
 		Repositories:     *communicationRuntime.Repositories,
 		RepositoryAccess: *communicationRuntime.RepositoryAccess,
 		Media: media.Service{

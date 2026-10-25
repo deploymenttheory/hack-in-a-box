@@ -36,6 +36,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/identity"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
+	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/media"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mentors"
@@ -65,6 +66,7 @@ import (
 )
 
 type Dependencies struct {
+	Judging              judging.Service
 	SubmissionFreeze     submissionfreeze.Service
 	SessionBookings      sessionbooking.Service
 	AdministrationOrigin string

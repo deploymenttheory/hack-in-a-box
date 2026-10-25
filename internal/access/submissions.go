@@ -91,6 +91,12 @@ func TeamPermissions(
 		if err != nil {
 			return a, fmt.Errorf("check assigned judge: %w", err)
 		}
+		if a.Judge {
+			a.Judge, err = q.CurrentJudgeAssignment(ctx, dbgen.CurrentJudgeAssignmentParams{EventID: eventID, TeamID: teamID, PersonID: actor})
+			if err != nil {
+				return a, fmt.Errorf("check managed judge assignment: %w", err)
+			}
+		}
 	}
 	// A competing reviewer cannot obtain privileged access to their own entry.
 	if a.Member {

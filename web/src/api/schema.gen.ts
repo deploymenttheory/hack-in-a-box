@@ -4,6 +4,63 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/judging/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeRound"];
+        put?: never;
+        post: operations["changeJudgeRound"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeCard"];
+        put?: never;
+        post: operations["changeJudgeCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judge-practice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgePractice"];
+        put?: never;
+        post: operations["changeJudgePractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze": {
         parameters: {
             query?: never;
@@ -3867,6 +3924,170 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SubmissionDocument: {
+            definitions: components["schemas"]["SubmissionDefinition"][];
+            evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        SubmissionOutputSummary: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            entry_id: string;
+            outcome: string;
+            /** Format: date-time */
+            frozen_at: string | null;
+            /** Format: int64 */
+            frozen_revision: number | null;
+            /** Format: date-time */
+            submitted_at: string | null;
+            artifacts: {
+                kind: string;
+                /** Format: int64 */
+                count: number;
+            }[];
+        };
+        JudgeEvidence: {
+            deliverable_id: string | null;
+            note: string;
+        };
+        JudgeScore: {
+            /** Format: uuid */
+            category_id: string;
+            value: number | null;
+            evidence: components["schemas"]["JudgeEvidence"][];
+        };
+        JudgeCard: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            version: number;
+            state: string;
+            /** Format: int64 */
+            submission_revision: number;
+            rubric: components["schemas"]["RubricReference"];
+            scores: components["schemas"]["JudgeScore"][];
+            /** Format: date-time */
+            changed_at: string;
+        };
+        JudgeAssignment: {
+            /** Format: uuid */
+            team_id: string;
+            judge_ids: string[];
+            /** Format: int64 */
+            missing: number;
+        };
+        JudgeRound: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: int64 */
+            revision: number;
+            deliberation: boolean;
+            /** Format: int64 */
+            required_judges: number;
+            assignments: components["schemas"]["JudgeAssignment"][];
+        };
+        JudgeRoundCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "assign" | "declare_conflict" | "open_deliberation";
+            /** Format: uuid */
+            team_id?: string;
+            judge_ids?: string[];
+            /** Format: uuid */
+            judge_id?: string;
+            /** Format: uuid */
+            competitor_id?: string;
+            conflict_kind?: string;
+            enabled?: boolean;
+            reason: string;
+        };
+        JudgeCardCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "submit" | "reopen";
+            /** Format: uuid */
+            author_id?: string;
+            /** Format: int64 */
+            submission_revision: number;
+            scores?: components["schemas"]["JudgeScore"][];
+            reason?: string;
+        };
+        JudgeReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            action: string;
+            /** Format: int64 */
+            revision: number;
+            state: string;
+            fingerprint: string;
+        };
+        JudgeFreezeEvidence: {
+            /** Format: uuid */
+            source_id: string;
+            status: string;
+            sha: string;
+            decision_id: string | null;
+        };
+        JudgePracticeCard: {
+            /** Format: int64 */
+            version: number;
+            rubric: components["schemas"]["RubricReference"];
+            state: string;
+            scores: components["schemas"]["JudgeScore"][];
+        };
+        JudgePractice: {
+            /** Format: uuid */
+            fictional_entry_id: string;
+            name: string;
+            rubric: components["schemas"]["RubricReference"];
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            card: components["schemas"]["JudgePracticeCard"] | null;
+        };
+        JudgePracticeCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "submit" | "reset";
+            scores?: components["schemas"]["JudgeScore"][];
+        };
+        JudgeSubmittedEvidence: {
+            /** Format: uuid */
+            deliverable_id: string;
+            kind: string;
+            label: string;
+            url: string;
+            file_id: string | null;
+        };
+        JudgeBrief: {
+            /** Format: uuid */
+            team_id: string;
+            team_name: string;
+            /** Format: uuid */
+            run_id: string;
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            reference: components["schemas"]["RubricReference"];
+            private_judge_guidance: string;
+            submission: components["schemas"]["SubmissionDocument"];
+            /** Format: int64 */
+            submission_revision: number;
+            output: components["schemas"]["SubmissionOutputSummary"];
+            repository: components["schemas"]["JudgeFreezeEvidence"];
+            own_card: components["schemas"]["JudgeCard"] | null;
+            submitted_cards: components["schemas"]["JudgeCard"][];
+            deliberation: boolean;
+        };
         SubmissionFreezeSource: {
             managed_evidence_ids: string[];
             uncaptured_evidence_ids: string[];
@@ -8314,6 +8535,174 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgeRound: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRound"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeRound: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeRoundCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeBrief"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeCard: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeCardCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgePractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgePractice"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgePractice: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgePracticeCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getSubmissionFreeze: {
         parameters: {
             query?: never;
