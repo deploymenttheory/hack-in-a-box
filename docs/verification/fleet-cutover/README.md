@@ -20,7 +20,7 @@ with no inventory errors. This establishes source ownership only.
 | Every first-release route and nested feature has a migrated owner and actual API integration | Current94-route source inventory is regenerated; judge/panel/results/report/showcase owners are now merged. Reconcile each domain's native HTTP and browser proof with final source, including the new #112 mentor advisory journey after its merge. Source presence alone is not native integration. |
 | Both portals/mobile/actions/icons and100-quality applicability | Existing source-attributed domain images and100-quality map remain. Complete the current reference-to-product audit and document justified variations; inherited images are not silently relabelled as new captures. |
 | No unused legacy presentation/imports/competing tokens; canonical API and business rules retained | Removed the concrete showcase migration shim and both callers now reference its production owner. Full remaining import/token/caller audit and final canonical check remain required. No domain/API/authority policy changes here. |
-| Published versioned guide, production components, contribution rules and runtime independence | Full independent guide build passes with both portals. Final isolated current-image browser walkthrough and public-process-failure isolation remain required; the user's already-running preview is preserved. |
+| Published versioned guide, production components, contribution rules and runtime independence | Full independent guide build passes with both portals. The source11375165 normal-image four-case browser/realOIDC/creation/read/logout/guide/public-process-failure proof now passes with14 original captures and zero remaining resources. Final integration after #112 and current-source reconciliation remain required; the user's normal preview is preserved. |
 | Exact-head CI and optionalM5 exclusion | Full web lint,237 unit tests, both portal builds and guide build pass on the working-tree checkpoint. Independent reviews and final full CI remain gates. Certificates/session booking stay optionalM5. Separate #120/#121/#122 release scopes are not replaced by this audit. |
 
 Verification command: `node scripts/check-fleet-cutover.mjs`, followed by
@@ -102,8 +102,13 @@ canonical12:00 succeeds. The fixture now enters that canonical minute form;
 the existing application already adds seconds for its native time resolver.
 No product input, timing or assertion is weakened.
 
-The complete normal-image browser journey remains **unverified** at this
-checkpoint; earlier failed projects were fully removed. The earlier
+The corrected normal-image journey **passed all four cases** at11375165,
+including actual native200 creation, both surface readers, separate logout,
+unauthenticated versioned guide, and admin/guide with public stopped. All14
+PNG hashes and scoped cleanup are verified in the
+[bounded normal-runtime evidence](normal-runtime-11375165/README.md).
+This is not full domain cutover acceptance; final #112 integration/current
+source, remaining inventory/caller/quality audit, reviews and fullCI remain gates. The earlier
 237-test/source-inventory results above do not establish its success. Preserve
 each failed attempt separately, diagnose its actual symptom, then record the
 exact executed source and measured result before changing this status.
