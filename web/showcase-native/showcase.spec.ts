@@ -11,6 +11,7 @@ test('actual reviewed two-event discovery preserves explicit awards, consent, au
   await page.goto('/projects'); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
   await expect(page.getByLabel('Source event')).toContainText('Synthetic autumn hack'); await expect(page.getByLabel('Source event')).toContainText('Synthetic spring hack')
   await expect(page.getByRole('button', { name: 'More records', exact: true })).toBeVisible(); await page.getByRole('button', { name: 'More records', exact: true }).click(); await expect(page.getByRole('navigation', { name: 'Showcase pages' })).toContainText('30 loaded')
+  await page.getByRole('heading', { name: 'Reviewed projects', exact: true }).scrollIntoViewIfNeeded()
   for (const colorScheme of ['light', 'dark'] as const) {
    await page.emulateMedia({ colorScheme }); await settleTheme(page); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
    const audit = await new AxeBuilder({ page }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([])
