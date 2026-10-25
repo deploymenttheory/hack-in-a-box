@@ -788,6 +788,80 @@ type InboxNotification struct {
 	ScopeApproval []byte
 }
 
+type JudgeAssignment struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+	Active   bool
+}
+
+type JudgeCard struct {
+	EventID  uuid.UUID
+	RunID    uuid.UUID
+	TeamID   uuid.UUID
+	AuthorID uuid.UUID
+	Version  int64
+	Document []byte
+}
+
+type JudgeCommand struct {
+	EventID     uuid.UUID
+	RequestID   uuid.UUID
+	ActorID     uuid.UUID
+	Fingerprint string
+	Result      []byte
+}
+
+type JudgeFactualSummary struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	Version  int64
+	Document []byte
+}
+
+type JudgeHistory struct {
+	ID         int64
+	EventID    uuid.UUID
+	RunID      *uuid.UUID
+	TeamID     *uuid.UUID
+	ActorID    uuid.UUID
+	Action     string
+	Reason     string
+	Document   []byte
+	OccurredAt time.Time
+}
+
+type JudgePracticeCard struct {
+	EventID  uuid.UUID
+	ActorID  uuid.UUID
+	Version  int64
+	Document []byte
+}
+
+type JudgeResultApproval struct {
+	ID        uuid.UUID
+	EventID   uuid.UUID
+	RunID     uuid.UUID
+	Binding   string
+	ActorID   uuid.UUID
+	Reason    string
+	CreatedAt time.Time
+}
+
+type JudgeResultInvalidation struct {
+	ApprovalID uuid.UUID
+	ActorID    uuid.UUID
+	Reason     string
+	CreatedAt  time.Time
+}
+
+type JudgeRound struct {
+	EventID      uuid.UUID
+	RunID        uuid.UUID
+	Revision     int64
+	Deliberation bool
+}
+
 type LoginAttempt struct {
 	StateHash   string
 	BrowserHash string

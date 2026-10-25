@@ -4,6 +4,139 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeCardStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/teams/{team_id}/judge-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeSummary"];
+        put?: never;
+        post: operations["changeJudgeSummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeRounds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging-receipts/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeRound"];
+        put?: never;
+        post: operations["changeJudgeRound"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judging/{run_id}/teams/{team_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgeCard"];
+        put?: never;
+        post: operations["changeJudgeCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/judge-practice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getJudgePractice"];
+        put?: never;
+        post: operations["changeJudgePractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze": {
         parameters: {
             query?: never;
@@ -3867,6 +4000,236 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        JudgeCardState: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            version: number;
+            state: string;
+            source_changed: boolean;
+            can_reopen: boolean;
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: uuid */
+            repository_decision_id: string | null;
+            source_available: boolean;
+        };
+        JudgeCardStates: {
+            items: components["schemas"]["JudgeCardState"][];
+        };
+        JudgeSummaryFact: {
+            /** Format: uuid */
+            deliverable_id: string;
+            fact: string;
+        };
+        JudgeFactualSummary: {
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: uuid */
+            approved_by: string | null;
+            /** Format: int64 */
+            submission_revision: number;
+            repository: components["schemas"]["JudgeFreezeEvidence"];
+            facts: components["schemas"]["JudgeSummaryFact"][];
+        };
+        JudgeSummaryPage: {
+            /** Format: int64 */
+            version: number;
+            summary: components["schemas"]["JudgeFactualSummary"] | null;
+            receipt: components["schemas"]["JudgeReceipt"] | null;
+        };
+        JudgeSummaryCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "approve";
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: uuid */
+            repository_decision_id?: string | null;
+            facts?: components["schemas"]["JudgeSummaryFact"][];
+            reason: string;
+        };
+        JudgeRounds: {
+            items: components["schemas"]["JudgeRound"][];
+        };
+        JudgeRecovery: {
+            receipt: components["schemas"]["JudgeReceipt"] | null;
+        };
+        SubmissionDocument: {
+            definitions: components["schemas"]["SubmissionDefinition"][];
+            evidence: components["schemas"]["SubmissionEvidence"][];
+        };
+        SubmissionOutputSummary: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            entry_id: string;
+            outcome: string;
+            /** Format: date-time */
+            frozen_at: string | null;
+            /** Format: int64 */
+            frozen_revision: number | null;
+            /** Format: date-time */
+            submitted_at: string | null;
+            artifacts: {
+                kind: string;
+                /** Format: int64 */
+                count: number;
+            }[];
+        };
+        JudgeEvidence: {
+            deliverable_id: string | null;
+            note: string;
+        };
+        JudgeScore: {
+            /** Format: uuid */
+            category_id: string;
+            value: number | null;
+            evidence: components["schemas"]["JudgeEvidence"][];
+        };
+        JudgeCard: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            /** Format: int64 */
+            version: number;
+            state: string;
+            /** Format: int64 */
+            submission_revision: number;
+            rubric: components["schemas"]["RubricReference"];
+            scores: components["schemas"]["JudgeScore"][];
+            /** Format: date-time */
+            changed_at: string;
+            repository: components["schemas"]["JudgeFreezeEvidence"];
+        };
+        JudgeAssignment: {
+            /** Format: uuid */
+            team_id: string;
+            judge_ids: string[];
+            /** Format: int64 */
+            missing: number;
+        };
+        JudgeRound: {
+            /** Format: uuid */
+            run_id: string;
+            /** Format: int64 */
+            revision: number;
+            deliberation: boolean;
+            /** Format: int64 */
+            required_judges: number;
+            assignments: components["schemas"]["JudgeAssignment"][];
+        };
+        JudgeRoundCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "assign" | "declare_conflict" | "open_deliberation";
+            /** Format: uuid */
+            team_id?: string;
+            judge_ids?: string[];
+            /** Format: uuid */
+            judge_id?: string;
+            /** Format: uuid */
+            competitor_id?: string;
+            conflict_kind?: string;
+            enabled?: boolean;
+            reason: string;
+        };
+        JudgeCardCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "submit" | "reopen";
+            /** Format: uuid */
+            author_id?: string;
+            /** Format: int64 */
+            submission_revision: number;
+            scores?: components["schemas"]["JudgeScore"][];
+            reason?: string;
+            /** Format: uuid */
+            repository_decision_id?: string | null;
+        };
+        JudgeReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            team_id: string;
+            action: string;
+            /** Format: int64 */
+            revision: number;
+            state: string;
+            fingerprint: string;
+        };
+        JudgeFreezeEvidence: {
+            /** Format: uuid */
+            source_id: string;
+            status: string;
+            sha: string;
+            decision_id: string | null;
+        };
+        JudgePracticeCard: {
+            /** Format: int64 */
+            version: number;
+            rubric: components["schemas"]["RubricReference"];
+            state: string;
+            scores: components["schemas"]["JudgeScore"][];
+        };
+        JudgePractice: {
+            /** Format: uuid */
+            fictional_entry_id: string;
+            name: string;
+            rubric: components["schemas"]["RubricReference"];
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            card: components["schemas"]["JudgePracticeCard"] | null;
+        };
+        JudgePracticeCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "save" | "submit" | "reset";
+            scores?: components["schemas"]["JudgeScore"][];
+        };
+        JudgeSubmittedEvidence: {
+            /** Format: uuid */
+            deliverable_id: string;
+            kind: string;
+            label: string;
+            url: string;
+            file_id: string | null;
+        };
+        JudgeBrief: {
+            /** Format: uuid */
+            team_id: string;
+            team_name: string;
+            /** Format: uuid */
+            run_id: string;
+            criteria: components["schemas"]["PublicRubricDefinition"];
+            reference: components["schemas"]["RubricReference"];
+            private_judge_guidance: string;
+            submission: components["schemas"]["SubmissionDocument"];
+            /** Format: int64 */
+            submission_revision: number;
+            output: components["schemas"]["SubmissionOutputSummary"];
+            repository: components["schemas"]["JudgeFreezeEvidence"];
+            own_card: components["schemas"]["JudgeCard"] | null;
+            submitted_cards: components["schemas"]["JudgeCard"][];
+            deliberation: boolean;
+            mentor_summary: components["schemas"]["JudgeFactualSummary"] | null;
+        };
         SubmissionFreezeSource: {
             managed_evidence_ids: string[];
             uncaptured_evidence_ids: string[];
@@ -8314,6 +8677,304 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getJudgeCardStates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only current card state/version and opaque reopen preconditions; no scores, notes, artifacts or code. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeCardStates"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeSummary: {
+        parameters: {
+            query?: {
+                request_id?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current separately authored and explicitly reviewed factual briefing; no private assessment projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeSummaryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeSummary: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeSummaryCommand"];
+            };
+        };
+        responses: {
+            /** @description Current separately authored and explicitly reviewed factual briefing; no private assessment projection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeRounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current actor-authorized native source; no inferred grant or original-outcome claim. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRounds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current actor-authorized native source; no inferred grant or original-outcome claim. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeRound: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeRound"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeRound: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeRoundCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgeCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeBrief"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgeCard: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                run_id: string;
+                team_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeCardCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJudgePractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized projection; independent scores remain private until explicit deliberation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgePractice"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeJudgePractice: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgePracticeCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command acknowledgement under current authority. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getSubmissionFreeze: {
         parameters: {
             query?: never;

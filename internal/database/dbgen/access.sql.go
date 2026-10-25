@@ -111,6 +111,24 @@ func (q *Queries) CompetitionState(ctx context.Context, arg CompetitionStatePara
 	return column_1, err
 }
 
+const currentJudgeAssignment = `-- name: CurrentJudgeAssignment :one
+SELECT COALESCE(NOT EXISTS(SELECT 1 FROM judge_rounds r WHERE r.event_id=$1)
+OR EXISTS(SELECT 1 FROM judge_assignments a WHERE a.event_id=$1 AND a.team_id=$2 AND a.person_id=$3 AND a.active),false)::boolean AS allowed
+`
+
+type CurrentJudgeAssignmentParams struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+}
+
+func (q *Queries) CurrentJudgeAssignment(ctx context.Context, arg CurrentJudgeAssignmentParams) (bool, error) {
+	row := q.db.QueryRow(ctx, currentJudgeAssignment, arg.EventID, arg.TeamID, arg.PersonID)
+	var allowed bool
+	err := row.Scan(&allowed)
+	return allowed, err
+}
+
 const excludeCompetition = `-- name: ExcludeCompetition :exec
 INSERT INTO competition_exclusions(event_id,person_id,source) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING
 `

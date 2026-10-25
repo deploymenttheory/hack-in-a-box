@@ -62,4 +62,4 @@ SELECT * FROM rubric_changes WHERE event_id=$1 AND rubric_id=$2 AND revision<sql
 -- name: RubricAssignedJudges :many
 SELECT m.person_id FROM event_memberships m JOIN people p ON p.id=m.person_id AND p.active
 JOIN resource_assignments a ON a.event_id=m.event_id AND a.person_id=m.person_id AND a.resource_id=$2
-WHERE m.event_id=$1 AND m.role='judge' AND m.active ORDER BY m.person_id;
+WHERE m.event_id=$1 AND m.role='judge' AND m.active AND (NOT EXISTS(SELECT 1 FROM judge_rounds j WHERE j.event_id=m.event_id) OR EXISTS(SELECT 1 FROM judge_assignments j JOIN competition_entries e ON e.event_id=j.event_id AND e.team_id=j.team_id WHERE j.event_id=m.event_id AND j.person_id=m.person_id AND j.active AND e.id=$2)) ORDER BY m.person_id;
