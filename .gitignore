@@ -87,3 +87,5 @@ web/test-results-live/
 
 web/test-results-sessions-*/
 web/test-results-accessibility-*/
+web/test-results-freeze/
+web/test-results-freeze-native/

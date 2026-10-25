@@ -1,0 +1,49 @@
+[
+  {
+    "command": {
+      "action": "configure",
+      "branch": "release/ui",
+      "external_evidence": "",
+      "native_revision": 0,
+      "reason": "",
+      "request_id": "5108c5df-2f27-43c9-bcfa-8f265b97d4d7",
+      "sha": "",
+      "source_id": "00000000-0000-0000-0000-000000000000",
+      "submission_revision": 0
+    },
+    "revision": 0,
+    "expected": "834d22e804908d57d189bbace8c92c401d971b195a62320d1163227cbfe3628d"
+  },
+  {
+    "command": {
+      "action": "reconcile",
+      "branch": "",
+      "external_evidence": "Synthetic\u2029record",
+      "native_revision": 3,
+      "observation_ids": [],
+      "push_ids": [],
+      "reason": "\u003creviewed\u003e \u0026 retained\u2028record",
+      "request_id": "11111111-1111-4111-8111-111111111111",
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_id": "22222222-2222-4222-8222-222222222222",
+      "submission_revision": 1
+    },
+    "revision": 2,
+    "expected": "03004df5ab135bb9cffba1cc464d8f00887587e9d599b5ff6420cb4c5c71a548"
+  },
+  {
+    "command": {
+      "action": "amend",
+      "branch": "",
+      "external_evidence": "﻿\u003cevidence\u003e\u2028line\u2029﻿",
+      "native_revision": 6,
+      "reason": " \u003céclair\u003e \u0026 retained ",
+      "request_id": "33333333-3333-4333-8333-333333333333",
+      "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_id": "22222222-2222-4222-8222-222222222222",
+      "submission_revision": 2
+    },
+    "revision": 5,
+    "expected": "a69837bcef261e3cf2f080bd2de3ea120531128bdcdfca17bdc7954ac2a52071"
+  }
+]

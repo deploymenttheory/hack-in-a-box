@@ -35,6 +35,10 @@ jobs:
         env:
           HACKBOX_SESSION_BROWSER: '1'
         run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestSessionBookingBrowsers$' -count=1 -timeout=5m
+      - name: Native submitted-build and cutoff evidence browsers
+        env:
+          HACKBOX_FREEZE_BROWSER: '1'
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestSubmissionFreezeBrowsers$' -count=1 -timeout=5m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
@@ -46,4 +50,10 @@ jobs:
         with:
           name: native-session-booking-proof
           path: web/test-results-sessions-native
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: native-submitted-build-proof
+          path: web/test-results-freeze-native
           retention-days: 7

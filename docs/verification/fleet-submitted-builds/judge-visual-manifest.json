@@ -1,0 +1,19 @@
+{
+  "source_commit": "f7898153a022013bba2abbe71824d29b560c2445",
+  "runtime": "Actual native PostgreSQL/HTTP and production regular portal; synthetic assigned judge. Chromium desktop/narrow emulation, not real-device certification.",
+  "result": "Unfiltered native2/2, race-enabled package16.070s. Clean unchanged source recorded for both viewports.",
+  "images": [
+    {
+      "path": "images/after-assigned-judge-verified-f789-desktop.png",
+      "width": 1440,
+      "height": 1281,
+      "sha256": "94a012142c1b89381b1a87e0e5d2962431fd07bd0f8b2b0b22d37efe9de8b908"
+    },
+    {
+      "path": "images/after-assigned-judge-verified-f789-mobile.png",
+      "width": 390,
+      "height": 1853,
+      "sha256": "36ee7f8cd5af1e22c84a08d21177db2cf35aeee68579c8329b220321bf247623"
+    }
+  ]
+}

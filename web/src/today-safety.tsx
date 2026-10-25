@@ -10,7 +10,7 @@ const confirmDeparture = () => window.confirm('Leave this workspace with an earl
 // It owns no task payload, replay, current-state receipt or authority decision.
 export function TodayActionSafety({ eventID, children }: { eventID: string; children: ReactNode }) {
   const identity = useIdentity(), prefix = `${identity.person.id}:${identity.draft_scope}:${eventID}`
-  const preparation = useCommunicationCommandNamespace(`${prefix}:preparation`), acknowledgements = useCommunicationCommandNamespace(`${prefix}:resource-acknowledgement`), sessions = useCommunicationCommandNamespace(`${prefix}:session-bookings`), attempts = [...preparation, ...acknowledgements, ...sessions]
+  const preparation = useCommunicationCommandNamespace(`${prefix}:preparation`), acknowledgements = useCommunicationCommandNamespace(`${prefix}:resource-acknowledgement`), sessions = useCommunicationCommandNamespace(`${prefix}:session-bookings`), code = useCommunicationCommandNamespace(`${prefix}:submission-freeze`), attempts = [...preparation, ...acknowledgements, ...sessions, ...code]
   const pending = attempts.some(attempt => attempt.state === 'pending'), unknown = attempts.some(attempt => attempt.blocks && attempt.state === 'unknown')
   usePlanningDepartureBarrier(pending)
   useBlocker({ shouldBlockFn: () => pending || unknown && !confirmDeparture(), enableBeforeUnload: attempts.length > 0 })
