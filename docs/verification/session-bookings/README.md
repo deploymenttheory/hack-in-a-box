@@ -159,11 +159,10 @@ Standards/Spec reviews and pass every exact-head CI check. Frontend keyboard/mob
 workflows and interactive guide composition remain owned by #167. No merge or
 broad release-certification claim is made here.
 
-Migration 49 is reserved for this owner. Recovery migration 48 will be inherited
-from its independently reviewed PR #269 before final integration; no recovery
-runtime or migration implementation is duplicated here. Root-reviewed pure
-migration-fixture isolation is a separate support commit and will be deduplicated
-when its upstream recovery merge becomes the base.
+Migration 49 follows recovery migration 48, inherited from merged PR #269. The
+recovery startup gate remains before storage cleanup, runtime/provider graph and
+workers. No recovery runtime or migration implementation is duplicated here;
+equivalent schema47/DST support commits were dropped during the rebase.
 
 ## Acceptance evidence map
 
@@ -204,3 +203,24 @@ Empty and retained-receipt rollback cases passed in **5.139s**. Canonical
 `check-generated.sh` completed cleanly, changed-owner lint reported **zero issues**,
 and `git diff --check` passed. All are bounded delta proof; prior full-owner proof
 remains attributed to candidate `418ecc6`, not rerun or relabelled.
+
+## Recovery-main integration
+
+Rebased the reviewed archive correction onto merged recovery main `c0018bc3`.
+The only source conflict was `database.SchemaVersion`: retained recovery 48 plus
+session 49. Range-diff preserved the five session commits except base-context
+changes; equivalent test-support commits were already upstream. Canonical generated
+parity was clean. Native session rollback and archive/unknown-SMTP cases passed on
+the rebased source.
+
+The bounded recovery startup test exposed a test-only latest-schema assumption:
+empty session49 legitimately rolls down before populated recovery48 rejects
+rollback, so checking global49 afterwards was invalid (**RED 2.796s**). The test
+now isolates its owned48 rollback phase, explicitly asserts retained48 and
+re-upgrades the current schema before continuing. Production hold and rollback
+guards are unchanged.
+
+The actual recovery hold/startup/review test passed after that test-only correction
+(**GREEN 4.277s**). Rebased session migration proof passed **6.080s** and the two
+archive/unknown-SMTP cases passed **6.108s**. This is bounded integration evidence;
+prior full-owner and API proof remains attributed to its original source head.

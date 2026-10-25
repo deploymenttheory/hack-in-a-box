@@ -96,11 +96,24 @@ func TestRecoveryHoldFencesStartupAndRequiresCurrentReview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Isolate this owner's migration so later empty migrations cannot change
+	// the schema version retained by its populated rollback guard.
+	if _, err = migrations.DownTo(ctx, 48); err != nil {
+		t.Fatal(err)
+	}
 	if _, err = migrations.DownTo(ctx, 47); err == nil {
 		t.Fatal("rollback bypassed active recovery hold")
 	}
+	var retainedVersion int64
+	if err = pool.QueryRow(ctx, "SELECT version_id FROM goose_db_version WHERE is_applied ORDER BY id DESC LIMIT 1").
+		Scan(&retainedVersion); err != nil || retainedVersion != 48 {
+		t.Fatalf("failed rollback changed recovery schema: %d %v", retainedVersion, err)
+	}
+	if err = database.Migrate(ctx, pool, database.SchemaVersion); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
-		t.Fatalf("failed rollback changed schema: %v", err)
+		t.Fatal(err)
 	}
 
 	// Native schedules and verification attempts can precede generic job rows.
