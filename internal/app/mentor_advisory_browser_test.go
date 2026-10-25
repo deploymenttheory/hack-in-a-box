@@ -80,7 +80,7 @@ func runMentorAdvisoryBrowser(t *testing.T, portal, viewport, scope string) {
 	resultsSourceRequire(
 		t,
 		dbgen.New(r.pool).
-			SetMembership(ctx, dbgen.SetMembershipParams{EventID: r.eventID, PersonID: r.mentor.ID, Role: "facilitator", Active: true}),
+			SetMembership(ctx, dbgen.SetMembershipParams{EventID: r.eventID, PersonID: r.mentor.ID, Role: "logistics", Active: true}),
 	)
 	outsider := testdb.Person(t, r.pool)
 	resultsSourceRequire(
