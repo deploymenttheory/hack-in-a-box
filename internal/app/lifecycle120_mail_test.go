@@ -627,8 +627,9 @@ func exerciseLifecycleDefiniteCampaign(
 		Action:    "retry",
 		Reason:    "Explicit synthetic retry only after definite temporary rejection",
 	}
-	final := original
+	var final deliveryhistory.Detail
 	if mode == "permanent" {
+		final = original
 		if original.Item.OperationState != "permanent" {
 			t.Fatal("permanent rejection did not finish its native operation")
 		}
