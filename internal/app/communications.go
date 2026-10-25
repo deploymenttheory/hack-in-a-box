@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -65,43 +66,64 @@ func newCommunicationRuntime(
 	pool *pgxpool.Pool,
 	cfg config.Config,
 	logger *slog.Logger,
+	clocks ...func() time.Time,
 ) (communicationRuntime, error) {
+	// Production omits the optional clock. Set it before wiring any callback or
+	// value copy so an integrated rehearsal observes one native domain instant.
+	var now func() time.Time
+	if len(clocks) > 0 {
+		now = clocks[0]
+	}
 	smtp, err := maildelivery.NewSMTP(cfg.SMTP)
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure SMTP: %w", err)
 	}
-	provider := &smtpintegration.Service{Pool: pool, Transport: smtp, Origin: cfg.WorkspaceOrigin}
-	teams := &teamsworkflow.Service{Pool: pool, Keys: cfg.CredentialKeys}
+	provider := &smtpintegration.Service{
+		Now:       now,
+		Pool:      pool,
+		Transport: smtp,
+		Origin:    cfg.WorkspaceOrigin,
+	}
+	teams := &teamsworkflow.Service{Now: now, Pool: pool, Keys: cfg.CredentialKeys}
 	composer := &communications.Service{
+		Now:      now,
 		Pool:     pool,
 		Channels: map[string]communications.ChannelProvider{"smtp": provider, "teams": teams},
 	}
-	auto := &automation.Service{Pool: pool, Composer: composer}
-	local := &inbox.Service{Pool: pool, Communications: composer, ScopePolicy: auto}
+	auto := &automation.Service{Now: now, Pool: pool, Composer: composer}
+	local := &inbox.Service{Now: now, Pool: pool, Communications: composer, ScopePolicy: auto}
 	composer.Channels["in_app"] = local
 	provider.ScopePolicy = auto
 	teams.ScopePolicy = auto
 	provider.Campaigns = composer
-	answers := &clarification.Service{Pool: pool}
+	answers := &clarification.Service{Pool: pool, Clock: now}
 	answers.Notifications = clarificationInboxSink{Inbox: local}
-	helpProvider := help.Service{Pool: pool}
-	shared := &feedback.Service{Pool: pool, Sources: map[string]feedback.SourcePolicy{
-		"observation": observationFeedbackSource{Service: observations.Service{Pool: pool}},
-		"question":    questionFeedbackSource{Service: answers},
-		"help":        helpFeedbackSource{Service: helpProvider},
+	helpProvider := help.Service{Pool: pool, Clock: now}
+	shared := &feedback.Service{Clock: now, Pool: pool, Sources: map[string]feedback.SourcePolicy{
+		"observation": observationFeedbackSource{
+			Service: observations.Service{Pool: pool, Now: now},
+		},
+		"question": questionFeedbackSource{Service: answers},
+		"help":     helpFeedbackSource{Service: helpProvider},
 	}}
 	shared.Notifications = feedbackInboxSink{Inbox: local}
-	cards := &scorecards.Service{Pool: pool}
+	cards := &scorecards.Service{Pool: pool, Now: now}
 	huddles := &moderation.Service{
+		Clock:   now,
 		Pool:    pool,
 		Cards:   cards,
 		Actions: moderation.FeedbackActions{Service: shared},
 	}
 	cards.Moderation = huddles
-	questionnaires := &surveys.Service{Pool: pool}
+	questionnaires := &surveys.Service{Pool: pool, Now: now}
 	followThrough := &outcomes.Service{
+		Now: now,
 		Media: outcomeMediaReferences{
-			Media: media.Service{Pool: pool, Privacy: privacy.Service{Pool: pool}},
+			Media: media.Service{
+				Clock:   now,
+				Pool:    pool,
+				Privacy: privacy.Service{Pool: pool, Clock: now},
+			},
 		},
 		Pool:            pool,
 		Composer:        composer,
@@ -127,7 +149,9 @@ func newCommunicationRuntime(
 		"survey.open":             automation.SurveySource{Surveys: questionnaires},
 		"help.updated":            automation.HelpSource{Help: helpProvider},
 		"clarification.published": automation.ClarificationSource{Answers: answers},
-		"rubric.published":        automation.RubricSource{Rubric: rubric.Service{Pool: pool}},
+		"rubric.published": automation.RubricSource{
+			Rubric: rubric.Service{Pool: pool, Clock: now},
+		},
 	}
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	webhooks := &githubwebhooks.Service{Pool: pool, Keys: cfg.CredentialKeys}
@@ -140,6 +164,7 @@ func newCommunicationRuntime(
 		},
 	}
 	accessOwner := &repositoryaccess.Service{
+		Now:  now,
 		Pool: pool,
 		App: githubapp.Service{
 			Pool:     pool,
@@ -271,6 +296,6 @@ func newCommunicationRuntime(
 		SMTP:           provider,
 		Teams:          teams,
 		Jobs:           outbox,
-		MailContacts:   mailcontact.Service{Pool: pool, Sender: smtp},
+		MailContacts:   mailcontact.Service{Pool: pool, Sender: smtp, Now: now},
 	}, nil
 }

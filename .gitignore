@@ -82,3 +82,5 @@ web/test-results-communications/
 web/test-results-surveys-*/
 
 web/test-results-today-*/
+# Real native live rehearsal browser artifacts (synthetic private sessions).
+web/test-results-live/
