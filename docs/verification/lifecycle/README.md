@@ -343,3 +343,48 @@ This proves the unknown/no-resend branch for a real scheduled organiser-only
 campaign. Definite temporary/permanent failures, deliberate safe retry/resend,
 changed current audiences/sources, other providers and the coherent full-event
 matrix remain required. Neither L11 nor the full lifecycle is marked complete.
+
+
+## Definite SMTP rejection and reviewed retry checkpoint
+
+The extended `TestLifecycleComposeSMTP` passed in 95.04s (runner 83930), frozen
+source `ce8cb0c17e90bc9e09ed342e55d9f8f62e1c3607`, image
+`sha256:343dbaa0fe4402018e758fb380e2d071879997453f5d5a748308161dfa2a86e5`,
+main base `076f6162`, schema 54. It repeated accepted/unknown handling and added
+two separately approved current-organiser campaigns and native scheduled
+bindings. Both were executed through actual River dispatch and SMTP workers.
+
+The relay returned 550 at RCPT for one campaign: native history retained a
+permanent rejection and one attempt; an ordinary retry command returned 409.
+For the other it returned 451 at RCPT: native history retained the original
+retryable attempt, and no DATA capture occurred. After explicitly clearing the
+synthetic fault, the organiser's reasoned native retry command queued the real
+worker again. The same delivery then retained its original rejected attempt
+and one accepted second attempt, with one retry review. A 32-second wall-time
+observation confirmed the old queued work did not duplicate the accepted effect.
+Only three relay DATA messages existed overall: initial accepted self-test,
+uncertain original campaign and the accepted safe retry. Each operation's lease
+was released. These are SMTP acceptance/rejection facts, not human delivery.
+
+Safe receipts [smtp-permanent.json](evidence/smtp-permanent.json) and
+[smtp-temporary.json](evidence/smtp-temporary.json) include bounded read-only
+native operation/attempt/review metadata. No message body, mailbox, credential
+or token is exported.
+
+The preceding source `093ef7d6` / image
+`sha256:524e0f88893b36d6789e59fde0652d2a6c0fdc2903ce23a48940da018404ceb1`
+failed an identity assertion in 69.31s (runner 42495), after native safe retry
+had succeeded. A read-only native query retained the original retryable attempt,
+accepted second attempt and one retry review. The driver had shallow-copied its
+expected detail (`final := original`), then decoded responses into slices shared
+with the original expectation. A standalone encoding/json reproduction confirmed
+the original expectation was overwritten through the shared slice. The fix
+allocates an independent response value; the identity/attempt assertions remain.
+This driver failure is not reclassified as a passing run or production defect.
+Corrected build 14010 and fresh startup 90110 passed before runner 83930.
+
+Both failed and corrected private projects were removed with all their labelled
+containers, volumes and networks; no user project was changed. Remaining work
+focuses on the connected business lifecycle and deterministic repository/provider
+flow, current audience/source changes and all final matrix/browser acceptance.
+Full L11 and `complete_lifecycle` remain unfinished/false.
