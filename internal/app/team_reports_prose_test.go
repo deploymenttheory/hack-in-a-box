@@ -134,3 +134,81 @@ func TestTeamReportProseBeforeAnyConfirmationRemainsIndependentOfResults(t *test
 		})
 	}
 }
+
+func TestTeamReportConcurrentCommandsRetainOneVersionAndExactOriginalReceipt(t *testing.T) {
+	f := newResultsSourceFixture(t, rubric.AllTeams)
+	r := f.runtime
+	ctx := t.Context()
+	s := teamreports.Service{Pool: r.pool, Now: r.clock.read, Results: &f.service}
+	p, err := s.Read(ctx, r.owner.ID, r.eventID, r.teamID)
+	resultsSourceRequire(t, err)
+	c := teamreports.Command{
+		RequestID:     uuid.New(),
+		Action:        "save",
+		SourceBinding: p.CurrentSource.Binding,
+		Body: teamreports.Body{
+			Title:      "Concurrent reviewed report",
+			Summary:    "No competing draft may overwrite this exact version",
+			Highlights: []string{},
+			NextSteps:  []string{},
+		},
+		Reason: "Explicit reviewed prose command",
+	}
+	type outcome struct {
+		page teamreports.Page
+		err  error
+	}
+	simultaneous := func(expected int64, commands [2]teamreports.Command) [2]outcome {
+		start := make(chan struct{})
+		responses := make(chan outcome, 2)
+		for _, command := range commands {
+			go func() {
+				<-start
+				p, e := s.Change(ctx, r.owner.ID, r.eventID, r.teamID, expected, command)
+				responses <- outcome{p, e}
+			}()
+		}
+		close(start)
+		return [2]outcome{<-responses, <-responses}
+	}
+	second := c
+	second.RequestID = uuid.New()
+	second.Body.Summary = "A different explicitly reviewed competing draft"
+	attempts := simultaneous(0, [2]teamreports.Command{c, second})
+	accepted, conflicts := 0, 0
+	for _, result := range attempts {
+		switch {
+		case result.err == nil:
+			accepted++
+		case errors.Is(result.err, access.ErrConflict):
+			conflicts++
+		default:
+			t.Fatal("unexpected concurrency outcome", result.err)
+		}
+	}
+	if accepted != 1 || conflicts != 1 {
+		t.Fatal("stale concurrent command overwrote draft", accepted, conflicts)
+	}
+	c.RequestID = uuid.New()
+	duplicates := simultaneous(1, [2]teamreports.Command{c, c})
+	for _, result := range duplicates {
+		resultsSourceRequire(t, result.err)
+		if result.page.Receipt == nil || result.page.Receipt.ExpectedVersion != 1 ||
+			result.page.Receipt.Version != 2 ||
+			result.page.Receipt.RequestID != c.RequestID {
+			t.Fatal("duplicate command lost original acceptance", result.page)
+		}
+	}
+	if *duplicates[0].page.Receipt != *duplicates[1].page.Receipt {
+		t.Fatal("duplicate command invented different receipts")
+	}
+	var versions, commands int
+	resultsSourceRequire(
+		t,
+		r.pool.QueryRow(ctx, "SELECT (SELECT count(*) FROM team_feedback_versions WHERE event_id=$1),(SELECT count(*) FROM team_feedback_commands WHERE event_id=$1)", r.eventID).
+			Scan(&versions, &commands),
+	)
+	if versions != 2 || commands != 2 {
+		t.Fatal("duplicate receipt or stale competing write created history", versions, commands)
+	}
+}

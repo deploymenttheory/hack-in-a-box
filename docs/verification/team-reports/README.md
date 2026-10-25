@@ -1,4 +1,4 @@
-# Issue113 initial native foundation
+# Issue113 native report and typed API verification
 
 Stacked on the typed #112 core at `6eb40751`; PR #284 must merge/rebase before final #113
 integration. This checkpoint is an observable Draft, not Ready or issue closure.
@@ -74,3 +74,29 @@ passes with zero issues; TypeScript compilation passes. Migration54
 upgrade/empty-rollback and adjacent native owner regressions are recorded after
 their separate terminal results; no pending CI or UI/browser proof is treated as
 passed here.
+
+
+## Rebased backend checkpoint
+
+The three report commits were safely rebased onto actual #112 head
+`bd2b9fcfcadae67cbfba7475a82eb523acf37241`. Owned native report/scoring-read
+production files and existing proof files remain byte-identical to `7b761f7f`;
+canonical generation preserves the incoming room protocol and authoritative
+ballot `judge_run_id` union. SQL generation adds the actual migration54 table
+models, including nullable prose confirmation/run references.
+
+Actual populated-parent54 upgrade, empty rollback to53 and restore/current
+schema check passed in 7.530s. The first parallel adjacent-owner invocation
+failed two fixtures before test setup because the shared testcontainers reaper
+was still `created`; its aggregate was not green. Full results and judging
+owners then passed sequentially on the rebased source in 7.249s and 43.353s.
+The full rubric owner passed in 46.927s. Native report concurrency passed in
+20.919s: different commands racing one version retain exactly one accepted
+write; concurrent repeats of the same command retain one new version and the
+same original receipt. All verification uses actual test-owned PostgreSQL and
+synthetic identities/artifact URLs; no provider effects.
+
+Final canonical SQL/Go/TypeScript generation is stable with no working/index
+drift. Configured affected lint is zero; TypeScript compilation passes. Final
+CI and the separate frontend's actual browser/guide/room evidence remain their
+own gates, not inferred from this backend checkpoint.
