@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
@@ -193,5 +195,28 @@ func TestShowcaseNativePublicationFiltersAwardsAndCurrentAudience(t *testing.T) 
 		if strings.Contains(string(raw), secret) {
 			t.Fatal("restricted field in showcase", secret)
 		}
+	}
+	// The trusted completion timestamp must preserve the exact existing 90-day
+	// boundary; the archive/read fix never widens organisation retention.
+	completed, readErr := dbgen.New(r.pool).Event(ctx, r.eventID)
+	resultsSourceRequire(t, readErr)
+	if !completed.CompletedAt.Valid {
+		t.Fatal("native completion retention origin missing")
+	}
+	boundary := completed.CompletedAt.Time.AddDate(0, 0, 90)
+	r.clock.set(boundary.Add(-time.Nanosecond))
+	if _, err = f.public.deps.Outcomes.Public(ctx, r.competitor.ID, s.winnerProject); err != nil {
+		t.Fatal("retained project disappeared before exact boundary", err)
+	}
+	r.clock.set(boundary)
+	if _, err = f.public.deps.Outcomes.Public(
+		ctx,
+		r.competitor.ID,
+		s.winnerProject,
+	); !errors.Is(
+		err,
+		access.ErrNotFound,
+	) {
+		t.Fatal("expired project survived exact retention boundary", err)
 	}
 }
