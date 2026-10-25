@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { request } from 'node:http'
-import type { Browser, BrowserContext } from '@playwright/test'
+import type { Browser, BrowserContext, Page } from '@playwright/test'
 type Cookie = { Name: string; Value: string }
 type Manifest = { origin: string; socket: string; scope: string; event_id: string; second_event_id: string; winner_project: string; nonwinner_project: string; second_project: string; draft_project: string; restricted_project: string; media_id: string }
 const path = process.env.HACKBOX_SHOWCASE_MANIFEST
@@ -22,5 +22,18 @@ export function control<T = unknown>(action: string, extra: { actor?: string } =
     else resolve((body ? JSON.parse(body) : undefined) as T)
    })
   }); req.on('error', reject); req.end(data)
+ })
+}
+
+// Theme media changes may start finite production background transitions. Audit
+// their actual completed palette rather than a transient interpolation frame.
+export async function settleTheme(page: Page) {
+ await page.locator('main').evaluate(async element => {
+  getComputedStyle(element).getPropertyValue('--background')
+  const transitions = element.getAnimations({ subtree: true }).filter(animation => {
+   const timing = animation.effect?.getComputedTiming()
+   return timing && Number.isFinite(timing.endTime)
+  })
+  await Promise.all(transitions.map(animation => animation.finished.catch(() => {})))
  })
 }

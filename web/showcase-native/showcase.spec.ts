@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { actor, control, native } from './native'
+import { actor, control, native, settleTheme } from './native'
 
 test('actual reviewed two-event discovery preserves explicit awards, consent, audience, archive and cache boundaries', async ({ browser }, testInfo) => {
  const reader = await actor(browser), outsider = await actor(browser, 'outsider')
@@ -12,7 +12,7 @@ test('actual reviewed two-event discovery preserves explicit awards, consent, au
   await expect(page.getByLabel('Source event')).toContainText('Synthetic autumn hack'); await expect(page.getByLabel('Source event')).toContainText('Synthetic spring hack')
   await expect(page.getByRole('button', { name: 'More records', exact: true })).toBeVisible(); await page.getByRole('button', { name: 'More records', exact: true }).click(); await expect(page.getByRole('navigation', { name: 'Showcase pages' })).toContainText('30 loaded')
   for (const colorScheme of ['light', 'dark'] as const) {
-   await page.emulateMedia({ colorScheme }); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
+   await page.emulateMedia({ colorScheme }); await settleTheme(page); await expect(page.getByRole('heading', { name: 'Reviewed projects', exact: true })).toBeVisible()
    const audit = await new AxeBuilder({ page }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([])
    expect(await page.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
    await page.screenshot({ path: testInfo.outputPath(`showcase-discovery-${colorScheme}.png`) })
@@ -36,7 +36,7 @@ test('actual reviewed two-event discovery preserves explicit awards, consent, au
   const evidence = await control<{ nonwinner_versions: number }>('evidence'); expect(evidence.nonwinner_versions).toBe(3)
   await control('archive'); await page.getByRole('button', { name: 'Read current project', exact: true }).click(); await expect(page.getByText('Archived · Read-only', { exact: true })).toBeVisible(); await expect(page.getByRole('button', { name: /save|publish|edit/i })).toHaveCount(0)
   for (const colorScheme of ['light', 'dark'] as const) {
-   await page.emulateMedia({ colorScheme }); await expect(page.getByText('Reviewed recovery award', { exact: true })).toBeVisible()
+   await page.emulateMedia({ colorScheme }); await settleTheme(page); await expect(page.getByText('Reviewed recovery award', { exact: true })).toBeVisible()
    const audit = await new AxeBuilder({ page }).include('main').analyze(); expect(audit.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')).toEqual([])
    expect(await page.locator('html').evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
    await page.screenshot({ path: testInfo.outputPath(`reviewed-project-${colorScheme}.png`), fullPage: true })
