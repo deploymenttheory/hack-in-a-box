@@ -1,5 +1,38 @@
 # Fleet cutover — in-progress delivery (#245)
 
+## Current final-parity workstream — 25 October 2026
+
+The earlier checkpoints below retain their original sources and limits. The
+current final workstream starts from the reviewed showcase candidate63844452,
+whose tree equals merged main076f6162. It completes the whole #245 cutover;
+this checkpoint is Draft and does not claim release readiness.
+
+The existing source check reproduced13 undocumented registrations on that
+baseline. The maintained inventory now includes the qualification panel,
+announced/prepared results, every assigned judge ballot, and versioned own-team
+feedback routes. Both routers import the reviewed showcase directly; its
+obsolete outcome-workspace re-export has been removed after moving both callers.
+The source record now resolves94 registrations and100 reference qualities,
+with no inventory errors. This establishes source ownership only.
+
+| Complete #245 requirement | Current evidence / remaining gate |
+| --- | --- |
+| Every first-release route and nested feature has a migrated owner and actual API integration | Current94-route source inventory is regenerated; judge/panel/results/report/showcase owners are now merged. Reconcile each domain's native HTTP and browser proof with final source, including the new #112 mentor advisory journey after its merge. Source presence alone is not native integration. |
+| Both portals/mobile/actions/icons and100-quality applicability | Existing source-attributed domain images and100-quality map remain. Complete the current reference-to-product audit and document justified variations; inherited images are not silently relabelled as new captures. |
+| No unused legacy presentation/imports/competing tokens; canonical API and business rules retained | Removed the concrete showcase migration shim and both callers now reference its production owner. Full remaining import/token/caller audit and final canonical check remain required. No domain/API/authority policy changes here. |
+| Published versioned guide, production components, contribution rules and runtime independence | Full independent guide build passes with both portals. Final isolated current-image browser walkthrough and public-process-failure isolation remain required; the user's already-running preview is preserved. |
+| Exact-head CI and optionalM5 exclusion | Full web lint,237 unit tests, both portal builds and guide build pass on the working-tree checkpoint. Independent reviews and final full CI remain gates. Certificates/session booking stay optionalM5. Separate #120/#121/#122 release scopes are not replaced by this audit. |
+
+Verification command: `node scripts/check-fleet-cutover.mjs`, followed by
+`cd web && npm run lint && npm test && npm run build && npm run build:styleguide`.
+The source check first failed with13 missing route registrations; it now passes.
+The frontend check log is retained locally as
+`/private/tmp/hackbox245-web-checks.log`. No focused current native/browser
+matrix, full import audit, runtime-failure proof or final CI is claimed by this
+first checkpoint.
+
+---
+
 This is the full cutover workstream, based on main
 `2d82ac402fc68e39af0c49708fa6f363742bbd66`. It is **not Ready**, does not close
 #245 and does not claim the complete first-release UI exists. The accepted source

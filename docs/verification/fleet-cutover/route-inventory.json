@@ -3,11 +3,11 @@
   "sources": [
     {
       "path": "web/src/app.tsx",
-      "sha256": "1f36dd829b869158889d0e7924c42c5bc159d9b80d79decddd0f2369a1443a46"
+      "sha256": "829b1b606f93ff4fc28ea13587648ca58c3f5386317954b15566e1f05dc32792"
     },
     {
       "path": "web/src/participant-app.tsx",
-      "sha256": "418b17d8826dee9289edd28af17e8822962de602fbded8200d2111080bd2f301"
+      "sha256": "adfdbfdcc185c43cf9ff930b47569b73e1dce56bbdbafd988104d02b75116a61"
     },
     {
       "path": "web/src/main.tsx",
@@ -15,10 +15,73 @@
     },
     {
       "path": "docs/design/portal-route-inventory.md",
-      "sha256": "1f1c87894ed06edf7edf8447bd8052a685cb59e4c6178acfefd8e63cad232826"
+      "sha256": "f1158d9870e37d997341580be4b4ca514c1e669b19a51018c45103aa88e7cad8"
     }
   ],
   "routes": [
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/results/ballots",
+      "component": "ResultsBallotsPage",
+      "owner": "web/src/results-ballots.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/team-feedback",
+      "component": "TeamFeedbackDirectoryPage",
+      "owner": "web/src/team-feedback.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/teams/$teamId/feedback-report",
+      "component": "TeamFeedbackPage",
+      "owner": "web/src/team-feedback.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/results",
+      "component": "AnnouncedResultsPage",
+      "owner": "web/src/results-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/results/prepare",
+      "component": "ResultsPreparationPage",
+      "owner": "web/src/results-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/panel",
+      "component": "QualificationDirectoryPage",
+      "owner": "web/src/qualification.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/panel/$runId",
+      "component": "QualificationPanelPage",
+      "owner": "web/src/qualification.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/judging",
+      "component": "JudgeWorkspacePage",
+      "owner": "web/src/judge-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/judging/practice",
+      "component": "JudgePracticePage",
+      "owner": "web/src/judge-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
     {
       "portal": "administrator",
       "path": "/events/$eventId/builds",
@@ -86,14 +149,14 @@
       "portal": "administrator",
       "path": "/projects",
       "component": "PublishedProjects",
-      "owner": "web/src/outcome-workspace.tsx",
+      "owner": "web/src/showcase.tsx",
       "integration": "not established by source inventory"
     },
     {
       "portal": "administrator",
       "path": "/projects/$outcomeId",
       "component": "PublishedProjectPage",
-      "owner": "web/src/outcome-workspace.tsx",
+      "owner": "web/src/showcase.tsx",
       "integration": "not established by source inventory"
     },
     {
@@ -301,6 +364,62 @@
     },
     {
       "portal": "participant",
+      "path": "/events/$eventId/results/ballots",
+      "component": "ResultsBallotsPage",
+      "owner": "web/src/results-ballots.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/team-feedback",
+      "component": "TeamFeedbackDirectoryPage",
+      "owner": "web/src/team-feedback.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/teams/$teamId/feedback-report",
+      "component": "TeamFeedbackPage",
+      "owner": "web/src/team-feedback.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/results",
+      "component": "AnnouncedResultsPage",
+      "owner": "web/src/results-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/panel",
+      "component": "QualificationDirectoryPage",
+      "owner": "web/src/qualification.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/panel/$runId",
+      "component": "QualificationPanelPage",
+      "owner": "web/src/qualification.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/judging",
+      "component": "JudgeWorkspacePage",
+      "owner": "web/src/judge-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/judging/practice",
+      "component": "JudgePracticePage",
+      "owner": "web/src/judge-workspace.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
       "path": "/events/$eventId/builds",
       "component": "AssignedBuildsPage",
       "owner": "web/src/assigned-builds.tsx",
@@ -366,14 +485,14 @@
       "portal": "participant",
       "path": "/projects",
       "component": "PublishedProjects",
-      "owner": "web/src/outcome-workspace.tsx",
+      "owner": "web/src/showcase.tsx",
       "integration": "not established by source inventory"
     },
     {
       "portal": "participant",
       "path": "/projects/$outcomeId",
       "component": "PublishedProjectPage",
-      "owner": "web/src/outcome-workspace.tsx",
+      "owner": "web/src/showcase.tsx",
       "integration": "not established by source inventory"
     },
     {

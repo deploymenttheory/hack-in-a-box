@@ -31,6 +31,13 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/events/$eventId/media/$mediaId` | `MediaWorkspacePage` | Admin, Participant | #243 |
 | `/events/$eventId/judging` | `JudgeWorkspacePage` | Admin, Participant | #109 |
 | `/events/$eventId/judging/practice` | `JudgePracticePage` | Admin, Participant | #109 |
+| `/events/$eventId/panel` | `QualificationDirectoryPage` | Admin, Participant | #111 |
+| `/events/$eventId/panel/$runId` | `QualificationPanelPage` | Admin, Participant | #111 |
+| `/events/$eventId/results` | `AnnouncedResultsPage` | Admin, Participant | #113 |
+| `/events/$eventId/results/prepare` | `ResultsPreparationPage` | Admin | #113 |
+| `/events/$eventId/results/ballots` | `ResultsBallotsPage` | Admin, Participant | #113 |
+| `/events/$eventId/team-feedback` | `TeamFeedbackDirectoryPage` | Admin, Participant | #113 |
+| `/events/$eventId/teams/$teamId/feedback-report` | `TeamFeedbackPage` | Admin, Participant | #113 |
 | `/events/$eventId/mentor` | `MentorWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/mentor/$teamId` | `MentorWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/mentor/$teamId/scorecards` | `ScorecardWorkspace` | Admin, Participant | #240 |
@@ -50,8 +57,8 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/ideas/$outcomeId` | `OutcomePage` | Admin, Participant | #242 |
 | `/ideas/reviews/$reviewId` | `OutcomeReviewPage` | Admin, Participant | #242 |
 | `/inbox` | `InboxPage` | Admin, Participant | #239 |
-| `/projects` | `PublishedProjects` | Admin, Participant | #242 |
-| `/projects/$outcomeId` | `PublishedProjectPage` | Admin, Participant | #242 |
+| `/projects` | `PublishedProjects` | Admin, Participant | #163 |
+| `/projects/$outcomeId` | `PublishedProjectPage` | Admin, Participant | #163 |
 | `/register` | `RegistrationDirectory` | Admin, Participant | #234 |
 | `/register/$eventId` | `RegistrationPage` | Admin, Participant | #236 |
 | `/templates` | `TemplatesPage` | Admin | #235 |
@@ -77,7 +84,9 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | Clarifications / private questions | Question author/read/review, explicit common-answer review/publication and released answer reader | #240 |
 | Mentor / help / review / feedback | Mentor workspace/private draft recovery, scorecards/observations/evidence, helper queue/request thread, review dashboard, team inspector/judge summary, moderation/huddle/feedback readers and follow-ups | #240 |
 | Surveys | Directory, audience/authoring/publish, respondent version, answer privacy, management/close/results/export and results review | #241 |
-| Ideas / outcomes / projects | Idea create/detail/review, current team follow-through, project eligibility/published/private readers and explicit next actions | #242 |
+| Ideas / outcomes | Idea create/detail/review, current team follow-through, project eligibility/private readers and explicit next actions | #242 |
+| Reviewed project showcase | Permission-filtered event/status/search and pagination, current approved project detail/media/award audience, archive and correction/withdrawal readers | #163 |
+| Qualification panel / results / feedback | Current recorded panel and frozen evidence, every assigned overall/category judge ballot, explicit finalist/award announcement, report author/preview/review/release, own-team reading and versioned corrections | #111, #113 |
 | Media / consent | Gallery/detail/upload/review, own consent, protected image derivatives, withdrawal/current permission states | #243 |
 | MC console / room display | Rehearsal, pairing, cue controls, operator confirmation/receipt, distance-readable output and token-only display recovery | #244 |
 | Account | Organisation read-only ID, private email/code/confirmation, GitHub link/change/unlink acknowledgement and callback outcome; scoped account menu + destination search | #234 |
