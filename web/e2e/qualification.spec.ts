@@ -157,6 +157,13 @@ test('matching late original acknowledgement preserves the next action after cur
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
   await expect(page.getByRole('status').filter({hasText:'Original sign card acknowledged for request'})).toBeVisible()
   await expect(page.getByRole('button',{name:'Review another team',exact:true})).toBeFocused()
+  await page.keyboard.press('Enter')
+  for(const target of [state.page.teams[1],state.page.teams[1],team]){
+   const inspect=page.getByRole('button',{name:`Inspect Team ${target.team_id}`,exact:true});await expect(inspect).toBeEnabled();await inspect.press('Enter')
+   await expect(page.getByRole('heading',{name:`Team ${target.team_id}`,exact:true,level:2})).toBeFocused()
+   await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter');await expect(inspect).toBeFocused()
+  }
+  await expect(page.getByRole('status').filter({hasText:'Original sign card acknowledged for request'})).toBeVisible()
  }finally{release()}
 })
 test('pending current reads retain saved-card keyboard focus while confirmation stays blocked',async({page})=>{

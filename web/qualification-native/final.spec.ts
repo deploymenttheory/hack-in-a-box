@@ -28,6 +28,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  const values=[[10,9,10,9,9],[9,8,9,8,8],[8,7,8,7,7],[7,6,7,6,6],[1,10,10,1,1]]
  for(const [index,team] of native.team_ids.entries()){
   await activate(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}))
+  await expect(page.getByRole('heading',{name:teamLabel(team),exact:true,level:2})).toBeFocused()
   const source=page.getByRole('region',{name:'Independent original final evidence',exact:true})
   await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
   await activate(page.getByRole('button',{name:'Edit reasoned final card',exact:true}))
@@ -46,6 +47,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
   const nextTeam=page.getByRole('button',{name:'Review another team',exact:true});await expect(nextTeam).toBeFocused();await activate(nextTeam)
   await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()
+  if(index===0){await activate(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}));await expect(page.getByRole('heading',{name:teamLabel(team),exact:true,level:2})).toBeFocused();await activate(page.getByRole('link',{name:'Back to panel',exact:true}));await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()}
  }
  let proof=await control<{cards:number;current:boolean;signoff:boolean;page:QualificationPage}>('evidence');expect(proof).toMatchObject({cards:5,current:false,signoff:false})
  expect(proof.page.round.cards.every(card=>card.state==='signed')).toBe(true)
