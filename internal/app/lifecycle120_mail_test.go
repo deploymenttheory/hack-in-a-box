@@ -12,7 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
+	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/mailcontact"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
@@ -76,8 +78,8 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 	}
 	audience := communications.Audience{
 		ID:                 uuid.New(),
-		Name:               "Confirmed competitors",
-		Roles:              []string{"attendee"},
+		Name:               "Current organisers",
+		Roles:              []string{"organiser"},
 		RegistrationStates: []string{},
 		Teams:              []uuid.UUID{},
 	}
@@ -106,7 +108,11 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 		TemplateID: template.ID,
 		AudienceID: audience.ID,
 		Channels:   []string{"smtp"},
-		Timing:     communications.CampaignTiming{Kind: "relative", Anchor: "live_start", Days: -1},
+		Timing: communications.CampaignTiming{
+			Kind:   "relative",
+			Anchor: "live_start",
+			Days:   -15,
+		},
 	}
 	campaignPath := base + "/campaigns/" + definition.ID.String()
 	var detail communications.CampaignDetail
@@ -210,6 +216,7 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+	exerciseLifecycleUnknownCampaign(t, control, owner, current.ID, campaignPath, detail)
 }
 
 func waitLifecycleSMTP(
@@ -247,4 +254,261 @@ type lifecycleSMTPStateError struct{ state, want string }
 
 func (e *lifecycleSMTPStateError) Error() string {
 	return "native SMTP state " + e.state + " did not reach " + e.want
+}
+
+// This additional phase is actual scheduled campaign dispatch and deliberate
+// no-resend reconciliation. The original uncertain evidence must stay intact.
+func exerciseLifecycleUnknownCampaign(
+	t *testing.T,
+	control *lifecycleControl,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	campaignPath string,
+	campaign communications.CampaignDetail,
+) {
+	t.Helper()
+	ctx := t.Context()
+	base := "/api/v1/events/" + eventID.String() + "/communications"
+	for _, action := range []string{"preview", "approve"} {
+		var next communications.CampaignDetail
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			campaignPath,
+			campaign.Revision,
+			communications.CampaignCommand{
+				Action:  action,
+				Version: campaign.Campaign.Campaign.Version,
+				Reason:  "Explicit synthetic campaign audience and schedule review",
+			},
+			&next,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		campaign = next
+	}
+	if campaign.Preview == nil || len(campaign.Preview.Recipients) != 1 ||
+		campaign.Preview.Recipients[0].PersonID != owner.person ||
+		campaign.Campaign.Campaign.Approval == nil ||
+		campaign.Campaign.DueAt == nil {
+		t.Fatal("campaign did not bind the exact current organiser audience")
+	}
+	definition := automation.Definition{
+		ID:                     uuid.New(),
+		CampaignID:             campaign.Campaign.Campaign.Definition.ID,
+		CampaignVersion:        campaign.Campaign.Campaign.Version,
+		Trigger:                "scheduled",
+		MaximumLatenessSeconds: 60,
+	}
+	var changed struct {
+		Page automation.Page `json:"page"`
+	}
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		base+"/automation",
+		campaign.Revision,
+		map[string]any{
+			"action":     "save",
+			"definition": definition,
+			"version":    0,
+			"reason":     "Explicit real queued synthetic schedule",
+		},
+		&changed,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if len(changed.Page.Bindings) != 1 || changed.Page.Bindings[0].Definition.ID != definition.ID {
+		t.Fatal("native scheduled binding was not retained")
+	}
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		base+"/automation",
+		changed.Page.Revision,
+		map[string]any{
+			"action":     "approve",
+			"binding_id": definition.ID,
+			"version":    changed.Page.Bindings[0].Version,
+			"reason":     "Approve exact native synthetic dispatch",
+		},
+		&changed,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := control.call(
+		ctx,
+		http.MethodPost,
+		"/mail/fault",
+		map[string]string{"recipient": "owner@example.test", "mode": "ambiguous"},
+		nil,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := control.advance(ctx, *campaign.Campaign.DueAt); err != nil {
+		t.Fatal(err)
+	}
+	var history deliveryhistory.Page
+	deadline := time.Now().Add(45 * time.Second)
+	for time.Now().Before(deadline) {
+		if err := owner.call(
+			ctx,
+			http.MethodGet,
+			base+"/deliveries?channel=smtp&campaign_id="+definition.CampaignID.String(),
+			-1,
+			nil,
+			&history,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+		campaignItems := make([]deliveryhistory.Item, 0, 1)
+		selfTests := 0
+		for _, item := range history.Items {
+			switch item.Purpose {
+			case "campaign":
+				campaignItems = append(campaignItems, item)
+			case "self_test":
+				selfTests++
+			default:
+				t.Fatal("unexpected native campaign delivery history purpose")
+			}
+		}
+		if selfTests != 1 {
+			t.Fatal("native history lost the independent original self-test")
+		}
+		history.Items = campaignItems
+
+		if len(history.Items) == 1 && history.Items[0].Purpose == "campaign" &&
+			history.Items[0].State == "ambiguous" &&
+			history.Items[0].OperationState == "ambiguous" {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if len(history.Items) != 1 || history.Items[0].State != "ambiguous" ||
+		history.Items[0].RecipientID == nil ||
+		*history.Items[0].RecipientID != owner.person {
+		t.Fatal("actual native scheduled campaign did not retain its uncertain recipient effect")
+	}
+	path := base + "/deliveries/" + history.Items[0].ID.String()
+	var original deliveryhistory.Detail
+	if err := owner.call(ctx, http.MethodGet, path, -1, nil, &original, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	if len(original.Attempts) != 1 || original.Attempts[0].State != "ambiguous" {
+		t.Fatal("native unknown effect did not preserve its first attempt")
+	}
+	command := deliveryhistory.Command{
+		RequestID: uuid.New(),
+		Action:    "resolve_no_resend",
+		Reason:    "Synthetic relay consumed DATA but response was lost; deliberately do not duplicate",
+	}
+	var resolved deliveryhistory.Detail
+	// Repeat the exact original command/revision to model a lost HTTP response.
+	for range 2 {
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			path,
+			original.Item.Revision,
+			command,
+			&resolved,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if resolved.Item.ID != original.Item.ID || !resolved.Item.Cancelled ||
+		resolved.Item.State != "ambiguous" ||
+		len(resolved.Attempts) != 1 ||
+		resolved.Attempts[0].ID != original.Attempts[0].ID ||
+		len(resolved.Reviews) != 1 ||
+		resolved.Reviews[0].ID != command.RequestID {
+		t.Fatal(
+			"unknown-command retry changed original effect identity/evidence or duplicated the decision",
+		)
+	}
+	collision := command
+	collision.Reason = "Changed payload cannot reuse the lost-response identity"
+	if err := owner.call(
+		ctx,
+		http.MethodPost,
+		path,
+		original.Item.Revision,
+		collision,
+		nil,
+		http.StatusConflict,
+	); err != nil {
+		t.Fatal(err)
+	}
+	// Past the native initial retry/snooze interval; no manual queue/handler call.
+	select {
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	case <-time.After(32 * time.Second):
+	}
+	var mail struct {
+		Items []lifecycleMail `json:"items"`
+	}
+	if err := control.call(ctx, http.MethodGet, "/mail/messages", nil, &mail); err != nil {
+		t.Fatal(err)
+	}
+	if len(mail.Items) != 2 || mail.Items[1].Accepted || len(mail.Items[1].Digest) != 64 {
+		t.Fatal("uncertain original was resent or lost its relay evidence")
+	}
+	var final deliveryhistory.Detail
+	if err := owner.call(ctx, http.MethodGet, path, -1, nil, &final, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	if final.Item.ID != original.Item.ID || len(final.Attempts) != 1 ||
+		final.Attempts[0].ID != original.Attempts[0].ID ||
+		len(final.Reviews) != 1 {
+		t.Fatal("native reconciliation replayed the uncertain effect")
+	}
+	receipt, err := json.MarshalIndent(
+		map[string]any{
+			"checkpoint":          "queued-smtp-unknown-no-resend-only",
+			"complete_lifecycle":  false,
+			"event_id":            eventID,
+			"campaign_id":         definition.CampaignID,
+			"binding_id":          definition.ID,
+			"delivery_id":         final.Item.ID,
+			"attempt_id":          final.Attempts[0].ID,
+			"decision_id":         command.RequestID,
+			"state":               final.Item.State,
+			"operation_state":     final.Item.OperationState,
+			"cancelled":           final.Item.Cancelled,
+			"attempt_count":       len(final.Attempts),
+			"decision_count":      len(final.Reviews),
+			"relay_count":         len(mail.Items),
+			"unknown_mail_sha256": mail.Items[1].Digest,
+			"assertions": []string{
+				"native-exact-audience-approval",
+				"native-schedule-binding-approval",
+				"real-queued-dispatch-and-provider-effect",
+				"lost-data-response-ambiguous",
+				"explicit-no-resend",
+				"same-original-command-idempotent",
+				"changed-payload-conflict",
+				"original-provider-evidence-retained",
+				"no-blind-resend-after-natural-retry-interval",
+			},
+		},
+		"",
+		"  ",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join("/artifacts", "smtp-unknown.json"),
+		receipt,
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
 }
