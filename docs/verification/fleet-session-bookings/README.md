@@ -194,3 +194,14 @@ The affected public session guide cases then passed4/4 in4.1s against the rebuil
 Continuous participant browser configuration now explicitly includes the owned session suite, alongside the existing administrator coverage. Current conflict-warning→native-shaped date-review/calendar-state, title layout and real keyboard/private-lifetime cases run through those actual CI configurations. The participant suite passed33 tests with7 intentional skips in25.9s (organiser-only cases and desktop narrow-only geometry). Final inherited native rehearsal, exact-head CI and independent reviews remain pending.
 
 The matching administrator CI-config session suite passed39 tests with1 intentional desktop narrow-only skip in29.5s after the final copy/coverage changes. Types, affected lint and all three production exports passed for that source chain.
+
+
+## Final Standards correction — nested setup draft departure
+
+The396f796 Standards review identified oneP2: notification channel edits were not reported as unsent, and session definition edits had no route/beforeunload guard. Actual production desktop RED cases reproduced both: Back removed the checked channel6.0s, and Switch event removed an unsent room/window/facilitator definition5.8s. Failed artifacts remain outside the repository at `/private/tmp/hackbox167-setup-draft-396f796-red`.
+
+The setup owner now combines definition edits, separate channel edits and an unsent review for local Back, section reporting and route/beforeunload discard policy. Rejecting discard preserves exact private inputs. Acknowledging a definition clears only its definition dirty state; an exact channel acknowledgement clears only its channel dirty state. Pending and original-unknown command metadata/barriers remain independently owned and unchanged; discard never settles or replays them. Actual authority loss still unmounts and clears private inputs without a draft-discard veto.
+
+The same departure journeys passed4/4 across desktop/mobile6.4s. Additional actual browser reload rejection, authority-loss scrubbing and unknown-command isolation passed4/4 in4.5s. The complete finite administrator session suite then passed47 tests with1 deliberate desktop narrow-only skip in38.9s. Types, affected lint and both production portal builds passed. The reload probe initially waited incorrectly for a load after rejecting beforeunload; using actual `location.reload()` and the native dialog verifies cancellation without waiting for a document load that is intentionally prevented.
+
+No broad local native rehearsal was repeated solely for this guard addition. Native/guide/image evidence retains its explicitly older source attribution. Current-head CI and final review delta remain required before Ready or acceptance.
