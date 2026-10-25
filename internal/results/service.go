@@ -23,7 +23,14 @@ func CalculateInTransaction(
 	if owner == nil {
 		return judging.Completion{}, nil, access.ErrForbidden
 	}
-	completion, err := owner.CompletionInTransaction(ctx, tx, actor, eventID, runID)
+	return calculateCompletion(ctx, tx, owner.CompletionInTransaction, actor, eventID, runID)
+}
+
+func calculateCompletion(ctx context.Context, tx pgx.Tx,
+	reader func(context.Context, pgx.Tx, uuid.UUID, uuid.UUID, uuid.UUID) (judging.Completion, error),
+	actor, eventID, runID uuid.UUID,
+) (judging.Completion, []TeamTally, error) {
+	completion, err := reader(ctx, tx, actor, eventID, runID)
 	if err != nil {
 		return judging.Completion{}, nil, fmt.Errorf("read current judge completion: %w", err)
 	}

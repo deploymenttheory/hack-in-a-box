@@ -39,6 +39,20 @@ func (s Service) StartAssessmentInTransaction(
 	tx pgx.Tx,
 	actor, eventID, teamID, runID uuid.UUID,
 ) (AssessmentSnapshot, error) {
+	return s.assessmentInTransaction(ctx, tx, actor, eventID, teamID, runID, true)
+}
+
+// ReadAssessmentInTransaction revalidates current final authority without
+// starting a run or granting a scoring write after completion.
+func (s Service) ReadAssessmentInTransaction(ctx context.Context, tx pgx.Tx,
+	actor, eventID, teamID, runID uuid.UUID,
+) (AssessmentSnapshot, error) {
+	return s.assessmentInTransaction(ctx, tx, actor, eventID, teamID, runID, false)
+}
+
+func (s Service) assessmentInTransaction(ctx context.Context, tx pgx.Tx,
+	actor, eventID, teamID, runID uuid.UUID, write bool,
+) (AssessmentSnapshot, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
 	if err != nil {
@@ -68,7 +82,7 @@ func (s Service) StartAssessmentInTransaction(
 		return AssessmentSnapshot{}, fmt.Errorf("read assessment dates: %w", err)
 	}
 	now := s.now()
-	if err := assessmentOpen(row, c, now); err != nil {
+	if err := assessmentReadable(row, c, now, write); err != nil {
 		return AssessmentSnapshot{}, err
 	}
 
@@ -90,6 +104,9 @@ func (s Service) StartAssessmentInTransaction(
 		Definition: d,
 	}
 	if run.Purpose == "checkpoint" {
+		if !write {
+			return AssessmentSnapshot{}, access.ErrForbidden
+		}
 		if (!authority.Mentor && !authority.Reviewer) || row.Stage != "live" ||
 			!now.Before(c.SubmissionCutoff) {
 			return AssessmentSnapshot{}, access.ErrForbidden
@@ -129,6 +146,9 @@ func (s Service) StartAssessmentInTransaction(
 		); err != nil {
 			return AssessmentSnapshot{}, err
 		}
+	}
+	if !write {
+		return out, nil
 	}
 	if err = q.StartRubricRun(
 		ctx,
@@ -248,6 +268,16 @@ func assessmentOpen(row dbgen.Event, c event.Configuration, now time.Time) error
 			"assessment_not_open",
 			"Assessment requires the actual live-start gate and an active event.",
 		)
+	}
+	return nil
+}
+
+func assessmentReadable(row dbgen.Event, c event.Configuration, now time.Time, write bool) error {
+	if write {
+		return assessmentOpen(row, c, now)
+	}
+	if !row.PublishedAt.Valid || now.Before(row.PublishedAt.Time) || c.LiveStart.IsZero() || !c.SubmissionCutoff.After(c.LiveStart) || now.Before(c.SubmissionCutoff) || !slices.Contains([]string{"live", "assessment", "completed"}, row.Stage) {
+		return access.ErrForbidden
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-# Deliberate own-team feedback reports — initial foundation
+# Deliberate own-team feedback reports — native owner and typed API
 
 Issue #113 owns announced-result reading and deliberate feedback report delivery.
 The support feedback owner intentionally cannot carry scores. This separate
@@ -20,16 +20,29 @@ identities never enter the participant projection. Result-source drift pauses
 current score-bearing report reads/previews without rewriting stored originals.
 Releasing a report never announces finalists/awards or triggers a provider.
 
-This is the initial native foundation, not the completed #113 surface. The full
-versioned HTTP/client/runtime integration, accepted greenfield Fleet UI in both
-portals, action/review/receipt lifetimes, independent interactive guide, print,
-mobile/accessibility and browser embargo/correction proof remain pending. Actual
-room announcement rendering also remains pending; the separate112 protocol
-parser/frame-bound correction belongs to112 and is not duplicated here.
+The versioned API exposes administrator-only GET/POST
+`/api/v1/events/{event_id}/teams/{team_id}/feedback-report`, administrator
+`/history`, actor-exact original `/requests/{request_id}` on either portal, and
+current confirmed member `/released` on either portal. Typed save/release
+commands carry request UUID, If-Match, current source binding and reason. A
+current GET never creates an acknowledgement. CSRF and strict additional-field
+validation apply through the canonical HTTP runtime.
 
-The existing #112 confirmed-source reader currently relies on a native judging
-write guard that fails closed after completion/archive. Report mutations do not
-add a permanent live/assessment-only rule: a sensible post-hack read-authorised
-source seam, preserving closed competition records and no new writer grants, is
-an explicit unresolved #113 acceptance gate. This foundation does not claim to
-solve that through a historical or fabricated confirmation.
+A separate native read-assessment/completion path revalidates current published
+rubric, frozen final/repository identity, required independent cards, current
+judge roles/assignments/conflicts and genuine signed qualification. It permits
+completed-event reports without starting a run or reopening scoring writes.
+Cancelled/archived sources remain unavailable; report writers retain existing
+EventEdit/WritesAllowed authority and gain no competition mutation grant.
+
+Published teams outside the final tally may receive deliberately authored prose
+under the exact current event confirmation. Their source explicitly has
+`scores_available=false`, `total=null` and no category scores; choosing to include
+nonexistent final scores is rejected. No zero, rank or other-team tally is
+manufactured. Scores for a scored team still require the explicit saved choice.
+
+The accepted greenfield Fleet UI, action/review/unknown-receipt lifetimes,
+independent interactive guide, print/mobile/accessibility/browser proof and
+actual room announcement rendering are being delivered in the separate frontend
+lane. This native/API checkpoint alone does not complete #113. The separate #112
+room parser/frame-bound correction is consumed rather than duplicated here.

@@ -7,20 +7,22 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 )
 
 // TeamFeedbackSource is a narrowly typed report source, never a result release.
 // It cannot carry rank, awards, raw judge cards or private mentor assessment.
 type TeamFeedbackSource struct {
-	ConfirmationID uuid.UUID              `json:"confirmation_id"`
-	JudgeRunID     uuid.UUID              `json:"judge_run_id"`
-	Binding        string                 `json:"binding"`
-	TeamID         uuid.UUID              `json:"team_id"`
-	Reference      rubric.Reference       `json:"reference"`
-	RequiredJudges int                    `json:"required_judges"`
-	Categories     []TeamFeedbackCategory `json:"categories"`
-	Total          Exact                  `json:"total"`
+	ScoresAvailable bool                   `json:"scores_available"`
+	ConfirmationID  uuid.UUID              `json:"confirmation_id"`
+	JudgeRunID      uuid.UUID              `json:"judge_run_id"`
+	Binding         string                 `json:"binding"`
+	TeamID          uuid.UUID              `json:"team_id"`
+	Reference       rubric.Reference       `json:"reference"`
+	RequiredJudges  int                    `json:"required_judges"`
+	Categories      []TeamFeedbackCategory `json:"categories"`
+	Total           *Exact                 `json:"total"`
 }
 type TeamFeedbackCategory struct {
 	CategoryID uuid.UUID `json:"category_id"`
@@ -44,11 +46,23 @@ func (s Service) ConfirmedTeamFeedbackInTransaction(
 	if !current.organiser {
 		return out, access.ErrForbidden
 	}
+	q := dbgen.New(tx)
+	authority, err := access.TeamPermissions(ctx, q, actor, eventID, teamID)
+	if err != nil {
+		return out, failure("current report target", err)
+	}
+	team, err := q.HackTeam(ctx, dbgen.HackTeamParams{EventID: eventID, ID: teamID})
+	if err != nil {
+		return out, failure("published report target", err)
+	}
+	if !authority.Active || !authority.Organiser || team.State != "published" {
+		return out, access.ErrForbidden
+	}
 	round, err := load(ctx, tx, eventID)
 	if err != nil {
 		return out, err
 	}
-	source, err := s.source(ctx, tx, actor, eventID)
+	source, err := s.sourceMode(ctx, tx, actor, eventID, true)
 	if err != nil {
 		return out, err
 	}
@@ -72,14 +86,15 @@ func (s Service) ConfirmedTeamFeedbackInTransaction(
 			continue
 		}
 		out = TeamFeedbackSource{
-			ConfirmationID: round.Confirmation.ID,
-			JudgeRunID:     source.preview.JudgeRunID,
-			Binding:        source.preview.Binding,
-			TeamID:         teamID,
-			Reference:      source.preview.Reference,
-			RequiredJudges: team.RequiredJudges,
-			Total:          team.Total,
-			Categories:     []TeamFeedbackCategory{},
+			ScoresAvailable: true,
+			ConfirmationID:  round.Confirmation.ID,
+			JudgeRunID:      source.preview.JudgeRunID,
+			Binding:         source.preview.Binding,
+			TeamID:          teamID,
+			Reference:       source.preview.Reference,
+			RequiredJudges:  team.RequiredJudges,
+			Total:           &team.Total,
+			Categories:      []TeamFeedbackCategory{},
 		}
 		for _, category := range team.Categories {
 			label := ""
@@ -99,5 +114,7 @@ func (s Service) ConfirmedTeamFeedbackInTransaction(
 		}
 		return out, nil
 	}
-	return out, access.ErrForbidden
+	// A confirmed outcome can support prose for a published unscored team.
+	// Absence of a final tally is explicit; it never manufactures zero scores.
+	return TeamFeedbackSource{ConfirmationID: round.Confirmation.ID, JudgeRunID: source.preview.JudgeRunID, Binding: source.preview.Binding, TeamID: teamID, Reference: source.preview.Reference, Categories: []TeamFeedbackCategory{}}, nil
 }

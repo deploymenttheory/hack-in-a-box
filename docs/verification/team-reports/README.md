@@ -22,3 +22,25 @@ retains its actual separate status in the PR.
 No HTTP/UI/browser completion, post-completion source support, full migration
 upgrade/empty-rollback proof, providers, or release acceptance is claimed here.
 See docs/design/team-feedback-reports.md for complete pending #113 scope.
+
+
+## Typed API and completed-event source checkpoint
+
+Canonical OpenAPI generates actual Go/TypeScript contracts for private report
+preparation/change/history, original receipt and released own-team reading.
+Handler/runtime and native test packages compile; client generation succeeds.
+
+Targeted real PostgreSQL/race regressions reproduce the original scoring-write
+coupling after a real live→assessment→completed lifecycle (6.516s RED), and the
+original final-tally-only gate for a real unscored published team (7.386s RED).
+The corrected seam reads current native authority/evidence without starting runs
+or permitting score writes. Initial corrected execution proved post-completion
+release in both modes, but exposed a blocked-source error projection and an
+incomplete test team-facts fixture. Both were corrected. A subsequent complete
+run (108.810s) passed the HTTP lifecycle, existing foundation and unscored cases;
+its two closed-stage cases failed only because the new conflict fixture omitted
+its required `kind`. The fixture now uses an actual reporting conflict; the
+final complete native execution is running and is not claimed passed here.
+
+No provider effects, full UI completion, exact current CI or final independent
+review/acceptance is claimed by this checkpoint.

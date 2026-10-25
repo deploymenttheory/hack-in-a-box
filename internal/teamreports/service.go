@@ -118,7 +118,7 @@ func (s Service) Change(
 		if err != nil {
 			return err
 		}
-		if source.Binding != input.SourceBinding {
+		if source.Binding != input.SourceBinding || input.IncludeFinalScores && !source.ScoresAvailable {
 			return access.ErrConflict
 		}
 		next := Record{
