@@ -11,6 +11,12 @@ Results/report UI #113, independent verification #114, showcase #163 and the
 Fleet cutover #245 remain prerequisite gates, rather than inferred completion
 from their draft branches or a closed supporting issue.
 
+The partial receipts below retain their original source/schema provenance.
+Main subsequently gained the reports/scoring owners and schema 54; final #120
+acceptance requires integration with the final merged owners, a fresh image
+build and complete execution on that source. These verification images are
+separate from the normal latest application deployment.
+
 The confirmed category-adjudication rule is that mentors provide advisory input
 only. All required judges must vote; only judge ballots count toward a strict
 majority, and a split remains unresolved. The backend/UI advisory-input
