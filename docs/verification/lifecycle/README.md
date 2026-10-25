@@ -93,6 +93,15 @@ default exclusive expiry and explicitly configured native 30/60/90 effects.
 Their [exact run and failure provenance](evidence/clock-runs.md) distinguishes
 component fixtures from the required full HTTP lifecycle and production images.
 
+The next `publication` profile is implemented and compiles, but is **not yet
+executed**. It repeats genuine admission/allocation through HTTP, configures the
+explicit retained-response policy through the native HTTP owner, approves the
+exact rubric/challenge, denies early route/search/rubric access, and requires
+the actual worker's publication maintenance at the independent DST/T−7 instant.
+It also checks identical attendee rubric bytes and native version-bound
+acknowledgements. Its partial receipt remains `complete_lifecycle=false`; a
+fresh verification-image rebuild and native run are still required.
+
 The most recent lightweight compile check compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
 '^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.464 seconds).

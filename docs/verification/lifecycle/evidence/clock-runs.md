@@ -109,3 +109,14 @@ normal cleanup at 20:08:32 UTC.
 
 The full HTTP/Compose lifecycle, independent browser journeys and normal
 production-image proof remain pending; none is inferred from these components.
+
+## Focused existing regressions
+
+After the new clock proofs, session `1861` passed the remaining existing jobs
+authority/approval/cancellation/deferred/recovery/rollback cases in 62.239s.
+The unchanged new forty-second clock case was deliberately excluded.
+Session `61640` then passed the existing native archived-review history,
+owner/policy/provider approval and calendar-schedule cases in 10.187s.
+These were sequential Go processes at `GOMAXPROCS=2`, `-p=2`, selected source
+`3ed3053b`; their PostgreSQL fixtures completed normal cleanup. No broad suite
+or unchanged long proof was repeated for new console output.
