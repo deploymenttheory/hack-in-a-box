@@ -20,6 +20,7 @@ export function permittedDestinations(session: Pick<Session, 'can_create_events'
     ...(admin && session.can_create_events ? [{ href: '/events/new', label: 'Create event', icon: 'add' } as const, { href: '/templates', label: 'Event templates', icon: 'layout' } as const] : []),
     ...(event ? [
       { href: `/events/${event.id}`, label: event.name + ' workspace', icon: 'calendar' } as const,
+      { href: `/events/${event.id}/judging`, label: 'Judge desk and practice', icon: 'check' } as const,
       { href: `/events/${event.id}/surveys`, label: 'Surveys and feedback', icon: 'list' } as const,
       { href: `/events/${event.id}/media`, label: 'Event media', icon: 'layout' } as const,
       { href: `/events/${event.id}/photo-consent`, label: 'Your photo consent', icon: 'user' } as const,

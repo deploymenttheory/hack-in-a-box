@@ -27,6 +27,8 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/events/$eventId/help/$requestId` | `HelpPage` | Admin, Participant | #240 |
 | `/events/$eventId/media` | `MediaWorkspacePage` | Admin, Participant | #243 |
 | `/events/$eventId/media/$mediaId` | `MediaWorkspacePage` | Admin, Participant | #243 |
+| `/events/$eventId/judging` | `JudgeWorkspacePage` | Admin, Participant | #109 |
+| `/events/$eventId/judging/practice` | `JudgePracticePage` | Admin, Participant | #109 |
 | `/events/$eventId/mentor` | `MentorWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/mentor/$teamId` | `MentorWorkspace` | Admin, Participant | #240 |
 | `/events/$eventId/mentor/$teamId/scorecards` | `ScorecardWorkspace` | Admin, Participant | #240 |

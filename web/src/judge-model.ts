@@ -6,9 +6,9 @@ export type JudgeReceipt = components['schemas']['JudgeReceipt']
 export type JudgeCriteria = components['schemas']['PublicRubricDefinition']
 export type JudgeCommand = components['schemas']['JudgeCardCommand']
 export type JudgePracticeCommand = components['schemas']['JudgePracticeCommand']
-export type ScoreInput = { categoryID: string; value: string; note: string; deliverableID: string }
+export type ScoreInput = { categoryID: string; value: string; note: string; deliverableID: string; additionalEvidence?:JudgeScore['evidence'] }
 export function scoreInputs(criteria: JudgeCriteria, scores: JudgeScore[] = []): ScoreInput[] {
- return criteria.categories.map(category => {const score=scores.find(s=>s.category_id===category.id);return {categoryID:category.id,value:score?.value===null||score?.value===undefined?'':String(score.value),note:score?.evidence[0]?.note??'',deliverableID:score?.evidence[0]?.deliverable_id??''}})
+ return criteria.categories.map(category => {const score=scores.find(s=>s.category_id===category.id);return {categoryID:category.id,value:score?.value===null||score?.value===undefined?'':String(score.value),note:score?.evidence[0]?.note??'',deliverableID:score?.evidence[0]?.deliverable_id??'',additionalEvidence:score?.evidence.slice(1)??[]}})
 }
 export function validateJudgeScores(criteria: JudgeCriteria, inputs: ScoreInput[], submit: boolean) {
  const errors: Record<string,string>={}, scores:JudgeScore[]=[]
@@ -18,13 +18,13 @@ export function validateJudgeScores(criteria: JudgeCriteria, inputs: ScoreInput[
   if(value!==null&&(!Number.isInteger(value)||value<category.min_score||value>category.max_score))errors[category.id]=`Choose a whole score from ${category.min_score} to ${category.max_score}.`
   else if(submit&&value===null)errors[category.id]='Choose a score before submitting.'
   if(input.note.length>4000)errors[`${category.id}:evidence`]='Keep the evidence note within 4,000 characters.'
-  else if(submit&&!input.deliverableID&&!input.note.trim())errors[`${category.id}:evidence`]='Reference a frozen deliverable or add your own observed evidence.'
-  scores.push({category_id:category.id,value,evidence:input.note.trim()||input.deliverableID?[{deliverable_id:input.deliverableID||null,note:input.note}]:[]})
+  else if(submit&&!input.deliverableID&&!input.note.trim()&&!input.additionalEvidence?.length)errors[`${category.id}:evidence`]='Reference a frozen deliverable or add your own observed evidence.'
+  scores.push({category_id:category.id,value,evidence:[...(input.note.trim()||input.deliverableID?[{deliverable_id:input.deliverableID||null,note:input.note}]:[]),...(input.additionalEvidence??[])]})
  }
  return {errors,scores}
 }
 const nil='00000000-0000-0000-0000-000000000000'
-export type JudgeIntent = {requestID:string;action:'save'|'submit'|'reset';revision:number;runID?:string;teamID?:string;fingerprint:string}
+export type JudgeIntent = {requestID:string;action:'save'|'submit'|'reset'|'reopen';revision:number;runID?:string;teamID?:string;fingerprint:string}
 // Match Go's explicit command struct, including its JSON escaping. This digest
 // is exact request metadata; private scores/notes never enter session history.
 export async function judgeFingerprint(body:JudgeCommand|JudgePracticeCommand,revision:number,runID?:string,teamID?:string){
@@ -36,5 +36,5 @@ export async function judgeFingerprint(body:JudgeCommand|JudgePracticeCommand,re
  return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('')
 }
 export function matchJudgeReceipt(receipt:JudgeReceipt,intent:JudgeIntent,actorID:string){
- return receipt.request_id===intent.requestID&&receipt.actor_id===actorID&&receipt.run_id===(intent.runID??nil)&&receipt.team_id===(intent.teamID??nil)&&receipt.action===intent.action&&receipt.revision===intent.revision+1&&receipt.state===(intent.action==='submit'?'submitted':intent.action==='reset'?'reset':'draft')&&receipt.fingerprint===intent.fingerprint
+ return receipt.request_id===intent.requestID&&receipt.actor_id===actorID&&receipt.run_id===(intent.runID??nil)&&receipt.team_id===(intent.teamID??nil)&&receipt.action===(intent.runID?intent.action:`practice_${intent.action}`)&&receipt.revision===intent.revision+1&&receipt.state===(intent.action==='submit'?'submitted':'draft')&&receipt.fingerprint===intent.fingerprint
 }
