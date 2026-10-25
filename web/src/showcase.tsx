@@ -43,7 +43,7 @@ function ProjectDirectory() {
  const rows = projects.data?.pages.flatMap(page => page.items) ?? [], events = projects.data?.pages[0]?.events ?? []
  function change(next: ShowcaseSearch) { scope.renew(); setGeneration(value => value + 1); void navigate({ to: '/projects', search: next }) }
  function retry() { scope.renew(); setBlocked(undefined); setGeneration(value => value + 1) }
- return <section className="workspace fleet-showcase">
+ return <section className="fleet-showcase">
   <Link className="fleet-showcase-back" to="/ideas"><Icon name="back" />Your ideas</Link>
   <CollectionHeading title="Reviewed projects" scope={{ entity: 'Organisation showcase · Current approved audience' }} description={<p>Discover useful work from every team. Projects appear only after separate organiser publication; submissions, awards and event completion do not publish them.</p>} secondary={[{ label: 'Read current projects', icon: 'refresh', onSelect: () => { scope.renew(); setGeneration(value => value + 1) }, disabled: projects.isFetching || !!blocked }]} />
   {blocked ? <><Failure error={blocked} /><Button icon="refresh" variant="outline" onClick={retry}>Check current showcase access</Button></> : <>
@@ -67,7 +67,7 @@ export function PublishedProjectPage() {
 function ProjectReader({ id }: { id: string }) {
  const filters = showcaseSearch(useSearch({ strict: false }))
  const { current, blocked, checkAccess } = useOutcomeRead(id, 'showcase-project', async signal => unwrap(await apiRead(id, signal)))
- return <section className="workspace fleet-showcase"><Link className="fleet-showcase-back" to="/projects" search={filters}><Icon name="back" />Reviewed projects</Link>
+ return <section className="fleet-showcase"><Link className="fleet-showcase-back" to="/projects" search={filters}><Icon name="back" />Reviewed projects</Link>
   {blocked ? <><CollectionHeading title="Project unavailable" scope={{ entity: 'Current reviewed publication' }} /><Failure error={blocked} /><Button icon="refresh" variant="outline" onClick={checkAccess}>Check current publication access</Button></> : current.isPending ? <Loading /> : current.error ? <Failure error={current.error} retry={() => void current.refetch()} /> : <>
    <CollectionHeading title={current.data.problem} scope={{ entity: `Reviewed publication · Version ${current.data.version}` }} description={<p>Published {new Date(current.data.published_at).toLocaleString()}. Only reviewed fields and currently permitted published awards or media are shown.</p>} secondary={[{ label: 'Read current project', icon: 'refresh', onSelect: () => void current.refetch(), disabled: current.isFetching }]} />
    <ShowcaseReading project={current.data} source={current.data.source_readable ? <Link to="/ideas/$outcomeId" params={{ outcomeId: id }} className={buttonVariants({ variant: 'outline' })}><Icon name="book" />Read current outcome record</Link> : <p>Source outcome version {current.data.source_version} was reviewed for this publication. Its restricted record is not shared with this audience.</p>} references={current.data.links.length ? <ul className="fleet-showcase-links">{current.data.links.map((link, index) => <li key={`${link.url}:${index}`}><ProjectReference link={link} /></li>)}</ul> : <p>No approved reference is currently available.</p>} />

@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/media"
@@ -39,6 +41,23 @@ func newShowcaseFixture(t *testing.T, paginate bool) *showcaseFixture {
 	)
 	f, r := s.results, s.results.runtime
 	ctx := t.Context()
+	// The second actual frozen team was added by the scoring fixture. Derive
+	// lifecycle facts from that real roster before invoking native assessment.
+	resultsSourceRequire(t, database.Within(ctx, r.pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+		if _, err := q.LockEvent(ctx, r.eventID); err != nil {
+			return err
+		}
+		var assigned, total, frozen int32
+		if err := tx.QueryRow(ctx, "SELECT count(*),count(*) FILTER(WHERE frozen) FROM hack_teams WHERE event_id=$1 AND state='published'", r.eventID).
+			Scan(&total, &frozen); err != nil {
+			return err
+		}
+		if err := tx.QueryRow(ctx, "SELECT count(*) FROM hack_team_members m JOIN competition_claims c ON c.event_id=m.event_id AND c.person_id=m.person_id WHERE m.event_id=$1 AND m.snapshot='published' AND c.state='confirmed'", r.eventID).
+			Scan(&assigned); err != nil {
+			return err
+		}
+		return event.RecordTeamFacts(ctx, tx, r.eventID, assigned, total, frozen, nil)
+	}))
 	s.outsider = testdb.Person(t, r.pool)
 	_, err := r.pool.Exec(
 		ctx,
@@ -443,7 +462,17 @@ func (s *showcaseFixture) archive(ctx context.Context) error {
 			"Actual native archive without changing showcase publication",
 			false,
 		); err != nil {
-			return err
+			facts, readErr := dbgen.New(r.pool).EventFacts(ctx, r.eventID)
+			if readErr != nil {
+				return fmt.Errorf("archive %s: %w (facts read: %v)", stage, err, readErr)
+			}
+			return fmt.Errorf(
+				"archive %s: %w (actual total teams=%d settled=%d)",
+				stage,
+				err,
+				facts.TotalTeams,
+				facts.SettledSubmissions,
+			)
 		}
 	}
 	return nil
