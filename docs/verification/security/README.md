@@ -209,3 +209,27 @@ startup do not establish any privileged abuse result. Root coordinates shared
 Docker recovery; only this uniquely named synthetic project may subsequently be
 cleaned/restarted by this lane. The normal user deployments remain outside this
 walkthrough's mutation scope.
+
+`verify-security-deployment.py` now wraps this walkthrough with a frozen Git
+archive, immutable image IDs, explicit application/verification source records,
+a fresh UUID-suffixed project, all-resource preflight and scoped final cleanup.
+It accepts existing normal images only when their retained build-source record
+matches their embedded revision (when present) and the verification source has
+no differing production code. An absent image revision label is recorded as
+absent; image IDs and a supplied source string alone do not prove a build origin.
+The separately retained build record remains required.
+
+```sh
+python3 scripts/verify-security-deployment.py \
+  --application-source FULL_BUILD_SOURCE_SHA \
+  --public-image sha256:FULL_PUBLIC_IMAGE_ID \
+  --admin-image sha256:FULL_ADMIN_IMAGE_ID \
+  --provider-image sha256:FULL_SYNTHETIC_PROVIDER_IMAGE_ID \
+  --python-image sha256:FULL_PYTHON_RUNNER_IMAGE_ID \
+  --artifacts /private/tmp/NEW_PRIVATE_SECURITY_ARTIFACT_DIRECTORY
+```
+
+The walkthrough separately asserts missing required CSRF header400, invalid
+32-byte token403 and invalid Origin403. The driver itself is not an execution
+result; publish its measured receipt and zero-resource cleanup before claiming
+that scope passed.

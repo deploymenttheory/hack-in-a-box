@@ -175,7 +175,7 @@ def main():
     owner.call('GET', base, 200, 'independent-admin-session-survives-public-logout')
     receipt = {'scope': 'agent-executed private normal-command deployment abuse; future/live competition, showcase browser and mentor feature retain separate proofs',
                'normal_api_commands': True, 'configured_oidc_pkce': True, 'test_clock_or_sql_or_fabricated_session': False,
-               'application_source': os.environ['HACKBOX_SECURITY_SOURCE'], 'observations': observations, 'complete_release_security': False}
+               'application_source': os.environ['HACKBOX_SECURITY_SOURCE'], 'verification_source': os.environ.get('HACKBOX_SECURITY_VERIFICATION_SOURCE', 'unrecorded'), 'observations': observations, 'complete_release_security': False}
     Path('/artifacts/security-deployment.json').write_text(json.dumps(receipt, indent=2) + '\n')
     print('PASS isolated normal-command security walkthrough: ' + str(len(observations)) + ' observed API outcomes; no payload/session evidence retained')
 

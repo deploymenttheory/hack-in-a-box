@@ -96,6 +96,7 @@ services:
     environment:
       HACKBOX_SECURITY_ISOLATED: synthetic-only
       HACKBOX_SECURITY_SOURCE: ${HACKBOX_SECURITY_SOURCE:?Set exact normal API source}
+      HACKBOX_SECURITY_VERIFICATION_SOURCE: ${HACKBOX_SECURITY_VERIFICATION_SOURCE:-unrecorded}
     volumes:
       - ../../../scripts/security-deployment-probe.py:/probe/security-deployment-probe.py:ro
       - ${HACKBOX_SECURITY_ARTIFACTS:?Set private artifact directory}:/artifacts
