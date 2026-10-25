@@ -1,0 +1,7 @@
+.fleet-freeze-evidence,.fleet-freeze-editor { padding-block:var(--space-4);border-block-start:1px solid var(--border);min-inline-size:0;overflow-wrap:anywhere; }
+.fleet-freeze-facts { margin-block:var(--space-4); }
+.fleet-freeze-facts>div { display:grid;grid-template-columns:minmax(7rem,1fr) minmax(0,2fr);gap:var(--space-3);padding-block:var(--space-2);border-block-end:1px solid var(--border); }
+.fleet-freeze-facts dt { color:var(--muted-foreground); }.fleet-freeze-facts dd { margin:0; }
+.fleet-freeze-history { padding-inline-start:var(--space-4); }.fleet-freeze-history li { padding-block:var(--space-3);border-block-end:1px solid var(--border); }
+.fleet-freeze-evidence code { white-space:normal;overflow-wrap:anywhere; }
+@media print { .fleet-freeze-private { display:none!important; } }

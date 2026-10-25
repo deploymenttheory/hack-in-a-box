@@ -276,3 +276,20 @@ sequences, source/queue history, provider acceptance and delivery remain distinc
 No session place grants event admission, minimum attendance or team membership.
 The static guide's callbacks are synthetic local observations, never native
 receipts, API calls, private storage or provider effects.
+
+## Submitted builds and code cutoff evidence
+
+`FreezeEvidence` and `FreezeReview` are production exports shared with the static
+guide. Label formal outcome, actual cutoff, observation instant and reviewed SHA
+separately. Only a completed current binding to the exact native frozen final may
+show the immutable code link. Live URLs are mutable; a repository reference or
+current branch head is not verified cutoff evidence.
+
+Capture the native source/head/final revisions and original request UUID before
+review. Exact request metadata/fingerprint may survive in signed-in memory; branch
+drafts, SHA candidates, reasons and evidence bodies remain in private owners.
+Current GET never acknowledges a prior command. Unknown outcomes permit original
+receipt lookup or deliberate fresh-base review without replay. Current role,
+assignment or audience loss clears held private reviews and late continuations.
+Use native fields, a named confirmation and actual opener focus; preserve unsent
+inputs on cancelled review/departure. The guide uses synthetic callbacks only.
