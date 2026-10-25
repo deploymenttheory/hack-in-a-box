@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 )
 
 // PublicationFields is a positive projection chosen for separate organiser
@@ -42,21 +43,55 @@ type PublicLink struct {
 	URL   string `json:"url"`
 	Media bool   `json:"media"`
 }
+type ProjectAward struct {
+	PrizeID  uuid.UUID `json:"prize_id"`
+	Name     string    `json:"name"`
+	Amount   string    `json:"amount"`
+	Currency string    `json:"currency"`
+}
+
+// ProjectAwards resolves only an explicitly released award under the native
+// results audience. Project sharing never broadens access to an event result.
+type ProjectAwards interface {
+	ProjectAwardsInTransaction(
+		context.Context,
+		pgx.Tx,
+		uuid.UUID,
+		uuid.UUID,
+		uuid.UUID,
+	) ([]resultpublication.AnnouncedAward, error)
+}
+type ProjectEvent struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+type ProjectQuery struct {
+	Cursor  uuid.UUID
+	Search  string
+	Limit   int32
+	EventID uuid.UUID
+	Status  string
+}
 type Project struct {
-	ID             uuid.UUID    `json:"id"`
-	Version        int64        `json:"version"`
-	Problem        string       `json:"problem"`
-	Solution       string       `json:"solution"`
-	Links          []PublicLink `json:"links"`
-	Source         Provenance   `json:"source"`
-	EventName      *string      `json:"event_name"`
-	TeamName       *string      `json:"team_name"`
-	FollowUpStatus string       `json:"follow_up_status"`
-	PublishedAt    time.Time    `json:"published_at"`
+	ID             uuid.UUID      `json:"id"`
+	Version        int64          `json:"version"`
+	Problem        string         `json:"problem"`
+	Solution       string         `json:"solution"`
+	Links          []PublicLink   `json:"links"`
+	Source         Provenance     `json:"source"`
+	EventName      *string        `json:"event_name"`
+	TeamName       *string        `json:"team_name"`
+	FollowUpStatus string         `json:"follow_up_status"`
+	PublishedAt    time.Time      `json:"published_at"`
+	Awards         []ProjectAward `json:"awards"`
+	Archived       bool           `json:"archived"`
+	SourceReadable bool           `json:"source_readable"`
+	SourceVersion  int64          `json:"source_version"`
 }
 type ProjectPage struct {
-	Items      []Project  `json:"items"`
-	NextCursor *uuid.UUID `json:"next_cursor"`
+	Items      []Project      `json:"items"`
+	NextCursor *uuid.UUID     `json:"next_cursor"`
+	Events     []ProjectEvent `json:"events"`
 }
 type PublicationVersion struct {
 	OutcomeID     uuid.UUID         `json:"outcome_id"`

@@ -104,7 +104,7 @@ test('accepted closure with lost response remains explicitly reconcilable after 
 test('published projects search and paginate only positive reviewed fields and honour current revocation',async({page})=>{
  const {state}=await mock(page,true)
  const next='72222222-2222-4222-8222-222222222222',queries:string[]=[]
- const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Reviewed adoption project',solution:'Reviewed solution <script>window.projectLeak=true</script>',links:[{label:'Approved documentation',url:'https://example.test/docs',media:false}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ const project:components['schemas']['OutcomeProject']={awards:[],archived:false,source_readable:false,source_version:2,id:outcomeID,version:2,problem:'Reviewed adoption project',solution:'Reviewed solution <script>window.projectLeak=true</script>',links:[{label:'Approved documentation',url:'https://example.test/docs',media:false}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
  let deny=false
  await page.route('**/api/v1/projects**',async route=>{
   const url=new URL(route.request().url());queries.push(url.search)
@@ -114,10 +114,10 @@ test('published projects search and paginate only positive reviewed fields and h
   return route.fulfill({json:{items:[url.searchParams.has('cursor')?{...project,id:next,problem:'Another reviewed project'}:project],next_cursor:url.searchParams.has('cursor')?null:outcomeID}})
  })
  await page.goto('/projects');await expect(page.getByRole('link',{name:'Reviewed adoption project',exact:true})).toBeVisible()
- await page.getByRole('button',{name:'More reviewed projects'}).click();await expect(page.getByRole('link',{name:'Another reviewed project',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'More records'}).click();await expect(page.getByRole('link',{name:'Another reviewed project',exact:true})).toBeVisible()
  expect(queries.some(q=>q.includes('cursor='+outcomeID))).toBe(true)
  await page.getByRole('searchbox', { name: 'Search reviewed problem and solution' }).fill('private original');await page.getByRole('button',{name:'Search',exact:true}).click()
- await expect(page.getByText('No permitted reviewed projects match this search.')).toBeVisible()
+ await expect(page.getByText('No currently permitted projects match these filters. Change the search or event to continue.')).toBeVisible()
  await page.goto(`/projects/${outcomeID}`);await expect(page.getByRole('heading',{name:'Reviewed adoption project',exact:true})).toBeVisible()
  await expect(page.getByRole('link',{name:'Approved documentation'})).toHaveAttribute('rel','noopener noreferrer')
  expect(await page.evaluate(()=>'projectLeak'in window)).toBe(false);expect(state.eventReads).toBe(0)
@@ -329,7 +329,7 @@ test('native outcome correction returns keyboard focus to the actual mounted ini
 
 test('original unknown outcome survives reviewed project to current native media navigation and return without a document reload or replacement',async({page})=>{
  const {state}=await mock(page,true)
- const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Synthetic reviewed project',solution:'Only approved positive fields',links:[{label:'Current authorised recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ const project:components['schemas']['OutcomeProject']={awards:[],archived:false,source_readable:false,source_version:2,id:outcomeID,version:2,problem:'Synthetic reviewed project',solution:'Only approved positive fields',links:[{label:'Current authorised recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
  await page.route(`**/api/v1/projects/${outcomeID}`,route=>route.fulfill({json:project}))
  const item:components['schemas']['MediaItem']={...mediaSource(),kind:'recording',title:'Synthetic current recording',recording_url:'https://recordings.example.test/synthetic-reviewed',can_read_original:false}
  await page.route(`**/api/v1/events/${firstID}/media**`,route=>{expect(route.request().method()).toBe('GET');const path=new URL(route.request().url()).pathname;return route.fulfill({json:path.endsWith(`/${mediaID}`)?item:{items:[item],revision:1,can_collect:false,can_review:false,next_cursor:null}})})
@@ -361,7 +361,7 @@ test('original unknown outcome survives reviewed project to current native media
 test('current released project removes a media reference omitted by the native consent projection without changing approved publication facts',async({page})=>{
  const {state}=await mock(page,true)
  let revoked=false,reads=0
- const project:components['schemas']['OutcomeProject']={id:outcomeID,version:2,problem:'Synthetic reviewed project with current media',solution:'Approved positive solution',links:[{label:'Current reviewed recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
+ const project:components['schemas']['OutcomeProject']={awards:[],archived:false,source_readable:false,source_version:2,id:outcomeID,version:2,problem:'Synthetic reviewed project with current media',solution:'Approved positive solution',links:[{label:'Current reviewed recording',url:`/events/${firstID}/media/${mediaID}`,media:true}],source:{event_id:firstID,team_id:null},event_name:null,team_name:null,follow_up_status:'accepted',published_at:'2026-10-01T12:00:00Z'}
  await page.route(`**/api/v1/projects/${outcomeID}`,route=>{reads++;return route.fulfill({json:{...project,links:revoked?[]:project.links}})})
  await page.goto(`/projects/${outcomeID}`)
  await expect(page.getByRole('link',{name:'Current reviewed recording (current authorised media)',exact:true})).toBeVisible()
@@ -369,6 +369,6 @@ test('current released project removes a media reference omitted by the native c
  await expect(page.getByRole('link',{name:'Current reviewed recording (current authorised media)',exact:true})).toHaveCount(0,{timeout:20_000})
  expect(reads).toBeGreaterThanOrEqual(2)
  await expect(page.getByRole('heading',{name:project.problem,exact:true})).toBeVisible()
- await expect(page.getByText('Separately reviewed publication · Version 2',{exact:true})).toBeVisible()
+ await expect(page.getByText('Reviewed publication · Version 2',{exact:true})).toBeVisible()
  expect(state.requests).toHaveLength(0);expect(state.eventReads).toBe(0)
 })

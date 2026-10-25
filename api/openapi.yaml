@@ -6534,6 +6534,30 @@ paths:
               "maxLength": 200
             }
           },
+{
+  "name": "event_id",
+  "in": "query",
+  "required": false,
+  "schema": {
+    "type": "string",
+    "format": "uuid"
+  }
+},
+{
+  "name": "status",
+  "in": "query",
+  "required": false,
+  "schema": {
+    "type": "string",
+    "enum": [
+      "proposed",
+      "reviewing",
+      "accepted",
+      "in_progress",
+      "closed"
+    ]
+  }
+},
           {
             "$ref": "#/components/parameters/Limit"
           }
@@ -16059,7 +16083,7 @@ components:
           "event_name",
           "team_name",
           "follow_up_status",
-          "published_at"
+          "published_at", "awards", "archived", "source_readable", "source_version"
         ],
         "properties": {
           "id": {
@@ -16106,6 +16130,10 @@ components:
               "closed"
             ]
           },
+          "awards": {"type":"array","items":{"$ref":"#/components/schemas/OutcomeProjectAward"}},
+          "archived": {"type":"boolean"},
+          "source_readable": {"type":"boolean"},
+          "source_version": {"type":"integer","format":"int64","minimum":1},
           "published_at": {
             "type": "string",
             "format": "date-time"
@@ -16118,7 +16146,7 @@ components:
         "additionalProperties": false,
         "required": [
           "items",
-          "next_cursor"
+          "next_cursor", "events"
         ],
         "properties": {
           "items": {
@@ -16127,6 +16155,7 @@ components:
               "$ref": "#/components/schemas/OutcomeProject"
             }
           },
+          "events": {"type":"array","items":{"$ref":"#/components/schemas/OutcomeProjectEvent"}},
           "next_cursor": {
             "type": "string",
             "nullable": true,
@@ -16134,6 +16163,10 @@ components:
           }
         }
       }
+    OutcomeProjectAward:
+      {"type":"object","additionalProperties":false,"required":["prize_id","name","amount","currency"],"properties":{"prize_id":{"type":"string","format":"uuid"},"name":{"type":"string"},"amount":{"type":"string"},"currency":{"type":"string"}}}
+    OutcomeProjectEvent:
+      {"type":"object","additionalProperties":false,"required":["id","name"],"properties":{"id":{"type":"string","format":"uuid"},"name":{"type":"string"}}}
     OutcomeReviewSchedule:
       {
         "type": "object",

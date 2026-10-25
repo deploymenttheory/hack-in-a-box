@@ -24,9 +24,10 @@ type Service struct {
 	Composer        *communications.Service
 	Automation      *automation.Service
 
-	Media MediaReferences
-	Pool  *pgxpool.Pool
-	Now   func() time.Time
+	Awards ProjectAwards
+	Media  MediaReferences
+	Pool   *pgxpool.Pool
+	Now    func() time.Time
 }
 
 func (s Service) now() time.Time {

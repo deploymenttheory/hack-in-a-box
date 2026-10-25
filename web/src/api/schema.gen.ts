@@ -9392,13 +9392,31 @@ export interface components {
             team_name: string | null;
             /** @enum {string} */
             follow_up_status: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
+            awards: components["schemas"]["OutcomeProjectAward"][];
+            archived: boolean;
+            source_readable: boolean;
+            /** Format: int64 */
+            source_version: number;
             /** Format: date-time */
             published_at: string;
         };
         OutcomeProjectPage: {
             items: components["schemas"]["OutcomeProject"][];
+            events: components["schemas"]["OutcomeProjectEvent"][];
             /** Format: uuid */
             next_cursor: string | null;
+        };
+        OutcomeProjectAward: {
+            /** Format: uuid */
+            prize_id: string;
+            name: string;
+            amount: string;
+            currency: string;
+        };
+        OutcomeProjectEvent: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
         OutcomeReviewSchedule: {
             /** @enum {integer} */
@@ -17183,6 +17201,8 @@ export interface operations {
             query?: {
                 cursor?: string;
                 search?: string;
+                event_id?: string;
+                status?: "proposed" | "reviewing" | "accepted" | "in_progress" | "closed";
                 limit?: components["parameters"]["Limit"];
             };
             header?: never;

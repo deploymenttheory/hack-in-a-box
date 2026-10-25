@@ -1,7 +1,5 @@
-import type { components } from './api/schema.gen'
 import { OutcomeDecision, useOutcomeReview } from './outcome-decision'
 import { useOutcomeRead, useOutcomeProjection } from './outcome-read'
-import { CollectionToolbar } from './components/patterns/collection'
 import { Field, Textarea, Input, Checkbox, Select } from './components/ui/fields'
 import { CollectionHeading, CollectionRecords, CollectionPagination } from './components/patterns/collection'
 import { StatusBadge } from './components/ui/feedback'
@@ -138,63 +136,4 @@ function ReviewReader({ id }: { id: string }) {
   </section>
 }
 
-export function PublishedProjects() {
-  const identity = useIdentity()
-  return <ProjectDirectory key={`${identity.person.id}:${identity.draft_scope}`} />
-}
-function ProjectDirectory() {
-  const identity = useIdentity(), cache = useQueryClient(), navigate = useNavigate()
-  const [search, setSearch] = useState(''), [term, setTerm] = useState(''), [blocked, setBlocked] = useState<unknown>(), [mount] = useState(() => crypto.randomUUID()), [generation, setGeneration] = useState(() => crypto.randomUUID())
-  const scope = usePrivateRequestScope(`${identity.person.id}:${identity.draft_scope}:published-projects`)
-  const prefix = useMemo(() => [...privateKey(identity.person.id, 'organisation', 'published-projects'), identity.draft_scope, mount], [identity.person.id, identity.draft_scope, mount])
-  useEffect(() => () => { void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix }) }, [cache, prefix])
-  const projects = useInfiniteQuery({ queryKey: [...prefix, generation, term], gcTime: 0, enabled: !blocked, initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam, signal }) => {
-      await Promise.resolve(); const ticket = scope.capture(); ticket.assert()
-      try { const result = unwrap(await api.GET('/api/v1/projects', { signal, params: { query: { search: term, cursor: pageParam, limit: 25 } } })); ticket.assert(); return result }
-      catch (error) { if (ticket.current() && outcomeDenied(error)) { scope.invalidate(); setBlocked(error); setSearch(''); setTerm(''); void cache.cancelQueries({ queryKey: prefix }); cache.removeQueries({ queryKey: prefix }) }; throw error }
-    }, getNextPageParam: page => page.next_cursor ?? undefined, retry: false, refetchInterval: 15_000, refetchOnWindowFocus: 'always' })
-  const records = projects.data?.pages.flatMap(page => page.items) ?? []
-  return <section className="workspace fleet-outcomes fleet-outcomes--private"><Link className="fleet-outcome-navigation" to="/ideas"><Icon name="back" />Your ideas</Link>
-    <CollectionHeading title="Reviewed projects" scope={{ entity: 'Current approved audience' }} description={<p>Only separately reviewed publications available to your current audience appear here. Event completion, submissions or awards do not publish projects.</p>} />
-    {blocked ? <Failure error={blocked} /> : <>
-      <CollectionToolbar source="cursor" search={{ kind: 'server', label: 'Search reviewed problem and solution', value: search, maxLength: 200, onChange: setSearch, onSearch: () => { setTerm(search); setGeneration(crypto.randomUUID()) }, onClear: () => { setSearch(''); setTerm(''); setGeneration(crypto.randomUUID()) } }} />
-      {projects.isPending ? <Loading /> : projects.error ? <Failure error={projects.error} retry={() => void projects.refetch()} /> : <>
-        <CollectionRecords label="Reviewed projects" rows={records} rowKey={value => value.id} rowLabel={value => value.problem} destination={value => ({ href: `/projects/${value.id}`, label: value.problem, onNavigate: () => void navigate({ to: '/projects/$outcomeId', params: { outcomeId: value.id } }) })} columns={[
-          { id: 'solution', label: 'Reviewed solution', essential: true, cell: value => value.solution },
-          { id: 'status', label: 'Reviewed follow-up status', cell: value => <StatusBadge>{value.follow_up_status.replaceAll('_', ' ')}</StatusBadge> },
-          { id: 'version', label: 'Publication version', cell: value => value.version },
-        ]} actions={value => <Link className={`${buttonVariants({ variant: 'ghost' })} fleet-outcome-open`} to="/projects/$outcomeId" params={{ outcomeId: value.id }} aria-label={`Open ${value.problem}`}><Icon name="next" />Open</Link>} />
-        {!records.length && <p>No permitted reviewed projects match this search.</p>}
-        <CollectionPagination source={{ kind: 'cursor', loaded: records.length, busy: projects.isFetchingNextPage }} />
-        {projects.hasNextPage && <Button icon="nextPage" variant="outline" disabled={projects.isFetchingNextPage} onClick={() => void projects.fetchNextPage()}>More reviewed projects</Button>}
-      </>}
-    </>}
-  </section>
-}
-export function PublishedProjectPage() {
-  const { outcomeId } = useParams({ strict: false }), identity = useIdentity()
-  return <ProjectReader key={`${identity.person.id}:${identity.draft_scope}:${outcomeId}`} id={outcomeId!} />
-}
-function ProjectReader({ id }: { id: string }) {
-  const { current: project, blocked, checkAccess } = useOutcomeRead(id, 'published-project', async signal => unwrap(await api.GET('/api/v1/projects/{outcome_id}', { signal, params: { path: { outcome_id: id } } })))
-  return <section className="workspace fleet-outcomes fleet-outcomes--private"><Link className="fleet-outcome-navigation" to="/projects"><Icon name="back" />Reviewed projects</Link>
-    {blocked ? <><CollectionHeading title="Project unavailable" scope={{ entity: 'Current publication access' }} /><Failure error={blocked} /><Button icon="refresh" variant="outline" onClick={checkAccess}>Check current publication access</Button></> : project.isPending ? <Loading /> : project.error ? <Failure error={project.error} /> : <article>
-      <CollectionHeading title={project.data.problem} scope={{ entity: `Separately reviewed publication · Version ${project.data.version}` }} description={<p>Published {new Date(project.data.published_at).toLocaleString()}. Private evidence, estimates and original assessment records are excluded.</p>} />
-      <section className="fleet-outcome-section"><h2>Solution</h2><p className="outcome-prose">{project.data.solution}</p></section>
-      <section className="fleet-outcome-section"><h2>Reviewed follow-through</h2><StatusBadge>{project.data.follow_up_status.replaceAll('_', ' ')}</StatusBadge><p>This is the status reviewed for this publication; later private updates do not silently republish it.</p>{project.data.event_name && <p>Source event: {project.data.event_name}</p>}{project.data.team_name && <p>Source team: {project.data.team_name}</p>}</section>
-      <section className="fleet-outcome-section"><h2>Reviewed references</h2>{project.data.links.length ? <ul className="fleet-outcome-references">{project.data.links.map((link, i) => <li key={`${link.url}:${i}`}><ProjectReference link={link} /></li>)}</ul> : <p>No reviewed reference is published.</p>}<p>Media links reflect the current owning audience and consent check. This project grants no additional access.</p></section>
-    </article>}
-  </section>
-}
-
-const nativeUUIDPattern = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-const nativeMediaDestination = new RegExp(`^/events/(${nativeUUIDPattern})/media/(${nativeUUIDPattern})$`, 'i')
-function ProjectReference({ link }: { link: components['schemas']['OutcomeProject']['links'][number] }) {
-  if (!link.media) return <a href={link.url} rel="noopener noreferrer" target="_blank"><Icon name="external" />{link.label}</a>
-  const destination = nativeMediaDestination.exec(link.url)
-  if (!destination) return <span><Icon name="warning" />{link.label} (current media destination unavailable)</span>
-  // Only the owning native resolver supplies this destination. SPA navigation
-  // preserves original session intent metadata; the media owner rechecks access.
-  return <Link to="/events/$eventId/media/$mediaId" params={{ eventId: destination[1], mediaId: destination[2] }}><Icon name="book" />{link.label} (current authorised media)</Link>
-}
+export { PublishedProjects, PublishedProjectPage } from './showcase'

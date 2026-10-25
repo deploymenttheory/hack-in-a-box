@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -263,6 +266,45 @@ func (s Service) publicProjection(
 		link.Media = true
 		out.Links = append(out.Links, link)
 	}
+	out.Awards = []ProjectAward{}
+	out.SourceVersion = row.SourceVersion
+	out.SourceReadable, err = dbgen.New(tx).
+		OutcomeReadable(ctx, dbgen.OutcomeReadableParams{OutcomeID: out.ID, ActorID: actor, AtTime: s.now()})
+	if err != nil {
+		return Project{}, wrap("read current approved source access", err)
+	}
+	if out.Source.EventID != nil {
+		event, e := dbgen.New(tx).Event(ctx, *out.Source.EventID)
+		if e != nil {
+			return Project{}, wrap("read source archive state", e)
+		}
+		out.Archived = event.Stage == "archived"
+		if out.Source.TeamID != nil && s.Awards != nil {
+			awards, e := s.Awards.ProjectAwardsInTransaction(
+				ctx,
+				tx,
+				actor,
+				*out.Source.EventID,
+				*out.Source.TeamID,
+			)
+			if e != nil && !errors.Is(e, access.ErrForbidden) && !errors.Is(e, access.ErrNotFound) {
+				return Project{}, wrap("resolve currently permitted announced awards", e)
+			}
+			if e == nil {
+				for _, award := range awards {
+					out.Awards = append(
+						out.Awards,
+						ProjectAward{
+							PrizeID:  award.PrizeID,
+							Name:     award.Name,
+							Amount:   award.Amount,
+							Currency: award.Currency,
+						},
+					)
+				}
+			}
+		}
+	}
 	return out, nil
 }
 
@@ -271,6 +313,18 @@ func (s Service) Public(ctx context.Context, actor, id uuid.UUID) (Project, erro
 	err := database.Within(ctx, s.Pool, func(tx pgx.Tx, q *dbgen.Queries) error {
 		if err := active(ctx, q, actor); err != nil {
 			return err
+		}
+		head, headErr := q.OutcomeHead(ctx, id)
+		if errors.Is(headErr, pgx.ErrNoRows) {
+			return access.ErrNotFound
+		}
+		if headErr != nil {
+			return wrap("read published project source", headErr)
+		}
+		if head.EventID != nil {
+			if _, lockErr := q.LockEvent(ctx, *head.EventID); lockErr != nil {
+				return wrap("lock current project event", lockErr)
+			}
 		}
 		row, err := q.OutcomePublishedProject(
 			ctx,
@@ -294,7 +348,23 @@ func (s Service) Projects(
 	search string,
 	limit int32,
 ) (ProjectPage, error) {
-	out := ProjectPage{Items: []Project{}}
+	return s.FindProjects(ctx, actor, ProjectQuery{Cursor: cursor, Search: search, Limit: limit})
+}
+
+func (s Service) FindProjects(
+	ctx context.Context,
+	actor uuid.UUID,
+	filter ProjectQuery,
+) (ProjectPage, error) {
+	cursor, search, limit := filter.Cursor, filter.Search, filter.Limit
+	out := ProjectPage{Items: []Project{}, Events: []ProjectEvent{}}
+	if filter.Status != "" &&
+		!slices.Contains(
+			[]string{"proposed", "reviewing", "accepted", "in_progress", "closed"},
+			filter.Status,
+		) {
+		return out, access.ErrInvalid
+	}
 	if limit < 1 || limit > 100 || !text(search, 200) {
 		return out, access.ErrInvalid
 	}
@@ -310,19 +380,75 @@ func (s Service) Projects(
 				AtTime:   s.now(),
 				Search:   search,
 				PageSize: limit + 1,
+				EventID:  filter.EventID,
+				Status:   filter.Status,
 			},
 		)
 		if err != nil {
 			return wrap("search permitted published projects", err)
 		}
+		// Result and media owners may take their native event locks. Lock source
+		// events in a stable order first, then recheck each project after the wait.
+		eventIDs := map[string]uuid.UUID{}
+		for _, row := range rows {
+			var project Project
+			if decodeErr := json.Unmarshal(row.PublishedFields, &project); decodeErr != nil {
+				return wrap("read project source lock", decodeErr)
+			}
+			if project.Source.EventID != nil {
+				eventIDs[project.Source.EventID.String()] = *project.Source.EventID
+			}
+		}
+		ordered := make([]string, 0, len(eventIDs))
+		for id := range eventIDs {
+			ordered = append(ordered, id)
+		}
+		sort.Strings(ordered)
+		for _, id := range ordered {
+			if _, lockErr := q.LockEvent(ctx, eventIDs[id]); lockErr != nil {
+				return wrap("lock current showcase source", lockErr)
+			}
+		}
+		events, eventsErr := q.OutcomePublishedProjectEvents(
+			ctx,
+			dbgen.OutcomePublishedProjectEventsParams{ActorID: actor, AtTime: s.now()},
+		)
+		if eventsErr != nil {
+			return wrap("read approved event filters", eventsErr)
+		}
+		for _, event := range events {
+			out.Events = append(out.Events, ProjectEvent{ID: event.EventID, Name: event.EventName})
+		}
 		more := len(rows) > int(limit)
 		if more {
 			rows = rows[:limit]
 		}
-		for _, row := range rows {
+		for _, initial := range rows {
+			row, currentErr := q.OutcomePublishedProject(
+				ctx,
+				dbgen.OutcomePublishedProjectParams{
+					OutcomeID: initial.OutcomeID,
+					ActorID:   actor,
+					AtTime:    s.now(),
+				},
+			)
+			if errors.Is(currentErr, pgx.ErrNoRows) {
+				continue
+			}
+			if currentErr != nil {
+				return wrap("recheck current showcase project", currentErr)
+			}
 			item, projectErr := s.publicProjection(ctx, tx, actor, row)
 			if projectErr != nil {
 				return projectErr
+			}
+			if filter.Status != "" && item.FollowUpStatus != filter.Status ||
+				search != "" &&
+					!strings.Contains(
+						strings.ToLower(item.Problem+" "+item.Solution),
+						strings.ToLower(search),
+					) {
+				continue
 			}
 			out.Items = append(out.Items, item)
 		}

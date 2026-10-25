@@ -1,3 +1,4 @@
+import { ShowcaseMemory } from './showcase-context'
 import { OutcomeSafety } from './outcome-safety'
 import { CommunicationSafety } from './communication-tests'
 import { ProtectedUploadSafety } from './protected-upload-safety'
@@ -26,7 +27,7 @@ export const sessionCache = new QueryClient({ defaultOptions: { queries: { retry
 function PrivateCache({ children }: { children: ReactNode }) {
   const [cache] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 15_000, refetchOnReconnect: 'always' } } }))
   useEffect(() => () => { void cache.cancelQueries(); cache.clear() }, [cache])
-  return <QueryClientProvider client={cache}>{children}</QueryClientProvider>
+  return <QueryClientProvider client={cache}><ShowcaseMemory>{children}</ShowcaseMemory></QueryClientProvider>
 }
 
 function Account({ session }: { session: Session }) {

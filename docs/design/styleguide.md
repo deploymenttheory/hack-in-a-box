@@ -377,3 +377,23 @@ majority remain native authority; a split offers another deliberate reviewed vot
 No organiser casting action is inferred, and announcement/award confirmation stay
 separate. Vote recovery matches actor, request, run, tie/candidates, version and
 native fingerprint without retaining observed evidence or reasons above the task.
+
+### Reviewed project discovery
+
+`ShowcaseRecords` and `ShowcaseReading` are the production discovery and reading
+surfaces used by the independent guide. Owners supply permission-filtered search,
+approved event-name facets, reviewed follow-up status and cursor pagination.
+Links open actual project routes and preserve filter return context. Keep typed
+search text only in the current private session memory, never document URLs or
+persistent storage; event UUID/status may remain route context. A current
+source-record link is shown only when its own native reader permits access.
+
+Award metadata requires both explicit result publication and the current native
+result audience. Organisation sharing of a project does not expand award access.
+An empty award projection is neutral, never a claim that a team lost. Source links
+retain provider permissions; media links retain current consent and owning access.
+Archived projects are read-only; proposed/accepted follow-up is distinct from
+demonstrated adoption. Clear queries and cached content on current audience loss.
+
+The synthetic showcase example imports these exports with local event and
+publication toggles. It performs no API call or private persistence.

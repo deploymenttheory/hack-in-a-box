@@ -1,0 +1,111 @@
+{
+  "source": "755d16f0fd940f6d67804f502260876192e1d588",
+  "native_package_seconds": 50.225,
+  "native_test_seconds": 48.66,
+  "cases": [
+    {
+      "scope": "admin-desktop",
+      "seconds": 13.81,
+      "expected": 1,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "screenshots": [
+        {
+          "path": "admin-desktop/showcase-discovery-light.png",
+          "sha256": "398d22173fbaa737fc67d3aa5288f71c9d2cc89eb0e09b6a3ca66ae1f32ced29"
+        },
+        {
+          "path": "admin-desktop/showcase-discovery-dark.png",
+          "sha256": "393fc06e68e6b60d4798fb1c7ac8d889e58751e46275c620fa2bcd4e38b966e6"
+        },
+        {
+          "path": "admin-desktop/reviewed-project-light.png",
+          "sha256": "50adc48b5cd5a1b2edcdb9adc1adbe43b0a896830d11d00338ced1d6559858ba"
+        },
+        {
+          "path": "admin-desktop/reviewed-project-dark.png",
+          "sha256": "f33865c7f506f75500f6f40764fcb2949237e5d942edfbba570e3cfb04629fce"
+        }
+      ]
+    },
+    {
+      "scope": "admin-mobile",
+      "seconds": 11.82,
+      "expected": 1,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "screenshots": [
+        {
+          "path": "admin-mobile/showcase-discovery-light.png",
+          "sha256": "ed0f723b45730185889a848c2ece9a28780ae7864b4a916d0c845955e58bf5ad"
+        },
+        {
+          "path": "admin-mobile/showcase-discovery-dark.png",
+          "sha256": "fa788005cfb61e75443d2f3ac6f9932e9ed6b0588d030a1da4309904b5c219b8"
+        },
+        {
+          "path": "admin-mobile/reviewed-project-light.png",
+          "sha256": "bd99ee2f61644554d9a2a61b44499fe5befa5a772995de4db57d30b192685597"
+        },
+        {
+          "path": "admin-mobile/reviewed-project-dark.png",
+          "sha256": "9d26ab88c0009a798cafb612a7ec9733a24af0b2596ef8448c471b33c097c83d"
+        }
+      ]
+    },
+    {
+      "scope": "public-desktop",
+      "seconds": 11.51,
+      "expected": 1,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "screenshots": [
+        {
+          "path": "public-desktop/showcase-discovery-light.png",
+          "sha256": "4f913243b15e5e8fe0f26ae45b812af8e0f413e4adfa76ff4a105720f69a54ee"
+        },
+        {
+          "path": "public-desktop/showcase-discovery-dark.png",
+          "sha256": "7529af331391f9c5af594021d2d43cbf9b0321dced4226a61be265d718934dba"
+        },
+        {
+          "path": "public-desktop/reviewed-project-light.png",
+          "sha256": "6039868345315021aaeb25429b233f08b3cebe75bdcb2843797e7bebb1042a9f"
+        },
+        {
+          "path": "public-desktop/reviewed-project-dark.png",
+          "sha256": "ed68fdc4b8b4374796028919167ec4558e27cfc64caece1a059f0a842f7e7b86"
+        }
+      ]
+    },
+    {
+      "scope": "public-mobile",
+      "seconds": 11.52,
+      "expected": 1,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "screenshots": [
+        {
+          "path": "public-mobile/showcase-discovery-light.png",
+          "sha256": "40d52e285a4371bc8397fd3358927887465cff052e6938e8e13eec4b30740bdd"
+        },
+        {
+          "path": "public-mobile/showcase-discovery-dark.png",
+          "sha256": "7a948bc75a17a83f42b34ae67d9e02ca8284bb400979eaf32e8c21b246c7a16c"
+        },
+        {
+          "path": "public-mobile/reviewed-project-light.png",
+          "sha256": "9b7e62284299379cd9840bf54903293639e95be6160a91dd39dc499fc648ba29"
+        },
+        {
+          "path": "public-mobile/reviewed-project-dark.png",
+          "sha256": "946eaa81c763b69cb2c3577b9238397f0b9d2616873fb587b2db4b401f7d7b15"
+        }
+      ]
+    }
+  ]
+}

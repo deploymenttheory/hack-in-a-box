@@ -343,7 +343,7 @@ func (q *Queries) ScheduleItems(ctx context.Context, eventID uuid.UUID) ([]Sched
 }
 
 const setEventStage = `-- name: SetEventStage :one
-UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2 IN ('completed','cancelled') THEN now() WHEN $2='assessment' THEN NULL ELSE completed_at END,
+UPDATE events SET stage=$2,writes_allowed=$3,completed_at=CASE WHEN $2 IN ('completed','cancelled') THEN COALESCE(completed_at,$4::timestamptz) WHEN $2='assessment' THEN NULL ELSE completed_at END,
 revision=revision+1,updated_at=now() WHERE id=$1 RETURNING id, name, revision, created_at, updated_at, owner_id, writes_allowed, slug, configuration, stage, published_at, team_frozen_at, completed_at
 `
 
@@ -351,10 +351,16 @@ type SetEventStageParams struct {
 	ID            uuid.UUID
 	Stage         string
 	WritesAllowed bool
+	AtTime        time.Time
 }
 
 func (q *Queries) SetEventStage(ctx context.Context, arg SetEventStageParams) (Event, error) {
-	row := q.db.QueryRow(ctx, setEventStage, arg.ID, arg.Stage, arg.WritesAllowed)
+	row := q.db.QueryRow(ctx, setEventStage,
+		arg.ID,
+		arg.Stage,
+		arg.WritesAllowed,
+		arg.AtTime,
+	)
 	var i Event
 	err := row.Scan(
 		&i.ID,

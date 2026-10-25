@@ -235,7 +235,17 @@ func (h handlers) ListPublishedProjects(
 		search = *r.Params.Search
 	}
 	_, limit := page(nil, r.Params.Limit)
-	v, err := h.Outcomes.Projects(ctx, actor(ctx).ID, cursor, search, limit)
+	filter := outcomes.ProjectQuery{Cursor: cursor, Search: search, Limit: limit}
+	if r.Params.EventId != nil {
+		if *r.Params.EventId == uuid.Nil {
+			return nil, access.ErrInvalid
+		}
+		filter.EventID = *r.Params.EventId
+	}
+	if r.Params.Status != nil {
+		filter.Status = string(*r.Params.Status)
+	}
+	v, err := h.Outcomes.FindProjects(ctx, actor(ctx).ID, filter)
 	if err != nil {
 		return nil, fmt.Errorf("search reviewed published projects: %w", err)
 	}

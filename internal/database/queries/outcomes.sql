@@ -100,10 +100,23 @@ WHERE ph.outcome_id=sqlc.arg(outcome_id) AND outcome_project_readable(ph.outcome
 
 -- name: OutcomePublishedProjectsPage :many
 SELECT pv.* FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
 WHERE ph.outcome_id>sqlc.arg(after_id)
 AND outcome_project_readable(ph.outcome_id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
 AND (sqlc.arg(search)::text='' OR position(lower(sqlc.arg(search)) in lower((pv.published_fields->>'problem')||' '||(pv.published_fields->>'solution')))>0)
+AND (sqlc.arg(event_id)::uuid='00000000-0000-0000-0000-000000000000'::uuid OR oh.event_id=sqlc.arg(event_id)::uuid)
+AND (sqlc.arg(status)::text='' OR pv.published_fields->>'follow_up_status'=sqlc.arg(status)::text)
 ORDER BY ph.outcome_id LIMIT sqlc.arg(page_size);
+
+-- name: OutcomePublishedProjectEvents :many
+SELECT event_id,event_name FROM (
+SELECT DISTINCT ON (oh.event_id) oh.event_id::uuid AS event_id, COALESCE(pv.published_fields->>'event_name','')::text AS event_name
+FROM outcome_project_heads ph JOIN outcome_project_versions pv ON pv.outcome_id=ph.outcome_id AND pv.version=ph.published_version
+JOIN outcome_heads oh ON oh.id=ph.outcome_id
+WHERE oh.event_id IS NOT NULL AND pv.published_fields->>'event_name' IS NOT NULL
+AND outcome_project_readable(ph.outcome_id,sqlc.arg(actor_id)::uuid,sqlc.arg(at_time)::timestamptz)
+ORDER BY oh.event_id,pv.created_at DESC,pv.outcome_id
+) approved_events ORDER BY event_name,event_id;
 
 -- name: OutcomeReviewHeadsEventPage :many
 SELECT * FROM outcome_review_heads WHERE event_id=$1 AND id>sqlc.arg(after_id) ORDER BY id LIMIT sqlc.arg(page_size);

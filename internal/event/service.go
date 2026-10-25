@@ -533,6 +533,7 @@ func (s Service) Transition(
 		); err != nil {
 			return fmt.Errorf("authorize stage change: %w", err)
 		}
+		now := s.now().UTC()
 		if row.Revision != revision {
 			return access.ErrConflict
 		}
@@ -552,7 +553,7 @@ func (s Service) Transition(
 			return fmt.Errorf("decode lifecycle configuration: %w", err)
 		}
 		if to == "assessment" && s.SettleSubmissions != nil {
-			if err := s.SettleSubmissions(ctx, tx, row, s.now()); err != nil {
+			if err := s.SettleSubmissions(ctx, tx, row, now); err != nil {
 				return fmt.Errorf("settle assessment submissions: %w", err)
 			}
 		}
@@ -570,7 +571,7 @@ func (s Service) Transition(
 			f,
 			count,
 			to,
-			s.now(),
+			now,
 			attendanceException,
 			strings.TrimSpace(reason),
 		); len(
@@ -597,6 +598,7 @@ func (s Service) Transition(
 				ID:            id,
 				Stage:         to,
 				WritesAllowed: to != "archived" && to != "cancelled",
+				AtTime:        now,
 			},
 		)
 		if err != nil {
@@ -611,7 +613,7 @@ func (s Service) Transition(
 			}
 		}
 		if s.ReconcileSessions != nil {
-			if err := s.ReconcileSessions(ctx, tx, actor, changed, s.now()); err != nil {
+			if err := s.ReconcileSessions(ctx, tx, actor, changed, now); err != nil {
 				return fmt.Errorf("reconcile event sessions: %w", err)
 			}
 		}
