@@ -143,6 +143,8 @@ func (s Service) queueUpdates(
 				occ.BookingRevision,
 				occ.CalendarSequence,
 				occ.State,
+				occ.SourceState,
+				occ.Reason,
 			},
 		)
 		tag, err := tx.Exec(

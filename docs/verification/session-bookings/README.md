@@ -181,3 +181,26 @@ SMTP deliveries, retains the exact original snapshot and schema version, then
 executes the surviving approved update and later cancellation through the native
 outbox. This is an immutable-history preservation check, not an assertion that a
 current read can settle an uncertain original command.
+
+## Archive-suppression review correction
+
+Independent review of candidate `418ecc6` found that a future session's archive
+suppression collided with its earlier approved occurrence: unchanged source
+revisions shared a uniqueness key that omitted the source disposition. The real
+native registration → preparation → live → assessment → completed → archived
+regression reproduced **zero explicit suppression records (RED 3.854s)**.
+
+The pending migration's occurrence identity now includes source state and reason;
+the exact occurrence binding includes them too. Archive adds a separate immutable
+`parent_event_readonly` record without changing the original approved occurrence,
+SMTP snapshot, booking revision or personal calendar sequence. Reconciliation
+repeats deduplicate that disposition. Suppressed rows never queue adapters, and
+parent writes/jobs policy stays unchanged. The regression checks the actual
+organiser history projection, zero new jobs or sends, and the original attempt.
+
+The corrected regression and four related native SMTP/parent-lifecycle cases
+passed with PostgreSQL and `-race` in **13.513s** (the archive case itself 1.91s).
+Empty and retained-receipt rollback cases passed in **5.139s**. Canonical
+`check-generated.sh` completed cleanly, changed-owner lint reported **zero issues**,
+and `git diff --check` passed. All are bounded delta proof; prior full-owner proof
+remains attributed to candidate `418ecc6`, not rerun or relabelled.

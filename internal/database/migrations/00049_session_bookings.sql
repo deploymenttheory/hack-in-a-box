@@ -93,7 +93,8 @@ CREATE TABLE session_notification_occurrences (
  source_state text NOT NULL CHECK(source_state IN ('approved','suppressed','unavailable')),
  reason text NOT NULL,
  created_at timestamptz NOT NULL DEFAULT now(),
- UNIQUE(event_id,session_id,recipient_id,configuration_version,session_revision,booking_revision),
+ -- A later readonly disposition is separate from its unchanged approved source.
+ UNIQUE(event_id,session_id,recipient_id,configuration_version,session_revision,booking_revision,source_state,reason),
  FOREIGN KEY(event_id,session_id) REFERENCES bookable_sessions(event_id,id)
 );
 CREATE TABLE session_notification_reports (

@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/deliveryhistory"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
@@ -312,5 +314,108 @@ func TestSessionSMTPDateChangeAndRollbackRetainApprovedOriginals(t *testing.T) {
 	}
 	if err = f.pool.QueryRow(ctx, `SELECT snapshot::text FROM smtp_campaign_messages WHERE operation_id=$1`, initial).Scan(&retained); err != nil || retained != initialSnapshot {
 		t.Fatal("date/cancel rewrote original attempt", err)
+	}
+}
+
+func TestSessionArchiveRetainsExplicitSuppressionWithoutChangingApprovedOccurrence(t *testing.T) {
+	f := newSessionNotificationFixture(t)
+	ctx := t.Context()
+	transport := f.smtp(t, maildelivery.Accepted)
+	current, err := f.events.Read(ctx, f.owner.ID, f.eventID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := current.Configuration
+	c.MinimumAttendance = 1
+	c.Schedule[0].Anchor = "submission_cutoff"
+	c.Schedule[0].Days = 1
+	if _, err = f.events.Update(ctx, f.owner.ID, f.eventID, current.Revision, event.Input{ID: f.eventID, Name: current.Name, Slug: current.Slug, Configuration: c, Reason: "Synthetic follow-on session after completion"}); err != nil {
+		t.Fatal(err)
+	}
+	f.approve(t, []string{"smtp"})
+	f.reserve(t)
+	original, originalSnapshot := f.operation(t, "booked")
+	transition := func(stage string) {
+		t.Helper()
+		row, e := f.events.Read(ctx, f.owner.ID, f.eventID)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = f.events.Transition(ctx, f.owner.ID, f.eventID, row.Revision, stage, "Synthetic reviewed lifecycle transition", false); e != nil {
+			t.Fatal(stage, e)
+		}
+	}
+	transition("preparation")
+	// Synthetic native-team/content facts satisfy the existing lifecycle gates;
+	// all stage changes, including completion and archive, use the actual owner.
+	if err = database.Within(ctx, f.pool, func(tx pgx.Tx, _ *dbgen.Queries) error {
+		if e := event.RecordTeamFacts(ctx, tx, f.eventID, 1, 1, 1, &c.TeamFreeze); e != nil {
+			return e
+		}
+		if e := event.RecordSubmissionFacts(ctx, tx, f.eventID, 1); e != nil {
+			return e
+		}
+		_, e := tx.Exec(ctx, `UPDATE events SET published_at=$2 WHERE id=$1`, f.eventID, c.LiveStart.AddDate(0, 0, -7))
+		return e
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f.now = c.LiveStart
+	transition("live")
+	f.now = c.SubmissionCutoff
+	transition("assessment")
+	transition("completed")
+	var originalRow string
+	var calendarSequence, operations int64
+	if err = f.pool.QueryRow(ctx, `SELECT row_to_json(n)::text FROM session_notification_occurrences n JOIN smtp_campaign_messages m ON m.occurrence_id=n.id WHERE m.operation_id=$1`, original).Scan(&originalRow); err != nil {
+		t.Fatal(err)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT calendar_sequence FROM session_bookings WHERE event_id=$1 AND session_id=$2 AND person_id=$3`, f.eventID, f.sessionID, f.person.ID).Scan(&calendarSequence); err != nil {
+		t.Fatal(err)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM operations WHERE event_id=$1`, f.eventID).Scan(&operations); err != nil {
+		t.Fatal(err)
+	}
+	transition("archived")
+	for range 2 {
+		if err = database.Within(ctx, f.pool, func(tx pgx.Tx, q *dbgen.Queries) error {
+			row, e := q.LockEvent(ctx, f.eventID)
+			if e != nil {
+				return e
+			}
+			return f.runtime.SessionBookings.ReconcileEventInTransaction(ctx, tx, f.owner.ID, row, f.now)
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	history, err := f.runtime.SessionBookings.NotificationHistory(ctx, f.owner.ID, f.eventID, f.sessionID, 0, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	suppressed := 0
+	for _, item := range history.Items {
+		if item.SourceState == "suppressed" && item.Reason == "parent_event_readonly" {
+			suppressed++
+			if item.CalendarSequence != calendarSequence || len(item.Reports) != 0 {
+				t.Fatal("suppression changed calendar or queued delivery", item)
+			}
+		}
+	}
+	if suppressed != 1 {
+		t.Fatalf("missing or duplicated explicit archive suppression: %d", suppressed)
+	}
+	var afterRow, afterSnapshot string
+	var afterCalendar, afterOperations int64
+	if err = f.pool.QueryRow(ctx, `SELECT row_to_json(n)::text,m.snapshot::text FROM session_notification_occurrences n JOIN smtp_campaign_messages m ON m.occurrence_id=n.id WHERE m.operation_id=$1`, original).Scan(&afterRow, &afterSnapshot); err != nil || afterRow != originalRow || afterSnapshot != originalSnapshot {
+		t.Fatal("archive changed original approved occurrence/attempt", err)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT calendar_sequence FROM session_bookings WHERE event_id=$1 AND session_id=$2 AND person_id=$3`, f.eventID, f.sessionID, f.person.ID).Scan(&afterCalendar); err != nil || afterCalendar != calendarSequence {
+		t.Fatal("archive manufactured calendar change", err)
+	}
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM operations WHERE event_id=$1`, f.eventID).Scan(&afterOperations); err != nil || afterOperations != operations {
+		t.Fatal("archive queued a new job", err)
+	}
+	if err = f.runtime.Jobs.Execute(ctx, original); err != nil || len(transport.sent()) != 0 {
+		t.Fatal("archive sent provider effect", err)
 	}
 }
