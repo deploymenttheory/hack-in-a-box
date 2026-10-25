@@ -175,3 +175,11 @@ test('pending current reads retain saved-card keyboard focus while confirmation 
   await expect(page.getByLabel('Recorded panel reason',{exact:true})).toBeVisible()
  }finally{release()}
 })
+test('resolved retained tie records do not report an unresolved tie after exact panel signoff',async({page})=>{
+ const state=await fixture(page)
+ state.page.preview!.ties=[{id:'retained-category-tie',kind:'category',category_id:state.page.criteria.categories[0].id,team_ids:state.page.teams.map(team=>team.team_id),seats:1}]
+ state.page.preview!.blockers=[];state.page.round.proposal=structuredClone(state.page.preview)
+ await page.goto(path);await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
+ await expect(page.getByText(/ties require evidence review and recorded panel decisions/)).toHaveCount(0)
+ await page.getByRole('button',{name:'Preview category preparation',exact:true}).press('Enter');await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toBeVisible()
+})

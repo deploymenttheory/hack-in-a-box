@@ -71,6 +71,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  const review=page.getByRole('alertdialog',{name:'Review private panel command',exact:true});await expect(review).toContainText('Proposed finalists');await expect(review).toContainText('Reserve');await expect(review).toContainText('All eligible teams remain category candidates')
  await activate(review.getByRole('button',{name:'Confirm reviewed panel command',exact:true}))
  await expect(page.getByText('Current private panel signoff',{exact:true})).toBeVisible()
+ await expect(page.getByText(/ties require evidence review and recorded panel decisions/)).toHaveCount(0)
  proof=await control<typeof proof>('evidence');expect(proof).toMatchObject({cards:5,current:true,signoff:true})
  expect(proof.page.preview!.finalist_ids).toEqual(native.team_ids.slice(0,3));expect(proof.page.preview!.reserve_ids).toEqual([native.team_ids[3]])
  for(const label of ['Technical approach','UX'])expect(proof.page.preview!.categories.find(value=>value.category_id===native.categories.find(category=>category.label===label)!.id)!.team_ids).toEqual([native.team_ids[4]])
