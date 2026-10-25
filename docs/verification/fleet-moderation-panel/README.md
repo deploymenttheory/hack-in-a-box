@@ -271,3 +271,53 @@ history/capability/privacy/recovery hardening, native/visual proof across both
 portals, independent reviews and final current CI. Final award confirmation,
 publication and feedback release remain separate112/113 responsibilities. No
 local preview or UI receipt invents those APIs or released results.
+
+### Follow-up native checkpoints and current open gates
+
+The five-team source fixture passed real PostgreSQL/race at clean `23478c4e`
+(6.934s), using formal live submissions, a monotonic cutoff, independent submitted
+final cards, real second-review completion and exact signed huddles. Its first
+attempt correctly failed invalid mentor capacity; the fixture now declares the
+actual five-team coverage and configures a native panel rather than bypassing
+that policy. No production authority was changed.
+
+The real save-card journey exposed lost inspector/next-action continuity in both
+admin layouts at `f9f565d7`. It passed both at clean `b12ac3d3` (Go/race68.592s)
+after carrying only exact acknowledgement/navigation metadata to a matching fresh
+native card. A separate test-only `Draft` versus native `draft` capitalization
+correction is not a product fix. A second actual keyboard regression identified
+the inspector heading stealing next-action focus; explicit owner focus preserves
+the shared default and is documented in the interactive guide.
+
+At clean `dc52ad54c463beadd70281a9cec338b712d94417`, the full admin desktop
+browser passed in35.8s: original authorised evidence, five reasoned save/sign
+pairs, split ballots from two independent mentors, organiser casting, exact
+versioned signoff, a non-finalist Technical/UX category winner, and separate
+private preparations. `native-complete-admin-desktop-dc52.json` records its exact
+source/tree. Its mobile attempt stopped at a test trying to press the hidden
+collection without Back to panel. The follow-up now uses the real return action
+and verifies same-row keyboard focus through the existing coverage focus owner.
+
+A real production-component regression also showed a retained historical card
+as current after native `card_source_current=false`/withdrawal (RED2/2). The
+current inspector now requires the native current-source flag and labels
+withdrawn/disbanded/inactive outcomes distinctly; the affected retired-card and
+back-focus cases passed4/4 in3.6s. Source was the working-tree extension on dc52;
+these are component checks, not native outcome proof.
+
+Clean `f619f9e5dc4f26a06d26a4921b70afb191018891` extends the native journey
+with an actual organiser withdrawal, explicitly test-only disbanded/unused-repo
+lifecycle facts, no current score/actions after retirement, and light/dark
+captures. The full admin mobile journey PASSED (2.1m browser). Admin desktop
+stopped at its second card confirmation: a real native request became unknown
+and the dialog remained; the UI retained the unknown barrier. This is an OPEN
+proof failure, not a pass or evidence that the command failed. No retry,
+assertion weakening, timing-policy change or fabricated receipt was introduced.
+The complete run therefore FAILED (Go/race222.116s). Independent guide build and
+all8 real standalone/embedded guide checks passed in8.8s on the same source.
+
+Still mandatory: diagnose and resolve the desktop native failure, complete both
+regular-portal native layouts and current visual inspection, remaining
+privacy/recovery cases, independent full reviews and final CI. All issue111
+acceptance stays open until those gates complete; #112/#113 still own final
+award publication and feedback release.
