@@ -29,7 +29,15 @@ export function usePresentationReader(eventID:string, owner:string){
   ticket.assert()
   try{
    const value=unwrap(await api.GET('/api/v1/events/{event_id}/presentation',{signal:ticket.signal,cache:'no-store',params:{path:{event_id:eventID}}}));ticket.assert()
-   if(generation!==epoch.current||serial!==request.current)throw new DOMException('Presentation read superseded','AbortError')
+   if(generation!==epoch.current)throw new DOMException('Presentation read superseded','AbortError')
+   if(serial!==request.current){
+    // A refresh must not cancel a reviewed preflight that confirms the same
+    // currently authorised revision. Keep the current projection; never install
+    // a superseded private payload or treat this GET as a mutation receipt.
+    const known=current.current
+    if(known?.can_control&&value.can_control&&known.revision===value.revision)return known
+    throw new DOMException('Presentation read superseded','AbortError')
+   }
    return accept(value)
   }catch(failure){if(ticket.current()&&generation===epoch.current){if(presentationDenied(failure))deny(failure);else if(serial===request.current){setError(failure);setLoading(false)}}throw failure}
  },[accept,deny,eventID,root])
