@@ -56,6 +56,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -64,6 +65,7 @@ import (
 )
 
 type Dependencies struct {
+	SubmissionFreeze     submissionfreeze.Service
 	SessionBookings      sessionbooking.Service
 	AdministrationOrigin string
 	Archives             archives.Service

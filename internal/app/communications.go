@@ -35,11 +35,13 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
+	SubmissionFreeze *submissionfreeze.Service
 	SessionBookings  *sessionbooking.Service
 	GitHubWebhooks   *githubwebhooks.Service
 	RepositoryAccess *repositoryaccess.Service
@@ -186,12 +188,22 @@ func newCommunicationRuntime(
 			Provider: githubapp.NewProvider(),
 		},
 	}
+	freeze := &submissionfreeze.Service{
+		Pool: pool,
+		Now:  now,
+		App: githubapp.Service{
+			Pool:     pool,
+			Keys:     cfg.CredentialKeys,
+			Provider: githubapp.NewProvider(),
+		},
+	}
 	webhooks.Membership = accessOwner
 	outbox, err := jobs.New(
 		pool,
 		logger,
 		map[string]jobs.Handler{
 			githubwebhooks.HandlerKind:    webhooks,
+			submissionfreeze.HandlerKind:  freeze,
 			repositories.HandlerKind:      repos,
 			repositoryaccess.HandlerKind:  accessOwner,
 			repositoryaccess.PollKind:     repositoryaccess.PollHandler{Service: accessOwner},
@@ -205,6 +217,7 @@ func newCommunicationRuntime(
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
+	freeze.Jobs = outbox
 	webhooks.Jobs = outbox
 	composer.Jobs = outbox
 	auto.Jobs = outbox
@@ -280,6 +293,7 @@ func newCommunicationRuntime(
 	teams.Composer = *composer
 	return communicationRuntime{
 		SessionBookings:  sessions,
+		SubmissionFreeze: freeze,
 		GitHubWebhooks:   webhooks,
 		Repositories:     repos,
 		RepositoryAccess: accessOwner,

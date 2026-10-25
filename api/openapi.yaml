@@ -14,6 +14,183 @@ info:
 security:
   - session: []
 paths:
+  "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/EventID"
+      },
+      {
+        "name": "team_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "get": {
+      "operationId": "getSubmissionFreeze",
+      "description": "Current native team/submission audience only. Current GET is not an original command acknowledgement. Observation time is distinct from cutoff. Private reconciliation prose is organiser-only.",
+      "responses": {
+        "200": {
+          "description": "Current-authorised repository freeze evidence.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionFreezePage"
+              }
+            }
+          }
+        },
+        "default": {
+          "$ref": "#/components/responses/Error"
+        }
+      }
+    },
+    "post": {
+      "operationId": "changeSubmissionFreeze",
+      "description": "Configure the managed branch before cutoff, or explicitly reconcile/amend an immutable cutoff source. No automatic historical proof, external writes or submission acceptance. Exact request_id replay returns the original acknowledgement under current read authority; new commands require current write authority and matching revision.",
+      "responses": {
+        "200": {
+          "description": "Current-authorised repository freeze evidence.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionFreezeReceipt"
+              }
+            }
+          }
+        },
+        "default": {
+          "$ref": "#/components/responses/Error"
+        }
+      },
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/CSRF"
+        },
+        {
+          "name": "If-Match",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string", "pattern": "^\"[0-9]+\"$"
+          },
+          "description": "Observed repository freeze revision."
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SubmissionFreezeCommand"
+            }
+          }
+        }
+      }
+    }
+  }
+  "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze/commands/{request_id}": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/EventID"
+      },
+      {
+        "name": "team_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      {
+        "name": "request_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "get": {
+      "operationId": "getSubmissionFreezeReceipt",
+      "description": "Current-authorised actor-bound exact original command lookup. Null means unknown, never failure or permission to replay.",
+      "responses": {
+        "200": {
+          "description": "Current-authorised repository freeze evidence.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionFreezeRecovery"
+              }
+            }
+          }
+        },
+        "default": {
+          "$ref": "#/components/responses/Error"
+        }
+      }
+    }
+  }
+  "/api/v1/events/{event_id}/teams/{team_id}/submission-freeze/push-evidence": {
+    "parameters": [
+      {
+        "$ref": "#/components/parameters/EventID"
+      },
+      {
+        "name": "team_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "get": {
+      "operationId": "getSubmissionFreezePushEvidence",
+      "description": "Current organiser only. Exact retained authenticated repository/ref evidence, cursor-paged in UUID storage order. Not a complete history or chronological ordering guarantee; author dates are not retained or sufficient proof.",
+      "responses": {
+        "200": {
+          "description": "Current-authorised repository freeze evidence.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionFreezePushPage"
+              }
+            }
+          }
+        },
+        "default": {
+          "$ref": "#/components/responses/Error"
+        }
+      },
+      "parameters": [
+        {
+          "name": "after",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          }
+        }
+      ]
+    }
+  }
   "/api/v1/events/{event_id}/sessions/{session_id}/notifications": {
     "parameters": [
       {
@@ -6498,6 +6675,536 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
   schemas:
+    SubmissionFreezeSource: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "managed_evidence_ids",
+        "uncaptured_evidence_ids",
+        "audiences",
+        "id",
+        "event_id",
+        "team_id",
+        "entry_id",
+        "submission_revision",
+        "native_outcome",
+        "cutoff",
+        "recorded_at",
+        "repository_id",
+        "repository_url",
+        "branch",
+        "configuration_revision",
+        "repository_provenance",
+        "status"
+      ],
+      "properties": {
+        "managed_evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "uncaptured_evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "audiences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "team_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "entry_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "submission_revision": {
+          "type": "integer",
+          "format": "int64",
+          "nullable": true
+        },
+        "native_outcome": {
+          "type": "string"
+        },
+        "cutoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "repository_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "repository_url": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "configuration_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "repository_provenance": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    }
+    SubmissionFreezeObservation: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_id",
+        "observed_at",
+        "sha",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "string"
+        }
+      }
+    }
+    SubmissionFreezeDecision: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "managed_evidence_ids",
+        "uncaptured_evidence_ids",
+        "audiences",
+        "submission_revision",
+        "native_revision",
+        "id",
+        "source_id",
+        "revision",
+        "actor_id",
+        "at",
+        "action",
+        "sha",
+        "reason",
+        "observation_ids",
+        "push_ids",
+        "external_evidence",
+        "prior_decision_id"
+      ],
+      "properties": {
+        "managed_evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "uncaptured_evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "audiences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "submission_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "native_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "reconcile",
+            "amend"
+          ]
+        },
+        "sha": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "observation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "push_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "external_evidence": {
+          "type": "string"
+        },
+        "prior_decision_id": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true
+        }
+      }
+    }
+    SubmissionFreezePage: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_reference_status",
+        "native_revision",
+        "revision",
+        "native_outcome",
+        "current_submission_revision",
+        "binding_current",
+        "branch",
+        "repository_id",
+        "repository_url",
+        "cutoff",
+        "can_configure",
+        "can_reconcile",
+        "can_amend",
+        "status",
+        "source",
+        "observations",
+        "decisions",
+        "current"
+      ],
+      "properties": {
+        "current_reference_status": {
+          "type": "string"
+        },
+        "native_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "native_outcome": {
+          "type": "string"
+        },
+        "current_submission_revision": {
+          "type": "integer",
+          "format": "int64",
+          "nullable": true
+        },
+        "binding_current": {
+          "type": "boolean"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "repository_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "repository_url": {
+          "type": "string"
+        },
+        "cutoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "can_configure": {
+          "type": "boolean"
+        },
+        "can_reconcile": {
+          "type": "boolean"
+        },
+        "can_amend": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        },
+        "source": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/SubmissionFreezeSource"
+            }
+          ],
+          "nullable": true
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SubmissionFreezeObservation"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SubmissionFreezeDecision"
+          }
+        },
+        "current": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/SubmissionFreezeDecision"
+            }
+          ],
+          "nullable": true
+        }
+      }
+    }
+    SubmissionFreezeCommand: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "action"
+      ],
+      "properties": {
+        "native_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "submission_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "request_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "configure",
+            "reconcile",
+            "amend"
+          ]
+        },
+        "source_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "branch": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "sha": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "observation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "push_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "external_evidence": {
+          "type": "string",
+          "maxLength": 8000
+        },
+        "prior_decision_id": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true
+        }
+      }
+    }
+    SubmissionFreezeReceipt: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "expected_revision",
+        "request_id",
+        "fingerprint",
+        "action",
+        "revision",
+        "decision"
+      ],
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "request_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "decision": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/SubmissionFreezeDecision"
+            }
+          ],
+          "nullable": true
+        }
+      }
+    }
+    SubmissionFreezeRecovery: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt"
+      ],
+      "properties": {
+        "receipt": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/SubmissionFreezeReceipt"
+            }
+          ],
+          "nullable": true
+        }
+      }
+    }
+    SubmissionFreezePush: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sha",
+        "ref",
+        "provider_at",
+        "received_at",
+        "payload_hash"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "provider_at": {
+          "type": "string",
+          "format": "date-time",
+          "nullable": true
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload_hash": {
+          "type": "string"
+        }
+      }
+    }
+    SubmissionFreezePushPage: {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/SubmissionFreezePush"
+          }
+        },
+        "next_cursor": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true
+        }
+      }
+    }
     "SessionNotificationConfiguration": {
       "type": "object",
       "additionalProperties": false,

@@ -1547,6 +1547,16 @@ type SmtpSubmissionReceipt struct {
 	RecordedAt  time.Time
 }
 
+type SubmissionBranchConfiguration struct {
+	EventID      uuid.UUID
+	TeamID       uuid.UUID
+	Revision     int64
+	RepositoryID int64
+	Provenance   uuid.UUID
+	Branch       string
+	ActorID      uuid.UUID
+}
+
 type SubmissionChange struct {
 	EventID        uuid.UUID
 	TeamID         uuid.UUID
@@ -1574,6 +1584,46 @@ type SubmissionFileReference struct {
 	SubmissionRevision int64
 	FileID             uuid.UUID
 	Audience           []string
+}
+
+type SubmissionFreezeCommand struct {
+	EventID     uuid.UUID
+	RequestID   uuid.UUID
+	TeamID      uuid.UUID
+	ActorID     uuid.UUID
+	Fingerprint string
+	Result      []byte
+}
+
+type SubmissionFreezeDecision struct {
+	ID         uuid.UUID
+	SourceID   uuid.UUID
+	Revision   int64
+	ActorID    uuid.UUID
+	DecidedAt  time.Time
+	Definition []byte
+}
+
+type SubmissionFreezeHead struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	Revision int64
+}
+
+type SubmissionFreezeObservation struct {
+	ID         uuid.UUID
+	SourceID   uuid.UUID
+	ObservedAt time.Time
+	Definition []byte
+}
+
+type SubmissionFreezeSource struct {
+	ID         uuid.UUID
+	EventID    uuid.UUID
+	TeamID     uuid.UUID
+	Cutoff     time.Time
+	Binding    []byte
+	Definition []byte
 }
 
 type SubmissionRevision struct {

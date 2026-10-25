@@ -50,3 +50,8 @@ SELECT id FROM events WHERE configuration->>'submission_cutoff' IS NOT NULL AND 
 -- name: SubmissionOrganisers :many
 SELECT p.id,p.display_name FROM event_memberships m JOIN people p ON p.id=m.person_id
 WHERE m.event_id=$1 AND m.role='organiser' AND m.active AND p.active ORDER BY p.display_name,p.id;
+
+-- name: SubmissionCutoffOutcome :one
+SELECT * FROM submission_changes WHERE event_id=$1 AND team_id=$2
+AND actor_id IS NULL AND action IN ('frozen','not_submitted','withdrawn') AND occurred_at >= $3
+ORDER BY revision LIMIT 1;
