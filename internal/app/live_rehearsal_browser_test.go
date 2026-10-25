@@ -57,12 +57,34 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 			"set HACKBOX_INTEGRATION=1 HACKBOX_LIVE_REHEARSAL=1 after building both production portals",
 		)
 	}
+	runNativeBrowserRehearsal(t, "playwright.live.config.ts", "test-results-live")
+}
+
+func TestAccessibilityBrowsers(t *testing.T) {
+	if os.Getenv("HACKBOX_ACCESSIBILITY") != "1" {
+		t.Skip("set HACKBOX_INTEGRATION=1 HACKBOX_ACCESSIBILITY=1 after building both portals")
+	}
+	runNativeBrowserRehearsal(
+		t,
+		"playwright.accessibility.config.ts",
+		"test-results-accessibility-native",
+	)
+}
+
+// Both suites use the same native fixture, private control channel and production
+// router. Configuration selects verification, never a different product policy.
+func runNativeBrowserRehearsal(t *testing.T, configuration, outputDirectory string) {
+	t.Helper()
 	r := newLiveRehearsal(t)
 	admin, public := r.surface(t, "admin"), r.surface(t, "public")
 	// A separate native database/runtime keeps irreversible cutoff settlement out
 	// of ordinary live Today, display and private mentor recovery scenarios.
 	phase := newLiveRehearsal(t, true)
 	phasePublic := phase.surface(t, "public")
+	var admission *accessibilityAdmission
+	if configuration == "playwright.accessibility.config.ts" {
+		admission = newAccessibilityAdmission(t)
+	}
 	for _, surface := range []rehearsalSurface{admin, public} {
 		// Native router owns SPA fallback; missing built assets must fail visibly.
 		response, err := http.Get(
@@ -152,6 +174,14 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				fixture, publicSurface = phase, phasePublic
 			} else if input.Fixture != "" {
 				http.Error(w, "unknown fixture", 400)
+				return
+			}
+			if input.Action == "admission-session" {
+				if admission == nil {
+					http.Error(w, "admission fixture unavailable", http.StatusNotFound)
+					return
+				}
+				admission.session(w, request, input.Actor, input.Surface)
 				return
 			}
 			var err error
@@ -252,7 +282,12 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 				}
 			case "release-phase-challenge":
 				common := content.Service{Pool: phase.pool, Clock: phase.clock.read}
-				if err := common.Dispatch(request.Context(), phase.eventID, phase.challengeID, phase.challengeRevision); err != nil {
+				if err := common.Dispatch(
+					request.Context(),
+					phase.eventID,
+					phase.challengeID,
+					phase.challengeRevision,
+				); err != nil {
 					http.Error(w, err.Error(), 409)
 					return
 				}
@@ -302,7 +337,11 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 	t.Cleanup(func() { _ = control.Close() })
 	// Only synthetic short-lived test sessions are passed to the node owner.
 	manifest := map[string]any{
-		"phase":               map[string]any{"event_id": phase.eventID, "team_id": phase.teamID, "public": phasePublic.server.URL},
+		"phase": map[string]any{
+			"event_id": phase.eventID,
+			"team_id":  phase.teamID,
+			"public":   phasePublic.server.URL,
+		},
 		"answer_id":           support.answerID,
 		"help_id":             support.helpID,
 		"private_question_id": support.questionID,
@@ -314,6 +353,15 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"display":             proxy.server.URL,
 		"socket":              socket,
 		"run_id":              uuid.NewString(),
+	}
+	var admissionClockStart time.Time
+	if admission != nil {
+		admissionClockStart = admission.runtime.clock.read()
+		manifest["admission"] = map[string]any{
+			"event_id": admission.runtime.eventID, "form_id": admission.formID,
+			"public": admission.public.server.URL, "admin": admission.admin.server.URL,
+			"instant": admissionClockStart,
+		}
 	}
 	manifestPath := filepath.Join(private, "manifest.json")
 	data, err := json.Marshal(manifest)
@@ -329,7 +377,7 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"node_modules/@playwright/test/cli.js",
 		"test",
 		"--config",
-		"playwright.live.config.ts",
+		configuration,
 	)
 	if project := os.Getenv("HACKBOX_REHEARSAL_PROJECT"); project != "" {
 		if project != "chromium" && project != "firefox-display" {
@@ -367,8 +415,9 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		t.Fatal(err)
 	}
 	proof := map[string]any{
-		"source_commit":     strings.TrimSpace(string(source)),
-		"source_commit_end": strings.TrimSpace(string(sourceAfter)),
+		"browser_configuration": configuration,
+		"source_commit":         strings.TrimSpace(string(source)),
+		"source_commit_end":     strings.TrimSpace(string(sourceAfter)),
 		"source_worktree_clean": len(strings.TrimSpace(string(statusBefore))) == 0 &&
 			len(strings.TrimSpace(string(statusAfter))) == 0,
 		"fixture_run_id":            manifest["run_id"],
@@ -381,12 +430,19 @@ func TestLiveRehearsalBrowsers(t *testing.T) {
 		"test_selection":            os.Getenv("HACKBOX_REHEARSAL_GREP"),
 		"browser_command_succeeded": result == nil,
 	}
+	if admission != nil {
+		proof["admission_fixture"] = map[string]any{
+			"event_id":    admission.runtime.eventID,
+			"clock_start": admissionClockStart,
+			"clock_end":   admission.runtime.clock.read(),
+		}
+	}
 	proofJSON, err := json.MarshalIndent(proof, "", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(
-		filepath.Join(command.Dir, "test-results-live", "native-fixture.json"),
+		filepath.Join(command.Dir, outputDirectory, "native-fixture.json"),
 		proofJSON,
 		0o600,
 	); err != nil {

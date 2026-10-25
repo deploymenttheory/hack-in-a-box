@@ -1,0 +1,276 @@
+{
+  "issue": 122,
+  "overall": "incomplete",
+  "note": "Optional M5 bookings/certificates have their own acceptance and do not gate M4. Every row needs actual complete first-release flows; a partial state scan never closes a row.",
+  "journeys": [
+    {
+      "id": "registration",
+      "scope": "Registration application, errors, offer acceptance and withdrawal",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        236
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "teams",
+      "scope": "Team request, roster editing, allocation and freeze refusal",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        237
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "mentor",
+      "scope": "Private observation, review, correction, save, local recovery and current denial",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        106
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "judge",
+      "scope": "Final judge score, corrections, submission lock and result sign-off",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        108,
+        109,
+        111,
+        112,
+        114
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "mc",
+      "scope": "MC live controls, review/correction, pairing, revocation and room output",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        90
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "objectives",
+      "scope": "Objective setup, editing, validation and success measures",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        157
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "rules",
+      "scope": "Released rules, exact version acknowledgement and current contacts",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        88
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "help",
+      "scope": "Help request, queue claim contention, thread and current role loss",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        160
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "clarifications",
+      "scope": "Private question, official answer, correction and equal audience access",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        162
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [
+        "admission-and-live-native-proof.json \u2014 selected native keyboard/state journeys only; full journey/manual/browser acceptance remains pending"
+      ],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "practice",
+      "scope": "Synthetic judge practice, feedback and return to official briefing",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        109,
+        114
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "showcase",
+      "scope": "Reviewed project publication, permitted search, reader and withdrawal",
+      "acceptance_criteria": [
+        5,
+        6
+      ],
+      "source_issues": [
+        163
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "brand",
+      "scope": "Platform/custom light/dark themes, menu, dialog, errors and forced colours",
+      "acceptance_criteria": [
+        2,
+        3,
+        6
+      ],
+      "source_issues": [
+        245
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "guide",
+      "scope": "Independent static guide navigation, components, task examples and no-match recovery",
+      "acceptance_criteria": [
+        2,
+        3,
+        6
+      ],
+      "source_issues": [
+        245
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "shell",
+      "scope": "Sign-in, account, keyboard destinations, expiry, denial and lost connection",
+      "acceptance_criteria": [
+        1,
+        3,
+        6
+      ],
+      "source_issues": [
+        245
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    },
+    {
+      "id": "documents",
+      "scope": "Attachments, room QR, print and export entry points",
+      "acceptance_criteria": [
+        3,
+        6
+      ],
+      "source_issues": [
+        245
+      ],
+      "status": "not_evaluated",
+      "environments": [],
+      "automated_evidence": [],
+      "manual_evidence": [],
+      "defects": []
+    }
+  ]
+}

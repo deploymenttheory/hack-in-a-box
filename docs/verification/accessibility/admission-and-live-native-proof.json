@@ -1,0 +1,473 @@
+{
+  "scope": "Seven selected native PostgreSQL/production-portal keyboard journeys and 23 automated state scans; not full WCAG, manual, stable retail browser or actual mobile acceptance.",
+  "source_environment": {
+    "source_start": {
+      "commit": "9285577d3a19efa883711c37128f6c69714242ce",
+      "clean": true
+    },
+    "source_end": {
+      "commit": "9285577d3a19efa883711c37128f6c69714242ce",
+      "clean": true
+    },
+    "same_commit": true,
+    "overall": "passed",
+    "duration_ms": 70752.387,
+    "host": {
+      "os": "darwin",
+      "release": "27.0.0",
+      "architecture": "arm64",
+      "node": "v22.23.3"
+    },
+    "evidence_kind": "supplementary automated engine and keyboard checks; no manual or retail-device pass implied",
+    "tests": [
+      {
+        "title": " > chromium > admission.spec.ts > native registration is keyboard reachable at 390 CSS pixels through real field rejection, review, acceptance and next action",
+        "status": "passed",
+        "duration_ms": 11923
+      },
+      {
+        "title": " > chromium > admission.spec.ts > native team create, join and captain approval remain keyboard usable while a lost original acknowledgement stays unknown",
+        "status": "passed",
+        "duration_ms": 10179
+      },
+      {
+        "title": " > chromium > native.spec.ts > native participant reaches rules, reviews and acknowledges the exact version using only the keyboard",
+        "status": "passed",
+        "duration_ms": 6778
+      },
+      {
+        "title": " > chromium > native.spec.ts > native mentor reaches private fields and reviews unsent evidence through keyboard navigation",
+        "status": "passed",
+        "duration_ms": 3634
+      },
+      {
+        "title": " > chromium > native.spec.ts > native administrator can reach MC review and correction without a pointer",
+        "status": "passed",
+        "duration_ms": 4520
+      },
+      {
+        "title": " > chromium > native.spec.ts > native participant keyboard journey reaches help context and published official answers",
+        "status": "passed",
+        "duration_ms": 9277
+      },
+      {
+        "title": " > chromium > native.spec.ts > native administrator creates an objective and success measure entirely by keyboard",
+        "status": "passed",
+        "duration_ms": 20799
+      }
+    ]
+  },
+  "native_fixture": {
+    "admission_fixture": {
+      "clock_end": "2027-03-01T09:00:00Z",
+      "clock_start": "2027-03-01T09:00:00Z",
+      "event_id": "d8aba33b-cbe5-4d24-9b42-932a9f6c3063"
+    },
+    "browser_command_succeeded": true,
+    "browser_configuration": "playwright.accessibility.config.ts",
+    "event_id": "6dbf3509-3b48-4659-b6ee-19177a555a28",
+    "fixture_run_id": "65c46e26-0f1c-4395-89fc-653a3a768911",
+    "phase_event_id": "28122b93-ca4f-4338-a906-a1218bd757d8",
+    "phase_team_id": "d6b5ac57-20a2-4ecb-a8a9-6fbfd69c9fde",
+    "project_selection": "",
+    "publication_at": "2027-03-22T10:00:00Z",
+    "source_commit": "9285577d3a19efa883711c37128f6c69714242ce",
+    "source_commit_end": "9285577d3a19efa883711c37128f6c69714242ce",
+    "source_worktree_clean": true,
+    "team_id": "a9bbf64b-0ba7-4391-88c0-d7db6adb7286",
+    "test_selection": ""
+  },
+  "scan_states": [
+    {
+      "state": "native-admission-empty-form-390",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-admission-server-field-error-390",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-admission-corrected-review-390",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-admission-confirmed-result-390",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-create-review",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-join-review-390",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-captain-approval-review",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-accepted-draft-membership",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-lost-original-acknowledgement",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "participant-today",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "released-rules",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "rules-acknowledgement-review",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-hidden-focus"
+      ]
+    },
+    {
+      "state": "native-mentor-editor",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-mentor-review",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-mc-controls",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-mc-required-reason",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-mc-review",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-team-help-reader",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-common-answer-collection",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-common-answer-reader",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-objective-empty-editor",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-objective-measure-editor",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    },
+    {
+      "state": "native-objective-saved-version",
+      "browser": "156.0.8078.4",
+      "engine": "chromium",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "testEngine": {
+        "name": "axe-core",
+        "version": "4.14.0"
+      },
+      "violations": 0,
+      "incomplete_rules": [
+        "aria-prohibited-attr"
+      ]
+    }
+  ]
+}

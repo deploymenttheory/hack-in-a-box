@@ -54,7 +54,7 @@ test('email relay acceptance stays separate from proof and bad codes clear befor
   await noPrivatePersistence(page)
 })
 
-test('ambiguous email has no automatic retry and private fields clear on hide and navigation', async ({ page }) => {
+test('ambiguous email has no automatic retry and private fields clear on hide and navigation', async ({ page }, info) => {
   const fixture = await emailFixture(page, 'ambiguous')
   await page.goto('/account')
   await page.getByLabel('Email address', { exact: true }).fill(email)
@@ -64,7 +64,7 @@ test('ambiguous email has no automatic retry and private fields clear on hide an
   await page.evaluate(() => window.dispatchEvent(new Event('pagehide')))
   await expect(page.getByLabel('Eight-digit confirmation code')).toHaveValue('')
   await page.getByLabel('Eight-digit confirmation code').fill(code)
-  await page.getByRole('link', { name: 'Hack in a Box home' }).click()
+  await page.getByRole('link', { name: info.project.metadata.portal === 'administrator' ? 'Hack in a Box · Admin home' : 'Hack in a Box home', exact: true }).click()
   await page.goBack()
   await expect(page.getByLabel('Eight-digit confirmation code')).toHaveValue('')
   expect(fixture.attempts).toHaveLength(1)

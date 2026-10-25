@@ -1,0 +1,72 @@
+{
+  "note": "Actual stable release/browser, native engine and desktop emulation are distinct evidence. No implicit pass from installed metadata or a project name.",
+  "required": [
+    {
+      "target": "stable Chrome",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    },
+    {
+      "target": "stable Edge",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    },
+    {
+      "target": "stable Firefox",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    },
+    {
+      "target": "stable Safari",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    },
+    {
+      "target": "mobile Safari",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    },
+    {
+      "target": "mobile Chrome",
+      "status": "not_executed",
+      "os": null,
+      "device": null,
+      "browser_version": null,
+      "assistive_technology": null,
+      "source_commit": null,
+      "journeys": [],
+      "evidence": []
+    }
+  ],
+  "supplementary_engine_runs": []
+}
