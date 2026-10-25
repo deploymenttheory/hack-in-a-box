@@ -429,3 +429,30 @@ for(const boundary of ['beforeprint','hidden','pagehide'] as const){
   }finally{release()}
  })
 }
+
+
+test('a background refresh of the same authorised revision does not cancel a reviewed return preflight', async ({ page }) => {
+  const data = fixture()
+  data.page.override = cue('6bd74836-6b44-41ab-8435-e706356ff955', 'Synthetic urgent cue')
+  await prepare(page, data)
+  let release!: () => void, started = false, holdNext = true, backgroundStarted = false
+  const held = new Promise<void>(resolve => { release = resolve }), original = structuredClone(data.page)
+  await page.route(`**/events/${firstID}/presentation`, async route => {
+    if (route.request().method() !== 'GET') return route.fallback()
+    if (!holdNext) { backgroundStarted = true; return route.fallback() }
+    holdNext = false; started = true; await held
+    return route.fulfill({ json: original })
+  })
+  try {
+    await page.getByRole('button', { name: 'Return to schedule', exact: true }).click()
+    await page.getByRole('button', { name: 'Confirm room change', exact: true }).click()
+    await expect.poll(() => started).toBe(true)
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect.poll(() => backgroundStarted).toBe(true)
+    release()
+    await expect(live(page).getByRole('heading', { name: 'Planned opening', exact: true })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Review return to schedule', exact: true })).toHaveCount(0)
+    expect(data.requests.map(request => request.body.action)).toEqual(['return_to_schedule'])
+    expect(data.page.current_index).toBe(0)
+  } finally { release() }
+})
