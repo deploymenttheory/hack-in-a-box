@@ -415,3 +415,32 @@ scope's four artifacts were refreshed with their actual source/tree and hashes;
 the other three retain a6f5 attribution. The refreshed comparison was visually
 inspected with its complete original-evidence and moderated-card contents.
 Production source is unchanged from the four-scope a6f5 native pass.
+
+### Post-review manual inspector focus correction (not in merged PR285)
+
+The independent Standards review found that retained original acknowledgement
+metadata disabled normal inspector focus even after manually opening another
+team. The complete actual UI sequence (matched sign ACK → Review another team
+→ inspect another team → revisit that team → reopen the original team) reproduced
+**RED2** at both layouts: the newly displayed inspector heading was inactive.
+The correction separates the current opening's focus provenance from retained
+safe ACK metadata. The ACK transition keeps its one-shot explicit next-action
+focus; a manual opening restores the normal inspector heading focus. Pending
+actions remain disabled and original unknown requests retain their barriers.
+
+At original correction checkpoint `7fd3c8a1217859a52ff214622b52daebedcfc5c5`,
+the complete sequence and related pending/private-denial/HTTP408 checks passed
+**12/12 admin (4.5s) and 12/12 regular (5.2s)**, both layouts. The correction
+transplanted cleanly as `b186fe241ce4122dd9d068666187b1c3567d11fc` onto the
+rebased PR head `10ee498923647ffeb108325bbb958a5e4c7cf638`; types, focused ESLint
+and both production portal builds passed on b186. Only the three owned
+UI/browser files changed; the shared native fixture union is untouched.
+
+The native final journey now explicitly asserts actual heading focus on each
+manual opening and a same-team revisit after a real sign acknowledgement.
+**That updated native assertion is NOT RUN locally yet.** Root requested holding
+heavy native verification while integrating PR286 after the user merged PR285.
+No source was pushed to the merged branch. This correction remains a local
+follow-up candidate; native proof, independent correction reviews and follow-up
+CI remain required. Earlier native matrix evidence retains its exact sources
+and does not establish this new focus assertion.
