@@ -1,0 +1,569 @@
+{
+  "source_commit": "6bab692bbf34eb2d88926b0e4887ff870551ccfc",
+  "source_worktree_clean": true,
+  "scope": "explicit native security matrix; not full repository CI, browser, deployed manual abuse or pending feature verification",
+  "groups": [
+    {
+      "criterion": "SSO/session/CSRF",
+      "package": "identity",
+      "tests": [
+        "TestSecurity121OIDCTokenBrowserAndSessionAbuse",
+        "TestOIDCStatePKCENonceAudienceAndRevocation"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/identity",
+        "-run",
+        "^(TestSecurity121OIDCTokenBrowserAndSessionAbuse|TestOIDCStatePKCENonceAudienceAndRevocation)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestOIDCStatePKCENonceAudienceAndRevocation",
+        "TestSecurity121OIDCTokenBrowserAndSessionAbuse"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "29667f2beb471c5a34cb10abeb16309685bdd1e7a2c8fd5f4e488b4ec9114e2c"
+    },
+    {
+      "criterion": "SSRF URL/DNS/TLS/proxy/redirect and safe receipts",
+      "package": "teamsworkflow",
+      "tests": [
+        "TestSecurity121SSRFTransportRejectsDestinationsBeforeDial",
+        "TestEndpointPolicy",
+        "TestPublicAddresses",
+        "TestPinnedTLSNoProxyNoRedirectAndProviderClassification",
+        "TestRejectsUnsafeDNSAndDoesNotDial"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/teamsworkflow",
+        "-run",
+        "^(TestSecurity121SSRFTransportRejectsDestinationsBeforeDial|TestEndpointPolicy|TestPublicAddresses|TestPinnedTLSNoProxyNoRedirectAndProviderClassification|TestRejectsUnsafeDNSAndDoesNotDial)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestSecurity121SSRFTransportRejectsDestinationsBeforeDial",
+        "TestEndpointPolicy",
+        "TestPublicAddresses",
+        "TestPinnedTLSNoProxyNoRedirectAndProviderClassification",
+        "TestRejectsUnsafeDNSAndDoesNotDial"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "b6a4a80b246beab3a63e1b39f1b67db992dad0541dbcc7e2055940d74ef34a0e"
+    },
+    {
+      "criterion": "HTTP object references, uploads, redaction and current privacy",
+      "package": "httpapi",
+      "tests": [
+        "TestSecurity121RequestFailuresDoNotLogCredentialsOrUntrustedMetadata",
+        "TestSecurity121CrossEventFilesExportsAndMaliciousUploads",
+        "TestGitHubWebhookRawMachineAuthenticationAndStatusPolicy",
+        "TestContentEmbargoHTTPRoleTeamAndCacheMatrix",
+        "TestContentEmbargoHTTPGatesAndMissedPostponement",
+        "TestContentEmbargoHTTPPrivilegedGrantsAndLastingExclusion",
+        "TestHelpHTTPCurrentTeamContextAndLiveReviewGate",
+        "TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttachment",
+        "TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance",
+        "TestOutcomesHTTPOrdinaryMemberPrivateHistoryAndReviewedPublication"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/httpapi",
+        "-run",
+        "^(TestSecurity121RequestFailuresDoNotLogCredentialsOrUntrustedMetadata|TestSecurity121CrossEventFilesExportsAndMaliciousUploads|TestGitHubWebhookRawMachineAuthenticationAndStatusPolicy|TestContentEmbargoHTTPRoleTeamAndCacheMatrix|TestContentEmbargoHTTPGatesAndMissedPostponement|TestContentEmbargoHTTPPrivilegedGrantsAndLastingExclusion|TestHelpHTTPCurrentTeamContextAndLiveReviewGate|TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttachment|TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance|TestOutcomesHTTPOrdinaryMemberPrivateHistoryAndReviewedPublication)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttachment",
+        "TestContentEmbargoHTTPRoleTeamAndCacheMatrix",
+        "TestContentEmbargoHTTPGatesAndMissedPostponement",
+        "TestContentEmbargoHTTPPrivilegedGrantsAndLastingExclusion",
+        "TestGitHubWebhookRawMachineAuthenticationAndStatusPolicy",
+        "TestHelpHTTPCurrentTeamContextAndLiveReviewGate",
+        "TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance",
+        "TestOutcomesHTTPOrdinaryMemberPrivateHistoryAndReviewedPublication",
+        "TestSecurity121RequestFailuresDoNotLogCredentialsOrUntrustedMetadata",
+        "TestSecurity121CrossEventFilesExportsAndMaliciousUploads"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "12a613515a42b49974524c331c5315f544788bbd9c681e71e7cb52e65d3fdb80"
+    },
+    {
+      "criterion": "lasting eligibility and incompatible grant/registration races",
+      "package": "permissions",
+      "tests": [
+        "TestGrantHistoryEligibilityAndConcurrentRegistration",
+        "TestRoleResourceMatrixAndImmediateRevocation"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/permissions",
+        "-run",
+        "^(TestGrantHistoryEligibilityAndConcurrentRegistration|TestRoleResourceMatrixAndImmediateRevocation)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestGrantHistoryEligibilityAndConcurrentRegistration",
+        "TestRoleResourceMatrixAndImmediateRevocation"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "b5ff061c01781c3b81724545c289e87b52e24e9d37f5d8dd19306a252cdbb6fb"
+    },
+    {
+      "criterion": "offer/grant race and post-freeze roster abuse",
+      "package": "registration",
+      "tests": [
+        "TestOfferAcceptanceAndOrganiserGrantCannotCreateCompetingOrganiser",
+        "TestFreezeAndMembershipMoveSerializeAgainstPublicationFacts",
+        "TestFreezeSerializesWithManualMovesAndQueuedPublication"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/registration",
+        "-run",
+        "^(TestOfferAcceptanceAndOrganiserGrantCannotCreateCompetingOrganiser|TestFreezeAndMembershipMoveSerializeAgainstPublicationFacts|TestFreezeSerializesWithManualMovesAndQueuedPublication)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestFreezeSerializesWithManualMovesAndQueuedPublication",
+        "TestFreezeAndMembershipMoveSerializeAgainstPublicationFacts",
+        "TestOfferAcceptanceAndOrganiserGrantCannotCreateCompetingOrganiser"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "ec9844ae2b3a4efe1fc07f1b2f8119c57659254d3f9cceb3549f4b608b43f108"
+    },
+    {
+      "criterion": "formal submission common publication and live/frozen timing",
+      "package": "submissions",
+      "tests": [
+        "TestSubmissionBoundariesHistoryAndAuthorization",
+        "TestCompetitionDefinitionsWaitForActualCommonPublication"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/submissions",
+        "-run",
+        "^(TestSubmissionBoundariesHistoryAndAuthorization|TestCompetitionDefinitionsWaitForActualCommonPublication)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestSubmissionBoundariesHistoryAndAuthorization",
+        "TestCompetitionDefinitionsWaitForActualCommonPublication"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "90c147816ff98baec540ccab77dfc4cdd89590317daa3ccc0ef7e0a15a8048a3"
+    },
+    {
+      "criterion": "pre-live/provisional/private mentor review",
+      "package": "scorecards",
+      "tests": [
+        "TestIndependentCheckpointLifecycleUsesNativeRubricAndKeepsPendingPrivate",
+        "TestConfiguredWindowAndEvidenceReferencesCannotBypassNativeOwnership"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/scorecards",
+        "-run",
+        "^(TestIndependentCheckpointLifecycleUsesNativeRubricAndKeepsPendingPrivate|TestConfiguredWindowAndEvidenceReferencesCannotBypassNativeOwnership)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestConfiguredWindowAndEvidenceReferencesCannotBypassNativeOwnership",
+        "TestIndependentCheckpointLifecycleUsesNativeRubricAndKeepsPendingPrivate"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "d1a10e981ea284014aba257aaf34bfad2783cdc4db3038a256489d1409c74f22"
+    },
+    {
+      "criterion": "synthetic practice and current independent judge authority",
+      "package": "judging",
+      "tests": [
+        "TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode",
+        "TestConcurrentVersionFenceAndDeclaredConflictRevocation",
+        "TestCurrentAssignmentLossRevokesNativeSubmissionAndAuthoredHistoryReads"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/judging",
+        "-run",
+        "^(TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode|TestConcurrentVersionFenceAndDeclaredConflictRevocation|TestCurrentAssignmentLossRevokesNativeSubmissionAndAuthoredHistoryReads)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode",
+        "TestConcurrentVersionFenceAndDeclaredConflictRevocation",
+        "TestCurrentAssignmentLossRevokesNativeSubmissionAndAuthoredHistoryReads"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "1b86d843889b2e39d8ced5bbf847e4b8668daac943f6253373eaf8f177c2acf9"
+    },
+    {
+      "criterion": "goal and measure early disclosure",
+      "package": "objectives",
+      "tests": [
+        "TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion",
+        "TestObjectiveThemeDisclosurePublishesOnlyInsideActualGuardedCommonChallenge"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/objectives",
+        "-run",
+        "^(TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion|TestObjectiveThemeDisclosurePublishesOnlyInsideActualGuardedCommonChallenge)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestObjectiveThemeDisclosurePublishesOnlyInsideActualGuardedCommonChallenge",
+        "TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "864b92a8f66aac555258ec009a15f07410c20a100e2a8d130030cda1471469c1"
+    },
+    {
+      "criterion": "rubric common release/exact version and correction",
+      "package": "rubric",
+      "tests": [
+        "TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically",
+        "TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/rubric",
+        "-run",
+        "^(TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically|TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically",
+        "TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "ab55851a6cac052fdd1bc994f1ff0a662315cfb25d132d37546ff84cf143702d"
+    },
+    {
+      "criterion": "help claim/concurrency/current helper and requester scope",
+      "package": "help",
+      "tests": [
+        "TestHelpConcurrentClaimIdempotencyAndCurrentAuthority",
+        "TestHelpCurrentMentorDeactivationCannotClaimOrKeepAssignment",
+        "TestHelpRequestContextExposesOnlyCurrentConfirmedPublishedOwnTeam",
+        "TestHelpRevocationTransactionWinsAgainstBlockedContextRead"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/help",
+        "-run",
+        "^(TestHelpConcurrentClaimIdempotencyAndCurrentAuthority|TestHelpCurrentMentorDeactivationCannotClaimOrKeepAssignment|TestHelpRequestContextExposesOnlyCurrentConfirmedPublishedOwnTeam|TestHelpRevocationTransactionWinsAgainstBlockedContextRead)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestHelpConcurrentClaimIdempotencyAndCurrentAuthority",
+        "TestHelpRevocationTransactionWinsAgainstBlockedContextRead",
+        "TestHelpCurrentMentorDeactivationCannotClaimOrKeepAssignment",
+        "TestHelpRequestContextExposesOnlyCurrentConfirmedPublishedOwnTeam"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "d423636ba4fe399e79cdf804613e241586a03dc3e3cf0dcf291dd834fb926c40"
+    },
+    {
+      "criterion": "private Q&A and common source/attachment/current audience",
+      "package": "clarification",
+      "tests": [
+        "TestPrivateQuestionRechecksActualPublicationCurrentTeamAndStaff",
+        "TestWorkspaceDerivesOwnTeamAndStaffOnlyAudienceFromCurrentReleasedAuthority"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/clarification",
+        "-run",
+        "^(TestPrivateQuestionRechecksActualPublicationCurrentTeamAndStaff|TestWorkspaceDerivesOwnTeamAndStaffOnlyAudienceFromCurrentReleasedAuthority)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestPrivateQuestionRechecksActualPublicationCurrentTeamAndStaff",
+        "TestWorkspaceDerivesOwnTeamAndStaffOnlyAudienceFromCurrentReleasedAuthority"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "d29eeaa9210759a0e20f84582a120f14ff41a72fc1c6de728a5f11c0e10399ae"
+    },
+    {
+      "criterion": "credentials encryption, current reveal, rotation and audit failure",
+      "package": "credentials",
+      "tests": [
+        "TestCredentialCurrentMembershipPrivacyAndAuditedDenials",
+        "TestCredentialKeyFaultRotationReplacementAndSafeRecovery",
+        "TestCredentialAuditFailurePreventsDisclosureAndStaleWrites"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/credentials",
+        "-run",
+        "^(TestCredentialCurrentMembershipPrivacyAndAuditedDenials|TestCredentialKeyFaultRotationReplacementAndSafeRecovery|TestCredentialAuditFailurePreventsDisclosureAndStaleWrites)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestCredentialCurrentMembershipPrivacyAndAuditedDenials",
+        "TestCredentialKeyFaultRotationReplacementAndSafeRecovery",
+        "TestCredentialAuditFailurePreventsDisclosureAndStaleWrites"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "5d094a28689cc0b890cbbacbd1f68b841180824edec4e923444d3c7a6ba988b0"
+    },
+    {
+      "criterion": "context-bound encryption and key redaction",
+      "package": "secretbox",
+      "tests": [
+        "TestContextBoundEncryptionAndRotationRecovery",
+        "TestInvalidKeyringNeverEchoesConfiguration"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/secretbox",
+        "-run",
+        "^(TestContextBoundEncryptionAndRotationRecovery|TestInvalidKeyringNeverEchoesConfiguration)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestContextBoundEncryptionAndRotationRecovery",
+        "TestInvalidKeyringNeverEchoesConfiguration"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "5055a919580e144d9311ee4ee2c5ddcbff1ed582628d989ad3d90547aed13089"
+    },
+    {
+      "criterion": "retention and archived consent",
+      "package": "privacy",
+      "tests": [
+        "TestRetentionRemovesFieldsAndDraftsButPreservesSafeHistory",
+        "TestNativePhotoConsentIncarnationRevisionAndArchivedSelfRevocation"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/privacy",
+        "-run",
+        "^(TestRetentionRemovesFieldsAndDraftsButPreservesSafeHistory|TestNativePhotoConsentIncarnationRevisionAndArchivedSelfRevocation)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestNativePhotoConsentIncarnationRevisionAndArchivedSelfRevocation",
+        "TestRetentionRemovesFieldsAndDraftsButPreservesSafeHistory"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "0b1e731e79ceb63db1c078f4496d1f0d1453328d136fec0cb8b7df3fcca96c17"
+    },
+    {
+      "criterion": "post-archive audited follow-through and reviewed publication",
+      "package": "outcomes",
+      "tests": [
+        "TestNativeOrganisationMemberPitchOwnershipHistoryArchiveAndRevocation",
+        "TestActualNativeArchivedPlanDeliversToNoEventRoleOwnerAndRetainsHistory",
+        "TestReviewedProjectPositiveProjectionSearchWithdrawalAndExactReplay"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/outcomes",
+        "-run",
+        "^(TestNativeOrganisationMemberPitchOwnershipHistoryArchiveAndRevocation|TestActualNativeArchivedPlanDeliversToNoEventRoleOwnerAndRetainsHistory|TestReviewedProjectPositiveProjectionSearchWithdrawalAndExactReplay)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestReviewedProjectPositiveProjectionSearchWithdrawalAndExactReplay",
+        "TestActualNativeArchivedPlanDeliversToNoEventRoleOwnerAndRetainsHistory",
+        "TestNativeOrganisationMemberPitchOwnershipHistoryArchiveAndRevocation"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "7ee062c2859764b45a96f3dec0e627f0c0b5bff51e779d834f39304592cdf327"
+    },
+    {
+      "criterion": "archived work cannot resurrect ordinary campaigns",
+      "package": "automation",
+      "tests": [
+        "TestArchiveCancelsOperationalWorkButOnlyValidatedRetainedFollowupSurvives",
+        "TestRetainedDeadlineCannotExceedEventPrivacyPolicy"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/automation",
+        "-run",
+        "^(TestArchiveCancelsOperationalWorkButOnlyValidatedRetainedFollowupSurvives|TestRetainedDeadlineCannotExceedEventPrivacyPolicy)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestArchiveCancelsOperationalWorkButOnlyValidatedRetainedFollowupSurvives",
+        "TestRetainedDeadlineCannotExceedEventPrivacyPolicy"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "b062c300af476256fdd5263c87bf084beb86e419b5493ebae1020ab1366d4c41"
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,9 @@
+[
+ {"criterion":"actual display transport, capability scope and stream revocation", "package":"httpapi", "tests":["TestPresentationHTTPContractsAndCapabilityBoundary","TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation"]},
+ {"criterion":"long-lived subscription denies before private payload read", "package":"access", "tests":["TestSubscriptionPolicyReevaluatesEveryDelivery"]},
+ {"criterion":"queued effects recheck current role assignment and event", "package":"jobs", "tests":["TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent"]},
+ {"criterion":"native protected file overlapping role and current revocation", "package":"files", "tests":["TestFileAccessWithOverlappingRolesAndRevocation"]},
+ {"criterion":"room projection cannot disclose private or early common sources", "package":"presentation", "tests":["TestDisplayTokensAreScopedHashedRevocableAndAuthorityBound","TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields","TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources"]},
+ {"criterion":"approved multi-channel confidentiality and execution source authority", "package":"automation", "tests":["TestApprovedMultiChannelAutomationCannotProjectNativePrivateCardsCredentialsOrOtherMailboxes","TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope"]},
+ {"criterion":"GitHub App provider authentication and least-privilege operation tokens", "package":"githubapp", "tests":["TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens","TestOperationTokensNeverDefaultToInstallationWideAccess"]}
+]

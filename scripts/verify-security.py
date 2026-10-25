@@ -17,17 +17,19 @@ import sys
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--manifest", default="docs/verification/security/cases.json")
     args = parser.parse_args()
     if os.environ.get("HACKBOX_INTEGRATION") != "1":
         parser.error("HACKBOX_INTEGRATION=1 is required; native skips are not proof")
     root = Path(__file__).resolve().parents[1]
-    cases = json.loads((root / "docs/verification/security/cases.json").read_text())
+    cases = json.loads((root / args.manifest).read_text())
     output = Path(args.output_dir).resolve()
     output.mkdir(parents=True, exist_ok=True, mode=0o700)
     summary = {
         "source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
         "source_worktree_clean": not subprocess.check_output(["git", "status", "--porcelain"], cwd=root, text=True).strip(),
         "scope": "explicit native security matrix; not full repository CI, browser, deployed manual abuse or pending feature verification",
+        "manifest": args.manifest,
         "groups": [],
     }
     env = {**os.environ, "GOMAXPROCS": "2"}
