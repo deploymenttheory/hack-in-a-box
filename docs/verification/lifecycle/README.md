@@ -81,6 +81,12 @@ project with the same caps; no worker, browser or provider delivery ran. The
 project's containers, volumes and network were removed and label checks were
 empty after cleanup. This remains partial evidence, not L01–L18 completion.
 
+Focused production clock/retention regressions also proved genuine retained
+queue deferral, natural resume, wall-time lease/attempt ownership, the unchanged
+default exclusive expiry and explicitly configured native 30/60/90 effects.
+Their [exact run and failure provenance](evidence/clock-runs.md) distinguishes
+component fixtures from the required full HTTP lifecycle and production images.
+
 The most recent lightweight compile check compiled both checkpoint drivers and passed the
 independent DST oracle (`go test ./internal/app -run
 '^TestLifecycleCalendarFixtureActuallyCrossesDST$' -count=1`, 0.464 seconds).

@@ -79,5 +79,33 @@ event service and completion-clock regression. A four-file diff against the
 source commit was empty. Its showcase-specific app assertion was excluded;
 event timestamp logic was not independently reimplemented.
 
-Configured positive 30/60/90 queued effects, source invalidation and the full
-HTTP/Compose lifecycle remain pending; none is inferred from these checkpoints.
+## Explicitly configured owned 30/60/90 follow-through
+
+Session `90384` passed, test 94.42s/package 94.823s, source frozen and committed
+unchanged as `9e1132a5`. Before native archive, the organiser used the existing
+native privacy owner to explicitly configure 120 days: day-90 follow-through
+plus a thirty-day response window. This fixture policy expires May 1, 2026;
+the production default stays ninety days and its exclusive boundary remains
+covered separately above. It does not move review dates or rescue expired work.
+
+All four genuine approved native plans first attempted through actual River
+and retained queued snoozes with no early effect. The positive owner inbox
+census advanced through these independent worked dates:
+
+| Review | Domain date | Actual native inbox census |
+|---|---|---|
+| Day 30 | January 31, 2026 12:00 UTC | 1 |
+| Day 60 | March 2, 2026 12:00 UTC | 2 |
+| Day 90 | April 1, 2026 12:00 UTC | 3 |
+
+After day 30, the ordinary owner closed the fourth source through its native
+outcome command. Ordinary maintenance blocked/cancelled that already queued
+day-60 reminder, with zero application attempts and no inbox effect. The
+positive messages retained their actual owned review destinations and did not
+disclose event-role-only names. There was no handler invocation, `Execute`,
+`JobRetry`, queue timestamp edit, virtual queue/lease clock or synthetic
+provider-success substitute. The native PostgreSQL fixture terminated through
+normal cleanup at 20:08:32 UTC.
+
+The full HTTP/Compose lifecycle, independent browser journeys and normal
+production-image proof remain pending; none is inferred from these components.
