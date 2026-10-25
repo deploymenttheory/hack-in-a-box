@@ -166,3 +166,22 @@ and diff checks passed. Participant discovery includes48 session cases and4
 deliverable-lifetime cases (52 total); discovery is not execution. Actual TypeScript build-mode type checking passed
 as well. These are local working-tree rebase-integration results,
 not complete245 acceptance or final CI.
+
+## Rebase after submitted-build UI merge
+
+Rebased the four cutover commits onto main
+`c723e693c21529c8411cae98863abd6e29d37648` after PR #278 merged.
+Conflict resolution preserves the submitted-build action link, all accessibility,
+booking and submitted-build test registrations, and the cutover private-owner
+changes. The Today observer retains all five owned command families:
+preparation, reading acknowledgements, bookings, code cutoff and team evidence.
+The existing regression now checks code command history before and after an
+unknown response alongside the other families, without changing unrelated
+actor, session or event history.
+
+Local verification on the rebased working tree: three affected unit files,
+seven tests passed in 1.47 seconds; TypeScript build-mode type checking and
+focused ESLint passed. These results establish this integration check only.
+Fresh published-head CI and the remaining full cutover acceptance are still
+required. Issue #97 is now delivered by #278; #109, #111, #113 and #163 remain
+separate integration dependencies.
