@@ -121,3 +121,17 @@ test('retired formal output never presents a retained historical card as current
  await expect(page.getByText('Recorded reason: Synthetic recorded moderation reason',{exact:true})).toHaveCount(0)
  await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toHaveCount(0)
 })
+test('pending current read preserves keyboard return to the same team without permitting an action',async({page})=>{
+ const state=await fixture(page),team=initial.teams[0].team_id;let hold=false,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{if(hold)await gate;return route.fulfill({json:state.page})})
+ try{
+  await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team}`,exact:true}).press('Enter')
+  hold=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await page.getByRole('link',{name:'Back to panel',exact:true}).press('Enter')
+  const source=page.getByRole('button',{name:`Inspect Team ${team}`,exact:true});await expect(source).toBeDisabled();await expect(source).toBeFocused()
+  await source.press('Enter');await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toHaveCount(0)
+  release();await expect(source).toBeEnabled();await expect(source).toBeFocused();await source.press('Enter')
+  await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Synthetic recorded moderation reason')
+ }finally{release()}
+})
