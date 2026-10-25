@@ -19,6 +19,7 @@ import (
 // It is not a public tally, qualification result or announcement. The caller
 // holds this event transaction while retaining its own approval/reference.
 type Completion struct {
+	Deliberation       bool
 	Criteria           rubric.PublicDefinition
 	Reference          rubric.Reference
 	Assignments        []Assignment
@@ -46,6 +47,10 @@ func (s Service) CompletionInTransaction(
 		return out, access.ErrForbidden
 	}
 	run, d, err := loadRun(ctx, tx, eventID, runID)
+	if err != nil {
+		return out, err
+	}
+	_, out.Deliberation, err = round(ctx, tx, eventID, runID)
 	if err != nil {
 		return out, err
 	}

@@ -394,7 +394,7 @@ func TestIndependentVisibilityIncompleteLockDeliberationAndReopen(t *testing.T) 
 		if e != nil {
 			return e
 		}
-		if c.Reference != f.criteria.Reference ||
+		if !c.Deliberation || c.Reference != f.criteria.Reference ||
 			len(c.Criteria.Categories) != len(f.criteria.Definition.Categories) ||
 			len(c.Assignments) != 1 ||
 			c.Assignments[0].TeamID != f.team ||

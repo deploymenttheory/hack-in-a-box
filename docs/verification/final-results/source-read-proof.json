@@ -1,0 +1,64 @@
+{
+  "kind": "working-tree checkpoint before commit; not full112 acceptance",
+  "parent": "ee980c31c75b10032579009323af00c431a13b21",
+  "sources": [
+    {
+      "path": "internal/judging/completion.go",
+      "sha256": "97f872ce9a561c50bfb0590226297192bf4dfc9b5c1bb9cc03bff9acb47306b7"
+    },
+    {
+      "path": "internal/judging/service_test.go",
+      "sha256": "683e07ef72fc682e879b388357987f2d69616bf7ee73faf8e7936d40b8b633bc"
+    },
+    {
+      "path": "internal/results/model.go",
+      "sha256": "bd76461afe10a362a198b284e3096bf12dc9af1e1cf672e7151a0edf06b6b63e"
+    },
+    {
+      "path": "internal/results/authority.go",
+      "sha256": "75ab7a1d00a34b7699ab98ecc51688e607656a2fb34c4da14214f46d488ffae4"
+    },
+    {
+      "path": "internal/results/source.go",
+      "sha256": "a32186f93ae9d36773458d42f8ce6e1e563fdac53b87bcf51d5ec17c771b19fe"
+    },
+    {
+      "path": "internal/results/read.go",
+      "sha256": "b22e1d3858989cb848dc0686144fdae5a5a1551842291bb1ee0388b9a2827b51"
+    },
+    {
+      "path": "internal/results/read_test.go",
+      "sha256": "7e9fefbd993b207682eec65db5ca1643fa941ab6e65792b5141c252f93410b60"
+    },
+    {
+      "path": "internal/results/storage.go",
+      "sha256": "7f0896fa948db6f210f9d04c2e7f1da682562883221ca832c00820caae126cd7"
+    },
+    {
+      "path": "internal/results/ties.go",
+      "sha256": "42669cec7c56e4c6035e41855638ad30e3a1ccdf7f120280797d7998d8027113"
+    },
+    {
+      "path": "internal/results/ties_test.go",
+      "sha256": "bd70326c759257c1239e6c6aeca2c56753037e769ac73c6f30f691ef4a79dd24"
+    }
+  ],
+  "proofs": [
+    {
+      "command": "HACKBOX_INTEGRATION=1 go test -race ./internal/results -count=1 -v",
+      "package_seconds": 6.764,
+      "scope": "schema/retention, exact arithmetic/category/tie identities and current organiser/missing-run read authority; source binding later changed to include entire exact selection metadata; full qualified source flow is pending"
+    },
+    {
+      "command": "HACKBOX_INTEGRATION=1 go test -race ./internal/judging -run ^TestIndependentVisibilityIncompleteLockDeliberationAndReopen$ -count=1 -v",
+      "scenario_seconds": 2.59,
+      "package_seconds": 3.996,
+      "scope": "actual required assignments/reference/deliberation projection and existing independent cards/reopen/approval scenario"
+    }
+  ],
+  "limitations": [
+    "no results HTTP endpoint/runtime wiring yet",
+    "no complete qualification/final tally or publication scenario yet",
+    "ballots, confirmation, event dispatch and full privacy/concurrency/acceptance/reviews/CI remain pending"
+  ]
+}

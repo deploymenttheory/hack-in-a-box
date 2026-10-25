@@ -43,7 +43,14 @@ func TestPopulatedParentUpgradeAndRetainedResultHistory(t *testing.T) {
 		run     *uuid.UUID
 		version *int64
 	}{{run: ptrUUID(uuid.New())}, {version: ptrVersion(1)}} {
-		if _, err = pool.Exec(t.Context(), `INSERT INTO result_versions(event_id,version,qualification_run_id,qualification_version,actor_id,action,reason,document,changed_at) VALUES($1,2,$2,$3,$4,'prepare','Synthetic incomplete native source','{}',now())`, eventID, pair.run, pair.version, actor.ID); err == nil {
+		if _, err = pool.Exec(
+			t.Context(),
+			`INSERT INTO result_versions(event_id,version,qualification_run_id,qualification_version,actor_id,action,reason,document,changed_at) VALUES($1,2,$2,$3,$4,'prepare','Synthetic incomplete native source','{}',now())`,
+			eventID,
+			pair.run,
+			pair.version,
+			actor.ID,
+		); err == nil {
 			t.Fatal("incomplete native qualification reference accepted")
 		}
 	}

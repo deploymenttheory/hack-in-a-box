@@ -84,3 +84,32 @@ those assertions were then inserted and passed in the recorded final run.
 
 The full native command, actual qualification handoff, HTTP/runtime/API, vote,
 confirmation and downstream publication acceptance above remain required.
+
+## Private current-source reader checkpoint
+
+The results owner now composes the actual published current run, native required
+judge completion and #110 `SelectionInTransaction` in one event transaction.
+Only a current organiser can read private preparation. Tallies are withheld
+until native deliberation is open; missing runs, incomplete judges and missing
+current signed qualification have explicit blockers. Stale stored preparation is
+redacted from the current projection, retaining its immutable storage. The public
+announcement type is separate and cannot carry raw cards, mentor ranks, votes or
+evidence. No result HTTP endpoint or runtime composition is wired yet.
+
+Exact category contenders use all required native judge averages in all-team
+mode, and the actual signed panel category IDs in qualification mode, including
+non-finalists. Ties retain every candidate and derive their identity from exact
+source binding; stable UUID order does not select a winner. The full selection
+metadata (including run/version/reference/signoff) participates in source binding.
+
+The real PostgreSQL/race results package passed in 6.764 seconds: schema and
+arithmetic scenarios plus a current organiser/missing-run reader, judge/outsider
+denials and foreign-event denial. Its role fixture deliberately tests the reader
+boundary; it is not a full lifecycle rehearsal or a completed qualified tally.
+The existing native judge scenario also passed with the new explicit deliberation
+source assertion in 2.59 seconds (package 3.996s). Configured source lint passed
+after replacing a category-contender allocation with bounded slice reuse.
+
+Full actual signed-selection → result preparation → judge ballots → confirmation
+→ separate publication/native HTTP/runtime/provider integration remains required.
+No successful UI publication or external message is simulated by these readers.
