@@ -124,3 +124,24 @@ fingerprint/authority assertion or native timing policy was weakened.
 Remaining guide/expanded keyboard/privacy/current visual/#108 integration gates
 still apply. This successful native checkpoint does not make the draft Ready or
 close the issue.
+
+## Rebase and expanded proof — 1dee0f2
+
+The owned branch was rebased onto merged session UI main `b2f7f5a0`, preserving
+both command namespaces, both guide exports and participant suite registration.
+No generated contract or schema conflict occurred. On clean executable1dee0f2,
+the expanded suite passed **16/16 through each actual portal configuration**
+(10.6s/11.6s), including genuine bounded Tab traversal, stale exact-review pause,
+current200 organiser capability-loss scrubbing and deliberately reviewed new-base
+recovery retaining earlier unknown metadata. The unfiltered actual native
+keyboard/capture/reconciliation/assignment-loss journeys passed again **2/2,
+-race package16.010s**, with both owned databases terminated. Screenshots were
+captured; they are not yet final-copy provenance images.
+
+The four owned guide journeys reached the expected lifecycle but failed an
+ambiguous unnamed status selector: Base UI adds a separate empty live-status span.
+The synthetic original-outcome status now has an explicit accessible name and
+its tests bind that exact name. This is not a product-policy RED. The affected
+static guide rerun remains pending. Visual inspection also prompted plain user
+labels in place of implementation wording and an actual styled Back action;
+updated source-attributed image capture remains required after that copy change.
