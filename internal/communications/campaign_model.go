@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/deploymenttheory/hack-in-a-box/internal/maildelivery"
 )
 
 // ChannelProvider reports actual adapter readiness. Setup URLs and the supported
@@ -120,14 +122,15 @@ type TestMessage struct {
 // ApprovedCampaign is the transaction-bound execution seam for #82. Resolving
 // it never enqueues or sends. The caller retains its actual recipient attempts.
 type ApprovedCampaign struct {
-	ScopeApproval *ScopeApproval
-	Approval      CampaignApproval
-	Purpose       string
-	Format        string
-	Definition    CampaignDefinition
-	Version       int64
-	DueAt         time.Time
-	Preview       Preview
+	SessionCalendar *maildelivery.Calendar
+	ScopeApproval   *ScopeApproval
+	Approval        CampaignApproval
+	Purpose         string
+	Format          string
+	Definition      CampaignDefinition
+	Version         int64
+	DueAt           time.Time
+	Preview         Preview
 }
 
 // BroadcastMessage contains one common literal projection and no recipient list.

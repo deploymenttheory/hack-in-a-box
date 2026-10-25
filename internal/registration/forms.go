@@ -23,8 +23,9 @@ import (
 )
 
 type Service struct {
-	Pool *pgxpool.Pool
-	Now  func() time.Time
+	Pool              *pgxpool.Pool
+	Now               func() time.Time
+	ReconcileSessions func(context.Context, pgx.Tx, uuid.UUID, dbgen.Event, time.Time) error
 }
 
 func (s Service) now() time.Time {

@@ -54,6 +54,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
 	"github.com/deploymenttheory/hack-in-a-box/internal/secretbox"
+	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
@@ -63,6 +64,7 @@ import (
 )
 
 type Dependencies struct {
+	SessionBookings      sessionbooking.Service
 	AdministrationOrigin string
 	Archives             archives.Service
 	GitHubWebhooks       *githubwebhooks.Service

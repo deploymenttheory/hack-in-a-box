@@ -4,6 +4,223 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/sessions/{session_id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser only. Exact native contract, providers and current booking cohort; no enqueue or send. */
+        get: operations["previewSessionNotifications"];
+        put: operations["configureSessionNotifications"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/notifications/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Explicit exact preview approval of the native lifecycle contract and provider versions; never bypasses current recipient authority, parent no-writes or original uncertain effects. */
+        post: operations["approveSessionNotifications"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/notification-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Organiser-only source/queue facts. Queued intents are not provider acceptance, inbox reading or original effect receipts. */
+        get: operations["getSessionNotificationHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/own-cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Active exact own-booking cancellation identity and calendar sequence. Does not grant event, session-detail, meeting-link or roster access. */
+        get: operations["getOwnSessionCancellation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Permission-filtered optional session discovery or personal agenda; never the private raw staff schedule. */
+        get: operations["listBookableSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getBookableSession"];
+        put: operations["configureBookableSession"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/booking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Exact retained request acknowledgement. Same actor/request/body repeats return the original acknowledgement after current authorization; current state reads are not receipts. */
+        post: operations["changeSessionBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelBookableSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/receipts/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getSessionBookingReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Current organiser/logistics or exact assigned facilitator only; no contact, logistics preferences or assessment fields. */
+        get: operations["getSessionAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/sessions/{session_id}/attendance/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["recordSessionAttendance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/archives": {
         parameters: {
             query?: never;
@@ -3588,6 +3805,157 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SessionNotificationConfiguration: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            version: number;
+            channels: ("in_app" | "smtp")[];
+            approved: boolean;
+        };
+        SessionNotificationPreview: {
+            configuration: components["schemas"]["SessionNotificationConfiguration"];
+            /** Format: int64 */
+            session_revision: number;
+            /** Format: int64 */
+            current_recipients: number;
+            providers: components["schemas"]["ChannelReadiness"][];
+            can_approve: boolean;
+            fingerprint: string;
+        };
+        SessionNotificationReport: {
+            /** @enum {string} */
+            channel: "in_app" | "smtp";
+            /** @enum {string} */
+            state: "queued" | "unavailable";
+            queued_intents: number;
+            reason: string;
+        };
+        SessionNotificationRecord: {
+            /** Format: int64 */
+            sequence: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            recipient_id: string;
+            /** Format: int64 */
+            configuration_version: number;
+            /** Format: int64 */
+            session_revision: number;
+            /** Format: int64 */
+            booking_revision: number;
+            /** Format: int64 */
+            calendar_sequence: number;
+            /** @enum {string} */
+            source_state: "approved" | "suppressed" | "unavailable";
+            reason: string;
+            reports: components["schemas"]["SessionNotificationReport"][];
+        };
+        SessionNotificationHistory: {
+            items: components["schemas"]["SessionNotificationRecord"][];
+            /** Format: int64 */
+            next_cursor?: number;
+        };
+        SessionOwnCancellation: {
+            /** Format: uuid */
+            session_id: string;
+            /** Format: uuid */
+            person_id: string;
+            /** Format: int64 */
+            sequence: number;
+        };
+        SessionLocalTime: {
+            wall: string;
+            /** @enum {string} */
+            dst_choice: "" | "earlier" | "later";
+        };
+        SessionDefinition: {
+            duration_minutes: number;
+            capacity: number;
+            room: string;
+            meeting_url: string;
+            facilitator_ids: string[];
+            booking_opens: components["schemas"]["SessionLocalTime"];
+            booking_closes: components["schemas"]["SessionLocalTime"];
+        };
+        SessionPlace: {
+            /** Format: uuid */
+            person_id: string;
+            /** @enum {string} */
+            state: "booked" | "waitlisted" | "cancelled" | "ineligible";
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            waitlist_position?: number;
+            /** Format: int64 */
+            calendar_sequence: number;
+        };
+        SessionBookingReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            session_id: string;
+            /** Format: uuid */
+            person_id: string;
+            /** @enum {string} */
+            action: "reserve" | "cancel" | "attendance";
+            /** @enum {string} */
+            state: "booked" | "waitlisted" | "cancelled" | "present" | "absent";
+            /** Format: int64 */
+            revision: number;
+        };
+        SessionAttendanceEntry: {
+            /** Format: uuid */
+            person_id: string;
+            display_name: string;
+            present: boolean;
+            /** Format: int64 */
+            revision: number;
+        };
+        SessionRoster: {
+            items: components["schemas"]["SessionAttendanceEntry"][];
+        };
+        BookableSession: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            revision: number;
+            /** Format: int64 */
+            calendar_sequence: number;
+            title: string;
+            timezone: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            /** Format: date-time */
+            booking_opens: string;
+            /** Format: date-time */
+            booking_closes: string;
+            /** Format: int64 */
+            capacity: number;
+            /** Format: int64 */
+            booked: number;
+            /** Format: int64 */
+            available: number;
+            /** Format: int64 */
+            capacity_shortfall: number;
+            cancelled: boolean;
+            needs_review: boolean;
+            room: string;
+            meeting_url?: string;
+            own_booking?: components["schemas"]["SessionPlace"];
+            conflicts: string[];
+            can_reserve: boolean;
+            can_manage: boolean;
+            can_record_attendance: boolean;
+            definition?: components["schemas"]["SessionDefinition"];
+        };
+        SessionBookingPage: {
+            items: components["schemas"]["BookableSession"][];
+            /** Format: uuid */
+            next_cursor?: string;
+        };
         ArchiveAssessmentPanel: {
             context: components["schemas"]["ModerationContext"];
             cards: components["schemas"]["MentorScorecard"][];
@@ -7723,6 +8091,8 @@ export interface components {
         IdempotencyKey: string;
         /** @description Quoted presentation revision, starting at "0". */
         PresentationRevision: string;
+        /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+        SessionRevision: string;
         /** @description Quoted event revision, for example "1". */
         Revision: string;
         Cursor: number;
@@ -7736,6 +8106,385 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    previewSessionNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority native session notification result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotificationPreview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureSessionNotifications: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    channels: ("in_app" | "smtp")[];
+                };
+            };
+        };
+        responses: {
+            /** @description Current-authority native session notification result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotificationPreview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    approveSessionNotifications: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    version: number;
+                    fingerprint: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Current-authority native session notification result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotificationPreview"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSessionNotificationHistory: {
+        parameters: {
+            query?: {
+                after?: number;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority native session notification result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotificationHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOwnSessionCancellation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority native session notification result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOwnCancellation"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listBookableSessions: {
+        parameters: {
+            query?: {
+                after?: string;
+                limit?: components["parameters"]["Limit"];
+                own?: boolean;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBookingPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getBookableSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookableSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureBookableSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionDefinition"];
+            };
+        };
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookableSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeSessionBooking: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    session_revision: number;
+                    /** Format: uuid */
+                    request_id: string;
+                    /** @enum {string} */
+                    action: "reserve" | "cancel";
+                };
+            };
+        };
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBookingReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cancelBookableSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookableSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSessionBookingReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBookingReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSessionAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionRoster"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    recordSessionAttendance: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+                /** @description Quoted session, own booking or attendance revision; use "0" for initial creation. */
+                "If-Match": components["parameters"]["SessionRevision"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                session_id: string;
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    request_id: string;
+                    present: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Current-authority session operation result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBookingReceipt"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listArchivedEvents: {
         parameters: {
             query?: {

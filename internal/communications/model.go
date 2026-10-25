@@ -19,6 +19,7 @@ import (
 )
 
 type Service struct {
+	SessionPlans SessionPlans
 	OutcomePlans OutcomePlans
 	FactOwners   map[string]FactOwner
 	Channels     map[string]ChannelProvider

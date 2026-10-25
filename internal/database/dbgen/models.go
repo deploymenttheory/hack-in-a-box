@@ -46,6 +46,18 @@ type AuditEvent struct {
 	OccurredAt time.Time
 }
 
+type BookableSession struct {
+	EventID             uuid.UUID
+	ID                  uuid.UUID
+	Revision            int64
+	CalendarSequence    int64
+	NotificationVersion int64
+	Definition          []byte
+	SourceSnapshot      []byte
+	NeedsReview         bool
+	Cancelled           bool
+}
+
 type CateringSetting struct {
 	EventID uuid.UUID
 	Buffer  int32
@@ -1389,6 +1401,88 @@ type Session struct {
 	Token  string
 	Data   []byte
 	Expiry time.Time
+}
+
+type SessionAttendance struct {
+	EventID   uuid.UUID
+	SessionID uuid.UUID
+	PersonID  uuid.UUID
+	Present   bool
+	Revision  int64
+}
+
+type SessionBooking struct {
+	EventID          uuid.UUID
+	SessionID        uuid.UUID
+	PersonID         uuid.UUID
+	State            string
+	QueueSequence    int64
+	CalendarSequence int64
+	Revision         int64
+	UpdatedAt        time.Time
+}
+
+type SessionCommand struct {
+	EventID     uuid.UUID
+	SessionID   uuid.UUID
+	RequestID   uuid.UUID
+	ActorID     uuid.UUID
+	Fingerprint string
+	Result      []byte
+}
+
+type SessionHistory struct {
+	ID              int64
+	EventID         uuid.UUID
+	SessionID       uuid.UUID
+	ActorID         uuid.UUID
+	PersonID        *uuid.UUID
+	Action          string
+	SessionRevision int64
+	CreatedAt       time.Time
+}
+
+type SessionNotificationApproval struct {
+	ConfigurationID   uuid.UUID
+	ActorID           uuid.UUID
+	ProviderRevisions []byte
+	Binding           string
+	ApprovedAt        time.Time
+}
+
+type SessionNotificationConfiguration struct {
+	EventID   uuid.UUID
+	SessionID uuid.UUID
+	Version   int64
+	ID        uuid.UUID
+	Channels  []byte
+	ActorID   uuid.UUID
+	CreatedAt time.Time
+}
+
+type SessionNotificationOccurrence struct {
+	Sequence             int64
+	ID                   uuid.UUID
+	EventID              uuid.UUID
+	SessionID            uuid.UUID
+	RecipientID          uuid.UUID
+	ConfigurationVersion int64
+	SessionRevision      int64
+	BookingRevision      int64
+	BookingState         string
+	CalendarSequence     int64
+	Binding              string
+	SourceState          string
+	Reason               string
+	CreatedAt            time.Time
+}
+
+type SessionNotificationReport struct {
+	OccurrenceID  uuid.UUID
+	Channel       string
+	State         string
+	QueuedIntents int32
+	Reason        string
 }
 
 type SmtpCampaignMessage struct {

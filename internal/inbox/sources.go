@@ -65,6 +65,10 @@ func (s Service) authorize(
 			retained.SelfOnly != (source.Kind == "test_self") || (retained.SelfOnly && retained.Resource != nil) {
 			return nil, access.ErrNotFound
 		}
+		if retained.ScopeApproval != nil &&
+			retained.ScopeApproval.Kind == "native_session_booking" {
+			return s.authorizeSessionNotice(ctx, tx, eventID, actor, retained)
+		}
 		if err = s.Communications.AuthorizeInboxRecipientInTransaction(
 			ctx,
 			tx,
@@ -130,6 +134,29 @@ func (s Service) authorize(
 		}
 		return nativeDestination(source, destination)
 	}
+}
+
+func (s Service) authorizeSessionNotice(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, actor uuid.UUID,
+	retained communications.InboxProvenance,
+) (*Destination, error) {
+	if retained.SelfOnly || retained.Resource != nil || s.Communications == nil ||
+		s.Communications.SessionPlans == nil {
+		return nil, access.ErrNotFound
+	}
+	restricted, err := s.Communications.SessionPlans.AuthorizeSessionInboxInTransaction(
+		ctx,
+		tx,
+		eventID,
+		actor,
+		*retained.ScopeApproval,
+	)
+	if err != nil {
+		return nil, wrap("authorize session notification", err)
+	}
+	return &Destination{SuppressEventName: restricted}, nil
 }
 
 // An owner cannot introduce arbitrary browser destinations or activate a journey

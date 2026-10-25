@@ -33,12 +33,14 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/reviewdashboard"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/scorecards"
+	"github.com/deploymenttheory/hack-in-a-box/internal/sessionbooking"
 	"github.com/deploymenttheory/hack-in-a-box/internal/smtpintegration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/surveys"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teamsworkflow"
 )
 
 type communicationRuntime struct {
+	SessionBookings  *sessionbooking.Service
 	GitHubWebhooks   *githubwebhooks.Service
 	RepositoryAccess *repositoryaccess.Service
 	Repositories     *repositories.Service
@@ -92,8 +94,20 @@ func newCommunicationRuntime(
 	}
 	auto := &automation.Service{Now: now, Pool: pool, Composer: composer}
 	local := &inbox.Service{Now: now, Pool: pool, Communications: composer, ScopePolicy: auto}
+	sessions := &sessionbooking.Service{
+		Now:             now,
+		Pool:            pool,
+		WorkspaceOrigin: cfg.WorkspaceOrigin,
+		Fallback:        auto,
+		DeliveryChannels: map[string]sessionbooking.NotificationChannel{
+			"in_app": local,
+			"smtp":   provider,
+		},
+	}
+	composer.SessionPlans = sessions
+	local.ScopePolicy = sessions
 	composer.Channels["in_app"] = local
-	provider.ScopePolicy = auto
+	provider.ScopePolicy = sessions
 	teams.ScopePolicy = auto
 	provider.Campaigns = composer
 	answers := &clarification.Service{Pool: pool, Clock: now}
@@ -265,6 +279,7 @@ func newCommunicationRuntime(
 	teams.Jobs = outbox
 	teams.Composer = *composer
 	return communicationRuntime{
+		SessionBookings:  sessions,
 		GitHubWebhooks:   webhooks,
 		Repositories:     repos,
 		RepositoryAccess: accessOwner,
