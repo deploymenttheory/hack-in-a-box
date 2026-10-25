@@ -1,0 +1,104 @@
+name: hackbox-lifecycle-normal-probe
+x-normal: &normal
+  image: ${HACKBOX_NORMAL_PUBLIC_IMAGE:?Set the verified immutable normal public image ID}
+  entrypoint: [/app/api]
+  init: true
+  cpus: 0.5
+  mem_limit: 256m
+  pids_limit: 128
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [synthetic]
+  environment: &normal-environment
+    GOMAXPROCS: '2'
+    HACKBOX_ENV: development
+    HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-normal-probe-only@postgres:5432/lifecycle?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: http://public:8080
+    HACKBOX_ADMIN_ORIGIN: http://admin:8080
+    HACKBOX_WORKSPACE_ORIGIN: http://public:8080
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web
+    HACKBOX_OIDC_ISSUER: http://provider:8080
+    HACKBOX_OIDC_CLIENT_ID: lifecycle-public
+    HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
+    HACKBOX_BOOTSTRAP_SUBJECT: owner
+  volumes: [files:/data/files]
+  healthcheck: &healthcheck
+    test: [CMD, /app/healthcheck]
+    interval: 2s
+    timeout: 5s
+    retries: 30
+  depends_on:
+    migrate: {condition: service_completed_successfully}
+    provider: {condition: service_healthy}
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    cpus: 0.75
+    mem_limit: 384m
+    pids_limit: 128
+    networks: [synthetic]
+    environment:
+      POSTGRES_DB: lifecycle
+      POSTGRES_USER: lifecycle
+      POSTGRES_PASSWORD: synthetic-normal-probe-only
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U lifecycle -d lifecycle']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  migrate:
+    <<: *normal
+    entrypoint: [/app/migrate]
+    healthcheck: {disable: true}
+    volumes: []
+    depends_on:
+      postgres: {condition: service_healthy}
+  provider:
+    <<: *normal
+    image: ${HACKBOX_LIFECYCLE_IMAGE:-hackbox-lifecycle:verification}
+    entrypoint: [/app/lifecycle.test]
+    command: ['-test.run=^TestLifecycleComposeProcess$', '-test.timeout=15m', '-test.v']
+    environment:
+      GOMAXPROCS: '2'
+      HACKBOX_LIFECYCLE_ISOLATED: synthetic-only
+      HACKBOX_LIFECYCLE_ROLE: provider
+      HACKBOX_LIFECYCLE_CONTROL: /control
+    volumes: [control:/control]
+    depends_on: {}
+  public:
+    <<: *normal
+  admin:
+    <<: *normal
+    image: ${HACKBOX_NORMAL_ADMIN_IMAGE:?Set the verified immutable normal admin image ID}
+    environment:
+      <<: *normal-environment
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: http://admin:8080
+      HACKBOX_OIDC_CLIENT_ID: lifecycle-admin
+  probe:
+    <<: *normal
+    image: ${HACKBOX_LIFECYCLE_IMAGE:-hackbox-lifecycle:verification}
+    entrypoint: [/app/lifecycle.test]
+    command: ['-test.run=^TestLifecycleNormalImageCalendarAPI$', '-test.timeout=2m', '-test.v']
+    profiles: [probe]
+    environment:
+      GOMAXPROCS: '2'
+      HACKBOX_LIFECYCLE_ISOLATED: synthetic-only
+      HACKBOX_LIFECYCLE_NORMAL_IMAGES: normal-commands
+    healthcheck: {disable: true}
+    volumes: [artifacts:/artifacts]
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+volumes:
+  database:
+  files:
+  control:
+  artifacts:
+networks:
+  synthetic: {internal: true}

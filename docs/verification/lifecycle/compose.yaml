@@ -1,6 +1,6 @@
 name: hackbox-lifecycle
 x-fixture: &fixture
-  image: hackbox-lifecycle:verification
+  image: ${HACKBOX_LIFECYCLE_IMAGE:-hackbox-lifecycle:verification}
   build:
     context: ../../..
     dockerfile: docs/verification/lifecycle/Dockerfile
