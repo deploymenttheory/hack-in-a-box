@@ -75,3 +75,15 @@ test('ordinary cancel without a current-read overlap returns focus immediately',
  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
  await waitFor(() => expect(opener).toHaveFocus())
 })
+
+test('read-start and cancel in one render batch still restore the original opener', async () => {
+ const { waiting, refresh } = setup()
+ const opener = await screen.findByRole('button', { name: 'Review tie vote' })
+ fireEvent.click(opener); await screen.findByRole('alertdialog')
+ const cancel = screen.getByRole('button', { name: 'Cancel' })
+ act(() => { void refresh(); fireEvent.click(cancel) })
+ await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+ await act(async () => { waiting.resolve(initial) })
+ await waitFor(() => expect(opener).toBeEnabled())
+ await waitFor(() => expect(opener).toHaveFocus())
+})
