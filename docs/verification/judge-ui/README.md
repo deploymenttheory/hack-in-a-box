@@ -83,3 +83,46 @@ also rerun on this clean checkpoint. Fresh exact Linux CI and independent paired
 reviews remain required before Ready/merge; the inherited Firefox rehearsal stays
 registered and is not claimed as locally completed by this Chromium-only matrix.
 This evidence does not certify the separate full issue122 manual audit.
+
+## Independent review corrections and current CI diagnosis
+
+The full original reviews were pinned to c723e693…6364c78e: Spec had zero findings;
+Standards identified two P1 defects. The correction preserves original command
+metadata after HTTP408 and places sent-command departure protection in the
+metadata history above disposed private editors. Pending originals block actual
+route departure, the planning-departure contract and before-unload; unknown
+originals require explicit departure confirmation without clearing metadata.
+Private draft/preflight guards remain separate. Only an exact original
+acknowledgement settles the sent metadata, including a late matching response
+after private role/assignment denial.
+
+Actual unchanged-build RED covered all six 408 paths (final save/submit, practice
+save/submit/reset and reasoned reopen), plus pending-after-denial and a separate
+unknown-after-denial planning-barrier failure. The correction's nine focused
+cases passed 9/9 in 9.1s. Full affected/original suites then passed administrator
+42/42 in 46.7s and regular42/42 in 44.5s across desktop/mobile, with configured
+ESLint, TypeScript and both production builds passing. They prove no extra POST,
+current reads unable to settle an original, exact recovery, lost private access,
+blocked pending departure, rejected/accepted real event navigation, retained
+metadata on actual return, and matching late-ACK barrier release. The first
+correction run exposed a test setup race: practice reset began before its prior
+submit acknowledgement arrived. The fixture now explicitly awaits that actual
+submitted state before timing out the reset; no boundary assertion or timeout
+was weakened.
+
+These checks ran on the correction tree committed as `7ac3bdc0`. Rebase onto actual
+main a2dfaa27079a3ae4b3bf7ea3a559658660b94b0a produced `45f66b444414a830f880871bf8f0035a1972e5ee`:
+all ten owned commits are patch-equivalent by range-diff, and the complete web,
+API and owned runtime composition trees are unchanged. Incoming main adds only
+native verification tests/docs. Earlier native/guide/screenshots retain their
+original source attribution; no broad native rerun or updated screenshot is
+claimed for these bounded client-lifetime changes. Fresh exact CI and independent
+bounded reviews on both axes remain the final gates.
+
+The published 6364 aggregate web failure was separately diagnosed from the exact
+job 121151778449 API and completed logs: the administrator test step succeeded
+with 1,227 passed / 9 skipped in 13.7m. Setup/install/build consumed approximately 86s,
+and the job was cancelled at its exact 15m ceiling despite the successful test
+step. Styleguide passed 2m46; native rehearsal passed 7m1. The browser-job budget is
+now 20m, preserving every per-case timeout, retry setting and assertion. This is a
+measured job-budget correction, not a rerun or suppression of a failed case.
