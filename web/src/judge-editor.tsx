@@ -66,7 +66,7 @@ export function JudgeEditor(props:Props){
    if(ticket.current()){setReceipt(result);setReview(undefined);setBaseVersion(result.revision);setBaseline(JSON.stringify(target.inputs));if(target.intent.action==='reset'){const empty=scoreInputs(criteria);setInputs(empty);setBaseline(JSON.stringify(empty))}await refresh()}
   }catch(error){
    if(attemptID){if(error instanceof APIError&&error.status>=400&&error.status<500)commands.complete(attemptID);else commands.uncertain(attemptID)}
-   if(ticket.current()){setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
+   if(ticket.current()){if(attemptID)setReview(undefined);setFailure(error);if(error instanceof APIError&&[401,403,404].includes(error.status)){scope.invalidate();await refresh()}}
   }finally{sending.current=false;if(ticket.current())setPreparing(false)}
  }
  async function recover(){

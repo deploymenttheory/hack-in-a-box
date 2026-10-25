@@ -9,7 +9,7 @@ permissions:
 jobs:
   live-rehearsal:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       GOMAXPROCS: '2'
       GOFLAGS: '-p=1'
@@ -39,6 +39,10 @@ jobs:
         env:
           HACKBOX_FREEZE_BROWSER: '1'
         run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestSubmissionFreezeBrowsers$' -count=1 -timeout=5m
+      - name: Native independent judge UI browsers
+        env:
+          HACKBOX_JUDGE_BROWSER: '1'
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestJudgeUIBrowsers$' -count=1 -timeout=8m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
@@ -56,4 +60,10 @@ jobs:
         with:
           name: native-submitted-build-proof
           path: web/test-results-freeze-native
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: native-judge-ui-proof
+          path: web/test-results-judging-native
           retention-days: 7

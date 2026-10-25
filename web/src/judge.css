@@ -9,6 +9,6 @@
  .fleet-judge-section dt {font-weight:600;}
  .fleet-judge-section dd {margin-inline-start:0;}
  .fleet-judge-workspace code {overflow-wrap:anywhere;}
- @media print {.fleet-judge-workspace{display:none!important}}
+ @media print {.fleet-judge-workspace,.fleet-judge-private{display:none!important}}
  @media (max-width:40rem){.fleet-judge-workspace{padding:var(--space-4)}}
 }

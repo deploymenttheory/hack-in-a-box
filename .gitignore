@@ -89,3 +89,6 @@ web/test-results-sessions-*/
 web/test-results-accessibility-*/
 web/test-results-freeze/
 web/test-results-freeze-native/
+
+# Owned synthetic judge browser artifacts; never commit authenticated traces.
+web/test-results-judging-*/
