@@ -39,6 +39,10 @@
         {
           "artifact": "tls-deployment-observations.json",
           "scope": "57 actual configured production-profile API outcomes on d3dba5f8 verifier/main076 applications"
+        },
+        {
+          "artifact": "native-upload-boundary.json",
+          "scope": "Existing HTTP parent re-executed on e3d91ae8: causal fixture RED, exact MIME415/size413,1024-byte positive201; no new distinct parent"
         }
       ]
     },

@@ -364,3 +364,22 @@ certificate-only checks.
 This closes the previously missing supported transport execution for main076.
 Final mentor-feature integration, current-source authority proof, independent
 reviews and latest-head CI remain required before release sign-off.
+
+## Independent review correction: upload causality
+
+The full Standards review at `d4eb89e6` found a verification defect: the named
+1025-byte size case declared PNG for plain text and accepted any4xx, so MIME
+rejection could conceal broken size enforcement. No application vulnerability
+was established. Correction `e3d91ae8` requires exact415 for the two spoofed
+HTML/SVG uploads and exact413 for otherwise valid1025-byte `text/plain`; the
+same-MIME1024-byte positive control requires201. Existing no-persistence,
+attachment/nosniff and revocation assertions remain.
+
+[`native-upload-boundary.json`](native-upload-boundary.json) records the focused
+race-enabled native RED/GREEN proof. Temporarily raising only the test fixture's
+limit to2048 produced the expected201-versus413 failure after the MIME cases
+passed (packageexit1,3.904s). Restoring1024 before the clean source commit produced
+parent PASS and packageexit0 (4.830s), no skip/failure. This re-executes one of the
+65 existing distinct parents; it does not add a new parent or relabel historical
+matrix runs as final-source proof. Integration of #292 and final checks remain
+pending.

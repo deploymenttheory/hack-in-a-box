@@ -1,0 +1,48 @@
+{
+  "source_commit": "e3d91ae82a5b7de22fde9d7c92713439ba29726d",
+  "source_worktree_clean": true,
+  "scope": "One existing native HTTP parent re-executed with precise independent MIME and size assertions; no increase in the65 distinct historical parents and not final integrated CI.",
+  "test": "TestSecurity121CrossEventFilesExportsAndMaliciousUploads",
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-race",
+    "-p",
+    "1",
+    "-parallel",
+    "1",
+    "./internal/httpapi",
+    "-run",
+    "^TestSecurity121CrossEventFilesExportsAndMaliciousUploads$",
+    "-count=1",
+    "-timeout=10m"
+  ],
+  "environment": {
+    "HACKBOX_INTEGRATION": "1",
+    "GOMAXPROCS": "2"
+  },
+  "red": {
+    "mutation": "Temporary test-fixture MaxBytes1024\u21922048; restored before source commit. No production mutation.",
+    "expected_failure": "oversize.txt got201 want413 after both exact415 MIME cases succeeded",
+    "package_exit": 1,
+    "package_seconds": 3.904,
+    "log_sha256": "89a33d2a93de8fdf4e71aceedc91d2eb52ab28e80fad3242e6c2ec1782d13d4d"
+  },
+  "green": {
+    "parent_passed": true,
+    "package_passed": true,
+    "package_exit": 0,
+    "package_seconds": 4.83,
+    "skips": [],
+    "failures": [],
+    "assertions": [
+      "HTML and SVG spoofed as PNG each return415",
+      "Valid text/plain1025-byte upload returns413",
+      "Rejected uploads persist zero file metadata",
+      "Same-MIME1024-byte upload returns201 and download remains attachment/nosniff",
+      "Current organiser revocation denies download403"
+    ],
+    "log_sha256": "8a4e54912bc5ff0300ba306b7bb8390e989ea87a650387511bef142d32bf5eaf"
+  }
+}
