@@ -36,6 +36,7 @@ has already been rebuilt. #88 owns complete Today/readiness product content.
 | `/events/$eventId/results` | `AnnouncedResultsPage` | Admin, Participant | #113 |
 | `/events/$eventId/results/prepare` | `ResultsPreparationPage` | Admin | #113 |
 | `/events/$eventId/results/ballots` | `ResultsBallotsPage` | Admin, Participant | #113 |
+| `/events/$eventId/results/mentor-advisories` | `MentorAdvisoryPage` | Admin, Participant | #112 |
 | `/events/$eventId/team-feedback` | `TeamFeedbackDirectoryPage` | Admin, Participant | #113 |
 | `/events/$eventId/teams/$teamId/feedback-report` | `TeamFeedbackPage` | Admin, Participant | #113 |
 | `/events/$eventId/mentor` | `MentorWorkspace` | Admin, Participant | #240 |

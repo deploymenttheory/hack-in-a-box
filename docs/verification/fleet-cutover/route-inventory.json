@@ -3,11 +3,11 @@
   "sources": [
     {
       "path": "web/src/app.tsx",
-      "sha256": "829b1b606f93ff4fc28ea13587648ca58c3f5386317954b15566e1f05dc32792"
+      "sha256": "54d21a27d7757174f65d8f560919b78aa2ceaef67f28e8ddd26a90e3e7631639"
     },
     {
       "path": "web/src/participant-app.tsx",
-      "sha256": "adfdbfdcc185c43cf9ff930b47569b73e1dce56bbdbafd988104d02b75116a61"
+      "sha256": "9be10d5e0807a3caba2a048158614a7f3820844ad56ebc5fa32b17fd21c884a7"
     },
     {
       "path": "web/src/main.tsx",
@@ -15,10 +15,17 @@
     },
     {
       "path": "docs/design/portal-route-inventory.md",
-      "sha256": "f1158d9870e37d997341580be4b4ca514c1e669b19a51018c45103aa88e7cad8"
+      "sha256": "1a501dc38c3b1ffab598d2472af93e5bcc8d09a831880eb0ec43ad24025a8554"
     }
   ],
   "routes": [
+    {
+      "portal": "administrator",
+      "path": "/events/$eventId/results/mentor-advisories",
+      "component": "MentorAdvisoryPage",
+      "owner": "web/src/mentor-advisory.tsx",
+      "integration": "not established by source inventory"
+    },
     {
       "portal": "administrator",
       "path": "/events/$eventId/results/ballots",
@@ -360,6 +367,13 @@
       "path": "/register/$eventId",
       "component": "RegistrationPage",
       "owner": "web/src/registration.tsx",
+      "integration": "not established by source inventory"
+    },
+    {
+      "portal": "participant",
+      "path": "/events/$eventId/results/mentor-advisories",
+      "component": "MentorAdvisoryPage",
+      "owner": "web/src/mentor-advisory.tsx",
       "integration": "not established by source inventory"
     },
     {

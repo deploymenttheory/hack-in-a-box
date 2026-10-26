@@ -51,6 +51,78 @@ async function login(page, origin) {
   await expect(page.getByRole('heading', { name: 'Your events', exact: true })).toBeVisible()
   assert.equal(new URL(page.url()).origin, origin)
 }
+// Actual media upload/decision/byte-read journey, using only normal signed-in UI.
+// This closes a positive integration gap left by mocked gallery/browser fixtures.
+async function mediaJourney(page, eventID, name) {
+  await page.goto(`${origins.admin}/events/${eventID}/media`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading', { level: 1, name: 'Event media', exact: true })).toBeVisible()
+  const title = `Synthetic protected image ${name}`
+  await page.getByRole('button', { name: 'Add media', exact: true }).click()
+  await page.getByLabel('Media title', { exact: true }).fill(title)
+  await page.getByLabel('Caption', { exact: true }).fill('Synthetic UI diagram; no identifiable people or challenge content.')
+  await page.getByLabel('Photograph (PNG or JPEG, up to 8 MiB)', { exact: true }).setInputFiles({ name: 'synthetic-ui.png', mimeType: 'image/png', buffer: readFileSync(join(root, 'docs/design/fleet-reference/fleet-workspace-admin.png')) })
+  await page.getByLabel('Submission reason', { exact: true }).fill('Verify actual protected media submission')
+  await page.getByRole('button', { name: 'Review private media draft', exact: true }).click()
+  const uploadPath = `/api/v1/events/${eventID}/media/upload`
+  const [uploaded] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === uploadPath && response.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Confirm private media draft', exact: true }).click(),
+  ])
+  assert.equal(uploaded.status(), 200, 'Native photo upload')
+  const media = await uploaded.json()
+  assert.match(media.id, /^[a-f0-9-]{36}$/)
+  assert.equal(media.acknowledged_version, 1, 'Exact original photo acknowledgement')
+  assert.equal(media.state, 'draft')
+  const article = page.locator(`[data-media-record="${media.id}"]`)
+  await expect(article.getByRole('link', { name: title, exact: true })).toBeVisible()
+  const photoPath = `/api/v1/events/${eventID}/media/${media.id}/thumbnail`
+  const [photo] = await Promise.all([
+    page.waitForResponse(response => new URL(response.url()).pathname === photoPath && response.request().method() === 'GET'),
+    article.getByRole('button', { name: 'View protected photo', exact: true }).click(),
+  ])
+  assert.equal(photo.status(), 200, 'Native protected thumbnail')
+  assert.match(photo.headers()['content-type'] ?? '', /^image\/png/)
+  assert.match(photo.headers()['cache-control'] ?? '', /no-store/)
+  await expect(article.getByRole('img', { name: title, exact: true })).toBeVisible()
+  await capture(page, `${name}-media-private`)
+  const decisions = []
+  for (const [action, expectedState, reviewLabel, confirmLabel] of [
+    ['review', 'reviewed', 'Review organiser approval', 'Confirm organiser approval'],
+    ['publish', 'released', 'Review gallery release', 'Confirm explicit gallery release'],
+    ['withdraw', 'withdrawn', 'Review media withdrawal', 'Confirm media withdrawal'],
+  ]) {
+    const task = article.getByRole('region', { name: 'Private media task', exact: true })
+    const opener = task.getByRole('button', { name: 'Open private media review', exact: true })
+    if (await opener.count()) await opener.click()
+    await task.getByLabel('Reason for this action', { exact: true }).fill(`Synthetic explicit ${action}`)
+    if (action === 'review') {
+      await task.getByRole('checkbox', { name: 'I checked the media and identified every recognisable person.', exact: true }).check()
+      await task.getByRole('checkbox', { name: 'No identifiable people are present.', exact: true }).check()
+      await task.getByRole('checkbox', { name: 'I reviewed the content, caption, recording destination and challenge classification.', exact: true }).check()
+    }
+    await task.getByRole('button', { name: reviewLabel, exact: true }).click()
+    const [response] = await Promise.all([
+      page.waitForResponse(value => new URL(value.url()).pathname === `/api/v1/events/${eventID}/media/${media.id}` && value.request().method() === 'PUT'),
+      task.getByRole('button', { name: confirmLabel, exact: true }).click(),
+    ])
+    assert.equal(response.status(), 200, `Native media ${action}`)
+    const intent = response.request().postDataJSON(), result = await response.json()
+    assert.equal(intent.action, action)
+    assert.equal(result.id, media.id)
+    assert.equal(result.acknowledged_version, intent.version + 1, 'Exact original decision acknowledgement')
+    assert.equal(result.state, expectedState)
+    decisions.push({ action, expected_version: intent.version, acknowledged_version: result.acknowledged_version, status: response.status() })
+    await expect(article.getByText(expectedState, { exact: true })).toBeVisible()
+    if (action === 'publish') await capture(page, `${name}-media-released`)
+  }
+  await expect(article.getByRole('button', { name: 'View protected photo', exact: true })).toHaveCount(0)
+  const withdrawn = await page.request.get(`${origins.admin}${photoPath}`)
+  assert.equal(withdrawn.status(), 403, 'Withdrawal prevents future protected bytes, even for organiser')
+  assert.match(withdrawn.headers()['content-type'] ?? '', /application\/json/)
+  await page.goto(`${origins.admin}/events/${eventID}`, { waitUntil: 'domcontentloaded' })
+  return { media_id: media.id, upload_status: uploaded.status(), thumbnail_status: photo.status(), decisions, withdrawn_thumbnail_status: withdrawn.status() }
+}
+
 const browser = await chromium.launch({ headless: true })
 try {
   for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }]) {
@@ -95,6 +167,8 @@ try {
         await expect(participant.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible()
         await expect(participant.getByRole('heading', { name: 'Event dates', exact: true })).toBeVisible()
         await capture(participant, `${name}-participant-event`)
+        const media = await mediaJourney(admin, event.id, name)
+        await expect(admin.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible()
         await guide.goto(origins.guide, { waitUntil: 'domcontentloaded' })
         await expect(guide.getByRole('heading', { level: 1, name: 'Principles', exact: true })).toBeVisible()
         await expect(guide.getByText(source.slice(0, 12), { exact: true })).toBeVisible()
@@ -120,7 +194,7 @@ try {
           await capture(guide, `${name}-guide-public-stopped`)
         }
         assert.deepEqual(errors, [], 'Normal-image UI JavaScript errors')
-        cases.push({ name, event_id: event.id, result: 'pass', native_creation: saved.status(), independent_logout: true, guide_api_requests: guideAPIs.length, public_failure_isolation: name === 'mobile-dark' })
+        cases.push({ name, event_id: event.id, result: 'pass', native_creation: saved.status(), media, independent_logout: true, guide_api_requests: guideAPIs.length, public_failure_isolation: name === 'mobile-dark' })
         console.log(`${name}: PASS`)
       } catch (error) {
         // Screenshots contain only the synthetic app/guide, never OAuth pages or cookies.
