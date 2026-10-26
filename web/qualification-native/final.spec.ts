@@ -4,6 +4,7 @@ import {native,owner,control,teamLabel} from './native'
 import {activate,typeInto,selectNative,reach,inspectCurrent,openLocal} from './keyboard'
 import {confirmReviewedDialog} from './confirmation'
 import type {QualificationPage} from '../src/qualification-model'
+import {waitForCastingRead} from './current-panel-read'
 async function accept(page:Page,reason:string){
  await typeInto(page.getByLabel('Recorded panel reason',{exact:true}),reason)
  const submit=page.getByRole('button',{name:'Review entered panel decision',exact:true});await openLocal(submit,page.getByRole('alertdialog',{name:'Review private panel command',exact:true}),'visible')
@@ -61,9 +62,10 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await typeInto(voter.getByLabel('Supporting observed evidence',{exact:true}),`Independent ${actor} ballot grounded in the actual UX comparison`)
   await accept(voter,`Independent ${actor} reasoned UX ballot`);await voterContext.close()
  }
- await page.bringToFront()
- // Foreground reconciliation may replace the old workspace after both ballots.
- // Observe that exact current state before capturing a local activation target.
+ // Register after both exact ballot ACKs: a pending earlier read can be stale.
+ const currentBallots=waitForCastingRead(page,new URL(`/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`,native.origin).href,native.categories.find(category=>category.label==='UX')!.id,1)
+ await page.bringToFront();await currentBallots
+ // Observe the applied current projection before capturing a local target.
  const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true})
  await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
  await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')

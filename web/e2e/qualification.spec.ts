@@ -335,3 +335,47 @@ for(const empty of [false,true])test(`declared original record accepts exact rec
  try{await readOriginalAcknowledgement(ack,page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true}))}catch(error){console.log(JSON.stringify({ackReads,enters,writes:task.writes.length}));throw error}finally{releaseLabels()}
  expect(task.writes).toHaveLength(1);expect(ackReads).toBe(1);expect(enters).toBe(1);expect(snapshots).toBeGreaterThan(0)
 })
+
+
+test('owner awaits actual casting projection and ignores pending stale or different tie reads',async({page})=>{
+ await page.clock.install()
+ const state=await fixture(page),category=state.page.criteria.categories.find(value=>value.label==='User experience')!,tieID='synthetic-ux-tie'
+ state.page.current=false;state.page.round.signoff=null;state.page.capabilities.record_locked=false
+ state.page.preview!.ties=[{id:tieID,kind:'category',category_id:category.id,team_ids:state.page.teams.map(value=>value.team_id),seats:1}]
+ state.page.tie_actions=[{tie_id:tieID,seat:1,candidate_team_ids:[],can_vote:false,has_voted:false,can_resolve:false,resolve_team_ids:[],casting:false,required_votes:2,votes_complete:false}]
+ let hold=false,reads=0,writes=0,release:()=>void=()=>{}
+ const pending=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  if(route.request().method()!=='GET'){writes++;return route.abort()}
+  const projection=structuredClone(state.page);reads++
+  if(hold)await pending
+  await route.fulfill({json:projection})
+ })
+ await page.goto(path)
+ const tie=page.getByRole('region',{name:'Affected tie: User experience · Seat 1',exact:true})
+ await expect(tie).toContainText('Required current ballots incomplete')
+ await page.clock.pauseAt(new Date())
+ // This GET began before the second ballot and retains the earlier projection.
+ hold=true;const before=reads;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect.poll(()=>reads).toBeGreaterThan(before)
+ const {waitForCastingRead}=await import('../qualification-native/current-panel-read')
+ let settled=false
+ const current=waitForCastingRead(page,new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href,category.id,1).then(()=>{settled=true})
+ hold=false;release()
+ // A following native read with a complete OTHER tie must not satisfy the barrier.
+ state.page.tie_actions[0]={...state.page.tie_actions[0],votes_complete:true,casting:true,seat:2}
+ await page.clock.runFor(15_000)
+ await expect(tie).toHaveCount(0)
+ expect(settled).toBe(false)
+ state.page.tie_actions[0].seat=1;state.page.preview!.ties[0].category_id=state.page.criteria.categories[0].id
+ await page.clock.runFor(15_000)
+ await expect(page.getByRole('region',{name:'Affected tie: Demo · Seat 1',exact:true})).toContainText('Current ballots complete')
+ expect(settled).toBe(false)
+ state.page.preview!.ties[0].category_id=category.id
+ await page.clock.runFor(15_000);await current
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ const {openLocal}=await import('../qualification-native/keyboard')
+ const beforeExplicit=reads
+ await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
+ await expect.poll(()=>reads).toBe(beforeExplicit+1)
+ expect(writes).toBe(0)
+})
