@@ -61,8 +61,13 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await typeInto(voter.getByLabel('Supporting observed evidence',{exact:true}),`Independent ${actor} ballot grounded in the actual UX comparison`)
   await accept(voter,`Independent ${actor} reasoned UX ballot`);await voterContext.close()
  }
- await page.bringToFront();await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
- const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true});await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ await page.bringToFront()
+ // Foreground reconciliation may replace the old workspace after both ballots.
+ // Observe that exact current state before capturing a local activation target.
+ const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true})
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
  await openLocal(page.getByRole('button',{name:'Review casting tie decision: UX · Seat 1',exact:true}),page.getByLabel('Recorded panel reason',{exact:true}),'visible')
  await selectNative(page.getByLabel('Candidate for affected tie seat',{exact:true}),native.team_ids[4])
  await typeInto(page.getByLabel('Supporting observed evidence',{exact:true}),'Compare both independent UX observations; retain the non-finalist category candidate')
