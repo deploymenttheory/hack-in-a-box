@@ -273,7 +273,30 @@ func TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance(t *t
 	}
 	check(request(owner, "GET", historyPath+"?before_version=0", nil, 1, true), 400)
 	check(request(attendee, "GET", path+"/original", nil, 1, true), 200)
-	check(request(attendee, "GET", path+"/thumbnail", nil, 1, true), 200)
+	thumbnail := request(attendee, "GET", path+"/thumbnail", nil, 1, true)
+	check(thumbnail, 200)
+	if _, err := png.Decode(bytes.NewReader(thumbnail.Body.Bytes())); err != nil {
+		t.Fatalf("native protected thumbnail must contain a decodable PNG: %v (bytes=%d)", err, thumbnail.Body.Len())
+	}
+	server := httptest.NewServer(router)
+	t.Cleanup(server.Close)
+	thumbnailRequest, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+path+"/thumbnail", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	thumbnailRequest.AddCookie(&http.Cookie{Name: "hackbox_session", Value: tokens[attendee.ID]})
+	streamed, err := server.Client().Do(thumbnailRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	streamedBytes, err := io.ReadAll(streamed.Body)
+	_ = streamed.Body.Close()
+	if err != nil || streamed.StatusCode != http.StatusOK {
+		t.Fatalf("native protected thumbnail transport: status=%d bytes=%d err=%v", streamed.StatusCode, len(streamedBytes), err)
+	}
+	if _, err := png.Decode(bytes.NewReader(streamedBytes)); err != nil {
+		t.Fatalf("native protected thumbnail transport must contain PNG: %v (bytes=%d content-length=%s)", err, len(streamedBytes), streamed.Header.Get("Content-Length"))
+	}
 	file, _, err := native.Original(ctx, attendee.ID, eventID, item.ID)
 	if err != nil {
 		t.Fatal(err)

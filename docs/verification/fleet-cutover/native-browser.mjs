@@ -89,6 +89,16 @@ async function mediaJourney(page, eventID, name) {
   assert.match(photo.headers()['content-type'] ?? '', /^application\/octet-stream/)
   assert.match(photo.headers()['cache-control'] ?? '', /no-store/)
   const bytes = await photo.body()
+  if (bytes.length === 0) {
+    // Read-only diagnostic, never a replacement for the UI's original byte/render check.
+    const direct = await page.request.get(`${origins.admin}${photoPath}`)
+    const directBytes = await direct.body()
+    recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'empty_ui_thumbnail_diagnostic',
+      ui_status: photo.status(), ui_content_length: photo.headers()['content-length'] ?? null, ui_bytes: bytes.length,
+      direct_status: direct.status(), direct_content_length: direct.headers()['content-length'] ?? null, direct_bytes: directBytes.length,
+      direct_prefix: [...directBytes.subarray(0, 8)],
+      browser: await article.evaluate(node => ({ focused: document.hasFocus(), hidden: document.hidden, image_present: !!node.querySelector('img'), natural_width: node.querySelector('img')?.naturalWidth ?? null })) })
+  }
   assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], 'Native PNG thumbnail bytes')
   recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'thumbnail', status: photo.status(), media_type: photo.headers()['content-type'], sha256: createHash('sha256').update(bytes).digest('hex') })
   const image = article.getByRole('img', { name: title, exact: true })
