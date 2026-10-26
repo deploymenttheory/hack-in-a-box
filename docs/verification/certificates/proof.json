@@ -203,5 +203,58 @@
     "source": "47324ffbe7dbf416165d44340212b62f9a051fa4",
     "code_api_test_files_byte_equal": 17,
     "historical_design_document_changed": "docs/design/certificates.md gains current verification link and independent-review/CI status only; its historical source hash is retained above."
+  },
+  "ci_schema_compatibility_regression": {
+    "ci_source": "fb0012fb6f6d337a40779139926a767e85d7ce2a",
+    "ci_run": 40363780203,
+    "ci_job": 121715852561,
+    "ci_log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/ci-fb0012fb-go.log",
+    "ci_log_sha256": "b70bd755212a17e34a22901b6cbe2f2f8fa489c1ad14da64fbc39149f683fdd6",
+    "actual_failures": [
+      {
+        "owner": "internal/httpapi",
+        "reason": "unbatched package exceeded10m",
+        "package_seconds": 600.202,
+        "resolution": "pending integration of PR303 exhaustive HTTP batching; not rerun here"
+      },
+      {
+        "owner": "TestMentorAdvisoryUpgradeRetainsPopulatedParentAndCorrectionHistory",
+        "reason": "fixture correctly retains pinned schema55 but then asks current runtime CheckSchema, whose head is56",
+        "file_line": "internal/results/advisory_schema_test.go:120"
+      }
+    ],
+    "green_source": "9db8318cabb87687e5aa4b068b387f65478b6f88",
+    "correction": "Test-only9lines retain all54\u219255 rollback/history/version55 checks, explicitly upgrade to currenthead, thenCheckSchema and recheck two retained advisoryversions",
+    "command": [
+      "go",
+      "test",
+      "-v",
+      "-race",
+      "-p",
+      "1",
+      "-parallel",
+      "1",
+      "./internal/results",
+      "-run",
+      "^TestMentorAdvisoryUpgradeRetainsPopulatedParentAndCorrectionHistory$",
+      "-count=1",
+      "-timeout=8m"
+    ],
+    "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native-9db8318c/native.log",
+    "log_sha256": "79a5f518b7cdaa921aa1b4fd533be9674baf153c3d232f61ba0851644d8cce37",
+    "source_file": "internal/results/advisory_schema_test.go",
+    "source_sha256": "d0de7ca9bfc6db24ea26bfa63198f40774f78cdb5f29dabd9590728de3424e55",
+    "exit_code": 0,
+    "parent_seconds": 1.93,
+    "package_seconds": 3.29,
+    "failures": 0,
+    "skips": 0,
+    "all_owned_containers_absent": true,
+    "resources_sha256": "67eab6abac6d3553948e199e1b60427dd4b54d0438c988feff07a52cf90a8d85",
+    "memory_samples": 0,
+    "memory_limit_or_peak_claimed": false,
+    "lint_exit_code": 0,
+    "lint_log_sha256": "e92606b0bf483111dff0a120c315ea165821348f31365020e2468a0059095c47",
+    "scope": "Additional historical-schema compatibility owner only, not a rerun of the five certificate parents or fullCI. All17 direct certificate code/API/test hashes unchanged."
   }
 }

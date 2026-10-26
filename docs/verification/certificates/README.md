@@ -36,3 +36,13 @@ The rebase snapshot reconciles all 18 historical files; the final documentation
 link/status change is separate. All 17 code/API/test files remain byte-equal.
 Independent reviews and final-head CI remain required before this Draft is ready. No release acceptance follows from this
 receipt alone.
+
+Final-head CI at `fb0012fb` exposed an inherited historical-schema test that
+validated migration55 retention and then incorrectly required runtime schema55
+after the new head became56. The test-only correction keeps every pinned54→55
+rollback/history assertion, upgrades explicitly to current head before runtime
+compatibility checking, and rechecks retained correction history. The exact
+additional native owner passes at `9db8318c`; its source/log/resource hashes are
+recorded separately. The same CI also hit the existing whole HTTP-package
+10-minute budget; integration of the separately reviewed exhaustive batching
+fix in #303 and fresh final-head CI remain required. Neither failure is erased.
