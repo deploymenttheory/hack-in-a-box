@@ -7,6 +7,8 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -41,6 +43,10 @@ func WriteFactoryInputs(directory string, plan FactoryPlan) error {
 	if err != nil {
 		return err
 	}
+	secrets, err := factorySecrets()
+	if err != nil {
+		return err
+	}
 	if err := os.Mkdir(directory, 0o700); err != nil {
 		return fmt.Errorf("create NEW private fixture directory: %w", err)
 	}
@@ -50,6 +56,9 @@ func WriteFactoryInputs(directory string, plan FactoryPlan) error {
 		if err := os.WriteFile(filepath.Join(directory, name), content, 0o600); err != nil {
 			return fmt.Errorf("write private fixture certificate: %w", err)
 		}
+	}
+	if err := os.WriteFile(filepath.Join(directory, "secrets.env"), secrets, 0o600); err != nil {
+		return fmt.Errorf("write private random fixture environment: %w", err)
 	}
 	for name, value := range map[string]any{"factory-plan.json": plan, "oidc.json": manifest} {
 		raw, err := json.MarshalIndent(value, "", "  ")
@@ -68,6 +77,34 @@ func WriteFactoryInputs(directory string, plan FactoryPlan) error {
 		return fmt.Errorf("write setup-only historical clock: %w", err)
 	}
 	return nil
+}
+
+func factorySecrets() ([]byte, error) {
+	var values [4][32]byte
+	for index := range values {
+		if _, err := rand.Read(values[index][:]); err != nil {
+			return nil, fmt.Errorf("generate private fixture credentials: %w", err)
+		}
+	}
+	keyring, err := json.Marshal(struct {
+		Active string            `json:"active"`
+		Keys   map[string]string `json:"keys"`
+	}{Active: "load123", Keys: map[string]string{"load123": base64.StdEncoding.EncodeToString(values[3][:])}})
+	if err != nil {
+		return nil, fmt.Errorf("encode private fixture keyring: %w", err)
+	}
+	// Values are generated hexadecimal/base64 and fixed JSON, never interpolated
+	// caller text. Single quotes protect JSON in Compose's private env-file.
+	return fmt.Appendf(
+		nil,
+		"LOAD_DB_PASSWORD=%s\nLOAD_OBSERVER_PASSWORD=%s\nLOAD_METRICS_TOKEN=%s\nLOAD_CREDENTIAL_KEYRING='%s'\n",
+		hex.EncodeToString(
+			values[0][:],
+		),
+		hex.EncodeToString(values[1][:]),
+		hex.EncodeToString(values[2][:]),
+		keyring,
+	), nil
 }
 
 func factoryCertificates(now time.Time) (map[string][]byte, error) {
