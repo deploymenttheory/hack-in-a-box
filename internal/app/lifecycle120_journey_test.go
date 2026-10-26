@@ -108,6 +108,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 		run.events = append(run.events, item)
 	}
+	// Published frozen team identities already exist; prepare their private
+	// repositories before any common theme disclosure or live transition.
+	run.provisionRepositories(t)
 	if err := control.advance(ctx, timeline.Publication.Add(-time.Second)); err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +137,6 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	for i := range run.events {
 		run.readCommonPublication(t, &run.events[i])
 	}
-	run.provisionRepositories(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
