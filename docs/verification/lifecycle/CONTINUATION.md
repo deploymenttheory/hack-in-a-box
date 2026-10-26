@@ -8,17 +8,32 @@ Issue #120 is now reopened to track unfinished acceptance. This continuation
 preserves that full contract and the L01–L18 matrix in
 [README.md](README.md).
 
+## Current PR #296 checkpoint scope
+
+The current delivery freezes native result-release, own-team feedback, live-help
+and reviewed common-answer/correction tooling and their source-attributed
+checkpoint evidence. It does not complete or close #120. The latest whole
+clarification journey failed and its exact uncertain-write target was later
+classified through read-only recovery; no failed whole run is relabelled a pass.
+All original criteria below stay open for later integrated delivery. Media,
+surveys, remaining exception variants, outcomes/archive and final browser/runtime
+acceptance are follow-up work rather than claims made by this checkpoint PR.
+
 ## Source and evidence boundaries
 
-The continuation starts on main `6764e89a` and carries only four unpublished
-post-`e485545c` changes: chronological finalist/award publication, its causal
-judge-start regression, the completion-owner correction and explicit keyed HTTP
-test intents. The recovered checkout's final tree is byte-identical to original
-`9d3fa421`; the original refs remain available. No changed public endpoint or
-schema is introduced.
+The continuation originally started on main `6764e89a` with four unpublished
+post-`e485545c` changes. The recovered tree matched original `9d3fa421`; original
+refs remain available. The causal judge-start regression and production
+completion correction have since merged separately in #298 and were dropped
+from this branch. The current delta contains only verification drivers,
+Compose harness configuration and documentation/evidence; it introduces no
+production endpoint, schema, authentication or domain-clock behavior.
 
 | Evidence | Actual result and limit |
 |---|---|
+| Frozen `72379c11`, runner20523 | Both modes passed479.73s through live-help races: exact prelive denial, one successful claim/one conflict and winner resolution per event. Native2 requests/6 commands/6 transitions; cleanup verified empty. |
+| Frozen `c952fd05` / `deb5f867` / `89590a6b` | Whole runs failed264.15s/418.72s/365.56s. Both common-answer versions and128 native inbox references were observed; the first stale fixture timestamp was corrected without production changes. Later request timeouts/daemon loss remain failures, with cause unknown. |
+| Read-only recovery of runner90117 | Exact timed-out team remains revision0/open, with no active/formal revision or audit change. One earlier other-team submission is distinct. Recovered native source corroborates4 common publications/128 references. No original write was replayed; all private resources were removed. |
 | Frozen `02fddbc7`, runner64283 | Both connected modes passed510.35s through four actual own-team reports,12 exact command ACKs, explicit draft/release/amendment/privacy and optional own-score checks. Results remain31 versions/3 publications. Live support, surveys, media and later phases remain. |
 | Frozen `f2526ef3`, runner21409 | Both connected native modes passed404.60s after the reviewed correction, including private finalist preparation/release before fresh judging and separate award publication. Thirty-one native result ACKs/versions and exactly three deliberate publications. This historical checkpoint stops before feedback and later phases. |
 | Frozen `dbe2304a`, runner7896 | Both connected native modes passed383.22s through separate award confirmation. Twenty-seven result versions/commands, two advisory versions/commands, two judge approvals and zero publications. This is the merged checkpoint, not full lifecycle acceptance. |
@@ -49,7 +64,7 @@ supporting checkpoint evidence.
 | Under-three pre-freeze reassignment; smaller/withdrawn teams after freeze; no moves/backfill; unused disbanded repos | Real pre-freeze depletion, unlock/reassignment/republication and freeze move denial. | After actual repository provision/publication, keep a smaller team's identity without reassignment; fully withdraw another; review any resulting access changes through native owners. Assert its existing repo is unused/unscored and post-freeze moves/post-cutoff replacement fail. |
 | T−7 local-calendar publication, early work, live-only formal/review, missed release and reasoned exceptions | Real worker DST/T−7 publication, private preparation work/drafts and early formal/review denial. | Actual missed/+60-second boundary, source/current audience gates, reasoned post-publication postponement and below-minimum attendance exception. Use event-specific dates and a single monotonic domain clock; do not rewind time or stretch windows. |
 | Former-organiser/privileged competitor rejection; cutoff freeze before stage advancement; assessment with an explicit outcome for every team | Native cutoff sources/retry/reconciliation while events remain live, including frozen/not-submitted/withdrawn outcomes. | Actual privilege history survives grant revocation; enforce same-event disqualification and correct cross-event scope. Reach native assessment only after complete current-team outcome census. |
-| Objectives, common rubric, exact acknowledgements, concurrent help, reviewed clarification and correction notices | Native objective/common rubric/acknowledgement, live mentor checkpoints and479.73s two-event help race/resolution. | Rehearse private-to-common reviewed clarification and correction, including actual current-audience inbox references committed atomically by the native owner. Keep queued external communications distinct; browser disconnected recovery remains required. |
+| Objectives, common rubric, exact acknowledgements, concurrent help, reviewed clarification and correction notices | Native objective/common rubric/acknowledgement, live mentor checkpoints,479.73s help race/resolution and2 reviewed common-answer versions/event with32 native inbox references/version. | Complete final cross-phase/current-role/material-change variants and browser disconnected recovery. Common-answer references commit atomically with the native owner; queued external communications remain distinct. |
 | Practice versus real scoring, non-winning showcase and owned30/60/90 reviews with estimated/evidenced outcomes | Isolated actual practice, new mentor/final judge cards; native retained-review components. | Reviewed consented non-winner publication/search/filter/page/withdrawal; actual owned review plans and queued30/60/90 effects. Distinguish estimates, self-reports and evidenced adoption. |
 | Archive retains only explicitly approved follow-up; audited updates leave competition immutable; M5 excluded | Exclusive default90-day expiry and explicit native120-day synthetic retention components. | Native completion/archive; approved retained follow-up only; audit/export/current owner access; compare frozen submission, rubric, scoring, decisions and publication hashes before/after authorised outcome updates. Default90 stays unchanged. |
 | Completed Fleet screens/guide and full action-to-next-action journeys | API lifecycle and separate historical UI/normal-image proofs. | Final merged Fleet routes in both actual portals, real backend actions, keyboard/narrow recovery, independent published guide and public-app outage/admin availability. Prototype/mocked-browser checks do not satisfy this row. |
