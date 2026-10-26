@@ -1,0 +1,476 @@
+{
+  "checkpoint": "fresh-independent-judge-cards-and-guarded-deliberation",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "bfb58c59556cac0b95b60e6ab1297d3f53937c60",
+    "fixture_image": "sha256:a4a73a6850765fb2c39819d654af3e1973b66557c882bc5e86f1671eda6398f5",
+    "main_base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
+    "schema": 55,
+    "build": "12132",
+    "startup": "41435",
+    "runner": "48916",
+    "duration_seconds": 285.71,
+    "production_image": false
+  },
+  "events": [
+    {
+      "event_id": "02439472-d5c5-4e9e-b8e3-04dca1f70e55",
+      "mode": "all_teams",
+      "judge_run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+      "eligible_team_ids": [
+        "af7cb17b-b343-4b1f-8d38-35f84ece86f5",
+        "ae22905b-37b2-4ee6-940b-374d6fa65145",
+        "43d84ada-e534-48a9-8391-599e8f0c6276",
+        "a8c26cfc-b4e4-4ca4-a00a-2878fa8b8acf"
+      ],
+      "reserve_reads_denied": 0,
+      "mentor_real_card_read_denied": true,
+      "missing_third_judge_deliberation_denied_without_mutation": true,
+      "deliberation_opened": true,
+      "cards": [
+        {
+          "acknowledgement": {
+            "request_id": "d767ee1a-fd9f-4c2d-95ee-f2a0709d864a",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "af7cb17b-b343-4b1f-8d38-35f84ece86f5",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "c352a4088de1b88385f63414d707cba08f1e12e6f2d3b143b4ce55295c96cb1a"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "9d7b3455-d8a0-42ff-8055-84ec70e34d30",
+            "sha": "fcf8b452164860b02cbaf7ede0ef882ffcbf5b0c",
+            "decision_id": "93d42a56-c6a9-4662-a715-10a3cc488860"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "abece72e-6a5c-4457-bfec-62588264df21",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "ae22905b-37b2-4ee6-940b-374d6fa65145",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "758e5cab0ead7bde4f88241817e16e2e13605da111abca85ad782bb3196e08ca"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "e1160f26-a3e0-45b9-9bd4-a41f7ce49ef5",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "43d84ada-e534-48a9-8391-599e8f0c6276",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "226d1ee82fda549c2c9586984668b3ae28fff739f1af30accaa83d0bc21e97cf"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "e2a74f79-786e-423a-a356-853fd45a85f8",
+            "sha": "2e1a9015e1911867381c1097450430b047452632",
+            "decision_id": "23b2fe1b-9f8d-488a-b62c-9357d495444d"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "a66ee1d5-a102-4fc7-ac1d-567a9a7fce57",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "a8c26cfc-b4e4-4ca4-a00a-2878fa8b8acf",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "643dd5e779049860f27f3c7dcfbdc2f7d09cb8f6b814b1279966d65e0eee94a4"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "d6f0127f-0bf6-4168-8f46-cfd9c3b47b8b",
+            "sha": "7d70e96c8adf2895cc6221001b104337500679f7",
+            "decision_id": "96765438-a922-4790-86e5-755dda5e1bc2"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "2828fe49-a165-41e5-a247-7b85d5e2197f",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "af7cb17b-b343-4b1f-8d38-35f84ece86f5",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "53245e74fcfb9810a34ec083996caceaf792ee32822f25c1da9c92fca5391495"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "9d7b3455-d8a0-42ff-8055-84ec70e34d30",
+            "sha": "fcf8b452164860b02cbaf7ede0ef882ffcbf5b0c",
+            "decision_id": "93d42a56-c6a9-4662-a715-10a3cc488860"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "63cdf5c6-5f17-48e1-92a9-da0ee059c85b",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "ae22905b-37b2-4ee6-940b-374d6fa65145",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "a4aad1620f6aca125f6598fc6adceb1b17c27cd8ef76ab1a220afc019a355588"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "66515b2f-e920-4c1e-9bfa-a3d950faf227",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "43d84ada-e534-48a9-8391-599e8f0c6276",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "8448ed2545927e0814acb68180b3562f36b8e58f4a3db134447b0023827cebd5"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "e2a74f79-786e-423a-a356-853fd45a85f8",
+            "sha": "2e1a9015e1911867381c1097450430b047452632",
+            "decision_id": "23b2fe1b-9f8d-488a-b62c-9357d495444d"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "379320a7-10ac-4250-bd74-a5e9e7017022",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "a8c26cfc-b4e4-4ca4-a00a-2878fa8b8acf",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "cd22d8edde4d5b5c3f8ae1d58f8de73d17c7d3e428bbf7ab435c6f0fd45c5f3c"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "d6f0127f-0bf6-4168-8f46-cfd9c3b47b8b",
+            "sha": "7d70e96c8adf2895cc6221001b104337500679f7",
+            "decision_id": "96765438-a922-4790-86e5-755dda5e1bc2"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "881ff204-39c6-426a-bf12-a1ad2e7869a5",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "af7cb17b-b343-4b1f-8d38-35f84ece86f5",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "f35f5a31d11e5100f9599d91862b66ce995a8a7b7e740bdc47545f9a39342aa4"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "9d7b3455-d8a0-42ff-8055-84ec70e34d30",
+            "sha": "fcf8b452164860b02cbaf7ede0ef882ffcbf5b0c",
+            "decision_id": "93d42a56-c6a9-4662-a715-10a3cc488860"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "4131459c-4aa0-48a9-b3e6-130c6638f3f1",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "ae22905b-37b2-4ee6-940b-374d6fa65145",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "e4b1a0cb171b82a95e152905d7a5f325fefb60e2d3a943a833fc6d88266083f5"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "86d6966e-2e62-406d-be3f-45cf4cd2c201",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "43d84ada-e534-48a9-8391-599e8f0c6276",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "52654a2fc5b203a27d77cc6b71ab4338320eb2bb5b67cbd8b16244cc6d989a82"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "e2a74f79-786e-423a-a356-853fd45a85f8",
+            "sha": "2e1a9015e1911867381c1097450430b047452632",
+            "decision_id": "23b2fe1b-9f8d-488a-b62c-9357d495444d"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "ee819071-d7c1-43fc-8b5b-4050d9d22ee4",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+            "team_id": "a8c26cfc-b4e4-4ca4-a00a-2878fa8b8acf",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "8b52f0cfe76c855da3bb9eed361f7162255bdb226af10175e763dd71fdbe32a2"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "d6f0127f-0bf6-4168-8f46-cfd9c3b47b8b",
+            "sha": "7d70e96c8adf2895cc6221001b104337500679f7",
+            "decision_id": "96765438-a922-4790-86e5-755dda5e1bc2"
+          }
+        }
+      ],
+      "open_acknowledgement": {
+        "request_id": "1403cb4b-0789-45fc-9d68-141da1707ce6",
+        "actor_id": "6665a06d-a4cc-4279-9c77-7028d13814bb",
+        "run_id": "4373161d-d456-4f54-becf-584056c40b5c",
+        "action": "open_deliberation",
+        "revision": 19,
+        "fingerprint": "378599ad7340728a2dcf8a7126258f6dca1fe4674ab0310e82db882fee57f257"
+      }
+    },
+    {
+      "event_id": "67e7ee72-2f50-4d59-a9d4-40380a48bf51",
+      "mode": "mentor_qualification",
+      "judge_run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+      "eligible_team_ids": [
+        "0593dd0b-5f34-4b0d-819a-4fd2eebce0ed",
+        "21b523ea-5e04-49d3-8216-5e53b2617aec",
+        "680260c0-7014-4cce-8109-9b6ddbc1f902"
+      ],
+      "reserve_reads_denied": 1,
+      "mentor_real_card_read_denied": true,
+      "missing_third_judge_deliberation_denied_without_mutation": true,
+      "deliberation_opened": true,
+      "cards": [
+        {
+          "acknowledgement": {
+            "request_id": "8d171d5f-dbf6-442e-aa7f-498331e04307",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "0593dd0b-5f34-4b0d-819a-4fd2eebce0ed",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "45c76e7788a85fcfb031b4f12f7804c58465e656c0e1da14809029f5d4e7fbc1"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "d19c1be4-5b0c-4166-87ae-27f828d9044a",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "21b523ea-5e04-49d3-8216-5e53b2617aec",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "78aa52a57fe8b8995bd175d01dcd2f649f0b0cbcc3b312d1e99c42e521021870"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "277bdc32-451b-45d8-a6a4-8de1f24fad1e",
+            "sha": "0f0f1b1115b5376af8bd7aa965d73b3ee8a480ca",
+            "decision_id": "3afa8efc-15eb-4cab-b315-d1178bf58c08"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "115bc1fe-925b-44a2-8c41-5a8ba3620385",
+            "actor_id": "7b649230-6945-443f-ba35-91a40c3be031",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "680260c0-7014-4cce-8109-9b6ddbc1f902",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "d53f183d188ba7cb1ab47636ff9463f478e5b4de07f9a7dd1f1fe58dabc1c084"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "77f11c0f-ab15-4960-b43c-d4c086eced8d",
+            "sha": "348828d445b1331df7db738f3dcec1bb15c0abcd",
+            "decision_id": "ab0d34e5-6cd8-41fc-89aa-7703d4dfbb57"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "875b73eb-753c-4e30-9999-0e4a492c89e3",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "0593dd0b-5f34-4b0d-819a-4fd2eebce0ed",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "f0e24a8e98cd666d9ed2c73f216f3b43d7a7b9592f44b5a80467ffe1c8d5bda5"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "8a2d5453-80f3-4568-a08b-b3274fe3d23f",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "21b523ea-5e04-49d3-8216-5e53b2617aec",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "22ac35681725420b9a35d231e2397e8a27cf4190b515f4cf8087376fd0cab6f2"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "277bdc32-451b-45d8-a6a4-8de1f24fad1e",
+            "sha": "0f0f1b1115b5376af8bd7aa965d73b3ee8a480ca",
+            "decision_id": "3afa8efc-15eb-4cab-b315-d1178bf58c08"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "312fac6e-b8df-4734-b47b-aa4bdf00aa2b",
+            "actor_id": "d4259b65-1374-47e4-a651-429112efcaf5",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "680260c0-7014-4cce-8109-9b6ddbc1f902",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "96e5913ec143858b2b745ffa1628fc5b14d2c0a79b1a3ea89ec0f3ecde639b3d"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "77f11c0f-ab15-4960-b43c-d4c086eced8d",
+            "sha": "348828d445b1331df7db738f3dcec1bb15c0abcd",
+            "decision_id": "ab0d34e5-6cd8-41fc-89aa-7703d4dfbb57"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "900cf305-56f8-4ff9-8a1f-439390b9b220",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "0593dd0b-5f34-4b0d-819a-4fd2eebce0ed",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "19b7e81fd3d1121f2e8d2feed08db0414b245f5105d3cc9dc03a0ff1aaa6027a"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "not_applicable"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "7caffa71-e5b7-4352-a2f2-395be1a2ca09",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "21b523ea-5e04-49d3-8216-5e53b2617aec",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "f2b795496587b69f499cb973d90f1168cc1b94e400db258dfda02d42d74dc45d"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "277bdc32-451b-45d8-a6a4-8de1f24fad1e",
+            "sha": "0f0f1b1115b5376af8bd7aa965d73b3ee8a480ca",
+            "decision_id": "3afa8efc-15eb-4cab-b315-d1178bf58c08"
+          }
+        },
+        {
+          "acknowledgement": {
+            "request_id": "d1b3e93c-e407-4e40-be88-c6d5ed942fde",
+            "actor_id": "6bc6f04d-95d8-44c4-ab87-3af7d0ee4011",
+            "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+            "team_id": "680260c0-7014-4cce-8109-9b6ddbc1f902",
+            "action": "submit",
+            "revision": 1,
+            "fingerprint": "3930868a67f9702dfbc8d9cef8becb8898ed1718904b573265765e15c3fe9d46"
+          },
+          "submission_revision": 1,
+          "frozen_repository_reference": {
+            "status": "completed",
+            "source_id": "77f11c0f-ab15-4960-b43c-d4c086eced8d",
+            "sha": "348828d445b1331df7db738f3dcec1bb15c0abcd",
+            "decision_id": "ab0d34e5-6cd8-41fc-89aa-7703d4dfbb57"
+          }
+        }
+      ],
+      "open_acknowledgement": {
+        "request_id": "dafb2174-56d5-488b-88cd-7bdde747a5ca",
+        "actor_id": "6665a06d-a4cc-4279-9c77-7028d13814bb",
+        "run_id": "3fea3a7b-922f-40c9-aa3d-8859328a5dc3",
+        "action": "open_deliberation",
+        "revision": 16,
+        "fingerprint": "ecfae1c004697560abe2bb29507f2851e747aee72459a4cb242323d30c93cf13"
+      }
+    }
+  ],
+  "native_census": {
+    "independent_fresh_judge_cards": 21,
+    "required_judges_per_team": 3,
+    "opened_deliberations": 2,
+    "missing_judge_open_denials": 2,
+    "mentor_real_card_read_denials": 2,
+    "reserve_real_card_read_denials": 1,
+    "original_card_acknowledgements_recovered_by_GET": 21,
+    "native_command_rows": 41,
+    "preweek_practice_acknowledgements_separate": 6,
+    "planning_assignment_acknowledgements_separate": 12
+  },
+  "private_artifact_hashes": [
+    {
+      "local_basename": "hackbox120-fresh-judges-bfb58c59-journey.json",
+      "sha256": "6cb26386b144bcd68917cd14ac4808543d8fbfbb2fa1fa8251f6e35499c76fa4"
+    },
+    {
+      "local_basename": "hackbox120-fresh-judges-bfb58c59-judge-state.json",
+      "sha256": "937f701fa482734ee91d54a943cb91337f63c7d92ac89548a11afa09003b8f06"
+    },
+    {
+      "local_basename": "hackbox120-fresh-judges-bfb58c59-access-state.json",
+      "sha256": "6b343d0573de6f6ce2da1ad2781c7a4f68c31c74fb444e68c500f3727b21f590"
+    },
+    {
+      "local_basename": "hackbox120-fresh-judges-bfb58c59-cutoff-state.json",
+      "sha256": "b0807a789cd2780625be84f01bd59d67b07a36becc990fd767933d1f65330552"
+    },
+    {
+      "local_basename": "hackbox120-fresh-judges-bfb58c59-work.json",
+      "sha256": "0f08b83010a2432f4b173f6b445d699bdbd1985f07686dd0b5fbaeb134ac7b51"
+    }
+  ],
+  "privacy": "Only validated synthetic UUIDs, hashes, enum states, revisions and current references are published. Raw private cards, scores/evidence, judge guidance, runtime JSON, cookies, provider configuration and keys remain local.",
+  "scope_limits": [
+    "Four all-team frozen entries and three actual signed finalists each receive three new version1 cards. A reserve remains excluded; mentors cannot read independent judge cards.",
+    "Practice and mentor qualification do not start the judge-final run. Actual card values differ from practice/live/mentor-final values; no other submitted cards are disclosed before explicit deliberation.",
+    "Missing third-judge opening returns409 without changing round revision or deliberation. Opening follows actual current completeness; three peer cards then become visible only in the intended deliberation.",
+    "No final judge tie ballot, mentor advisory, confirmation, award or public result is claimed by this checkpoint.",
+    "Repository SHA strings identify scoped synthetic work receipts explicitly selected by the native organiser, not real Git objects or GitHub history. Isolated fixture proof is distinct from normal production-image/TLS/browser proof."
+  ],
+  "remaining_scope": "Actual all-required-judge strict-majority decisions/advisory-only input, remaining lifecycle variants/help/support, awards/showcase/archive/owned outcomes and final integrated browser/normal-image/recovery/CI remain required. No L01\u2013L18 row is complete.",
+  "cleanup": {
+    "project": "hackbox-lifecycle120-fresh-judges-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "normal_user_projects_untouched": true
+  }
+}

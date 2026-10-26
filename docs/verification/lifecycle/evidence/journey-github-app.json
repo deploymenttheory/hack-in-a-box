@@ -1,0 +1,127 @@
+{
+  "assertions": [
+    "single-connected-native-http-journey",
+    "both-judging-templates",
+    "distinct-native-event-brands-objectives",
+    "overlapping-native-person-identities",
+    "independent-team-and-event-state",
+    "actual-admission-fifo-go-remediation-and-freeze",
+    "native-common-publication-in-both-events",
+    "same-exact-public-rubric-within-event",
+    "private-guidance-excluded",
+    "exact-version-acknowledgements",
+    "early-live-denied-without-mutation",
+    "native-scheduled-live-transition",
+    "normal-configured-encrypted-github-app-owner",
+    "real-app-jwt-scoped-template-rest",
+    "single-use-native-installation-callback"
+  ],
+  "checkpoint": "connected-two-event-start-to-live-only",
+  "complete_lifecycle": false,
+  "events": [
+    {
+      "event_id": "26361561-a536-48fa-b601-eebb37788027",
+      "mode": "all_teams",
+      "stage": "live",
+      "objective": {
+        "id": "6b6d90d4-efb7-4b5d-861b-d48b440c7a87",
+        "version": 1
+      },
+      "primary": "#164e63",
+      "team_ids": [
+        "a9c8911d-1404-41b4-bafe-fae4dc3b352f",
+        "1e672925-fcfb-4717-8ce9-1f88488de3fe",
+        "fe6c873f-b3fc-4815-ae56-a1496341c55a",
+        "e6723a6d-299c-404a-af11-1b2c1486bc0d",
+        "e35c5430-625d-42b0-a07b-af017951f0bc",
+        "dfd83217-ca22-4b48-a4bc-d1019d627e11"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "36c3d85d-2f96-479d-a77d-71296dc905d8",
+      "rubric": {
+        "id": "e35de1ac-51a3-4bba-a834-de43721ae0ef",
+        "version": 1,
+        "digest": "8e9b8806d0da19420868e1435e8dfee5decc03d9f50736774a5c9bf27cb78bca"
+      },
+      "common_sha256": "2341076e0c4c45e368d916b9b9f19775720fcb45d65b49ed6e4581e0c43dec20",
+      "published_at": "2026-03-23T09:00:00Z"
+    },
+    {
+      "event_id": "f3258c6d-b123-4e22-919d-8187d123efe3",
+      "mode": "mentor_qualification",
+      "stage": "live",
+      "objective": {
+        "id": "32be447b-d67f-44f3-bbb9-01059f495dfb",
+        "version": 1
+      },
+      "primary": "#5b21b6",
+      "team_ids": [
+        "aa20e30b-0d38-46af-b713-d25939b3edea",
+        "524f2513-5968-4308-a564-631279165047",
+        "3feaa909-d364-420e-9522-9d709ce7f986",
+        "9b2c74f6-b82f-4b26-b5fc-be0256d492e4",
+        "db3b8479-50a8-4e27-8ba8-56764c3faea0",
+        "2dedb83d-ac0a-4de7-a687-2f2e9505565c"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "4f6326e9-7b17-4fba-a62d-c9f23a06b23a",
+      "rubric": {
+        "id": "b8ba0c37-9e3f-47dc-9bdd-6f2be12f0870",
+        "version": 1,
+        "digest": "f8d65bffcf7b1fde54804889d3b8fc1dec9a88230b952188ad82d80ae2adec99"
+      },
+      "common_sha256": "c69a4774bebb823df26a67db3d69744d07375ea5586fde5af821bf9d69af857b",
+      "published_at": "2026-03-23T09:00:00Z"
+    }
+  ],
+  "explicit_retention_days": 120,
+  "github_transport_proof": {
+    "app_jwts_verified": 12,
+    "installation_tokens_minted": 4,
+    "template_reads": 4
+  },
+  "live_start": "2026-03-30T09:00:00+01:00",
+  "overlapping_oidc_people": 36,
+  "publication": "2026-03-23T09:00:00Z",
+  "remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
+  "retention_reason": "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
+  "provenance": {
+    "source": "0c72445bb3bbc89e43d5443f0576b49d7fa6e3c9",
+    "fixture_image": "sha256:c8a633cc11d1f7de54469c3d40818e9d05e726ff04faeabb6849b5e828ac685a",
+    "main_base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+    "schema": 54,
+    "runner": "11852",
+    "duration_seconds": 1.85,
+    "production_image": false
+  },
+  "native_app_bindings": [
+    {
+      "event_id": "26361561-a536-48fa-b601-eebb37788027",
+      "app_id": 42,
+      "installation_id": 7,
+      "organization_id": 99
+    },
+    {
+      "event_id": "f3258c6d-b123-4e22-919d-8187d123efe3",
+      "app_id": 42,
+      "installation_id": 7,
+      "organization_id": 99
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "checkpoint": "fresh-final-mentor-cards-and-signed-review",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "ae532cefe94c2be5b57e9767809aa97f22aa6af6",
+    "fixture_image": "sha256:f6ad29d8486d28e8413fdc317089229da19edda6da918f54b7b75f1b3057a3a0",
+    "main_base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
+    "schema": 55,
+    "build": "89686",
+    "startup": "71047",
+    "runner": "24488",
+    "duration_seconds": 284.7,
+    "production_image": false
+  },
+  "events": [
+    {
+      "event_id": "b0156730-04fa-486b-b54f-5d3f83ab458a",
+      "mode": "all_teams",
+      "live_card_count": 12,
+      "final_cards": [],
+      "final_huddles": []
+    },
+    {
+      "event_id": "1fd3d5bf-ed84-41a5-9319-cde916873dc2",
+      "mode": "mentor_qualification",
+      "live_card_count": 12,
+      "final_cards": [
+        {
+          "team_id": "6a984412-fed1-4282-889a-27217199945d",
+          "author_id": "56e335fc-6e9f-4cb6-bc52-2de4dc27a67e",
+          "reference": {
+            "id": "20b4cdca-183c-535f-b4e5-5a937eef0201",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "6a984412-fed1-4282-889a-27217199945d",
+          "author_id": "e20b2c94-616d-4b5e-9d9b-3bd1720d8b8b",
+          "reference": {
+            "id": "c2d35934-5ae9-5435-a922-0056aae9792c",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "66d51666-b6fa-4c99-a77e-4f57fc8dd40d",
+          "author_id": "56e335fc-6e9f-4cb6-bc52-2de4dc27a67e",
+          "reference": {
+            "id": "8da724b1-7514-5cdc-ab12-ad4a423025a3",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "66d51666-b6fa-4c99-a77e-4f57fc8dd40d",
+          "author_id": "e20b2c94-616d-4b5e-9d9b-3bd1720d8b8b",
+          "reference": {
+            "id": "ff290ce6-2220-5365-a1d8-efba7a42f235",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "183415e8-f019-466d-be47-9b1fa1e61877",
+          "author_id": "56e335fc-6e9f-4cb6-bc52-2de4dc27a67e",
+          "reference": {
+            "id": "d3670322-6e09-55ed-8bde-dc220da51344",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "183415e8-f019-466d-be47-9b1fa1e61877",
+          "author_id": "e20b2c94-616d-4b5e-9d9b-3bd1720d8b8b",
+          "reference": {
+            "id": "8809b7de-c837-5947-b915-038eef24e757",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "e25ff5ef-d17f-4503-b157-a88d4c094e1e",
+          "author_id": "56e335fc-6e9f-4cb6-bc52-2de4dc27a67e",
+          "reference": {
+            "id": "23e582e9-6d01-5072-b45e-a4d1271361d7",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        },
+        {
+          "team_id": "e25ff5ef-d17f-4503-b157-a88d4c094e1e",
+          "author_id": "e20b2c94-616d-4b5e-9d9b-3bd1720d8b8b",
+          "reference": {
+            "id": "1bcbac03-33ac-58a1-b957-a9745fcc62c9",
+            "version": 1
+          },
+          "run_id": "8be90304-1433-40ff-9ae2-820958a27371"
+        }
+      ],
+      "final_huddles": [
+        {
+          "team_id": "6a984412-fed1-4282-889a-27217199945d",
+          "huddle_id": "5e05a1a1-1333-4c4f-a1cd-bab1148959cd",
+          "version": 4,
+          "signoff_id": "2c8ae478-368e-5c8f-9948-dc0c7368ce0d",
+          "submission_revision": 1,
+          "response_context_binding": "5c7b04bb7069004b2e16ca4a0044c4ce6dffc4a311ff422ab79f3d563051e7ad",
+          "final_cards": [
+            {
+              "id": "20b4cdca-183c-535f-b4e5-5a937eef0201",
+              "version": 1
+            },
+            {
+              "id": "c2d35934-5ae9-5435-a922-0056aae9792c",
+              "version": 1
+            }
+          ]
+        },
+        {
+          "team_id": "66d51666-b6fa-4c99-a77e-4f57fc8dd40d",
+          "huddle_id": "3002b082-77ec-4d92-945c-e5d897099de6",
+          "version": 4,
+          "signoff_id": "cdd6a6f6-6bf2-5bc1-9c89-61e1a114bd43",
+          "submission_revision": 1,
+          "response_context_binding": "38ebc12db9975c7a181497a956026a08183b741d4e3f58273c988103c5fbc78e",
+          "final_cards": [
+            {
+              "id": "8da724b1-7514-5cdc-ab12-ad4a423025a3",
+              "version": 1
+            },
+            {
+              "id": "ff290ce6-2220-5365-a1d8-efba7a42f235",
+              "version": 1
+            }
+          ]
+        },
+        {
+          "team_id": "183415e8-f019-466d-be47-9b1fa1e61877",
+          "huddle_id": "3cd92538-65f0-473f-b10c-9eb925b04a58",
+          "version": 4,
+          "signoff_id": "47b7d9ac-0210-5888-a3a8-184187520a50",
+          "submission_revision": 1,
+          "response_context_binding": "5d70c7c102f30375d39c544d0f652befabd5068d9b41b5fed6d5273b3806b331",
+          "final_cards": [
+            {
+              "id": "d3670322-6e09-55ed-8bde-dc220da51344",
+              "version": 1
+            },
+            {
+              "id": "8809b7de-c837-5947-b915-038eef24e757",
+              "version": 1
+            }
+          ]
+        },
+        {
+          "team_id": "e25ff5ef-d17f-4503-b157-a88d4c094e1e",
+          "huddle_id": "4b296da2-d2bb-4db9-9a7e-55ee61d9eb52",
+          "version": 4,
+          "signoff_id": "d547e095-1c59-57b0-9077-e33a180077fc",
+          "submission_revision": 1,
+          "response_context_binding": "a3ad9b8c748418896118961571fa026d1fd9ddf8904bae23bc67850a02d83d04",
+          "final_cards": [
+            {
+              "id": "23e582e9-6d01-5072-b45e-a4d1271361d7",
+              "version": 1
+            },
+            {
+              "id": "1bcbac03-33ac-58a1-b957-a9745fcc62c9",
+              "version": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "persisted_signoff_references": [
+    {
+      "event_id": "1fd3d5bf-ed84-41a5-9319-cde916873dc2",
+      "id": "47b7d9ac-0210-5888-a3a8-184187520a50",
+      "team_id": "183415e8-f019-466d-be47-9b1fa1e61877",
+      "run_id": "8be90304-1433-40ff-9ae2-820958a27371",
+      "context_id": "3cd92538-65f0-473f-b10c-9eb925b04a58",
+      "actor_id": "70c784cf-b8c5-45ad-9a96-dd76b87e8b35",
+      "context_version": 3
+    },
+    {
+      "event_id": "1fd3d5bf-ed84-41a5-9319-cde916873dc2",
+      "id": "cdd6a6f6-6bf2-5bc1-9c89-61e1a114bd43",
+      "team_id": "66d51666-b6fa-4c99-a77e-4f57fc8dd40d",
+      "run_id": "8be90304-1433-40ff-9ae2-820958a27371",
+      "context_id": "3002b082-77ec-4d92-945c-e5d897099de6",
+      "actor_id": "70c784cf-b8c5-45ad-9a96-dd76b87e8b35",
+      "context_version": 3
+    },
+    {
+      "event_id": "1fd3d5bf-ed84-41a5-9319-cde916873dc2",
+      "id": "2c8ae478-368e-5c8f-9948-dc0c7368ce0d",
+      "team_id": "6a984412-fed1-4282-889a-27217199945d",
+      "run_id": "8be90304-1433-40ff-9ae2-820958a27371",
+      "context_id": "5e05a1a1-1333-4c4f-a1cd-bab1148959cd",
+      "actor_id": "70c784cf-b8c5-45ad-9a96-dd76b87e8b35",
+      "context_version": 3
+    },
+    {
+      "event_id": "1fd3d5bf-ed84-41a5-9319-cde916873dc2",
+      "id": "d547e095-1c59-57b0-9077-e33a180077fc",
+      "team_id": "e25ff5ef-d17f-4503-b157-a88d4c094e1e",
+      "run_id": "8be90304-1433-40ff-9ae2-820958a27371",
+      "context_id": "4b296da2-d2bb-4db9-9a7e-55ee61d9eb52",
+      "actor_id": "70c784cf-b8c5-45ad-9a96-dd76b87e8b35",
+      "context_version": 3
+    }
+  ],
+  "native_census": {
+    "live_checkpoint_cards": 24,
+    "fresh_final_cards": 8,
+    "total_private_cards": 32,
+    "immutable_huddle_versions": 16,
+    "signoffs": 4,
+    "accepted_grants": 88,
+    "delivered_access_operations": 88,
+    "delivered_independent_poll_operations": 12,
+    "access_poll_real_attempts": 100,
+    "unique_wall_attempt_leases": 100,
+    "retained_leases": 0,
+    "delivered_cutoff_operations": 14,
+    "cutoff_delivered_attempts": 14,
+    "cutoff_retryable_attempts": 1
+  },
+  "private_artifact_hashes": [
+    {
+      "local_basename": "hackbox120-final-mentor-review-ae532cef-journey.json",
+      "sha256": "0345b3eab25eb87485a725293fc6a90874e041e6ec1aa1f2e4feee00a599770f"
+    },
+    {
+      "local_basename": "hackbox120-final-mentor-review-ae532cef-access-state.json",
+      "sha256": "e3655797bc0e8b9525408d8c0fe36ca0c9d356c39f2a7e25bd6687759d93db09"
+    },
+    {
+      "local_basename": "hackbox120-final-mentor-review-ae532cef-cutoff-state.json",
+      "sha256": "7f6c3a7ce25c38c710eaa4c9beb94c0ace26a7eee0fa8d236ecf88585e57338f"
+    },
+    {
+      "local_basename": "hackbox120-final-mentor-review-ae532cef-huddle-state.json",
+      "sha256": "0b4671daaeef1aa240fa930ffdb37fa1c17cc4cbfcbdcfb818cdfa2b95805002"
+    },
+    {
+      "local_basename": "hackbox120-final-mentor-review-ae532cef-work.json",
+      "sha256": "9d8e467210973c7d878309c8356f53a869302507f6b0d0849ec901b7477126c7"
+    }
+  ],
+  "privacy": "Fixed whitelist of validated synthetic UUIDs, integer counts, SHA256 hashes and native references only. No raw runtime JSON, scores, notes, cookies, tokens, provider configuration or cryptographic key material is published. Full diagnostics stay local.",
+  "evidence_limits": [
+    "Only mentor_qualification has eight fresh final cards and four current signed huddles; all_teams has no mentor-final requirement.",
+    "Final cards differ from live checkpoints by card and run IDs and bind exact frozen formal revisions. This prepares qualification source, never finalist selection or independent judge scoring.",
+    "Export SQL flat proof.binding projection was NULL because the stored signoff contains nested Context. Actual native-response context bindings and matching persisted signoff/context IDs are recorded separately; no SQL binding value is reconstructed.",
+    "Isolated test entrypoint/provider proof is distinct from normal production-image, TLS, real GitHub and browser proof."
+  ],
+  "remaining_scope": "Actual qualification/finalist decisions, fresh final judge cards/advisory-only input/judge-only majority, remaining lifecycle variants/help/support, awards/showcase/archive/owned outcomes and final integrated browser/normal-image/recovery/CI remain required. No L01\u2013L18 row is complete.",
+  "cleanup": {
+    "project": "hackbox-lifecycle120-final-mentor-review-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "normal_user_projects_untouched": true
+  }
+}

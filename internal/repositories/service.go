@@ -38,6 +38,10 @@ type App interface {
 type Service struct {
 	Pool *pgxpool.Pool
 	App  App
+	// Now optionally supplies domain eligibility time for new immediate intents.
+	// Nil preserves the original database creation timestamp, including its precision.
+	// Audit records, authentication, provider transport and job leases keep wall time.
+	Now func() time.Time
 }
 type View struct {
 	TeamID       uuid.UUID `json:"team_id"`
@@ -141,6 +145,10 @@ func (s Service) queue(
 	if err != nil {
 		return repositoryError(err)
 	}
+	var queuedAt time.Time
+	if s.Now != nil {
+		queuedAt = s.Now().UTC()
+	}
 	for _, t := range teams {
 		if t.State != "published" {
 			continue
@@ -177,6 +185,10 @@ func (s Service) queue(
 		if err != nil {
 			return repositoryError(err)
 		}
+		due := r.CreatedAt
+		if s.Now != nil {
+			due = queuedAt
+		}
 		if _, err = q.InsertOperation(
 			ctx,
 			dbgen.InsertOperationParams{
@@ -184,7 +196,7 @@ func (s Service) queue(
 				TargetID:     t.ID,
 				Kind:         HandlerKind,
 				OperationKey: "repository:" + t.ID.String(),
-				DueAt:        r.CreatedAt,
+				DueAt:        due,
 				Approved:     true,
 			},
 		); err != nil {

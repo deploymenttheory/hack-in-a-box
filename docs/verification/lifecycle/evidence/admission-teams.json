@@ -1,0 +1,142 @@
+{
+  "accepted_offer_id": "8067b273-d0e1-42b0-a924-99d9f53b1758",
+  "applications": 36,
+  "assertions": [
+    "normal-oidc-for-every-person",
+    "published-exact-form-version",
+    "native-facilitator-selection",
+    "staff-excluded-from-minimum",
+    "409-attendance_shortfall-without-state-change",
+    "threshold-does-not-auto-advance",
+    "explicit-go",
+    "capacity-and-fifo",
+    "offer-excluded-until-accepted",
+    "offer-survives-preparation",
+    "target-five-published-teams",
+    "actual-withdrawal-leaves-two",
+    "409-teams_unready-without-state-change",
+    "explicit-unlock-and-reassignment",
+    "draft-does-not-change-publication",
+    "reviewed-republication",
+    "native-freeze",
+    "409-teams_frozen-without-state-change"
+  ],
+  "census": {
+    "accepted_offer_confirmed": 35,
+    "after_pair_reassignment_confirmed": 32,
+    "explicit_go_confirmed": 35,
+    "minimum_blocked_confirmed": 29,
+    "minimum_reached_without_auto_advance": 30,
+    "overflow_waitlist_position": 1,
+    "pending_offer_excluded_confirmed": 34
+  },
+  "checkpoint": "native-compose-admission-teams-only",
+  "complete_lifecycle": false,
+  "event_id": "44fbb20b-b0bd-4180-89e0-085254f1f8e9",
+  "frozen_revision": 101,
+  "queued_notifications_exercised": false,
+  "teams": [
+    {
+      "id": "ac938a97-7da4-4709-bbaf-38785d4346af",
+      "state": "disbanded",
+      "frozen": false,
+      "members": []
+    },
+    {
+      "id": "ceac0f3b-0def-4eea-b538-2f30db55026f",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "45e47608-351e-4f0f-9d07-713835e96dab",
+        "4a729e2d-40a0-430e-bee1-4d48b512bce3",
+        "732fabc1-38b2-4f85-b470-c3dcb1324cac",
+        "d95245a6-789b-4682-ac7d-72ce36f9c11f",
+        "e2dae5cb-d613-4f5a-9cc6-d9658f1b7041",
+        "e56cc98d-d179-41e0-8da5-4258255e140d"
+      ]
+    },
+    {
+      "id": "88de3d84-6840-4c4d-bf40-367858b6a8e0",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "3a4627cd-35b2-42b3-a4bb-fc1a04f801cf",
+        "85affebb-8a91-43de-8d21-82432716e5c2",
+        "b0418dd2-bcaf-4a89-9cfe-6d43a3460bc4",
+        "d0ce4fa4-6329-4c5b-8b89-f4aa3f891a7b",
+        "e45d8da4-f325-4685-b99b-a7c7c5737800",
+        "fe4b7874-60e4-4792-a3c0-4cdcec21eddd"
+      ]
+    },
+    {
+      "id": "1cc976b6-536b-4866-a4b1-61be16c4c403",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "1378fc4c-eeba-427b-a07c-623413d47665",
+        "26086818-aac1-4d16-8217-6a45b28373e2",
+        "4e982d9a-0de5-45dc-9a72-c5cfd10cb206",
+        "991f9c8a-b5d6-45a4-92a4-aff423a6257a",
+        "f7cf20cf-b8d6-453d-b0e8-6486f86834c5"
+      ]
+    },
+    {
+      "id": "15b27d84-c46d-40de-a5b0-8a3ae34827b8",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "00651859-15c8-4bc4-9ff2-f8cf32082cfc",
+        "2d59fdac-c23b-4c1a-ad64-02e1f817cd45",
+        "378c62bb-bfd7-49a0-9ada-5665e318e0a0",
+        "552abc11-e897-44c3-a32f-1f1ecd9a3960",
+        "c5d18f95-fcd9-4fb3-af54-19b17c4802cd"
+      ]
+    },
+    {
+      "id": "d9d8ff4d-82b2-4c77-a429-d507967cbc9e",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "15e6decb-606c-4ab0-a475-4ff61c1450bc",
+        "3bdbf9ab-fd83-458a-9239-2b40222ca363",
+        "65aea842-efd8-4462-90e9-743951fae061",
+        "6ffaa42b-c286-444b-b80a-33212afa934b",
+        "92feca04-68b4-468b-8bbe-90199797af85"
+      ]
+    },
+    {
+      "id": "be2a6ddc-6703-4842-acab-4edd49ecc28d",
+      "state": "published",
+      "frozen": true,
+      "members": [
+        "601da5c3-a650-41d6-818e-238425dbf48d",
+        "6e7e9442-9e30-464b-b051-f169fe356e3a",
+        "8b943489-63ab-48d7-bba1-c754d08799b5",
+        "dbae1190-15e2-4fcd-8479-a919080dd9c7",
+        "efb93029-c1ac-408f-bbb1-4451b73e7364"
+      ]
+    }
+  ],
+  "waitlisted_registration_id": "003345ca-9700-4c1e-810e-f21b3cbc2857",
+  "image_id": "sha256:363166f25378dcbb727ed181120804206526f24c53b76a223fcac4f3127d42e1",
+  "image_source": "c403ddc56a81e9553ceb03474e12bd7a55ca1086",
+  "compose_source": "c403ddc56a81e9553ceb03474e12bd7a55ca1086",
+  "project": "hackbox-lifecycle120-admission-20261025",
+  "test_seconds": 0.39,
+  "services_started": [
+    "postgres",
+    "provider",
+    "migrate",
+    "public",
+    "admin"
+  ],
+  "excluded_proof": [
+    "worker-effects",
+    "browser",
+    "smtp-delivery",
+    "github-provider",
+    "full-lifecycle",
+    "production-images"
+  ],
+  "cleanup": "project containers, volumes and network removed; label-filtered post-cleanup queries empty"
+}

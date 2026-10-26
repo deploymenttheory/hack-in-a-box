@@ -179,6 +179,7 @@ func newCommunicationRuntime(
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	webhooks := &githubwebhooks.Service{Pool: pool, Keys: cfg.CredentialKeys}
 	repos := &repositories.Service{
+		Now:  now,
 		Pool: pool,
 		App: githubapp.Service{
 			Pool:     pool,
@@ -224,6 +225,7 @@ func newCommunicationRuntime(
 	if err != nil {
 		return communicationRuntime{}, fmt.Errorf("configure communication outbox: %w", err)
 	}
+	outbox.DomainNow = now
 	freeze.Jobs = outbox
 	webhooks.Jobs = outbox
 	composer.Jobs = outbox

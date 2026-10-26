@@ -1,0 +1,63 @@
+{
+  "assertions": [
+    "native-exact-audience-approval",
+    "native-schedule-binding-approval",
+    "real-queued-dispatch-and-provider-effect",
+    "lost-data-response-ambiguous",
+    "explicit-no-resend",
+    "same-original-command-idempotent",
+    "changed-payload-conflict",
+    "original-provider-evidence-retained",
+    "no-blind-resend-after-natural-retry-interval"
+  ],
+  "attempt_count": 1,
+  "attempt_id": "fc69bead-c982-4ef2-9dbf-b48e392b1df4",
+  "binding_id": "a4dfa823-f38c-4a8b-9bd0-b639768a40e2",
+  "campaign_id": "bf048a02-8ea6-4032-b339-664f63d75e9a",
+  "cancelled": true,
+  "checkpoint": "queued-smtp-unknown-no-resend-only",
+  "complete_lifecycle": false,
+  "decision_count": 1,
+  "decision_id": "0c89ea4b-9a8c-4b57-9cd7-5cc639ed4811",
+  "delivery_id": "26ded308-9c06-4aa5-8a41-24205afc4dd3",
+  "event_id": "935221d7-4454-4ca5-a954-1499ca7cbebb",
+  "operation_state": "ambiguous",
+  "relay_count": 2,
+  "state": "ambiguous",
+  "unknown_mail_sha256": "cf98512e900899cd9a10a1bb2c334e5f2a1b3edf0e465494192b4a1d34dbd7f2",
+  "source": "8e13c403499b1d04f63facd4a55e6bd8ed0dccca",
+  "image": "sha256:43792266b01df15091ff2a0344e3e49f7314f02a3028be90950d47b10fa22aee",
+  "schema": 54,
+  "native_operations": [
+    {
+      "kind": "communication_test_smtp",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "attempt_outcomes": [
+        "delivered"
+      ]
+    },
+    {
+      "kind": "communication.dispatch",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "attempt_outcomes": [
+        "delivered"
+      ]
+    },
+    {
+      "kind": "communication_campaign_smtp",
+      "state": "ambiguous",
+      "attempts": 1,
+      "cancelled": true,
+      "lease_released": true,
+      "attempt_outcomes": [
+        "ambiguous"
+      ]
+    }
+  ]
+}

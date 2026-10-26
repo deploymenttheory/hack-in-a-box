@@ -1,0 +1,99 @@
+{
+  "assertions": [
+    "single-connected-native-http-journey",
+    "both-judging-templates",
+    "distinct-native-event-brands-objectives",
+    "overlapping-native-person-identities",
+    "independent-team-and-event-state",
+    "actual-admission-fifo-go-remediation-and-freeze",
+    "native-common-publication-in-both-events",
+    "same-exact-public-rubric-within-event",
+    "private-guidance-excluded",
+    "exact-version-acknowledgements",
+    "early-live-denied-without-mutation",
+    "native-scheduled-live-transition"
+  ],
+  "checkpoint": "connected-two-event-start-to-live-only",
+  "complete_lifecycle": false,
+  "events": [
+    {
+      "event_id": "fade91e6-a289-46ca-b12b-c80844e70fb7",
+      "mode": "all_teams",
+      "stage": "live",
+      "objective": {
+        "id": "28045da4-a2eb-495a-b5b7-f00b50103f5e",
+        "version": 1
+      },
+      "primary": "#164e63",
+      "team_ids": [
+        "b3f2fdb0-98fa-48e3-8ee1-16ff2acb991d",
+        "0a97c273-e7e9-432f-87f9-bdaee5caabe1",
+        "5da03f83-c462-4f4b-b3ff-87c17869329e",
+        "29006ff5-e8bd-4f18-b46b-15c9b8d4dac4",
+        "28b4eb7d-18f1-40ed-96cc-38fb968633a1",
+        "d207df26-941a-4044-8f4a-00b8e82e339b"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "22ae174b-3a9b-4a57-a901-865c43e40836",
+      "rubric": {
+        "id": "e825335f-27ba-4ae7-9c6b-99be6b2feb37",
+        "version": 1,
+        "digest": "10bbbaf5fd0d62f29c4d6c3fe5d51c714b0ff943aed472d423df01db824b1579"
+      },
+      "common_sha256": "da60fe1cbf906f25668eeacb13f083ba4c542a7733176b14223d09ce300edbcc",
+      "published_at": "2026-03-23T09:00:00Z"
+    },
+    {
+      "event_id": "c6e976f5-c9bb-4a4a-a7b4-75d465055ef5",
+      "mode": "mentor_qualification",
+      "stage": "live",
+      "objective": {
+        "id": "560a3cbd-f294-4e5f-9263-83f40ebf3dd6",
+        "version": 1
+      },
+      "primary": "#5b21b6",
+      "team_ids": [
+        "c54b1df9-d318-4633-8037-de6645bde62d",
+        "a5f89cb3-ac7c-4fed-ae1b-05fdf876df10",
+        "2a1dadf4-2dd9-43a1-b07a-4cecf80d3eb6",
+        "c04920fb-50fb-4234-83bf-c119925a70e1",
+        "8d10d48d-034a-4fc9-b585-1fc483e78b2a",
+        "a44e0c53-173a-43f3-b321-31187bd0b773"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "ecff78f3-6336-4924-9357-1e7e19388abe",
+      "rubric": {
+        "id": "445b7ec4-6946-4816-9eff-bbab314b5e46",
+        "version": 1,
+        "digest": "4c477fd13c44bdba9f9b5475d38ded08289f38af4491dc0a6a4e1eeba19443dc"
+      },
+      "common_sha256": "4e3d78367296120eb4fdeb57c2ebddd36037f0d75494abc91b8f25890e06f660",
+      "published_at": "2026-03-23T09:00:00Z"
+    }
+  ],
+  "explicit_retention_days": 120,
+  "live_start": "2026-03-30T09:00:00+01:00",
+  "overlapping_oidc_people": 36,
+  "publication": "2026-03-23T09:00:00Z",
+  "remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
+  "retention_reason": "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
+  "source": "467e0b40ae4f7157b4b3a61e269ce3e520010429",
+  "image": "sha256:73c325d5353b7b5e7547c6c256eeb1d4156005c5289ba591e8400cd7ef88e5f5",
+  "schema": 54
+}

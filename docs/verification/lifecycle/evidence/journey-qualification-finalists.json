@@ -1,0 +1,422 @@
+{
+  "checkpoint": "recorded-native-qualification-and-finalist-selection",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "64ba7abfbcf397c040f6ea88a0aa72aebcb5e63a",
+    "fixture_image": "sha256:a7324da43f518231cf34613ed96cf5d340008bb6a328554e7ce1859510436cc2",
+    "main_base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
+    "schema": 55,
+    "build": "23391",
+    "startup": "90611",
+    "runner": "77867",
+    "duration_seconds": 306.56,
+    "production_image": false
+  },
+  "event_id": "eb5c91ed-b694-49d1-90a1-7cac584bcdfd",
+  "mentor_final_run_id": "a49784bc-db79-4ed1-a9ae-65f45fa09ff8",
+  "finalist_ids": [
+    "0e70fced-7df3-491b-b118-684f62dbbb2a",
+    "1815d614-7563-48c7-a123-9d5212c16ed4",
+    "1d03c653-8ecf-4987-94fb-9af78271be2a"
+  ],
+  "reserve_ids": [
+    "83f0a56b-789a-41b2-a8f0-37c2ceb558be"
+  ],
+  "signoff_binding": "7beac3f7eef835bbe66e8b17854456bc60de8258e7af396823275a1bce24ab7d",
+  "native_census": {
+    "moderated_signed_cards": 4,
+    "required_mentor_panel_members": 2,
+    "recorded_ballots": 16,
+    "recorded_noncasting_resolutions": 8,
+    "immutable_round_versions": 35,
+    "stored_command_acknowledgements": 35,
+    "read_only_original_acknowledgements_recovered": 35,
+    "immutable_source_references": 124,
+    "latest_signed_source_references": 4,
+    "missing_vote_signoff_denied_without_mutation": true
+  },
+  "latest_signed_source_references": [
+    {
+      "event_id": "eb5c91ed-b694-49d1-90a1-7cac584bcdfd",
+      "run_id": "a49784bc-db79-4ed1-a9ae-65f45fa09ff8",
+      "team_id": "0e70fced-7df3-491b-b118-684f62dbbb2a",
+      "signoff_id": "acb9d69a-3d40-5f42-ad6d-5fd7e3a8b8d1",
+      "round_version": 35
+    },
+    {
+      "event_id": "eb5c91ed-b694-49d1-90a1-7cac584bcdfd",
+      "run_id": "a49784bc-db79-4ed1-a9ae-65f45fa09ff8",
+      "team_id": "1815d614-7563-48c7-a123-9d5212c16ed4",
+      "signoff_id": "5080ea20-391d-5e69-bab1-e2552d6ecf4e",
+      "round_version": 35
+    },
+    {
+      "event_id": "eb5c91ed-b694-49d1-90a1-7cac584bcdfd",
+      "run_id": "a49784bc-db79-4ed1-a9ae-65f45fa09ff8",
+      "team_id": "1d03c653-8ecf-4987-94fb-9af78271be2a",
+      "signoff_id": "e250aafc-a1de-5b91-a73f-4eb17d7f086d",
+      "round_version": 35
+    },
+    {
+      "event_id": "eb5c91ed-b694-49d1-90a1-7cac584bcdfd",
+      "run_id": "a49784bc-db79-4ed1-a9ae-65f45fa09ff8",
+      "team_id": "83f0a56b-789a-41b2-a8f0-37c2ceb558be",
+      "signoff_id": "627d7e81-16c7-5d95-8b77-fcb56efc3326",
+      "round_version": 35
+    }
+  ],
+  "original_command_references": [
+    {
+      "request_id": "dc6fd672-b4e7-4688-96b1-0f74b945b8af",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "configure_panel",
+      "fingerprint": "292079c06d84057f5f8abf7caec3921906da2756dd7130b30cad3bd0b504b286",
+      "expected_revision": 187,
+      "expected_version": 0,
+      "version": 1
+    },
+    {
+      "request_id": "59e38697-710a-4e54-bcaa-9bb24a648b6a",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "save_card",
+      "fingerprint": "8f36b94dd8e953f614669e8944822f6084fc8285472e3e1de26da873baa17b30",
+      "expected_revision": 188,
+      "expected_version": 1,
+      "version": 2
+    },
+    {
+      "request_id": "30202768-e21a-4e7d-9ab5-9c3eca92ca79",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "sign_card",
+      "fingerprint": "2d8c56bb6d397c62f79a1d851eeb59307c88e460db89441a5f571f6b283eeea0",
+      "expected_revision": 189,
+      "expected_version": 2,
+      "version": 3
+    },
+    {
+      "request_id": "6ecaa16a-612f-4c3c-a008-912016a51224",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "save_card",
+      "fingerprint": "ab858819856b4a9071a539ec76eef2e8b9f961a2874b86610276835646780026",
+      "expected_revision": 190,
+      "expected_version": 3,
+      "version": 4
+    },
+    {
+      "request_id": "97751d78-5bab-4b41-af30-c866fb23c817",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "sign_card",
+      "fingerprint": "b2bfb406bbc67823d0624f53767094eba625b438c90a961a4b22883bde5089e5",
+      "expected_revision": 191,
+      "expected_version": 4,
+      "version": 5
+    },
+    {
+      "request_id": "a58b3a45-b551-481b-a5fb-987faf6421dd",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "save_card",
+      "fingerprint": "af83822b709aeec4bdf2f5016bc9a3abbb66a53c2e4c37e2776c031ddf46c383",
+      "expected_revision": 192,
+      "expected_version": 5,
+      "version": 6
+    },
+    {
+      "request_id": "87f1c37b-f315-42fe-9c1e-f57e213e8620",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "sign_card",
+      "fingerprint": "37572bc2cc8207ff95ce6885b5ee2d2178c45f93900048933a6d90a69eb506b3",
+      "expected_revision": 193,
+      "expected_version": 6,
+      "version": 7
+    },
+    {
+      "request_id": "290643df-f495-4d9f-879d-ec5d3973ee5c",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "save_card",
+      "fingerprint": "9b0c77f61fde4e5e586412662fb3cba79a2e4bf927da9f3c8a272a20f5b1cd60",
+      "expected_revision": 194,
+      "expected_version": 7,
+      "version": 8
+    },
+    {
+      "request_id": "9eee32be-d199-4c2a-a254-7e2fc925da32",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "sign_card",
+      "fingerprint": "506e07b937bf4c395c685989b832568221e3606aa1782ee7fa658c8f37397977",
+      "expected_revision": 195,
+      "expected_version": 8,
+      "version": 9
+    },
+    {
+      "request_id": "ac4662ca-5c21-47af-925f-a16d7f749a83",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "propose",
+      "fingerprint": "6b1de42536c60ed2ace0a2e2a12c3c1b2a8f046182d3bf1cb144aa18ec31d289",
+      "expected_revision": 196,
+      "expected_version": 9,
+      "version": 10
+    },
+    {
+      "request_id": "fba53059-7faf-422b-a669-94b9cc0aa244",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "5e855d89284190b9f88c0550042e0e3d7d8810d5c17bdc7f1768a7e27bd62509",
+      "expected_revision": 197,
+      "expected_version": 10,
+      "version": 11
+    },
+    {
+      "request_id": "a9c963f0-fe26-46d5-b03e-719a53d77045",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "c6f74aca9c647d39af819ea0c3511632a16a6b73f0904af0c18c33b3cc747368",
+      "expected_revision": 198,
+      "expected_version": 11,
+      "version": 12
+    },
+    {
+      "request_id": "4d8347da-6306-4726-ab91-d419d9390da4",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "6efa22bb3ce681d3fdb62081cb99e9ec6d0e504e6c3fc887e54cc61e533ea28c",
+      "expected_revision": 199,
+      "expected_version": 12,
+      "version": 13
+    },
+    {
+      "request_id": "71406004-8607-40b0-a45e-69d7dd159485",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "7489706a9b406c681c120351be08229e8fb98cff51fe522d0a5f7c7654e4d586",
+      "expected_revision": 200,
+      "expected_version": 13,
+      "version": 14
+    },
+    {
+      "request_id": "02897654-d6af-445b-8769-170a3a10fcff",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "1a48c7bc6c6572d94cd4662589d66c38eede18fbe701d9d785b660a332bddcbd",
+      "expected_revision": 201,
+      "expected_version": 14,
+      "version": 15
+    },
+    {
+      "request_id": "24ab8848-f30c-4c86-b79f-e1e6bb45564c",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "ddb0e728444949623ef1f2e564d541bccce222709371ee2dc8e8812910b57f46",
+      "expected_revision": 202,
+      "expected_version": 15,
+      "version": 16
+    },
+    {
+      "request_id": "869da95f-76a8-476e-a4f5-5b55f57590b0",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "bb51c682b6ab3a7150c12738a84071809d2a754df002bfd13198d3b45f9f2e63",
+      "expected_revision": 203,
+      "expected_version": 16,
+      "version": 17
+    },
+    {
+      "request_id": "f6016d3f-4724-4eb9-90ca-e8e3f2418f29",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "c61465b5fd649d59e448cedc0650957adb8afed55c41452ac837c6ec76e525c5",
+      "expected_revision": 204,
+      "expected_version": 17,
+      "version": 18
+    },
+    {
+      "request_id": "727a03af-0655-4ad1-80df-707811600ced",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "03267644212fe664efc57d183b659897259282fd2d59cf4fe77dcbdfb6fc4198",
+      "expected_revision": 205,
+      "expected_version": 18,
+      "version": 19
+    },
+    {
+      "request_id": "f4ed339c-cb0d-497b-9032-fc2d4ca683ca",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "900ec98daa93b57a547ddb42fcf2acd5dd263a6c0bad6709370ff4794fc6bae1",
+      "expected_revision": 206,
+      "expected_version": 19,
+      "version": 20
+    },
+    {
+      "request_id": "a1dc1b67-d880-43a9-96e2-43725d7b330a",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "7ee03853fe4634870f095f4287cfe0f3516e27fd718b15c3843f432083ff8ebb",
+      "expected_revision": 207,
+      "expected_version": 20,
+      "version": 21
+    },
+    {
+      "request_id": "fc4c7292-422d-49bd-abd9-2bb35b5aa10e",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "c4a3703844741b2c4152fe7b2c8b18baa58bd71d76dbeffe6e5fc78baa0cac2b",
+      "expected_revision": 208,
+      "expected_version": 21,
+      "version": 22
+    },
+    {
+      "request_id": "2f738be8-8ce8-41e0-bb7a-49276ce900a4",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "a307b3df40fda51e305166022af58c69a5367e76be0b1a9a3a9d21cd2df4d9dc",
+      "expected_revision": 209,
+      "expected_version": 22,
+      "version": 23
+    },
+    {
+      "request_id": "d3a8a45b-6c74-41bc-85e8-8f8bf91b0ff8",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "41fafb4eb922c99deb4fca5bf795373852ccdd14c9a4b79245fab3016c0558b2",
+      "expected_revision": 210,
+      "expected_version": 23,
+      "version": 24
+    },
+    {
+      "request_id": "dfd02d40-3d5c-4aff-acc0-519d3133efe0",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "1d9a826771c691826c0c7c0ddb86621ad2f482b93822c00ad9cf2d04c8ee5b4d",
+      "expected_revision": 211,
+      "expected_version": 24,
+      "version": 25
+    },
+    {
+      "request_id": "576688ac-ae52-453f-a834-ad6edebb4ad4",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "7785e5923e51548311f19dd04e303586cc70ee35ae2ee19cf5f62ca80818a963",
+      "expected_revision": 212,
+      "expected_version": 25,
+      "version": 26
+    },
+    {
+      "request_id": "aa95ec3e-609f-4b8e-80b6-a287d4c516b0",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "c38fcb71b218ab426356582d24fdb77eb64a6aceae7d895bc216cffd0c2ae8ac",
+      "expected_revision": 213,
+      "expected_version": 26,
+      "version": 27
+    },
+    {
+      "request_id": "47235de0-56d4-44c5-b86e-2af630d7879d",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "edf2d5333df74c59e820d7ee6f9632c55634c3b786a8ea7b813225cf02af4ecf",
+      "expected_revision": 214,
+      "expected_version": 27,
+      "version": 28
+    },
+    {
+      "request_id": "93933230-bad3-4b90-9774-616121174776",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "2b473c031e6f9e4269ae0c0113c47010880d24f089425021186a314bb829df3a",
+      "expected_revision": 215,
+      "expected_version": 28,
+      "version": 29
+    },
+    {
+      "request_id": "b6e6bd7e-7d96-48d5-89dc-f638888ba48e",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "c11eccfa4f2f4ac3a8eaf03a754bd07acc388a39c5867c64638b97589414f10a",
+      "expected_revision": 216,
+      "expected_version": 29,
+      "version": 30
+    },
+    {
+      "request_id": "48a672a7-257f-4d2c-8419-0a8a2617db6e",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "10ecd5dbeabc59e508f4e3dd146e29614cab5527d38576c992075d46e03a42db",
+      "expected_revision": 217,
+      "expected_version": 30,
+      "version": 31
+    },
+    {
+      "request_id": "f93b5fa1-3d8e-4eee-abec-76ddd692510a",
+      "actor_id": "67977c75-cd3f-4642-89fe-11cc0f32fc24",
+      "action": "vote_tie",
+      "fingerprint": "0695f5ed6ce137a1a0f73200643593ea37f21c1ce8d38314a5dca37c8418ff65",
+      "expected_revision": 218,
+      "expected_version": 31,
+      "version": 32
+    },
+    {
+      "request_id": "c9187492-b915-45de-a5e0-97da29e1ce2b",
+      "actor_id": "b9f99fda-1bb7-4ca9-b804-6ddf4c086f0b",
+      "action": "vote_tie",
+      "fingerprint": "446d5641d486b02b20bbd89c41458bfaf670bfd303264ba816fb184738411e65",
+      "expected_revision": 219,
+      "expected_version": 32,
+      "version": 33
+    },
+    {
+      "request_id": "8230c4e3-5374-406a-893b-5af324cf103a",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "resolve_tie",
+      "fingerprint": "d3c2fa2ef878fd1f2bd4122cfd7d7d145dd2a1ba5581e97787b811b1f1e2137f",
+      "expected_revision": 220,
+      "expected_version": 33,
+      "version": 34
+    },
+    {
+      "request_id": "b056fb8e-96fe-405a-9438-3f2f6ba0bd3f",
+      "actor_id": "cd43c81e-16e7-474c-b4d9-bf8d7951dd13",
+      "action": "sign_off",
+      "fingerprint": "2a28eb3095d204114f190d117c4a1c7cfa97253121f54a45fa408cbd0006d80a",
+      "expected_revision": 221,
+      "expected_version": 34,
+      "version": 35
+    }
+  ],
+  "private_artifact_hashes": [
+    {
+      "local_basename": "hackbox120-qualification-64ba7abf-journey.json",
+      "sha256": "3cb0451de400bd2f0ea3d18fb1b6344e18c957df04cd4206b8499745bef78630"
+    },
+    {
+      "local_basename": "hackbox120-qualification-64ba7abf-panel-state.json",
+      "sha256": "57c8089e4dfadf5c0103a1824ee63d8bc084e0e4beba0c94f0c0ba11fc21df58"
+    },
+    {
+      "local_basename": "hackbox120-qualification-64ba7abf-access-state.json",
+      "sha256": "9890628512f62cfd3bbdd362aed4045491f189c6c04854433d774564bb0bd129"
+    },
+    {
+      "local_basename": "hackbox120-qualification-64ba7abf-cutoff-state.json",
+      "sha256": "621b36043f4e318f5d506f0950a22cc85a725e9f8decfd9d940ea952d3eb3cb3"
+    },
+    {
+      "local_basename": "hackbox120-qualification-64ba7abf-work.json",
+      "sha256": "5e4f28b62ceaac274280810e333885619b6034dfa760849290d1d4f0d719a4ef"
+    }
+  ],
+  "privacy": "Only validated synthetic UUIDs, counts, enums, SHA256 hashes and current references are published. Raw runtime JSON, private scores/prose, session data, provider configuration and keys remain local.",
+  "scope_limits": [
+    "This is mentor qualification before independent final judging; its ballots are not final judge votes and its scores do not populate judge cards.",
+    "Actual complete two-mentor ballots precede each recorded unique-leader organiser resolution; three finalists and one reserve are current native signed selections.",
+    "Same connected admission/common/provider/live-checkpoint/frozen-review/cutoff flow passed; all-team mode receives no mentor-qualification requirement.",
+    "Isolated fixture execution is distinct from normal production-image, real GitHub, TLS and browser proof."
+  ],
+  "remaining_scope": "Fresh final judge cards, advisory-only mentor input and all-required-judge strict-majority decisions, remaining lifecycle variants/help/support, awards/showcase/archive/owned outcomes and final integrated browser/normal-image/recovery/CI remain required. No L01\u2013L18 row is complete.",
+  "cleanup": {
+    "project": "hackbox-lifecycle120-qualification-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "normal_user_projects_untouched": true
+  }
+}

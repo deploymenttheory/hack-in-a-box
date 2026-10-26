@@ -268,7 +268,7 @@ func (s Service) approvalProof(
 		anchor = cfg.LiveEnd
 	}
 	proof.RetainUntil = privacy.RetentionDeadline(anchor, policy.RetentionDays)
-	if !s.now().Before(proof.RetainUntil) || v.DueAt.After(proof.RetainUntil) {
+	if !s.now().Before(proof.RetainUntil) || !v.DueAt.Before(proof.RetainUntil) {
 		return proof, access.ErrInvalid
 	}
 	proof.PrivacyRevision, err = q.OutcomePrivacyRevision(ctx, eventRow.ID)

@@ -1,0 +1,230 @@
+{
+  "complete_lifecycle": false,
+  "current_native_metadata": {
+    "approved_at": "2026-03-23T09:00:00Z",
+    "approved_by": "502d55ca-32f9-4748-a439-b6f7f3683563",
+    "can_manage": true,
+    "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+    "execution": [
+      {
+        "action_id": "32944248-3c9a-4fc4-b1dc-bbd2731a3578",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.467824Z"
+      },
+      {
+        "action_id": "7b10a298-27d8-4cc5-bd7c-3c4c41a4cf92",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.449502Z"
+      },
+      {
+        "action_id": "843d2639-12f5-4bd7-8c11-2459efc071e6",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.558734Z"
+      },
+      {
+        "action_id": "a5925776-4472-4c6b-af0a-d0bf6f906542",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.45575Z"
+      },
+      {
+        "action_id": "b6f9ff4d-082d-4358-837d-0b1d1724d94b",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.552827Z"
+      },
+      {
+        "action_id": "d6293b92-5422-4d53-ab05-de9d4f1cdd55",
+        "state": "delivered",
+        "diagnostic": "",
+        "attempted": true,
+        "updated_at": "2026-10-26T05:08:22.461523Z"
+      }
+    ],
+    "fingerprint": "fd5bb31b358f3d4c25d79f650e7df693b83c10021721cb44714d15ef12e74240",
+    "flags": [
+      "verified_account_required",
+      "verified_account_required",
+      "plan_stale"
+    ],
+    "grant_count": 6,
+    "grants_open": true,
+    "plan_id": "4db01267-6d05-47fb-9ccf-4feefbafda4c",
+    "plan_present": true,
+    "repository_id": 1002,
+    "team_id": "4aa0a7a7-888f-47d2-83ad-3e2f95aa6b7a",
+    "version": 1
+  },
+  "expected_original_approval": {
+    "team_id": "4aa0a7a7-888f-47d2-83ad-3e2f95aa6b7a",
+    "plan_id": "4db01267-6d05-47fb-9ccf-4feefbafda4c",
+    "plan_version": 1,
+    "repository_id": 1002,
+    "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+    "fingerprint": "fd5bb31b358f3d4c25d79f650e7df693b83c10021721cb44714d15ef12e74240",
+    "action_ids": [
+      "a5925776-4472-4c6b-af0a-d0bf6f906542",
+      "d6293b92-5422-4d53-ab05-de9d4f1cdd55",
+      "7b10a298-27d8-4cc5-bd7c-3c4c41a4cf92",
+      "32944248-3c9a-4fc4-b1dc-bbd2731a3578",
+      "b6f9ff4d-082d-4358-837d-0b1d1724d94b",
+      "843d2639-12f5-4bd7-8c11-2459efc071e6"
+    ],
+    "approver_id": "502d55ca-32f9-4748-a439-b6f7f3683563",
+    "pending_before_external_acceptance": 6,
+    "accepted_after_native_refresh": 6
+  },
+  "failure": "current native poll authority/source changed",
+  "provenance": {
+    "source": "d61a4bc1e3faac3a0b8f717264ba95b12c8fa975",
+    "fixture_image": "sha256:643a73d2d63243624e28f3dee58b94ea88d0a02aca2050295ae2017980491db4",
+    "main_base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
+    "schema": 55,
+    "build": "81739",
+    "startup": "62354",
+    "runner": "21370",
+    "duration_seconds": 112.28,
+    "result": "FAIL",
+    "production_image": false
+  },
+  "native_source_metadata": {
+    "events": [
+      {
+        "id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+        "stage": "live",
+        "revision": 145
+      },
+      {
+        "id": "8f002838-f04b-427f-b2ba-5d96e9f5f510",
+        "stage": "live",
+        "revision": 145
+      }
+    ],
+    "mentor_coverage": [
+      {
+        "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+        "person_id": "7131ccc6-9fbd-4031-951e-c259fb1cf658",
+        "slot": "second",
+        "snapshot": "draft",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+        "person_id": "7131ccc6-9fbd-4031-951e-c259fb1cf658",
+        "slot": "second",
+        "snapshot": "published",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+        "person_id": "98338463-f169-46fc-9a13-5ee099dcbe52",
+        "slot": "primary",
+        "snapshot": "draft",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "2d29b136-2216-410a-a06c-c486c7cd4914",
+        "person_id": "98338463-f169-46fc-9a13-5ee099dcbe52",
+        "slot": "primary",
+        "snapshot": "published",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "8f002838-f04b-427f-b2ba-5d96e9f5f510",
+        "person_id": "7131ccc6-9fbd-4031-951e-c259fb1cf658",
+        "slot": "second",
+        "snapshot": "draft",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "8f002838-f04b-427f-b2ba-5d96e9f5f510",
+        "person_id": "7131ccc6-9fbd-4031-951e-c259fb1cf658",
+        "slot": "second",
+        "snapshot": "published",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "8f002838-f04b-427f-b2ba-5d96e9f5f510",
+        "person_id": "98338463-f169-46fc-9a13-5ee099dcbe52",
+        "slot": "primary",
+        "snapshot": "draft",
+        "team_count": 6,
+        "verified_github_account": false
+      },
+      {
+        "event_id": "8f002838-f04b-427f-b2ba-5d96e9f5f510",
+        "person_id": "98338463-f169-46fc-9a13-5ee099dcbe52",
+        "slot": "primary",
+        "snapshot": "published",
+        "team_count": 6,
+        "verified_github_account": false
+      }
+    ],
+    "operations": [
+      {
+        "kind": "communication.dispatch",
+        "state": "delivered",
+        "count": 2
+      },
+      {
+        "kind": "mentors.published",
+        "state": "pending",
+        "count": 2
+      },
+      {
+        "kind": "registration.offer",
+        "state": "cancelled",
+        "count": 2
+      },
+      {
+        "kind": "repository.access",
+        "state": "delivered",
+        "count": 64
+      },
+      {
+        "kind": "repository.access.poll",
+        "state": "delivered",
+        "count": 12
+      },
+      {
+        "kind": "repository.provision",
+        "state": "delivered",
+        "count": 12
+      },
+      {
+        "kind": "submission.capture",
+        "state": "pending",
+        "count": 14
+      },
+      {
+        "kind": "teams.published",
+        "state": "pending",
+        "count": 4
+      }
+    ],
+    "practice_cards": 6,
+    "live_mentor_cards": 0
+  },
+  "diagnosis": "Actual newly published primary/second mentor coverage legitimately expanded desired repository source after the original competitor-only approval. Both mentors lack verified native GitHub accounts. The exact original plan identity/version/fingerprint and delivered grants are retained; verified_account_required twice and plan_stale correctly block current approval assertions. No missing account, plan source, API denial or guard is bypassed. Actual live mentor cards were never written.",
+  "cleanup": {
+    "project": "hackbox-lifecycle120-mentor-review-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "normal_user_projects_untouched": true
+  }
+}

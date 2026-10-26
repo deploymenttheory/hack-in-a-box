@@ -1,0 +1,118 @@
+{
+  "assertions": [
+    "native-exact-audience-and-schedule-approval",
+    "real-queued-native-rcpt-rejection",
+    "no-data-after-definite-rejection",
+    "original-delivery-and-attempt-retained",
+    "native-retry-policy-enforced"
+  ],
+  "attempt_count": 2,
+  "campaign_id": "54f06d28-4694-4497-8afa-48fcb29e79c6",
+  "checkpoint": "queued-smtp-definite-temporary-only",
+  "complete_lifecycle": false,
+  "decision_count": 1,
+  "delivery_id": "9fb0bc42-0620-4e36-8354-a7a3c566b302",
+  "event_id": "0c2d9485-53cd-45d3-bd82-554abee2ae53",
+  "final_state": "provider_accepted",
+  "initial_state": "retryable",
+  "original_attempt_id": "4f2b64c0-b129-4ced-b790-88b246fa1c76",
+  "source": "ce8cb0c17e90bc9e09ed342e55d9f8f62e1c3607",
+  "image": "sha256:343dbaa0fe4402018e758fb380e2d071879997453f5d5a748308161dfa2a86e5",
+  "schema": 54,
+  "native_operations": [
+    {
+      "kind": "communication_test_smtp",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": null,
+      "smtp_attempts": [
+        {
+          "number": 1,
+          "outcome": "accepted"
+        }
+      ],
+      "review_count": 0
+    },
+    {
+      "kind": "communication.dispatch",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": null,
+      "smtp_attempts": null,
+      "review_count": 0
+    },
+    {
+      "kind": "communication_campaign_smtp",
+      "state": "ambiguous",
+      "attempts": 1,
+      "cancelled": true,
+      "lease_released": true,
+      "provider_state": "ambiguous",
+      "smtp_attempts": [
+        {
+          "number": 1,
+          "outcome": "ambiguous"
+        }
+      ],
+      "review_count": 1
+    },
+    {
+      "kind": "communication.dispatch",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": null,
+      "smtp_attempts": null,
+      "review_count": 0
+    },
+    {
+      "kind": "communication_campaign_smtp",
+      "state": "permanent",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": "permanent",
+      "smtp_attempts": [
+        {
+          "number": 1,
+          "outcome": "permanent"
+        }
+      ],
+      "review_count": 0
+    },
+    {
+      "kind": "communication.dispatch",
+      "state": "delivered",
+      "attempts": 1,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": null,
+      "smtp_attempts": null,
+      "review_count": 0
+    },
+    {
+      "kind": "communication_campaign_smtp",
+      "state": "delivered",
+      "attempts": 2,
+      "cancelled": false,
+      "lease_released": true,
+      "provider_state": "accepted",
+      "smtp_attempts": [
+        {
+          "number": 2,
+          "outcome": "accepted"
+        },
+        {
+          "number": 1,
+          "outcome": "retryable"
+        }
+      ],
+      "review_count": 1
+    }
+  ]
+}

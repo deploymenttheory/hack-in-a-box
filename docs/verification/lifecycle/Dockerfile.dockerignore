@@ -1,0 +1,23 @@
+# The fixture build needs only these source trees. In particular, do not send
+# local worktrees, provider secrets, evidence archives or application data.
+**
+!go.mod
+!go.sum
+!cmd/
+!cmd/**
+!internal/
+!internal/**
+!web/
+!web/**
+**/.env
+**/.env.*
+web/node_modules
+web/dist
+web/dist-admin
+web/dist-styleguide
+web/.pattern-dist
+web/test-results*
+web/playwright-report
+web/styleguide-test-results
+**/*.log
+**/*.tsbuildinfo

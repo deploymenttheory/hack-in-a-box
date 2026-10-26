@@ -1,0 +1,52 @@
+{
+  "assertions": [
+    "normal-config",
+    "real-oidc-callback",
+    "native-bootstrap-owner",
+    "separate-portal-sessions",
+    "private-draft-denied",
+    "unprivileged-creation-denied"
+  ],
+  "checkpoint": "native-compose-bootstrap-only",
+  "complete_lifecycle": false,
+  "event_ids": [
+    "708fa012-b01d-4de1-8c6a-81c2a342bf8f",
+    "e3b2dcd8-3195-4743-9b29-1b83035c4af8"
+  ],
+  "image_id": "sha256:cb28085ecab6a2cbd074262857daa2c48c995183e83cde510d5a113c18768907",
+  "image_source": "2b203526e53ec2c88e272c9890b65f473ca1aa54",
+  "compose_source": "8ee123e6",
+  "project": "hackbox-lifecycle120-initial-20261025",
+  "test_seconds": 0.04,
+  "services_started": [
+    "postgres",
+    "provider",
+    "migrate",
+    "public",
+    "admin"
+  ],
+  "excluded_proof": [
+    "admission",
+    "teams",
+    "worker-effects",
+    "browser",
+    "smtp-delivery",
+    "github-provider",
+    "full-lifecycle",
+    "production-images"
+  ],
+  "resource_caps": {
+    "fixture": {
+      "cpus": 0.5,
+      "memory_mib": 256,
+      "pids": 128,
+      "gomaxprocs": 2
+    },
+    "postgres": {
+      "cpus": 0.75,
+      "memory_mib": 384,
+      "pids": 128
+    }
+  },
+  "cleanup": "project containers, volumes and network removed; label-filtered post-cleanup queries empty"
+}

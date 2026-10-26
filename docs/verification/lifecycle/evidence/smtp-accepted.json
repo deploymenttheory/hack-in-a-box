@@ -1,0 +1,32 @@
+{
+  "assertions": [
+    "native-oidc-verified-contact",
+    "reviewed-requesting-organiser",
+    "real-river-worker",
+    "tls-auth-smtp",
+    "native-bounded-accepted-receipt",
+    "single-private-relay-message"
+  ],
+  "checkpoint": "queued-smtp-accepted-only",
+  "complete_lifecycle": false,
+  "event_id": "5929a794-a787-42e5-b3a1-c7f9cf7939fd",
+  "mail_sha256": "31e9fa5337e49a0be1743a171ac30c410433e2919d5faa6a05ca75b9a1e52c66",
+  "reason": "relay_accepted",
+  "relay_count": 1,
+  "state": "accepted",
+  "test_id": "bf7116f7-28ab-4f92-8945-58b224c7cad7",
+  "native_operation": {
+    "kind": "communication_test_smtp",
+    "state": "delivered",
+    "attempts": 1,
+    "delivery_attempt_outcomes": [
+      "delivered"
+    ],
+    "smtp_state": "accepted",
+    "receipt_code": "relay_accepted",
+    "lease_released": true,
+    "schema": 54
+  },
+  "source": "0a21f4a6",
+  "image": "sha256:3fd3cd2b1d615d071f1cf0cc8ab25695618f4e6380bd19bf1caf29305a5ec3ef"
+}
