@@ -3,6 +3,7 @@ package certificates_test
 import (
 	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -10,11 +11,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/certificates"
-	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -377,11 +379,11 @@ func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t 
 	); err == nil {
 		t.Fatal("certificate provenance could be erased")
 	}
-	if err = database.Migrate(
-		ctx,
-		f.pool,
-		55,
-	); err == nil ||
+	db := stdlib.OpenDBFromPool(f.pool)
+	defer db.Close()
+	migrator, err := goose.NewProvider(goose.DialectPostgres, db, os.DirFS("../database/migrations"))
+	require(t, err)
+	if _, err = migrator.DownTo(ctx, 55); err == nil ||
 		!strings.Contains(err.Error(), "certificate decisions must be retained") {
 		t.Fatal("downgrade did not preserve issued recognition", err)
 	}
