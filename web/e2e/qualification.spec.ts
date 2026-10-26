@@ -84,6 +84,7 @@ test('HTTP408 retains the original panel outcome as unknown without replay',asyn
  const task=await pendingPanel(page,'408');task.release()
  await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown')
  await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
+ await expect(page.getByRole('button',{name:'Configure intended panel',exact:true})).toHaveAttribute('disabled','')
  expect(task.writes).toHaveLength(1)
 })
 for(const response of ['ack','408'] as const)test(`sent panel metadata protects pending and ${response} departure after private reader denial`,async({page})=>{
@@ -281,6 +282,35 @@ for(const label of ['Read recorded panel history','Read current panel source'])t
   await page.keyboard.press('Enter')
   if(label==='Read recorded panel history'){await expect(page.getByRole('region',{name:'Currently authorised panel history',exact:true})).toBeVisible();expect(historyReads).toBe(1)}
   else{await expect.poll(()=>reads).toBe(beforeActivation+1);expect(historyReads).toBe(0)}
+  expect(writes).toBe(0)
+ }finally{held=false;release()}
+})
+
+for(const preparing of [false,true])test(`${preparing?'Unsent review':'Final-card editor'} keeps focus only during a benign read pause and accepts no disabled action`,async({page})=>{
+ const state=await fixture(page)
+ state.page.capabilities.record_locked=false;state.page.teams[0].can_save_card=true
+ let held=false,reads=0,writes=0,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{reads++;if(held)await gate;await route.fulfill({json:state.page})})
+ await page.goto(path)
+ await page.getByRole('button',{name:`Inspect Team ${state.page.teams[0].team_id}`,exact:true}).click()
+ const edit=page.getByRole('button',{name:'Edit reasoned final card',exact:true}),reason=page.getByLabel('Recorded panel reason',{exact:true})
+ if(preparing){await edit.click();await reason.fill('Retained private unsent final-card observation')}
+ const target=preparing?page.getByRole('button',{name:'Review entered panel decision',exact:true}):edit
+ const {reach}=await import('../qualification-native/keyboard');await reach(target)
+ page.on('request',request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))writes++})
+ try{
+  const priorReads=reads;held=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect.poll(()=>reads).toBeGreaterThan(priorReads)
+  await expect(target).toBeDisabled();await expect(target).toBeFocused({timeout:750})
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('alertdialog',{name:'Review private panel command',exact:true})).toHaveCount(0)
+  if(!preparing)await expect(reason).toHaveCount(0)
+  expect(writes).toBe(0)
+  held=false;release();await expect(target).toBeEnabled();await expect(target).toBeFocused()
+  await page.keyboard.press('Enter')
+  if(preparing){await expect(page.getByRole('alertdialog',{name:'Review private panel command',exact:true})).toBeVisible();await expect(reason).toHaveValue('Retained private unsent final-card observation')}
+  else await expect(reason).toBeVisible()
   expect(writes).toBe(0)
  }finally{held=false;release()}
 })

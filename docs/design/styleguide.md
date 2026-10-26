@@ -461,3 +461,9 @@ a brief current-source check would otherwise drop focus to the document body.
 The Components action example demonstrates that disabled activation still runs
 no callback. Preserve private inert/denial boundaries and command pending/unknown
 locks; retaining keyboard position does not grant authority or retry a write.
+
+The same focus rule applies to a current local editor/review opener while its
+source is being read. Gate it with read pause and no pending or unknown command;
+keep the original disabled condition and local validation/readiness checks.
+Actual HTTP confirmation/retry controls and private inert/denial boundaries keep
+their existing locks. Preserving focus never prepares or submits a disabled step.
