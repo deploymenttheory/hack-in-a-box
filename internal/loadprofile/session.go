@@ -19,6 +19,8 @@ import (
 
 var errLoadSession = errors.New("invalid load session")
 
+const NativeRequestTimeout = 15 * time.Second
+
 // Session owns one genuine application-issued cookie jar. Credentials and
 // response bodies are intentionally private and never part of JSON reports.
 type Session struct {
@@ -58,7 +60,7 @@ func SignIn(
 		client: &http.Client{
 			Jar:           jar,
 			Transport:     transport,
-			Timeout:       15 * time.Second,
+			Timeout:       NativeRequestTimeout,
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}

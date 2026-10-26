@@ -32,20 +32,22 @@ func ReleaseRuntimeConfig(containers map[string]string) RuntimeConfig {
 // deliberate current-permission/contention probes are separate native oracles;
 // this type deliberately has no boolean that can certify them from traffic.
 type RuntimeEvidence struct {
-	Authentication AuthenticationReceipt `json:"authentication"`
-	Burst          BurstResult           `json:"burst"`
-	Sustained      StageResult           `json:"sustained"`
-	Operations     []OperationReport     `json:"operations"`
-	Integrity      IntegrityReport       `json:"integrity"`
-	Attempts       AttemptReport         `json:"write_attempts"`
-	Displays       DisplayReport         `json:"displays"`
-	Due            DueReport             `json:"due"`
-	Admission      []AdmissionFact       `json:"native_admission"`
-	Resources      []ResourceSample      `json:"resource_samples"`
-	Queues         []QueueSample         `json:"queue_samples"`
-	SamplingErrors int                   `json:"sampling_errors"`
-	StreamErrors   int                   `json:"stream_errors"`
-	Saturation     SaturationResult      `json:"saturation"`
+	Authentication    AuthenticationReceipt `json:"authentication"`
+	Burst             BurstResult           `json:"burst"`
+	BurstBackground   BurstReadiness        `json:"burst_background"`
+	Sustained         StageResult           `json:"sustained"`
+	Operations        []OperationReport     `json:"operations"`
+	Integrity         IntegrityReport       `json:"integrity"`
+	Attempts          AttemptReport         `json:"write_attempts"`
+	Displays          DisplayReport         `json:"displays"`
+	Due               DueReport             `json:"due"`
+	Admission         []AdmissionFact       `json:"native_admission"`
+	Resources         []ResourceSample      `json:"resource_samples"`
+	Queues            []QueueSample         `json:"queue_samples"`
+	SamplingErrors    int                   `json:"sampling_errors"`
+	StreamErrors      int                   `json:"stream_errors"`
+	StreamConnections []DisplayContinuity   `json:"stream_connections"`
+	Saturation        SaturationResult      `json:"saturation"`
 	// A workload receipt alone cannot satisfy the release's independent
 	// privacy/provider/follow-up oracles or baseline-image provenance gates.
 	ReleasePassed bool `json:"release_passed"`
@@ -119,7 +121,7 @@ func RunNativeProfile(
 	var observers sync.WaitGroup
 	for _, display := range fixture.Displays {
 		observers.Go(func() {
-			err := ReadDisplay(
+			continuity, err := MaintainDisplay(
 				observeContext,
 				&http.Client{Transport: transport},
 				fixture.Origins[PublicSurface],
@@ -129,6 +131,9 @@ func RunNativeProfile(
 				display.Forbidden,
 				displays,
 			)
+			observationMu.Lock()
+			evidence.StreamConnections = append(evidence.StreamConnections, continuity)
+			observationMu.Unlock()
 			if err != nil && observeContext.Err() == nil {
 				observationMu.Lock()
 				evidence.StreamErrors++
@@ -173,29 +178,30 @@ func RunNativeProfile(
 	if err != nil {
 		return evidence, err
 	}
-	backgroundContext, stopBackground := context.WithCancel(ctx)
-	background := make(chan error, 1)
-	go func() {
-		_, err := RunStage(backgroundContext, StageConfig{
-			Profile: fixture.Cohort.Profile,
-			Phase:   BurstPhase, Duration: time.Hour, Interval: config.Interval,
-		}, actorList, reads.Action, &metrics, &accepted)
-		background <- err
-	}()
 	tasks := make([]RegistrationTask, 0, len(fixture.Burst.Applications))
 	for subject, application := range fixture.Burst.Applications {
 		tasks = append(tasks, RegistrationTask{Actor: bySubject[subject], Input: application})
 	}
-	evidence.Burst, err = RunRegistrationBurst(ctx, fixture.Burst.Config, tasks, writes, &accepted)
-	stopBackground()
-	backgroundErr := <-background
+	evidence.Burst, evidence.BurstBackground, err = runBurstWithBackground(
+		ctx,
+		config,
+		fixture.Burst.Config,
+		actorList,
+		tasks,
+		reads.Action,
+		writes,
+		&metrics,
+		&accepted,
+	)
 	if err != nil {
-		failures = append(failures, fmt.Errorf("native registration burst: %w", err))
+		failures = append(failures, err)
 	}
-	// Intentional background-phase cancellation is not a request error; the
-	// HTTP measurements retain any actual failed in-flight reads separately.
-	if backgroundErr != nil && !errors.Is(backgroundErr, context.Canceled) {
-		failures = append(failures, backgroundErr)
+	if evidence.BurstBackground.Ready.IsZero() ||
+		evidence.BurstBackground.People != len(actorList) {
+		stopObserving()
+		observers.Wait()
+		evidence.Operations = metrics.Reports()
+		return evidence, errors.Join(failures...)
 	}
 	evidence.Sustained, err = RunStage(ctx, StageConfig{
 		Profile: fixture.Cohort.Profile, Phase: SustainedPhase,
@@ -206,6 +212,9 @@ func RunNativeProfile(
 	}
 	// Freeze baseline source/due/latency observations BEFORE the intentionally
 	// overloaded appendix. Accepted writes from that appendix still reconcile.
+	if err := displays.AwaitPublishedReceipts(ctx); err != nil {
+		failures = append(failures, err)
+	}
 	failures = append(
 		failures,
 		evidence.collectBaseline(ctx, fixture, database, displays, &metrics, events)...)

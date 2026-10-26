@@ -18,6 +18,28 @@ type NativeDatabase struct {
 	events map[uuid.UUID]bool
 }
 
+type InstallationCensus struct {
+	Events            int64 `json:"events"`
+	People            int64 `json:"people"`
+	ActivePeople      int64 `json:"active_people"`
+	UnexpiredSessions int64 `json:"unexpired_sessions"`
+}
+
+// Installation reads global counts only in the explicitly isolated load123
+// database. A scoped five-event query cannot hide an old sixth event or a
+// second dormant setup-session cohort elsewhere in the same installation.
+func (n NativeDatabase) Installation(ctx context.Context) (InstallationCensus, error) {
+	var census InstallationCensus
+	err := n.pool.QueryRow(ctx, `SELECT (SELECT count(*) FROM events),
+ (SELECT count(*) FROM people), (SELECT count(*) FROM people WHERE active),
+ (SELECT count(*) FROM sessions WHERE expiry>clock_timestamp())`).Scan(
+		&census.Events, &census.People, &census.ActivePeople, &census.UnexpiredSessions)
+	if err != nil {
+		return census, fmt.Errorf("read isolated native installation census: %w", err)
+	}
+	return census, nil
+}
+
 func NewNativeDatabase(pool *pgxpool.Pool, eventIDs []uuid.UUID) (NativeDatabase, error) {
 	if pool == nil {
 		return NativeDatabase{}, fmt.Errorf(

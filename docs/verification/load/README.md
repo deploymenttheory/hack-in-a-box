@@ -385,9 +385,10 @@ uses dummy values only and is not runtime/TLS/native proof.
 The setup API may read a private historical domain clock, with no HTTP clock
 route or native session/identity seeding. Missing or nonprivate clock control
 fails closed. Setup will stop before measured production images/default-wall
-workers and fresh 1,000-person authentication. Historical native worker release
-and capture still require the reviewed shared #120 worker composition; the
-current preparation API does not substitute direct maintenance calls. Positive
+workers and fresh 1,000-person authentication. The reviewed shared worker composition and separately reviewed optional due-
+eligibility clock are integrated. Production omits that clock; River scheduling,
+attempts, transport and leases stay on wall time. Actual native setup
+publication/capture is still required; direct maintenance calls are not proof. Positive
 archived entries use actual URL formal submissions and native capture/freeze;
 URLs never invent repository SHAs. Their native execution/export, project
 publication and follow-up preparation remain pending.
@@ -414,3 +415,47 @@ source label; independent Standards and Spec reviews found no issues. The
 hashes and scope. This is neither the normal app deployment nor a capacity result;
 CA mounts, actual issuer/SSE integration and the complete profile remain gates.
 
+
+
+## Native clock and workload handover checkpoints
+
+The [source-attributed worker clock receipt](evidence/worker-domain-clock.json)
+records a real PostgreSQL/River regression at clean `6c0d551c`: nil/default and
+historical-domain subcases passed, parent 38.30s/package-race39.520s, no skips or
+failures and exact scoped resources empty. The historical case first retained
+zero application attempts/leases while not due, then resumed through real
+River scheduling; attempt timestamps and the two-minute lease stayed on wall
+time. The entire existing worker Run tail, including 10-second reconciliation,
+is byte-identical. The synthetic handler and this component do not prove real
+application delivery, retained occurrence queries, setup publication/capture or
+full load. The earlier skipped invocation is explicitly non-evidence.
+
+Preparation now requires a fresh native installation and reads global counts,
+so a scoped five-event census cannot hide an old sixth event. Each known setup
+jar uses one normal CSRF-protected logout; original lost responses remain
+unresolved. A final native count must show zero unexpired setup sessions before
+fresh runtime authentication. This prevents a hidden second dormant cohort.
+The extended SQL census component still needs its actual PostgreSQL rerun;
+source/component controls alone are not native session/logout evidence.
+
+All cohort people must complete a successful native background read before the
+registration barrier opens. These same read streams continue during the burst
+and drain already-started requests when scheduling stops. Neither login counts
+nor the first few staggered readers stand in for all 1,000 active background
+people. The component's deliberately held reader requires zero registration
+wire commands before full readiness; it is coordination evidence only.
+
+The native display server deliberately ends a connection at five minutes. The
+driver now records each connection and reconnects only that known clean finite
+rotation after the same one-second delay as the production display. Every new
+GET checks the same current scoped bearer capability; no cookies, account grant
+or stale-frame replay are introduced. Early EOF, revocation, dependency and
+invalid/private frame errors stay visible failures. Actual five-minute native
+rotation must still be observed in the full sustained run.
+
+After writers drain, final already-published SSE receipts may arrive within the
+existing native-client I/O deadline. An event-driven drain retains actual
+publish/receive timestamps; the 2-second p95 target is unchanged. Late samples
+stay late, partial/missing receipts stay in the denominator, and the actual
+1,800-second activity window is not padded by drain time. Synthetic late/partial
+controls and normalized rotation-reader controls are not native load evidence.

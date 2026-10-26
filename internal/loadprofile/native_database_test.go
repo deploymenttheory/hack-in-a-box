@@ -18,12 +18,40 @@ func TestNativeDatabaseQueriesRetainPendingFactsAndScope(t *testing.T) {
 	event := testdb.Event(t, pool, owner.ID)
 	outside := testdb.Event(t, pool, owner.ID)
 	ctx := t.Context()
-	if _, err := pool.Exec(ctx, `UPDATE events SET configuration='{"capacity":180}'::jsonb WHERE id=$1`, event); err != nil {
+	if _, err := pool.Exec(
+		ctx,
+		`UPDATE events SET configuration='{"capacity":180}'::jsonb WHERE id=$1`,
+		event,
+	); err != nil {
 		t.Fatal(err)
 	}
 	native, err := NewNativeDatabase(pool, []uuid.UUID{event})
 	if err != nil {
 		t.Fatal(err)
+	}
+	inactive := testdb.Person(t, pool)
+	if _, err := pool.Exec(
+		ctx,
+		`UPDATE people SET active=false WHERE id=$1`,
+		inactive.ID,
+	); err != nil {
+		t.Fatal(err)
+	}
+	// Deliberately seeded STORE QUERY inputs, not native authenticated jars.
+	if _, err := pool.Exec(ctx, `INSERT INTO sessions(token,data,expiry) VALUES
+ ('synthetic-query-live','synthetic-query-data',now()+interval '1 hour'),
+ ('synthetic-query-expired','synthetic-query-data',now()-interval '1 hour')`); err != nil {
+		t.Fatal(err)
+	}
+	installation, err := native.Installation(ctx)
+	if err != nil || installation.Events != 2 || installation.People != 2 ||
+		installation.ActivePeople != 1 ||
+		installation.UnexpiredSessions != 1 {
+		t.Fatal(
+			"global installation census hid outside events, inactive people or session expiry",
+			installation,
+			err,
+		)
 	}
 	admission, err := native.Admission(ctx, []uuid.UUID{event})
 	if err != nil {
@@ -38,7 +66,14 @@ func TestNativeDatabaseQueriesRetainPendingFactsAndScope(t *testing.T) {
 	}
 	intent, source := uuid.New(), uuid.New()
 	for id, kind := range map[uuid.UUID]string{intent: "communication.dispatch", source: "teams.published"} {
-		if _, err := pool.Exec(ctx, `INSERT INTO operations(id,event_id,operation_key,kind,target_id,due_at,approved) VALUES($1,$2,$3,$4,$1,now()-interval '1 minute',true)`, id, event, id.String(), kind); err != nil {
+		if _, err := pool.Exec(
+			ctx,
+			`INSERT INTO operations(id,event_id,operation_key,kind,target_id,due_at,approved) VALUES($1,$2,$3,$4,$1,now()-interval '1 minute',true)`,
+			id,
+			event,
+			id.String(),
+			kind,
+		); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -63,16 +98,32 @@ func TestNativeDatabaseQueriesRetainPendingFactsAndScope(t *testing.T) {
 	// Reading an actual attempt timestamp is tested with deliberately seeded
 	// input; only the separate worker owner can prove a genuine guarded start.
 	started := time.Now().UTC().Truncate(time.Microsecond)
-	if _, err := pool.Exec(ctx, `INSERT INTO delivery_attempts(operation_id,lease_token,outcome,started_at) VALUES($1,$2,'running',$3)`, intent, uuid.New(), started); err != nil {
+	if _, err := pool.Exec(
+		ctx,
+		`INSERT INTO delivery_attempts(operation_id,lease_token,outcome,started_at) VALUES($1,$2,'running',$3)`,
+		intent,
+		uuid.New(),
+		started,
+	); err != nil {
 		t.Fatal(err)
 	}
 	starts, err = native.JobStarts(ctx, []uuid.UUID{intent})
-	if err != nil || len(starts) != 1 || starts[0].FirstStarted == nil || !starts[0].FirstStarted.Equal(started) || starts[0].Attempts != 1 {
+	if err != nil || len(starts) != 1 || starts[0].FirstStarted == nil ||
+		!starts[0].FirstStarted.Equal(started) ||
+		starts[0].Attempts != 1 {
 		t.Fatal("original timestamp/count changed in query projection", starts, err)
 	}
 	for _, action := range []string{"create", "claim", "resolve"} {
-		spec := WriteSpec{Kind: HelpEffect, Action: action, Event: event, Actor: owner.ID,
-			Command: uuid.New(), Resource: uuid.New(), Version: 1, Fingerprint: "unused-missing-candidate"}
+		spec := WriteSpec{
+			Kind:        HelpEffect,
+			Action:      action,
+			Event:       event,
+			Actor:       owner.ID,
+			Command:     uuid.New(),
+			Resource:    uuid.New(),
+			Version:     1,
+			Fingerprint: "unused-missing-candidate",
+		}
 		facts, commits, err := native.Effects(ctx, map[uuid.UUID]WriteSpec{uuid.New(): spec})
 		if err != nil || len(facts) != 1 || len(commits) != 0 {
 			t.Fatal("absent original help command not retained", action, facts, commits, err)

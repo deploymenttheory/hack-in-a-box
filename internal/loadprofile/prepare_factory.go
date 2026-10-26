@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -50,12 +52,15 @@ func (p FactoryPlan) Validate() error {
 }
 
 type AdmissionPreparation struct {
-	Authentication  AuthenticationReceipt `json:"authentication"`
-	Calls           []PreparationCall     `json:"calls"`
-	Admissions      []PreparedAdmission   `json:"admissions"`
-	Census          []AdmissionFact       `json:"census"`
-	NativeAdmission bool                  `json:"native_admission_complete"`
-	FullLoad        bool                  `json:"full_load"`
+	Authentication      AuthenticationReceipt `json:"authentication"`
+	Calls               []PreparationCall     `json:"calls"`
+	Admissions          []PreparedAdmission   `json:"admissions"`
+	Census              []AdmissionFact       `json:"census"`
+	NativeAdmission     bool                  `json:"native_admission_complete"`
+	FullLoad            bool                  `json:"full_load"`
+	SessionCleanup      SetupSessionCleanup   `json:"setup_session_cleanup"`
+	InitialInstallation *InstallationCensus   `json:"initial_installation"`
+	AfterCleanup        *InstallationCensus   `json:"installation_after_cleanup"`
 }
 
 // PrepareFactoryAdmission is one real executable setup phase. It authenticates
@@ -69,8 +74,7 @@ func PrepareFactoryAdmission(
 	issuer string,
 	transport http.RoundTripper,
 	database NativeDatabase,
-) (AdmissionPreparation, error) {
-	var receipt AdmissionPreparation
+) (receipt AdmissionPreparation, returnedErr error) {
 	if err := plan.Validate(); err != nil {
 		return receipt, err
 	}
@@ -87,6 +91,17 @@ func PrepareFactoryAdmission(
 	if err := database.scoped(events); err != nil {
 		return receipt, err
 	}
+	initial, err := database.Installation(ctx)
+	if err != nil {
+		return receipt, err
+	}
+	receipt.InitialInstallation = &initial
+	if initial.Events != 0 || initial.People != 0 || initial.UnexpiredSessions != 0 {
+		return receipt, fmt.Errorf(
+			"%w: native factory requires a fresh isolated installation",
+			errCohort,
+		)
+	}
 	actors, authentication, err := AuthenticateCohort(
 		ctx,
 		plan.Cohort,
@@ -97,9 +112,7 @@ func PrepareFactoryAdmission(
 	)
 	receipt.Authentication = authentication
 	defer func() {
-		for _, actor := range actors {
-			actor.Session.Close()
-		}
+		returnedErr = errors.Join(returnedErr, receipt.closeSessions(ctx, actors, database))
 	}()
 	if err != nil {
 		return receipt, err
@@ -144,4 +157,34 @@ func PrepareFactoryAdmission(
 	}
 	receipt.NativeAdmission = true
 	return receipt, nil
+}
+
+func (r *AdmissionPreparation) closeSessions(
+	ctx context.Context,
+	actors []CohortActor,
+	database NativeDatabase,
+) error {
+	// Cancellation interrupts setup itself. Cleanup still makes one bounded
+	// normal logout attempt per known jar; a lost original response stays lost.
+	cleanupContext, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Minute)
+	defer cancel()
+	cleanup, calls, cleanupErr := closeSetupSessions(cleanupContext, actors)
+	r.SessionCleanup = cleanup
+	r.Calls = append(r.Calls, calls...)
+	for _, actor := range actors {
+		actor.Session.Close()
+	}
+	census, censusErr := database.Installation(cleanupContext)
+	if censusErr != nil {
+		return errors.Join(cleanupErr, censusErr)
+	}
+	r.AfterCleanup = &census
+	if census.UnexpiredSessions != 0 || (r.NativeAdmission &&
+		(census.Events != 5 || census.People != 1000 || census.ActivePeople != 1000)) {
+		return errors.Join(
+			cleanupErr,
+			fmt.Errorf("%w: native setup installation/session handover census differs", errCohort),
+		)
+	}
+	return cleanupErr
 }

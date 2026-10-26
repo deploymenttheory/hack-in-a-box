@@ -47,6 +47,7 @@ type DisplayLedger struct {
 	mu      sync.Mutex
 	streams map[string]uuid.UUID
 	cues    map[cueKey]*cueObservation
+	changed chan struct{}
 }
 
 func NewDisplayLedger(streams map[string]uuid.UUID) (*DisplayLedger, error) {
@@ -60,7 +61,11 @@ func NewDisplayLedger(streams map[string]uuid.UUID) (*DisplayLedger, error) {
 		}
 		owned[id] = event
 	}
-	return &DisplayLedger{streams: owned, cues: make(map[cueKey]*cueObservation)}, nil
+	return &DisplayLedger{
+		streams: owned,
+		cues:    make(map[cueKey]*cueObservation),
+		changed: make(chan struct{}),
+	}, nil
 }
 
 func (l *DisplayLedger) Published(
@@ -109,6 +114,7 @@ func (l *DisplayLedger) Published(
 	entry.published = anchor.AuditAt
 	entry.phase = anchor.Phase
 	entry.offsetUpper = anchor.DatabaseAt.Sub(anchor.DriverBefore)
+	l.signal()
 	return nil
 }
 
@@ -135,6 +141,7 @@ func (l *DisplayLedger) Received(
 	}
 	if previous, exists := entry.received[stream]; !exists || at.Before(previous.at) {
 		entry.received[stream] = displayReceipt{at: at, digest: digest}
+		l.signal()
 	}
 	return nil
 }
@@ -146,6 +153,58 @@ type DisplayReport struct {
 	MismatchedReceipts int `json:"mismatched_receipts"`
 	MissingReceipts    int `json:"missing_receipts"`
 	InvalidClockOrder  int `json:"invalid_clock_order"`
+}
+
+// signal runs only while mu is held. Waiters observe actual receipt events,
+// not arbitrary sleeps or a changed latency threshold.
+func (l *DisplayLedger) signal() {
+	close(l.changed)
+	l.changed = make(chan struct{})
+}
+
+// AwaitPublishedReceipts drains only already-published sources after writers
+// stop. Its bound is the existing native-client I/O deadline, independently of
+// the two-second P95 target. Measurements still
+// use the actual publication/receipt timestamps, so a late frame stays late and
+// a missing frame remains in the denominator. No heartbeat can satisfy it.
+func (l *DisplayLedger) AwaitPublishedReceipts(ctx context.Context) error {
+	deadline := time.NewTimer(NativeRequestTimeout)
+	defer deadline.Stop()
+	for {
+		pending, changed := l.pendingPublished()
+		if !pending {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("drain already-published display receipts: %w", ctx.Err())
+		case <-deadline.C:
+			if pending, _ := l.pendingPublished(); !pending {
+				return nil
+			}
+			return fmt.Errorf(
+				"%w: published receipt drain incomplete within native I/O deadline",
+				errDisplayProof,
+			)
+		case <-changed:
+		}
+	}
+}
+
+func (l *DisplayLedger) pendingPublished() (bool, <-chan struct{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for key, cue := range l.cues {
+		if cue.published.IsZero() {
+			continue
+		}
+		for stream, event := range l.streams {
+			if _, received := cue.received[stream]; event == key.event && !received {
+				return true, l.changed
+			}
+		}
+	}
+	return false, l.changed
 }
 
 // Measurements is a final snapshot, not an incremental counter: callers add
@@ -213,6 +272,14 @@ func ReadDisplay(
 	forbidden []string,
 	ledger *DisplayLedger,
 ) error {
+	return readDisplay(ctx, client, origin, token, stream, event, forbidden, ledger, nil)
+}
+
+func readDisplay(
+	ctx context.Context, client *http.Client, origin, token, stream string,
+	event uuid.UUID, forbidden []string, ledger *DisplayLedger,
+	opened func(int, time.Duration),
+) error {
 	u, err := url.Parse(origin)
 	if err != nil || u.Scheme != "https" || u.Host == "" || u.Path != "" || u.RawQuery != "" ||
 		u.User != nil ||
@@ -239,9 +306,16 @@ func ReadDisplay(
 		Transport:     transport,
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse },
 	}
+	started := time.Now()
 	response, err := connection.Do(request)
 	if err != nil {
+		if opened != nil {
+			opened(0, time.Since(started))
+		}
 		return fmt.Errorf("%w: current stream connection failed", errDisplayProof)
+	}
+	if opened != nil {
+		opened(response.StatusCode, time.Since(started))
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode != http.StatusOK ||
@@ -328,7 +402,7 @@ func consumeDisplay(
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("%w: SSE body read failed", errDisplayProof)
 	}
-	if data.Len() != 0 {
+	if data.Len() != 0 || kind != "" || id != "" {
 		return fmt.Errorf("%w: incomplete SSE record", errDisplayProof)
 	}
 	return nil

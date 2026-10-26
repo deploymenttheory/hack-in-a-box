@@ -55,7 +55,7 @@ func ReadPrivateStringMap(path string) (map[string]string, error) {
 func OpenReadOnlyObserver(ctx context.Context, raw string) (*pgxpool.Pool, error) {
 	target, err := url.Parse(raw)
 	if err != nil || (target.Scheme != "postgres" && target.Scheme != "postgresql") ||
-		target.User == nil || target.Hostname() == "" || target.Port() == "" {
+		target.User == nil || target.Hostname() == "" || target.Port() == "" || target.Path != "/load123" {
 		return nil, fmt.Errorf("%w: explicit private loopback observer URL required", errCohort)
 	}
 	password, hasPassword := target.User.Password()

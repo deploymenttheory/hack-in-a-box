@@ -1,0 +1,36 @@
+{
+  "source": "6c0d551c5fdf7a40395906e3c644147a58dea6c6",
+  "carried_source": "492bb8c76280cde4e8a4c5b6bd77838eb30c9e0f",
+  "scope": "Real PostgreSQL/River due eligibility and wall-time attempt/lease component; synthetic delivery handler, not application/provider delivery or load acceptance",
+  "native_integration_flag": true,
+  "test": "TestRiverDomainDueEligibilityKeepsLeasesAndNilDefaultOnWallTime",
+  "parent_seconds": 38.30,
+  "package_race_seconds": 39.520,
+  "subcases": {
+    "nil_default": "PASS 4.91s",
+    "historical_domain": "PASS 33.40s"
+  },
+  "skipped": 0,
+  "failed": 0,
+  "log_sha256": "373c3a6ce849a51f07925cb66db9f480edd649f417c8d90d81ff09761bfb2dca",
+  "canonical_test_source": "1df03291c54ccd3f26079b2e015c323760489362",
+  "canonical_test_sha256": "77454ee1ea0583b19e3288c2c0d47a05ce68a1ccb6bcdab94c9b3578a85ce3e1",
+  "unchanged_service_run_sha256": "a14bc49f2f6c8c35c071a8a4ba5c0906cd2b22780bd4106c8ffe87917c299ef2",
+  "durable_intent_tick_seconds": 10,
+  "independent_reviews": {
+    "spec": "0 findings; work/reviews/load123-domain-clock-spec.md",
+    "standards": "0 findings; work/reviews/load123-domain-clock-standards.md"
+  },
+  "cleanup": {
+    "session": "528c4f077689ce6c19b2032a9830f6807844962f064c191fcc544ec84c5f4f49",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "postgres_and_reaper_ids_absent": true
+  },
+  "preliminary_invocation": "An earlier invocation omitted the integration flag and skipped both subcases. Its separate skipped log is retained and is not native evidence.",
+  "retained_occurrence_query_execution_proven": false,
+  "native_setup_publication_capture_proven": false,
+  "full_load": false,
+  "release_passed": false
+}

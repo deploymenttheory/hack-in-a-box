@@ -20,7 +20,7 @@ x-app: &app
     HACKBOX_OIDC_ISSUER: https://issuer.load.test:8445
     HACKBOX_OIDC_CLIENT_ID: load-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
-    HACKBOX_BOOTSTRAP_SUBJECT: ${LOAD_BOOTSTRAP_SUBJECT:-}
+    HACKBOX_BOOTSTRAP_SUBJECT: ''
     HACKBOX_METRICS_TOKEN: ${LOAD_METRICS_TOKEN:?Set private random metrics token}
     HACKBOX_CREDENTIAL_KEYRING: ${LOAD_CREDENTIAL_KEYRING:?Set private fixture credential keyring}
     HACKBOX_STORAGE_PATH: /data/files
