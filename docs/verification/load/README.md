@@ -557,3 +557,37 @@ The sole clock controller still requires the exact expected previous instant.
 Actual worker release/capture and the production-clock handover remain separate
 required checkpoints. Source-preparation containers/network are removed; the
 four owned durable volumes retain the acknowledged dataset.
+
+### Actual shared-worker historical setup phase
+
+The private host CLI accepts `-release-from-sources <original-source-receipt>`
+with the existing canonical plan/CA/TCP targets, plus the exact `-setup-project`,
+immutable `-setup-image sha256:…` and `-setup-source <40-hex>` of the already-built
+private fixture. It verifies both the existing volume's Compose labels and the
+image's source label. Clock controls run as UID10001 with no network, no caps,
+a read-only root, 0.125 CPU/64MiB and only that owned private volume writable.
+Every controller has a retained deterministic name/project label; uncertain
+original control responses abort the phase without a blind retry.
+
+Start the canonical private setup worker with the setup override/profile first.
+Its extra 0.25 CPU/128MiB brings services to 2.875 CPU/1,984MiB; the one-shot
+controller makes the transient peak exactly 3 CPU/2GiB. The CLI observes River's
+actual unexpired leader lease before advancing. It never calls maintenance,
+reconciliation or a delivery handler directly.
+
+The phase advances monotonically through the archive's exact T−7 release,
+live start and cutoff, then the two live events' T−7 release/live start. It
+requires real native publication, 34 original formal URL acknowledgements,
+36 immutable cutoff sources (34 frozen and two explicitly not submitted), and
+36 genuine guarded capture starts/completions. URL-only capture must remain
+not applicable to repositories, with no invented repository/commit evidence.
+A native database wall boundary distinguishes actual attempt starts from the
+historical due/source timestamps. Final archive/live states and separately
+reviewed positive projects are read through their native owners. Original
+admission/source hashes and every original request/revision identifier remain
+in the private receipt; source reads never become original write acknowledgements.
+
+New plans derive schedules at PostgreSQL's microsecond timestamp precision,
+without relaxing any release/cutoff comparison. The whole phase remains setup,
+not due-start/SSE or capacity acceptance. Stop private worker/APIs before normal
+production images/default-wall operation and fresh runtime authentication.

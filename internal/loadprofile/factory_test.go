@@ -59,3 +59,28 @@ func TestReleaseFactoryDeclaresExactCohortWithoutCreatingNativeFacts(t *testing.
 		t.Fatal("missing run identity accepted")
 	}
 }
+
+func TestFactoryScheduleUsesNativeTimestampPrecisionBeforeDerivation(t *testing.T) {
+	anchor := time.Date(2026, time.October, 26, 12, 0, 0, 123456789, time.UTC)
+	plan, err := NewReleaseFactoryPlan(uuid.New(), anchor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !plan.RuntimeAnchor.Equal(anchor.Truncate(time.Microsecond)) {
+		t.Fatal("request anchor cannot roundtrip native timestamp columns")
+	}
+	for _, event := range plan.Events {
+		for _, instant := range []time.Time{event.Input.Configuration.LiveStart, event.Input.Configuration.LiveEnd, event.Input.Configuration.SubmissionCutoff, event.Input.Configuration.TeamFreeze, event.Input.Configuration.AdmissionCutoff} {
+			if instant.Nanosecond()%1000 != 0 {
+				t.Fatal("derived native schedule retained sub-microsecond precision")
+			}
+		}
+	}
+	if err := plan.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	plan.RuntimeAnchor = anchor
+	if err := plan.Validate(); err == nil {
+		t.Fatal("hand-edited noncanonical precision accepted")
+	}
+}

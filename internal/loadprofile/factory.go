@@ -39,6 +39,10 @@ type FactoryStaff struct {
 // history only, and future due follow-ups are scheduled separately after the
 // production runtime's actual warmup boundary.
 func NewReleaseFactoryPlan(run uuid.UUID, anchor time.Time) (FactoryPlan, error) {
+	// Native PostgreSQL timestamp columns retain microseconds. Canonicalise the
+	// REQUEST plan before deriving schedules so exact source checks never need
+	// to widen a release/cutoff boundary to accommodate persistence rounding.
+	anchor = anchor.UTC().Truncate(time.Microsecond)
 	plan := FactoryPlan{
 		Run: run, RuntimeAnchor: anchor.UTC(), SetupStart: anchor.UTC().AddDate(0, 0, -45),
 		BootstrapSubject: "load-e01-p181", Cohort: CohortPlan{Profile: "release"},

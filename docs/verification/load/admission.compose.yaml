@@ -28,3 +28,6 @@ services:
   observer-init:
     cpus: 0.25
     mem_limit: 128m
+  worker:
+    cpus: 0.25
+    mem_limit: 128m

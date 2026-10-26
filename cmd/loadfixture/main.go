@@ -10,6 +10,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,6 +29,26 @@ func main() {
 	)
 	expected := flag.String("expected-time", "", "exact existing setup domain time, RFC3339Nano")
 	next := flag.String("next-time", "", "strictly later setup domain time, RFC3339Nano")
+	release := flag.String(
+		"release-from-sources",
+		"",
+		"private original source receipt for actual worker release/capture",
+	)
+	setupProject := flag.String(
+		"setup-project",
+		"",
+		"exact owned hackbox-load123 project for private clock controls",
+	)
+	setupImage := flag.String(
+		"setup-image",
+		"",
+		"immutable private fixture image SHA256 for clock controls",
+	)
+	setupSource := flag.String(
+		"setup-source",
+		"",
+		"exact source SHA of private fixture clock controller",
+	)
 	sources := flag.String(
 		"sources-from-admission",
 		"",
@@ -44,7 +65,17 @@ func main() {
 			modes++
 		}
 	}
-	if flag.NArg() != 0 || modes != 1 || (*sources != "" && *admit == "") ||
+	phase := nativePreparationPhase{
+		Admission: *sources,
+		Sources:   *release,
+		Clock: loadprofile.DockerSetupClock{
+			Project: *setupProject,
+			Image:   *setupImage,
+			Source:  *setupSource,
+		},
+	}
+	if flag.NArg() != 0 || modes != 1 || !phase.valid(*admit != "") ||
+		(*sources != "" && *admit == "") ||
 		(*advance == "" && (*expected != "" || *next != "")) {
 		fmt.Fprintln(
 			os.Stderr,
@@ -72,7 +103,7 @@ func main() {
 		return
 	}
 	if *admit != "" {
-		if err := admitNative(*admit, *ca, *targets, *output, *sources); err != nil {
+		if err := admitNative(*admit, *ca, *targets, *output, phase); err != nil {
 			fmt.Fprintln(
 				os.Stderr,
 				"native preparation failed; inspect the private checkpoint receipt",
@@ -100,7 +131,10 @@ func main() {
 	)
 }
 
-func admitNative(planPath, caPath, targetsPath, outputPath, sourcesPath string) error {
+func admitNative(
+	planPath, caPath, targetsPath, outputPath string,
+	phase nativePreparationPhase,
+) error {
 	raw, err := loadprofile.ReadPrivateInput(planPath, loadprofile.MaximumPreparedBytes)
 	if err != nil {
 		return fmt.Errorf("read explicit setup plan: %w", err)
@@ -152,7 +186,10 @@ func admitNative(planPath, caPath, targetsPath, outputPath, sourcesPath string) 
 	}
 	var receipt any
 	var runErr error
-	if sourcesPath == "" {
+	switch {
+	case phase.Sources != "":
+		receipt, runErr = releaseNativeSources(ctx, plan, phase, origins, transport, database)
+	case phase.Admission == "":
 		receipt, runErr = loadprofile.PrepareFactoryAdmission(
 			ctx,
 			plan,
@@ -161,8 +198,8 @@ func admitNative(planPath, caPath, targetsPath, outputPath, sourcesPath string) 
 			transport,
 			database,
 		)
-	} else {
-		raw, err := loadprofile.ReadPrivateInput(sourcesPath, 8<<20)
+	default:
+		raw, err := loadprofile.ReadPrivateInput(phase.Admission, 8<<20)
 		if err != nil {
 			return fmt.Errorf("read private original admission checkpoint: %w", err)
 		}
@@ -189,3 +226,56 @@ func admitNative(planPath, caPath, targetsPath, outputPath, sourcesPath string) 
 }
 
 var errSetupCommand = errors.New("invalid private setup command")
+
+type nativePreparationPhase struct {
+	Admission string
+	Sources   string
+	Clock     loadprofile.DockerSetupClock
+}
+
+func (p nativePreparationPhase) valid(native bool) bool {
+	if !native {
+		return p.Admission == "" && p.Sources == "" && p.Clock.Project == "" &&
+			p.Clock.Image == "" &&
+			p.Clock.Source == ""
+	}
+	if p.Sources != "" {
+		return p.Admission == "" && p.Clock.Project != "" && p.Clock.Image != "" &&
+			p.Clock.Source != ""
+	}
+	return p.Clock.Project == "" && p.Clock.Image == "" && p.Clock.Source == ""
+}
+
+func releaseNativeSources(
+	ctx context.Context,
+	plan loadprofile.FactoryPlan,
+	phase nativePreparationPhase,
+	origins map[loadprofile.Surface]string,
+	transport http.RoundTripper,
+	database loadprofile.NativeDatabase,
+) (any, error) {
+	raw, err := loadprofile.ReadPrivateInput(phase.Sources, 8<<20)
+	if err != nil {
+		return nil, fmt.Errorf("read private original source checkpoint: %w", err)
+	}
+	original, err := loadprofile.ParseSourceCheckpoint(raw)
+	if err != nil {
+		return nil, fmt.Errorf("validate original source checkpoint: %w", err)
+	}
+	prepared, err := loadprofile.PrepareFactoryRelease(
+		ctx,
+		plan,
+		original,
+		origins,
+		"https://issuer.load.test:8445",
+		transport,
+		database,
+		&phase.Clock,
+	)
+	digest := sha256.Sum256(raw)
+	prepared.OriginalSourcesSHA256 = hex.EncodeToString(digest[:])
+	if err != nil {
+		return prepared, fmt.Errorf("native release/capture setup incomplete: %w", err)
+	}
+	return prepared, nil
+}
