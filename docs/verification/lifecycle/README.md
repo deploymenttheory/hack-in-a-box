@@ -1186,3 +1186,52 @@ results/awards/feedback/showcase/archive/owned outcomes, remaining lifecycle
 variants and final native-browser/normal-image/recovery/CI gates remain required.
 Synthetic repository hashes do not claim real GitHub history.
 **complete_lifecycle=false; no L01–L18 row is fully complete.**
+
+
+## Continuation: deliberate finalist and award releases — native PASS
+
+On main6764/schema55, frozen `f2526ef365b56cf202f01e17d111c693a2312588`
+passed runner21409 in **404.60s**, build7061/start38960, immutable fixture
+`sha256:5d222948c448970d28ceafec4e8d423e34ee4ee37c601e5679e65b6f2955ba63`.
+The [inspected bounded receipt](evidence/journey-result-releases.json) cross-checks
+all31 original result acknowledgements against native PostgreSQL, and publishes
+only the four new preparation/release acknowledgements with safe source and
+publication identities. Raw exports/cards/advisory prose/auth/provider settings
+stay local with hashes. Five finite controls passed0.427s without skips/failures;
+affected-package lint is clean. All owned containers/volumes/networks were removed.
+
+The qualified event privately prepares the exact signed selection, then explicitly
+publishes three finalists and one reserve before fresh independent judge briefs
+or cards. Existing native guards verify that the judge run remains unstarted until
+an intended judge actually opens a brief. Both events repeat the fresh judge,
+advisory-only, all-required-judge majority and separate confirmation checks. Earlier
+finalist publication remains visible during confirmation, with no premature awards.
+The organiser then deliberately publishes two confirmed awards per event. Native
+storage has31 immutable result versions/commands, two advisory versions/commands,
+two judge approvals and exactly three publications: one finalist and two award
+announcements. Actual current recipients receive the exact safe snapshots, and
+private preparation remains403. A fresh duplicate source-publication intent
+returns409 without changing native event/result revisions or announcements. Original
+acknowledgements are recovered by GET, not command replay.
+
+This fixes a real boundary exposed by the first chronological release run:
+`a98924ed` passed finalist publication but failed316.71s at the following unstarted
+judge guard. The separate native component at `f5194948` proved organiser results
+preview alone changed started_at while judge cards remained zero in both modes
+(RED4.04s/package4.360s). Completion now only revalidates retained card contexts;
+its outer read/write guard, organiser requirement and current judge/assignment,
+rubric/frozen/finalist/repository/card validity gates remain. Intended judge Brief
+still starts assessment. Frozen8a94 native GREEN4.28s/package4.781s and five
+existing affected native owner parents22.207s/zero skips/failures preceded the
+full corrected404.60s HTTP run. Independent Standards and Spec reviews each
+reported zero findings for the exact bounded owner correction and regression;
+this is not a full continuation review. The rebased equivalent fix is f87e364c.
+
+PR291 merged the earlier incomplete checkpoint; [CONTINUATION.md](CONTINUATION.md)
+audits every original criterion, and reopened issue120 tracks the remaining full
+scope in Draft296. This proof covers publication and recipient reads, not approved
+queued result-notification delivery. Own-team feedback, surveys/media/support,
+remaining admission/eligibility/freeze/publication exceptions, reviewed non-winning
+showcase, archive/owned outcomes, final Fleet browsers/guide, production-image
+recovery and final reviews/CI remain required. **complete_lifecycle=false; no
+original acceptance checkbox or L01–L18 row is declared fully complete.**

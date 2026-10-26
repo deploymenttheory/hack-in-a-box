@@ -4,7 +4,8 @@ PR #291 merged `e485545c` as `6764e89a`. Its source and published receipts
 explicitly retain `complete_lifecycle=false`; merging did not run the remaining
 scenario or satisfy the full acceptance contract. Issue #120 was automatically
 closed, with all twelve acceptance checkboxes still unchecked when audited.
-This continuation preserves that full contract and the L01–L18 matrix in
+Issue #120 is now reopened to track unfinished acceptance. This continuation
+preserves that full contract and the L01–L18 matrix in
 [README.md](README.md).
 
 ## Source and evidence boundaries
@@ -18,6 +19,7 @@ schema is introduced.
 
 | Evidence | Actual result and limit |
 |---|---|
+| Frozen `f2526ef3`, runner21409 | Both connected native modes passed404.60s after the reviewed correction, including private finalist preparation/release before fresh judging and separate award publication. Thirty-one native result ACKs/versions and exactly three deliberate publications. Feedback and later phases remain unexecuted. |
 | Frozen `dbe2304a`, runner7896 | Both connected native modes passed383.22s through separate award confirmation. Twenty-seven result versions/commands, two advisory versions/commands, two judge approvals and zero publications. This is the merged checkpoint, not full lifecycle acceptance. |
 | Frozen `a98924ed`, runner12337 | Failed316.71s. Explicit private finalist preparation, actual finalist publication, original acknowledgement recovery, duplicate rejection and authorised recipient reads passed. The following existing guard found independent judging had already started. No complete release-phase pass is claimed. |
 | Frozen `f5194948` native regression | Failed4.04s/package4.360s: both modes had no started run or judge cards before organiser results preview; preview alone set `started_at` while cards remained zero. |
