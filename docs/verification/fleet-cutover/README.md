@@ -1,5 +1,123 @@
 # Fleet cutover — in-progress delivery (#245)
 
+## Integrated candidate — 26 October 2026
+
+Current executable checkpoint `7db51c31` is rebased on merged main `6764e89a`.
+The 752-file historical snapshot currently reconciles as 726 unchanged files,
+26 changed files and zero missing files. Source-attributed historical executions
+remain historical; final current-head CI remains a merge gate.
+The regenerated inventory resolves **96 registrations, 30 route owners and 318
+reachable modules**, with one Tailwind theme owner and no source errors. Both
+mentor-advisory routes are included. The original 94-route/29-owner native
+contract snapshot below remains attributed to `4d1808ac`; it is not relabelled.
+[Current source reconciliation](current-source-reconciliation.json) records every
+changed file against that snapshot and the merged mentor-advisory owner.
+
+
+The latest qualification corrections distinguish safe original-request metadata
+from the private workspace and observe real native read completion. They retain
+original actor/run/request/revision/fingerprint checks, exact target identity,
+trusted keyboard guards and separate current-source reads. After each signed
+card, the scenario now waits for its ten native original evidence entries before
+capturing the next-team action. The strict default helper and timeouts are
+unchanged. [Source-attributed corrections and failed attempts](qualification-original-record-proof.json)
+retain the four-initial native pass, the 7/8 run and subsequent failed scopes.
+At `c26e79b0`, all 248 unit tests and 126 controlled browser cases pass; these do
+not establish a complete current native matrix. The corrected admin/mobile/final native scope passes at `7db51c31`
+(96.19s parent; 98.040s race package), including both actual read barriers.
+All final-head CI checks, including the complete eight-scope matrix, remain required.
+
+The normal-image `794214f5` walkthrough below remains historical. Main `6764e89a`
+adds worker composition, optional fixture domain clocks and a stricter outcome
+retention boundary. Normal production still supplies no fixture clock. The
+source differential records those changes; it does not relabel the earlier
+Docker installation as the rebased executable. Full lifecycle acceptance remains
+open in #120 and its continuation #296.
+
+The focused real PostgreSQL/HTTP outcome-review parent passed with race checking
+at `fd89304b` (4.04s parent; 5.571s package), proving draft/approve/exact replay/
+cancel, current/history readers, version and privacy denials, and exactly three
+retained review versions. [Receipt](outcome-review-http-proof.json) records source
+hashes, actual raw-log hash, the preceding fixture failure and scope limits. It
+does not prove reminder transport or OIDC browser execution. The same parent
+passes again after the `6764e89a` rebase at `7db51c31` (4.94s parent;
+6.540s race package), with no skipped scopes.
+
+The protected photo flow exposed a real CSP defect: the UI fetched protected
+images as Blob URLs, while `img-src` disallowed Blob URLs. The sole production
+header change adds `blob:` to image sources. Chromium controls prove actual image
+decode while Blob scripts and external scripts/images remain blocked. Native HTTP
+controls retain nonempty PNG bodies over both recorder and real socket paths.
+
+The corrected `794214f5` normal-image run passes all four desktop/mobile and
+light/dark cases: actual upload ACK1, rendered protected PNG bytes, organiser
+approval1→2, explicit release2→3 and withdrawal3→4, followed by thumbnail403.
+Every later intent uses the existing explicit current-metadata confirmation and
+each original PUT acknowledgement is checked. Separate logout, guide isolation
+and public-process failure isolation also pass. All22 unchanged captures, image
+IDs and scoped cleanup are in [normal runtime evidence](normal-runtime-794214f5/README.md).
+This is the same organiser in both portals and an untagged photograph; native
+HTTP covers tagged-person consent rather than implying that case ran here.
+
+The exact public/mobile/final qualification case that failed CI also passes with
+race checking (66.98s parent;68.551s package). Foreground ballot reconciliation
+legitimately replaced the old workspace; the caller now waits for the actual
+completed ballot state before selecting its control. The strict stale-target
+helper remains unchanged. [Receipt](qualification-foreground-proof.json) retains
+the failed CI source, correction, exact local scope and raw-log hash. Final CI
+must still exercise the complete matrix. Full reviews and exact final-head CI
+remain gates before merge; these records do not complete lifecycle or release
+signoff.
+
+A later final-CI failure at `cbfe2c5b` exposed actual keyboard focus loss on
+native-disabled read buttons during a benign source refresh. The correction at
+`1d1fef8a` applies the existing focus-preserving disabled behavior to the two
+read-only controls; all disabled conditions, callbacks, private inert boundaries
+and strict keyboard helper remain unchanged. The production-owner held-GET RED
+becomes four desktop/mobile passes, with24 existing keyboard controls also passing
+(28cases/5.8s). The exact failed admin/desktop/final native scope passes with race
+checking (66.64s parent;68.235s package). Both rebuilt portals and the updated guide
+pass. [Correction receipt](qualification-read-focus-proof.json) retains raw hashes,
+exact scope and the failed CI. The earlier normal media/isolation run remains
+attributed to794; this later change only affects the two qualification read
+controls and the guide's interactive usage example. Final full CI is still required.
+
+Historical checkpoints below retain their original dates, sources and remaining
+gates at the time; the integrated status above takes precedence.
+
+## Current final-parity workstream — 25 October 2026
+
+The earlier checkpoints below retain their original sources and limits. The
+current final workstream starts from the reviewed showcase candidate63844452,
+whose tree equals merged main076f6162. It completes the whole #245 cutover;
+this checkpoint is Draft and does not claim release readiness.
+
+The existing source check reproduced13 undocumented registrations on that
+baseline. The maintained inventory now includes the qualification panel,
+announced/prepared results, every assigned judge ballot, and versioned own-team
+feedback routes. Both routers import the reviewed showcase directly; its
+obsolete outcome-workspace re-export has been removed after moving both callers.
+The source record now resolves94 registrations and100 reference qualities,
+with no inventory errors. This establishes source ownership only.
+
+| Complete #245 requirement | Current evidence / remaining gate |
+| --- | --- |
+| Every first-release route and nested feature has a migrated owner and actual API integration | Current94-route source inventory is regenerated; judge/panel/results/report/showcase owners are now merged. Reconcile each domain's native HTTP and browser proof with final source, including the new #112 mentor advisory journey after its merge. Source presence alone is not native integration. |
+| Both portals/mobile/actions/icons and100-quality applicability | Existing source-attributed domain images and100-quality map remain. Complete the current reference-to-product audit and document justified variations; inherited images are not silently relabelled as new captures. |
+| No unused legacy presentation/imports/competing tokens; canonical API and business rules retained | Removed the concrete showcase migration shim and both callers now reference its production owner. Full remaining import/token/caller audit and final canonical check remain required. No domain/API/authority policy changes here. |
+| Published versioned guide, production components, contribution rules and runtime independence | Full independent guide build passes with both portals. The source11375165 normal-image four-case browser/realOIDC/creation/read/logout/guide/public-process-failure proof now passes with14 original captures and zero remaining resources. Final integration after #112 and current-source reconciliation remain required; the user's normal preview is preserved. |
+| Exact-head CI and optionalM5 exclusion | Full web lint,237 unit tests, both portal builds and guide build pass on the working-tree checkpoint. Independent reviews and final full CI remain gates. Certificates/session booking stay optionalM5. Separate #120/#121/#122 release scopes are not replaced by this audit. |
+
+Verification command: `node scripts/check-fleet-cutover.mjs`, followed by
+`cd web && npm run lint && npm test && npm run build && npm run build:styleguide`.
+The source check first failed with13 missing route registrations; it now passes.
+The frontend check log is retained locally as
+`/private/tmp/hackbox245-web-checks.log`. No focused current native/browser
+matrix, full import audit, runtime-failure proof or final CI is claimed by this
+first checkpoint.
+
+---
+
 This is the full cutover workstream, based on main
 `2d82ac402fc68e39af0c49708fa6f363742bbd66`. It is **not Ready**, does not close
 #245 and does not claim the complete first-release UI exists. The accepted source
@@ -16,6 +134,122 @@ replaced by a visual migration.
 | No obsolete presentation/imports/competing tokens; generated API/invariants intact | Production import/caller audit is in progress. Existing flat semantic aliases with live callers cannot be removed merely because their name contains “card”. The bounded resource-lifetime correction preserves native endpoints, CSRF, If-Match, exact responses, cutoff and current authority. Generated contract parity and final broad checks remain gates. |
 | Versioned production guide, contribution rules, independent availability | Existing independent production host/build and contribution rules are retained. A current isolated image and separately browsed guide must be proved; an already running guide at 8082 is not candidate-release evidence. |
 | Current-head CI; optional M5 not a blocker | Draft checkpoint only; no exact-head CI success claimed. #164/#165 remain optional M5 and do not block first-release cutover. #121/#122/#120 retain their separate release scopes, rather than being replaced by this audit. |
+
+## Reference quality applicability
+
+`quality-evidence.csv` retains all100 ordered reference identities and gives each
+its own current source paths and applicability statement. The statements describe
+both shared implementation and intentional task variations, rather than claiming
+that every feature belongs on every screen. Comparable records may be tabular;
+room display, evidence reading, queues and media retain suitable compositions.
+Sort, eligible selection, optional columns and export must come from meaningful
+owning capabilities. Guide examples of these controls are explicitly distinguished
+from native domain operations; no bulk/export API is invented to populate a toolbar.
+
+The map is a source/applicability review. It does not relabel historical captures,
+certify current browser results, or waive a required first-release workflow. Final
+cross-domain/reference/actual-API reconciliation and independent review remain
+required before245 closes. The normal-image captures retain source11375165.
+
+## Production caller and legacy selector audit
+
+`node scripts/audit-presentation-callers.mjs` follows static imports, reexports,
+literal dynamic imports and CSS imports from the normal portal/display entry and
+both independent guide entries. At source5d8fd041, all314 source modules are
+reachable; no relative import is unresolved. The only Tailwind `@theme` owner is
+`design-system/tokens.css`; event palette adapters retain native branding authority.
+Reachability does not prove every export/selector is useful or every route works.
+
+The bounded [caller record](presentation-caller-audit.json) identifies retired
+card-grid, preparation-board, attendance-tile, credential-table, old media/survey
+and other migrated layouts with no complete class token in any reachable TS/TSX.
+Their100 simple selector arms and matching responsive/print overrides are removed.
+Mixed live arms, current private data-attribute print protection, shared semantic
+aliases and dynamically constructed connection-state classes are preserved.
+A second source pass removes42 additional unused selector arms from foundations,
+workspaces and migrated feature styles, including obsolete ui-* controls. Functional
+selector lists keep their live alternatives; current private print guards remain.
+The actual computed connection-state and room-image class families are preserved,
+including room-logo/room-hero even though those full names are absent as literals.
+The offline run-sheet HTML has its own inline table-scroll/print styles in
+`internal/preparation/render.go`; they remain unchanged and do not import the
+removed frontend rule. Before/after source hashes and removed selectors are recorded per file. No retained
+selector changes its declarations or enclosing media/layer context.
+A third pass removes66 obsolete selector arms for20 class names that appeared
+only in module paths, JSX element names or comments. The checker now reads
+TS/TSX string and template values rather than treating every source word as a
+possible class. Imported JSON remains in the reachability graph; the current
+`styleguide/qualities.json` contains guideline prose rendered as text, so words
+such as “header” and “tabs” there are not class callers. This is a bounded source
+check: new dynamically computed classes or data-driven class sources require
+an explicit caller audit. The known room/connection families remain protected.
+
+The checker refuses if a retired class gains a possible literal caller or another token
+owner appears. Current CSS/browser/native integration and the full reference
+quality audit remain separate gates; this record does not certify full245.
+
+## Reproducible normal-image runtime and browser probe
+
+`python3 scripts/verify-fleet-runtime.py --artifacts /PRIVATE/NEW/ARTIFACT-DIRECTORY`
+builds only tracked, committed HEAD into uniquely named normal public/admin/guide
+images. Install the locked frontend dependencies and Playwright Chromium first.
+The four fixed loopback ports18180/18181/18182/19190 must be free; an existing
+project container, volume, network or artifact directory fails preflight instead
+of being overwritten. Every run gets a distinct project suffix.
+
+`python3 -B scripts/test_verify_fleet_runtime.py` exercises the two runner
+guards without starting Docker services: leftover volume/network refusal and
+concurrent live-fixture edits while only the frozen archive is executed. These
+are tool-boundary regressions, not application/browser verification.
+
+The probe uses a private PostgreSQL database and a verification-only external
+OIDC provider on loopback. The application images run their normal commands,
+OIDC/PKCE/nonce/signature/session checks and bootstrap flow. They have no test
+clock, test entrypoint, seeded session or successful mocked API response. The
+Compose/provider/browser fixture files execute from the same archived source
+until cleanup; the normal image revision and locked browser dependency versions
+are checked against that archive. Real
+browser form → review → native event creation → both portal readers is followed
+by independent logout, an unauthenticated guide and scoped public-process
+failure while administration/guide continue. Desktop/mobile, light/dark,
+finite-animation settling, overflow, serious/critical Axe checks and synthetic
+screenshots are part of that bounded probe. It does not prove every domain route
+or replace the full lifecycle/security/accessibility release scopes.
+
+Only project-prefixed ephemeral services/volumes/networks are removed in the
+runner's finally block. It never restarts Docker or modifies the normal user
+projects. Artifacts are private, contain no authentication trace/cookie values,
+retain image IDs/source and image hashes, and report zero remaining project
+resources after successful cleanup. The external provider script is not included
+in the application runtime image. Its identities and credentials are synthetic.
+
+The first runtime attempt at065e2bc3 built all three images and reached healthy
+containers, but the host browser failed before login. A guide-only differential
+kept the image/port fixed: DockerDesktop29.6.1 internal network produced an empty
+published binding and connection refusal; an ordinary dedicated bridge produced
+the intended127.0.0.1 binding and HTTP200. See
+[the source-attributed differential](network-forwarding-proof.json). This fixture
+therefore uses a dedicated bridge, publishes only loopback ports and leaves its
+database unexposed. Both probes cleaned their scoped resources.
+
+The next attempt atfc2963eb reached real sign-in in both portals and the
+creation form, then stopped before creation at a Playwright datetime-fill
+normalisation error. A bare step1 datetime-local input reproduced the same
+error: requesting12:00:00 yields the browser value12:00, while supplying the
+canonical12:00 succeeds. The fixture now enters that canonical minute form;
+the existing application already adds seconds for its native time resolver.
+No product input, timing or assertion is weakened.
+
+The corrected normal-image journey **passed all four cases** at11375165,
+including actual native200 creation, both surface readers, separate logout,
+unauthenticated versioned guide, and admin/guide with public stopped. All14
+PNG hashes and scoped cleanup are verified in the
+[bounded normal-runtime evidence](normal-runtime-11375165/README.md).
+This is not full domain cutover acceptance; final #112 integration/current
+source, remaining inventory/caller/quality audit, reviews and fullCI remain gates. The earlier
+237-test/source-inventory results above do not establish its success. Preserve
+each failed attempt separately, diagnose its actual symptom, then record the
+exact executed source and measured result before changing this status.
 
 ## Source inventory versus actual integration
 
@@ -229,3 +463,19 @@ independent production availability. The temporary local test configuration was
 removed after its process exited. Source hashes and command attribution are in
 `upload-lifetime-proof.json`. All results precede the checkpoint commit; fresh
 exact-head CI is still required.
+
+## Semantic event navigation icons
+
+A visual comparison with the accepted Fleet reference found the shared event
+registry still used the generic book fallback for multiple existing workspaces.
+The current registry now declares their subject/operation: team, upload, calendar,
+send, shield, document and presentation. The shared icon catalogue and contributor
+guidance describe those choices. Capability-derived destination visibility, order,
+labels and native narrow-screen navigation are unchanged.
+
+The existing21 planning/primitive tests, both portal builds and independent guide
+build pass. Two existing synthetic desktop/narrow planning browser cases pass in
+3.3 seconds. [Patch-attributed images and source hashes](navigation-icons/proof.json)
+keep this bounded visual evidence separate from actual native API integration.
+The current desktop setup was inspected against the accepted desktop reference;
+this does not claim a whole-product visual certification.

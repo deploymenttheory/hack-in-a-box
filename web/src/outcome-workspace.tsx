@@ -135,5 +135,3 @@ function ReviewReader({ id }: { id: string }) {
     {blocked ? <><Failure error={blocked} /><Button icon="refresh" variant="outline" onClick={checkAccess}>Check current review access</Button></> : current.isPending ? <Loading /> : current.error ? <Failure error={current.error} /> : <section className="fleet-outcome-section"><h2>{current.data.schedule.days}-day checkpoint</h2><StatusBadge>{current.data.effective_state.replaceAll('_', ' ')}</StatusBadge><p>{new Date(current.data.due_at).toLocaleString(undefined, { timeZone: current.data.schedule.timezone })} ({current.data.schedule.timezone})</p><Link className={buttonVariants({})} to="/ideas/$outcomeId" params={{ outcomeId: current.data.outcome_id }}><Icon name="next" />Open your current follow-through</Link></section>}
   </section>
 }
-
-export { PublishedProjects, PublishedProjectPage } from './showcase'

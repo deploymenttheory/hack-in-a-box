@@ -1,0 +1,51 @@
+{
+  "kind": "Local frontend checks; controlled media API fixtures; no native runtime or final CI claim",
+  "executable_source": "746d75ab239278fd993bcd9ec907e2ea44e8d142",
+  "documentation_followup": "d06df6aeeea5fba25fc47926b639753a8789a1b5",
+  "unit_tests": 248,
+  "unit_files": 51,
+  "unit_duration_seconds": 9.02,
+  "browser_cases": 22,
+  "browser_duration_seconds": 12.5,
+  "browser_scope": "Media workspace controlled API cases plus actual Go CSP literal in isolated HTTP Chromium controls; desktop/mobile administrator build; no OIDC/native media claim",
+  "other_checks": [
+    "lint",
+    "both portal production builds",
+    "independent style guide build",
+    "canonical generated schema byte equality"
+  ],
+  "logs": {
+    "units": {
+      "private_path": "/private/tmp/hackbox245-746-web-units.log",
+      "sha256": "525a0d7a7dcdff773506f870caa9d84f4903d3ffa3e2f0e3abae146466787e91"
+    },
+    "lint": {
+      "private_path": "/private/tmp/hackbox245-746-web-lint.log",
+      "sha256": "ac23124da20094d656a717b4260340572dfc05a28e6145a4207fc7c3d2d39c64"
+    },
+    "portals": {
+      "private_path": "/private/tmp/hackbox245-746-web-build.log",
+      "sha256": "63b964ebe710b98adcbd16b565d1d19e1c8aff0b2f9e2ff48ee96617b8f2c889"
+    },
+    "guide": {
+      "private_path": "/private/tmp/hackbox245-746-guide-build.log",
+      "sha256": "dc0feb1737e882582456259b416829e9cb24209e227500e555fcdcdc37b52fd6"
+    },
+    "media_and_CSP_browser": {
+      "private_path": "/private/tmp/hackbox245-746-media-browser.log",
+      "sha256": "b7d10483217c3966174cdce0bcd96a8e4fdef4ee4e4a3d1c257454086c364289"
+    },
+    "canonical_generation": {
+      "private_path": "/private/tmp/hackbox245-current-canonical.log",
+      "sha256": "db6df48d94dc3f8e07bd420af2bc1c079e47b8dd159df2a4192fad3dceae237c"
+    }
+  },
+  "source_counts": {
+    "registrations": 96,
+    "owners": 30,
+    "reachable": 318,
+    "qualities": 100,
+    "theme_owners": 1,
+    "errors": 0
+  }
+}

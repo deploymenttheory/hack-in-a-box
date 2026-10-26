@@ -1,0 +1,106 @@
+# Isolated synthetic verification only. No production configuration/secrets.
+name: hackbox-fleet245-native
+x-app: &app
+  image: ${FLEET_UI_PUBLIC_IMAGE:?Set a unique cutover public image}
+  init: true
+  cpus: 0.5
+  mem_limit: 256m
+  pids_limit: 128
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: &environment
+    GOMAXPROCS: '2'
+    HACKBOX_ENV: development
+    HACKBOX_DATABASE_URL: postgres://cutover:synthetic-cutover-only@postgres:5432/cutover?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: http://127.0.0.1:18180
+    HACKBOX_ADMIN_ORIGIN: http://127.0.0.1:18181
+    HACKBOX_WORKSPACE_ORIGIN: http://127.0.0.1:18180
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web
+    HACKBOX_OIDC_ISSUER: http://oidc.localhost:19190
+    HACKBOX_OIDC_CLIENT_ID: fleet-cutover-preview
+    HACKBOX_BOOTSTRAP_SUBJECT: fleet-cutover-owner
+  volumes: [files:/data/files]
+  depends_on:
+    migrate: {condition: service_completed_successfully}
+    provider: {condition: service_healthy}
+  healthcheck: &healthcheck
+    test: [CMD, /app/healthcheck]
+    interval: 2s
+    timeout: 5s
+    retries: 30
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    cpus: 0.75
+    mem_limit: 384m
+    pids_limit: 128
+    environment:
+      POSTGRES_DB: cutover
+      POSTGRES_USER: cutover
+      POSTGRES_PASSWORD: synthetic-cutover-only
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U cutover -d cutover']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  migrate:
+    <<: *app
+    entrypoint: [/app/migrate]
+    healthcheck: {disable: true}
+    volumes: []
+    depends_on:
+      postgres: {condition: service_healthy}
+  provider:
+    image: node:22.23.3-bookworm-slim@sha256:3ed98443660ff48413b5af19ecefce3b9d50845a901a43420d47cc63a9fddbe9
+    command: [node, /provider/oidc-provider.mjs]
+    user: '1000:1000'
+    cpus: 0.25
+    mem_limit: 96m
+    pids_limit: 64
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: [./oidc-provider.mjs:/provider/oidc-provider.mjs:ro]
+    ports: ['127.0.0.1:19190:19190']
+    networks:
+      default:
+        aliases: [oidc.localhost]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:19190/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  public:
+    <<: *app
+    ports: ['127.0.0.1:18180:8080']
+  admin:
+    <<: *app
+    image: ${FLEET_UI_ADMIN_IMAGE:?Set a unique cutover admin image}
+    environment:
+      <<: *environment
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: http://127.0.0.1:18181
+    ports: ['127.0.0.1:18181:8080']
+  styleguide:
+    image: ${FLEET_UI_GUIDE_IMAGE:?Set a unique cutover guide image}
+    init: true
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 64
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports: ['127.0.0.1:18182:8080']
+    healthcheck: *healthcheck
+volumes:
+  database:
+  files:
+networks:
+  default: {}

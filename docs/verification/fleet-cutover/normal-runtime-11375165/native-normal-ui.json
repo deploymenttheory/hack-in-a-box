@@ -1,0 +1,107 @@
+{
+  "source": "11375165a90c88f32103e1b28e8c0717c9a63dce",
+  "project": "hackbox-fleet245-11375165a90c-c5fbf45d",
+  "kind": "Normal production commands with a synthetic external OIDC provider; actual browser/HTTP/PostgreSQL",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "event_id": "f4f1a8f3-ef16-4e61-a8c2-8e162c254d99",
+      "result": "pass",
+      "native_creation": 200,
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "desktop-dark",
+      "event_id": "6a44a3de-f664-4fa1-8a5a-0216c9e04f69",
+      "result": "pass",
+      "native_creation": 200,
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "mobile-light",
+      "event_id": "28e8d1ae-1db3-4924-96bd-38a76e9268ee",
+      "result": "pass",
+      "native_creation": 200,
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "mobile-dark",
+      "event_id": "94c6d535-e2fd-40d1-8e80-670ca8a454d4",
+      "result": "pass",
+      "native_creation": 200,
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": true
+    }
+  ],
+  "images": [
+    {
+      "name": "desktop-light-admin-event.png",
+      "sha256": "4e3169b24b38346581f0f8acbff36897ec04e713ad40836726ff1f3acd29b023"
+    },
+    {
+      "name": "desktop-light-participant-event.png",
+      "sha256": "5a90da1587fddd601917bdb5dfe4e021f843d9df83f851a52ee0d50d1fd2cb15"
+    },
+    {
+      "name": "desktop-light-guide.png",
+      "sha256": "84506aacf20402e8465211ee3552566557a23929815d0402e89e2918103a19d9"
+    },
+    {
+      "name": "desktop-dark-admin-event.png",
+      "sha256": "eb430a007969536adf3f9e9b2de454bb95ca4560840d79b57dd6ca5360d2f31f"
+    },
+    {
+      "name": "desktop-dark-participant-event.png",
+      "sha256": "5d8688b953a5b70d516ba382ec24491682682fc9d96c87cdde734229c072e11b"
+    },
+    {
+      "name": "desktop-dark-guide.png",
+      "sha256": "5d73f904f03b9f388970072d365182f4a416adf92f91e2819620e6a680e7fdd8"
+    },
+    {
+      "name": "mobile-light-admin-event.png",
+      "sha256": "b6b822c8f7b2344923e8a268fe2b3e96fb09bcc71ea767849679cdc4e48aef39"
+    },
+    {
+      "name": "mobile-light-participant-event.png",
+      "sha256": "0d2ae6d3aee9042140fc6a6c47e051aaee156a3b750fd3e53ebb5d3dcb6ec567"
+    },
+    {
+      "name": "mobile-light-guide.png",
+      "sha256": "b6002836f680f598b62d84a62d2b882622f718ff954933e79e77506a3a68f8b3"
+    },
+    {
+      "name": "mobile-dark-admin-event.png",
+      "sha256": "09b1b8b042b1097db560266080c8c97287fbca9f570d0706d30b2fd9d272d8a9"
+    },
+    {
+      "name": "mobile-dark-participant-event.png",
+      "sha256": "521d32fd5873f29ba0e421f73d51d1f6e01ad1bd5a7f5523caab345a549e6fa1"
+    },
+    {
+      "name": "mobile-dark-guide.png",
+      "sha256": "4434e772e22d8eadd64d3477ed0974e0a7edaa39ce5d54ca139e366337127062"
+    },
+    {
+      "name": "mobile-dark-admin-public-stopped.png",
+      "sha256": "09b1b8b042b1097db560266080c8c97287fbca9f570d0706d30b2fd9d272d8a9"
+    },
+    {
+      "name": "mobile-dark-guide-public-stopped.png",
+      "sha256": "4434e772e22d8eadd64d3477ed0974e0a7edaa39ce5d54ca139e366337127062"
+    }
+  ],
+  "immutable_images": {
+    "public": "sha256:d50960569d06f18a66bbe8ede2d0aaf82d566105acbf29058516006910df7fc2",
+    "admin": "sha256:2a4ae20827099fb63b21eb80de0e353609fea35e46bdef6cdca13b14aee2f683",
+    "guide": "sha256:c8b97c0ef62026dea61f080f5420d568f8151536357ed0e30b815c421ae910ca"
+  },
+  "scope": "Shared shells, reviewed native draft creation, event reading, independent sessions/guide and public-process failure; not every domain route or complete lifecycle certification."
+}

@@ -1,4 +1,4 @@
-import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react'
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,type ReactNode} from 'react'
 import {useBlocker} from '@tanstack/react-router'
 import {APIError} from './api/client'
 import {useIdentity} from './session'
@@ -96,6 +96,8 @@ export function QualificationCommandReview({headingRef,failure,failureStage,ack,
 // actor/run; retained metadata grants no private source or retry body.
 export function QualificationCommandHistory({eventID,runID}:{eventID:string;runID:string}){
  const identity=useIdentity(),owner=qualificationNamespace(identity.person.id,identity.draft_scope,eventID,runID),commands=useCommunicationCommands(owner),scope=usePrivateRequestScope(`${owner}:original-history`)
+ // An opaque UI lifetime marker, never an authenticated draft scope or credential.
+ const originalOwner=useMemo(()=>owner?crypto.randomUUID():undefined,[owner])
  const [reading,setReading]=useState(false),[failure,setFailure]=useState<unknown>(),[message,setMessage]=useState('')
  const pending=commands.attempts.some(attempt=>attempt.state==='pending'),unknown=commands.attempts.some(attempt=>attempt.state==='unknown')
  usePlanningDepartureBarrier(pending)
@@ -119,5 +121,5 @@ export function QualificationCommandHistory({eventID,runID}:{eventID:string;runI
    commands.complete(attempt.id);setMessage(`Original ${metadata.action.replaceAll('_',' ')} acknowledged at panel version ${result.receipt.version}. Current panel state must be read separately.`)
   }catch(error){if(ticket.current())setFailure(error)}finally{if(ticket.current())setReading(false)}
  }
- return <>{commands.attempts.length>0&&<aside aria-label="Original panel command history"><h2>Earlier panel request metadata</h2><p>Safe request identity only; no private scores, reasons, evidence or replay body survives the closed task.</p>{commands.attempts.map(attempt=><p key={attempt.id}>Request {attempt.command.requestID} · Expected event revision {attempt.revision} · Expected panel version {attempt.command.expectedVersion} · {attempt.state==='pending'?'Awaiting acknowledgement':'Outcome unknown'}{attempt.state==='unknown'&&<Button icon="refresh" variant="outline" disabled={reading} onClick={event=>void recover(attempt,event.currentTarget)}>Read original panel acknowledgement</Button>}</p>)}{!!failure&&<Failure error={failure}/>}</aside>}{message&&<p role="status" tabIndex={-1} ref={outcome}>{message}</p>}</>
+ return <>{commands.attempts.length>0&&<aside aria-label="Original panel command history" data-original-panel-owner={JSON.stringify({actor:identity.person.id,event:eventID,run:runID,generation:originalOwner})}><h2>Earlier panel request metadata</h2><p>Safe request identity only; no private scores, reasons, evidence or replay body survives the closed task.</p>{commands.attempts.map(attempt=><p key={attempt.id} data-original-panel-record={JSON.stringify({request:attempt.command.requestID,event_revision:attempt.revision,panel_version:attempt.command.expectedVersion})}>Request {attempt.command.requestID} · Expected event revision {attempt.revision} · Expected panel version {attempt.command.expectedVersion} · {attempt.state==='pending'?'Awaiting acknowledgement':'Outcome unknown'}{attempt.state==='unknown'&&<Button icon="refresh" variant="outline" disabled={reading} onClick={event=>void recover(attempt,event.currentTarget)}>Read original panel acknowledgement</Button>}</p>)}{!!failure&&<Failure error={failure}/>}</aside>}{message&&<p role="status" tabIndex={-1} ref={outcome}>{message}</p>}</>
 }

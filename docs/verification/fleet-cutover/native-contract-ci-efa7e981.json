@@ -1,0 +1,47 @@
+{
+  "kind": "executed native HTTP/database contract suite; not complete cutover or every-route browser proof",
+  "candidate": "efa7e981df36cde7fd15aeca6a1d3f22738bd1d7",
+  "base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "workflow_run": 40246811823,
+  "job": 121329998921,
+  "url": "https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40246811823/job/121329998921",
+  "conclusion": "SUCCESS",
+  "actual_checkout": "69f5d69ebb7a75b41ba7d4910f2a9e43e536d831",
+  "actual_checkout_tree": "3ec100d64735ffcc7fb7727cabd892baaff1e322",
+  "candidate_tree": "3ec100d64735ffcc7fb7727cabd892baaff1e322",
+  "equal_tree": true,
+  "native_environment": {
+    "HACKBOX_INTEGRATION": "1"
+  },
+  "httpapi": {
+    "seconds": 574.671,
+    "selection": "Unfiltered internal/httpapi package in other-packages race run; no test-name filter. Read referenced bodies for native setup and individual scope."
+  },
+  "app": {
+    "selected_top_level_parents": 60,
+    "batch_sizes": [
+      30,
+      30
+    ],
+    "seconds": [
+      248.768,
+      317.759
+    ],
+    "limit": "Exhaustive disjoint parent selection is not a no-skip/browser claim. Opt-in browser parents require their separate native workflow flags."
+  },
+  "source_comparison": {
+    "paths": [
+      "internal",
+      "api",
+      "web/src/api"
+    ],
+    "result": "git diff 076f6162 efa7e981 -- internal api web/src/api is empty; existing backend/contracts/generated client unchanged by this cutover candidate"
+  },
+  "private_log_sha256": "82e17a6fc22a8a58f3fa1b1f3d9bf4a560ab89c0941f62046e283bb17ca68d5b",
+  "remaining": [
+    "Native-browser CI is not green at this head; its qualification failures require the current #292 keyboard/focus corrections and a fresh integrated run.",
+    "Correlate current route/nested owners and request/response assertions with each actual native contract and browser proof; filenames are not acceptance.",
+    "Integrate mentor advisory routes after #292 merge and verify current source, all CI, normal runtime, full independent reviews and final #245 criteria."
+  ],
+  "scope": "HTTP fixtures may seed native people/domain facts and control clocks. This is not normal OIDC, a no-seed lifecycle, load testing or full accessibility/security signoff."
+}

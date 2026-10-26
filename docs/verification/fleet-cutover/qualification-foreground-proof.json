@@ -1,0 +1,25 @@
+{
+  "kind": "Real PostgreSQL/Chromium qualification regression; one public mobile final scope, not all eight",
+  "source": "794214f5c226d027d8de564242aea73be52fb0db",
+  "causal_correction": "e6a32b73c77083c12463d57c1d1c57e3df39fca5 cherry-picked as794214f5",
+  "prior_failed_ci": "https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40267563511/job/121393174532",
+  "cause": "Foreground ballot reconciliation legitimately replaced the old workspace before local activation. Strict detached-target guard correctly refused it.",
+  "change": "Wait for actual affected tie Current ballots complete and Casting decision required before acquiring the read control; retain both post-read assertions. Keyboard helper, write guards and production code unchanged.",
+  "command": "HACKBOX_INTEGRATION=1 HACKBOX_QUALIFICATION_BROWSER=1 HACKBOX_QUALIFICATION_SURFACE=public HACKBOX_QUALIFICATION_SCENARIO=final GOMAXPROCS=2 GOFLAGS=-p=1 go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestQualificationBrowsers$/^public$/^mobile$/^final$' -count=1 -timeout=5m",
+  "exit_code": 0,
+  "parent_elapsed_seconds": 66.98,
+  "package_elapsed_seconds": 68.551,
+  "browser_cases": 1,
+  "raw_log_private_path": "/private/tmp/hackbox245-794-qualification-final-mobile.log",
+  "raw_log_sha256": "b57ed7a68c42a6c65b55f815cf5b9844bc86392ec60f87e4b1c699a506c97328",
+  "source_files_sha256": {
+    "web/qualification-native/final.spec.ts": "124128862a76aadb3589c2f8fb487cd4904acc4a93e9bc8c654eeed88eb91e7c",
+    "web/qualification-native/keyboard.ts": "f00756197c2f45c025d523af97412a45b8087cc30177594954cdc23ead2dc870",
+    "internal/app/qualification_browser_test.go": "09cfe65e5db96f8b2e41acab31419de092154e15729a459960eb27e1ded79569"
+  },
+  "cleanup": "Specific PostgreSQL container326ac57b0cec terminated in logs and absent on post-run docker ps; user app remains healthy.",
+  "limits": [
+    "No rerun of other seven qualification scopes in this local command; final native CI must run full matrix.",
+    "Tight Chromium remount RED/GREEN controls prove caller scheduling separately, not a native backend reproduction."
+  ]
+}

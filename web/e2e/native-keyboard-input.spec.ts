@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { activate, typeInto, inspectCurrent, openLocal } from '../qualification-native/keyboard'
+import { activate, typeInto, inspectCurrent, openLocal, readOriginalAcknowledgement } from '../qualification-native/keyboard'
 
 test('native text-entry helper observes a read-pause rejection before deliberately re-entering the same field', async ({ page }) => {
  await page.setContent('<fieldset><textarea aria-label="Synthetic current evidence">Earlier value</textarea></fieldset>')
@@ -126,4 +126,52 @@ test('an HTTP write is never accepted as a local opening or repeated',async({pag
  page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;await press(key,options)}
  await expect(openLocal(page.getByRole('button',{name:'Open local review'}),page.getByRole('heading',{name:'Local review'}))).rejects.toThrow('must not send an HTTP mutation')
  expect(enters).toBe(1)
+})
+
+const originalRecordIDs={actor:'10000000-0000-4000-8000-000000000001',event:'10000000-0000-4000-8000-000000000002',run:'10000000-0000-4000-8000-000000000003',generation:'10000000-0000-4000-8000-000000000004',request:'10000000-0000-4000-8000-000000000005'}
+async function declaredOriginalRecord(page:import('@playwright/test').Page){
+ const owner=JSON.stringify({actor:originalRecordIDs.actor,event:originalRecordIDs.event,run:originalRecordIDs.run,generation:originalRecordIDs.generation}),record=JSON.stringify({request:originalRecordIDs.request,event_revision:2,panel_version:0})
+ let reads=0
+ await page.route('https://original.example.test/**',route=>{if(new URL(route.request().url()).pathname==='/receipt'){reads++;return route.fulfill({body:'synthetic receipt'})}return route.fulfill({contentType:'text/html',body:`<aside aria-label="Original panel command history" data-original-panel-owner='${owner}'><p data-original-panel-record='${record}'>Expected event revision2 · Panel version0 · Outcome unknown<button onclick="window.accepted=(window.accepted||0)+1;fetch('/receipt');document.querySelector('h2').hidden=false">Read original panel acknowledgement</button></p></aside><p id="unrelated">Unrelated team label pending</p><h2 hidden>Exact original receipt</h2><button id="other" onclick="fetch('/receipt')">Other current action</button>`})})
+ await page.goto(`https://original.example.test/events/${originalRecordIDs.event}/panel/${originalRecordIDs.run}`)
+ return {control:page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}),destination:page.getByRole('heading',{name:'Exact original receipt'}),reads:()=>reads}
+}
+for(const mutation of ['actor','event','run','generation','request','event_revision','panel_version','record-text','record-clone','owner-clone','button-replacement','reparent','url','control-text','href','wrong-target'] as const)test(`declared original record refuses ${mutation} at the trusted key boundary without a receipt read`,async({page})=>{
+ const original=await declaredOriginalRecord(page),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{
+  if(key==='Enter'){
+   enters++
+   await page.evaluate(kind=>{
+    const record=document.querySelector('[data-original-panel-record]')!,owner=document.querySelector('[data-original-panel-owner]')!,button=record.querySelector('button')!
+    if(['actor','event','run','generation'].includes(kind)){const identity=JSON.parse(owner.getAttribute('data-original-panel-owner')!);identity[kind]='20000000-0000-4000-8000-000000000001';owner.setAttribute('data-original-panel-owner',JSON.stringify(identity))}
+    else if(['request','event_revision','panel_version'].includes(kind)){const identity=JSON.parse(record.getAttribute('data-original-panel-record')!);identity[kind]=kind==='request'?'20000000-0000-4000-8000-000000000001':99;record.setAttribute('data-original-panel-record',JSON.stringify(identity))}
+    else if(kind==='record-text')record.prepend('Different original attempt ')
+    else if(kind==='record-clone')record.replaceWith(record.cloneNode(true))
+    else if(kind==='owner-clone')owner.replaceWith(owner.cloneNode(true))
+    else if(kind==='button-replacement')button.replaceWith(button.cloneNode(true))
+    else if(kind==='url')history.replaceState(null,'','/events/20000000-0000-4000-8000-000000000001/panel/20000000-0000-4000-8000-000000000002')
+    else if(kind==='control-text')button.textContent='Different original request control'
+    else if(kind==='href')button.setAttribute('href','/different-original')
+    else if(kind==='reparent'){const other=document.createElement('p');other.setAttribute('data-original-panel-record',record.getAttribute('data-original-panel-record')!);owner.append(other);other.append(button)}
+    else (document.querySelector('#other') as HTMLButtonElement).focus()
+   },mutation)
+  }
+  await press(key,options)
+ }
+ await expect(readOriginalAcknowledgement(original.control,original.destination)).rejects.toThrow(/not positively rejected|target was replaced/)
+ expect(enters).toBe(1);expect(original.reads()).toBe(0)
+})
+for(const malformed of ['missing-record','missing-owner','null-marker','invalid-revision'] as const)test(`declared original record has no fallback for ${malformed}`,async({page})=>{
+ const original=await declaredOriginalRecord(page),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ await page.evaluate(kind=>{const record=document.querySelector('[data-original-panel-record]')!,owner=document.querySelector('[data-original-panel-owner]')!;if(kind==='missing-record')record.removeAttribute('data-original-panel-record');else if(kind==='missing-owner')owner.removeAttribute('data-original-panel-owner');else if(kind==='null-marker')record.setAttribute('data-original-panel-record','null');else record.setAttribute('data-original-panel-record',JSON.stringify({request:'10000000-0000-4000-8000-000000000005',event_revision:-1,panel_version:0}))},malformed)
+ page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;await press(key,options)}
+ await expect(readOriginalAcknowledgement(original.control,original.destination)).rejects.toThrow(/declared original panel/)
+ expect(enters).toBe(0);expect(original.reads()).toBe(0)
+})
+test('declared original record allows one accepted receipt read even when completion retires that record',async({page})=>{
+ const original=await declaredOriginalRecord(page),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ await original.control.evaluate(button=>button.addEventListener('click',()=>{const owner=button.closest('[data-original-panel-owner]')!;owner.setAttribute('data-original-panel-owner','retired after accepted original read')}))
+ page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;await press(key,options)}
+ await readOriginalAcknowledgement(original.control,original.destination)
+ await expect.poll(original.reads).toBe(1);expect(enters).toBe(1)
 })

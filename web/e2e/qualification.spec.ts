@@ -63,7 +63,7 @@ test('current native discovery and editable panel validation support keyboard re
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
 
-async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|'408'){
+async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|'408',beforeLoad?:(state:Awaited<ReturnType<typeof fixture>>)=>Promise<void>){
  const state=await fixture(page),writes:QualificationCommand[]=[],organiser=initial.round.panel.organiser_id,mentor=initial.round.panel.mentor_ids[0]
  state.page.round.version=0;state.page.round.cards=[];state.page.round.signoff=null;state.page.current=false;state.page.preview=null;state.page.capabilities={can_read_panel:false,can_configure_panel:true,can_propose:false,can_sign_off:false,read_only:false,record_locked:false}
  let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
@@ -76,6 +76,7 @@ async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|
   if(response==='408')return route.fulfill({status:408,json:{error:{code:'timeout',message:'Synthetic response timeout after dispatch',request_id:'synthetic'}}})
   return route.fulfill({json:{...state.page,receipt}})
  })
+ if(beforeLoad)await beforeLoad(state)
  await page.goto(path);await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:'Review entered panel decision',exact:true})).toBeEnabled();await page.getByLabel('Recorded panel reason',{exact:true}).fill('Private panel reason must disappear on current denial');await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter');await page.getByRole('alertdialog',{name:'Review private panel command',exact:true}).getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
  await expect.poll(()=>writes.length).toBe(1)
  return {state,writes,release}
@@ -84,6 +85,7 @@ test('HTTP408 retains the original panel outcome as unknown without replay',asyn
  const task=await pendingPanel(page,'408');task.release()
  await expect(page.getByLabel('Original panel command history')).toContainText('Outcome unknown')
  await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
+ await expect(page.getByRole('button',{name:'Configure intended panel',exact:true})).toHaveAttribute('disabled','')
  expect(task.writes).toHaveLength(1)
 })
 for(const response of ['ack','408'] as const)test(`sent panel metadata protects pending and ${response} departure after private reader denial`,async({page})=>{
@@ -250,4 +252,130 @@ for(const mode of ['accepted','interrupted','changed','denied','408','lost_ack',
    await expect(page.getByRole('status').filter({hasText:'Original sign card acknowledged for request'})).toBeVisible()
   }
  }finally{page.keyboard.press=press;release()}
+})
+
+for(const label of ['Read recorded panel history','Read current panel source'])test(`${label} keeps native keyboard focus during a current source pause without opening or writing`,async({page})=>{
+ const state=await fixture(page)
+ let held=false,reads=0,historyReads=0,writes=0,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  reads++;if(held)await gate
+  await route.fulfill({json:state.page})
+ })
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/history?*`,route=>{historyReads++;return route.fulfill({json:{items:[],next_cursor:null}})})
+ await page.goto(path)
+ const historyButton=page.getByRole('button',{name:label,exact:true})
+ const {reach}=await import('../qualification-native/keyboard')
+ await reach(historyButton)
+ page.on('request',request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))writes++})
+ try{
+  const priorReads=reads
+  held=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect.poll(()=>reads).toBeGreaterThan(priorReads)
+  await expect(historyButton).toBeDisabled()
+  await expect(historyButton).toBeFocused({timeout:750})
+  await page.keyboard.press('Enter')
+  expect(historyReads).toBe(0);expect(writes).toBe(0)
+  await expect(page.getByRole('region',{name:'Currently authorised panel history',exact:true})).toHaveCount(0)
+  held=false;release()
+  await expect(historyButton).toBeEnabled();await expect(historyButton).toBeFocused()
+  const beforeActivation=reads
+  await page.keyboard.press('Enter')
+  if(label==='Read recorded panel history'){await expect(page.getByRole('region',{name:'Currently authorised panel history',exact:true})).toBeVisible();expect(historyReads).toBe(1)}
+  else{await expect.poll(()=>reads).toBe(beforeActivation+1);expect(historyReads).toBe(0)}
+  expect(writes).toBe(0)
+ }finally{held=false;release()}
+})
+
+for(const preparing of [false,true])test(`${preparing?'Unsent review':'Final-card editor'} keeps focus only during a benign read pause and accepts no disabled action`,async({page})=>{
+ const state=await fixture(page)
+ state.page.capabilities.record_locked=false;state.page.teams[0].can_save_card=true
+ let held=false,reads=0,writes=0,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{reads++;if(held)await gate;await route.fulfill({json:state.page})})
+ await page.goto(path)
+ await page.getByRole('button',{name:`Inspect Team ${state.page.teams[0].team_id}`,exact:true}).click()
+ const edit=page.getByRole('button',{name:'Edit reasoned final card',exact:true}),reason=page.getByLabel('Recorded panel reason',{exact:true})
+ if(preparing){await edit.click();await reason.fill('Retained private unsent final-card observation')}
+ const target=preparing?page.getByRole('button',{name:'Review entered panel decision',exact:true}):edit
+ const {reach}=await import('../qualification-native/keyboard');await reach(target)
+ page.on('request',request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))writes++})
+ try{
+  const priorReads=reads;held=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect.poll(()=>reads).toBeGreaterThan(priorReads)
+  await expect(target).toBeDisabled();await expect(target).toBeFocused({timeout:750})
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('alertdialog',{name:'Review private panel command',exact:true})).toHaveCount(0)
+  if(!preparing)await expect(reason).toHaveCount(0)
+  expect(writes).toBe(0)
+  held=false;release();await expect(target).toBeEnabled();await expect(target).toBeFocused()
+  await page.keyboard.press('Enter')
+  if(preparing){await expect(page.getByRole('alertdialog',{name:'Review private panel command',exact:true})).toBeVisible();await expect(reason).toHaveValue('Retained private unsent final-card observation')}
+  else await expect(reason).toBeVisible()
+  expect(writes).toBe(0)
+ }finally{held=false;release()}
+})
+
+for(const empty of [false,true])test(`declared original record accepts exact receipt with ${empty?'empty rows':'delayed unrelated labels'}`,async({page})=>{
+ let releaseLabels:()=>void=()=>{};const gate=new Promise<void>(resolve=>{releaseLabels=resolve})
+ const task=await pendingPanel(page,'408',async(state)=>{if(empty)state.page.teams=[];await page.route(`**/api/v1/events/${firstID}/teams`,async route=>{await gate;await route.fulfill({json:{teams:[{id:initial.teams[0].team_id,name:'Disclosed current team'}]}})})})
+ task.release()
+ const history=page.getByLabel('Original panel command history')
+ await expect(history).toContainText('Outcome unknown')
+ await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
+ if(empty)await expect(page.getByRole('button',{name:/^Inspect /})).toHaveCount(0)
+ const label=page.getByRole('button',{name:'Inspect Disclosed current team',exact:true})
+ const ack=page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}),element=ack.elementHandle.bind(ack)
+ let snapshots=0,ackReads=0,enters=0
+ const body=task.writes[0],fingerprint=await qualificationFingerprint(body,task.state.page.revision)
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/commands/${body.request_id}`,route=>{ackReads++;return route.fulfill({json:{receipt:{request_id:body.request_id,run_id:run,action:body.action,expected_revision:task.state.page.revision,expected_version:0,version:1,fingerprint}}})})
+ ack.elementHandle=async(...args)=>{const handle=await element(...args);if(handle){const capture=handle.evaluateHandle.bind(handle);handle.evaluateHandle=(async(...values:Parameters<typeof handle.evaluateHandle>)=>{const scope=await capture(...values),evaluate=scope.evaluate.bind(scope);scope.evaluate=(async(...values:Parameters<typeof scope.evaluate>)=>{const result=await evaluate(...values);if(typeof result==='string'&&result.startsWith('{"url"')&&snapshots++===0){releaseLabels();if(!empty)await expect(label).toBeVisible();await expect(history).toContainText('Outcome unknown')}return result}) as typeof scope.evaluate;return scope}) as typeof handle.evaluateHandle}return handle}
+ const press=page.keyboard.press.bind(page.keyboard);page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;return press(key,options)}
+ const {readOriginalAcknowledgement}=await import('../qualification-native/keyboard')
+ try{await readOriginalAcknowledgement(ack,page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true}))}catch(error){console.log(JSON.stringify({ackReads,enters,writes:task.writes.length}));throw error}finally{releaseLabels()}
+ expect(task.writes).toHaveLength(1);expect(ackReads).toBe(1);expect(enters).toBe(1);expect(snapshots).toBeGreaterThan(0)
+})
+
+
+test('owner awaits actual casting projection and ignores pending stale or different tie reads',async({page})=>{
+ await page.clock.install()
+ const state=await fixture(page),category=state.page.criteria.categories.find(value=>value.label==='User experience')!,tieID='synthetic-ux-tie'
+ state.page.current=false;state.page.round.signoff=null;state.page.capabilities.record_locked=false
+ state.page.preview!.ties=[{id:tieID,kind:'category',category_id:category.id,team_ids:state.page.teams.map(value=>value.team_id),seats:1}]
+ state.page.tie_actions=[{tie_id:tieID,seat:1,candidate_team_ids:[],can_vote:false,has_voted:false,can_resolve:false,resolve_team_ids:[],casting:false,required_votes:2,votes_complete:false}]
+ let hold=false,reads=0,writes=0,release:()=>void=()=>{}
+ const pending=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  if(route.request().method()!=='GET'){writes++;return route.abort()}
+  const projection=structuredClone(state.page);reads++
+  if(hold)await pending
+  await route.fulfill({json:projection})
+ })
+ await page.goto(path)
+ const tie=page.getByRole('region',{name:'Affected tie: User experience · Seat 1',exact:true})
+ await expect(tie).toContainText('Required current ballots incomplete')
+ await page.clock.pauseAt(new Date())
+ // This GET began before the second ballot and retains the earlier projection.
+ hold=true;const before=reads;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect.poll(()=>reads).toBeGreaterThan(before)
+ const {waitForCastingRead}=await import('../qualification-native/current-panel-read')
+ let settled=false
+ const current=waitForCastingRead(page,new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href,category.id,1).then(()=>{settled=true})
+ hold=false;release()
+ // A following native read with a complete OTHER tie must not satisfy the barrier.
+ state.page.tie_actions[0]={...state.page.tie_actions[0],votes_complete:true,casting:true,seat:2}
+ await page.clock.runFor(15_000)
+ await expect(tie).toHaveCount(0)
+ expect(settled).toBe(false)
+ state.page.tie_actions[0].seat=1;state.page.preview!.ties[0].category_id=state.page.criteria.categories[0].id
+ await page.clock.runFor(15_000)
+ await expect(page.getByRole('region',{name:'Affected tie: Demo · Seat 1',exact:true})).toContainText('Current ballots complete')
+ expect(settled).toBe(false)
+ state.page.preview!.ties[0].category_id=category.id
+ await page.clock.runFor(15_000);await current
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ const {openLocal}=await import('../qualification-native/keyboard')
+ const beforeExplicit=reads
+ await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
+ await expect.poll(()=>reads).toBe(beforeExplicit+1)
+ expect(writes).toBe(0)
 })

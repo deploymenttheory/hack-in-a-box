@@ -1,0 +1,69 @@
+{
+  "kind": "synthetic visual/component evidence; not native API or full cutover acceptance",
+  "parent": "efa7e981df36cde7fd15aeca6a1d3f22738bd1d7",
+  "capture_source": "working-tree patch over recorded parent; exact runtime source hashes below, built assets frozen during browser run",
+  "source_files": [
+    {
+      "path": "web/src/components/ui/icon.tsx",
+      "sha256": "2ef95a4dc01ad28bdb5dfda5fef9d6371deaa4d805ac282731260f1cdcd11410"
+    },
+    {
+      "path": "web/src/planning-layout.tsx",
+      "sha256": "57f8ca30099af326d53c30ca4c1fcfe7515b65b8159fe6ca7129009a3be4580e"
+    },
+    {
+      "path": "web/src/styleguide/primitives.tsx",
+      "sha256": "5100d1a2e169c616bb3f95a2a0dd0f14a6626405b924f38580cbc94c5ff4ebc0"
+    },
+    {
+      "path": "docs/design/styleguide.md",
+      "sha256": "585be96e82147eb926cf5e7393faeac85bd2a17084689391c6c7e5f43ff81ea7"
+    }
+  ],
+  "change": "Explicit semantic icons for all currently offered event workspace destinations; shared document and presentation registry glyphs and published guide guidance. Current capability-derived destinations/order/labels/native narrow selector unchanged.",
+  "checks": {
+    "existing_planning_and_primitive_units": {
+      "files": 2,
+      "passed": 21,
+      "seconds": 1.67
+    },
+    "both_portal_typescript_builds": "passed",
+    "independent_guide_build": "passed",
+    "synthetic_admin_browser": {
+      "cases": 2,
+      "seconds": 3.3,
+      "viewports": [
+        "desktop",
+        "narrow"
+      ],
+      "assertions": [
+        "event heading",
+        "setup field visibility",
+        "no horizontal overflow"
+      ]
+    },
+    "visual_inspection": "Current desktop setup inspected against accepted Fleet desktop reference and historical setup; four captures retained, not all individually inspected."
+  },
+  "images": [
+    {
+      "path": "docs/verification/fleet-cutover/navigation-icons/admin-desktop-overview.png",
+      "sha256": "8357a53c8c08971257fe81cf7cdf2030242b2044af50bc832ab6d686c69ffe83"
+    },
+    {
+      "path": "docs/verification/fleet-cutover/navigation-icons/admin-desktop-setup.png",
+      "sha256": "c2c07b721a790aa60e5586654738a0f2c92c67f461818caff740ca1b07a8da37"
+    },
+    {
+      "path": "docs/verification/fleet-cutover/navigation-icons/admin-mobile-overview.png",
+      "sha256": "339be3958889fbd6c92010a2996fcc073b510951a9d0195b0a2889a507545389"
+    },
+    {
+      "path": "docs/verification/fleet-cutover/navigation-icons/admin-mobile-setup.png",
+      "sha256": "932e58c8f116e05baf2da4a211aa96b886e79219ef5df94ebe47bdadfc45ffd5"
+    }
+  ],
+  "limits": [
+    "Browser API responses are synthetic fixtures. This does not establish native integration for every route, production OIDC or permission changes.",
+    "Final #112 integration/current source, full cutover reviews and all final CI remain required."
+  ]
+}

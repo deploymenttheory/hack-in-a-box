@@ -48,7 +48,6 @@
   .fleet-rules-layout { display: block; }
   .fleet-rules-layout > aside { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,20rem),1fr)); gap: var(--space-6); }
   .fleet-rules-planning .fleet-planning-form > fieldset { border: 0; }
-  .fleet-guidance-records { display: block; }
   .fleet-brand-preview { padding: var(--space-4); border: 1px solid var(--input); background: var(--background); color: var(--foreground); }
   @media (max-width: 64rem) { .fleet-editor-sections { grid-template-columns: 1fr; } .fleet-editor-sections > nav { flex-direction: row; flex-wrap: wrap; } }
   @media (max-width: 48rem) { .fleet-planning-layout, .fleet-planning-detail { grid-template-columns: minmax(0,1fr); } .fleet-planning-nav { border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); } .fleet-planning-nav-groups { display: none; } .fleet-planning-nav-mobile { display: block; } .fleet-planning-heading { padding-block: var(--space-3); } }

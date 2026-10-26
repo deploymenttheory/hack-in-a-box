@@ -426,3 +426,44 @@ inputs/review on current authority or source change. Exclude private advisory fr
 print, persisted caches and participant announcements. The independent synthetic
 example demonstrates these production exports without APIs, cookies or storage;
 its callbacks do not create native receipts or counted ballots.
+
+## Event navigation icon meaning
+
+Declare each event destination in `planning-layout.tsx` with an icon from the
+shared production registry. Use the subject or operation: teams/mentors use
+`team`, sessions use `calendar`, campaigns use `send`, deliverables use `upload`,
+the MC console uses `presentation`, and authored content uses `document`.
+`book` identifies rules/resource reading rather than serving as the icon for
+every workspace. The interactive production catalogue includes these registry
+entries automatically. Keep visible labels and the native narrow-screen section
+selector; an icon does not authorise or expose a destination.
+
+### Emphasise the next action within its task
+
+Use the shared primary/outline variants to distinguish the next reviewed action
+from preparation or alternatives. A campaign preview is primary until a current
+preview exists, then approval takes priority. Saving a private assessment draft
+is secondary to submitting the independent card. An owner review plan first
+emphasises drafting, then approval of its saved current draft. Within a selected
+panel team, the next card/evidence decision takes priority over global selection
+work; the panel overview has its own next proposal/signoff decision.
+
+Derive presentation from existing native state and keep current capability,
+disabled, confirmation and receipt rules intact. Colour never grants authority
+or acknowledges a write. Separate tasks on one page can each have a primary
+action; avoid competing primary actions within the same editor/review group.
+
+### Keep keyboard position during a current read pause
+
+For an already-current read-only control, use the production Button's
+`focusableWhenDisabled` with the existing read-pending disabled condition when
+a brief current-source check would otherwise drop focus to the document body.
+The Components action example demonstrates that disabled activation still runs
+no callback. Preserve private inert/denial boundaries and command pending/unknown
+locks; retaining keyboard position does not grant authority or retry a write.
+
+The same focus rule applies to a current local editor/review opener while its
+source is being read. Gate it with read pause and no pending or unknown command;
+keep the original disabled condition and local validation/readiness checks.
+Actual HTTP confirmation/retry controls and private inert/denial boundaries keep
+their existing locks. Preserving focus never prepares or submits a disabled step.

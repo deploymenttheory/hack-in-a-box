@@ -1,0 +1,207 @@
+{
+  "kind": "Current-source integration layer; historical executions retain their own source; not final acceptance",
+  "source": "7db51c31be213925b33891d050e753f4f1c7bfe9",
+  "base": "6764e89aabcb5bdae91b33aaf4f3ff6d3d5620bc",
+  "historical_snapshot": "4d1808ac61044c64fd12a154bdf28475012440f9",
+  "counts": {
+    "registrations": 96,
+    "owners": 30,
+    "reachable_modules": 318,
+    "reference_qualities": 100
+  },
+  "source_errors": [],
+  "source_comparison": {
+    "unchanged_files": 726,
+    "missing_files": [],
+    "changed_files": [
+      {
+        "path": ".github/workflows/live-rehearsal.yml",
+        "historical_sha256": "068e7bbda1bff1b212a0dc014471bd04eda4e03df5eccd5d2ccc95354c389875",
+        "current_sha256": "c51734e608659af9adae25b702793f33bfef2bff8dd3db3b41d4d80ff1b32f60"
+      },
+      {
+        "path": "api/openapi.yaml",
+        "historical_sha256": "cce0e5d6406871c25d0211c2df029abb25817a84a28dfbb85a86c6611e6415d0",
+        "current_sha256": "cecb1e44aeb0887628d2292a238e353f5cb791cc06e5e37b51c2870794b564ce"
+      },
+      {
+        "path": "docs/design/portal-route-inventory.md",
+        "historical_sha256": "f1158d9870e37d997341580be4b4ca514c1e669b19a51018c45103aa88e7cad8",
+        "current_sha256": "1a501dc38c3b1ffab598d2472af93e5bcc8d09a831880eb0ec43ad24025a8554"
+      },
+      {
+        "path": "docs/verification/fleet-cutover/route-inventory.json",
+        "historical_sha256": "818512ba5f70a6a6107bbce4c83567740fe0e0b780a8c66024d4a2d0dda2220d",
+        "current_sha256": "143d630543fc2f27c92166855408b204008de982f9812fba16d9ebe05e5701b4"
+      },
+      {
+        "path": "internal/app/results_ballots_integration_test.go",
+        "historical_sha256": "4da6ead413ee70a90b04811d7e74de9920c83889336044ab10c0f47fd4d4274c",
+        "current_sha256": "f6f236905176fcc2a94426c4f1cd529efde48d998dcb5d851c087af2fff02624"
+      },
+      {
+        "path": "internal/httpapi/media_test.go",
+        "historical_sha256": "5063ebba9ad0614a6d07e218dee330513f24ae1c70189ef733bb25a193db1a61",
+        "current_sha256": "98069fca9b78fe8638386af96a65de3208ff6cf6f6560f5c103e338158dd6402"
+      },
+      {
+        "path": "internal/jobs/jobs.go",
+        "historical_sha256": "1c783193677fb616ae8dccee556146f43c383bd6974a906b1b0916effa164773",
+        "current_sha256": "7e6cf7a16aa40810c7f20f7e4f1fe4a9d006ed4cbf52de64ec8ef53040e543d8"
+      },
+      {
+        "path": "internal/outcomes/reviews.go",
+        "historical_sha256": "76d57ffac7aeb1aea1fa95ec55c4618d902a9a0873e0cc626b66ca1baabb9897",
+        "current_sha256": "007b41ca359472e096e9b6b57e3bcb4e51cc8b43bcf909f4d7f6cea808916424"
+      },
+      {
+        "path": "internal/repositories/service.go",
+        "historical_sha256": "f745d4ddb96bcf2d4784368cef29a48e9bb5956c28f23ebd555945dcb714becf",
+        "current_sha256": "6abddbd4a6fd79a3813ffb6d47cf699da08a36b20c997647206bd529b08146d4"
+      },
+      {
+        "path": "internal/results/authority.go",
+        "historical_sha256": "75ab7a1d00a34b7699ab98ecc51688e607656a2fb34c4da14214f46d488ffae4",
+        "current_sha256": "0fa1117fdac77f6c25911bfb7d48b50aab71e2680b1b404f19024bada06c5b2f"
+      },
+      {
+        "path": "internal/results/ballots.go",
+        "historical_sha256": "557231817409008b85d4f7ed7e1d2cf885661fec2c7e57f4b76bdfda27d38eae",
+        "current_sha256": "098257c3c1b8392bed48796ea2b574e8b1973909ae66836ac3b3507a7f2fdc6a"
+      },
+      {
+        "path": "internal/results/model.go",
+        "historical_sha256": "1e3534b6bab1e76233c2f5533d5296cb0262d284549743fb4d26c03caeac7216",
+        "current_sha256": "333d64988f107aaa470c40b4ee4e29f59cfa566a37eb11fd5a6c5c0a98677d50"
+      },
+      {
+        "path": "internal/results/read.go",
+        "historical_sha256": "54269a958f7bdd5672b1855ca2a0f238d62ca9af3c0ca8934edd061bb3f9461f",
+        "current_sha256": "1f5afbde8153144f65c6e85ada3a7665db3ae2c7841d970e5c95e28d57a75e9c"
+      },
+      {
+        "path": "web/src/api/schema.gen.ts",
+        "historical_sha256": "e98aab2f4e1dde8b4643520b9c75739fdbc78c41d44d09cebf0f394db4cc7001",
+        "current_sha256": "cacfac010b243815f989932074e82b980c6fb0365e0281e5aff0976c3d225b57"
+      },
+      {
+        "path": "web/src/app-shell.tsx",
+        "historical_sha256": "2a1b0a3eb41755eb5768f9b711dede7c34924163dcb036a6627a19515b302e51",
+        "current_sha256": "ecd4b25870b40cff180571ece7f5f43851559cd6ef3fcfb77b79c2ca204f320b"
+      },
+      {
+        "path": "web/src/mentor-workspace.tsx",
+        "historical_sha256": "48704d27d08937e19d5115c1d53bd5379796475e5e5f713511f8a3c07af61fbe",
+        "current_sha256": "44c6d3b30c06b9b8130259af847f089bf3f1f4f26ed3956689d74443aa232bcd"
+      },
+      {
+        "path": "web/src/qualification-command.tsx",
+        "historical_sha256": "1ff5a7d63765f6477292a338c6d3459025fa924aae8029d1925c818a22187fb6",
+        "current_sha256": "5dcd67d0057a6e312f907e3dce70bbd3505eb8a7c7058bba44199375d8aba97c"
+      },
+      {
+        "path": "web/src/qualification-editor.tsx",
+        "historical_sha256": "e643ac8dfc5a65b58b60e4c7ffc0ff0563ef8774328619318f0f543797573e41",
+        "current_sha256": "d199f32869630f400a84b335b87f02d36d971ff59d11c1f6eac5a01d78e1fe33"
+      },
+      {
+        "path": "web/src/qualification-history.tsx",
+        "historical_sha256": "5a6f4e4c93c3ccffc9f07774a2541abb2fea13f49c4708c095ab937e98e6105a",
+        "current_sha256": "47e49707efd10e8cb74330c968d684e007dc4dbf7e81ba999534e6fa4463eb53"
+      },
+      {
+        "path": "web/src/qualification.tsx",
+        "historical_sha256": "bed5f7d1ece0915e447c12cf8fa9300c7e400a5acbba0522c7da85f6ed8b3be8",
+        "current_sha256": "ec0d017eb8330aa99a62b8a30080a287cdfd12a5d4d3d9d15591d74b5e389885"
+      },
+      {
+        "path": "web/src/results-ballots.tsx",
+        "historical_sha256": "e76d2cd49e746267e31bc9aa4cee8b71479f2c19551b9eb99b29757dbb8eb9c6",
+        "current_sha256": "1bd204dc6cf343ba43e5eee926f369870d795a5a3832ca66e1d7b910f3bfddb8"
+      },
+      {
+        "path": "web/src/results-decision.tsx",
+        "historical_sha256": "60b3c195f78976f20f4083a719dc0ddaa91e27cc11fd02e3770cf51a1537cc6d",
+        "current_sha256": "704089864c6c4527630c0384e5d5d72fdaba6886b4f014be3de8941aa1425522"
+      },
+      {
+        "path": "web/src/results-link.tsx",
+        "historical_sha256": "189c295972ff412b2ed944719902f273a49e1e018ba19ef287a391c18d136473",
+        "current_sha256": "2318e22a7b59acb329e389c63b24bc8b9a969afbbad197d6d4ef782de9134a26"
+      },
+      {
+        "path": "web/src/results-workspace.tsx",
+        "historical_sha256": "8f7c3d51eaeb660307fe36eaf17bb7c06810a27495223e5079782971775f1549",
+        "current_sha256": "3d15c34127f0d725a691b24d3ee78090aac6298bc0c786895dbe4b47a9ee5dbf"
+      },
+      {
+        "path": "web/src/styleguide/primitives.tsx",
+        "historical_sha256": "5100d1a2e169c616bb3f95a2a0dd0f14a6626405b924f38580cbc94c5ff4ebc0",
+        "current_sha256": "db7edf8562e699e1b1c58df0cf0e0ceb0c63d3001ab2a5770cfa3c4d140ed5ec"
+      },
+      {
+        "path": "web/src/today-read.ts",
+        "historical_sha256": "76b32883a6a26a02d5680721e699dd0fd9aa6899860cf69118bd9ccc871baf45",
+        "current_sha256": "7364b887ef22223856e44e39c24153f09c5f562d055ccd90eddc4d3cdf08dc19"
+      }
+    ]
+  },
+  "mentor_advisory": {
+    "registrations": [
+      {
+        "portal": "administrator",
+        "path": "/events/$eventId/results/mentor-advisories",
+        "component": "MentorAdvisoryPage",
+        "owner": "web/src/mentor-advisory.tsx",
+        "integration": "not established by source inventory"
+      },
+      {
+        "portal": "participant",
+        "path": "/events/$eventId/results/mentor-advisories",
+        "component": "MentorAdvisoryPage",
+        "owner": "web/src/mentor-advisory.tsx",
+        "integration": "not established by source inventory"
+      }
+    ],
+    "merge": "bba43a686df80db04f2e11d94735a30c03f4337c",
+    "reviewed_head": "1dc2e894c19b0b2ffa3f49a10aa5096c3916bb2d",
+    "native_browser_parent": "TestMentorAdvisoryBrowsers",
+    "native_vote_rule_parent": "TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote",
+    "contract": "All judges vote; only judge votes count toward strict majority. Mentor views remain advisory evidence.",
+    "source_files": {
+      "web/src/mentor-advisory.tsx": {
+        "current_sha256": "cbf0ceb8848c14bd636697528fb302081c0a434e306a1374e95d9627e8f946c8",
+        "equals_merged_main": true
+      },
+      "internal/app/mentor_advisory_browser_test.go": {
+        "current_sha256": "270b8eac32830e05d4075d7d0fee90d478c26d7191acacc5b63e737b87f3a03a",
+        "equals_merged_main": true
+      },
+      "internal/app/results_advisory_integration_test.go": {
+        "current_sha256": "94a17828a02333d54bc5fa34c99ec75d3d986ff5bd5f52001250ab2681e31d33",
+        "equals_merged_main": true
+      },
+      "internal/results/advisory.go": {
+        "current_sha256": "c6f4eb7fac378aecd51be1d60e9f2481572911d172e8f6cb506aa9378208c652",
+        "equals_merged_main": true
+      }
+    },
+    "evidence": "../mentor-advisory/README.md; native browser evidence at its own original source, current-head native CI still required"
+  },
+  "focused_outcome_http_receipt": "outcome-review-http-proof.json",
+  "media": {
+    "source": "794214f5c226d027d8de564242aea73be52fb0db",
+    "complete_four_case_runtime": "PASS",
+    "receipt": "normal-runtime-794214f5/native-normal-ui.json",
+    "cleanup": "normal-runtime-794214f5/cleanup.json",
+    "scope": "Untagged actual photo upload/review/release/withdrawal and protected-byte denial in four widths/themes; same organiser both portals. Native tagged-consent HTTP coverage remains separate."
+  },
+  "remaining_gates": [
+    "Complete current-head CI before merge. Full lifecycle remains issue120 and continuation296; normal image794214f5 retains its exact historical source."
+  ],
+  "acceptance_complete": false,
+  "qualification_correction_receipt": "qualification-foreground-proof.json",
+  "frontend_checks_receipt": "frontend-checks-746d75ab.json",
+  "read_focus_correction_receipt": "qualification-read-focus-proof.json",
+  "original_receipt_scope_receipt": "qualification-original-record-proof.json"
+}

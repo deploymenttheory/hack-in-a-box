@@ -1,0 +1,89 @@
+{
+  "kind": "Focused current production UI journeys with synthetic routed API fixtures, not native PostgreSQL/OIDC/provider proof",
+  "product_source": "4d1808ac",
+  "parent": "27fe2eda646c410c6f9637048c90fc2ec4246dca",
+  "source_files": {
+    "web/src/campaign-composer.tsx": "14303ef16f655d888c5e47e19b9277d2025a7c3cf8989aacb5f10bfd248714ff",
+    "web/src/mentor-scorecard-task.tsx": "7faecd55b3ee651e5892d9f10c24ff869ad3a1403796c43aa5618f6e7122c8fc",
+    "web/src/outcome-reviews.tsx": "e0d1b728134e3faf024e7691e621589bea2e84f41387cefdbd66cea2c47f6440",
+    "web/src/qualification-editor.tsx": "e643ac8dfc5a65b58b60e4c7ffc0ff0563ef8774328619318f0f543797573e41"
+  },
+  "execution": {
+    "portal_builds": "PASS, both production portals",
+    "guide_build": "PASS, independent guide",
+    "web_units": {
+      "files": 49,
+      "tests": 237,
+      "seconds": 8.04
+    },
+    "browser": {
+      "administrator": {
+        "cases": 10,
+        "seconds": 11.0,
+        "retries": 0
+      },
+      "regular": {
+        "cases": 4,
+        "seconds": 4.6,
+        "retries": 0
+      }
+    },
+    "limits": "Native API/business/private owner gates remain unchanged. Final integrated current CI and normal runtime still required; qualification after-image awaits that native run."
+  },
+  "logs": {
+    "/private/tmp/hackbox245-action-hierarchy-build.log": {
+      "sha256": "a5b4e40085a90a50de25b26aa43612109eaa903a9d47de4dc477edd296941eb1"
+    },
+    "/private/tmp/hackbox245-action-hierarchy-guide.log": {
+      "sha256": "592327104546d9e534b2845031379cb169d63a0a2b44d0c5525e07ff64cf7a2b"
+    },
+    "/private/tmp/hackbox245-action-hierarchy-units.log": {
+      "sha256": "95fdf1cc39f876ee9435bf53d9d2ef67218fd2974ad0c940d7f083a558011a2b"
+    },
+    "/private/tmp/hackbox245-action-hierarchy-admin.log": {
+      "sha256": "be1b3b921f5d0c3e5c06acb559a63dbe67556e9cae86b4d451a06fe7198de0bb"
+    },
+    "/private/tmp/hackbox245-action-hierarchy-public.log": {
+      "sha256": "ab0fc3d8faf3add8a0fbf3c0d1aa8816273c45822e740d49e920a5b5f02c01d5"
+    }
+  },
+  "screenshots": {
+    "admin-desktop-campaign.png": {
+      "sha256": "d3f502ba8dd72aa568971477c6b6cd6c416624bca97054b01a08e02edbace4cc",
+      "transformed": false,
+      "visually_inspected": true
+    },
+    "admin-mobile-campaign.png": {
+      "sha256": "aaa7f413dcd7cda86fef3204dc91077eca8d6d2840196da3d399a358e76a8cb0",
+      "transformed": false,
+      "visually_inspected": true
+    },
+    "admin-mobile-mentor.png": {
+      "sha256": "46cbce4e9345a23e691071ea9178492b5b5167c683242460fa0c3fc3872c5f6a",
+      "transformed": false,
+      "visually_inspected": true
+    },
+    "regular-mobile-mentor.png": {
+      "sha256": "56d4ac30ba87fcd837b926b9be8619f1141244d75d1e84edac5c6776c5061e38",
+      "transformed": false,
+      "visually_inspected": true
+    },
+    "admin-desktop-owner-plan.png": {
+      "sha256": "eb3d7b3776cd48797a9a3324917af5c0380b9ec85ab5ebb374419abb98782d29",
+      "transformed": false,
+      "visually_inspected": true
+    },
+    "admin-mobile-owner-plan.png": {
+      "sha256": "a4b207c14f8dd3e4c1aaeb7133b867edede0a75081bf54337e0cd943a41f4ed2",
+      "transformed": false,
+      "visually_inspected": true
+    }
+  },
+  "before": {
+    "campaign": "docs/verification/fleet-communications/images/after-campaign-desktop.png",
+    "mentor": "docs/verification/fleet-mentor-workspaces/after/private-checkpoint-scorecard-mobile.png",
+    "owner_plan": "docs/verification/fleet-outcomes/images/after-admin-desktop-owner-plan.png",
+    "panel": "docs/verification/fleet-moderation-panel/final-native/admin-desktop-final-current-independent-and-moderated-card.png"
+  },
+  "before_scope": "Historical domain captures retain their original README/manifests and source attribution. They are not 4d1808ac browser executions."
+}

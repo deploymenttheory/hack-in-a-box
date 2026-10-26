@@ -4,6 +4,7 @@ import {native,owner,control,teamLabel} from './native'
 import {activate,typeInto,selectNative,reach,inspectCurrent,openLocal} from './keyboard'
 import {confirmReviewedDialog} from './confirmation'
 import type {QualificationPage} from '../src/qualification-model'
+import {waitForCastingRead} from './current-panel-read'
 async function accept(page:Page,reason:string){
  await typeInto(page.getByLabel('Recorded panel reason',{exact:true}),reason)
  const submit=page.getByRole('button',{name:'Review entered panel decision',exact:true});await openLocal(submit,page.getByRole('alertdialog',{name:'Review private panel command',exact:true}),'visible')
@@ -44,6 +45,8 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   if(index===0){await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10);await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})}
   await openLocal(confirm,page.getByLabel('Recorded panel reason',{exact:true}));await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
+  // Signing opens a fresh source reader; await its native evidence before navigation.
+  await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
   const nextTeam=page.getByRole('button',{name:'Review another team',exact:true});await expect(nextTeam).toBeFocused();await openLocal(nextTeam,page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}))
   await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()
@@ -61,8 +64,14 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await typeInto(voter.getByLabel('Supporting observed evidence',{exact:true}),`Independent ${actor} ballot grounded in the actual UX comparison`)
   await accept(voter,`Independent ${actor} reasoned UX ballot`);await voterContext.close()
  }
- await page.bringToFront();await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
- const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true});await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ // Register after both exact ballot ACKs: a pending earlier read can be stale.
+ const currentBallots=waitForCastingRead(page,new URL(`/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`,native.origin).href,native.categories.find(category=>category.label==='UX')!.id,1)
+ await page.bringToFront();await currentBallots
+ // Observe the applied current projection before capturing a local target.
+ const tie=page.getByRole('region',{name:'Affected tie: UX · Seat 1',exact:true})
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
+ await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
+ await expect(tie).toContainText('Current ballots complete');await expect(tie).toContainText('Casting decision required')
  await openLocal(page.getByRole('button',{name:'Review casting tie decision: UX · Seat 1',exact:true}),page.getByLabel('Recorded panel reason',{exact:true}),'visible')
  await selectNative(page.getByLabel('Candidate for affected tie seat',{exact:true}),native.team_ids[4])
  await typeInto(page.getByLabel('Supporting observed evidence',{exact:true}),'Compare both independent UX observations; retain the non-finalist category candidate')

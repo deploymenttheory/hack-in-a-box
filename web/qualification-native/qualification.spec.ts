@@ -1,6 +1,6 @@
 import {expect,test} from '@playwright/test'
 import {native,owner,control,teamLabel} from './native'
-import {openLocal} from './keyboard'
+import {openLocal,readOriginalAcknowledgement} from './keyboard'
 test('actual initial native panel captures exact lost ACK, retains blockers/history and clears on real session expiry',async({browser})=>{
  test.skip(native.scenario!=='initial','Separate real final cohort journey')
  const context=await owner(browser),page=await context.newPage(),errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
@@ -15,7 +15,7 @@ test('actual initial native panel captures exact lost ACK, retains blockers/hist
  await page.route(`**/api/v1/events/${native.event_id}/mentor-qualification/${native.run_id}`,async route=>{if(route.request().method()==='POST'&&!lost){lost=true;const response=await route.fetch();expect(response.ok()).toBe(true);return route.abort('failed')}return route.continue()})
  await review.getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
  await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
- await openLocal(page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}),page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true}),'visible')
+ await readOriginalAcknowledgement(page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}),page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true}))
  await expect(page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true})).toBeVisible()
  await openLocal(page.getByRole('button',{name:'Read current panel source',exact:true}),page.getByRole('heading',{name:'Moderation and selections',exact:true}),'visible')
  await expect(page.getByRole('button',{name:`Inspect ${teamLabel(native.team_id)}`,exact:true})).toBeVisible()
