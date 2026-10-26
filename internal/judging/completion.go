@@ -130,7 +130,7 @@ func (s Service) completion(
 			return out, access.ErrConflict
 		}
 		teams++
-		cards, err := s.completedCards(ctx, tx, eventID, runID, entry.TeamID, ids, d, write)
+		cards, err := s.completedCards(ctx, tx, eventID, runID, entry.TeamID, ids, d)
 		if err != nil {
 			return out, err
 		}
@@ -292,11 +292,12 @@ func (s Service) completedCards(
 	eventID, runID, teamID uuid.UUID,
 	ids []uuid.UUID,
 	d rubric.Definition,
-	write bool,
 ) ([]Card, error) {
 	out := []Card{}
 	for _, judge := range ids {
-		snapshot, final, err := s.assessmentMode(ctx, tx, judge, eventID, runID, teamID, write)
+		// Completion revalidates retained cards; it must not open a brief on a
+		// judge's behalf. The completion caller retains its own read/write guard.
+		snapshot, final, err := s.assessmentMode(ctx, tx, judge, eventID, runID, teamID, false)
 		if err != nil {
 			return nil, err
 		}
