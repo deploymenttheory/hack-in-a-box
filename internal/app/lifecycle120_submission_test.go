@@ -147,12 +147,23 @@ func (r *lifecycleJourney) preparePrivateDrafts(t *testing.T) {
 func (r *lifecycleJourney) submitLiveEvidence(t *testing.T) {
 	t.Helper()
 	ctx := t.Context()
-	submittedAt := r.timeline.Live
-	if !r.livePollAt.IsZero() {
-		submittedAt = r.livePollAt
+	// Earlier live support commands may advance domain time monotonically. Bind
+	// the formal evidence to the actual current phase, not the older poll stamp.
+	var phase struct {
+		Now time.Time `json:"now"`
+	}
+	if err := r.control.call(ctx, http.MethodGet, "/clock", nil, &phase); err != nil {
+		t.Fatal(err)
+	}
+	submittedAt := phase.Now
+	if submittedAt.IsZero() || (!r.livePollAt.IsZero() && submittedAt.Before(r.livePollAt)) {
+		t.Fatal("formal submission phase has no current monotonic domain instant")
 	}
 	for index := range r.events {
 		item := &r.events[index]
+		if submittedAt.Before(item.view.Configuration.LiveStart) || !submittedAt.Before(item.view.Configuration.SubmissionCutoff) {
+			t.Fatal("formal submission phase is outside the actual native live window")
+		}
 		for i := range item.submissions {
 			receipt := &item.submissions[i]
 			// Retain two genuine private-only drafts for later absent/not-submitted
