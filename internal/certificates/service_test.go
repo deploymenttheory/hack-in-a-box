@@ -113,6 +113,63 @@ func (f fixture) mark(t *testing.T, person uuid.UUID, version int64, present boo
 }
 
 func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t *testing.T) {
+	t.Run("explicit-two-recorded-days-policy", func(t *testing.T) {
+		f := setup(t)
+		ctx := t.Context()
+		cfg := event.DefaultConfiguration()
+		cfg.Timezone = "UTC"
+		cfg.LiveStart = time.Date(2027, 6, 20, 8, 0, 0, 0, time.UTC)
+		cfg.LiveEnd = cfg.LiveStart.Add(32 * time.Hour)
+		raw, err := json.Marshal(cfg)
+		require(t, err)
+		_, err = f.pool.Exec(ctx, "UPDATE events SET configuration=$2 WHERE id=$1", f.event, raw)
+		require(t, err)
+		command := certificates.SettingsCommand{
+			RequestID: uuid.New(),
+			Reviewed:  true,
+			Attendance: &certificates.AttendancePolicy{
+				Days:           []string{f.day, "2027-06-21"},
+				MinimumPresent: 2,
+			},
+			Templates: []certificates.Template{
+				{
+					ID:          f.template,
+					Kind:        "attendance",
+					Recognition: "Two verified days",
+					Issuer:      "Reviewed organiser",
+					Accent:      "#007e67",
+				},
+			},
+			Reason: "Explicit two-day attendance floor",
+		}
+		_, err = f.s.Configure(ctx, f.owner.ID, f.event, command)
+		require(t, err)
+		target := certificates.Target{PersonID: f.person.ID, TemplateID: f.template}
+		f.mark(t, f.person.ID, 0, true)
+		preview, err := f.s.Preview(ctx, f.owner.ID, f.event, target)
+		require(t, err)
+		if preview.Eligible {
+			t.Fatal("one check-in satisfied configured two-day policy")
+		}
+		second := f
+		second.day = "2027-06-21"
+		second.mark(t, f.person.ID, 0, true)
+		preview, err = f.s.Preview(ctx, f.owner.ID, f.event, target)
+		require(t, err)
+		if !preview.Eligible {
+			t.Fatal("two recorded days did not satisfy explicit policy")
+		}
+		command.RequestID = uuid.New()
+		command.Version = 1
+		command.Attendance = nil
+		_, err = f.s.Configure(ctx, f.owner.ID, f.event, command)
+		require(t, err)
+		preview, err = f.s.Preview(ctx, f.owner.ID, f.event, target)
+		require(t, err)
+		if preview.Eligible {
+			t.Fatal("unset attendance policy still issued recognition")
+		}
+	})
 	f := setup(t)
 	ctx := t.Context()
 	f.configure(t, "attendance")
@@ -279,6 +336,12 @@ func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t 
 	require(t, err)
 	if replay.Current || replay.Certificate.Version != 1 {
 		t.Fatal("original replay impersonates current certificate", replay)
+	}
+	if replay.Receipt == nil || len(replay.History) != 3 ||
+		replay.History[0].Receipt != *replay.Receipt ||
+		replay.History[1].Receipt.Action != "correct" ||
+		replay.History[2].Receipt.Action != "revoke" {
+		t.Fatal("history lost exact original command provenance", replay)
 	}
 }
 

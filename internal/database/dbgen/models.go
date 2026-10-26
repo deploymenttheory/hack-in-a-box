@@ -89,6 +89,7 @@ type CertificateVersion struct {
 	PersonID       uuid.UUID
 	RecognitionKey string
 	State          string
+	Action         string
 	RequestID      uuid.UUID
 	Fingerprint    string
 	Document       []byte

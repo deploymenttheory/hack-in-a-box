@@ -97,8 +97,9 @@ type History struct {
 	Certificate Certificate `json:"certificate"`
 	ActorID     uuid.UUID   `json:"actor_id"`
 	Reason      string      `json:"reason"`
-	RequestID   uuid.UUID   `json:"request_id"`
+	Receipt     Receipt     `json:"receipt"`
 }
+
 type Receipt struct {
 	RequestID     uuid.UUID `json:"request_id"`
 	CertificateID uuid.UUID `json:"certificate_id"`

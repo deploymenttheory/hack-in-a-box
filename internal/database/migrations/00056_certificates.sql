@@ -18,6 +18,7 @@ CREATE TABLE certificate_versions (
  person_id uuid NOT NULL REFERENCES people(id),
  recognition_key text NOT NULL,
  state text NOT NULL CHECK(state IN ('issued','revoked')),
+ action text NOT NULL CHECK(action IN ('issue','correct','revoke')),
  request_id uuid NOT NULL,
  fingerprint text NOT NULL CHECK(fingerprint ~ '^[a-f0-9]{64}$'),
  document jsonb NOT NULL CHECK(jsonb_typeof(document)='object'),

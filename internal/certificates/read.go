@@ -39,7 +39,7 @@ func (s Service) view(
 	if staff {
 		rows, err := tx.Query(
 			ctx,
-			"SELECT document,actor_id,reason,request_id FROM certificate_versions WHERE event_id=$1 AND id=$2 ORDER BY version",
+			"SELECT document,actor_id,reason,request_id,action,fingerprint FROM certificate_versions WHERE event_id=$1 AND id=$2 ORDER BY version",
 			event.ID,
 			c.ID,
 		)
@@ -50,12 +50,21 @@ func (s Service) view(
 		for rows.Next() {
 			var raw []byte
 			var h History
-			if err = rows.Scan(&raw, &h.ActorID, &h.Reason, &h.RequestID); err != nil {
+			if err = rows.Scan(
+				&raw,
+				&h.ActorID,
+				&h.Reason,
+				&h.Receipt.RequestID,
+				&h.Receipt.Action,
+				&h.Receipt.Fingerprint,
+			); err != nil {
 				return out, failure("read", err)
 			}
 			if err = json.Unmarshal(raw, &h.Certificate); err != nil {
 				return out, failure("read", err)
 			}
+			h.Receipt.CertificateID = h.Certificate.ID
+			h.Receipt.Version = h.Certificate.Version
 			out.History = append(out.History, h)
 		}
 		if err = rows.Err(); err != nil {

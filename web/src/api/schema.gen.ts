@@ -4457,8 +4457,7 @@ export interface components {
             /** Format: uuid */
             actor_id: string;
             reason: string;
-            /** Format: uuid */
-            request_id: string;
+            receipt: components["schemas"]["CertificateReceipt"];
         };
         CertificateReceipt: {
             /** Format: uuid */

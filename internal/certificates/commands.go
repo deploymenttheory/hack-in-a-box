@@ -113,7 +113,7 @@ func (s Service) Change(
 		}
 		_, err = tx.Exec(
 			ctx,
-			"INSERT INTO certificate_versions(event_id,id,version,person_id,recognition_key,state,request_id,fingerprint,document,actor_id,reason,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+			"INSERT INTO certificate_versions(event_id,id,version,person_id,recognition_key,state,request_id,fingerprint,document,actor_id,reason,created_at,action) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
 			eventID,
 			id,
 			next.Version,
@@ -126,6 +126,7 @@ func (s Service) Change(
 			actor,
 			command.Reason,
 			s.now(),
+			command.Action,
 		)
 		if err != nil {
 			return failure("commands", err)
