@@ -28,7 +28,7 @@ criterion, current assertion boundaries, actual artifacts and remaining gates.
 | Showcase search/media leakage | Merged #163 source is integrated; exact native public-reader/source/publication abuse and native publication/search/consent owner | PASS2 exact parents at9d787fe2; scope/source below |
 | Post-archive follow-up | Native audited outcome/review/reminder path with ordinary competition writes denied, current-source cancellation and retention enforced | Native matrix PASS |
 | Credential encryption, log redaction, retention | Native credential reveal/rotation/key-fault/audit-failure and context-bound encryption; new request/provider error redaction, retention and archived consent assertions | Native matrix PASS |
-| New mentor contribution | Follow-up feature is owned separately; assess its implemented authority, private evidence and publication boundary after integration | Dependency pending |
+| Merged mentor contribution | Actual merged owner/API case checks current coverage/conflict/role/source, own-author privacy, exact receipts and optional advice without judge-vote influence | PASS 1 exact parent at clean 2e7a8bb7; final CI/review pending |
 | Manual local synthetic deployment; automated advisories and full required checks | Actual configured normal-command abuse:55 API outcomes, immutable main076 images, exact OIDC/PKCE, private current-role controls and zero-resource cleanup | PASS atc2f7c69d; final integrated feature/current-head checks remain pending |
 | Findings with reproduction, boundary and remediation | Findings ledger will distinguish reproduced issues, fixes, remaining risks and untested boundaries; sensitive values excluded | No findings conclusion yet |
 
