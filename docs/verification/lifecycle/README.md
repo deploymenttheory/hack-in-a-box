@@ -1064,3 +1064,34 @@ finalists, supply independent judge cards, resolve judge ties or publish results
 Remaining lifecycle variants and later phases/final validation stay required.
 The isolated entrypoint remains distinct from production-image/browser proof.
 **complete_lifecycle=false; no L01–L18 row is fully complete.**
+
+
+## Native recorded qualification and finalist selection — PASS
+
+Frozen `64ba7abfbcf397c040f6ea88a0aa72aebcb5e63a` passed runner77867 in
+**306.56s**, build23391/start90611, fixture
+`sha256:a7324da43f518231cf34613ed96cf5d340008bb6a328554e7ce1859510436cc2`,
+main03bfae7/schema55. Its [validated bounded receipt](evidence/journey-qualification-finalists.json)
+contains current IDs, hashes, counts and original command references; complete
+raw exports stay local with SHA256 attribution. Ten components compiled/passed
+1.214s and lint0 before actual native execution.
+
+The real owner configures the selected two-mentor/organiser panel. Four moderated
+qualification cards bind actual frozen repository decisions, signed independent
+review contexts and current formal revisions. Equal synthetic final scores lead
+to a native proposal with unresolved seats. An actual missing-ballot sign-off
+returns409 and leaves round version/signoff unchanged. Both current mentors then
+record each required ballot; only a complete unique-leader result permits the
+organiser's explicit noncasting resolution. Sixteen ballots and eight decisions
+produce an actual signed selection of three finalists and one distinct reserve.
+These are mentor-qualification ballots before independent judging, not final
+judge votes or imported judge scores.
+
+All35 successful single-shot commands have exact actor/version/fingerprint
+acknowledgements recovered through GET, without POST replay. Native SQL retains
+35 immutable round versions,35 command acknowledgements and124 source references;
+the latest four source references point to actual signed frozen reviews. The
+same connected earlier lifecycle phases pass, and all project resources were
+cleaned. Fresh final judge cards, advisory-only input, all-required-judge strict
+majority and the remaining lifecycle variants/later phases/final validation stay
+required. **complete_lifecycle=false; no L01–L18 row is fully complete.**
