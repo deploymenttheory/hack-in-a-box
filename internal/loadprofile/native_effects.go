@@ -84,7 +84,7 @@ func (n NativeDatabase) effect(ctx context.Context, spec WriteSpec) (EffectFact,
 	case HelpEffect:
 		var request uuid.UUID
 		var version int64
-		err = n.pool.QueryRow(ctx, `SELECT c.request_id,c.response_revision,c.payload_digest,(SELECT count(*) FROM help_transitions t WHERE t.event_id=c.event_id AND t.request_id=c.request_id AND t.revision=c.response_revision AND t.actor_id=c.actor_id AND t.action='claim' AND t.assignee_id=c.actor_id) FROM help_commands c WHERE c.event_id=$1 AND c.actor_id=$2 AND c.command_id=$3`, spec.Event, spec.Actor, spec.Command).
+		err = n.pool.QueryRow(ctx, `SELECT c.request_id,c.response_revision,c.payload_digest,(SELECT count(*) FROM help_transitions t WHERE t.event_id=c.event_id AND t.request_id=c.request_id AND t.revision=c.response_revision AND t.actor_id=c.actor_id AND t.action=$4 AND ($4 <> 'claim' OR t.assignee_id=c.actor_id)) FROM help_commands c WHERE c.event_id=$1 AND c.actor_id=$2 AND c.command_id=$3`, spec.Event, spec.Actor, spec.Command, spec.Action).
 			Scan(&request, &version, &fact.Fingerprint, &fact.Effects)
 		if err == nil && (request != spec.Resource || version != spec.Version) {
 			return fact, fmt.Errorf(

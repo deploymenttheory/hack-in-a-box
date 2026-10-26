@@ -25,6 +25,7 @@ type WriteSpec struct {
 	Event, Actor, Team, Resource, Command uuid.UUID
 	Version                               int64
 	Fingerprint                           string
+	Action                                string
 }
 
 func (s WriteSpec) scope() string {
@@ -61,7 +62,8 @@ func (l *AttemptLedger) Begin(spec WriteSpec) (uuid.UUID, error) {
 			return uuid.Nil, fmt.Errorf("%w: native mentor team/version required", errWriteAttempt)
 		}
 	case HelpEffect:
-		if spec.Command == uuid.Nil {
+		if spec.Command == uuid.Nil || spec.Version < 1 ||
+			(spec.Action != "create" && spec.Action != "claim" && spec.Action != "resolve") {
 			return uuid.Nil, fmt.Errorf(
 				"%w: original help command identity required",
 				errWriteAttempt,

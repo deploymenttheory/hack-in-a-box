@@ -221,6 +221,7 @@ func (w NativeWrites) HelpClaim(
 	}
 	spec := WriteSpec{
 		Kind:        HelpEffect,
+		Action:      "claim",
 		Event:       event,
 		Actor:       actor.Session.Person(),
 		Resource:    request,
