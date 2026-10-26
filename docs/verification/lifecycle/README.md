@@ -955,3 +955,28 @@ default52 OIDC people/36 participant GitHub accounts and the strict stale-plan
 guard. No reapproval/write retry or source substitution happened in this RED.
 Safe metadata was exported; scoped containers, networks and volumes are empty.
 Full lifecycle acceptance remains false.
+
+
+## Explicit staff identity/live-source checkpoint — browser-owner RED
+
+Frozen6dd804b7 (image`sha256:b772ec21220f292db4f5917207c896266dccc2ead58fd8b2f5ff8e7976f5c8b1`,
+main03/schema55) failed runner80013 at **163.10s**. The
+[actual native metadata](evidence/journey-mentor-browser-owner-red.json) records
+38 verified native GitHub identities, all88 real delivered access operations,
+64 accepted competitor grants,12 accepted first-event mentor read grants and
+12 pending second-event mentor read grants. Six fictional practice cards and
+zero live mentor cards are retained. Initial T7 plans remain competitor-only;
+current live coverage requires distinct explicit approvals for24 read grants.
+
+The second event's separate OIDC browser successfully reads only its native own
+invitation but has no authenticated external GitHub browser cookie; the external
+acceptance correctly returns403. The originally linked first-event browser
+represents the same verified native person. The correction must select that
+retained external browser only after exact native-person equality, retaining
+the second event's own native API reader. It must not clone cookies, bypass
+OAuth/PKCE, replay approvals or relax source/authentication guards. Ten exact
+provider/default/explicit-identity parents passed1.113s and lint was0 before
+this native run, including unknown-actor zero-code/session and accepted
+read-only mentor external-work denial. These component results never substitute
+for the failed native journey. All owned project resources were cleaned;
+complete_lifecycle remains false.

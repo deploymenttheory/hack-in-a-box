@@ -143,14 +143,15 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 				if grant.Member.Role != "mentor" || grant.Member.Permission != "pull" || grant.State != "pending" || grant.InvitationID == nil || !grant.Managed {
 					t.Fatal("new mentor grant was not distinctly pending read-only access")
 				}
-				var client *lifecycleClient
+				var client, external *lifecycleClient
 				for _, actor := range []string{"mentor-a", "mentor-b"} {
 					candidate := item.cohort.staff[actor]
 					if candidate.person == grant.Member.PersonID {
 						client = candidate
+						external = r.events[0].cohort.staff[actor]
 					}
 				}
-				if client == nil {
+				if client == nil || external == nil || external.person != client.person {
 					t.Fatal("unexpected mentor account in current source")
 				}
 				var own repositoryaccess.OwnView
@@ -161,7 +162,7 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 				if len(own.Grants) != 1 || own.Grants[0].ID != grant.ID || own.CurrentGitHubID == nil || *own.CurrentGitHubID != grant.Member.GitHubID {
 					t.Fatal("live own mentor invitation disclosed another person or numeric account")
 				}
-				r.acceptExternalInvitation(t, client, *grant.InvitationID)
+				r.acceptExternalInvitation(t, external, *grant.InvitationID)
 				pending++
 			}
 			if pending != 2 {
