@@ -1,0 +1,30 @@
+# Bounded native admission checkpoint ONLY. This resource envelope is not the
+# declared sustained-load baseline; retain its actual caps with setup receipts.
+services:
+  api:
+    cpus: 0.75
+    mem_limit: 512m
+  admin:
+    cpus: 0.75
+    mem_limit: 512m
+  postgres:
+    cpus: 0.5
+    mem_limit: 512m
+  issuer:
+    cpus: 0.25
+    mem_limit: 128m
+  tls-public:
+    cpus: 0.125
+    mem_limit: 64m
+  tls-admin:
+    cpus: 0.125
+    mem_limit: 64m
+  tls-issuer:
+    cpus: 0.125
+    mem_limit: 64m
+  migrate:
+    cpus: 0.5
+    mem_limit: 256m
+  observer-init:
+    cpus: 0.25
+    mem_limit: 128m

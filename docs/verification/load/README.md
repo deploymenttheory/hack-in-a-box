@@ -491,3 +491,13 @@ the original publication acknowledgement. This does not create awards, finalist
 status, a frozen submission, or proof that the whole factory ran. Actual native
 execution of this recipe and the cross-event current-permission probes remain
 required before release acceptance.
+
+`admission.compose.yaml` is an additional **setup-checkpoint-only** override:
+public/admin each 0.75 CPU and 512MiB, PostgreSQL 0.5 CPU and 512MiB,
+issuer 0.25 CPU and 128MiB, and three proxies each 0.125 CPU and 64MiB.
+The running admission services total at most 2.625 CPU and 1,856MiB;
+the host driver uses GOMAXPROCS=2. Migration and observer initialisation run
+before the APIs, at 0.5 CPU/256MiB and 0.25 CPU/128MiB respectively. The
+setup worker is not started for this admission-only checkpoint. Keep these
+caps and all observed errors in its receipt; this checkpoint cannot substitute
+for the independently measured full-profile baseline.
