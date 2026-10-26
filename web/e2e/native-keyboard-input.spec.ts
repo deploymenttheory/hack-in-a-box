@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { activate, typeInto, inspectCurrent } from '../qualification-native/keyboard'
+import { activate, typeInto, inspectCurrent, openLocal } from '../qualification-native/keyboard'
 
 test('native text-entry helper observes a read-pause rejection before deliberately re-entering the same field', async ({ page }) => {
  await page.setContent('<fieldset><textarea aria-label="Synthetic current evidence">Earlier value</textarea></fieldset>')
@@ -89,5 +89,41 @@ test('a replaced paused inspector target cannot receive the earlier local naviga
   if(key==='Enter')await button.evaluate(element=>{const replacement=element.cloneNode(true) as HTMLElement;replacement.removeAttribute('aria-disabled');element.replaceWith(replacement)})
  }
  await expect(inspectCurrent(button,page.getByRole('heading'))).rejects.toThrow('target was replaced')
+ expect(enters).toBe(1)
+})
+
+// Native Base UI focusableWhenDisabled semantics: the current read rejects
+// a trusted key before a local editor opener's callback can run.
+test('local final-card review opener survives a positively rejected current-read key without a write',async({page})=>{
+ await page.setContent('<button aria-disabled="false">Review saved final card confirmation</button><label hidden>Recorded panel reason<textarea></textarea></label><script>const button=document.querySelector("button");button.onclick=event=>{if(button.getAttribute("aria-disabled")==="true"){event.preventDefault();return;}const label=document.querySelector("label");label.hidden=false;label.querySelector("textarea").focus()}</script>')
+ const button=page.getByRole('button',{name:'Review saved final card confirmation'}),press=page.keyboard.press.bind(page.keyboard)
+ let enters=0,writes=0
+ page.on('request',request=>{if(!['GET','HEAD'].includes(request.method()))writes++})
+ page.keyboard.press=async(key,options)=>{if(key==='Enter'){enters++;if(enters===1)await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}await press(key,options);if(key==='Enter')await button.evaluate(element=>element.setAttribute('aria-disabled','false'))}
+ await openLocal(button,page.getByLabel('Recorded panel reason'))
+ await expect(page.getByLabel('Recorded panel reason')).toBeVisible({timeout:750})
+ expect(enters).toBe(2);expect(writes).toBe(0)
+})
+
+test('a current-context change refuses to retarget the same paused local opener',async({page})=>{
+ await page.setContent('<main data-private-qualification><p>Current team A</p><button aria-disabled="false">Open local review</button></main><script>document.querySelector("button").onclick=event=>{if(event.currentTarget.getAttribute("aria-disabled")==="true")event.preventDefault()}</script>')
+ const button=page.getByRole('button',{name:'Open local review'}),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{if(key==='Enter'){enters++;await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}await press(key,options);if(key==='Enter')await page.locator('main').evaluate(element=>{element.querySelector('p')!.textContent='Current team B';element.querySelector('button')!.setAttribute('aria-disabled','false')})}
+ await expect(openLocal(button,page.getByLabel('Recorded panel reason'))).rejects.toThrow('target was replaced')
+ expect(enters).toBe(1)
+})
+test('a second read-pause rejection cannot loop a local opener',async({page})=>{
+ await page.setContent('<button aria-disabled="false" onclick="if(this.getAttribute(\'aria-disabled\')===\'true\')event.preventDefault()">Open local review</button>')
+ const button=page.getByRole('button',{name:'Open local review'}),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{if(key==='Enter'){enters++;await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}await press(key,options);if(key==='Enter')await button.evaluate(element=>element.setAttribute('aria-disabled','false'))}
+ await expect(openLocal(button,page.getByLabel('Recorded panel reason'))).rejects.toThrow('not positively rejected')
+ expect(enters).toBe(2)
+})
+test('an HTTP write is never accepted as a local opening or repeated',async({page})=>{
+ await page.route('https://local.example.test/write',route=>route.fulfill({status:200,body:'ok',headers:{'access-control-allow-origin':'*'}}))
+ await page.setContent('<button>Open local review</button><h2 tabindex="-1" hidden>Local review</h2><script>document.querySelector("button").onclick=()=>{fetch("https://local.example.test/write",{method:"POST"});const heading=document.querySelector("h2");heading.hidden=false;heading.focus()}</script>')
+ const press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;await press(key,options)}
+ await expect(openLocal(page.getByRole('button',{name:'Open local review'}),page.getByRole('heading',{name:'Local review'}))).rejects.toThrow('must not send an HTTP mutation')
  expect(enters).toBe(1)
 })

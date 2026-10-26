@@ -277,3 +277,40 @@ synthetic helper proof, separate from the subsequent full native qualification
 matrix. Production code, domain/API/SQL and advisory/report fixture bytes are
 unchanged by this correction; their earlier source-attributed proofs remain
 historical evidence rather than relabelled current-head runs.
+
+
+## Local-step activation after the ada CI failure
+
+CI run `40249603943` at `ada5a8fcd20560771cda83b14c2dea68152b29c6`
+passed seven qualification scopes and failed the public/mobile/final journey.
+The reason field did not appear after the local saved-card review opener. The
+private trace shows the same opener enabled at relative time 31428.156 ms, a
+current GET beginning at 31430.987 ms, and `aria-disabled=true` from 31437.040 ms
+through trusted Enter at 31439.243 ms. Base UI's disabled-button callback prevents
+the click default and returns before the local editor's `open(sign_card)`. The
+reason form never mounted; this was not a failed POST or a missing receipt.
+
+A tight real Chromium fixture reproduced the same missing visible reason field
+with the old single-key helper (750 ms assertion, exit 1). It models the actual
+Base UI `focusableWhenDisabled` / prevented-click semantics and the rejected-key
+window, without changing production code. The corrected local-step helper and
+negative controls passed 26 desktop/mobile cases in 4.8 seconds. The raw trace
+and logs remain private; they are not checked in.
+
+The audited local callbacks are editor `open`, unsent form `review`/command
+`prepare`, inspector/next-team selection, history/details opening, preparation
+preview selection, and explicit current-source/original-receipt GETs. These may
+use `openLocal`, with an exact visible destination or focus assertion. It captures
+the original DOM node, URL, control identity and rendered private workspace; only
+a focused trusted key positively rejected while paused with zero unprevented
+accepted clicks permits one re-entry after the same context becomes enabled. A
+second rejection, changed context, replaced target or unobserved prevention fails.
+The helper also rejects HTTP mutation requests during the local opening.
+
+Router links remain single-shot: their successful navigation legitimately
+prevents the click default, and they have no local disabled-button callback.
+Actual write confirmation retains `confirmReviewedDialog` and its exact-one-POST,
+original-receipt checks; the initial deliberately lost-ACK write and session-denial
+gestures retain their original single-key behavior. No product guard, polling,
+timeout, domain API, majority rule or mentor-advisory authority changed. Current
+full native qualification execution and current-head CI are still required.

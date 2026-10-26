@@ -1,4 +1,4 @@
-import {expect,type Locator} from '@playwright/test'
+import {expect,type Locator,type Request} from '@playwright/test'
 
 // Actual native focus traversal. Merely pressing a locator can implicitly wake
 // a background tab and race the real source-read pause. The journey activates
@@ -86,16 +86,20 @@ export async function observeActivation(control:Locator){
  }
 }
 
-// Opt-in local inspector navigation only. A current read may reject the trusted
-// key after reach returns. Never repeat a domain command or an accepted click.
-export async function inspectCurrent(control:Locator,destination:Locator){
+// Explicitly opted-in local UI/read-only steps only: editor/review opening,
+// inspection and navigation. Mutation confirmation must use its own command
+// barrier. A positively rejected key permits one re-entry of the unchanged step.
+export async function openLocal(control:Locator,destination:Locator,outcome:'focused'|'visible'='focused'){
  await reach(control)
  const original=await control.elementHandle()
  if(!original)throw new Error('Current native inspector target is absent')
- const identity=await original.getAttribute('data-record-focus')
- if(!identity)throw new Error('Local inspection requires an explicit current record identity')
+ const context=()=>original.evaluate(element=>JSON.stringify({url:location.href,tag:element.tagName,name:element.textContent,record:element.getAttribute('data-record-focus'),href:element.getAttribute('href'),workspace:(element.closest('[data-private-qualification]')??element.ownerDocument.body).textContent}))
+ const identity=await context()
+ const mutations:string[]=[]
+ const request=(value:Request)=>{if(!['GET','HEAD','OPTIONS'].includes(value.method()))mutations.push(value.method())}
+ control.page().on('request',request)
  const same=async()=>{
-  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||await original.getAttribute('data-record-focus')!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||await context()!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
  }
  try{
   for(let attempt=0;attempt<2;attempt++){
@@ -106,7 +110,7 @@ export async function inspectCurrent(control:Locator,destination:Locator){
     const key=(event:KeyboardEvent)=>{
      if(!event.isTrusted||event.key!=='Enter')return
      state.keys++
-     if(event.target!==element||!element.isConnected){state.unexpected++;return}
+     if(event.target!==element||element!==element.ownerDocument.activeElement||!element.isConnected){state.unexpected++;return}
      if(paused())state.rejectedKeys++
     }
     const click=(event:MouseEvent)=>{
@@ -122,9 +126,19 @@ export async function inspectCurrent(control:Locator,destination:Locator){
    let observed:{keys:number;rejectedKeys:number;accepted:number;blocked:number;unexpected:number}
    try{await control.page().keyboard.press('Enter');observed=await observation.evaluate(value=>value.state)}
    finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
-   if(observed.accepted===1&&observed.keys===1&&observed.unexpected===0){await expect(destination).toBeFocused();return}
+   expect(mutations,'Opening a local step must not send an HTTP mutation').toEqual([])
+   if(observed.accepted===1&&observed.keys===1&&observed.unexpected===0){
+    if(outcome==='focused')await expect(destination).toBeFocused();else await expect(destination).toBeVisible()
+    expect(mutations,'A local destination must not send an HTTP mutation').toEqual([])
+    return
+   }
    if(attempt!==0||observed.keys!==1||observed.rejectedKeys!==1||observed.accepted!==0||observed.blocked>1||observed.unexpected!==0)throw new Error('Native inspection was not positively rejected by a current read; no navigation was repeated')
-   await same();await expect(control).toBeEnabled();await same()
+   await expect(control).toBeEnabled();await same()
   }
- }finally{await original.dispose()}
+ }finally{control.page().off('request',request);await original.dispose()}
+}
+
+export async function inspectCurrent(control:Locator,destination:Locator){
+ if(!await control.getAttribute('data-record-focus'))throw new Error('Local inspection requires an explicit current record identity')
+ await openLocal(control,destination)
 }
