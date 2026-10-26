@@ -1065,6 +1065,60 @@ Remaining lifecycle variants and later phases/final validation stay required.
 The isolated entrypoint remains distinct from production-image/browser proof.
 **complete_lifecycle=false; no L01–L18 row is fully complete.**
 
+## Judge-only majorities and independent award confirmation — native PASS
+
+Frozen `dbe2304a4b95a54a7a5f47695473241d6480eaff` passed both connected event
+modes in runner7896, **383.22s**, build64424/start49090, fixture
+`sha256:3b80dc986faaddc84ad86e1674b483775bc0817737ec79a86b406adfb5186983`,
+main03bfae7/schema55. The [bounded receipt](evidence/journey-result-decisions.json)
+contains27 exact original result acknowledgements and two advisory acknowledgements,
+cross-checked against actual native PostgreSQL metadata. Private runtime exports,
+cards, advisory prose and provider/session configuration remain local with hashes.
+Three actual driver/schema/reply-loss controls passed0.642s; twelve independent
+native decision-owner parents passed0.324s; configured lint reported zero issues.
+
+Prizes are declared before the common rubric approval. All-team final judging
+has six actual tied decisions: one final and five categories. Two assigned
+mentors independently contribute to a current category target. Their advice
+does not change scoring, source bindings, result versions or judge vote counts.
+One actual accepted HTTP200 advisory response is consumed by a test-only
+transport; the caller receives an error and recovers its exact original intent
+through GET. The transport observes one POST, and native storage retains one
+version/command for that contribution. This is controlled reply loss, not a
+physical Wi-Fi interruption test. A valid mentor ballot request returns403.
+
+Qualification mode has one final-judge tie. Its category winners remain those
+of the actual signed native qualification panel, including a possible
+non-finalist. Both mentor advisory pages correctly contain zero category targets;
+the driver never fabricates category ties, advice or extra judge votes there.
+A valid mentor final-ballot request returns403 without changing the signed
+selection or native votes. Category award selection reads that signed source.
+
+In both modes every current judge must vote. An isolated missing third ballot
+blocks confirmation with409. A complete three-way split stays unresolved and
+also blocks confirmation. An explicit replacement by that third judge produces
+a strict two-of-three majority. The replaced ballot's exact original
+acknowledgement remains recoverable. All-team storage has18 current votes plus
+one replacement command; qualification has three current votes plus one
+replacement command. Two prizes per event are explicitly confirmed with
+synthetic100.00/50.00GBP metadata; no payment occurs. Native storage retains
+27 immutable result versions/commands, two advisory versions/commands and two
+judge approvals. Actual recipient reads and SQL both show zero announcements:
+confirmation never substitutes for deliberate publication.
+
+Three earlier native failures remain attributed in the receipt: organiser
+receipts carry their run in the prepared source rather than ACK.run_id;
+ballot evidence requires explicit nullable deliverable_id; qualification
+categories belong to the signed panel rather than new final-judge ties.
+The first all-team decision proof already passed in the third failed run;
+only the final383.22s execution proves both modes together. These corrections
+change test drivers only. All owned containers, volumes and networks were removed.
+
+Deliberate finalist/award announcements, own-team feedback, remaining lifecycle
+variants/help/clarification/media/surveys, reviewed non-winner showcase, archive
+and owned outcomes, final integrated browsers/normal-image recovery and CI
+remain required. **complete_lifecycle=false; no L01–L18 row is fully complete.**
+
 
 ## Native recorded qualification and finalist selection — PASS
 

@@ -1,0 +1,631 @@
+{
+  "checkpoint": "judge-only-majorities-advisory-only-input-and-separate-award-confirmation",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "dbe2304a4b95a54a7a5f47695473241d6480eaff",
+    "fixture_image": "sha256:3b80dc986faaddc84ad86e1674b483775bc0817737ec79a86b406adfb5186983",
+    "main_base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
+    "schema": 55,
+    "build": "64424",
+    "startup": "49090",
+    "runner": "7896",
+    "duration_seconds": 383.22,
+    "production_image": false
+  },
+  "events": [
+    {
+      "event_id": "de137461-9b81-4572-a72d-c568a0965620",
+      "mode": "all_teams",
+      "judge_run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+      "source_binding": "1fa6672dcd51b862cb0e6d60b443d8f8537456b1b3eb5eee74515818f41eb59c",
+      "advisory_scope": "current_category_ties",
+      "checks": {
+        "mentor_vote_denied": true,
+        "missing_judge_confirmation_denied": true,
+        "split_confirmation_denied": true,
+        "explicit_revote_majority": true,
+        "original_vote_survives_revote": true
+      },
+      "organiser_commands": [
+        {
+          "request_id": "1c2b230f-9899-4478-bd03-f66dbbed65c5",
+          "actor_id": "85abed0e-7011-414f-9b09-5187968abe43",
+          "expected_revision": 157,
+          "expected_version": 0,
+          "version": 1,
+          "action": "prepare",
+          "fingerprint": "dd545cddd4f3eb9f5f1298ef0c6a1951ae8115915fda59f85932a4567e1f23b2"
+        },
+        {
+          "request_id": "058e1212-8c7e-4319-a94e-a34a30300740",
+          "actor_id": "85abed0e-7011-414f-9b09-5187968abe43",
+          "expected_revision": 179,
+          "expected_version": 20,
+          "version": 21,
+          "action": "confirm",
+          "fingerprint": "17549f1ab4244e32d1624a13e90bab751e9b75770f9d10371ce1af82b0a2d0b0"
+        }
+      ],
+      "judge_ballot_commands": [
+        {
+          "request_id": "802acc50-ed55-4fa8-aa1a-42f323263055",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 160,
+          "expected_version": 1,
+          "version": 2,
+          "action": "vote",
+          "fingerprint": "7bb13775bb1ac25cda201dfbb2bdc897367fc4fb25bf2944f43d0fc506b22760",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "7701d797cdeb1724070397830ef86ba84aefc995da29ba87220e663c789927a7",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "8cc60737-c5e1-4813-9aec-29491b06f0a1",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 161,
+          "expected_version": 2,
+          "version": 3,
+          "action": "vote",
+          "fingerprint": "af572b0422a5d2fa297458d83e94abfdf1c8d1eace2f20f5c6cfdf66fe4f6cb7",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "7701d797cdeb1724070397830ef86ba84aefc995da29ba87220e663c789927a7",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "b87a7830-4764-4638-acc1-11061332a708",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 162,
+          "expected_version": 3,
+          "version": 4,
+          "action": "vote",
+          "fingerprint": "aa82f91e1e5a0abae90bf5451dc55d9093eb2eeed0bd2354baa492f78134c19d",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "7701d797cdeb1724070397830ef86ba84aefc995da29ba87220e663c789927a7",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "e04c7298-456e-4f87-bff8-aa952b0a9662",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 163,
+          "expected_version": 4,
+          "version": 5,
+          "action": "vote",
+          "fingerprint": "d4b72159a4492c9d223558651251ae228088a73c079f8164f50b8fe9661ca570",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "fae882cd127b2809ebe9db71d961a30d246b4de0aa0996f793aba8a55b5116ec",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "4e4c72bd-0a88-4d5c-bbb6-100745b5eb1e",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 164,
+          "expected_version": 5,
+          "version": 6,
+          "action": "vote",
+          "fingerprint": "b4cc164d8d9a12e2140036e769c8e3af87886b6cda05920ba020833e6939b5e5",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "fae882cd127b2809ebe9db71d961a30d246b4de0aa0996f793aba8a55b5116ec",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "52423065-0a8d-417a-8ac2-043b5201c770",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 165,
+          "expected_version": 6,
+          "version": 7,
+          "action": "vote",
+          "fingerprint": "4a8f4e93f73797f5dd2a0382f34e41aaef42a57a207c171f901f266a9289390d",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "fae882cd127b2809ebe9db71d961a30d246b4de0aa0996f793aba8a55b5116ec",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "b64dbfd8-2431-4596-908f-fa1988e0a0c8",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 166,
+          "expected_version": 7,
+          "version": 8,
+          "action": "vote",
+          "fingerprint": "67b1a03879578a602f521ee1a3c2a30226abe7d59d59995e2d0303d9ca70e2ce",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "893c25b41a064930db1f4baf9b432caeb9de0ca52fe82c0ee8b9e5300258d926",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "279e141d-055f-41f9-b6f2-c011c02473ae",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 167,
+          "expected_version": 8,
+          "version": 9,
+          "action": "vote",
+          "fingerprint": "04180ddde651ab1bcf6f2dfd7b5dfa32563450e54d9dcffe7c7808da1fde01ff",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "893c25b41a064930db1f4baf9b432caeb9de0ca52fe82c0ee8b9e5300258d926",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "a0a2ebcc-7ad9-4b29-bc37-d6087e59d0c6",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 168,
+          "expected_version": 9,
+          "version": 10,
+          "action": "vote",
+          "fingerprint": "1ab7577894d40d68763f9e90b62ac5e5ee2b0c1e214deda89b209df15d406246",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "893c25b41a064930db1f4baf9b432caeb9de0ca52fe82c0ee8b9e5300258d926",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "a1d78653-9726-4706-8399-4fc7dbb7c0d4",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 169,
+          "expected_version": 10,
+          "version": 11,
+          "action": "vote",
+          "fingerprint": "b1a4ce1898cee4fa0599fc17c82bb5ca9956a3a291006d22fac21f4c9b3ee0c3",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "ba42bbfbc70fc7181d87501dd78dee4064fd200b9d72e67b63ac03d4d7f211de",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "146b672a-72c2-4168-ae30-1cd3d89b007f",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 170,
+          "expected_version": 11,
+          "version": 12,
+          "action": "vote",
+          "fingerprint": "ab6c14de7dc6e6fe2580f92e381bac218ea298dcdc84e25530d01d9b6bdca48c",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "ba42bbfbc70fc7181d87501dd78dee4064fd200b9d72e67b63ac03d4d7f211de",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "c1b4f8c0-c4f8-4762-90ce-2579efbca98d",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 171,
+          "expected_version": 12,
+          "version": 13,
+          "action": "vote",
+          "fingerprint": "edffb870bf8463fe274c5c30b1ce176565ef0aeae301c933d0fefc93dffe5a3d",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "ba42bbfbc70fc7181d87501dd78dee4064fd200b9d72e67b63ac03d4d7f211de",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "bb3b96b0-cd2a-4c86-8d45-02c9ada3ad1d",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 172,
+          "expected_version": 13,
+          "version": 14,
+          "action": "vote",
+          "fingerprint": "1101328ffe54f61b2c3654fff62b0f0a263e734c5e3f33ee6afd8ee1e0cde356",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "3be99637e7dba6cdcde8242728654b555804ddead0b4878905cae7369d5463d4",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "c9eef25b-59d2-4887-995c-3cdcd6d3759f",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 173,
+          "expected_version": 14,
+          "version": 15,
+          "action": "vote",
+          "fingerprint": "e5c0e875f3de2a94bb3f21d2e1af95032c500755dcf3526e821fd88c42118651",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "3be99637e7dba6cdcde8242728654b555804ddead0b4878905cae7369d5463d4",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "58ff81b4-4215-46db-96fe-2e507f7aeabd",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 174,
+          "expected_version": 15,
+          "version": 16,
+          "action": "vote",
+          "fingerprint": "b94e92d813d31aedefb65a929a8de5e8966c566ca13f42c1623f617632f01c8f",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "3be99637e7dba6cdcde8242728654b555804ddead0b4878905cae7369d5463d4",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "cc998b3e-5e8d-4572-9474-839f47e6d817",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 175,
+          "expected_version": 16,
+          "version": 17,
+          "action": "vote",
+          "fingerprint": "c97d2fc2d2d6a8fc2ff02adb5da08e1e9681ca874ab81e74aa7ad65fcadfe18c",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "517251d003aaf04fde0baeea25bf8bad43062a71811639648d29d3a9a675ba5c",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "b5272f8f-a6bc-495b-a1b6-de7f41ed1260",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 176,
+          "expected_version": 17,
+          "version": 18,
+          "action": "vote",
+          "fingerprint": "ab1023a9601481be9caddea2e8de73a98d2fa0232a01984827a6c1fcea3bc7de",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "517251d003aaf04fde0baeea25bf8bad43062a71811639648d29d3a9a675ba5c",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "9529fe83-308c-4b52-a10b-90b03a9fa6da",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 177,
+          "expected_version": 18,
+          "version": 19,
+          "action": "vote",
+          "fingerprint": "b0287aacec23c97e7ed5a4d421540fc1f62133b15222d3c561d4178728f216dd",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "517251d003aaf04fde0baeea25bf8bad43062a71811639648d29d3a9a675ba5c",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        },
+        {
+          "request_id": "e869c1bf-9c5a-4b7c-a4a0-5aeca7808b49",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 178,
+          "expected_version": 19,
+          "version": 20,
+          "action": "vote",
+          "fingerprint": "770030225ee8301a4173ba73b484977ecb07367f0a3465a98f95bbc27906c2f7",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "517251d003aaf04fde0baeea25bf8bad43062a71811639648d29d3a9a675ba5c",
+          "team_ids": [
+            "06eb63c8-b747-42aa-9dda-9455ca05109f",
+            "928f2581-2753-4dd0-bb56-cde827f34764",
+            "c2123af0-f9f9-4502-b96c-ca45c105f0b2",
+            "f8af0e3b-3705-45ee-96ff-845f5ebea821"
+          ]
+        }
+      ],
+      "advisory_commands": [
+        {
+          "request_id": "36a4f5b3-3074-4756-b4b2-49e56840e98a",
+          "actor_id": "82e4b634-27f8-43ba-a962-edeaaf790b96",
+          "expected_revision": 158,
+          "expected_version": 0,
+          "version": 1,
+          "action": "advise",
+          "fingerprint": "8699ed5adc8f621dbf4620f6e6e14a59cdae0149db36e1ff0f637d636a747a49",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "7701d797cdeb1724070397830ef86ba84aefc995da29ba87220e663c789927a7",
+          "team_id": "06eb63c8-b747-42aa-9dda-9455ca05109f"
+        },
+        {
+          "request_id": "73c7aadf-5a65-41b4-a74b-839eddf8e76b",
+          "actor_id": "d81f1dcb-dbda-4e9b-9bde-fc031ba31562",
+          "expected_revision": 159,
+          "expected_version": 0,
+          "version": 1,
+          "action": "advise",
+          "fingerprint": "c591bf67e03352dedf706c3b9b6492af8c0966282badd449f2fd93be8a93af87",
+          "run_id": "cbe4bb1f-b857-4090-8ecc-360f50b12eba",
+          "tie_id": "7701d797cdeb1724070397830ef86ba84aefc995da29ba87220e663c789927a7",
+          "team_id": "06eb63c8-b747-42aa-9dda-9455ca05109f"
+        }
+      ],
+      "current_judge_vote_count": 18,
+      "superseded_ballot_commands": 1,
+      "controlled_reply_loss": {
+        "actual_native_http_200_consumed": true,
+        "caller_received_no_acknowledgement": true,
+        "post_count": 1,
+        "original_request_get_recovered": true,
+        "native_advisory_commands": 2,
+        "native_advisory_versions": 2,
+        "advice_did_not_change_scores_votes_or_source": true,
+        "physical_wifi_test": false
+      },
+      "confirmation_id": "3b8aa4b6-d038-4ed8-b395-fcee9e7c476f",
+      "judge_approval_id": "3b8aa4b6-d038-4ed8-b395-fcee9e7c476f",
+      "decision_binding": "ce024d3ecb8d015e7c35ebf7157938bbcf5ec7261c6825c30c40ee097a6fba33",
+      "awards": [
+        {
+          "prize_id": "916ed997-559f-57a6-bf5d-f6fb365b66a8",
+          "category_id": null,
+          "team_id": "06eb63c8-b747-42aa-9dda-9455ca05109f",
+          "amount": "100.00",
+          "currency": "GBP"
+        },
+        {
+          "prize_id": "e8b3523b-96e7-5ea3-880c-235e9e499a50",
+          "category_id": "d6eaf58c-f19f-52ad-b36b-065e4a0e3fc1",
+          "team_id": "06eb63c8-b747-42aa-9dda-9455ca05109f",
+          "amount": "50.00",
+          "currency": "GBP"
+        }
+      ],
+      "announcements_before_release": 0
+    },
+    {
+      "event_id": "6e23cdfc-44d2-41db-bc9b-af8e9bf92a92",
+      "mode": "mentor_qualification",
+      "judge_run_id": "5ba2bb8c-ca6a-4bd8-8229-062d2f3aaa5a",
+      "source_binding": "52f92551b9016d146f89f32162c151ea879ab12287d4816d8977606d5604dc71",
+      "advisory_scope": "none_categories_already_signed_by_qualification",
+      "checks": {
+        "mentor_vote_denied": true,
+        "missing_judge_confirmation_denied": true,
+        "split_confirmation_denied": true,
+        "explicit_revote_majority": true,
+        "original_vote_survives_revote": true
+      },
+      "organiser_commands": [
+        {
+          "request_id": "b78807d1-93fb-4471-81e4-a6bde967d53f",
+          "actor_id": "85abed0e-7011-414f-9b09-5187968abe43",
+          "expected_revision": 222,
+          "expected_version": 0,
+          "version": 1,
+          "action": "prepare",
+          "fingerprint": "d646a07c992f81e5f5ceac9641d4582cdce833472b4b4992d2325d03077fa8ab"
+        },
+        {
+          "request_id": "f0e7d01a-4ab4-4702-9155-bd10404862e8",
+          "actor_id": "85abed0e-7011-414f-9b09-5187968abe43",
+          "expected_revision": 227,
+          "expected_version": 5,
+          "version": 6,
+          "action": "confirm",
+          "fingerprint": "180343bdfa430670e57b110baa028e19759a5d5f80fe26a6217bced1f3cbfbfb"
+        }
+      ],
+      "judge_ballot_commands": [
+        {
+          "request_id": "4c686a31-f740-425c-ac09-3c999b6c4b45",
+          "actor_id": "fea8f819-7fda-4ca8-8337-b4fd21ccc294",
+          "expected_revision": 223,
+          "expected_version": 1,
+          "version": 2,
+          "action": "vote",
+          "fingerprint": "789263b41552b50b9c6f9a54a231d0ffa10272e9f2530d46175f34e1c1f64498",
+          "run_id": "5ba2bb8c-ca6a-4bd8-8229-062d2f3aaa5a",
+          "tie_id": "5e320b0eca62a391c44852eeb3117c789f4a4953f2125eafab38862a65ac82d5",
+          "team_ids": [
+            "1fa31385-f6ea-476d-af0f-d9621d12e320",
+            "7f274516-616c-4c0f-9b44-ec9ae23dfcdd",
+            "81378aa0-ee27-4f3d-9e69-01c341897d1d"
+          ]
+        },
+        {
+          "request_id": "f9bcced2-bae9-408a-8ee7-1054d2617a47",
+          "actor_id": "0b1f3f36-af89-47e3-b211-f0998072b1a7",
+          "expected_revision": 224,
+          "expected_version": 2,
+          "version": 3,
+          "action": "vote",
+          "fingerprint": "87fdc39eb85d59884ea64e24145702cc3b9dcf0d88b0742770521a577309d735",
+          "run_id": "5ba2bb8c-ca6a-4bd8-8229-062d2f3aaa5a",
+          "tie_id": "5e320b0eca62a391c44852eeb3117c789f4a4953f2125eafab38862a65ac82d5",
+          "team_ids": [
+            "1fa31385-f6ea-476d-af0f-d9621d12e320",
+            "7f274516-616c-4c0f-9b44-ec9ae23dfcdd",
+            "81378aa0-ee27-4f3d-9e69-01c341897d1d"
+          ]
+        },
+        {
+          "request_id": "f70ca26d-f582-41eb-a62b-c9e27a1034f0",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 225,
+          "expected_version": 3,
+          "version": 4,
+          "action": "vote",
+          "fingerprint": "e8e475187f6736f06a0f53b0b8e3a0cecd0afb7536a65a76dddacc78d183318e",
+          "run_id": "5ba2bb8c-ca6a-4bd8-8229-062d2f3aaa5a",
+          "tie_id": "5e320b0eca62a391c44852eeb3117c789f4a4953f2125eafab38862a65ac82d5",
+          "team_ids": [
+            "1fa31385-f6ea-476d-af0f-d9621d12e320",
+            "7f274516-616c-4c0f-9b44-ec9ae23dfcdd",
+            "81378aa0-ee27-4f3d-9e69-01c341897d1d"
+          ]
+        },
+        {
+          "request_id": "293cc156-b853-4544-862a-d1d046828eec",
+          "actor_id": "4a43545d-6217-4000-8970-742f37248691",
+          "expected_revision": 226,
+          "expected_version": 4,
+          "version": 5,
+          "action": "vote",
+          "fingerprint": "028a22d2e5ef93775fccbba2c4059cb3ca148255a0753639dea4d99fd3878aaf",
+          "run_id": "5ba2bb8c-ca6a-4bd8-8229-062d2f3aaa5a",
+          "tie_id": "5e320b0eca62a391c44852eeb3117c789f4a4953f2125eafab38862a65ac82d5",
+          "team_ids": [
+            "1fa31385-f6ea-476d-af0f-d9621d12e320",
+            "7f274516-616c-4c0f-9b44-ec9ae23dfcdd",
+            "81378aa0-ee27-4f3d-9e69-01c341897d1d"
+          ]
+        }
+      ],
+      "advisory_commands": [],
+      "current_judge_vote_count": 3,
+      "superseded_ballot_commands": 1,
+      "qualification_scope": {
+        "current_category_advisory_targets": 0,
+        "category_winners_from_actual_signed_qualification": true,
+        "final_judge_category_reinterpretation": false
+      },
+      "confirmation_id": "6a7fec13-1607-4fd4-a068-73c9712f19e1",
+      "judge_approval_id": "6a7fec13-1607-4fd4-a068-73c9712f19e1",
+      "decision_binding": "43de7ddfe418c44dc89d1106102406912b0403c20148343bc7a2b15daa94315a",
+      "awards": [
+        {
+          "prize_id": "e08da4dd-42d8-5cf8-9412-8c73dc749bd5",
+          "category_id": null,
+          "team_id": "1fa31385-f6ea-476d-af0f-d9621d12e320",
+          "amount": "100.00",
+          "currency": "GBP"
+        },
+        {
+          "prize_id": "096375a8-20f3-5729-a5f4-320b64ec2fbd",
+          "category_id": "04914857-b22e-5d53-ad04-484602a9fe6e",
+          "team_id": "1fa31385-f6ea-476d-af0f-d9621d12e320",
+          "amount": "50.00",
+          "currency": "GBP"
+        }
+      ],
+      "announcements_before_release": 0
+    }
+  ],
+  "native_census": {
+    "result_versions": 27,
+    "result_commands": 27,
+    "advisory_versions": 2,
+    "advisory_commands": 2,
+    "judge_result_approvals": 2,
+    "result_publications": 0
+  },
+  "prior_native_failures_preserved": [
+    {
+      "source_prefix": "eb0b7fe1",
+      "duration_seconds": 317.6,
+      "outcome": "FAIL",
+      "cause": "Driver incorrectly required organiser ACK.run_id; actual prepared source retains the run.",
+      "local_log_sha256": "3db2c0209fca1b6f28626d409da99507cf9a37efef90872486c9fd2c045e89ad"
+    },
+    {
+      "source_prefix": "0d1457b1",
+      "duration_seconds": 301.75,
+      "outcome": "FAIL",
+      "cause": "Driver omitted required nullable ballot evidence deliverable_id, causing schema400 before mentor authority.",
+      "local_log_sha256": "b04c1051865bc439c9f49951c78d8fbe6ec0202d36881b4e3d7e592409404a54"
+    },
+    {
+      "source_prefix": "351970ba",
+      "duration_seconds": 363.58,
+      "outcome": "FAIL",
+      "cause": "All-team decisions passed; driver then incorrectly expected qualification category ties in final judging.",
+      "local_log_sha256": "5acc53642573a46a861819f0d797e8e42c1841fd7d8479418a5628c291632a11"
+    }
+  ],
+  "component_verification": {
+    "actual_driver_schema_and_reply_loss_parents": 3,
+    "driver_package_seconds": 0.642,
+    "native_decision_owner_parents": 12,
+    "native_owner_package_seconds": 0.324,
+    "configured_lint_issues": 0
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-result-decisions-dbe2304a-native.log",
+      "sha256": "a5f533106072366b3915489b810c81918e52acdc9c75273be05e3896ab96ca13"
+    },
+    {
+      "local_basename": "hackbox120-result-decisions-dbe2304a-journey.json",
+      "sha256": "9b87b0efc0400ce9521c85945d0c61a4ae12c832b56d923e56fa57a3423b5d90"
+    },
+    {
+      "local_basename": "hackbox120-result-decisions-dbe2304a-work.json",
+      "sha256": "3bcd6fc6108a654c5173a2290027382d8b039974e941bcede350d9fb90124a27"
+    },
+    {
+      "local_basename": "hackbox120-result-decisions-dbe2304a-result-state.json",
+      "sha256": "535c979127d7dd8ada96cc848f7b4ff5a9ace3c3e783986513da7ee7df8208df"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-result-modes-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0
+  },
+  "privacy": "Only whitelisted validated synthetic UUIDs, SHA256 bindings, enum states, counts and exact acknowledgement metadata. Raw exports, private cards/advisory views/reasons, keys, sessions and provider configuration remain local. Money is synthetic confirmation metadata; no payment. Controlled reply loss is not physical Wi-Fi interruption.",
+  "remaining_scope": [
+    "Deliberate finalist and award announcements, authored own-team feedback, help/contention and clarification/media/surveys.",
+    "Remaining admission/freeze/postponement/eligibility variants and approved current-source notification effects.",
+    "Reviewed non-winner showcase, archive and owned 30/60/90-day outcomes; final integrated native-browser, normal-image/recovery, independent reviews and green CI.",
+    "No L01-L18 row is claimed fully complete."
+  ]
+}
