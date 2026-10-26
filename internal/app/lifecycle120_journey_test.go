@@ -52,6 +52,7 @@ type lifecycleJourneyEvent struct {
 	resultReleases     []lifecycleResultReleaseReceipt
 	resultPreparations []lifecycleResultPreparationReceipt
 	teamFeedback       []lifecycleTeamFeedbackReceipt
+	liveHelp           lifecycleHelpReceipt
 	practice           []lifecyclePracticeReceipt
 	review             lifecycleMentorReviewReceipt
 	commonHash         string
@@ -210,6 +211,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("early live denial mutated native competition state")
 		}
 	}
+	run.denyEarlyOutputHelp(t)
 	if err := control.advance(ctx, timeline.Live); err != nil {
 		t.Fatal(err)
 	}
@@ -226,6 +228,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.prepareLiveMentorAccess(t)
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
+	run.raceLiveHelp(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
@@ -284,6 +287,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
 		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
 		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
+		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
 		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
@@ -325,6 +329,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				ResultReleases:     item.resultReleases,
 				ResultPreparations: item.resultPreparations,
 				TeamFeedback:       item.teamFeedback,
+				LiveHelp:           item.liveHelp,
 				Review:             item.review,
 			},
 		)

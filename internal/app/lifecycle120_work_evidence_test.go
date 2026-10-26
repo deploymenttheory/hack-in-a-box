@@ -27,6 +27,7 @@ func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
 		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
 		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
+		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
 	}
 	events := []item{}
 	for _, event := range r.events {
@@ -36,6 +37,7 @@ func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 		value.ResultReleases = event.resultReleases
 		value.ResultPreparations = event.resultPreparations
 		value.TeamFeedback = event.teamFeedback
+		value.LiveHelp = event.liveHelp
 		if event.judgeRun != uuid.Nil {
 			runID := event.judgeRun
 			value.JudgeRun = &runID
