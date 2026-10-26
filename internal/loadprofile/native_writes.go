@@ -71,7 +71,7 @@ func (w NativeWrites) finish(
 	return Accepted, nil
 }
 
-// Apply is one normal native registration submission. A waitlisted response is
+// Apply is one normal native attendee registration submission. A waitlisted response is
 // an ACCEPTED registration, not a dropped capacity error. It must be reconciled
 // against its committed row/hash just like a confirmed response.
 func (w NativeWrites) Apply(
@@ -112,6 +112,9 @@ func (w NativeWrites) Apply(
 		view.PersonID == actor.Session.Person() &&
 		view.FormID == input.FormID &&
 		view.FormVersion == input.FormVersion &&
+		view.Kind == "attendee" && view.Audience == "attendee" &&
+		view.TeamPreference == input.TeamPreference &&
+		view.InvitationReference == input.InvitationReference &&
 		view.Sequence > 0 &&
 		view.Revision >= 1 &&
 		(view.State == "confirmed" || view.State == "waitlisted")

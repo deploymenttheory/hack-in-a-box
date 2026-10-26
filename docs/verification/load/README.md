@@ -105,11 +105,14 @@ the normal-image runtime stage, and the transition/data/source must be recorded.
 No direct insertion of finished competition facts, sessions or delivered jobs
 may be represented as native workload execution.
 
-The complete runner must preserve separate setup, warm-up, burst, saturation and
-sustained receipts. Initial saturation points will use documented fixed cohort
-and decreasing think time, recording achieved traffic and resource/queue
-pressure. The chosen baseline must then execute the full real 30-minute stage
-in an exclusive heavy-work window. A diagnostic stop or failed threshold remains
+The complete runner must preserve separate setup, warm-up, burst, sustained and
+saturation receipts. The declared baseline executes the real 30-minute stage
+in an exclusive heavy-work window, then freezes its native oracles before the
+separate saturation appendix. Pressure points use the full cohort and decreasing
+think time, recording achieved traffic and resource/queue pressure. An uncertain
+write at overload cannot be silently replayed or retargeted into a later baseline.
+All accepted writes, including saturation writes, still require independent
+reconciliation; saturation failures and limits remain explicit. A diagnostic stop or failed threshold remains
 failed/non-release evidence; repair the cause or obtain an explicit owner target
 revision before release sign-off.
 
@@ -266,3 +269,21 @@ response uncertain, with no consumed-body replay. A separate scheduler control
 reproduced accepted-write loss when a later independent oracle failed; exact
 original ACKs are now retained even when that later check fails. Both controls
 passed in the component/race suite; neither is application or load acceptance.
+
+
+The source now includes a genuine concurrent registration-burst primitive: 200
+existing cross-event actors (50 from each other home event) apply against the
+frozen published form of the full registration event. One barrier releases
+them together; original ACKs, raw failures, action-start spread and achieved
+in-flight concurrency remain recorded. Accepted waitlist records are writes,
+not capacity errors. The full runner must keep all 1,000 actors making routine
+background reads during this burst; no extra fixture identities are introduced.
+
+The saturation primitive uses real monotonic windows, point-local native
+subrequest distributions, actual scoped resource/queue sampling and strictly
+decreasing think intervals. Release windows require all 1,000 native people
+and at least one real minute each. The first measured routine p95/error-rate
+boundary stops the curve and remains visible. Smoke cannot stand in for that
+curve or the separate 1,800-second sustained baseline. These primitives still
+need the coherent native fixture, complete CLI/oracle integration and actual
+baseline execution; no capacity evidence is inferred from their configuration.
