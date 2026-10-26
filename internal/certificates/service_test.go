@@ -14,6 +14,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/access"
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/certificates"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -367,6 +368,30 @@ func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t 
 		retained.History[1].Receipt.Action != "correct" ||
 		retained.History[2].Receipt.Action != "revoke" {
 		t.Fatal("history lost exact closed-event command provenance", retained)
+	}
+	if _, err = f.pool.Exec(
+		ctx,
+		"DELETE FROM certificate_versions WHERE event_id=$1 AND id=$2",
+		f.event,
+		id,
+	); err == nil {
+		t.Fatal("certificate provenance could be erased")
+	}
+	if err = database.Migrate(
+		ctx,
+		f.pool,
+		55,
+	); err == nil ||
+		!strings.Contains(err.Error(), "certificate decisions must be retained") {
+		t.Fatal("downgrade did not preserve issued recognition", err)
+	}
+	require(
+		t,
+		f.pool.QueryRow(ctx, "SELECT count(*) FROM certificate_versions WHERE event_id=$1 AND id=$2", f.event, id).
+			Scan(&versions),
+	)
+	if versions != 3 {
+		t.Fatal("failed downgrade damaged certificate provenance", versions)
 	}
 }
 
