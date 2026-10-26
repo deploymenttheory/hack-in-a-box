@@ -206,10 +206,29 @@ The five simultaneous event stages are registration, preparation, two live
 events and one archived follow-up event. Already active other-event cohorts can
 cross-apply to the full registration event to create real waitlist contention
 without inventing another thousand people. The full role-specific workload
-driver, help creation/resolution, approved cue publisher, negative current-access
+driver integration, approved cue publisher, negative current-access
 cases, due follow-up/provider receipt oracles, normal-image TLS Compose bridge
 and full burst/saturation/1,800-second run remain unfinished. The prerequisite
 #120 provider's strict OIDC constructor will be reused with an explicit 1,000-person
 map; its historical clock/control runner will not be inherited by the wall-clock
 load runtime. No public test-authentication route or seeded application session
 is introduced.
+
+
+The next source checkpoint adds native help creation and resolution alongside
+claims: every runtime request is measured and reconciled by its exact retained
+command/action/transition. Role-specific journeys alternate current reads with
+mentor corrections and deliberate help work; an unresolved original write blocks
+all later writes for its actor while ordinary authorised reads may continue.
+
+Cohort setup selects five distinct native events, 180 competitors plus 20 staff
+each, and authenticates declared people once through the ordinary OIDC client.
+It retains attempted/failed/distinct-person counts; duplicate native identities
+cannot satisfy the census. This is setup only, never evidence of sustained
+activity. The public receipt omits subjects, person IDs and credentials.
+
+SSE receipts additionally require the exact acknowledged current cue projection,
+not merely a matching sequence number. A wrong cue at the right revision remains
+an unexpected receipt. Synthetic HTTPS and pure component controls verify these
+measurement boundaries; real application/OIDC/SQL/SSE acceptance and the complete
+1800-second profile are still unexecuted.

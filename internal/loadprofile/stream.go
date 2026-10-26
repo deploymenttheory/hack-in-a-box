@@ -23,6 +23,10 @@ import (
 var errDisplayProof = errors.New("invalid load display evidence")
 
 type (
+	displayReceipt struct {
+		at     time.Time
+		digest string
+	}
 	cueKey struct {
 		event    uuid.UUID
 		sequence int64
@@ -31,7 +35,8 @@ type (
 		phase       Phase
 		published   time.Time
 		offsetUpper time.Duration
-		received    map[string]time.Time
+		expected    string
+		received    map[string]displayReceipt
 	}
 )
 
@@ -59,7 +64,16 @@ func NewDisplayLedger(streams map[string]uuid.UUID) (*DisplayLedger, error) {
 	return &DisplayLedger{streams: owned, cues: make(map[cueKey]*cueObservation)}, nil
 }
 
-func (l *DisplayLedger) Published(event uuid.UUID, sequence int64, anchor CueAnchor) error {
+func (l *DisplayLedger) Published(
+	event uuid.UUID,
+	sequence int64,
+	anchor CueAnchor,
+	expected presentation.DisplayCue,
+) error {
+	digest, err := payloadFingerprint(expected)
+	if err != nil || expected.ID == uuid.Nil {
+		return fmt.Errorf("%w: exact acknowledged current cue required", errDisplayProof)
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if !anchor.Phase.valid() || sequence < 1 || anchor.AuditAt.IsZero() ||
@@ -85,13 +99,14 @@ func (l *DisplayLedger) Published(event uuid.UUID, sequence int64, anchor CueAnc
 	key := cueKey{event, sequence}
 	entry := l.cues[key]
 	if entry == nil {
-		entry = &cueObservation{received: make(map[string]time.Time)}
+		entry = &cueObservation{received: make(map[string]displayReceipt)}
 		l.cues[key] = entry
 	}
 	if !entry.published.IsZero() &&
-		(!entry.published.Equal(anchor.AuditAt) || entry.phase != anchor.Phase) {
+		(!entry.published.Equal(anchor.AuditAt) || entry.phase != anchor.Phase || entry.expected != digest) {
 		return fmt.Errorf("%w: contradictory publication anchor", errDisplayProof)
 	}
+	entry.expected = digest
 	entry.published = anchor.AuditAt
 	entry.phase = anchor.Phase
 	entry.offsetUpper = anchor.DatabaseAt.Sub(anchor.DriverBefore)
@@ -100,10 +115,14 @@ func (l *DisplayLedger) Published(event uuid.UUID, sequence int64, anchor CueAnc
 
 func (l *DisplayLedger) Received(
 	stream string,
-	event uuid.UUID,
-	sequence int64,
+	snapshot presentation.Snapshot,
 	at time.Time,
 ) error {
+	event, sequence := snapshot.EventID, snapshot.Sequence
+	digest, err := payloadFingerprint(snapshot.Current)
+	if err != nil {
+		return fmt.Errorf("%w: current display projection fingerprint failed", errDisplayProof)
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.streams[stream] != event || event == uuid.Nil || sequence < 0 || at.IsZero() {
@@ -112,21 +131,22 @@ func (l *DisplayLedger) Received(
 	key := cueKey{event, sequence}
 	entry := l.cues[key]
 	if entry == nil {
-		entry = &cueObservation{received: make(map[string]time.Time)}
+		entry = &cueObservation{received: make(map[string]displayReceipt)}
 		l.cues[key] = entry
 	}
-	if previous, exists := entry.received[stream]; !exists || at.Before(previous) {
-		entry.received[stream] = at
+	if previous, exists := entry.received[stream]; !exists || at.Before(previous.at) {
+		entry.received[stream] = displayReceipt{at: at, digest: digest}
 	}
 	return nil
 }
 
 type DisplayReport struct {
-	Publications      int `json:"publications"`
-	ExpectedReceipts  int `json:"expected_receipts"`
-	MatchedReceipts   int `json:"matched_receipts"`
-	MissingReceipts   int `json:"missing_receipts"`
-	InvalidClockOrder int `json:"invalid_clock_order"`
+	Publications       int `json:"publications"`
+	ExpectedReceipts   int `json:"expected_receipts"`
+	MatchedReceipts    int `json:"matched_receipts"`
+	MismatchedReceipts int `json:"mismatched_receipts"`
+	MissingReceipts    int `json:"missing_receipts"`
+	InvalidClockOrder  int `json:"invalid_clock_order"`
 }
 
 // Measurements is a final snapshot, not an incremental counter: callers add
@@ -147,13 +167,18 @@ func (l *DisplayLedger) Measurements(finished time.Time) (DisplayReport, []Measu
 				continue
 			}
 			report.ExpectedReceipts++
-			at, exists := entry.received[stream]
+			receipt, exists := entry.received[stream]
+			at := receipt.at
 			outcome := Accepted
-			if !exists {
+			switch {
+			case !exists:
 				report.MissingReceipts++
 				at = finished
 				outcome = Unexpected
-			} else {
+			case receipt.digest != entry.expected:
+				report.MismatchedReceipts++
+				outcome = Unexpected
+			default:
 				report.MatchedReceipts++
 			}
 			delay := at.Sub(entry.published) + entry.offsetUpper
@@ -288,7 +313,7 @@ func consumeDisplay(
 				id != strconv.FormatInt(snapshot.Sequence, 10) {
 				return fmt.Errorf("%w: stream source/event/revision mismatch", errDisplayProof)
 			}
-			if err := ledger.Received(stream, event, snapshot.Sequence, time.Now()); err != nil {
+			if err := ledger.Received(stream, snapshot, time.Now()); err != nil {
 				return err
 			}
 		case "revoked", "reconnect":

@@ -20,7 +20,7 @@ func TestDisplayHeartbeatsAndCurrentReadsCannotReplacePublishedUpdateProof(t *te
 	}
 	start := time.Now()
 	for range 20 {
-		if err := ledger.Received("one", event, 6, start); err != nil {
+		if err := ledger.Received("one", syntheticSnapshot(event, 6), start); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -28,16 +28,16 @@ func TestDisplayHeartbeatsAndCurrentReadsCannotReplacePublishedUpdateProof(t *te
 		t.Fatal("unpublished current source became update proof", report)
 	}
 	// The first actual SSE receipt may beat the publisher response/audit query.
-	if err := ledger.Received("one", event, 7, start.Add(time.Second)); err != nil {
+	if err := ledger.Received("one", syntheticSnapshot(event, 7), start.Add(time.Second)); err != nil {
 		t.Fatal(err)
 	}
-	if err := ledger.Published(event, 7, syntheticAnchor(start)); err != nil {
+	if err := ledger.Published(event, 7, syntheticAnchor(start), *syntheticSnapshot(event, 7).Current); err != nil {
 		t.Fatal(err)
 	}
-	if err := ledger.Published(event, 8, syntheticAnchor(start.Add(2*time.Second))); err != nil {
+	if err := ledger.Published(event, 8, syntheticAnchor(start.Add(2*time.Second)), *syntheticSnapshot(event, 8).Current); err != nil {
 		t.Fatal(err)
 	}
-	if err := ledger.Received("one", event, 7, start.Add(10*time.Second)); err != nil {
+	if err := ledger.Received("one", syntheticSnapshot(event, 7), start.Add(10*time.Second)); err != nil {
 		t.Fatal(err)
 	}
 	report, samples := ledger.Measurements(start.Add(12 * time.Second))
@@ -130,15 +130,41 @@ func TestDisplayLatencyUsesConservativeServerDriverClockOffset(t *testing.T) {
 		DriverBefore: start.Add(time.Millisecond),
 		DriverAfter:  start.Add(3 * time.Millisecond),
 	}
-	if err := ledger.Published(event, 2, anchor); err != nil {
+	if err := ledger.Published(event, 2, anchor, *syntheticSnapshot(event, 2).Current); err != nil {
 		t.Fatal(err)
 	}
-	if err := ledger.Received("one", event, 2, start.Add(time.Second)); err != nil {
+	if err := ledger.Received("one", syntheticSnapshot(event, 2), start.Add(time.Second)); err != nil {
 		t.Fatal(err)
 	}
 	report, samples := ledger.Measurements(start.Add(3 * time.Second))
 	if report.InvalidClockOrder != 0 || len(samples) != 1 ||
 		samples[0].Duration != time.Second+time.Millisecond {
 		t.Fatal("clock skew made receipt artificially fast", report, samples)
+	}
+}
+
+func syntheticSnapshot(event uuid.UUID, sequence int64) presentation.Snapshot {
+	return presentation.Snapshot{EventID: event, Sequence: sequence, Current: &presentation.DisplayCue{ID: uuid.NewSHA1(uuid.NameSpaceOID, []byte("synthetic-cue")), Title: "Synthetic current cue", Text: "Synthetic public projection"}}
+}
+
+func TestSameRevisionWithWrongCueDoesNotBecomeSuccessfulSSELatency(t *testing.T) {
+	event := uuid.New()
+	ledger, err := NewDisplayLedger(map[string]uuid.UUID{"one": event})
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	expected := syntheticSnapshot(event, 7)
+	wrong := syntheticSnapshot(event, 7)
+	wrong.Current.Text = "Different stale cue"
+	if err := ledger.Received("one", wrong, start.Add(time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
+	if err := ledger.Published(event, 7, syntheticAnchor(start), *expected.Current); err != nil {
+		t.Fatal(err)
+	}
+	report, measurements := ledger.Measurements(start.Add(time.Second))
+	if report.MatchedReceipts != 0 || report.MismatchedReceipts != 1 || len(measurements) != 1 || measurements[0].Outcome != Unexpected {
+		t.Fatal("matching revision concealed wrong projection", report, measurements)
 	}
 }
