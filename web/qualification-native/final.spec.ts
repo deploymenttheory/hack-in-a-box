@@ -45,6 +45,8 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   if(index===0){await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10);await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})}
   await openLocal(confirm,page.getByLabel('Recorded panel reason',{exact:true}));await accept(page,`Confirm exact reviewed final card ${index+1}`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 2 · signed')
+  // Signing opens a fresh source reader; await its native evidence before navigation.
+  await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
   const nextTeam=page.getByRole('button',{name:'Review another team',exact:true});await expect(nextTeam).toBeFocused();await openLocal(nextTeam,page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}))
   await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()
