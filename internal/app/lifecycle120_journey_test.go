@@ -47,6 +47,7 @@ type lifecycleJourneyEvent struct {
 	cutoff       []lifecycleCutoffReceipt
 	judgeRun     uuid.UUID
 	practice     []lifecyclePracticeReceipt
+	review       lifecycleMentorReviewReceipt
 	commonHash   string
 }
 type lifecycleJourney struct {
@@ -151,6 +152,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.prepareRepositoryAccess(t)
 	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
+	run.prepareMentorReview(t)
 	run.rehearseJudgePractice(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
@@ -215,6 +217,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
+	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
 	var providerProof lifecycleGitHubProof
@@ -259,6 +262,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		Cutoff       []lifecycleCutoffReceipt     `json:"cutoff_sources"`
 		JudgeRun     uuid.UUID                    `json:"planned_judge_run_id"`
 		Practice     []lifecyclePracticeReceipt   `json:"fictional_judge_practice"`
+		Review       lifecycleMentorReviewReceipt `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -293,6 +297,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				Cutoff:       item.cutoff,
 				JudgeRun:     item.judgeRun,
 				Practice:     item.practice,
+				Review:       item.review,
 			},
 		)
 	}

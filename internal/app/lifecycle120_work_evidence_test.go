@@ -14,11 +14,12 @@ import (
 func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 	t.Helper()
 	type item struct {
-		EventID  uuid.UUID                  `json:"event_id"`
-		Work     []lifecycleWorkReceipt     `json:"preparation_work"`
-		Late     *lifecycleWorkReceipt      `json:"late_work,omitempty"`
-		Practice []lifecyclePracticeReceipt `json:"fictional_judge_practice,omitempty"`
-		JudgeRun *uuid.UUID                 `json:"planned_judge_run_id,omitempty"`
+		EventID  uuid.UUID                     `json:"event_id"`
+		Work     []lifecycleWorkReceipt        `json:"preparation_work"`
+		Late     *lifecycleWorkReceipt         `json:"late_work,omitempty"`
+		Practice []lifecyclePracticeReceipt    `json:"fictional_judge_practice,omitempty"`
+		JudgeRun *uuid.UUID                    `json:"planned_judge_run_id,omitempty"`
+		Review   *lifecycleMentorReviewReceipt `json:"mentor_live_checkpoint,omitempty"`
 	}
 	events := []item{}
 	for _, event := range r.events {
@@ -26,6 +27,10 @@ func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 		if event.judgeRun != uuid.Nil {
 			runID := event.judgeRun
 			value.JudgeRun = &runID
+		}
+		if event.review.Checkpoint.Definition.ID != uuid.Nil {
+			review := event.review
+			value.Review = &review
 		}
 		events = append(events, value)
 	}
