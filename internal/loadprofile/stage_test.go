@@ -2,6 +2,7 @@ package loadprofile
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -63,5 +64,22 @@ func TestCancelledRunCannotStartOrCertifySustainedExecution(t *testing.T) {
 	if err == nil || result.Completed || !result.Interrupted || result.Elapsed != 0 ||
 		result.Executed != 0 {
 		t.Fatal("cancelled/draining work certified runtime", result, err)
+	}
+}
+
+func TestPostAcknowledgementOracleErrorCannotEraseAcceptedWrite(t *testing.T) {
+	var ledger WriteLedger
+	var metrics Metrics
+	ack := AcceptedWrite{Identity: "synthetic-exact-original-ack", Fingerprint: "synthetic-fingerprint"}
+	_, _ = RunStage(t.Context(), StageConfig{Profile: "smoke", Duration: 20 * time.Millisecond, Interval: time.Millisecond, Phase: SustainedPhase}, []Actor{{ID: "synthetic-actor", Session: &Session{person: uuid.New()}}}, func(context.Context, Actor, uint64) (Measurement, *AcceptedWrite, error) {
+		return Measurement{Phase: SustainedPhase, Surface: PublicSurface, Operation: CueWrite, Status: 200, Outcome: Accepted}, &ack, errors.New("synthetic independent oracle failure after exact ACK")
+	}, &metrics, &ledger)
+	reports := metrics.Reports()
+	if len(reports) != 1 || reports[0].Outcomes[Unexpected] == 0 {
+		t.Fatal("independent oracle error hidden", reports)
+	}
+	report := ledger.Reconcile(nil)
+	if report.Accepted != 1 || report.Missing != 1 {
+		t.Fatal("post-ACK oracle error erased original accepted write", report)
 	}
 }

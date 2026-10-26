@@ -148,6 +148,13 @@ func RunStage(
 				default:
 				}
 				measurement, write, actionErr := action(ctx, actor, sequence)
+				// A later independent oracle error cannot erase an exact original
+				// acknowledgement already returned by the native action.
+				if write != nil {
+					if err := ledger.Accept(*write); err != nil {
+						recordError(err)
+					}
+				}
 				if actionErr != nil {
 					measurement.Outcome = Unexpected
 				}
@@ -159,11 +166,6 @@ func RunStage(
 					at := time.Now()
 					if at.Sub(result.Started) < cfg.Duration {
 						if err := activity.Authenticated(actor.ID, at); err != nil {
-							recordError(err)
-						}
-					}
-					if write != nil {
-						if err := ledger.Accept(*write); err != nil {
 							recordError(err)
 						}
 					}
