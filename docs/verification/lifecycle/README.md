@@ -835,3 +835,68 @@ receipt metadata before subsequent phases can fail, without bodies or sessions;
 the historical58 failure's missing work-receipt IDs remain missing. Corrected
 full native execution, all remaining lifecycle variants and final integrated
 advisory/browser/CI gates remain required.
+
+## Connected retained-work/cutoff/reconciliation — schema55 native PASS
+
+Actual runner57406 passed **237.22s** at frozen
+`0aad4fb959a6eaa9e0473f00f304d6399b0dfe32`, fixture image
+`sha256:eb71d2bcd3d5954aed7d0b4fa00204390af6eaf11d53f22cda1180da3aae2362`,
+mainbba43a6/schema55 (build39407/startup92311). The
+[source-pinned receipt](evidence/journey-cutoff-reconciled.json) contains actual
+work/source/decision references, bounded native SQL census and wall attempts.
+It includes the same retained two-event normal OIDC/admission/team/common/API
+journey, not separately seeded live or submission facts. Its test entrypoint and
+provider network remain distinct from normal production-image/TLS/browser proof.
+
+After actual common release/64 accepted native-managed grants, each current team
+performs an authenticated synthetic external work transaction; native branch
+configuration records main before cutoff. All twelve genuine private drafts and
+eight live formal entries remain distinct (six repository/two non-repository).
+The real queue's selected cutoff read receives one deterministic503; native
+history retains `provider_unavailable` and one retryable attempt. Only after that
+observation does the domain clock advance past cutoff and the same accepted
+collaborator create deliberately later external work. Natural queued retry reads
+that later current head; it never silently selects it as historical evidence.
+A member's late formal replacement PUT fails409/submission_cutoff/locked and the
+exact native frozen projection remains unchanged.
+
+All14 capture operations deliver with14 delivered attempts plus one retryable
+attempt,15 distinct wall-clock lease tokens and zero retained leases. Native
+immutable sources cover8 frozen,4 private-draft-only not-submitted and2 retired
+withdrawn entries. Each event includes a non-repository frozen source whose
+repository capture is correctly not-applicable. Six App-scoped current-ref
+observations plus the unavailable observation remain separate from decisions.
+There are exactly12 branch-configuration acknowledgements and6 explicit native
+organiser reconciliations (18 commands). Each selects the genuinely retained
+preparation-work receipt through the current source/native/submission revisions;
+original actor-bound acknowledgements are recovered with GET, without replaying
+the write. The failed/retried target's selected earlierSHA (`6b4da101…`) differs
+from its observed laterSHA (`807c32dc…`). Both events remain **live**, proving
+cutoff applies before assessment-stage advancement. Actual external counters are
+13 work transactions,7 scoped branch reads/1 failure,12 repository creates,
+36 PKCE/user reads and64 invitations/acceptances. These are opaque synthetic work
+hashes, not real Git objects or an automatic historical guarantee.
+
+The canonical-null-array RED80759 and corrected wire factory are preserved above;
+production validation remains unchanged. Schema55 integration includes the now
+merged advisory owner but does not yet execute its full lifecycle advisory path.
+The combined source also contains the minimal shared explicit OIDC-people
+constructor for #123: copied client/people inputs, exact unchanged52 default
+actors and separate36-account GitHub boundary, no new count environment setting,
+runner, domain/auth clock or authentication shortcut. A real alias-mutation RED
+failed before defensive copying (76950,package0.439s); final11 constructor/schema/
+provider parents passed65602 (package1.223s), with affected lint0. An initial
+unknown-actor control omitted required OpenID scope and hit the existing request
+guard; correcting only the test request preserved that guard. Explicit cohorts
+cannot acquire default/other-cohort people or duplicate/mismatched identities.
+These constructor/component checks do not claim1000-session/load acceptance.
+
+Final/work-progress/SQL receipts were exported before scoped cleanup. All owned
+containers, volumes and networks were removed and label queries were empty.
+The historical58 schema54 RED remains attributed to its original image/source;
+its missing work-receipt IDs are not retroactively reconstructed. Current-source
+post-freeze depletion/unused existing repos, offer cutoff, eligibility,
+missed/postponed release/attendance exception, full staff/practice/support and
+judging/advisory/awards/showcase/archive/owned outcomes plus all final native
+browser/normal-image/recovery/CI gates remain. **complete_lifecycle remains false;
+no L01–L18 row is declared fully complete.**
