@@ -208,9 +208,13 @@ func validateSaturation(result SaturationResult, after time.Time, fail func(stri
 		fail("measured release saturation curve with full cohort missing")
 		return
 	}
+	planned := ReleaseSaturationConfig().Intervals
 	previousInterval := time.Minute
 	limited := false
-	for _, point := range result.Points {
+	for index, point := range result.Points {
+		if index >= len(planned) || point.Interval != planned[index] {
+			fail("saturation pressure levels differ from the fixed release profile")
+		}
 		resourceSamples, queueSamples := baselineSampleCounts(
 			RuntimeEvidence{
 				Sustained: point.Stage,

@@ -209,7 +209,12 @@ func TestReleaseAcceptanceRejectsIncompleteRuntimeDespitePassingCallerReport(t *
 		"overlap-pressure":         func(r *RuntimeEvidence) { r.Saturation.Points[1].Stage.Started = r.Sustained.Started },
 		"inactive-pressure":        func(r *RuntimeEvidence) { r.Saturation.Points[1].Stage.Activity.ActiveEveryMinute-- },
 		"missing-pressure-samples": func(r *RuntimeEvidence) { r.Saturation.Points[1].Resources = nil },
-		"invented-pressure-limit":  func(r *RuntimeEvidence) { r.Saturation.LimitReached = false },
+		"skipped-pressure-level":   func(r *RuntimeEvidence) { r.Saturation.Points[1].Interval = 5 * time.Second },
+		"wrong-pressure-range": func(r *RuntimeEvidence) {
+			r.Saturation.Points[0].Interval = 59 * time.Second
+			r.Saturation.Points[1].Interval = 58 * time.Second
+		},
+		"invented-pressure-limit": func(r *RuntimeEvidence) { r.Saturation.LimitReached = false },
 		"saturation-cannot-pad-baseline-samples": func(r *RuntimeEvidence) {
 			for index := range r.Resources {
 				r.Resources[index].At = r.Sustained.Finished.Add(time.Minute)
