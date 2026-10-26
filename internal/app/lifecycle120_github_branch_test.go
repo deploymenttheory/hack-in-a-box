@@ -59,7 +59,9 @@ func lifecycleExternalBrowser(t *testing.T, actor string) *http.Client {
 }
 
 func TestLifecycleSyntheticGitHubExternalWorkRequiresAcceptedWrite(t *testing.T) {
-	fixture, native, key, configuration := lifecycleGitHubRESTFixture(t)
+	actors := lifecycleDefaultGitHubActors()
+	actors["mentor-a"] = 37
+	fixture, native, key, configuration := lifecycleGitHubRESTFixtureForActors(t, actors)
 	name := "hackbox-" + strings.ReplaceAll(uuid.NewString(), "-", "") + "-" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	repository, err := native.CreateRepository(t.Context(), configuration, key, lifecycleGitHubInstallationID, name, "hackbox-provisioning:"+uuid.NewString())
 	if err != nil {
@@ -116,8 +118,8 @@ func TestLifecycleSyntheticGitHubExternalWorkRequiresAcceptedWrite(t *testing.T)
 		}
 	}
 	accept(writer, invitation.Invitation.ID)
-	reader := lifecycleExternalBrowser(t, "attendee-02")
-	invitation, err = native.ChangeCollaborator(t.Context(), configuration, key, lifecycleGitHubInstallationID, access, githubapp.AccessChange{AccountID: 5002, Permission: "pull"})
+	reader := lifecycleExternalBrowser(t, "mentor-a")
+	invitation, err = native.ChangeCollaborator(t.Context(), configuration, key, lifecycleGitHubInstallationID, access, githubapp.AccessChange{AccountID: 5037, Permission: "pull"})
 	if err != nil || invitation.Invitation == nil {
 		t.Fatal("pending read invitation unavailable")
 	}

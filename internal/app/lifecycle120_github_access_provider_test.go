@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"slices"
@@ -39,7 +38,7 @@ func (g *lifecycleGitHub) accessHTTP(w http.ResponseWriter, r *http.Request) boo
 	if strings.HasPrefix(r.URL.Path, "/github-api/user/") {
 		raw := strings.TrimPrefix(r.URL.Path, "/github-api/user/")
 		id, err := strconv.ParseInt(raw, 10, 64)
-		if r.Method != http.MethodGet || err != nil || id < 5001 || id > 5036 {
+		if r.Method != http.MethodGet || err != nil || g.logins[int(id-5000)] == "" {
 			w.WriteHeader(http.StatusNotFound)
 			return true
 		}
@@ -57,7 +56,7 @@ func (g *lifecycleGitHub) accessHTTP(w http.ResponseWriter, r *http.Request) boo
 			w.WriteHeader(http.StatusForbidden)
 			return true
 		}
-		lifecycleJSON(w, map[string]any{"id": id, "login": fmt.Sprintf("lifecycle-attendee-%02d", id-5000), "type": "User"})
+		lifecycleJSON(w, map[string]any{"id": id, "login": g.logins[int(id-5000)], "type": "User"})
 		return true
 	}
 	prefix := "/github-api/repos/" + lifecycleGitHubOrganization + "/"
@@ -97,7 +96,7 @@ func (g *lifecycleGitHub) accessHTTP(w http.ResponseWriter, r *http.Request) boo
 			slices.Sort(ids)
 			values := []map[string]any{}
 			for _, id := range ids {
-				values = append(values, map[string]any{"id": id, "login": fmt.Sprintf("lifecycle-attendee-%02d", id-5000), "role_name": g.collaborators[name][id]})
+				values = append(values, map[string]any{"id": id, "login": g.logins[int(id-5000)], "role_name": g.collaborators[name][id]})
 			}
 			lifecycleJSON(w, values)
 		} else {
@@ -117,7 +116,7 @@ func (g *lifecycleGitHub) accessHTTP(w http.ResponseWriter, r *http.Request) boo
 		return true
 	}
 	if len(parts) == 3 && resource == "collaborators" && r.Method == http.MethodPut {
-		actor, valid := lifecycleGitHubActor(strings.TrimPrefix(parts[2], "lifecycle-"))
+		actor, valid := g.actors[strings.TrimPrefix(parts[2], "lifecycle-")]
 		var body struct {
 			Permission string `json:"permission"`
 		}

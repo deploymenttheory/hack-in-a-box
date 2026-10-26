@@ -39,7 +39,7 @@ func (g *lifecycleGitHub) oauthHTTP(w http.ResponseWriter, r *http.Request) bool
 	switch r.URL.Path {
 	case "/github/login/oauth/authorize":
 		q := r.URL.Query()
-		actor, valid := lifecycleGitHubActor(q.Get("actor"))
+		actor, valid := g.actors[q.Get("actor")]
 		redirect := q.Get("redirect_uri")
 		allowed := redirect == "http://public:8080/auth/github/callback" || redirect == "http://admin:8080/auth/github/callback"
 		challenge := q.Get("code_challenge")
@@ -123,7 +123,7 @@ func (g *lifecycleGitHub) oauthHTTP(w http.ResponseWriter, r *http.Request) bool
 		}
 		g.proof.OAuthUserReads++
 		g.mu.Unlock()
-		lifecycleJSON(w, map[string]any{"id": 5000 + account.Actor, "login": fmt.Sprintf("lifecycle-attendee-%02d", account.Actor), "type": "User"})
+		lifecycleJSON(w, map[string]any{"id": 5000 + account.Actor, "login": g.logins[account.Actor], "type": "User"})
 		return true
 	}
 	return false

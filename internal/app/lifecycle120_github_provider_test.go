@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -60,6 +62,8 @@ type (
 	// App JWTs and repository-scoped installation tokens for their REST requests.
 	lifecycleGitHub struct {
 		key           *rsa.PrivateKey
+		actors        map[string]int
+		logins        map[int]string
 		mu            sync.Mutex
 		tokens        map[string]lifecycleGitHubToken
 		proof         lifecycleGitHubProof
@@ -75,6 +79,34 @@ type (
 )
 
 func newLifecycleGitHub(directory string) (*lifecycleGitHub, error) {
+	return newLifecycleGitHubForActors(directory, lifecycleDefaultGitHubActors())
+}
+
+func lifecycleDefaultGitHubActors() map[string]int {
+	actors := map[string]int{}
+	for index := 1; index <= 36; index++ {
+		actors[fmt.Sprintf("attendee-%02d", index)] = index
+	}
+	return actors
+}
+
+func newLifecycleGitHubForActors(directory string, actors map[string]int) (*lifecycleGitHub, error) {
+	if len(actors) == 0 {
+		return nil, errors.New("explicit synthetic GitHub actors required")
+	}
+	actors = maps.Clone(actors)
+	logins := map[int]string{}
+	for subject, id := range actors {
+		if subject == "" || len(subject) > 100 || id < 1 || id > 10000 || logins[id] != "" {
+			return nil, errors.New("invalid or duplicate synthetic GitHub actor")
+		}
+		for _, value := range subject {
+			if !(value >= 'a' && value <= 'z' || value >= '0' && value <= '9' || value == '-') {
+				return nil, errors.New("invalid synthetic GitHub login")
+			}
+		}
+		logins[id] = "lifecycle-" + subject
+	}
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -92,7 +124,7 @@ func newLifecycleGitHub(directory string) (*lifecycleGitHub, error) {
 	); err != nil {
 		return nil, err
 	}
-	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}, codes: map[string]lifecycleGitHubCode{}, users: map[string]lifecycleGitHubUserToken{}, webSessions: map[string]lifecycleGitHubUserToken{}, invitations: map[int64]lifecycleGitHubInvitation{}, collaborators: map[string]map[int64]string{}}, nil
+	return &lifecycleGitHub{key: key, actors: actors, logins: logins, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}, codes: map[string]lifecycleGitHubCode{}, users: map[string]lifecycleGitHubUserToken{}, webSessions: map[string]lifecycleGitHubUserToken{}, invitations: map[int64]lifecycleGitHubInvitation{}, collaborators: map[string]map[int64]string{}}, nil
 }
 
 func (g *lifecycleGitHub) appJWT(r *http.Request) bool {
@@ -312,8 +344,13 @@ func (g *lifecycleGitHub) control(w http.ResponseWriter, r *http.Request) {
 // not native App attachment, queued repositories or the integrated lifecycle.
 func lifecycleGitHubRESTFixture(t *testing.T) (*lifecycleGitHub, *githubapp.RESTProvider, []byte, githubapp.Configuration) {
 	t.Helper()
+	return lifecycleGitHubRESTFixtureForActors(t, lifecycleDefaultGitHubActors())
+}
+
+func lifecycleGitHubRESTFixtureForActors(t *testing.T, actors map[string]int) (*lifecycleGitHub, *githubapp.RESTProvider, []byte, githubapp.Configuration) {
+	t.Helper()
 	directory := t.TempDir()
-	fixture, err := newLifecycleGitHub(directory)
+	fixture, err := newLifecycleGitHubForActors(directory, actors)
 	if err != nil {
 		t.Fatal(err)
 	}

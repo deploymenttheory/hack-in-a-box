@@ -147,6 +147,10 @@ func (r *lifecycleJourney) preparePrivateDrafts(t *testing.T) {
 func (r *lifecycleJourney) submitLiveEvidence(t *testing.T) {
 	t.Helper()
 	ctx := t.Context()
+	submittedAt := r.timeline.Live
+	if !r.livePollAt.IsZero() {
+		submittedAt = r.livePollAt
+	}
 	for index := range r.events {
 		item := &r.events[index]
 		for i := range item.submissions {
@@ -176,7 +180,7 @@ func (r *lifecycleJourney) submitLiveEvidence(t *testing.T) {
 			if err := member.call(ctx, http.MethodPut, path, before.Revision, submissions.Command{Evidence: receipt.evidence}, &next, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			if next.Final == nil || next.Final.Revision != 1 || next.Final.Late || next.Final.ActorID != member.person || !next.Final.SubmittedAt.Equal(r.timeline.Live) || !reflect.DeepEqual(next.Final.Evidence, receipt.evidence) {
+			if next.Final == nil || next.Final.Revision != 1 || next.Final.Late || next.Final.ActorID != member.person || !next.Final.SubmittedAt.Equal(submittedAt) || !reflect.DeepEqual(next.Final.Evidence, receipt.evidence) {
 				t.Fatal("native live submission changed the reviewed source or identity")
 			}
 			receipt.FormalRevision = next.Final.Revision

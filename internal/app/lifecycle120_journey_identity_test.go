@@ -14,8 +14,24 @@ import (
 // identity without creating or replacing it.
 func (r *lifecycleJourney) linkGitHubParticipants(t *testing.T) {
 	t.Helper()
+	type identity struct {
+		client, other *lifecycleClient
+		subject       string
+		numericID     int64
+	}
+	identities := []identity{}
 	for index, client := range r.events[0].cohort.clients {
-		expectedID := int64(5001 + index)
+		identities = append(identities, identity{client: client, other: r.events[1].cohort.clients[index], subject: fmt.Sprintf("attendee-%02d", index+1), numericID: int64(5001 + index)})
+	}
+	for index, actor := range []string{"mentor-a", "mentor-b"} {
+		client, other := r.events[0].cohort.staff[actor], r.events[1].cohort.staff[actor]
+		if client == nil || other == nil || client.person != other.person {
+			t.Fatal("selected mentor did not retain one normal OIDC identity across both events")
+		}
+		identities = append(identities, identity{client: client, other: other, subject: actor, numericID: int64(5037 + index)})
+	}
+	for index, current := range identities {
+		client, expectedID := current.client, current.numericID
 		var before githubidentity.Status
 		if err := client.call(t.Context(), http.MethodGet, "/api/v1/account/github", -1, nil, &before, http.StatusOK); err != nil {
 			t.Fatal(err)
@@ -34,7 +50,7 @@ func (r *lifecycleJourney) linkGitHubParticipants(t *testing.T) {
 			t.Fatal("native participant owner did not create bound PKCE authorization")
 		}
 		query := target.Query()
-		query.Set("actor", fmt.Sprintf("attendee-%02d", index+1))
+		query.Set("actor", current.subject)
 		target.RawQuery = query.Encode()
 		transport, err := newLifecycleProviderTransport()
 		if err != nil {
@@ -53,7 +69,7 @@ func (r *lifecycleJourney) linkGitHubParticipants(t *testing.T) {
 			t.Fatal("external GitHub callback lost exact native state/origin")
 		}
 		if index == 0 {
-			other := r.events[1].cohort.clients[index]
+			other := current.other
 			result, err := other.redirect(t.Context(), callback, http.StatusSeeOther)
 			if err != nil || result != other.origin+"/account?github=failed" {
 				t.Fatal("another authenticated browser session consumed participant linking authority")
@@ -67,12 +83,12 @@ func (r *lifecycleJourney) linkGitHubParticipants(t *testing.T) {
 		if err != nil || result != client.origin+"/account?github=failed" {
 			t.Fatal("native participant linking callback was replayable")
 		}
-		for _, reader := range []*lifecycleClient{client, r.events[1].cohort.clients[index]} {
+		for _, reader := range []*lifecycleClient{client, current.other} {
 			var status githubidentity.Status
 			if err := reader.call(t.Context(), http.MethodGet, "/api/v1/account/github", -1, nil, &status, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			if status.Account == nil || status.Account.GitHubID != expectedID || status.Account.Login != fmt.Sprintf("lifecycle-attendee-%02d", index+1) || status.Revision != before.Revision+1 || status.Account.VerifiedAt.IsZero() {
+			if status.Account == nil || status.Account.GitHubID != expectedID || status.Account.Login != "lifecycle-"+current.subject || status.Revision != before.Revision+1 || status.Account.VerifiedAt.IsZero() {
 				t.Fatal("native numeric GitHub ownership was not stable across event sessions")
 			}
 		}

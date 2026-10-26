@@ -202,7 +202,10 @@ func runLifecycleProvider(ctx context.Context) error {
 		return err
 	}
 	defer func() { _ = relay.close() }()
-	github, err := newLifecycleGitHub(directory)
+	actors := lifecycleDefaultGitHubActors()
+	actors["mentor-a"] = 37
+	actors["mentor-b"] = 38
+	github, err := newLifecycleGitHubForActors(directory, actors)
 	if err != nil {
 		return err
 	}

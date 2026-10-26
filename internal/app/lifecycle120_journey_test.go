@@ -38,6 +38,7 @@ type lifecycleJourneyEvent struct {
 	github       githubapp.Status
 	repositories []repositories.View
 	access       []lifecycleAccessReceipt
+	liveAccess   []lifecycleAccessReceipt
 	teamNotice   lifecycleTeamNoticeReceipt
 	accessPoll   []lifecycleAccessPollReceipt
 	deliverable  uuid.UUID
@@ -51,10 +52,11 @@ type lifecycleJourneyEvent struct {
 	commonHash   string
 }
 type lifecycleJourney struct {
-	owner    *lifecycleClient
-	control  *lifecycleControl
-	timeline lifecycleTimeline
-	events   []lifecycleJourneyEvent
+	owner      *lifecycleClient
+	control    *lifecycleControl
+	timeline   lifecycleTimeline
+	events     []lifecycleJourneyEvent
+	livePollAt time.Time
 }
 
 func TestLifecycleComposeJourney(t *testing.T) {
@@ -149,10 +151,10 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	for i := range run.events {
 		run.readCommonPublication(t, &run.events[i])
 	}
+	run.prepareMentorReview(t)
 	run.prepareRepositoryAccess(t)
 	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
-	run.prepareMentorReview(t)
 	run.rehearseJudgePractice(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
@@ -215,6 +217,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("native connected journey did not reach live with its real confirmed census")
 		}
 	}
+	run.prepareLiveMentorAccess(t)
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
 	run.recordLiveMentorCheckpoints(t)
@@ -230,14 +233,14 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			"native GitHub installation did not exercise actual verified App/scoped REST transport",
 		)
 	}
-	if providerProof.OAuthExchangesVerified != 36 || providerProof.OAuthUserReads != 36 {
-		t.Fatal("participant linking did not retain exactly36 real PKCE/user verifications")
+	if providerProof.OAuthExchangesVerified != 38 || providerProof.OAuthUserReads != 38 {
+		t.Fatal("participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications")
 	}
 	if providerProof.RepositoryCreates != 12 {
 		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
 	}
-	if providerProof.InvitationCreates != 64 || providerProof.InvitationAcceptances != 64 {
-		t.Fatal("actual external access census did not match both events' frozen thirty-two-person cohorts", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
+	if providerProof.InvitationCreates != 88 || providerProof.InvitationAcceptances != 88 {
+		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
 	}
 	type eventReceipt struct {
 		ID           uuid.UUID                    `json:"event_id"`
@@ -254,6 +257,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		PublishedAt  *time.Time                   `json:"published_at"`
 		Repositories []repositories.View          `json:"repositories"`
 		Access       []lifecycleAccessReceipt     `json:"repository_access"`
+		LiveAccess   []lifecycleAccessReceipt     `json:"live_mentor_repository_access"`
 		TeamNotice   lifecycleTeamNoticeReceipt   `json:"team_notice"`
 		AccessPoll   []lifecycleAccessPollReceipt `json:"access_poll"`
 		Submissions  []lifecycleSubmissionReceipt `json:"submissions"`
@@ -289,6 +293,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				PublishedAt:  item.view.PublishedAt,
 				Repositories: item.repositories,
 				Access:       item.access,
+				LiveAccess:   item.liveAccess,
 				TeamNotice:   item.teamNotice,
 				AccessPoll:   item.accessPoll,
 				Submissions:  item.submissions,
