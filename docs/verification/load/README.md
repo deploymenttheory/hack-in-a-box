@@ -346,3 +346,56 @@ native preparation/export, Compose integration and independent current-
 permission, contention, provider receipt and follow-up oracles. Its workload
 receipt explicitly cannot return `release_passed: true` at this checkpoint.
 No native driver process or full load profile has run yet.
+
+## Private factory and baseline composition
+
+`go run ./cmd/loadfixture -new-directory /private/tmp/hackbox-load123-new`
+creates a new owner-only directory containing the canonical five-event request
+plan, explicit external issuer manifest, setup clock and fresh fixture CA/server
+certificates. It creates no native application people, sessions or finished
+facts. The CA signing key is discarded; the server certificate covers only
+`public.load.test`, `admin.load.test` and `issuer.load.test` for 48 real hours.
+Existing input directories and historical receipts are never overwritten.
+
+The native admission checkpoint is separately executable with `-admit-plan`,
+`-ca`, `-targets` and `-output`. It requires the isolated TLS setup API and the
+`HACKBOX_LOAD_OBSERVER_DSN` dedicated read-only observer. It authenticates all
+1,000 people, submits 180 actual competitor applications per event and selects
+19 additional staff through native application/review. The declared native
+owner is the twentieth staff member. For the four other events it transfers
+ownership and removes the bootstrap's event organiser grant, preventing a
+hidden 201st person. The final read-only census independently requires 180+20,
+confirmed capacity/claims and no waitlist, duplicate or excluded competitor.
+This admission phase is source only so far; no successful native execution is
+claimed from compilation or issuer protocol tests.
+
+The private `compose.yaml` uses normal source-pinned API/admin/worker images,
+independent TLS front doors on 8443/8444/8445 and durable PostgreSQL/files volumes.
+The separate `setup.compose.yaml` selects only the private preparation API
+entrypoints. Normal application processes receive a CA-only volume; a scoped
+one-shot initializer copies only declared synthetic inputs into UID 10001
+private fixture volumes for the nonroot issuer/proxies. An explicit observer
+bootstrap grants its dedicated role SELECT after normal migrations. Its
+loopback port is benchmark-only; normal production Compose is unchanged.
+Resource limits, private upstream HTTP and synthetic fixture provider costs
+must remain explicit in the actual baseline report. Compose syntax validation
+uses dummy values only and is not runtime/TLS/native proof.
+
+The setup API may read a private historical domain clock, with no HTTP clock
+route or native session/identity seeding. Missing or nonprivate clock control
+fails closed. Setup will stop before measured production images/default-wall
+workers and fresh 1,000-person authentication. Historical native worker release
+and capture still require the reviewed shared #120 worker composition; the
+current preparation API does not substitute direct maintenance calls. Positive
+archived entries use actual URL formal submissions and native capture/freeze;
+URLs never invent repository SHAs. Their native execution/export, project
+publication and follow-up preparation remain pending.
+
+A second real HTTPS control found automatic replay of a bodyless command on a
+reused connection despite retaining its native Idempotency-Key: two effects and
+apparent success. The verified driver now uses a fresh connection for each
+unsafe request, preserving header/body identity and the unknown original
+response. The causal control passes with one effect. TLS connection cost stays
+inside measured write latency, including at the separate front-door proxy; it
+is not removed as external-provider time. No domain/provider write is retried
+by the driver to improve the measurements.

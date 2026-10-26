@@ -17,6 +17,7 @@ import (
 // HTTP_PROXY, DNS fallback, plaintext escape or system-root fallback.
 type VerifiedTransport struct {
 	transport *http.Transport
+	commands  *http.Transport
 	targets   map[string]string
 }
 
@@ -72,6 +73,12 @@ func NewVerifiedTransport(caPEM []byte, targets map[string]string) (*VerifiedTra
 		MaxConnsPerHost:     2048,
 		IdleConnTimeout:     90 * time.Second,
 	}
+	// Go may replay a bodyless POST bearing Idempotency-Key when a reused
+	// connection loses its response, even without GetBody. Each unsafe request
+	// gets a fresh connection; exact headers/body/key are preserved. The real
+	// TLS overhead remains inside the write latency distribution.
+	verified.commands = verified.transport.Clone()
+	verified.commands.DisableKeepAlives = true
 	return verified, nil
 }
 
@@ -95,11 +102,18 @@ func (t *VerifiedTransport) RoundTrip(request *http.Request) (*http.Response, er
 	if request.Host != "" && request.Host != request.URL.Host {
 		return nil, fmt.Errorf("%w: load driver refused alternate Host header", errLoadSession)
 	}
-	response, err := t.transport.RoundTrip(request)
+	transport := t.transport
+	if request.Method != http.MethodGet && request.Method != http.MethodHead {
+		transport = t.commands
+	}
+	response, err := transport.RoundTrip(request)
 	if err != nil {
 		return nil, fmt.Errorf("verified fixture HTTPS: %w", err)
 	}
 	return response, nil
 }
 
-func (t *VerifiedTransport) CloseIdleConnections() { t.transport.CloseIdleConnections() }
+func (t *VerifiedTransport) CloseIdleConnections() {
+	t.transport.CloseIdleConnections()
+	t.commands.CloseIdleConnections()
+}

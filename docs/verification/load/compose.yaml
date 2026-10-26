@@ -1,0 +1,202 @@
+# Private benchmark baseline. Supply a unique -p project and --env-file outside
+# the checkout. This file never extends or restarts the user's normal project.
+x-app: &app
+  image: ${LOAD_PUBLIC_IMAGE:?Set immutable normal public image}
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  cpus: 2
+  mem_limit: 1g
+  pids_limit: 256
+  environment: &environment
+    HACKBOX_ENV: production
+    HACKBOX_DATABASE_URL: postgres://load123:${LOAD_DB_PASSWORD:?Set private random database password}@postgres:5432/load123?sslmode=disable
+    HACKBOX_HTTP_ADDR: 0.0.0.0:8080
+    HACKBOX_PUBLIC_ORIGIN: https://public.load.test:8443
+    HACKBOX_ADMIN_ORIGIN: https://admin.load.test:8444
+    HACKBOX_WORKSPACE_ORIGIN: https://public.load.test:8443
+    HACKBOX_OIDC_ISSUER: https://issuer.load.test:8445
+    HACKBOX_OIDC_CLIENT_ID: load-public
+    HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
+    HACKBOX_BOOTSTRAP_SUBJECT: ${LOAD_BOOTSTRAP_SUBJECT:-}
+    HACKBOX_METRICS_TOKEN: ${LOAD_METRICS_TOKEN:?Set private random metrics token}
+    HACKBOX_CREDENTIAL_KEYRING: ${LOAD_CREDENTIAL_KEYRING:?Set private fixture credential keyring}
+    HACKBOX_STORAGE_PATH: /data/files
+    HACKBOX_WEB_DIR: /app/web
+    SSL_CERT_FILE: /fixture-ca/ca.crt
+    GOMAXPROCS: '2'
+  volumes:
+    - files:/data/files
+    - fixture_ca:/fixture-ca:ro
+  depends_on:
+    postgres: {condition: service_healthy}
+    tls-issuer: {condition: service_started}
+  restart: 'no'
+
+x-proxy: &proxy
+  image: ${LOAD_TLS_IMAGE:?Set source-pinned private TLS proxy image}
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  cpus: 0.25
+  mem_limit: 128m
+  pids_limit: 64
+  volumes: [fixture_private:/fixture:ro]
+  depends_on:
+    fixture-init: {condition: service_completed_successfully}
+
+services:
+  postgres:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    cpus: 1
+    mem_limit: 1g
+    pids_limit: 256
+    environment:
+      POSTGRES_DB: load123
+      POSTGRES_USER: load123
+      POSTGRES_PASSWORD: ${LOAD_DB_PASSWORD:?Set private random database password}
+    ports: ['127.0.0.1:${LOAD_OBSERVER_PORT:-15433}:5432']
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U load123 -d load123']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  # A root one-shot initializer copies only these declared synthetic inputs to
+  # project-owned volumes. Normal app processes receive CA-only, never keys.
+  fixture-init:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    user: '0:0'
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    security_opt: [no-new-privileges:true]
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - >-
+        install -d -o 10001 -g 10001 -m 0700 /fixture;
+        install -o 10001 -g 10001 -m 0600 /inputs/server.key /fixture/server.key;
+        install -o 10001 -g 10001 -m 0600 /inputs/server.crt /fixture/server.crt;
+        install -o 10001 -g 10001 -m 0600 /inputs/oidc.json /fixture/oidc.json;
+        install -o 10001 -g 10001 -m 0600 /inputs/domain-time /fixture/domain-time;
+        install -d -o 10001 -g 10001 -m 0755 /fixture-ca;
+        install -o 10001 -g 10001 -m 0644 /inputs/ca.crt /fixture-ca/ca.crt
+    volumes:
+      - ${LOAD_INPUT_DIR:?Set absolute new private input directory}:/inputs:ro
+      - fixture_private:/fixture
+      - fixture_ca:/fixture-ca
+
+  issuer:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 0.5
+    mem_limit: 256m
+    pids_limit: 128
+    command: [-test.run=^TestLoad123OIDCFixtureProcess$, -test.timeout=0]
+    environment:
+      HACKBOX_LOAD_OIDC_FIXTURE: '1'
+      HACKBOX_LOAD_OIDC_MANIFEST: /fixture/oidc.json
+      HACKBOX_LOAD_OIDC_LISTEN: :8080
+      GOMAXPROCS: '2'
+    volumes: [fixture_private:/fixture:ro]
+    depends_on:
+      fixture-init: {condition: service_completed_successfully}
+
+  tls-issuer:
+    <<: *proxy
+    command: [-listen, ':8445', -host, 'issuer.load.test:8445', -upstream, 'http://issuer:8080', -cert, /fixture/server.crt, -key, /fixture/server.key]
+    ports: ['127.0.0.1:${LOAD_ISSUER_PORT:-8445}:8445']
+    networks:
+      default: {aliases: [issuer.load.test]}
+    depends_on:
+      fixture-init: {condition: service_completed_successfully}
+      issuer: {condition: service_started}
+
+  migrate:
+    <<: *app
+    profiles: [tools]
+    entrypoint: [/app/migrate]
+
+  observer-init:
+    image: postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd
+    profiles: [tools]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      PGPASSWORD: ${LOAD_DB_PASSWORD:?Set private random database password}
+      LOAD_OBSERVER_PASSWORD: ${LOAD_OBSERVER_PASSWORD:?Set private random observer password}
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        psql -X --host=postgres --username=load123 --dbname=load123 --set=ON_ERROR_STOP=1 --set=observer_password="$$LOAD_OBSERVER_PASSWORD" <<'SQL'
+        BEGIN;
+        CREATE ROLE load123_observer LOGIN PASSWORD :'observer_password';
+        GRANT CONNECT ON DATABASE load123 TO load123_observer;
+        GRANT USAGE ON SCHEMA public TO load123_observer;
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO load123_observer;
+        ALTER DEFAULT PRIVILEGES FOR USER load123 IN SCHEMA public GRANT SELECT ON TABLES TO load123_observer;
+        COMMIT;
+        SQL
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+
+  api:
+    <<: *app
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  admin:
+    <<: *app
+    image: ${LOAD_ADMIN_IMAGE:?Set immutable normal admin image}
+    cpus: 1
+    environment:
+      <<: *environment
+      HACKBOX_SURFACE: admin
+      HACKBOX_PUBLIC_ORIGIN: https://admin.load.test:8444
+      HACKBOX_OIDC_CLIENT_ID: load-admin
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  worker:
+    <<: *app
+    profiles: [runtime]
+    cpus: 1
+    entrypoint: [/app/worker]
+
+  tls-public:
+    <<: *proxy
+    command: [-listen, ':8443', -host, 'public.load.test:8443', -upstream, 'http://api:8080', -cert, /fixture/server.crt, -key, /fixture/server.key]
+    ports: ['127.0.0.1:${LOAD_PUBLIC_PORT:-8443}:8443']
+    networks:
+      default: {aliases: [public.load.test]}
+
+  tls-admin:
+    <<: *proxy
+    command: [-listen, ':8444', -host, 'admin.load.test:8444', -upstream, 'http://admin:8080', -cert, /fixture/server.crt, -key, /fixture/server.key]
+    ports: ['127.0.0.1:${LOAD_ADMIN_PORT:-8444}:8444']
+    networks:
+      default: {aliases: [admin.load.test]}
+
+volumes:
+  database:
+  files:
+  fixture_private:
+  fixture_ca:

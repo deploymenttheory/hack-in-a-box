@@ -124,3 +124,63 @@ func TestVerifiedTransportRequiresDeclaredLoopbackTargets(t *testing.T) {
 		t.Fatal("missing CA accepted")
 	}
 }
+
+func TestVerifiedTransportDoesNotReplayBodylessUnknownCommand(t *testing.T) {
+	var effects atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			_, _ = io.WriteString(w, "warm idle connection")
+			return
+		}
+		if r.Header.Get("Idempotency-Key") != "synthetic-original-key" {
+			t.Error("native command identity stripped")
+		}
+		if effects.Add(1) == 1 {
+			connection, _, err := w.(http.Hijacker).Hijack()
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			_ = connection.Close()
+			return
+		}
+		_, _ = io.WriteString(w, "second effect")
+	}))
+	defer server.Close()
+	name := server.Certificate().DNSNames[0] + ":8443"
+	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
+	transport, err := NewVerifiedTransport(
+		ca,
+		map[string]string{name: server.Listener.Addr().String()},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Transport: transport, Timeout: 3 * time.Second}
+	response, err := client.Get("https://" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(io.Discard, response.Body)
+	_ = response.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "https://"+name, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Idempotency-Key", "synthetic-original-key")
+	response, err = client.Do(request)
+	if response != nil {
+		_ = response.Body.Close()
+	}
+	if err == nil || effects.Load() != 1 {
+		t.Fatalf(
+			"unknown bodyless command was replayed: effects=%d transport_error=%v",
+			effects.Load(),
+			err,
+		)
+	}
+}
