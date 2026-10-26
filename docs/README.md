@@ -1,70 +1,28 @@
-# Project Title
+# Hack-in-a-Box documentation
 
-Simple overview of your project and its use or purpose.
+Start with the [operator handbook](operator-handbook.md) to install, configure,
+upgrade and troubleshoot an installation. Use the [event-day checklist](event-day-checklist.md)
+to prepare and run an event. The [glossary](../GLOSSARY.md) and
+[architecture decisions](adr/) define the product rules.
 
->Make use of the [Markdow Syntax Guide](markdown-syntax-guide.md).
+| Task | Documentation |
+| --- | --- |
+| Run the application and develop locally | [Repository README](../README.md) |
+| Deploy independent participant/admin services | [Admin portal](admin-portal.md) |
+| Monitor processes, storage and durable operations | [Operations](operations.md) |
+| Back up, verify and restore a matching installation | [Encrypted recovery runbook](recovery-runbook.md) |
+| Configure personal mail and recover uncertain sends | [SMTP](smtp-setup.md) |
+| Configure an owned Teams Workflow | [Teams setup](teams-workflows-setup.md) |
+| Link individual GitHub identities | [GitHub identity](github-identity.md) |
+| Configure an organisation GitHub App and webhook | [GitHub App](github-app-setup.md) |
+| Recover encrypted team credentials | [Credential recovery](team-credential-recovery.md) |
+| Define and publish the shared scoring contract | [Rubric](rubric-contract.md) |
+| Manage canonical answers and material changes | [Official clarifications](official-clarifications-design.md) |
+| Plan objectives and distinguish estimated/evidenced value | [Objectives](objectives.md), [outcome follow-through](outcome-follow-through-design.md) |
+| Publish and extend the independent interactive UI guide | [Style guide](design/styleguide.md), [contributor standards](../CONTRIBUTING.md) |
 
-## Description
-
-Describe your project.
-
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Prerequisites
-
-Describe any prerequisites or dependencies.
-
-### Installation
-
-* How/where to download your program
-* Any modifications needed to be made to files/folders
-
-  ```bash
-  iex "&amp; { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
-  ```
-
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-
-## FAQ and Known Issues
-
-Any advise for common problems or issues.
-  ```bash
-  command to run if program contains helper info
-  ```
-
-## Contributors
-
-Contributors names and contact info
-
-* You, Yourself and the Universe
-* [@your_twitter](<https://twitter.com/your_username>)
-
-## Contribution
-
-If you would like to become an active contributor to this repository or project, please follow the instructions provided in [`CONTRIBUTING.md`](../CONTRIBUTING.md).
-
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@your_twitter](<https://twitter.com/your_username>) - email@example.com
-
-Project Link: [https://github.com/your_username/repo_name](<https://github.com/your_username/repo_name>)
-
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See [`LICENSE`](`../../LICENSE`).
-
-## References
-
-* [Emoji Cheat Sheet](<https://github.com/ikatyang/emoji-cheat-sheet>)
-* [License Helper](<https://choosealicense.com/>)
+Verification records under [verification/](verification/) describe their own
+source, fixture, execution and limitations. A historical screenshot or passing
+component test does not establish a clean-machine deployment, live-provider
+approval, capacity test or release signoff. The documentation walkthrough's
+current status is recorded [separately](verification/operator-handbook/README.md).

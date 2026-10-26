@@ -17,7 +17,9 @@ docker build --target recovery -t hackbox-recovery:REVIEWED_REVISION .
 
 The image includes the recovery command, existing migrate/worker entrypoints and
 pinned PostgreSQL 17.7 clients. It does not need Node, either web portal or host
-`pg_dump`/`psql`. Match the database major version and native schema (48). No
+`pg_dump`/`psql`. Match the database major version and the exact native schema required by that
+reviewed application revision; the schema recorded by a historical rehearsal is
+not the schema of every later release. No
 application service migrates itself on startup. Keep the reviewed image digest
 with the backup inventory; the encrypted manifest records its backup UUID, schema,
 UTC capture interval, object identities/sizes/checksums and ciphertext hashes.

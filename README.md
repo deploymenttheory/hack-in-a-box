@@ -2,7 +2,15 @@
 
 A self-hosted hackathon platform: a Go API and durable worker, a React/TypeScript browser application, PostgreSQL and private persistent-volume file storage. The product vocabulary is in [GLOSSARY.md](GLOSSARY.md), and the agreed rules are in [docs/adr](docs/adr).
 
-The foundation implements database migrations, the application shell, generated REST contracts, OIDC sessions, audit records, durable delivery operations, protected files and operational checks. Versioned registration forms, FIFO allocation and offers, organiser applicant review, and published/frozen team membership now supply attendance and team lifecycle facts. Challenge publication, team suggestions, mentor assignment and judging remain in their domain tickets. See [preparation verification](docs/preparation-verification.md) for the implementation sequence and tested boundaries. Event-resource access uses current event memberships and resource assignments. Platform administration manages ownership without implicitly granting private content, credentials or assessments. See [organiser verification](docs/organiser-verification.md).
+The application includes independent participant and administration portals,
+registration and team allocation, preparation and challenge publication, managed
+repository workflows, live support, judging and explicit results, and reviewed
+project outcomes. Current event/resource permissions govern private content,
+credentials and assessments; platform administration does not grant those reads
+implicitly. Start with the [operator handbook](docs/operator-handbook.md),
+[event-day checklist](docs/event-day-checklist.md) and [documentation index](docs/README.md).
+Release verification and live-provider prerequisites remain separate gates; a
+feature being present does not establish release readiness.
 
 ## Run with Docker Compose
 
@@ -84,7 +92,7 @@ Go tool directives and `go.sum` pin sqlc and oapi-codegen; `web/package-lock.jso
 
 `internal/app` wires dependencies. `internal/access` owns the policy boundary; `identity` authenticates. `audit` accepts defined action/reason codes and typed references instead of arbitrary confidential text. `files` adapts private storage. `jobs` owns durable operation identity, approvals, attempts and reconciliation independently of River retention. Domain modules must not import HTTP adapters or the composition root.
 
-Future integration handlers implement `Eligible`, `Deliver` and `Reconcile`; all receive a stable operation ID for provider idempotency. No external provider handler is installed in this foundation. Due time does not approve an operation. Workers recheck approval, cancellation and current eligibility before delivery. Database guards prevent simultaneous ownership, and expired attempts are reconciled. Outcomes are delivered, retryable, permanent or ambiguous; unknown outcomes become ambiguous and are never blindly retried. Reconciliation runs at startup and every minute from persisted records. See [operations](docs/operations.md) before implementing a provider.
+Integration handlers implement `Eligible`, `Deliver` and `Reconcile`; all receive a stable operation ID for provider idempotency. Provider setup and recovery prerequisites are documented in the [operator handbook](docs/operator-handbook.md#enable-integrations-deliberately). Due time does not approve an operation. Workers recheck approval, cancellation and current eligibility before delivery. Database guards prevent simultaneous ownership, and expired attempts are reconciled. Outcomes are delivered, retryable, permanent or ambiguous; unknown outcomes become ambiguous and are never blindly retried. Reconciliation runs at startup and every minute from persisted records. See [operations](docs/operations.md) before implementing a provider.
 
 The React shell uses TanStack Router/Query, React Hook Form/Zod and shadcn Base UI components with Tailwind. Private query keys include person and event; changing accounts destroys the private cache. Portals stay inside the event theme scope. Form schemas improve feedback; the server remains authoritative.
 
