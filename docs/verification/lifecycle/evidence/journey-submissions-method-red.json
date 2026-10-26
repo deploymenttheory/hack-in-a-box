@@ -1,0 +1,142 @@
+{
+  "checkpoint": "first-native-preweek-submission-driver-red",
+  "complete_lifecycle": false,
+  "source": "9faf597a55d4e65d92dc1e90536cbf42dda3a1b8",
+  "fixture_image": "sha256:5ccc85b10e9065ad2319f53ef77261b530a789789d69b52e3cc38e5f6d5bf261",
+  "main_base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "schema": 54,
+  "production_image": false,
+  "runner": "66554",
+  "duration_seconds": 102.39,
+  "result": "FAIL",
+  "observed": "POST formal submission returned405, expected409; native contract requiresPUT. First actual preweek private draft saved; no formal revision was created.",
+  "classification": "Driver HTTP method defect; no production bug or early gate acceptance inferred.",
+  "native_state": {
+    "captured_wall_at": "2026-10-26T02:41:53.544587+00:00",
+    "drafts": [
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "50b58a29-512e-4ff2-bc35-73090803eb18",
+        "revision": 1,
+        "actor_id": "189f4a9f-33e7-4112-94c9-3d2d75a0a475",
+        "updated_at": "2026-03-23T09:00:00+00:00",
+        "evidence_items": 1
+      }
+    ],
+    "formal_revisions": null,
+    "states": [
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "04296399-8390-426a-ad2f-3de5816266ca",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "50b58a29-512e-4ff2-bc35-73090803eb18",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "5a1943fc-fe9b-4ea1-b894-af0e5bf05818",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "6361548c-9e52-4f96-b751-3bdec1937596",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "d7dd0812-afad-4db5-8427-4507585a7b68",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "ebc8fc57-72f1-4514-b0c3-95705c7db12b",
+        "revision": 1,
+        "active_revision": null,
+        "outcome": "withdrawn",
+        "frozen_at": null
+      },
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "f7ab24e9-5e62-4ebf-9fe2-6a9396abf1bf",
+        "revision": 0,
+        "active_revision": null,
+        "outcome": "open",
+        "frozen_at": null
+      }
+    ],
+    "changes": [
+      {
+        "event_id": "f18eb2f6-96b2-420c-b59f-47ff09073f77",
+        "team_id": "ebc8fc57-72f1-4514-b0c3-95705c7db12b",
+        "revision": 1,
+        "active_revision": null,
+        "action": "withdrawn",
+        "review_status": "",
+        "occurred_at": "2026-03-23T09:00:00+00:00"
+      }
+    ],
+    "operation_census": [
+      {
+        "kind": "communication.dispatch",
+        "state": "delivered",
+        "count": 2,
+        "retained_leases": 0
+      },
+      {
+        "kind": "registration.offer",
+        "state": "cancelled",
+        "count": 2,
+        "retained_leases": 0
+      },
+      {
+        "kind": "repository.access",
+        "state": "delivered",
+        "count": 64,
+        "retained_leases": 0
+      },
+      {
+        "kind": "repository.provision",
+        "state": "delivered",
+        "count": 12,
+        "retained_leases": 0
+      },
+      {
+        "kind": "submission.capture",
+        "state": "pending",
+        "count": 14,
+        "retained_leases": 0
+      },
+      {
+        "kind": "teams.published",
+        "state": "pending",
+        "count": 4,
+        "retained_leases": 0
+      }
+    ]
+  },
+  "cleanup": {
+    "project": "hackbox-lifecycle120-submission-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "correction": "Both early-denial and live-formal sites must use canonicalPUT. Native version/body/CSRF checks, strict not_open/review_not_open expectations and all other assertions unchanged."
+}

@@ -96,7 +96,7 @@ func (r *lifecycleJourney) preparePrivateDrafts(t *testing.T) {
 					Blockers []event.Issue `json:"blockers"`
 				} `json:"error"`
 			}
-			if err := member.call(ctx, http.MethodPost, path, before.Revision, submissions.Command{Evidence: evidence}, &rejected, http.StatusConflict); err != nil {
+			if err := member.call(ctx, http.MethodPut, path, before.Revision, submissions.Command{Evidence: evidence}, &rejected, http.StatusConflict); err != nil {
 				t.Fatal(err)
 			}
 			if len(rejected.Error.Blockers) != 1 || rejected.Error.Blockers[0].Field != "live_start" || rejected.Error.Blockers[0].Code != "not_open" {
@@ -173,7 +173,7 @@ func (r *lifecycleJourney) submitLiveEvidence(t *testing.T) {
 			if !before.CanSubmit || before.Final != nil {
 				t.Fatal("actual live submission gate did not open cleanly")
 			}
-			if err := member.call(ctx, http.MethodPost, path, before.Revision, submissions.Command{Evidence: receipt.evidence}, &next, http.StatusOK); err != nil {
+			if err := member.call(ctx, http.MethodPut, path, before.Revision, submissions.Command{Evidence: receipt.evidence}, &next, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if next.Final == nil || next.Final.Revision != 1 || next.Final.Late || next.Final.ActorID != member.person || !next.Final.SubmittedAt.Equal(r.timeline.Live) || !reflect.DeepEqual(next.Final.Evidence, receipt.evidence) {
