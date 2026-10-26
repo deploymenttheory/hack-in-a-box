@@ -7,21 +7,25 @@ registration, team, gate or session records will be used as this scenario's
 lifecycle setup.
 
 Initial source baseline: `56d00be40e098f9ab71b2387377d2ad7cd81b63c`.
-Results/report UI #113, independent verification #114, showcase #163 and the
-Fleet cutover #245 remain prerequisite gates, rather than inferred completion
-from their draft branches or a closed supporting issue.
+The results/report, independent judging, showcase and Fleet owners were initial
+prerequisites. They have since merged, including Fleet #293 and the separate
+judging completion correction #298. Their closure does not supply the remaining
+integrated #120 acceptance evidence.
 
 The partial receipts below retain their original source/schema provenance.
-Main subsequently gained the reports/scoring owners and schema 54; final #120
-acceptance requires integration with the final merged owners, a fresh image
-build and complete execution on that source. These verification images are
-separate from the normal latest application deployment.
+Later connected checkpoints integrate actual reports/scoring/advisory owners
+and schema55. The current continuation is rebased onto main`5f78d51f`; final
+#120 acceptance still requires complete native and browser execution on final
+integrated source. Verification images remain separate from the normal latest
+application deployment. No historical receipt is promoted to a later-head pass.
 
 The confirmed category-adjudication rule is that mentors provide advisory input
 only. All required judges must vote; only judge ballots count toward a strict
-majority, and a split remains unresolved. The backend/UI advisory-input
-capability is still a prerequisite for that integrated journey and must not be
-simulated by counting mentor ballots or inventing a completed native owner.
+majority, and a split remains unresolved. The native advisory backend/UI owner
+merged in #292. The later results receipts exercise genuine all-team category
+advice and the qualified mode's distinct availability, never counting mentor
+ballots as final judge votes. Earlier infrastructure checkpoints retain their
+explicitly narrower scope.
 
 ## Infrastructure checkpoints under construction
 
