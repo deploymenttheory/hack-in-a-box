@@ -258,8 +258,11 @@ response and anchors its public projection to the immutable native audit. A
 synthetic decision marker binds the cue hash in the native decision history;
 it is not an invented application idempotency key. Independent reconciliation
 includes every committed cue candidate, including a lost original response, so
-an untracked committed source cannot disappear from the SSE oracle. The actual
-native cue-owner/query component is prepared but not yet executed.
+an untracked committed source cannot disappear from the SSE oracle. The real
+[native cue-owner component](evidence/native-cue-owner.json) passed at clean
+`5a10ee5a` with race detection: parent1.62s/package2.853s, no skip/failure and
+scoped resources empty. This proves owner/transaction/projection compatibility,
+not HTTP/OIDC/SSE transport or latency/load acceptance.
 
 Two causal driver corrections protect measurement integrity. A real local HTTPS
 control reproduced net/http transparently replaying a consumed POST after its
