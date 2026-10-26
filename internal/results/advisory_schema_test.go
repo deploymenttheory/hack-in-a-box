@@ -116,7 +116,16 @@ func TestMentorAdvisoryUpgradeRetainsPopulatedParentAndCorrectionHistory(t *test
 		retained != 2 {
 		t.Fatal("correction history changed", retained, err)
 	}
+	// The rollback contract above belongs to migration55. Runtime schema
+	// compatibility belongs to the current head, which can advance separately.
+	if err = database.Migrate(ctx, pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	if err = database.CheckSchema(ctx, pool); err != nil {
 		t.Fatal(err)
+	}
+	if err = pool.QueryRow(ctx, "SELECT count(*) FROM result_mentor_advisory_versions WHERE event_id=$1", eventID).
+		Scan(&retained); err != nil || retained != 2 {
+		t.Fatal("current schema upgrade changed correction history", retained, err)
 	}
 }
