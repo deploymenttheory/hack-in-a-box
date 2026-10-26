@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
@@ -27,15 +28,16 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
-	view       event.View
-	cohort     lifecycleAdmissions
-	teams      teams.Page
-	challenge  content.Page
-	rubric     rubric.Configuration
-	objective  objectives.View
-	brand      templates.Branding
-	github     githubapp.Status
-	commonHash string
+	view         event.View
+	cohort       lifecycleAdmissions
+	teams        teams.Page
+	challenge    content.Page
+	rubric       rubric.Configuration
+	objective    objectives.View
+	brand        templates.Branding
+	github       githubapp.Status
+	repositories []repositories.View
+	commonHash   string
 }
 type lifecycleJourney struct {
 	owner    *lifecycleClient
@@ -132,6 +134,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	for i := range run.events {
 		run.readCommonPublication(t, &run.events[i])
 	}
+	run.provisionRepositories(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
@@ -203,19 +206,23 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			"native GitHub installation did not exercise actual verified App/scoped REST transport",
 		)
 	}
+	if providerProof.RepositoryCreates != 12 {
+		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
+	}
 	type eventReceipt struct {
-		ID          uuid.UUID            `json:"event_id"`
-		Mode        string               `json:"mode"`
-		Stage       string               `json:"stage"`
-		Objective   objectives.Reference `json:"objective"`
-		Primary     string               `json:"primary"`
-		TeamIDs     []uuid.UUID          `json:"team_ids"`
-		Confirmed   int64                `json:"confirmed"`
-		Census      map[string]int64     `json:"admission_census"`
-		Challenge   uuid.UUID            `json:"challenge_id"`
-		Rubric      rubric.Reference     `json:"rubric"`
-		CommonHash  string               `json:"common_sha256"`
-		PublishedAt *time.Time           `json:"published_at"`
+		ID           uuid.UUID            `json:"event_id"`
+		Mode         string               `json:"mode"`
+		Stage        string               `json:"stage"`
+		Objective    objectives.Reference `json:"objective"`
+		Primary      string               `json:"primary"`
+		TeamIDs      []uuid.UUID          `json:"team_ids"`
+		Confirmed    int64                `json:"confirmed"`
+		Census       map[string]int64     `json:"admission_census"`
+		Challenge    uuid.UUID            `json:"challenge_id"`
+		Rubric       rubric.Reference     `json:"rubric"`
+		CommonHash   string               `json:"common_sha256"`
+		PublishedAt  *time.Time           `json:"published_at"`
+		Repositories []repositories.View  `json:"repositories"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -228,18 +235,19 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				ID:          item.view.ID,
-				Mode:        item.rubric.Definition.Mode,
-				Stage:       item.view.Stage,
-				Objective:   item.objective.Reference,
-				Primary:     item.brand.Primary,
-				TeamIDs:     teams,
-				Confirmed:   item.view.ConfirmedAttendees,
-				Census:      item.cohort.census,
-				Challenge:   item.challenge.ID,
-				Rubric:      item.rubric.Reference,
-				CommonHash:  item.commonHash,
-				PublishedAt: item.view.PublishedAt,
+				ID:           item.view.ID,
+				Mode:         item.rubric.Definition.Mode,
+				Stage:        item.view.Stage,
+				Objective:    item.objective.Reference,
+				Primary:      item.brand.Primary,
+				TeamIDs:      teams,
+				Confirmed:    item.view.ConfirmedAttendees,
+				Census:       item.cohort.census,
+				Challenge:    item.challenge.ID,
+				Rubric:       item.rubric.Reference,
+				CommonHash:   item.commonHash,
+				PublishedAt:  item.view.PublishedAt,
+				Repositories: item.repositories,
 			},
 		)
 	}
@@ -270,6 +278,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"normal-configured-encrypted-github-app-owner",
 				"real-app-jwt-scoped-template-rest",
 				"single-use-native-installation-callback",
+				"actual-queued-private-template-repositories-for-every-frozen-team",
 			},
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},

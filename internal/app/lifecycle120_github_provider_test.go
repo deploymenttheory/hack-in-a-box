@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
+	"github.com/google/uuid"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 )
@@ -44,15 +45,18 @@ type (
 		AppJWTsVerified          int `json:"app_jwts_verified"`
 		InstallationTokensMinted int `json:"installation_tokens_minted"`
 		TemplateReads            int `json:"template_reads"`
+		RepositoryCreates        int `json:"repository_creates"`
+		RepositoryReads          int `json:"repository_reads"`
 	}
 	// This is an external-provider fixture only. It cannot create competition facts
 	// or report native owner success. Actual clients must present verified wall-time
 	// App JWTs and repository-scoped installation tokens for their REST requests.
 	lifecycleGitHub struct {
-		key    *rsa.PrivateKey
-		mu     sync.Mutex
-		tokens map[string]lifecycleGitHubToken
-		proof  lifecycleGitHubProof
+		key          *rsa.PrivateKey
+		mu           sync.Mutex
+		tokens       map[string]lifecycleGitHubToken
+		proof        lifecycleGitHubProof
+		repositories map[string]githubapp.Repository
 	}
 )
 
@@ -74,7 +78,7 @@ func newLifecycleGitHub(directory string) (*lifecycleGitHub, error) {
 	); err != nil {
 		return nil, err
 	}
-	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}}, nil
+	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}}, nil
 }
 
 func (g *lifecycleGitHub) appJWT(r *http.Request) bool {
@@ -176,10 +180,7 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		decoder := json.NewDecoder(io.LimitReader(r.Body, 4096))
 		decoder.DisallowUnknownFields()
-		if decoder.Decode(&input) != nil || len(input.Repositories) != 1 ||
-			input.Repositories[0] != lifecycleGitHubTemplate ||
-			len(input.Permissions) != 1 ||
-			input.Permissions["metadata"] != "read" {
+		if decoder.Decode(&input) != nil || !g.allowedToken(input.Repositories, input.Permissions) {
 			fail(http.StatusUnprocessableEntity)
 			return
 		}
@@ -187,7 +188,7 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		expires := time.Now().UTC().Add(time.Hour)
 		g.mu.Lock()
 		g.tokens[token] = lifecycleGitHubToken{
-			Repositories: map[string]bool{lifecycleGitHubTemplate: true},
+			Repositories: map[string]bool{input.Repositories[0]: true},
 			Permissions:  input.Permissions,
 			Expires:      expires,
 		}
@@ -232,7 +233,9 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			},
 		)
 	default:
-		fail(http.StatusNotFound)
+		if !g.repositoryHTTP(w, r) {
+			fail(http.StatusNotFound)
+		}
 	}
 }
 
@@ -260,14 +263,15 @@ func (g *lifecycleGitHub) control(w http.ResponseWriter, r *http.Request) {
 
 // This bounded component check proves fixture authentication/protocol fidelity,
 // not native App attachment, queued repositories or the integrated lifecycle.
-func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
+func lifecycleGitHubRESTFixture(t *testing.T) (*lifecycleGitHub, *githubapp.RESTProvider, []byte, githubapp.Configuration) {
+	t.Helper()
 	directory := t.TempDir()
 	fixture, err := newLifecycleGitHub(directory)
 	if err != nil {
 		t.Fatal(err)
 	}
 	server := httptest.NewServer(fixture)
-	defer server.Close()
+	t.Cleanup(server.Close)
 	target, err := url.Parse(server.URL)
 	if err != nil {
 		t.Fatal(err)
@@ -285,12 +289,12 @@ func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
 	}
 	previous := http.DefaultTransport
 	http.DefaultTransport = transport
-	defer func() { http.DefaultTransport = previous; transport.base.CloseIdleConnections() }()
+	t.Cleanup(func() { http.DefaultTransport = previous; transport.base.CloseIdleConnections() })
 	key, err := os.ReadFile(filepath.Join(directory, "github-app.pem"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer clear(key)
+	t.Cleanup(func() { clear(key) })
 	native := githubapp.NewProvider()
 	configuration := githubapp.Configuration{
 		AppID:              lifecycleGitHubAppID,
@@ -299,6 +303,11 @@ func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
 		Organization:       lifecycleGitHubOrganization,
 		TemplateRepository: lifecycleGitHubTemplate,
 	}
+	return fixture, native, key, configuration
+}
+
+func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
+	fixture, native, key, configuration := lifecycleGitHubRESTFixture(t)
 	if value := native.Inspect(
 		t.Context(),
 		configuration,
@@ -355,5 +364,35 @@ func TestLifecycleSyntheticGitHubNativeRESTContract(t *testing.T) {
 	if fixture.proof.InstallationTokensMinted != proof.InstallationTokensMinted ||
 		fixture.proof.TemplateReads != proof.TemplateReads {
 		t.Fatal("rejected identity/scope created an additional provider token or template read")
+	}
+}
+
+// The actual native REST client must create and subsequently look up one private
+// template-derived provider resource. This does not provision a native team.
+func TestLifecycleSyntheticGitHubRepositoryRESTContract(t *testing.T) {
+	fixture, native, key, configuration := lifecycleGitHubRESTFixture(t)
+	name := "hackbox-" + strings.ReplaceAll(uuid.NewString(), "-", "") + "-" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	marker := "hackbox-provisioning:" + uuid.NewString()
+	if _, err := native.LookupRepository(t.Context(), configuration, key, lifecycleGitHubInstallationID, name); !errors.Is(err, githubapp.ErrRepositoryAbsent) {
+		t.Fatal("uncreated repository was not absent", err)
+	}
+	created, err := native.CreateRepository(t.Context(), configuration, key, lifecycleGitHubInstallationID, name, marker)
+	if err != nil {
+		t.Fatal("native template creation failed", err)
+	}
+	if created.ID <= 100 || created.Name != name || created.OrganizationID != lifecycleGitHubOrganizationID || !created.Private || created.Archived || created.TemplateID != 100 || created.Description != marker {
+		t.Fatal("provider creation lost private template/provenance identity")
+	}
+	found, err := native.LookupRepository(t.Context(), configuration, key, lifecycleGitHubInstallationID, name)
+	if err != nil || found != created {
+		t.Fatal("native lookup did not recover exact created identity", err)
+	}
+	if _, err := native.CreateRepository(t.Context(), configuration, key, lifecycleGitHubInstallationID, name, marker); !errors.Is(err, githubapp.ErrRepositoryRejected) {
+		t.Fatal("duplicate creation was not rejected", err)
+	}
+	fixture.mu.Lock()
+	defer fixture.mu.Unlock()
+	if fixture.proof.RepositoryCreates != 1 || fixture.proof.RepositoryReads != 1 {
+		t.Fatal("repository effects were duplicated or lookup was not observed")
 	}
 }
