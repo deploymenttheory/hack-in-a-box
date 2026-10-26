@@ -480,3 +480,14 @@ proof of challenge publication, submission capture, follow-up delivery or any
 measured elapsed runtime. Observe those facts through their actual native owners.
 Stop the private setup processes before launching the default-wall production
 images and authenticating the measured cohort.
+
+
+The positive project preparation recipe uses a real team member’s native
+`team_outcome` proposal, organiser assignment and acceptance, and a separate
+publication save/publish review. Its restricted source carries private synthetic
+canaries; only deliberately authored organisation-visible problem, solution and
+URL fields are published. The current project read is checked independently of
+the original publication acknowledgement. This does not create awards, finalist
+status, a frozen submission, or proof that the whole factory ran. Actual native
+execution of this recipe and the cross-event current-permission probes remain
+required before release acceptance.
