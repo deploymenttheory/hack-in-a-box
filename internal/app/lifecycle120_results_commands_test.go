@@ -76,7 +76,7 @@ func (r *lifecycleJourney) voteResult(t *testing.T, item *lifecycleJourneyEvent,
 		t.Fatal(err)
 	}
 	id := uuid.New()
-	body := map[string]any{"request_id": id, "version": before.Version, "action": "vote", "source_binding": before.SourceBinding, "tie_id": tieID, "team_id": teamID, "evidence": []map[string]any{{"team_id": teamID, "note": "Recorded independent judge preference against this exact frozen candidate"}}, "reason": "Explicit current judge ballot, never a mentor or organiser casting vote"}
+	body := lifecycleResultBallotBody(id, before, tieID, teamID)
 	if err := client.call(t.Context(), http.MethodPost, path+"/ballots", before.Revision, body, &next, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +103,12 @@ func (r *lifecycleJourney) voteResult(t *testing.T, item *lifecycleJourneyEvent,
 	item.resultDecision.Votes = append(item.resultDecision.Votes, *ack)
 	r.persistWorkProgress(t)
 	return next
+}
+
+// The API requires deliverable_id even when the evidence concerns the whole
+// frozen entry. The native evidence DTO preserves that explicit JSON null.
+func lifecycleResultBallotBody(id uuid.UUID, page results.BallotPage, tieID string, teamID uuid.UUID) map[string]any {
+	return map[string]any{"request_id": id, "version": page.Version, "action": "vote", "source_binding": page.SourceBinding, "tie_id": tieID, "team_id": teamID, "evidence": []results.VoteEvidence{{TeamID: teamID, Note: "Recorded independent preference against this exact frozen candidate"}}, "reason": "Explicit ballot request; only current final judges may vote"}
 }
 
 func lifecycleSyntheticAwards(t *testing.T, page results.Page) []results.Award {

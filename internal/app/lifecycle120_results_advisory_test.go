@@ -120,7 +120,7 @@ func (r *lifecycleJourney) adviseCurrentCategoryTie(t *testing.T, item *lifecycl
 	if !seen {
 		t.Fatal("intended judge panel lacks separately authored current category advice")
 	}
-	body := map[string]any{"request_id": uuid.New(), "action": "vote", "version": after.Round.Version, "source_binding": after.Preview.Binding, "tie_id": selected.TieID, "team_id": selected.TeamID, "evidence": []map[string]any{{"team_id": selected.TeamID, "note": "Negative proof: mentor advice grants no final judge ballot"}}, "reason": "Mentor cannot vote merely by contributing advice"}
+	body := lifecycleResultBallotBody(uuid.New(), ballots, selected.TieID, selected.TeamID)
 	if err := item.cohort.staff["mentor-a"].call(t.Context(), http.MethodPost, path+"/ballots", after.Revision, body, nil, http.StatusForbidden); err != nil {
 		t.Fatal(err)
 	}
