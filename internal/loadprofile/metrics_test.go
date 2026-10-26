@@ -5,6 +5,63 @@ import (
 	"time"
 )
 
+func TestPhaseAndOriginDistributionsCannotHideSlowPublicReads(t *testing.T) {
+	var metrics Metrics
+	for _, surface := range []Surface{PublicSurface, AdminSurface} {
+		for range 100 {
+			duration := time.Millisecond
+			if surface == PublicSurface {
+				duration = 600 * time.Millisecond
+			}
+			if err := metrics.Observe(
+				Measurement{
+					Phase:     SustainedPhase,
+					Surface:   surface,
+					Operation: HelpRead,
+					Duration:  duration,
+					Status:    200,
+					Outcome:   Accepted,
+				},
+			); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if err := metrics.Observe(
+		Measurement{
+			Phase:     SaturationPhase,
+			Surface:   PublicSurface,
+			Operation: HelpRead,
+			Duration:  10 * time.Second,
+			Status:    503,
+			Outcome:   Unexpected,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	reports := metrics.Reports()
+	if len(reports) != 3 {
+		t.Fatal("phase/origin data merged", reports)
+	}
+	foundSlow, foundFailure := false, false
+	for _, report := range reports {
+		if report.Phase == SustainedPhase && report.Surface == PublicSurface {
+			foundSlow = report.P95 == 600*time.Millisecond
+		}
+		if report.Phase == SaturationPhase {
+			foundFailure = report.Statuses[503] == 1 && report.Outcomes[Unexpected] == 1
+		}
+	}
+	if !foundSlow || !foundFailure {
+		t.Fatal("fast origin or another phase concealed slow/error distribution", reports)
+	}
+	if err := metrics.Observe(
+		Measurement{Operation: SessionRead, Status: 200, Outcome: Accepted},
+	); err == nil {
+		t.Fatal("unlabelled traffic accepted")
+	}
+}
+
 func TestPercentileRetainsSlowTailAndOverflow(t *testing.T) {
 	var d Distribution
 	for range 94 {
@@ -45,6 +102,7 @@ func TestServerAndTransportFailuresCannotBeExpected(t *testing.T) {
 	for _, status := range []int{0, 500, 503} {
 		if err := metrics.Observe(
 			Measurement{
+				Phase: SustainedPhase, Surface: PublicSurface,
 				Operation: RegistrationWrite,
 				Duration:  time.Millisecond,
 				Status:    status,
@@ -56,6 +114,7 @@ func TestServerAndTransportFailuresCannotBeExpected(t *testing.T) {
 	}
 	if err := metrics.Observe(
 		Measurement{
+			Phase: SustainedPhase, Surface: PublicSurface,
 			Operation: HelpClaim,
 			Duration:  time.Millisecond,
 			Status:    409,
@@ -65,7 +124,13 @@ func TestServerAndTransportFailuresCannotBeExpected(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := metrics.Observe(
-		Measurement{Operation: DueJobStart, Duration: time.Second, Outcome: Accepted},
+		Measurement{
+			Phase:     SustainedPhase,
+			Surface:   PublicSurface,
+			Operation: DueJobStart,
+			Duration:  time.Second,
+			Outcome:   Accepted,
+		},
 	); err != nil {
 		t.Fatal(err)
 	}

@@ -9,12 +9,12 @@ import (
 )
 
 func TestReleaseCannotSelectACompressedClockOrSmallerCohort(t *testing.T) {
-	for _, cfg := range []StageConfig{{"release", 1799 * time.Second, 5 * time.Second}, {"release", 30 * time.Minute, time.Minute}, {"unknown", time.Second, time.Millisecond}} {
+	for _, cfg := range []StageConfig{{"release", 1799 * time.Second, 5 * time.Second, SustainedPhase}, {"release", 30 * time.Minute, time.Minute, SustainedPhase}, {"unknown", time.Second, time.Millisecond, SustainedPhase}} {
 		if err := cfg.Validate(1000); err == nil {
 			t.Fatal("invalid release profile accepted", cfg)
 		}
 	}
-	if err := (StageConfig{"release", 30 * time.Minute, 5 * time.Second}).Validate(
+	if err := (StageConfig{"release", 30 * time.Minute, 5 * time.Second, SustainedPhase}).Validate(
 		999,
 	); err == nil {
 		t.Fatal("999 actors became 1000 active sessions")
@@ -27,16 +27,41 @@ func TestDuplicatedPersonCannotFillTheCohort(t *testing.T) {
 	session := &Session{person: uuid.New()}
 	_, err := RunStage(
 		context.Background(),
-		StageConfig{"smoke", time.Second, time.Millisecond},
-		[]Actor{{"one", session}, {"two", session}},
+		StageConfig{"smoke", time.Second, time.Millisecond, SustainedPhase},
+		[]Actor{{ID: "one", Session: session}, {ID: "two", Session: session}},
 		func(context.Context, Actor, uint64) (Measurement, *AcceptedWrite, error) {
 			t.Fatal("duplicate actor reached runtime")
-			return Measurement{}, nil, nil
+			return Measurement{Phase: SustainedPhase, Surface: PublicSurface}, nil, nil
 		},
 		new(Metrics),
 		new(WriteLedger),
 	)
 	if err == nil {
 		t.Fatal("duplicated person accepted")
+	}
+}
+
+func TestCancelledRunCannotStartOrCertifySustainedExecution(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	result, err := RunStage(
+		ctx,
+		StageConfig{
+			Profile:  "smoke",
+			Duration: time.Second,
+			Interval: time.Millisecond,
+			Phase:    SustainedPhase,
+		},
+		nil,
+		func(context.Context, Actor, uint64) (Measurement, *AcceptedWrite, error) {
+			t.Fatal("cancelled phase ran an actor")
+			return Measurement{}, nil, nil
+		},
+		new(Metrics),
+		new(WriteLedger),
+	)
+	if err == nil || result.Completed || !result.Interrupted || result.Elapsed != 0 ||
+		result.Executed != 0 {
+		t.Fatal("cancelled/draining work certified runtime", result, err)
 	}
 }

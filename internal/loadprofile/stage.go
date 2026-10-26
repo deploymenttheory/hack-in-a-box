@@ -14,6 +14,7 @@ var errLoadStage = errors.New("invalid load stage")
 type Actor struct {
 	ID      string
 	Session *Session
+	Phase   Phase
 }
 
 // Action owns native domain parsing, expected-conflict classification and
@@ -24,9 +25,13 @@ type Action func(context.Context, Actor, uint64) (Measurement, *AcceptedWrite, e
 type StageConfig struct {
 	Profile            string
 	Duration, Interval time.Duration
+	Phase              Phase
 }
 
 func (c StageConfig) Validate(actors int) error {
+	if !c.Phase.valid() {
+		return fmt.Errorf("%w: explicit measured phase required", errLoadStage)
+	}
 	if c.Profile != "release" && c.Profile != "smoke" {
 		return fmt.Errorf(
 			"%w: profile must be release or explicitly non-release smoke",
@@ -42,7 +47,8 @@ func (c StageConfig) Validate(actors int) error {
 	if actors < 1 {
 		return fmt.Errorf("%w: authenticated actor cohort required", errLoadStage)
 	}
-	if c.Profile == "release" && (c.Duration < 30*time.Minute || actors < 1000) {
+	if c.Profile == "release" && c.Phase == SustainedPhase &&
+		(c.Duration < 30*time.Minute || actors < 1000) {
 		return fmt.Errorf(
 			"%w: release stage requires at least 1000 active sessions for 1800 real seconds",
 			errLoadStage,
@@ -52,11 +58,12 @@ func (c StageConfig) Validate(actors int) error {
 }
 
 type StageResult struct {
-	Started, Finished time.Time
-	Elapsed           time.Duration
-	Activity          ActivityReport
-	Executed          uint64
-	Interrupted       bool
+	Started, PhaseEnded, Finished time.Time
+	Elapsed                       time.Duration
+	Activity                      ActivityReport
+	Executed                      uint64
+	Interrupted                   bool
+	Completed                     bool
 }
 
 // RunStage uses the real monotonic clock. It never accepts an injected clock,
@@ -74,6 +81,10 @@ func RunStage(
 	ledger *WriteLedger,
 ) (StageResult, error) {
 	var result StageResult
+	if err := ctx.Err(); err != nil {
+		result.Interrupted = true
+		return result, fmt.Errorf("load stage not started: %w", err)
+	}
 	if err := cfg.Validate(len(actors)); err != nil {
 		return result, err
 	}
@@ -83,25 +94,9 @@ func RunStage(
 			errLoadStage,
 		)
 	}
-	ids := make([]string, len(actors))
-	people := make(map[string]struct{}, len(actors))
-	for index, actor := range actors {
-		if actor.Session == nil ||
-			actor.Session.Person().String() == "00000000-0000-0000-0000-000000000000" {
-			return result, fmt.Errorf(
-				"%w: every active actor requires its own native authenticated session",
-				errLoadStage,
-			)
-		}
-		person := actor.Session.Person().String()
-		if _, exists := people[person]; exists {
-			return result, fmt.Errorf(
-				"%w: the active cohort must represent distinct native people, not duplicated cookie jars",
-				errLoadStage,
-			)
-		}
-		people[person] = struct{}{}
-		ids[index] = actor.ID
+	ids, err := cohortIdentities(actors)
+	if err != nil {
+		return result, err
 	}
 	result.Started = time.Now()
 	activity, err := NewActivity(result.Started, cfg.Duration, ids)
@@ -111,11 +106,19 @@ func RunStage(
 	stop := time.NewTimer(cfg.Duration)
 	defer stop.Stop()
 	done := make(chan struct{})
+	type phaseBoundary struct {
+		at        time.Time
+		completed bool
+	}
+	boundary := make(chan phaseBoundary, 1)
 	go func() {
+		phaseCompleted := false
 		select {
 		case <-stop.C:
+			phaseCompleted = true
 		case <-ctx.Done():
 		}
+		boundary <- phaseBoundary{at: time.Now(), completed: phaseCompleted}
 		close(done)
 	}()
 	var workers sync.WaitGroup
@@ -125,6 +128,7 @@ func RunStage(
 	recordError := func(err error) { errorOnce.Do(func() { firstError = err }) }
 	for index, actor := range actors {
 		workers.Add(1)
+		actor.Phase = cfg.Phase
 		go func(index int, actor Actor) {
 			defer workers.Done()
 			// Deterministic offsets spread the sustained cohort across its requested
@@ -181,12 +185,43 @@ func RunStage(
 	}
 	workers.Wait()
 	result.Finished = time.Now()
-	result.Elapsed = result.Finished.Sub(result.Started)
+	ended := <-boundary
+	result.PhaseEnded = ended.at
+	result.Completed = ended.completed
+	// Draining an accepted/in-flight request cannot pad a shortened sustained
+	// phase into an apparent 1800-second execution.
+	result.Elapsed = result.PhaseEnded.Sub(result.Started)
 	result.Activity = activity.Report()
 	result.Executed = count.Load()
-	result.Interrupted = ctx.Err() != nil
+	result.Interrupted = ctx.Err() != nil || !result.Completed
+	result.Completed = result.Completed && !result.Interrupted
 	if result.Interrupted {
 		return result, fmt.Errorf("load stage interrupted: %w", ctx.Err())
 	}
 	return result, firstError
+}
+
+func cohortIdentities(actors []Actor) ([]string, error) {
+	ids := make([]string, len(actors))
+	people := make(map[string]struct{}, len(actors))
+	for index, actor := range actors {
+		if actor.Session == nil ||
+			actor.Session.Person().String() == "00000000-0000-0000-0000-000000000000" {
+			return nil, fmt.Errorf(
+				"%w: every active actor requires its own native authenticated session",
+				errLoadStage,
+			)
+		}
+		person := actor.Session.Person().String()
+		if _, exists := people[person]; exists {
+			return nil, fmt.Errorf(
+				"%w: the active cohort must represent distinct native people, not duplicated cookie jars",
+				errLoadStage,
+			)
+		}
+		people[person] = struct{}{}
+		ids[index] = actor.ID
+	}
+
+	return ids, nil
 }

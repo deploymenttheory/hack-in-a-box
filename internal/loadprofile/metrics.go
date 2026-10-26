@@ -76,9 +76,13 @@ const (
 	SessionRead         Operation = "session-read"
 	RegistrationRead    Operation = "registration-read"
 	RegistrationWrite   Operation = "registration-write"
+	MentorRead          Operation = "mentor-read"
 	MentorWrite         Operation = "mentor-write"
 	HelpRead            Operation = "help-read"
 	HelpClaim           Operation = "help-claim"
+	HelpWrite           Operation = "help-write"
+	CueRead             Operation = "cue-read"
+	CueWrite            Operation = "cue-write"
 	ClarificationSearch Operation = "clarification-search"
 	ShowcaseSearch      Operation = "showcase-search"
 	DisplayUpdate       Operation = "display-update"
@@ -90,9 +94,13 @@ func (o Operation) valid() bool {
 	case SessionRead,
 		RegistrationRead,
 		RegistrationWrite,
+		MentorRead,
 		MentorWrite,
 		HelpRead,
 		HelpClaim,
+		HelpWrite,
+		CueRead,
+		CueWrite,
 		ClarificationSearch,
 		ShowcaseSearch,
 		DisplayUpdate,
@@ -104,7 +112,7 @@ func (o Operation) valid() bool {
 
 func (o Operation) Limit() time.Duration {
 	switch o {
-	case RegistrationWrite, MentorWrite, HelpClaim:
+	case RegistrationWrite, MentorWrite, HelpClaim, HelpWrite, CueWrite:
 		return time.Second
 	case DisplayUpdate:
 		return 2 * time.Second
@@ -126,6 +134,8 @@ const (
 )
 
 type Measurement struct {
+	Phase     Phase
+	Surface   Surface
 	Operation Operation
 	Duration  time.Duration
 	Status    int
@@ -133,6 +143,8 @@ type Measurement struct {
 }
 
 type OperationReport struct {
+	Phase     Phase              `json:"phase"`
+	Surface   Surface            `json:"surface"`
 	Operation Operation          `json:"operation"`
 	Count     uint64             `json:"count"`
 	P50       time.Duration      `json:"p50_upper_ns"`
@@ -155,10 +167,13 @@ type operationMetrics struct {
 // URLs, bodies, cookies, subjects, private text or identifiers in a report.
 type Metrics struct {
 	mu         sync.Mutex
-	operations map[Operation]*operationMetrics
+	operations map[seriesKey]*operationMetrics
 }
 
 func (m *Metrics) Observe(sample Measurement) error {
+	if !sample.Phase.valid() || !sample.Surface.valid() {
+		return fmt.Errorf("%w: explicit bounded phase and origin required", errLoadMeasurement)
+	}
 	if !sample.Operation.valid() {
 		return fmt.Errorf("%w: unknown load operation", errLoadMeasurement)
 	}
@@ -185,15 +200,16 @@ func (m *Metrics) Observe(sample Measurement) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.operations == nil {
-		m.operations = make(map[Operation]*operationMetrics)
+		m.operations = make(map[seriesKey]*operationMetrics)
 	}
-	metric := m.operations[sample.Operation]
+	key := seriesKey{sample.Phase, sample.Surface, sample.Operation}
+	metric := m.operations[key]
 	if metric == nil {
 		metric = &operationMetrics{
 			statuses: make(map[int]uint64),
 			outcomes: make(map[Outcome]uint64),
 		}
-		m.operations[sample.Operation] = metric
+		m.operations[key] = metric
 	}
 	if err := metric.distribution.Observe(sample.Duration); err != nil {
 		return err
@@ -207,37 +223,42 @@ func (m *Metrics) Reports() []OperationReport {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	reports := make([]OperationReport, 0, len(m.operations))
-	for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorWrite, HelpRead, HelpClaim, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
-		metric := m.operations[operation]
-		if metric == nil {
-			continue
+	for _, phase := range phases {
+		for _, surface := range surfaces {
+			for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorRead, MentorWrite, HelpRead, HelpClaim, HelpWrite, CueRead, CueWrite, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
+				metric := m.operations[seriesKey{phase, surface, operation}]
+				if metric == nil {
+					continue
+				}
+				p50, _ := metric.distribution.Percentile(.50)
+				p95, _ := metric.distribution.Percentile(.95)
+				p99, _ := metric.distribution.Percentile(.99)
+				statuses := make(map[int]uint64)
+				for status, count := range metric.statuses {
+					statuses[status] = count
+				}
+				outcomes := make(map[Outcome]uint64)
+				for outcome, count := range metric.outcomes {
+					outcomes[outcome] = count
+				}
+				reports = append(
+					reports,
+					OperationReport{
+						Phase: phase, Surface: surface,
+						Operation: operation,
+						Count:     metric.distribution.Count,
+						P50:       p50,
+						P95:       p95,
+						P99:       p99,
+						Maximum:   metric.distribution.Maximum,
+						Overflow:  metric.distribution.Overflow,
+						Limit:     operation.Limit(),
+						Statuses:  statuses,
+						Outcomes:  outcomes,
+					},
+				)
+			}
 		}
-		p50, _ := metric.distribution.Percentile(.50)
-		p95, _ := metric.distribution.Percentile(.95)
-		p99, _ := metric.distribution.Percentile(.99)
-		statuses := make(map[int]uint64)
-		for status, count := range metric.statuses {
-			statuses[status] = count
-		}
-		outcomes := make(map[Outcome]uint64)
-		for outcome, count := range metric.outcomes {
-			outcomes[outcome] = count
-		}
-		reports = append(
-			reports,
-			OperationReport{
-				Operation: operation,
-				Count:     metric.distribution.Count,
-				P50:       p50,
-				P95:       p95,
-				P99:       p99,
-				Maximum:   metric.distribution.Maximum,
-				Overflow:  metric.distribution.Overflow,
-				Limit:     operation.Limit(),
-				Statuses:  statuses,
-				Outcomes:  outcomes,
-			},
-		)
 	}
 	return reports
 }

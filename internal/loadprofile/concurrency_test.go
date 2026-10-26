@@ -25,6 +25,7 @@ func TestConcurrentMetricsAndExactAcknowledgementReplayPreserveEveryObservation(
 			for range 10 {
 				if err := metrics.Observe(
 					Measurement{
+						Phase: SustainedPhase, Surface: PublicSurface,
 						Operation: MentorWrite,
 						Duration:  time.Millisecond,
 						Status:    200,

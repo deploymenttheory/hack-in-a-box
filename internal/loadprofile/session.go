@@ -22,10 +22,11 @@ var errLoadSession = errors.New("invalid load session")
 // Session owns one genuine application-issued cookie jar. Credentials and
 // response bodies are intentionally private and never part of JSON reports.
 type Session struct {
-	origin string
-	client *http.Client
-	person uuid.UUID
-	csrf   string
+	origin  string
+	client  *http.Client
+	person  uuid.UUID
+	csrf    string
+	surface Surface
 }
 
 func (s *Session) Person() uuid.UUID { return s.person }
@@ -37,19 +38,12 @@ func (s *Session) Close()            { s.client.CloseIdleConnections() }
 // A caller supplies a normal verified-TLS transport trusted for its fixture CA.
 func SignIn(
 	ctx context.Context,
+	surface Surface,
 	origin, issuer, subject string,
 	transport http.RoundTripper,
 ) (*Session, error) {
-	for _, value := range []string{origin, issuer} {
-		u, err := url.Parse(value)
-		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Path != "" ||
-			u.RawQuery != "" ||
-			u.Fragment != "" {
-			return nil, fmt.Errorf(
-				"%w: load baseline requires exact HTTPS application and issuer origins",
-				errLoadSession,
-			)
-		}
+	if err := validateSignInOrigins(surface, origin, issuer); err != nil {
+		return nil, err
 	}
 	if subject == "" {
 		return nil, fmt.Errorf("%w: synthetic OIDC actor is required", errLoadSession)
@@ -59,7 +53,8 @@ func SignIn(
 		return nil, fmt.Errorf("create native session cookie jar: %w", err)
 	}
 	s := &Session{
-		origin: origin,
+		origin:  origin,
+		surface: surface,
 		client: &http.Client{
 			Jar:           jar,
 			Transport:     transport,
@@ -146,6 +141,7 @@ type Response struct {
 	Status   int
 	Duration time.Duration
 	Body     []byte
+	Received time.Time
 }
 
 // Exchange makes one native request. There is no write retry or inferred ACK.
@@ -157,6 +153,34 @@ func (s *Session) Exchange(
 	method, relative string,
 	revision *int64,
 	input any,
+) (Response, error) {
+	return s.exchange(ctx, method, relative, revision, input, uuid.Nil)
+}
+
+// Command preserves a caller-supplied native idempotency key. It performs one
+// request only; a missing response is not permission to generate another key.
+func (s *Session) Command(
+	ctx context.Context,
+	method, relative string,
+	revision *int64,
+	input any,
+	key uuid.UUID,
+) (Response, error) {
+	if key == uuid.Nil || (method != http.MethodPost && method != http.MethodPut) {
+		return Response{}, fmt.Errorf(
+			"%w: explicit command identity and mutating method required",
+			errLoadSession,
+		)
+	}
+	return s.exchange(ctx, method, relative, revision, input, key)
+}
+
+func (s *Session) exchange(
+	ctx context.Context,
+	method, relative string,
+	revision *int64,
+	input any,
+	key uuid.UUID,
 ) (Response, error) {
 	var result Response
 	target, err := url.Parse(relative)
@@ -191,6 +215,9 @@ func (s *Session) Exchange(
 	if revision != nil {
 		request.Header.Set("If-Match", fmt.Sprintf("\"%d\"", *revision))
 	}
+	if key != uuid.Nil {
+		request.Header.Set("Idempotency-Key", key.String())
+	}
 	started := time.Now()
 	response, err := s.client.Do(request)
 	if err != nil {
@@ -203,6 +230,7 @@ func (s *Session) Exchange(
 	defer func() { _ = response.Body.Close() }()
 	result.Status = response.StatusCode
 	result.Body, err = io.ReadAll(io.LimitReader(response.Body, (4<<20)+1))
+	result.Received = time.Now()
 	result.Duration = time.Since(started)
 	if err != nil || len(result.Body) > 4<<20 {
 		return result, fmt.Errorf(
@@ -214,4 +242,23 @@ func (s *Session) Exchange(
 		return result, fmt.Errorf("%w: native load response lacks no-store", errLoadSession)
 	}
 	return result, nil
+}
+
+func validateSignInOrigins(surface Surface, origin, issuer string) error {
+	if surface != PublicSurface && surface != AdminSurface {
+		return fmt.Errorf("%w: native person portal required", errLoadSession)
+	}
+	for _, value := range []string{origin, issuer} {
+		u, err := url.Parse(value)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.Path != "" ||
+			u.RawQuery != "" ||
+			u.Fragment != "" {
+			return fmt.Errorf(
+				"%w: load baseline requires exact HTTPS application and issuer origins",
+				errLoadSession,
+			)
+		}
+	}
+
+	return nil
 }

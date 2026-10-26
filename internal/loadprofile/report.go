@@ -17,13 +17,16 @@ type Host struct {
 }
 
 type Dataset struct {
-	Events                int    `json:"events"`
-	CapacityPerEvent      int    `json:"capacity_per_event"`
-	ConfirmedPerEvent     []int  `json:"confirmed_per_event"`
-	AuthenticatedSessions int    `json:"authenticated_sessions"`
-	Mentors               int    `json:"mentors"`
-	DisplayStreams        int    `json:"display_streams"`
-	Seed                  uint64 `json:"seed"`
+	Events                       int    `json:"events"`
+	TargetPeoplePerEvent         int    `json:"target_people_per_event"`
+	PeoplePerEvent               []int  `json:"people_per_event"`
+	StaffPerEvent                []int  `json:"staff_per_event"`
+	RegistrationCapacityPerEvent []int  `json:"registration_capacity_per_event"`
+	ConfirmedPerEvent            []int  `json:"confirmed_per_event"`
+	AuthenticatedSessions        int    `json:"authenticated_sessions"`
+	Mentors                      int    `json:"mentors"`
+	DisplayStreams               int    `json:"display_streams"`
+	Seed                         uint64 `json:"seed"`
 }
 
 type Oracle struct {
@@ -33,7 +36,7 @@ type Oracle struct {
 	EvidenceSHA256 string `json:"evidence_sha256"`
 }
 
-var RequiredOracles = []string{
+var requiredOracles = [...]string{
 	"registration-capacity-fifo",
 	"accepted-write-reconciliation",
 	"current-permission-private-search",
@@ -43,27 +46,34 @@ var RequiredOracles = []string{
 	"sse-current-source",
 }
 
+// RequiredOracleNames returns a copy of the fixed release oracle names.
+func RequiredOracleNames() []string {
+	return append([]string(nil), requiredOracles[:]...)
+}
+
 type Report struct {
-	Source          string            `json:"source"`
-	Tree            string            `json:"tree"`
-	Images          map[string]string `json:"images"`
-	Schema          int               `json:"schema"`
-	Profile         string            `json:"profile"`
-	Started         time.Time         `json:"started"`
-	Finished        time.Time         `json:"finished"`
-	Elapsed         time.Duration     `json:"monotonic_elapsed_ns"`
-	Host            Host              `json:"host"`
-	Dataset         Dataset           `json:"dataset"`
-	Activity        ActivityReport    `json:"activity"`
-	Operations      []OperationReport `json:"operations"`
-	Integrity       IntegrityReport   `json:"integrity"`
-	Oracles         []Oracle          `json:"oracles"`
-	ResourceSamples int               `json:"resource_samples"`
-	QueueSamples    int               `json:"queue_samples"`
-	BurstCompleted  bool              `json:"burst_completed"`
-	ExternalTLS     bool              `json:"external_tls"`
-	DurableVolumes  bool              `json:"durable_volumes"`
-	WorkerWallClock bool              `json:"worker_wall_clock"`
+	Source             string            `json:"source"`
+	Tree               string            `json:"tree"`
+	Images             map[string]string `json:"images"`
+	Schema             int               `json:"schema"`
+	Profile            string            `json:"profile"`
+	Started            time.Time         `json:"started"`
+	Finished           time.Time         `json:"finished"`
+	Elapsed            time.Duration     `json:"monotonic_elapsed_ns"`
+	Host               Host              `json:"host"`
+	Dataset            Dataset           `json:"dataset"`
+	Activity           ActivityReport    `json:"activity"`
+	Operations         []OperationReport `json:"operations"`
+	Integrity          IntegrityReport   `json:"integrity"`
+	Attempts           AttemptReport     `json:"write_attempts"`
+	Oracles            []Oracle          `json:"oracles"`
+	ResourceSamples    int               `json:"resource_samples"`
+	QueueSamples       int               `json:"queue_samples"`
+	BurstCompleted     bool              `json:"burst_completed"`
+	SustainedCompleted bool              `json:"sustained_completed"`
+	ExternalTLS        bool              `json:"external_tls"`
+	DurableVolumes     bool              `json:"durable_volumes"`
+	WorkerWallClock    bool              `json:"worker_wall_clock"`
 }
 
 type Evaluation struct {
@@ -81,10 +91,10 @@ func (r Report) Evaluate() Evaluation {
 	e := Evaluation{Failures: []string{}}
 	fail := func(reason string) { e.Failures = append(e.Failures, reason) }
 	shape := r.Profile == "release" && r.Elapsed >= 30*time.Minute && r.Dataset.Events == 5 &&
-		r.Dataset.CapacityPerEvent == 200 &&
+		r.Dataset.TargetPeoplePerEvent == 200 &&
 		r.Activity.ActiveEveryMinute >= 1000 &&
 		r.Activity.Windows >= 30 &&
-		r.BurstCompleted
+		r.BurstCompleted && r.SustainedCompleted
 	e.FullLoad = shape
 	if !shape {
 		fail(
@@ -93,6 +103,7 @@ func (r Report) Evaluate() Evaluation {
 	}
 	r.validateBaseline(fail)
 	r.validateDataset(fail)
+	r.validateWriteIntegrity(fail)
 	e.UnexpectedRate = r.evaluateOperations(fail)
 	r.validateOracles(fail)
 	e.Passed = len(e.Failures) == 0
@@ -120,12 +131,19 @@ func (r Report) validateBaseline(fail func(string)) {
 }
 
 func (r Report) validateDataset(fail func(string)) {
-	if len(r.Dataset.ConfirmedPerEvent) != 5 {
+	if len(r.Dataset.ConfirmedPerEvent) != 5 || len(r.Dataset.PeoplePerEvent) != 5 ||
+		len(r.Dataset.StaffPerEvent) != 5 ||
+		len(r.Dataset.RegistrationCapacityPerEvent) != 5 {
 		fail("five-event committed admission census missing")
 	} else {
-		for _, confirmed := range r.Dataset.ConfirmedPerEvent {
-			if confirmed != 200 {
-				fail("full capacity of 200 confirmed competitors per event not exercised")
+		for index, confirmed := range r.Dataset.ConfirmedPerEvent {
+			if r.Dataset.PeoplePerEvent[index] != 200 || r.Dataset.StaffPerEvent[index] < 0 ||
+				confirmed < 1 ||
+				confirmed+r.Dataset.StaffPerEvent[index] != r.Dataset.PeoplePerEvent[index] ||
+				confirmed != r.Dataset.RegistrationCapacityPerEvent[index] {
+				fail(
+					"per-event 200-person cohort and actual full competitor/staff capacity census inconsistent",
+				)
 				break
 			}
 		}
@@ -140,54 +158,88 @@ func (r Report) validateDataset(fail func(string)) {
 	if r.ResourceSamples < 30 || r.QueueSamples < 30 {
 		fail("resource utilization or queue lag time series incomplete")
 	}
+}
+
+func (r Report) validateWriteIntegrity(fail func(string)) {
 	if r.Integrity.Accepted == 0 || r.Integrity.Accepted != r.Integrity.Committed ||
 		r.Integrity.Missing != 0 ||
 		r.Integrity.Changed != 0 ||
 		r.Integrity.DuplicateEffects != 0 {
 		fail("accepted native write reconciliation failed")
 	}
+	if r.Attempts.Sent == 0 || r.Attempts.OriginalAcknowledgements == 0 ||
+		r.Attempts.Sent != r.Attempts.OriginalAcknowledgements+r.Attempts.ExplicitConflicts+r.Attempts.UnknownOriginalAcknowledgements ||
+		r.Attempts.Unreconciled != 0 ||
+		r.Attempts.MissingAcknowledgedEffects != 0 ||
+		r.Attempts.ChangedEffects != 0 ||
+		r.Attempts.DuplicateEffects != 0 ||
+		r.Attempts.CommittedDespiteConflict != 0 {
+		fail("complete sent-write/original-response/effect reconciliation failed")
+	}
 }
 
 func (r Report) evaluateOperations(fail func(string)) float64 {
-	var unexpectedRate float64
-	indexed := make(map[Operation]OperationReport, len(r.Operations))
+	indexed := make(map[seriesKey]bool, len(r.Operations))
+	required := make(map[Operation]uint64)
 	var requests, unexpected uint64
-	for _, operation := range r.Operations {
-		if _, exists := indexed[operation.Operation]; exists {
-			fail("duplicate operation report")
-		}
-		indexed[operation.Operation] = operation
-		if operation.Operation != DisplayUpdate && operation.Operation != DueJobStart {
-			requests += operation.Count
-			unexpected += operation.Outcomes[Unexpected]
-		}
-	}
-	if requests == 0 {
-		fail("no measured HTTP requests")
-	} else {
-		unexpectedRate = float64(unexpected) / float64(requests)
-		if unexpectedRate >= .01 {
-			fail("unexpected HTTP error rate is not below one percent")
-		}
-	}
-	for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorWrite, HelpRead, HelpClaim, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
-		value, exists := indexed[operation]
-		if !exists || value.Count < 30 {
-			fail(string(operation) + ": fewer than 30 measured observations")
+	for _, value := range r.Operations {
+		if !value.Phase.valid() || !value.Surface.valid() || !value.Operation.valid() {
+			fail("invalid operation/phase/origin label")
 			continue
 		}
-		if value.P95 > operation.Limit() {
-			fail(string(operation) + ": p95 target exceeded")
+		key := seriesKey{value.Phase, value.Surface, value.Operation}
+		if indexed[key] {
+			fail("duplicate operation/phase/origin report")
 		}
-		var outcomes uint64
+		indexed[key] = true
+		var outcomes, statuses uint64
 		for _, count := range value.Outcomes {
 			outcomes += count
 		}
-		if outcomes != value.Count {
-			fail(string(operation) + ": incomplete outcome accounting")
+		for _, count := range value.Statuses {
+			statuses += count
+		}
+		if outcomes != value.Count || statuses != value.Count {
+			fail(string(value.Operation) + ": incomplete raw outcome/status accounting")
+		}
+		if value.Phase.baseline() && value.P95 > value.Operation.Limit() {
+			fail(
+				string(
+					value.Phase,
+				) + "/" + string(
+					value.Surface,
+				) + "/" + string(
+					value.Operation,
+				) + ": p95 target exceeded",
+			)
+		}
+		phase := SustainedPhase
+		if value.Operation == RegistrationWrite {
+			phase = BurstPhase
+		}
+		if value.Phase == phase {
+			required[value.Operation] += value.Count
+		}
+		if value.Phase.baseline() && value.Operation != DisplayUpdate &&
+			value.Operation != DueJobStart {
+			requests += value.Count
+			unexpected += value.Outcomes[Unexpected]
 		}
 	}
-	return unexpectedRate
+	for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorRead, MentorWrite, HelpRead, HelpClaim, HelpWrite, CueRead, CueWrite, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
+		if required[operation] < 30 {
+			fail(string(operation) + ": fewer than30 observations in its actual baseline phase")
+		}
+	}
+	if requests == 0 {
+		fail("no measured baseline HTTP requests")
+		return 0
+	}
+	rate := float64(unexpected) / float64(requests)
+	if rate >= .01 {
+		fail("unexpected baseline HTTP error rate is not below one percent")
+	}
+	return rate
 }
 
 func (r Report) validateOracles(fail func(string)) {
@@ -198,7 +250,7 @@ func (r Report) validateOracles(fail func(string)) {
 		}
 		oracles[oracle.Name] = oracle
 	}
-	for _, name := range RequiredOracles {
+	for _, name := range requiredOracles {
 		oracle, exists := oracles[name]
 		if !exists || !oracle.Passed || oracle.Observations == 0 ||
 			len(oracle.EvidenceSHA256) != 64 {

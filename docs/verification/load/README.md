@@ -7,11 +7,14 @@ source, native workload adapter and dedicated baseline execution remain gates.
 
 ## Fixed acceptance envelope
 
-The release profile is five concurrent events, each with capacity 200, with at
-least 1,000 distinct authenticated people making successful native requests in
-**every minute** of the 1,800-second sustained stage. Staff/mentor sessions and
-bearer-authorised displays are additional explicitly counted traffic, never a
-replacement for attendee activity. A thousand stored people, initial sign-ins
+The release profile is five concurrent events with up to 200 people each and
+at least 1,000 distinct authenticated people making successful native requests
+in **every minute** of the 1,800-second sustained stage. The approved cohort
+keeps roles inside that count: 180 confirmed competitors plus 20 current staff
+per event, with the actual competitor capacity and distinct staff/people census
+reported separately. It never describes 200 competitors plus 20 staff as a
+200-person event. Any extra control actors/sessions and display capabilities
+are explicitly counted and cannot substitute for the continuously active cohort. A thousand stored people, initial sign-ins
 or duplicated jars for one person do not satisfy the target.
 
 The baseline uses Docker Compose, external verified TLS termination and durable
@@ -85,7 +88,7 @@ GOMAXPROCS=2 go test -p 1 ./internal/loadprofile -count=1
 
 | Runtime workload | Required independent assertions/evidence |
 | --- | --- |
-| Five-event concurrent burst admission, including over-capacity applicants | Native registration/form/FIFO/version facts, exactly 200 confirmed per event, no excess seat or duplicate person/event registration, accepted original responses reconciled |
+| Five-event concurrent burst admission, including over-capacity applicants | Native registration/form/FIFO/version facts, configured competitor capacity and the distinct 200-person competitor/staff cohort per event, no excess seat or duplicate person/event registration, accepted original responses reconciled |
 | 1,000 continuously active attendee sessions plus current staff | Normal OIDC/session issuance, distinct native people, every actor/minute activity, operation mix and achieved request rates, auth/session boundaries preserved |
 | Concurrent mentor observations/corrections | Current published coverage, expected native revisions, private author/source separation, every accepted version retained in native history |
 | Actual SSE displays while approved cue changes are accepted | Current authorised streams, accepted revision/time correlated to matching received revision, reconnect/revocation and private-canary checks; HTTP enqueue is not receipt |
@@ -157,3 +160,56 @@ current read as an original command acknowledgement. The release-load result
 remains **not executed**: this receipt sets `full_load=false` and
 `release_passed=false`. The full baseline still needs measured burst/saturation,
 all workload/oracles and actual 1,800s/1,000-person sustained execution.
+
+## Native adapter checkpoint (execution still pending)
+
+The current source adds hard-coded native HTTP adapters for actual registration
+(including accepted waitlist records), private mentor evidence, help-claim
+contention and current session/registration/help/clarification/showcase reads.
+Read projections use independent fixture publication/permission allowlists,
+strict DTO decoding, nonempty known-match checks and private canaries. Baseline
+traffic has no blanket expected-denial mode. Only the contention owners' exact
+`revision_conflict` response is classified as expected; registration form drift,
+idempotency conflicts, 429 and transport/server failures remain unexpected.
+
+Every sent write intent is retained as identity/version/fingerprint, including
+403/409/429/transport-unknown responses. Independently read immutable effects
+can establish persistence without rewriting an unknown original acknowledgement
+or enabling another write for that actor. A native owner may commit and then
+lose current read authority before replying; a 4xx alone cannot prove rollback.
+The ordinary accepted-write ledger and complete attempt ledger are both required.
+No replay body/private prose enters either public report.
+
+Read-only PostgreSQL adapters observe the actual admission/staff census, queued
+operations by kind, guarded attempt start timestamps, immutable registration/
+mentor/help effects and cue audit anchors. Raw all-operation due lag remains
+visible: intended automation source facts such as `teams.published` can remain
+pending without a delivery handler. Runnable healthy due-start measurements must
+use explicitly reconciled native dispatch operation IDs, not that raw gauge.
+
+The SSE client uses a verified HTTPS capability header without a person cookie
+or URL token. It checks native event/revision and positive projection shape.
+The ledger ignores heartbeats/current snapshots without an acknowledged native
+publication, preserves receipts arriving before the publisher response, and keeps
+missing expected display/revision pairs in the observations and oracle. Native
+audit/database timestamps and bounded driver round trips conservatively account
+for clock offset. These components have unit/race checks; no SSE/native SQL/API
+profile proof is claimed until the actual composed runtime executes them.
+
+Measurements now retain operation, phase and origin separately, with every raw
+status/outcome. Burst and sustained baseline limits are evaluated independently;
+setup, warmup, saturation and explicit probe distributions remain visible. A fast
+portal cannot hide a slow one by averaging. The monotonic phase boundary excludes
+request drain time, and interrupted/smoke runs cannot certify the sustained stage.
+
+The five simultaneous event stages are registration, preparation, two live
+events and one archived follow-up event. Already active other-event cohorts can
+cross-apply to the full registration event to create real waitlist contention
+without inventing another thousand people. The full role-specific workload
+driver, help creation/resolution, approved cue publisher, negative current-access
+cases, due follow-up/provider receipt oracles, normal-image TLS Compose bridge
+and full burst/saturation/1,800-second run remain unfinished. The prerequisite
+#120 provider's strict OIDC constructor will be reused with an explicit 1,000-person
+map; its historical clock/control runner will not be inherited by the wall-clock
+load runtime. No public test-authentication route or seeded application session
+is introduced.

@@ -12,10 +12,15 @@ func reportInput(t *testing.T) Report {
 	t.Helper()
 	start := time.Now()
 	var metrics Metrics
-	for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorWrite, HelpRead, HelpClaim, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
+	for _, operation := range []Operation{SessionRead, RegistrationRead, RegistrationWrite, MentorRead, MentorWrite, HelpRead, HelpClaim, HelpWrite, CueRead, CueWrite, ClarificationSearch, ShowcaseSearch, DisplayUpdate, DueJobStart} {
+		phase := SustainedPhase
+		if operation == RegistrationWrite {
+			phase = BurstPhase
+		}
 		for range 100 {
 			if err := metrics.Observe(
 				Measurement{
+					Phase: phase, Surface: PublicSurface,
 					Operation: operation,
 					Duration:  time.Millisecond,
 					Status:    200,
@@ -26,8 +31,8 @@ func reportInput(t *testing.T) Report {
 			}
 		}
 	}
-	oracles := make([]Oracle, 0, len(RequiredOracles))
-	for _, name := range RequiredOracles {
+	oracles := make([]Oracle, 0, len(requiredOracles))
+	for _, name := range requiredOracles {
 		oracles = append(
 			oracles,
 			Oracle{
@@ -69,23 +74,28 @@ func reportInput(t *testing.T) Report {
 			},
 		},
 		Dataset: Dataset{
-			Events:                5,
-			CapacityPerEvent:      200,
-			ConfirmedPerEvent:     []int{200, 200, 200, 200, 200},
-			AuthenticatedSessions: 1000,
-			Mentors:               5,
-			DisplayStreams:        5,
+			Events:                       5,
+			TargetPeoplePerEvent:         200,
+			PeoplePerEvent:               []int{200, 200, 200, 200, 200},
+			StaffPerEvent:                []int{20, 20, 20, 20, 20},
+			RegistrationCapacityPerEvent: []int{180, 180, 180, 180, 180},
+			ConfirmedPerEvent:            []int{180, 180, 180, 180, 180},
+			AuthenticatedSessions:        1000,
+			Mentors:                      5,
+			DisplayStreams:               5,
 		},
-		Activity:        ActivityReport{Sessions: 1000, ActiveEveryMinute: 1000, Windows: 30},
-		Operations:      metrics.Reports(),
-		Integrity:       IntegrityReport{Accepted: 100, Committed: 100},
-		Oracles:         oracles,
-		ResourceSamples: 30,
-		QueueSamples:    30,
-		BurstCompleted:  true,
-		ExternalTLS:     true,
-		DurableVolumes:  true,
-		WorkerWallClock: true,
+		Activity:           ActivityReport{Sessions: 1000, ActiveEveryMinute: 1000, Windows: 30},
+		Operations:         metrics.Reports(),
+		Integrity:          IntegrityReport{Accepted: 100, Committed: 100},
+		Attempts:           AttemptReport{Sent: 100, OriginalAcknowledgements: 100},
+		Oracles:            oracles,
+		ResourceSamples:    30,
+		QueueSamples:       30,
+		BurstCompleted:     true,
+		SustainedCompleted: true,
+		ExternalTLS:        true,
+		DurableVolumes:     true,
+		WorkerWallClock:    true,
 	}
 }
 
@@ -104,7 +114,13 @@ func TestThresholdsAndIntegrityCannotBeWaivedByFullDuration(t *testing.T) {
 	if result := control.Evaluate(); !result.Passed || !result.FullLoad {
 		t.Fatal(result)
 	}
-	for name, mutate := range map[string]func(*Report){"lost-write": func(r *Report) { r.Integrity.Missing = 1 }, "p95": func(r *Report) { r.Operations[0].P95 = 501 * time.Millisecond }, "missing-oracle": func(r *Report) { r.Oracles = r.Oracles[1:] }, "one-percent-errors": func(r *Report) { r.Operations[0].Outcomes[Accepted] = 92; r.Operations[0].Outcomes[Unexpected] = 8 }, "compressed-wall": func(r *Report) { r.Finished = r.Started.Add(time.Minute) }, "no-worker-wall": func(r *Report) { r.WorkerWallClock = false }, "missing-activity": func(r *Report) { r.Activity.MissingActorMinutes = 1 }} {
+	for name, mutate := range map[string]func(*Report){"lost-write": func(r *Report) { r.Integrity.Missing = 1 }, "p95": func(r *Report) {
+		for index := range r.Operations {
+			if r.Operations[index].Operation == SessionRead {
+				r.Operations[index].P95 = 501 * time.Millisecond
+			}
+		}
+	}, "missing-oracle": func(r *Report) { r.Oracles = r.Oracles[1:] }, "one-percent-errors": func(r *Report) { r.Operations[0].Outcomes[Accepted] = 88; r.Operations[0].Outcomes[Unexpected] = 12 }, "compressed-wall": func(r *Report) { r.Finished = r.Started.Add(time.Minute) }, "no-worker-wall": func(r *Report) { r.WorkerWallClock = false }, "missing-activity": func(r *Report) { r.Activity.MissingActorMinutes = 1 }} {
 		t.Run(name, func(t *testing.T) {
 			r := reportInput(t)
 			mutate(&r)
