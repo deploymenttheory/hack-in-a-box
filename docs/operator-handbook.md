@@ -66,6 +66,34 @@ cookies require HTTPS. Readiness does not verify the external identity provider
 or prove that a provider redirect is registered. Keep a controlled issuer/admin
 recovery procedure with the identity-provider owner.
 
+## Create a branded test event
+
+Use synthetic people and an isolated rehearsal installation for this check.
+After the first operator sign-in, complete these steps in the admin portal:
+
+1. Choose **Create event**. Enter a synthetic event name, slug, description and
+   venue. In **Attendance and dates**, choose a future live start/end and a
+   submission cutoff within that live window. Choose final admission before team
+   freeze, and team freeze before the computed T−7-day common release.
+   Use the date preview to correct blockers before saving.
+2. In **Organiser responsibility**, explicitly accept the event organiser role.
+   Choose **Save draft event**, review the exact details, then **Confirm save
+   draft event**. Verify the returned event name and draft state. Creating a
+   draft neither approves the go decision nor releases the challenge.
+3. In the event section selector choose **Branding**. Under **Colours**, choose
+   contrast-valid colours; under **Images**, select a synthetic PNG/JPEG logo
+   within the displayed limits. Inspect **Preview**, then **Save branding**.
+   Wait for **Branding saved.**; a timeout does not confirm a save and must not
+   be followed by an automatic retry.
+4. Reload the event and verify its saved name, logo and colours. Open the same
+   event in the participant portal using the current organiser account to verify
+   its permitted reader. This checks that account's staff access; it does not
+   establish confirmed-competitor eligibility.
+5. Open the matching independent style guide, then sign out of one portal and
+   confirm that the other retains its own session. Record the source revision,
+   image digests, actual results and any corrections before removing the
+   rehearsal's own disposable resources. Preserve every other installation.
+
 ## Runtime configuration and secret custody
 
 Compose reads `.env` for interpolation; Go commands read exported process
