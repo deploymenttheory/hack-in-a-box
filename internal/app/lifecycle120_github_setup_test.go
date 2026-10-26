@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
@@ -105,16 +106,18 @@ func (r *lifecycleJourney) configureGitHubApp(t *testing.T, item *lifecycleJourn
 	if _, err := r.owner.redirect(ctx, callback, http.StatusSeeOther); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.owner.call(
-		ctx,
-		http.MethodGet,
-		next.RequestURI(),
-		-1,
-		nil,
-		nil,
-		http.StatusBadRequest,
-	); err != nil {
+	replay, err := http.NewRequestWithContext(ctx, http.MethodGet, callback, nil)
+	if err != nil {
 		t.Fatal(err)
+	}
+	denied, err := r.owner.http.Do(replay)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = denied.Body.Close()
+	if denied.StatusCode != http.StatusBadRequest ||
+		!strings.Contains(denied.Header.Get("Cache-Control"), "no-store") {
+		t.Fatal("native App callback replay did not retain one-use rejection and no-store")
 	}
 	if err := r.owner.call(ctx, http.MethodGet, base, -1, nil, &status, http.StatusOK); err != nil {
 		t.Fatal(err)
