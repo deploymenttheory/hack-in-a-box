@@ -521,3 +521,50 @@ showcase, archive/outcomes and final browser matrix remain pending. All L01–L1
 rows still require their full integrated actions/assertions; **complete_lifecycle
 remains false**. New access setup belongs before pre-week work, rather than being
 reconstructed after it.
+
+## Connected native participant GitHub ownership checkpoint
+
+Frozen source `5a17fb70420a735edc40d1d4fa3a4cff586c7f43`, fixture image
+`sha256:5b56a6390deabd663d408809049ffa14509d5c83ed686b0ee03529cb2a7061b5`,
+main base `076f6162`, schema 54 passed in **51.45s**, runner 35490. Normal
+GitHub OAuth client/token-key settings enable the actual native account owner.
+All 36 genuine OIDC participants initiate their own current-version, acknowledged
+link command, receive native S256/browser-bound state and follow a strict
+synthetic external authorization/code/token/user protocol. An authenticated
+second browser for the same person cannot consume the first participant's state;
+the original browser still succeeds, and replay returns the native failed-link
+destination. Both retained event sessions observe the same numeric account,
+handle, verified timestamp and exactly advanced link revision. Linking remains
+person identity, not an event or repository access grant.
+
+The external fixture verifies exactly 36 PKCE exchanges and serves exactly 36
+actual authenticated user reads; wrong-verifier and code replay controls are
+covered separately with real OAuth/REST clients. Native PostgreSQL contains 36
+distinct verified numeric accounts and 36 protected token records. The native
+owner performs normal context-bound token encryption; no token, cookie or private
+response body is exported. Linking precedes repository provisioning/common theme
+release/pre-week work in the coherent journey. The same run then produces twelve
+ready repository mappings/twelve delivered operations/twelve delivered attempts,
+with released leases, and both contexts reach native live entry.
+[journey-github-identity.json](evidence/journey-github-identity.json) retains safe
+counts, IDs, source/image and native-state assertions.
+
+Build 73241 and startup 66755 preceded the run. The fresh private project and all
+labelled containers/volumes/networks were removed, with every final resource-class
+query empty. Normal user projects were unchanged. No production code changed in
+this checkpoint. The external provider and host mapping are explicitly test-only;
+this is not live GitHub acceptance or production GitHub TLS verification.
+
+Supporting real-client OAuth protocol RED71152 returned external404 before the
+fixture endpoint existed (0.06s). An intermediate incomplete fixture-field patch
+failed compilation; it supplied no executed proof. Corrected protocol GREEN67339
+passed0.02s; combined run45838 executed all three inspection/repository/OAuth
+parents (0.10s/0.04s/0.07s; package0.671s). Affected app lint reported zero issues.
+These component results are narrower than the measured native Compose run.
+
+L08/L12 now have this additional identity proof, but actual reviewed repository
+access/invitations and their external acceptance are still pending; repository
+creation or a linked account alone grants no access. Live support, submissions,
+cutoff faults/frozen census, judging/advisory, awards, showcase, retained outcomes,
+all remaining variants and final integrated browser/source/CI gates remain.
+**complete_lifecycle remains false; no L01–L18 row is declared fully complete.**
