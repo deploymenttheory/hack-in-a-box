@@ -1,0 +1,41 @@
+{
+  "verification_source": "d3dba5f8190321f6345ccf6b85e10111b5862a5e",
+  "application_source": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "image_source_attribution": "Supplied independently retained build record; production source equivalence checked by this runner. Empty embedded labels are not claimed as independent source verification.",
+  "embedded_application_sources": {
+    "public": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+    "admin": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784"
+  },
+  "images": {
+    "public": "sha256:c16b24704ee78afbd2d20f39396d3497a4d8bb189551cacd783c81a118346af4",
+    "admin": "sha256:a5138a6b75b651573ce235e278d386f9718716398de326af6e5f5d76f656dbb0",
+    "provider": "sha256:ad29f8b705499d940ca3e27ee720168223fb06e0cb15a821039d12d4a42e3e2b",
+    "python": "sha256:18d58f4e045f133283c50016a09285439cbe765877e1a93760888b85fd2ce905"
+  },
+  "project": "hackbox-security121-d3dba5f81903-331bcb05",
+  "scope": "Agent-executed normal API/OIDC abuse walkthrough; not future competition, complete security certification or full CI",
+  "transport_profile": "production HTTPS/external TLS and actual Secure cookies",
+  "passed": true,
+  "complete_release_security": false,
+  "public_certificate_pem_sha256": {
+    "ca.pem": "c117da00bc0b6551569a124c0d90e2259ed0d46ed1681939b069214079fe1f41",
+    "leaf.pem": "559413978fb47fa3095e050e5e664da6ddca1d6cef7f7dd010b9e0445a4cb4f8"
+  },
+  "observed_api_outcomes": 57,
+  "transport_assertions": [
+    "untrusted-private-CA-rejected",
+    "trusted-CA-wrong-hostname-rejected",
+    "secure-httponly-samesite-lax-host-only-cookies-observed-on-both-portals"
+  ],
+  "remaining_resources": {
+    "containers": "",
+    "volumes": "",
+    "networks": ""
+  },
+  "private_log_sha256": {
+    "configuration.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "startup.log": "0f669ef48787470eea256b8b3481864a1295e13660cbc502ef179ff58bcd6753",
+    "walkthrough.log": "dbe2bf5d9fff440f4872672864fd55d96d7e3861e7577ea842a347b0c03257a1",
+    "cleanup.log": "22635056e0d5697e045bae75ee17aaca0b00b7f40adfbe4208106b36741e4eb2"
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "source_commit": "432502185d422016eb0cae19f54e23044d641500",
+  "source_worktree_clean": true,
+  "scope": "explicit native security matrix; not full repository CI, browser, deployed manual abuse or pending feature verification",
+  "manifest": "docs/verification/security/delivery-cases.json",
+  "groups": [
+    {
+      "criterion": "actual display transport, capability scope and stream revocation",
+      "package": "httpapi",
+      "tests": [
+        "TestPresentationHTTPContractsAndCapabilityBoundary",
+        "TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/httpapi",
+        "-run",
+        "^(TestPresentationHTTPContractsAndCapabilityBoundary|TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestPresentationHTTPContractsAndCapabilityBoundary",
+        "TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "6e91e9c5001d4d96510dcad9fe0d3c463deb170756d6909784c0aefe1c6b4ba6"
+    },
+    {
+      "criterion": "long-lived subscription denies before private payload read",
+      "package": "access",
+      "tests": [
+        "TestSubscriptionPolicyReevaluatesEveryDelivery"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/access",
+        "-run",
+        "^(TestSubscriptionPolicyReevaluatesEveryDelivery)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestSubscriptionPolicyReevaluatesEveryDelivery"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "8a7c71b1acf069e5cdda34ad7580aaee4700c492c027ab165cfe54258d64e4e1"
+    },
+    {
+      "criterion": "queued effects recheck current role assignment and event",
+      "package": "jobs",
+      "tests": [
+        "TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/jobs",
+        "-run",
+        "^(TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "7f2219add56f8f746ed8e06d283b8eeb6d5068431fc1fdaea5595ddc2ae42091"
+    },
+    {
+      "criterion": "native protected file overlapping role and current revocation",
+      "package": "files",
+      "tests": [
+        "TestFileAccessWithOverlappingRolesAndRevocation"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/files",
+        "-run",
+        "^(TestFileAccessWithOverlappingRolesAndRevocation)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestFileAccessWithOverlappingRolesAndRevocation"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "0482aa92aa51113d1283e4ac4eb778f5ae443ba812c294713ecdab2c2812f357"
+    },
+    {
+      "criterion": "room projection cannot disclose private or early common sources",
+      "package": "presentation",
+      "tests": [
+        "TestDisplayTokensAreScopedHashedRevocableAndAuthorityBound",
+        "TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields",
+        "TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/presentation",
+        "-run",
+        "^(TestDisplayTokensAreScopedHashedRevocableAndAuthorityBound|TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields|TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestDisplayTokensAreScopedHashedRevocableAndAuthorityBound",
+        "TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields",
+        "TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "75ca9c9ee6f7e2dc4b5e100c100eecef2216a7c47ba27eff7241502117c75cc5"
+    },
+    {
+      "criterion": "approved multi-channel confidentiality and execution source authority",
+      "package": "automation",
+      "tests": [
+        "TestApprovedMultiChannelAutomationCannotProjectNativePrivateCardsCredentialsOrOtherMailboxes",
+        "TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/automation",
+        "-run",
+        "^(TestApprovedMultiChannelAutomationCannotProjectNativePrivateCardsCredentialsOrOtherMailboxes|TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestApprovedMultiChannelAutomationCannotProjectNativePrivateCardsCredentialsOrOtherMailboxes",
+        "TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "f8e8b900a42f12a34e223252d67958f0237a05a3f0d0ee97acd50d33bbb0854b"
+    },
+    {
+      "criterion": "GitHub App provider authentication and least-privilege operation tokens",
+      "package": "githubapp",
+      "tests": [
+        "TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens",
+        "TestOperationTokensNeverDefaultToInstallationWideAccess"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/githubapp",
+        "-run",
+        "^(TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens|TestOperationTokensNeverDefaultToInstallationWideAccess)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens",
+        "TestOperationTokensNeverDefaultToInstallationWideAccess"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "fae3ef46d6472c56413718a2c2d0e0b079ef772af2eb890d1206f67584e44ec8"
+    }
+  ],
+  "complete": true
+}

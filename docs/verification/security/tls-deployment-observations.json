@@ -1,0 +1,251 @@
+{
+  "scope": "agent-executed private normal-command deployment abuse; future/live competition, showcase browser and mentor feature retain separate proofs",
+  "transport_profile": "production HTTPS with private trusted CA and real external TLS termination",
+  "transport_assertions": [
+    "untrusted-private-CA-rejected",
+    "trusted-CA-wrong-hostname-rejected",
+    "secure-httponly-samesite-lax-host-only-cookies-observed-on-both-portals"
+  ],
+  "observed_cookie_names": [
+    "hackbox_admin_login",
+    "hackbox_admin_session",
+    "hackbox_public_login",
+    "hackbox_public_session"
+  ],
+  "normal_api_commands": true,
+  "configured_oidc_pkce": true,
+  "test_clock_or_sql_or_fabricated_session": false,
+  "application_source": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "verification_source": "d3dba5f8190321f6345ccf6b85e10111b5862a5e",
+  "observations": [
+    {
+      "scenario": "anonymous-admin-session",
+      "status": 401
+    },
+    {
+      "scenario": "anonymous-admin-events",
+      "status": 401
+    },
+    {
+      "scenario": "anonymous-admin-projects",
+      "status": 401
+    },
+    {
+      "scenario": "anonymous-public-session",
+      "status": 401
+    },
+    {
+      "scenario": "anonymous-public-events",
+      "status": 401
+    },
+    {
+      "scenario": "anonymous-public-projects",
+      "status": 401
+    },
+    {
+      "scenario": "real-oidc-session-owner-security-admin.test",
+      "status": 200
+    },
+    {
+      "scenario": "real-oidc-session-owner-security-public.test",
+      "status": 200
+    },
+    {
+      "scenario": "real-oidc-session-stranger-security-admin.test",
+      "status": 200
+    },
+    {
+      "scenario": "native-create-Harbour",
+      "status": 200
+    },
+    {
+      "scenario": "native-create-Orchard",
+      "status": 200
+    },
+    {
+      "scenario": "guessed-private-event",
+      "status": 403
+    },
+    {
+      "scenario": "unprivileged-event-creation",
+      "status": 403
+    },
+    {
+      "scenario": "missing-csrf",
+      "status": 400
+    },
+    {
+      "scenario": "invalid-csrf",
+      "status": 403
+    },
+    {
+      "scenario": "foreign-origin",
+      "status": 403
+    },
+    {
+      "scenario": "origin-suffix",
+      "status": 403
+    },
+    {
+      "scenario": "denied-commands-created-no-events",
+      "status": 200
+    },
+    {
+      "scenario": "unknown-privilege-field",
+      "status": 400
+    },
+    {
+      "scenario": "native-safe-file-positive-control",
+      "status": 201
+    },
+    {
+      "scenario": "guessed-private-file",
+      "status": 403
+    },
+    {
+      "scenario": "foreign-event-file-id-substitution",
+      "status": 404
+    },
+    {
+      "scenario": "independent-public-session-authorised-file",
+      "status": 200
+    },
+    {
+      "scenario": "active-asset-mime-spoof",
+      "status": 415
+    },
+    {
+      "scenario": "guessed-organiser-export",
+      "status": 403
+    },
+    {
+      "scenario": "native-unreleased-content-positive-control",
+      "status": 200
+    },
+    {
+      "scenario": "direct-unreleased-content-url",
+      "status": 404
+    },
+    {
+      "scenario": "preview-query-is-not-authority",
+      "status": 404
+    },
+    {
+      "scenario": "self-granted-role-attack",
+      "status": 403
+    },
+    {
+      "scenario": "read-current-role-change-base",
+      "status": 200
+    },
+    {
+      "scenario": "explicit-native-role-grant",
+      "status": 200
+    },
+    {
+      "scenario": "existing-session-remains-authenticated-after-role-grant",
+      "status": 200
+    },
+    {
+      "scenario": "new-current-role-positive-control",
+      "status": 200
+    },
+    {
+      "scenario": "role-does-not-cross-events",
+      "status": 403
+    },
+    {
+      "scenario": "mentor-role-not-early-draft-access",
+      "status": 404
+    },
+    {
+      "scenario": "read-current-revocation-base",
+      "status": 200
+    },
+    {
+      "scenario": "explicit-native-role-revocation",
+      "status": 200
+    },
+    {
+      "scenario": "revoked-role-is-independent-of-identity-session",
+      "status": 200
+    },
+    {
+      "scenario": "existing-session-current-role-revocation",
+      "status": 403
+    },
+    {
+      "scenario": "real-oidc-session-stranger-security-admin.test",
+      "status": 200
+    },
+    {
+      "scenario": "fresh-login-cannot-resurrect-revoked-role",
+      "status": 403
+    },
+    {
+      "scenario": "read-organiser-grant-base",
+      "status": 200
+    },
+    {
+      "scenario": "explicit-native-organiser-grant",
+      "status": 200
+    },
+    {
+      "scenario": "organiser-private-file-positive-control",
+      "status": 200
+    },
+    {
+      "scenario": "organiser-private-draft-positive-control",
+      "status": 200
+    },
+    {
+      "scenario": "read-organiser-revocation-base",
+      "status": 200
+    },
+    {
+      "scenario": "explicit-native-organiser-revocation",
+      "status": 200
+    },
+    {
+      "scenario": "same-session-revoked-organiser-file",
+      "status": 403
+    },
+    {
+      "scenario": "same-session-revoked-organiser-draft",
+      "status": 404
+    },
+    {
+      "scenario": "same-session-revoked-organiser-event",
+      "status": 403
+    },
+    {
+      "scenario": "real-oidc-session-stranger-security-admin.test",
+      "status": 200
+    },
+    {
+      "scenario": "fresh-login-cannot-resurrect-organiser-file",
+      "status": 403
+    },
+    {
+      "scenario": "secure-cookie-not-sent-over-http-admin",
+      "status": 401
+    },
+    {
+      "scenario": "secure-cookie-not-sent-over-http-public",
+      "status": 401
+    },
+    {
+      "scenario": "logout-public-session-only",
+      "status": 204
+    },
+    {
+      "scenario": "logged-out-cookie-denied",
+      "status": 401
+    },
+    {
+      "scenario": "independent-admin-session-survives-public-logout",
+      "status": 200
+    }
+  ],
+  "complete_release_security": false
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "criterion": "merged #112 mentor advisory: current published coverage/conflict/role/source, own-author privacy, exact receipts, unchanged final scores/votes/binding and optional-input confirmation",
+    "package": "app",
+    "tests": [
+      "TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote"
+    ]
+  }
+]

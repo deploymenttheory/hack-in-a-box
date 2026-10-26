@@ -1,0 +1,21 @@
+{
+  "source_commit": "6bab692bbf34eb2d88926b0e4887ff870551ccfc",
+  "scope": "completed independent frontend/advisory checks; no final integrated deployment or full CI acceptance",
+  "administration_browser_cases": 2,
+  "participant_browser_cases": 2,
+  "frontend_unit_tests": 237,
+  "frontend_unit_files": 49,
+  "affected_advisory_packages": 0,
+  "module_only_advisory": "GO-2026-5932",
+  "openpgp_packages_in_app_and_test_dependency_graph": 0,
+  "logs_sha256": {
+    "admin_browser": "014cbce9f177d6f5713a89cd59793f9944e691b9bc85a160646a53e26016544b",
+    "participant_browser": "3ef150425096e5f5d36908a0a487e8dca6158d1359a7071ba661f380b2fa391a",
+    "frontend_lint": "ac23124da20094d656a717b4260340572dfc05a28e6145a4207fc7c3d2d39c64",
+    "frontend_units": "c883ae0c971e9b7270957321611c7579b61fee336095286496d2822842a387d8",
+    "portal_builds": "ebec964e45f09a5d99956f1637ea3ab3907dfbc79084b7100f24a1825e6ad1c8",
+    "affected_go_lint": "e92606b0bf483111dff0a120c315ea165821348f31365020e2468a0059095c47",
+    "advisories": "784e31fe78e63e9e3fb5259e1c60d04284dd2e897998f1ea5675d22b52b02b7a",
+    "dependency_graph": "c4bbc56f961769e2ddca7155694e4f0a61cd5392d93e195fd02a31ed346ecc12"
+  }
+}

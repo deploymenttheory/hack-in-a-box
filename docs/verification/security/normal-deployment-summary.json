@@ -1,0 +1,32 @@
+{
+  "verification_source": "c2f7c69db067ef5fd350323a7dcb1b358355a77b",
+  "application_source": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "image_source_attribution": "Supplied independently retained build record; production source equivalence checked by this runner. Empty embedded labels are not claimed as independent source verification.",
+  "embedded_application_sources": {
+    "public": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+    "admin": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784"
+  },
+  "images": {
+    "public": "sha256:c16b24704ee78afbd2d20f39396d3497a4d8bb189551cacd783c81a118346af4",
+    "admin": "sha256:a5138a6b75b651573ce235e278d386f9718716398de326af6e5f5d76f656dbb0",
+    "provider": "sha256:802f0dd429a69543526ef5cf95d30f2aec260b7eb9f35d6318f6c510c07dfbb8",
+    "python": "sha256:18d58f4e045f133283c50016a09285439cbe765877e1a93760888b85fd2ce905"
+  },
+  "project": "hackbox-security121-c2f7c69db067-8e944ee7",
+  "scope": "Agent-executed normal API/OIDC abuse walkthrough; not future competition, complete security certification or full CI",
+  "passed": true,
+  "complete_release_security": false,
+  "observed_api_outcomes": 55,
+  "remaining_resources": {
+    "containers": "",
+    "volumes": "",
+    "networks": ""
+  },
+  "private_log_sha256": {
+    "configuration.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "startup.log": "1772549fab32ff31d244aaff39aa8406fa5f35b5a5c88905e2aa1801dd3f896f",
+    "walkthrough.log": "90c45a2afe70210fa9f3b50a9e4773d6522e70f7024d7ce024224c5b897d2cd9",
+    "cleanup.log": "a39aeffda6a93a3e1198c5666c2b1bc52885c1b729e7d4a8555da6598cdf9e0f"
+  },
+  "transport_scope": "Private-network HTTP/development configuration; this execution does not exercise production HTTPS or Secure-cookie transport."
+}
