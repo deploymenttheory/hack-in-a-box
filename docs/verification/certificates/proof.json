@@ -1,0 +1,260 @@
+{
+  "scope": "Optional M5 certificate backend; synthetic real PostgreSQL/HTTP and exported-document Chromium proof, no OIDC or UI165 claim",
+  "evaluated_source": "69cf985f9a9679ec2874b367e74cb68328d0b70d",
+  "base": "5f78d51f6f22bd11f58344f529d52daeebf475b1",
+  "historical_red": {
+    "source": "5744bb38f3406f5662b6e0262523933be1ab74d8",
+    "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native.log",
+    "log_sha256": "8c4b9cd1faa82611cce50edf3a44d671d53252a469c8c7d7e1c90b59c8615145",
+    "cause": "Production SchemaVersion remained55 while migration56 was added; certificate tables absent. Fixed fdda636d."
+  },
+  "full_native_attempt": {
+    "source": "fdda636db3c3b3836fdb4c12ecc9c20b3adbe224",
+    "command": [
+      "go",
+      "test",
+      "-v",
+      "-race",
+      "-p",
+      "1",
+      "-parallel",
+      "1",
+      "./internal/certificates",
+      "./internal/app",
+      "./internal/httpapi",
+      "-run",
+      "^TestCertificates",
+      "-count=1",
+      "-timeout=8m"
+    ],
+    "exit_code": 1,
+    "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native-fdda636d/native.log",
+    "log_sha256": "00420caa580deabb14ea582c615bae1f44f1f43b618808f21ed371d110180feb",
+    "resource_receipt_sha256": "6d2e447df4c5569ae7c6cfdad00c217ce729258b68231dd1a5d5dc94d7306fcb",
+    "all_owned_containers_absent": true,
+    "observed_pg_samples": 19
+  },
+  "corrected_parent_attempt": {
+    "source": "69cf985f9a9679ec2874b367e74cb68328d0b70d",
+    "command": [
+      "go",
+      "test",
+      "-v",
+      "-race",
+      "-p",
+      "1",
+      "-parallel",
+      "1",
+      "./internal/certificates",
+      "-run",
+      "^TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation$",
+      "-count=1",
+      "-timeout=8m"
+    ],
+    "exit_code": 0,
+    "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native-69cf985f/native.log",
+    "log_sha256": "89f42393604490225f119526ecfd19d432c93f30c8b74351a9eb5c76dbc33e50",
+    "resource_receipt_sha256": "7862d7796cc538ab4b171af98c2f3c87fb47b2216deda51adc2c23e16d81302b",
+    "all_owned_containers_absent": true,
+    "observed_pg_samples": 2
+  },
+  "parents": [
+    {
+      "name": "TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation",
+      "source": "69cf985f",
+      "parent_seconds": 6.49,
+      "package_seconds": 8.022,
+      "result": "PASS; actual Goose DownTo rejects retained decisions. fdda predecessor reached final test-only assertion then failed because database.Migrate is UpTo, not DownTo."
+    },
+    {
+      "name": "TestCertificatesDistinctRequestsRaceOneStableRecognition",
+      "source": "fdda636d",
+      "parent_seconds": 3.51,
+      "result": "PASS"
+    },
+    {
+      "name": "TestCertificatesCheckInCorrectionRaceAndCurrentStaffRevocation",
+      "source": "fdda636d",
+      "parent_seconds": 3.22,
+      "result": "PASS"
+    },
+    {
+      "name": "TestCertificatesRequireActualPublishedAwardAndCurrentRecipient",
+      "source": "fdda636d",
+      "parent_seconds": 26.05,
+      "package_seconds": 28.184,
+      "subcases": {
+        "all_teams": 10.31,
+        "mentor_qualification": 15.75
+      },
+      "result": "PASS"
+    },
+    {
+      "name": "TestCertificatesHTTPReviewedIssuanceCurrentPrivatePrintAndRevocation",
+      "source": "fdda636d",
+      "parent_seconds": 10.28,
+      "package_seconds": 12.222,
+      "result": "PASS"
+    }
+  ],
+  "source_equivalence": "fdda636d\u219269cf985f changes only service_test.go imports and the actual downgrade invocation; production, app award and HTTP owners unchanged. The two other domain test bodies unchanged. No all-package GREEN is claimed for the earlier failed full command.",
+  "browser": {
+    "kind": "Actual native HTTP exported certificate HTML rendered in isolated Chromium; not app/OIDC or UI165 proof",
+    "html_sha256": "5f488c0af7aae4b557abc7c785aa35c45c2fb6dfaee727f389da4c5f0b70e0ef",
+    "csp": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+    "cases": [
+      {
+        "width": 1440,
+        "media": "screen",
+        "overflow": false,
+        "serious_critical_axe": 0,
+        "external_requests": 0,
+        "inline_scripts_blocked": true,
+        "image_fetch_blocked": true
+      },
+      {
+        "width": 1440,
+        "media": "print",
+        "overflow": false,
+        "serious_critical_axe": 0,
+        "external_requests": 0,
+        "inline_scripts_blocked": true,
+        "image_fetch_blocked": true
+      },
+      {
+        "width": 390,
+        "media": "screen",
+        "overflow": false,
+        "serious_critical_axe": 0,
+        "external_requests": 0,
+        "inline_scripts_blocked": true,
+        "image_fetch_blocked": true
+      },
+      {
+        "width": 390,
+        "media": "print",
+        "overflow": false,
+        "serious_critical_axe": 0,
+        "external_requests": 0,
+        "inline_scripts_blocked": true,
+        "image_fetch_blocked": true
+      }
+    ],
+    "requests": 4
+  },
+  "browser_driver": "docs/verification/certificates/print-browser.cjs",
+  "browser_driver_sha256": "e8b5a0ce7a486ee761ee00699441162217282115ea184472c4c3ef3df6ef22f6",
+  "browser_log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native-fdda636d/browser-print-tracked.log",
+  "browser_log_sha256": "a1f728a6e024c7124e1b0dc267db2cbf0a55dfb30f9cdf4333cf7b6d87fd544a",
+  "resource_scope": {
+    "full_observed_peak_pg_mib": 44.75,
+    "corrected_parent_observed_peak_pg_mib": 31.7,
+    "sampling_not_capacity_or_hard_limit": true
+  },
+  "remaining_gates": [
+    "Independent full Standards and Spec reviews",
+    "All final-head CI and root acceptance review"
+  ],
+  "source_hashes": {
+    "api/openapi.yaml": "8fe3caf232b1e2f630cf9b68405966ba7e8ccb3dd0cc1eee281174f92e8a1120",
+    "docs/design/certificates.md": "f53a98a5d269bfbefff3b8a4b66586d369eba88315f5bdfc945501c68bd813af",
+    "internal/app/certificates164_test.go": "d30d9288e9a000a9ec25b7ed1108fafa309f16bc394ca7063ab8bdbd8e189e31",
+    "internal/certificates/commands.go": "b5bc72b5b9ae5240291e7e416533d1528582b5d19f26a24e892bac1fc50694d0",
+    "internal/certificates/eligibility.go": "0f90f53fb892f1454c97f290e4ddeb57d454b41203c27fc6035817ab53555fcd",
+    "internal/certificates/model.go": "efdbc19a0685c2528d3087b3a9af2fa84b519ea2f720611467651368893f1b82",
+    "internal/certificates/print.go": "74f00a28a34e28023f046d3f8313eb82c5212520a64369b552691edec2c35580",
+    "internal/certificates/read.go": "64657dff39aa8719614a5844b47973158245df53c917e1174d1b5c3928010b6f",
+    "internal/certificates/service_test.go": "64e73519cc68621600ccaa5e770a4627db324244811fb1a87ee4d3aabdcd7128",
+    "internal/certificates/settings.go": "4362ceaab0a3d15513b2c0192d213c1f6615e40f315a885d9f9601f1edf25ddc",
+    "internal/database/database.go": "ff8ab0bbd264acfcaae6d41626ed72279847b2b98bac77a7b0aacce2dfc199e6",
+    "internal/database/dbgen/models.go": "863f5fddda73874b1e7f33b543fdc5601d9ff567cefd6e4fdbb6d134911f9a21",
+    "internal/database/migrations/00056_certificates.sql": "50addaf6f9e6a2cf9146b0f8a14beb65b3d63c0eeca2f5d4ff53e708b48c36f7",
+    "internal/httpapi/certificates.go": "395f3c9bc8fc09afa22666acf90ecc5be343fb5d0c188a02b5a39fe70256bc7e",
+    "internal/httpapi/certificates_test.go": "f47f1c98ef583f81dba13a40d11d8b2a958d1abdbe1098fd4469557e7d0a88f7",
+    "internal/httpapi/contract/api.gen.go": "14dff4a83d752bf41e3ea7c3e16013508bd16e602f54502d76c3da0626471be5",
+    "internal/httpapi/handlers.go": "e262e8fd588a6ca963738fb6a85c40db285b3b829148e066d1d0287451f51d0d",
+    "web/src/api/schema.gen.ts": "fa6f9bc6ad0b34d86b93b4f2a9fff89fc65fb248ab1d659cd4211c4f7f52f146"
+  },
+  "rebase_reconciliation": {
+    "source": "460b006bacfa7597e521c062ed3bcbc004a2c7f4",
+    "base": "8fc614aec2a1bbc416bc466199f9ef79779dd407",
+    "all_recorded_source_files_byte_equal": true,
+    "recorded_source_file_count": 18,
+    "meaning": "Historical native and browser receipts retain their actual source; no rerun at rebased head is claimed."
+  },
+  "rebased_checks": {
+    "compile": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-compile.log",
+      "log_sha256": "461f4a1a1a8d18aba988e7973f487f685962bffc0553145de203cb83475a5303"
+    },
+    "lint": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-lint.log",
+      "log_sha256": "e92606b0bf483111dff0a120c315ea165821348f31365020e2468a0059095c47"
+    },
+    "generated": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-generated.log",
+      "log_sha256": "fd4492a811810fea3e1baa473a08c1e76124e5257674f9de8bf15a2e475e0ec3"
+    }
+  },
+  "final_documentation_delta": {
+    "source": "47324ffbe7dbf416165d44340212b62f9a051fa4",
+    "code_api_test_files_byte_equal": 17,
+    "historical_design_document_changed": "docs/design/certificates.md gains current verification link and independent-review/CI status only; its historical source hash is retained above."
+  },
+  "ci_schema_compatibility_regression": {
+    "ci_source": "fb0012fb6f6d337a40779139926a767e85d7ce2a",
+    "ci_run": 40363780203,
+    "ci_job": 121715852561,
+    "ci_log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/ci-fb0012fb-go.log",
+    "ci_log_sha256": "b70bd755212a17e34a22901b6cbe2f2f8fa489c1ad14da64fbc39149f683fdd6",
+    "actual_failures": [
+      {
+        "owner": "internal/httpapi",
+        "reason": "unbatched package exceeded10m",
+        "package_seconds": 600.202,
+        "resolution": "pending integration of PR303 exhaustive HTTP batching; not rerun here"
+      },
+      {
+        "owner": "TestMentorAdvisoryUpgradeRetainsPopulatedParentAndCorrectionHistory",
+        "reason": "fixture correctly retains pinned schema55 but then asks current runtime CheckSchema, whose head is56",
+        "file_line": "internal/results/advisory_schema_test.go:120"
+      }
+    ],
+    "green_source": "9db8318cabb87687e5aa4b068b387f65478b6f88",
+    "correction": "Test-only9lines retain all54\u219255 rollback/history/version55 checks, explicitly upgrade to currenthead, thenCheckSchema and recheck two retained advisoryversions",
+    "command": [
+      "go",
+      "test",
+      "-v",
+      "-race",
+      "-p",
+      "1",
+      "-parallel",
+      "1",
+      "./internal/results",
+      "-run",
+      "^TestMentorAdvisoryUpgradeRetainsPopulatedParentAndCorrectionHistory$",
+      "-count=1",
+      "-timeout=8m"
+    ],
+    "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/native-9db8318c/native.log",
+    "log_sha256": "79a5f518b7cdaa921aa1b4fd533be9674baf153c3d232f61ba0851644d8cce37",
+    "source_file": "internal/results/advisory_schema_test.go",
+    "source_sha256": "d0de7ca9bfc6db24ea26bfa63198f40774f78cdb5f29dabd9590728de3424e55",
+    "exit_code": 0,
+    "parent_seconds": 1.93,
+    "package_seconds": 3.29,
+    "failures": 0,
+    "skips": 0,
+    "all_owned_containers_absent": true,
+    "resources_sha256": "67eab6abac6d3553948e199e1b60427dd4b54d0438c988feff07a52cf90a8d85",
+    "memory_samples": 0,
+    "memory_limit_or_peak_claimed": false,
+    "lint_exit_code": 0,
+    "lint_log_sha256": "e92606b0bf483111dff0a120c315ea165821348f31365020e2468a0059095c47",
+    "scope": "Additional historical-schema compatibility owner only, not a rerun of the five certificate parents or fullCI. All17 direct certificate code/API/test hashes unchanged."
+  }
+}

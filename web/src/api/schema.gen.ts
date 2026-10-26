@@ -4,6 +4,84 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/certificate-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getCertificateSettings"];
+        put: operations["configureCertificates"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/certificates/eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        /** @description Organiser-only current native eligibility. Registration alone never qualifies; use the returned binding for explicit issuance. No certificate or notification is created. */
+        get: operations["previewCertificateEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/certificates/{certificate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                certificate_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Only own current recipient or current organiser. Unknown and inaccessible IDs return 404. Staff history retains provenance; recipient history is empty. Current=false blocks printing. */
+        get: operations["getCertificate"];
+        /** @description Explicit organiser issue/correct/revoke. Issue uses version zero; correction/revocation require the exact current certificate version. Correction retains UUID/person/recognition; revoked IDs cannot be resurrected. No delivery is sent. */
+        put: operations["changeCertificate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/certificates/{certificate_id}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                certificate_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Authorised accessible standalone printable HTML from the approved allowlist only. Revoked or changed eligibility returns 409; no public verification directory. */
+        get: operations["printCertificate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/results/mentor-advisories": {
         parameters: {
             query?: never;
@@ -4281,6 +4359,123 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CertificateAttendancePolicy: {
+            days: string[];
+            minimum_present: number;
+        };
+        CertificateTemplate: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "attendance" | "award";
+            recognition: string;
+            issuer: string;
+            accent: string;
+        };
+        CertificateSettings: {
+            /** Format: int64 */
+            version: number;
+            attendance: components["schemas"]["CertificateAttendancePolicy"] | null;
+            templates: components["schemas"]["CertificateTemplate"][];
+        };
+        CertificateSettingsCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {boolean} */
+            reviewed: true;
+            attendance: components["schemas"]["CertificateAttendancePolicy"] | null;
+            templates: components["schemas"]["CertificateTemplate"][];
+            reason: string;
+        };
+        CertificateTarget: {
+            /** Format: uuid */
+            person_id: string;
+            /** Format: uuid */
+            template_id: string;
+            /** Format: uuid */
+            publication_id: string;
+            /** Format: uuid */
+            prize_id: string;
+        };
+        CertificateFields: {
+            name: string;
+            event: string;
+            recognition: string;
+            issuer: string;
+            accent: string;
+            award: string;
+        };
+        CertificateEligibility: {
+            target: components["schemas"]["CertificateTarget"];
+            /** Format: int64 */
+            settings_version: number;
+            /** @enum {string} */
+            kind: "attendance" | "award";
+            eligible: boolean;
+            blockers: string[];
+            binding: string;
+            fields: components["schemas"]["CertificateFields"];
+        };
+        CertificateCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "issue" | "correct" | "revoke";
+            target: components["schemas"]["CertificateTarget"];
+            binding: string;
+            reason: string;
+        };
+        CertificateRecord: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            person_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            state: "issued" | "revoked";
+            /** @enum {string} */
+            kind: "attendance" | "award";
+            target: components["schemas"]["CertificateTarget"];
+            /** Format: int64 */
+            settings_version: number;
+            binding: string;
+            fields: components["schemas"]["CertificateFields"];
+            /** Format: date-time */
+            issued_at: string;
+            /** Format: date-time */
+            changed_at: string;
+        };
+        CertificateHistory: {
+            certificate: components["schemas"]["CertificateRecord"];
+            /** Format: uuid */
+            actor_id: string;
+            reason: string;
+            receipt: components["schemas"]["CertificateReceipt"];
+        };
+        CertificateReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            certificate_id: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            action: "issue" | "correct" | "revoke";
+            fingerprint: string;
+        };
+        CertificateView: {
+            receipt: components["schemas"]["CertificateReceipt"] | null;
+            certificate: components["schemas"]["CertificateRecord"];
+            current: boolean;
+            history: components["schemas"]["CertificateHistory"][];
+        };
         TeamFeedbackCurrentSource: {
             binding: string;
             /** Format: uuid */
@@ -9676,6 +9871,166 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getCertificateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organiser-only reviewed optional recognition configuration; version zero is unconfigured. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    configureCertificates: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateSettingsCommand"];
+            };
+        };
+        responses: {
+            /** @description Explicit reviewed immutable settings version. Exact request replay returns its original version. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    previewCertificateEligibility: {
+        parameters: {
+            query: {
+                person_id: string;
+                template_id: string;
+                publication_id?: string;
+                prize_id?: string;
+            };
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current configured eligibility and safe printable-field preview. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateEligibility"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                certificate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current certificate metadata; original request receipt is null on ordinary reads. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changeCertificate: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+                certificate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateCommand"];
+            };
+        };
+        responses: {
+            /** @description Exact original command receipt and retained certificate version, distinct from current eligibility. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateView"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    printCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                certificate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private printable recognition, never accreditation. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    "Content-Security-Policy"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getMentorAdvisories: {
         parameters: {
             query?: never;

@@ -63,6 +63,41 @@ type CateringSetting struct {
 	Buffer  int32
 }
 
+type CertificateHead struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	Version        int64
+	PersonID       uuid.UUID
+	RecognitionKey string
+}
+
+type CertificateSetting struct {
+	EventID     uuid.UUID
+	Version     int64
+	RequestID   uuid.UUID
+	Fingerprint string
+	Document    []byte
+	ActorID     uuid.UUID
+	Reason      string
+	CreatedAt   time.Time
+}
+
+type CertificateVersion struct {
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	Version        int64
+	PersonID       uuid.UUID
+	RecognitionKey string
+	State          string
+	Action         string
+	RequestID      uuid.UUID
+	Fingerprint    string
+	Document       []byte
+	ActorID        uuid.UUID
+	Reason         string
+	CreatedAt      time.Time
+}
+
 type ClarificationAnswer struct {
 	EventID          uuid.UUID
 	ID               uuid.UUID
