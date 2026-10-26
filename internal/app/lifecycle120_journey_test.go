@@ -51,6 +51,7 @@ type lifecycleJourneyEvent struct {
 	resultDecision     *lifecycleResultDecisionReceipt
 	resultReleases     []lifecycleResultReleaseReceipt
 	resultPreparations []lifecycleResultPreparationReceipt
+	teamFeedback       []lifecycleTeamFeedbackReceipt
 	practice           []lifecyclePracticeReceipt
 	review             lifecycleMentorReviewReceipt
 	commonHash         string
@@ -234,6 +235,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.scoreIndependentJudgeFinals(t)
 	run.decideJudgeResults(t)
 	run.publishConfirmedAwards(t)
+	run.releaseOwnTeamFeedback(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -281,6 +283,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		ResultDecision     *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
 		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
 		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
+		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
 		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
@@ -321,6 +324,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				ResultDecision:     item.resultDecision,
 				ResultReleases:     item.resultReleases,
 				ResultPreparations: item.resultPreparations,
+				TeamFeedback:       item.teamFeedback,
 				Review:             item.review,
 			},
 		)

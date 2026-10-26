@@ -158,7 +158,9 @@ services:
   journey:
     <<: *fixture
     profiles: [journey]
-    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=8m', '-test.v']
+    # The connected release baseline takes ~405s; own-team draft/release and
+    # amendment/privacy add ~80 real HTTP calls. Individual guards stay unchanged.
+    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=10m', '-test.v']
     volumes: ['control:/control:ro', 'artifacts:/artifacts']
     depends_on:
       public: {condition: service_healthy}
