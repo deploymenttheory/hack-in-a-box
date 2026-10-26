@@ -369,3 +369,19 @@ independent production availability. The temporary local test configuration was
 removed after its process exited. Source hashes and command attribution are in
 `upload-lifetime-proof.json`. All results precede the checkpoint commit; fresh
 exact-head CI is still required.
+
+## Semantic event navigation icons
+
+A visual comparison with the accepted Fleet reference found the shared event
+registry still used the generic book fallback for multiple existing workspaces.
+The current registry now declares their subject/operation: team, upload, calendar,
+send, shield, document and presentation. The shared icon catalogue and contributor
+guidance describe those choices. Capability-derived destination visibility, order,
+labels and native narrow-screen navigation are unchanged.
+
+The existing21 planning/primitive tests, both portal builds and independent guide
+build pass. Two existing synthetic desktop/narrow planning browser cases pass in
+3.3 seconds. [Patch-attributed images and source hashes](navigation-icons/proof.json)
+keep this bounded visual evidence separate from actual native API integration.
+The current desktop setup was inspected against the accepted desktop reference;
+this does not claim a whole-product visual certification.

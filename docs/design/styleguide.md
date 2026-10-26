@@ -426,3 +426,14 @@ inputs/review on current authority or source change. Exclude private advisory fr
 print, persisted caches and participant announcements. The independent synthetic
 example demonstrates these production exports without APIs, cookies or storage;
 its callbacks do not create native receipts or counted ballots.
+
+## Event navigation icon meaning
+
+Declare each event destination in `planning-layout.tsx` with an icon from the
+shared production registry. Use the subject or operation: teams/mentors use
+`team`, sessions use `calendar`, campaigns use `send`, deliverables use `upload`,
+the MC console uses `presentation`, and authored content uses `document`.
+`book` identifies rules/resource reading rather than serving as the icon for
+every workspace. The interactive production catalogue includes these registry
+entries automatically. Keep visible labels and the native narrow-screen section
+selector; an icon does not authorise or expose a destination.
