@@ -152,6 +152,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		run.readCommonPublication(t, &run.events[i])
 	}
 	run.prepareMentorReview(t)
+	run.planFinalMentorReview(t)
 	run.prepareRepositoryAccess(t)
 	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
@@ -223,6 +224,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
+	run.reviewFrozenMentorEvidence(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
