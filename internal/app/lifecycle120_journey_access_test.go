@@ -1,8 +1,10 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -12,11 +14,16 @@ import (
 )
 
 type lifecycleAccessReceipt struct {
-	TeamID      uuid.UUID `json:"team_id"`
-	PlanID      uuid.UUID `json:"plan_id"`
-	PlanVersion int64     `json:"plan_version"`
-	Pending     int       `json:"pending_before_external_acceptance"`
-	Accepted    int       `json:"accepted_after_native_refresh"`
+	TeamID       uuid.UUID   `json:"team_id"`
+	PlanID       uuid.UUID   `json:"plan_id"`
+	PlanVersion  int64       `json:"plan_version"`
+	RepositoryID int64       `json:"repository_id"`
+	EventID      uuid.UUID   `json:"event_id"`
+	Fingerprint  string      `json:"fingerprint"`
+	ActionIDs    []uuid.UUID `json:"action_ids"`
+	ApproverID   uuid.UUID   `json:"approver_id"`
+	Pending      int         `json:"pending_before_external_acceptance"`
+	Accepted     int         `json:"accepted_after_native_refresh"`
 }
 
 func (r *lifecycleJourney) participant(t *testing.T, id uuid.UUID) *lifecycleClient {
@@ -90,7 +97,11 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 			if approved.Receipt == nil || approved.Receipt.ID != plan.ID || approved.Receipt.Version != plan.Version || approved.Receipt.ApprovedAt == nil {
 				t.Fatal("native access approval lost original exact plan identity")
 			}
-			item.access = append(item.access, lifecycleAccessReceipt{TeamID: team.ID, PlanID: plan.ID, PlanVersion: plan.Version})
+			actions := []uuid.UUID{}
+			for _, action := range plan.Actions {
+				actions = append(actions, action.ID)
+			}
+			item.access = append(item.access, lifecycleAccessReceipt{TeamID: team.ID, PlanID: plan.ID, PlanVersion: plan.Version, EventID: item.view.ID, RepositoryID: plan.RepositoryID, Fingerprint: plan.Fingerprint, ActionIDs: actions, ApproverID: r.owner.person})
 		}
 	}
 	// Let the actual worker reconcile durable operations and send invitations.
@@ -106,21 +117,12 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 				if err := r.owner.call(ctx, http.MethodGet, path, -1, nil, &view, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
-				if view.Plan == nil || view.Plan.ID != receipt.PlanID || len(view.Flags) != 0 {
-					t.Fatal("native queued access lost approved current plan")
+				ready, err := lifecycleOriginalInvitationsPending(view, receipt)
+				if err != nil {
+					lifecycleCaptureAccessObservation(t, view, receipt, err)
+					t.Fatal(err)
 				}
-				if len(view.Grants) != len(view.Plan.Members) {
-					complete = false
-					continue
-				}
-				for _, grant := range view.Grants {
-					if grant.State == "failed" || grant.State == "ambiguous" || grant.Uncertain {
-						t.Fatal("native invitation requires operator review", grant.Diagnostic)
-					}
-					if grant.State != "pending" || !grant.Managed || grant.InvitationID == nil {
-						complete = false
-					}
-				}
+				complete = complete && ready
 			}
 		}
 		if complete {
@@ -140,6 +142,11 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 			var pending repositoryaccess.View
 			if err := r.owner.call(ctx, http.MethodGet, path, -1, nil, &pending, http.StatusOK); err != nil {
 				t.Fatal(err)
+			}
+			ready, err := lifecycleOriginalInvitationsPending(pending, *receipt)
+			if err != nil || !ready {
+				lifecycleCaptureAccessObservation(t, pending, *receipt, err)
+				t.Fatal("original queued invitation effects did not settle before external acceptance", err)
 			}
 			if pending.Plan == nil || len(pending.Grants) != len(pending.Plan.Members) {
 				t.Fatal("real queued invitations did not cover frozen membership within reconciliation budget")
@@ -188,15 +195,93 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 			if original.Plan == nil || original.Plan.ID != receipt.PlanID || original.Plan.Version != receipt.PlanVersion || original.ActorID == nil || *original.ActorID != r.owner.person || original.CommandFingerprint == nil {
 				t.Fatal("native original approval receipt lost exact actor/source/version")
 			}
-			var repeated repositoryaccess.Result
-			if err := r.owner.call(ctx, http.MethodPost, path, refreshed.Current.Revision, map[string]any{"action": "approve", "plan_id": receipt.PlanID, "plan_version": receipt.PlanVersion, "reason": "Explicitly approve exact verified frozen team access"}, &repeated, http.StatusOK); err != nil {
-				t.Fatal(err)
-			}
-			if repeated.Receipt == nil || repeated.Receipt.ID != receipt.PlanID || len(repeated.Current.Grants) != len(refreshed.Current.Grants) {
-				t.Fatal("known approval replay replaced original access history")
-			}
 			receipt.Accepted = len(refreshed.Current.Grants)
 		}
+	}
+}
+
+// A dispatch barrier is intentionally ambiguous before the provider write.
+// Observe only; never accept, replace approval or retry an uncertain effect.
+func lifecycleOriginalInvitationsPending(view repositoryaccess.View, receipt lifecycleAccessReceipt) (bool, error) {
+	plan := view.Plan
+	if !view.CanManage || !view.GrantsOpen || plan == nil || plan.ApprovedAt == nil || plan.ApprovedBy == nil || *plan.ApprovedBy != receipt.ApproverID || plan.ID != receipt.PlanID || plan.Version != receipt.PlanVersion || plan.EventID != receipt.EventID || plan.TeamID != receipt.TeamID || plan.RepositoryID != receipt.RepositoryID || plan.Fingerprint != receipt.Fingerprint {
+		return false, fmt.Errorf("native access authority/source drift: expected plan %s v%d team %s repository %d", receipt.PlanID, receipt.PlanVersion, receipt.TeamID, receipt.RepositoryID)
+	}
+	expected := map[uuid.UUID]bool{}
+	for _, id := range receipt.ActionIDs {
+		expected[id] = true
+	}
+	if len(expected) == 0 || len(expected) != len(receipt.ActionIDs) || len(view.Execution) != len(expected) || len(plan.Actions) != len(expected) || len(plan.Members) != len(expected) {
+		return false, fmt.Errorf("native original access action census changed for plan %s", receipt.PlanID)
+	}
+	delivered := true
+	for _, effect := range view.Execution {
+		if !expected[effect.ActionID] {
+			return false, fmt.Errorf("native access substituted original effect %s", effect.ActionID)
+		}
+		delete(expected, effect.ActionID)
+		switch {
+		case effect.State == "delivered" && effect.Attempted && effect.Diagnostic == "":
+		case effect.State == "planned" && !effect.Attempted && effect.Diagnostic == "":
+			delivered = false
+		case effect.State == "ambiguous" && effect.Attempted && effect.Diagnostic == "external_effect_uncertain":
+			delivered = false
+		default:
+			return false, fmt.Errorf("original native access effect requires review: %s %s", effect.State, effect.Diagnostic)
+		}
+	}
+	for _, flag := range view.Flags {
+		transient := flag.Code == "external_effect_requires_reconciliation" || flag.Code == "external_invitation_not_app_managed"
+		if delivered || !transient {
+			return false, fmt.Errorf("current native access flag requires review: %s", flag.Code)
+		}
+	}
+	if !delivered {
+		return false, nil
+	}
+	if len(view.Grants) != len(receipt.ActionIDs) {
+		return false, fmt.Errorf("delivered original effects omitted native grants for plan %s", receipt.PlanID)
+	}
+	ids := map[uuid.UUID]bool{}
+	for _, id := range receipt.ActionIDs {
+		ids[id] = true
+	}
+	for _, grant := range view.Grants {
+		if !ids[grant.ID] || grant.State != "pending" || !grant.Managed || grant.InvitationID == nil || grant.Uncertain || grant.Diagnostic != "" {
+			return false, fmt.Errorf("original delivered effect lacks known pending managed invitation: %s %s", grant.State, grant.Diagnostic)
+		}
+		delete(ids, grant.ID)
+	}
+	return true, nil
+}
+
+func lifecycleCaptureAccessObservation(t *testing.T, view repositoryaccess.View, expected lifecycleAccessReceipt, cause error) {
+	t.Helper()
+	flags := []string{}
+	for _, flag := range view.Flags {
+		flags = append(flags, flag.Code)
+	}
+	current := map[string]any{"plan_present": view.Plan != nil, "can_manage": view.CanManage, "grants_open": view.GrantsOpen, "flags": flags, "execution": view.Execution, "grant_count": len(view.Grants)}
+	if view.Plan != nil {
+		current["plan_id"] = view.Plan.ID
+		current["version"] = view.Plan.Version
+		current["event_id"] = view.Plan.EventID
+		current["team_id"] = view.Plan.TeamID
+		current["repository_id"] = view.Plan.RepositoryID
+		current["fingerprint"] = view.Plan.Fingerprint
+		current["approved_by"] = view.Plan.ApprovedBy
+		current["approved_at"] = view.Plan.ApprovedAt
+	}
+	message := "original effects still pending at observation deadline"
+	if cause != nil {
+		message = cause.Error()
+	}
+	raw, err := json.MarshalIndent(map[string]any{"expected_original_approval": expected, "current_native_metadata": current, "failure": message, "complete_lifecycle": false}, "", "  ")
+	if err != nil {
+		t.Fatal("cannot encode safe native access diagnostic")
+	}
+	if err := os.WriteFile("/artifacts/access-observation-failure.json", raw, 0o600); err != nil {
+		t.Fatal("cannot preserve safe native access diagnostic")
 	}
 }
 
