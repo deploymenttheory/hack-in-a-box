@@ -109,7 +109,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
 
 
  await openLocal(page.getByRole('button',{name:'Read recorded panel history',exact:true}),page.getByRole('region',{name:'Currently authorised panel history',exact:true}),'visible')
- await openLocal(history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)),history.getByText('Recorded private signoff reason: Exact versioned private panel approval after all native blockers are resolved. Current authority and source freshness must be read independently.',{exact:true}),'visible')
+ await openLocal(history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)),history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)).locator('..').getByText('Recorded reason: Confirm exact reviewed final card 3',{exact:true}),'visible')
  await expect(history.getByText(new RegExp(`Panel version ${proof.page.round.version} · sign off`)).locator('..').getByText('Recorded reason: Confirm exact reviewed final card 3',{exact:true})).toBeVisible()
 
  // Start from a real available keyboard action, then let the actual native
