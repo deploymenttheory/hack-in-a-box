@@ -568,3 +568,82 @@ creation or a linked account alone grants no access. Live support, submissions,
 cutoff faults/frozen census, judging/advisory, awards, showcase, retained outcomes,
 all remaining variants and final integrated browser/source/CI gates remain.
 **complete_lifecycle remains false; no L01–L18 row is declared fully complete.**
+
+## Connected queued invitations and accepted access checkpoint
+
+Frozen source `2a9fc5d11619ff74c77c842da3f07c1b1d16aaf9`, fixture image
+`sha256:ff9b91e06bc54c4a980a330045e0fa1ba8ea6485c7f7927c583cecdd4557d077`,
+main base `076f6162`, schema54 passed **114.71s**, runner89032. The same actual
+admission/freeze/App/36-person GitHub linking workflow first creates twelve
+private repositories. Own invitation URLs return403 before common publication.
+After actual T−7 publication and exact acknowledgement, the organiser explicitly
+reviews and approves twelve exact current plans for the frozen 32-person cohort
+in each event. Participant plan mutation is denied; no linked account alone
+supplies access. Current event/team/repository/fingerprint/version/approver and
+all original action IDs remain bound throughout observation.
+
+Real minute reconciliation/River workers deliver all **64 original access
+effects**. The fixture's actual App REST client receives64 distinct201 pending
+invitations; no invitation is treated as an accepted collaborator. Only after
+every original effect is natively delivered/attempted and every original managed
+grant is known pending with no current flags does each participant use their
+actual prior synthetic GitHub OAuth browser cookie and exact Origin to accept
+externally. The fixture changes external provider state only. Native ordinary
+refresh independently reads collaborators and records **64 managed accepted
+grants**, with empty diagnostics. Every current own-invitation API exposes only
+that person's accepted grant. Read-only original approval receipts retain actor,
+plan/version and command fingerprint; no approval is replayed or replaced.
+Both retained event contexts then complete early-live denial and actual live
+entry. Normal PostgreSQL records64 delivered access operations/attempts,64
+attempted original dispatch effects and released leases; the original twelve
+repository deliveries remain intact. External counters are804 verified AppJWTs,
+280 scoped tokens,52 template reads,216 repository reads,36 PKCE exchanges/user
+reads,12 creates and64 invitations/acceptances.
+
+[journey-repository-access.json](evidence/journey-repository-access.json) retains
+safe exact source/image, plan/action references, pending-versus-accepted censuses
+and the complete native operation-kind counts. It explicitly does not certify
+other queued work:14 submission captures remain pending before cutoff, four
+team-publication jobs and twelve access-poll jobs are retained as pending scope.
+Current-source notifications/polling, capture and other L01–L18 variants still
+need their own actual effects. The final full rehearsal must integrate all such
+owners; a passing repository subset cannot substitute for them.
+
+The previous frozen `ebc306c6`, image
+`sha256:d328d44e8919dee39b061b1c046fd8fe2f4e24a1c3e1a1000a61ec7fa3cece1f`,
+failed **105.86s**, runner15035. Its driver rejected a combined plan/flags check
+while actual workers ran. It had delivered64 original effects to64 managed
+pending grants; no external acceptance was attempted. A subsequent read-only
+walkthrough signed in through normal configured OIDC and read all twelve current
+views: intact version1 plans, zero flags and64 pending grants. The original
+transient response metadata was not captured. Therefore the native dispatch
+barrier's intentionally ambiguous pre-provider state is a source-consistent
+explanation, **not a recovered observation of the original failing flag**.
+[journey-repository-access-red.json](evidence/journey-repository-access-red.json)
+keeps this uncertainty and the later diagnostic separate from the failure.
+
+The driver now observes only known original planned/dispatch-barrier states;
+only the two explicit in-flight observation flags may wait while original effects
+remain unfinished. Every effect must eventually be delivered/attempted and every
+original grant pending/managed with zero flags before acceptance. Changed source,
+plan/version, target, approver, authority or unresolved terminal evidence stops
+the run. No retry/reapproval, timeout extension, product policy or clock change
+was made. Safe current metadata is captured on subsequent observation failures.
+The pure observation controls plus strict loopback access protocol passed at
+27391 (package0.516s), and affected lint reported zero issues. Earlier real-client
+access protocol RED11479 failed before scoped access endpoints existed (0.05s);
+GREEN7996 covered pending invitations (0.11s), extended18615 additionally proved
+anonymous/foreign-Origin rejection, authenticated external acceptance and real
+REST re-observation (0.07s). Combined1521 executed all four protocol parents,
+package0.588s. These component checks do not replace native execution.
+
+Build35456/startup72467 preceded the successful run. The earlier70abba5e image
+was build-only; before any deployment, the driver added accepted-own-reader and
+original-receipt assertions and frozeebc306c6. Both actual RED/GREEN projects and
+their profile volumes were removed, with all owned resource-class queries empty.
+The short read-only diagnostic helper also terminated. No user project or live
+GitHub account was touched. External acceptance is explicitly synthetic-provider
+browser behavior on a private network, not a claim of GitHub's production web UI,
+TLS or live sandbox. **complete_lifecycle remains false.** Early private work,
+provider failure/reconciliation variants, all output/cutoff/judging/advisory,
+awards/showcase/archive/outcomes and final integrated browser/CI gates remain.

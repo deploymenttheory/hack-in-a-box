@@ -1,0 +1,156 @@
+{
+  "source": "ebc306c667099d0a2881ce425b2b314879fefd70",
+  "fixture_image": "sha256:d328d44e8919dee39b061b1c046fd8fe2f4e24a1c3e1a1000a61ec7fa3cece1f",
+  "runner": "15035",
+  "duration_seconds": 105.86,
+  "passed": false,
+  "complete_lifecycle": false,
+  "failure": "Driver rejected combined current plan/flags condition while observing real queued access. Original transient response metadata was not retained.",
+  "native_state_after_failure": {
+    "repositories": [
+      {
+        "state": "ready",
+        "count": 12
+      }
+    ],
+    "grants": [
+      {
+        "state": "pending",
+        "app_managed": true,
+        "diagnostic": "",
+        "count": 64
+      }
+    ],
+    "effects": [
+      {
+        "state": "delivered",
+        "diagnostic": "",
+        "count": 64
+      }
+    ],
+    "operations": [
+      {
+        "kind": "submission.capture",
+        "state": "pending",
+        "count": 14,
+        "leases_released": true
+      },
+      {
+        "kind": "teams.published",
+        "state": "pending",
+        "count": 4,
+        "leases_released": true
+      },
+      {
+        "kind": "repository.access",
+        "state": "delivered",
+        "count": 64,
+        "leases_released": true
+      },
+      {
+        "kind": "registration.offer",
+        "state": "cancelled",
+        "count": 2,
+        "leases_released": true
+      },
+      {
+        "kind": "repository.provision",
+        "state": "delivered",
+        "count": 12,
+        "leases_released": true
+      }
+    ]
+  },
+  "later_configured_oidc_read_only_diagnostic": {
+    "scope": "Post-failure real configured OIDC/current native GET only; does not recover original transient response",
+    "views": [
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 6
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 6
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 6
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 5
+        }
+      },
+      {
+        "plan_version": 1,
+        "flags": [],
+        "grant_states": {
+          "pending": 6
+        }
+      }
+    ]
+  },
+  "diagnosis_limit": "Later intact approved plans/zero flags and native dispatch-barrier source support a transient observation explanation but do not identify the original failed condition.",
+  "external_acceptance_attempted": false,
+  "cleanup": "All owned containers, volumes and networks removed; all label queries empty."
+}
