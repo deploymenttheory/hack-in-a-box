@@ -537,3 +537,23 @@ organiser freeze is an explicit native command, not a fabricated cutoff fact.
 This phase still does not publish a challenge or capture a submission: those
 require the actual shared worker and the later monotonic historical setup
 phases, followed by the normal default-wall runtime handover.
+
+
+The [native source-preparation receipt](evidence/native-source-preparation.json)
+records the next actual checkpoint at driver `c9f8ac74`, linked to the original
+admission receipt by its full SHA256. After fresh normal 1,000-person sign-in,
+the four selected events passed their native go gate, obtained 36 five-person
+teams each, approved the common rubric/challenge and published 72 current mentor
+assignments with no gaps. The intended preparation event remains unfrozen;
+three later release sources are frozen. The registration event is unchanged.
+All 2,831 preparation calls completed (1,831 HTTP200, 1,000 logout204), and the
+final global census again found five events, 1,000 active people and zero
+unexpired sessions. No challenge was released and no worker ran in this phase.
+
+Compose may start its completed initializer again when bringing up another
+service. Initialisation therefore creates `domain-time` only when absent;
+restarting preparation cannot rewind an explicitly advanced private phase.
+The sole clock controller still requires the exact expected previous instant.
+Actual worker release/capture and the production-clock handover remain separate
+required checkpoints. Source-preparation containers/network are removed; the
+four owned durable volumes retain the acknowledged dataset.

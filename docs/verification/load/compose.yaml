@@ -84,7 +84,9 @@ services:
         install -o 10001 -g 10001 -m 0600 /inputs/server.key /fixture/server.key;
         install -o 10001 -g 10001 -m 0600 /inputs/server.crt /fixture/server.crt;
         install -o 10001 -g 10001 -m 0600 /inputs/oidc.json /fixture/oidc.json;
-        install -o 10001 -g 10001 -m 0600 /inputs/domain-time /fixture/domain-time;
+        if [ ! -e /fixture/domain-time ]; then
+          install -o 10001 -g 10001 -m 0600 /inputs/domain-time /fixture/domain-time;
+        fi;
         install -d -o 10001 -g 10001 -m 0755 /fixture-ca;
         install -o 10001 -g 10001 -m 0644 /inputs/ca.crt /fixture-ca/ca.crt
     volumes:
