@@ -143,9 +143,10 @@ builds and advisory/dependency-graph log digests are retained separately in
 
 - Preserve the now-executed integrated #163 native abuse evidence and its exact
   source; validate any later production changes against that bounded proof.
-- Integrate the separately owned mentor-contribution feature and verify its
-  current authority, original private evidence, tie/confirmation and publication
-  boundaries. The absent feature cannot be certified by current judge tests.
+- Preserve the merged mentor-contribution owner/API proof at clean source `2e7a8bb7`,
+  including current authority, own-author privacy, exact original receipts and
+  advice-independent tie/confirmation. Final current-head CI and independent
+  release review remain required; this native proof is not a new deployment walk.
 - Preserve the now-executed55-outcome normal-command privileged walkthrough
   against main076. Reconcile final integrated feature changes with this scope;
   the future/live competition and mentor boundaries still require their native
