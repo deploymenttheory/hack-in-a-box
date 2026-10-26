@@ -90,6 +90,15 @@ The offline run-sheet HTML has its own inline table-scroll/print styles in
 `internal/preparation/render.go`; they remain unchanged and do not import the
 removed frontend rule. Before/after source hashes and removed selectors are recorded per file. No retained
 selector changes its declarations or enclosing media/layer context.
+A third pass removes66 obsolete selector arms for20 class names that appeared
+only in module paths, JSX element names or comments. The checker now reads
+TS/TSX string and template values rather than treating every source word as a
+possible class. Imported JSON remains in the reachability graph; the current
+`styleguide/qualities.json` contains guideline prose rendered as text, so words
+such as “header” and “tabs” there are not class callers. This is a bounded source
+check: new dynamically computed classes or data-driven class sources require
+an explicit caller audit. The known room/connection families remain protected.
+
 The checker refuses if a retired class gains a possible literal caller or another token
 owner appears. Current CSS/browser/native integration and the full reference
 quality audit remain separate gates; this record does not certify full245.

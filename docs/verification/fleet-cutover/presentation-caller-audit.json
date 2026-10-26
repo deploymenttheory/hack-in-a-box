@@ -76,7 +76,27 @@
     "team-submission",
     "fleet-guidance-records",
     "fleet-communication-nav",
-    "fleet-outcome-references"
+    "fleet-outcome-references",
+    "header",
+    "tabs",
+    "help-reader",
+    "brand",
+    "event-form",
+    "content-workspace",
+    "content-editor",
+    "content-preview",
+    "resource-acknowledgement",
+    "team-deliverables",
+    "deliverable-editor",
+    "deliverable-upload",
+    "submission-history",
+    "mentor-workspace",
+    "help-workspace",
+    "scorecard-workspace",
+    "clarification-workspace",
+    "review-dashboard",
+    "outcome-workspace",
+    "survey-workspace"
   ],
   "removed_selector_arms": [
     ".page-heading",
@@ -181,7 +201,7 @@
     ".survey-network-scope"
   ],
   "before_sha256": "62ec7cc8719daca90ca4c266b35138ac959f858589ed3b3f5fd164682bca75cd",
-  "after_sha256": "60ebbe436a443a6391bac761415178cc6c60f9b7e3c4cb2c9d83b07ecc7cb4e2",
+  "after_sha256": "4a3d26837c71c83262d38a119630019d67bf3c27277dca08afc3bd52c44e5110",
   "remaining_gate": "Current-source browser/native/reference/quality reconciliation and final CI, plus remaining CSS review.",
   "remaining_selector_cleanup": {
     "baseline": "5d8fd041",
@@ -359,12 +379,12 @@
       {
         "path": "web/src/design-system/foundations.css",
         "baseline_sha256": "ed097f376a6e1bc9562b128a7787d462339976617efb7c3ad6c9a857ffec9e0b",
-        "after_sha256": "e526111e860f06e1113a39c642495b76bcc397729b2ff83a13d8b00998f61ede"
+        "after_sha256": "1309b11360aa578bc5b54d6ed6acd4c8164afd119d6d75811f84ae43b1067bc6"
       },
       {
         "path": "web/src/design-system/workspaces.css",
         "baseline_sha256": "62ec7cc8719daca90ca4c266b35138ac959f858589ed3b3f5fd164682bca75cd",
-        "after_sha256": "60ebbe436a443a6391bac761415178cc6c60f9b7e3c4cb2c9d83b07ecc7cb4e2"
+        "after_sha256": "4a3d26837c71c83262d38a119630019d67bf3c27277dca08afc3bd52c44e5110"
       },
       {
         "path": "web/src/design-system/event-planning.css",
@@ -390,6 +410,348 @@
     "independent_export_styles": {
       "owner": "internal/preparation/render.go",
       "note": "Run-sheet HTML uses table-scroll in its own complete inline stylesheet and CSP-protected offline document. It imports no frontend stylesheet; only the unused frontend rule is removed. Export markup and inline/print styles are unchanged."
+    }
+  },
+  "literal_value_retirement": {
+    "parent": "e8be2314c8563ad228b3bbd66408c22f74fa96ae",
+    "method": "TypeScript AST string/template values in reachable TS/TSX, split on whitespace and CSS-identifier syntax, excluding module paths/JSX tags/comments as possible class values. Imported JSON remains reachable; current styleguide/qualities.json is rendered as prose, not classes. Native computed room-/connection- families remain explicitly guarded; new computed/data-driven classes require a caller audit. This is bounded source evidence, not every-route rendering proof.",
+    "classes": [
+      "brand",
+      "clarification-workspace",
+      "content-editor",
+      "content-preview",
+      "content-workspace",
+      "deliverable-editor",
+      "deliverable-upload",
+      "event-form",
+      "header",
+      "help-reader",
+      "help-workspace",
+      "mentor-workspace",
+      "outcome-workspace",
+      "resource-acknowledgement",
+      "review-dashboard",
+      "scorecard-workspace",
+      "submission-history",
+      "survey-workspace",
+      "tabs",
+      "team-deliverables"
+    ],
+    "removed": [
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".header nav a"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".header nav a[aria-current=page]"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".tabs"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".tabs button:hover"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".header .brand"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".header nav"
+      },
+      {
+        "path": "web/src/design-system/foundations.css",
+        "selector": ".header > div"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".header"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".brand"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".event-form"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".header"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".header > div"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".tabs"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".tabs button"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".tabs button:is(.active, [aria-current=\"page\"])"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".tabs"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".content-workspace button"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".content-workspace :is(article, aside, section, form)"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".content-editor"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".content-editor .markdown-editor"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".content-preview h3"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".resource-acknowledgement"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".team-deliverables > .personal-preparation"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".deliverable-editor"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".deliverable-editor fieldset"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".deliverable-upload"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".deliverable-upload > button"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".submission-history"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".help-reader"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".help-reader > .panel"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".mentor-workspace"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".help-workspace"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".help-reader"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".help-workspace fieldset"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".scorecard-workspace"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace textarea"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace .panel"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace a"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace p"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".clarification-workspace fieldset"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".review-dashboard select"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".review-dashboard"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace fieldset"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace fieldset fieldset"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace legend"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace textarea"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace input"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace select"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace textarea"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace .panel"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace .identifier"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace .outcome-prose"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace dd"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace h1"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace h2"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace li"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace a"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace .actions"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".outcome-workspace .actions button"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace :is(article, section, form, dl, fieldset)"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace :is(select, input, textarea)"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace table"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace :is(th, td)"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace caption"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "selector": ".survey-workspace .tabs button"
+      }
+    ],
+    "files": [
+      {
+        "path": "web/src/design-system/foundations.css",
+        "parent_sha256": "e526111e860f06e1113a39c642495b76bcc397729b2ff83a13d8b00998f61ede",
+        "after_sha256": "1309b11360aa578bc5b54d6ed6acd4c8164afd119d6d75811f84ae43b1067bc6"
+      },
+      {
+        "path": "web/src/design-system/workspaces.css",
+        "parent_sha256": "60ebbe436a443a6391bac761415178cc6c60f9b7e3c4cb2c9d83b07ecc7cb4e2",
+        "after_sha256": "4a3d26837c71c83262d38a119630019d67bf3c27277dca08afc3bd52c44e5110"
+      }
+    ],
+    "functional_rewrites": [
+      ":where(.workspace, .help-reader, .state) \u2192 :where(.workspace, .state); :where specificity remains zero",
+      ":not(.primary-link, .brand) \u2192 :not(.primary-link); maximum class specificity unchanged"
+    ],
+    "privacy": "Retain the actual [data-private-review] print arm and all current live selector arms.",
+    "verification": {
+      "scope": "Local working-tree cleanup on parent e8be2314; not exact-head GitHub CI, native browser or every-route acceptance.",
+      "source_checker": {
+        "reachable": 314,
+        "errors": 0,
+        "protected_computed_prefixes": [
+          "room-",
+          "connection-"
+        ]
+      },
+      "guard_negative_control": "Temporarily added header/tabs string values to actual reachable main.tsx; checker rejected both. Restored original file bytes, then checker passed.",
+      "portal_builds": "Both production builds passed",
+      "guide_build": "Independent guide build passed",
+      "web_units": {
+        "files": 49,
+        "tests": 237,
+        "duration_seconds": 10.49
+      },
+      "logs": {
+        "portal_builds": {
+          "private_path": "/private/tmp/hackbox245-literal-css-build.log",
+          "sha256": "35c18bf5df9ed78d9b24474f740d39fa9847cac1d78c14b2493234e021800bd1"
+        },
+        "guide_build": {
+          "private_path": "/private/tmp/hackbox245-literal-styleguide-build.log",
+          "sha256": "efeb444a77aafffabf41fbdee85e3af98a742b8f491b4f00d80aa1287f72ef88"
+        },
+        "web_units": {
+          "private_path": "/private/tmp/hackbox245-literal-web-units.log",
+          "sha256": "38c31718e5e6273da35f63b4393be41c0405b602abb025e18dbeec1db32d99ba"
+        }
+      }
     }
   }
 }

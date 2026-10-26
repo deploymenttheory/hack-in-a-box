@@ -89,19 +89,12 @@
   .blockers li { color: var(--foreground); border-inline-start-color: var(--warning); background: var(--warning-surface); }
   .field-error { color: var(--destructive); font-size: .875rem; line-height: 1.6; }
   .menu { background: var(--popover); color: var(--foreground); border: 1px solid var(--input); }
-  .header nav a { border-radius: .25rem; padding-block: .5rem; }
-  .header nav a[aria-current=page] { font-weight: var(--weight-emphasis); text-decoration: underline; text-decoration-thickness: 2px; }
   .primary-link { align-items: center; justify-content: center; min-height: var(--control-height); border: 1px solid transparent; font-weight: 600; line-height: 1.5; }
   .primary-link:hover { text-decoration: underline; }
-  .tabs { row-gap: .25rem; }
-  .tabs button:hover { color: var(--foreground); background: var(--accent-surface); }
   .state { border-radius: var(--radius-card); }
-  .theme :where(.workspace, .help-reader, .state) a:not(.primary-link, .brand) { text-decoration: underline; }
-  .theme :where(.workspace, .help-reader, .state) a:hover { text-decoration-thickness: 2px; }
+  .theme :where(.workspace, .state) a:not(.primary-link) { text-decoration: underline; }
+  .theme :where(.workspace, .state) a:hover { text-decoration-thickness: 2px; }
   @media (max-width: 640px) {
     :root { --space-panel: 1.125rem; }
-    .header .brand { white-space: normal; }
-    .header nav { flex-wrap: wrap; }
-    .header > div { max-width: 100%; }
   }
 }
