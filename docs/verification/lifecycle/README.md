@@ -900,3 +900,34 @@ missed/postponed release/attendance exception, full staff/practice/support and
 judging/advisory/awards/showcase/archive/owned outcomes plus all final native
 browser/normal-image/recovery/CI gates remain. **complete_lifecycle remains false;
 no L01–L18 row is declared fully complete.**
+
+
+## Connected selected staff and isolated judge practice — schema55 native PASS
+
+Frozen `2aab98ea625965f31f16cfc357f97dbd98c8f891` passed runner16254 in
+**246.20s**, built by58691 as fixture image
+`sha256:d0a5c6e4b5400db3307d1caec401690a94383f0d049c3357464e583f1cbfea72`
+on main03bfae7/schema55. The [actual receipt](evidence/journey-judge-practice.json)
+retains this run's own event, staff, round, practice, source and queue references;
+the earlier cutoff237.22s receipt remains attributed to0aad.
+
+Mentors and three judges apply through actual normal OIDC and native staff-form
+review. Their selection does not increase the competitor census. Before live,
+each event plans a native final run and assigns all six frozen teams to the three
+selected judges. All six judge/event contexts submit the dedicated fictional
+practice card against their event's approved public rubric. The fixture asserts
+that private judge guidance is absent, actual competition teams are distinct,
+original actor-bound practice acknowledgements are retained and neither practice
+nor denied real scoring starts the actual final run. Assigned real-entry reads
+and real-card writes return403 before live; all six practice reads return403
+after the actual scheduled live transition. Both templates then complete the
+existing formal-submission, actual queued cutoff/retry and explicit retained-work
+reconciliation checks in the same connected contexts.
+
+Safe final/progress/native metadata was exported before scoped cleanup; all
+three resource-label classes are empty. This is the isolated test entrypoint,
+not normal production-image/browser proof. Actual final judge cards, mentor
+qualification/checkpoints/advisory input, judge-only strict-majority decisions,
+remaining lifecycle variants, awards/showcase/archive/owned outcomes and final
+CI/native-browser/normal-image recovery gates are still required.
+**complete_lifecycle=false; no L01–L18 row is declared fully complete.**
