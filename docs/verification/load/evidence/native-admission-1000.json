@@ -1,0 +1,184 @@
+{
+  "classification": "actual native TLS/OIDC/admission setup checkpoint only",
+  "full_load": false,
+  "release_accepted": false,
+  "driver_source": "9931dfd015812029095ed055fd315ea2a82d868f",
+  "driver_tree": "2d9c07316fec4043a82c76997b03bed581160fed",
+  "api_source": "735b44f86b76b4d8ff72b4ba28cdbec00be4d456",
+  "migration_source": "3d60091264bfb1d430188eeb31a4de32abe42294",
+  "tls_source": "111bcbcfa09262470e837cbfa01c6866e9e4a474",
+  "images": {
+    "private_setup_api": "sha256:79b0b5c634c6602eb5caf843c8f0a226c58989f378d0bbffabb837ec1da5e703",
+    "normal_migration_only": "sha256:abe3d70e674126141a9161eb32834fde9b7748fcfb313d26c0ca1da9bfc60fbb",
+    "tls_proxy": "sha256:2207142f765a531ed9e5acbfe06d6e040e945843575a88e08f0b61a041bd6433"
+  },
+  "project": "hackbox-load123-admit-735b",
+  "schema_version": 55,
+  "external_tls_verified": true,
+  "auth_paths": "normal OIDC/state/PKCE/callback/native session, explicit synthetic external actors",
+  "domain_clock": "private setup historical clock only; auth/transport/session/lease remain wall time",
+  "authentication": {
+    "started": "2026-10-26T13:03:05.10496Z",
+    "monotonic_elapsed_ns": 7478897583,
+    "attempted": 1000,
+    "authenticated": 1000,
+    "distinct_people": 1000,
+    "failed": 0,
+    "concurrency": 20,
+    "sustained_proof": false,
+    "unattempted": 0
+  },
+  "native_admission_complete": true,
+  "native_census": [
+    {
+      "event_id": "1e5f8692-508a-54de-9658-ae647890df04",
+      "configured_capacity": 180,
+      "applications": 180,
+      "confirmed": 180,
+      "waitlisted": 0,
+      "offered": 0,
+      "claimed_confirmed": 180,
+      "staff": 20,
+      "people": 200,
+      "duplicate_active": 0,
+      "excluded_competitors": 0,
+      "last_confirmed_sequence": 976,
+      "first_waitlisted_sequence": null
+    },
+    {
+      "event_id": "50e81a5a-fe4d-55f2-ba05-ed49b7e1a32c",
+      "configured_capacity": 180,
+      "applications": 180,
+      "confirmed": 180,
+      "waitlisted": 0,
+      "offered": 0,
+      "claimed_confirmed": 180,
+      "staff": 20,
+      "people": 200,
+      "duplicate_active": 0,
+      "excluded_competitors": 0,
+      "last_confirmed_sequence": 777,
+      "first_waitlisted_sequence": null
+    },
+    {
+      "event_id": "858c8199-7480-5aa4-899f-a545500f31c8",
+      "configured_capacity": 180,
+      "applications": 180,
+      "confirmed": 180,
+      "waitlisted": 0,
+      "offered": 0,
+      "claimed_confirmed": 180,
+      "staff": 20,
+      "people": 200,
+      "duplicate_active": 0,
+      "excluded_competitors": 0,
+      "last_confirmed_sequence": 180,
+      "first_waitlisted_sequence": null
+    },
+    {
+      "event_id": "a6b2d385-b91e-5440-ba0f-5c6810cfde2f",
+      "configured_capacity": 180,
+      "applications": 180,
+      "confirmed": 180,
+      "waitlisted": 0,
+      "offered": 0,
+      "claimed_confirmed": 180,
+      "staff": 20,
+      "people": 200,
+      "duplicate_active": 0,
+      "excluded_competitors": 0,
+      "last_confirmed_sequence": 578,
+      "first_waitlisted_sequence": null
+    },
+    {
+      "event_id": "d8456699-28f5-5bda-a068-0d67e7b7ff46",
+      "configured_capacity": 180,
+      "applications": 180,
+      "confirmed": 180,
+      "waitlisted": 0,
+      "offered": 0,
+      "claimed_confirmed": 180,
+      "staff": 20,
+      "people": 200,
+      "duplicate_active": 0,
+      "excluded_competitors": 0,
+      "last_confirmed_sequence": 379,
+      "first_waitlisted_sequence": null
+    }
+  ],
+  "installation_after_cleanup": {
+    "events": 5,
+    "people": 1000,
+    "active_people": 1000,
+    "unexpired_sessions": 0
+  },
+  "setup_session_cleanup": {
+    "attempted": 1000,
+    "original_acknowledgements": 1000,
+    "unresolved_original_responses": 0,
+    "http_statuses": {
+      "204": 1000
+    },
+    "monotonic_elapsed_ns": 5282770250
+  },
+  "preparation_http": {
+    "calls": 2186,
+    "raw_method_status_counts": [
+      {
+        "method": "GET",
+        "status": 200,
+        "count": 18
+      },
+      {
+        "method": "POST",
+        "status": 200,
+        "count": 1130
+      },
+      {
+        "method": "POST",
+        "status": 204,
+        "count": 1000
+      },
+      {
+        "method": "PUT",
+        "status": 200,
+        "count": 38
+      }
+    ],
+    "incomplete_original_responses": 0,
+    "scope": "native preparation and logout calls only; OIDC HTTP steps are separate authentication setup, not sustained distributions"
+  },
+  "resource_envelope": {
+    "total_service_cpu": 2.625,
+    "total_service_memory_mib": 1856,
+    "driver_gomaxprocs": 2,
+    "setup_worker_started": false,
+    "definition": "admission.compose.yaml; setup only, not sustained baseline"
+  },
+  "shutdown": {
+    "containers": 0,
+    "networks": 0,
+    "retained_volumes": [
+      "database",
+      "files",
+      "fixture_ca",
+      "fixture_private"
+    ],
+    "reason": "durable native admitted dataset retained for next factory phases; no active processes"
+  },
+  "private_artifact_sha256": {
+    "native-admission.json": "407e347f9a8375dcac7740f973c6e0a9cc8bc9d820869dc24b3febdc47891577",
+    "native-admission-driver.log": "dc0a35e462f8bf756bb74dd3e980c8b42259a99711e534961034b21fb66630bd",
+    "fixture-image-build.log": "478b3f72376a2379d210b889a184942a7d87aac728c155d36ac2f45c3668aaf1",
+    "admission-migration.log": "180682502311e21917667c7ae4b66a43f50adb1904ad6102b3552e22f6f7a841",
+    "admission-container-caps.txt": "d8297044ee96211ac7f0236e73c74974c01531dbaf9f8e094d022f8860e4e896",
+    "admission-stop.log": "a57958f05da9eff2d8653eeb2040fa512188222be33040de9f959f035b02870f"
+  },
+  "remaining": [
+    "native teams/go/freeze/release and positive URL archive",
+    "current permission/privacy/help/delivery/followup oracles",
+    "normal production API/admin/worker default-wall handover and fresh runtime1000auth",
+    "actual200burst, every-minute1000active real1800s sustained, all latency/error/due/SSE thresholds, fixed saturation",
+    "final integrated provenance, full independent review and current CI"
+  ]
+}

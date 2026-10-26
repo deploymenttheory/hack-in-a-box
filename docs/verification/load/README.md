@@ -501,3 +501,20 @@ before the APIs, at 0.5 CPU/256MiB and 0.25 CPU/128MiB respectively. The
 setup worker is not started for this admission-only checkpoint. Keep these
 caps and all observed errors in its receipt; this checkpoint cannot substitute
 for the independently measured full-profile baseline.
+
+The [native 1,000-person admission receipt](evidence/native-admission-1000.json)
+records actual verified external TLS, normal OIDC/state/PKCE/native sessions,
+five native events and 180 confirmed competitors plus 20 staff in each event.
+The SELECT-only installation observer found exactly 1,000 distinct active people,
+five events and zero unexpired sessions after 1,000 original logout acknowledgements.
+All preparation calls and raw statuses are retained; no application identity,
+registration or session was SQL-seeded. The private API and normal migration
+images have separate explicit source attribution.
+
+This establishes the real setup census only (`full_load=false`). Its historical
+setup clock, smaller admission caps, and 7.479-second sign-in phase cannot stand
+in for a normal production default-wall runtime or the required real 1,800-second
+active-cohort profile. The project’s containers and network were removed; four
+owned durable volumes intentionally retain the admitted dataset for the next
+native factory phases. Teams, challenge release, positive URL archive, runtime
+oracles, actual sustained targets and saturation remain open.
