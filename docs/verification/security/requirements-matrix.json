@@ -8,9 +8,14 @@
       "status": "pending_final_integrated_source_and_independent_review",
       "observed_findings": "No application security finding established by the completed scoped cases. Harness-method/status/certificate failures are separately retained; they are not application findings.",
       "remaining": [
-        "Integrate #292 mentor feature and execute its current owner privacy/authority assertion",
         "Latest-head full CI/advisory scan",
-        "Independent Standards/Spec review and root release sign-off"
+        "Independent complete-scope/current-source Standards/Spec review and root release sign-off"
+      ],
+      "evidence": [
+        {
+          "artifact": "native-mentor-advisory-matrix.json",
+          "scope": "Actual merged bba feature checked at clean2e7 verifier/native1parent; not broader deployment proof"
+        }
       ]
     },
     {
@@ -100,13 +105,14 @@
     {
       "id": "AC5",
       "requirement": "Include help-request claiming/access, private-to-common Q&A publication, goal/rubric early-disclosure, synthetic-practice isolation, showcase search/media leakage and post-archive follow-up in abuse scenarios.",
-      "status": "executed_scoped_mentor_feature_addition_pending",
+      "status": "executed_scoped_merged_mentor_native_addition_final_ci_pending",
       "assertions": [
         "Concurrent help claiming and current helper/requester context are native; operational helper access never grants assessment access.",
         "Official clarification is deliberately published common text, not an implicit release of private question/attachment.",
         "Objective/rubric access follows actual common publication and exact reviewed versions; practice cannot enter either live scoring mode.",
         "Published showcase read is independent of private source/results/media authority; literal search, consent correction/withdrawal and archive are native.",
-        "Only authorised audited archived follow-up/reminders survive; ordinary archived campaigns/writes remain cancelled/closed."
+        "Only authorised audited archived follow-up/reminders survive; ordinary archived campaigns/writes remain cancelled/closed.",
+        "Merged mentor views retain own-author/current coverage/conflict/role/source privacy and exact receipts; all required judges alone decide strict majority,optional advice absence does not gate confirmation and later advice does not rewrite confirmed history."
       ],
       "evidence": [
         {
@@ -120,16 +126,17 @@
         {
           "artifact": "native-delivery-matrix.json",
           "scope": "current queued/stream/file/channel authority"
+        },
+        {
+          "artifact": "native-mentor-advisory-matrix.json",
+          "scope": "1exact native parent onclean2e7 atop mergedbba; source-attributed addition to65historical distinct parents"
         }
-      ],
-      "pending": [
-        "mentor-advisory-cases.json after #292 integration; do not treat absent test as success"
       ]
     },
     {
       "id": "VERIFY_LOCAL_DEPLOYMENT",
       "requirement": "Run automated checks plus manual abuse scenarios against a local synthetic deployment.",
-      "status": "executed_supported_profile_final_integration_pending",
+      "status": "executed_supported_profiles_merged_mentor_native_final_ci_pending",
       "assertions": [
         "Private HTTP/development walkthrough:55 actual API outcomes.",
         "Production normal binaries, external real TLS, HTTPS RS256 issuer, PKCE/callbacks:57 actual API outcomes.",
@@ -364,6 +371,13 @@
       ]
     }
   ],
-  "pending_feature_manifest": "mentor-advisory-cases.json",
-  "limits": "Explicit selected assertions and measured outcomes only; names, compilation, inherited screenshots and historical green CI do not establish a broader/final-source pass."
+  "limits": "Explicit selected assertions and measured outcomes only; names, compilation, inherited screenshots and historical green CI do not establish a broader/final-source pass.",
+  "integrated_feature_manifest": "mentor-advisory-cases.json",
+  "integrated_feature_evidence": "native-mentor-advisory-matrix.json",
+  "distinct_native_parents": {
+    "historical": 65,
+    "new_integrated_mentor": 1,
+    "total_source_attributed": 66,
+    "not_claimed": "66final-head executions"
+  }
 }

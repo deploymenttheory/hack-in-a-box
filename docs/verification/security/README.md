@@ -383,3 +383,40 @@ parent PASS and packageexit0 (4.830s), no skip/failure. This re-executes one of 
 65 existing distinct parents; it does not add a new parent or relabel historical
 matrix runs as final-source proof. Integration of #292 and final checks remain
 pending.
+
+
+## Merged mentor-feature integration and final-source gate
+
+PR #292 is merged as `bba43a686df80db04f2e11d94735a30c03f4337c`. All 21
+security commits rebased without conflicts onto that actual main; range-diff
+confirms patch equivalence. There is no production behavior change in this
+verification branch. Historical 65 native parents, 4 mocked-API production-renderer
+cases,and the normal 076 HTTP 55/production-HTTPS 57 walkthroughs retain their
+original sources. They are not relabelled as current schema-55 deployments.
+
+At clean rebased source `2e7a8bb799d5a85b56a6816cfb281a1699c3a5ca`, the existing
+merged `TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote` actually passed
+with race detection: parent 25.37s, package 26.939s,one exact selected/passed parent,
+no skips or failures. The manifest runner validates both seen and passed parent
+names and does not treat an absent test as success. The original manifest's
+pre-integration pending label is retained in its execution receipt; the current
+manifest label now records the merged scope.
+
+[`native-mentor-advisory-matrix.json`](native-mentor-advisory-matrix.json) records
+the exact source, test-source/log hashes and scoped cleanup. It proves current
+coverage/conflict/role/frozen-source and own-author isolation, immutable correction
+and concurrent revision fencing, both real HTTP portals' strict CSRF/no-store/
+original-ACK boundaries,and the separation of advice from scores, votes and
+decision binding. Actual all-judge ballots keep a split unresolved until an
+explicit replacement yields strict majority. Confirmation succeeds without
+advice on other category ties; later advice does not rewrite confirmed history.
+Role loss removes private reads; source replacement cannot resurrect old advice.
+
+This adds one new distinct parent to the 65 historical parents: 66 across
+source-attributed receipts,not 66 current-head reruns. The native case uses fixture
+identities, sessions, domain facts and clocks; it is not a new normal OIDC or
+deployed/browser walkthrough. Disposable PostgreSQL/Ryuk, networks and volumes
+were removed; existing installations and unrelated resources were preserved.
+Latest-head full CI/imported-package advisory checks, independent complete-scope
+reviews and root release acceptance remain required. No release sign-off is
+claimed solely from this new owner proof.

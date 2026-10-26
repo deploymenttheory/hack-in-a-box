@@ -1,0 +1,72 @@
+{
+  "source_commit": "2e7a8bb799d5a85b56a6816cfb281a1699c3a5ca",
+  "source_worktree_clean": true,
+  "scope": "One exact merged mentor-advisory native owner/API parent, with race; not a rerun of65historical parents,normalOIDC,deployment/browser proof or fullCI.",
+  "manifest": "docs/verification/security/mentor-advisory-cases.json",
+  "groups": [
+    {
+      "criterion": "pending merged #112 mentor advisory: current published coverage/conflict/role/source, own-author privacy, exact receipts, unchanged final scores/votes/binding and optional-input confirmation",
+      "package": "app",
+      "tests": [
+        "TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote"
+      ],
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "1",
+        "-parallel",
+        "1",
+        "./internal/app",
+        "-run",
+        "^(TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote)$",
+        "-count=1",
+        "-timeout=10m"
+      ],
+      "passed_tests": [
+        "TestNativeMentorCategoryAdvisoryNeverCountsAsJudgeVote"
+      ],
+      "skips": [],
+      "failures": [],
+      "passed": true,
+      "log_sha256": "10c765b130b240fac9dd223e7f96e411bfc7670abf4c0d31f93a9819dabe38f9"
+    }
+  ],
+  "complete": true,
+  "integrated_main": "bba43a686df80db04f2e11d94735a30c03f4337c",
+  "rebase": "All21security commits replayed patch-equivalently without conflicts; no production behavior change.",
+  "manifest_at_execution_sha256": "336fc7b93984fb0204d45e0d7d636f81479b10d47583d702396da50e923da32c",
+  "manifest_label_limit": "The executed2e7 manifest retained its pre-integration pending label; the exact selected test exists and ran. The current label now says merged. Neither original labels nor historical runs are relabelled as final deployment evidence.",
+  "native_source_file": "internal/app/results_advisory_integration_test.go",
+  "native_source_file_sha256": "94a17828a02333d54bc5fa34c99ec75d3d986ff5bd5f52001250ab2681e31d33",
+  "parent_seconds": 25.37,
+  "package_seconds": 26.939,
+  "distinct_parent_reconciliation": {
+    "historical_distinct": 65,
+    "new_distinct": 1,
+    "total_distinct": 66,
+    "limit": "Mixed source-attributed receipts,not66current-head executions."
+  },
+  "fixture_scope": "Native PostgreSQL/composed owners and both real generated HTTP routers; fixture identities/domain facts/sessions and domain clock are controlled,not genuine OIDC.",
+  "actual_assertions": [
+    "Current published mentor coverage,conflict,role and frozen category/team/source authority; assigned second mentor cannot read/edit first author or recover private original ACK.",
+    "Both HTTP portals enforce strict generated contract,missingCSRF400,invalidCSRF403,no-store,mentor editor versus judge reader scope and exact original advisory replay.",
+    "Corrections retain immutable author/version/previous-version provenance; concurrent reviewed corrections serialize one accepted and one conflict.",
+    "No mentor views enter judge score,tally,vote denominator or decision binding; all required judges must vote,split remains unresolved,explicit replacement gives strict majority.",
+    "Other category ties without advice can complete actual native confirmation; later advice correction preserves confirmed round/decision binding.",
+    "Current coverage/conflict/role loss removes private advisory; source replacement cannot resurrect old binding,while current permitted safe original metadata remains independent."
+  ],
+  "cleanup": {
+    "owned_containers_removed": true,
+    "owned_networks_removed": true,
+    "owned_volumes_removed": true,
+    "orphan_test_processes": false,
+    "unrelated_existing_runtime_preserved": true
+  },
+  "remaining": [
+    "Current final-head full CI and imported-package advisory scan",
+    "Independent complete-scope/current-source reviews and root release acceptance"
+  ]
+}
