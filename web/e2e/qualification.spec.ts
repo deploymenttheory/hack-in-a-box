@@ -222,6 +222,7 @@ for(const mode of ['accepted','interrupted','changed','denied','408','lost_ack',
  const press=page.keyboard.press.bind(page.keyboard)
  try{
   await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter');await expect(page.getByRole('heading',{name:`Team ${team.team_id}`,exact:true,level:2})).toBeFocused();await page.getByRole('button',{name:'Review saved final card confirmation',exact:true}).press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toBeFocused()
   await page.getByLabel('Recorded panel reason',{exact:true}).fill('Exact reviewed card remains unsent during current read')
   await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
   const dialog=page.getByRole('alertdialog',{name:'Review private panel command',exact:true}),confirm=dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true})
