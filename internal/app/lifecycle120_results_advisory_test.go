@@ -127,3 +127,39 @@ func (r *lifecycleJourney) adviseCurrentCategoryTie(t *testing.T, item *lifecycl
 	item.resultDecision.MentorVoteDenied = true
 	return r.currentResults(t, item)
 }
+
+func (r *lifecycleJourney) verifyQualificationAdvisoryScope(t *testing.T, item *lifecycleJourneyEvent, page results.Page) {
+	t.Helper()
+	if page.Preview.Selection == nil || page.Preview.Selection.SignedBinding == "" || len(page.Advisories) != 0 || len(page.TieStates) != 1 || page.TieStates[0].Tie.Kind != "final" {
+		t.Fatal("qualification categories were reinterpreted as final judge category ties")
+	}
+	for _, category := range page.Preview.Selection.Categories {
+		if len(category.TeamIDs) != 1 {
+			t.Fatal("qualification category lacks its actual signed single winner")
+		}
+	}
+	path := "/api/v1/events/" + item.view.ID.String() + "/results"
+	for _, actor := range []string{"mentor-a", "mentor-b"} {
+		var advice results.AdvisoryPage
+		if err := item.cohort.staff[actor].call(t.Context(), http.MethodGet, path+"/mentor-advisories", -1, nil, &advice, http.StatusOK); err != nil {
+			t.Fatal(err)
+		}
+		if advice.RunID != item.judgeRun || advice.SourceBinding != page.Preview.Binding || len(advice.Targets) != 0 {
+			t.Fatal("already signed qualification categories exposed new category advisory targets")
+		}
+	}
+	var ballots results.BallotPage
+	if err := item.cohort.staff["judge-a"].call(t.Context(), http.MethodGet, path+"/ballots", -1, nil, &ballots, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	tie := page.TieStates[0].Tie
+	body := lifecycleResultBallotBody(uuid.New(), ballots, tie.ID, tie.TeamIDs[0])
+	if err := item.cohort.staff["mentor-a"].call(t.Context(), http.MethodPost, path+"/ballots", page.Revision, body, nil, http.StatusForbidden); err != nil {
+		t.Fatal(err)
+	}
+	after := r.currentResults(t, item)
+	if after.Round.Version != page.Round.Version || len(after.Round.Votes) != 0 || after.Preview.Binding != page.Preview.Binding || !reflect.DeepEqual(after.Preview.Selection, page.Preview.Selection) || len(after.Advisories) != 0 {
+		t.Fatal("denied mentor vote changed signed qualification categories or final ballots")
+	}
+	item.resultDecision.MentorVoteDenied = true
+}

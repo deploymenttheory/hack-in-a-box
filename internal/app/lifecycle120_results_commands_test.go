@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/results"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/google/uuid"
 )
 
@@ -18,6 +19,7 @@ type lifecycleResultDecisionReceipt struct {
 	ControlledReplyLost            bool                      `json:"controlled_reply_lost"`
 	ControlledReplyPOSTs           int64                     `json:"controlled_reply_posts"`
 	AdvisoryNoTallyOrVoteChange    bool                      `json:"advisory_no_tally_or_vote_change"`
+	AdvisoryScope                  string                    `json:"advisory_scope"`
 	MentorVoteDenied               bool                      `json:"mentor_vote_denied"`
 	MissingJudgeConfirmationDenied bool                      `json:"missing_judge_confirmation_denied"`
 	SplitConfirmationDenied        bool                      `json:"split_confirmation_denied"`
@@ -43,9 +45,7 @@ func (r *lifecycleJourney) changeResults(t *testing.T, item *lifecycleJourneyEve
 	t.Helper()
 	path := "/api/v1/events/" + item.view.ID.String() + "/results"
 	id := uuid.New()
-	body["request_id"] = id
-	body["version"] = page.Round.Version
-	body["reason"] = "Explicit synthetic reviewed result decision; no automatic announcement"
+	body = lifecycleResultCommandBody(id, page, body)
 	var next results.Page
 	if err := r.owner.call(t.Context(), http.MethodPost, path, page.Revision, body, &next, http.StatusOK); err != nil {
 		t.Fatal(err)
@@ -66,6 +66,13 @@ func (r *lifecycleJourney) changeResults(t *testing.T, item *lifecycleJourneyEve
 	item.resultDecision.Commands = append(item.resultDecision.Commands, *ack)
 	r.persistWorkProgress(t)
 	return next
+}
+
+func lifecycleResultCommandBody(id uuid.UUID, page results.Page, body map[string]any) map[string]any {
+	body["request_id"] = id
+	body["version"] = page.Round.Version
+	body["reason"] = "Explicit synthetic reviewed result decision; no automatic announcement"
+	return body
 }
 
 func (r *lifecycleJourney) voteResult(t *testing.T, item *lifecycleJourneyEvent, client *lifecycleClient, tieID string, teamID uuid.UUID) results.BallotPage {
@@ -119,6 +126,18 @@ func lifecycleSyntheticAwards(t *testing.T, page results.Page) []results.Award {
 	awards := []results.Award{}
 	for index, prize := range page.Preview.Criteria.Prizes {
 		winner := uuid.Nil
+		// Qualification's signed native panel owns category winners, including
+		// non-finalists. Final judges cannot add or reinterpret category ties.
+		if prize.CategoryID != nil && page.Preview.Criteria.Mode == rubric.MentorQualification {
+			if page.Preview.Selection == nil || page.Preview.Selection.SignedBinding == "" {
+				t.Fatal("category award lacks its actual signed qualification source")
+			}
+			for _, category := range page.Preview.Selection.Categories {
+				if category.CategoryID == *prize.CategoryID && len(category.TeamIDs) == 1 {
+					winner = category.TeamIDs[0]
+				}
+			}
+		}
 		for _, state := range page.TieStates {
 			match := prize.CategoryID == nil && state.Tie.Kind == "final" || prize.CategoryID != nil && state.Tie.Kind == "category" && state.Tie.CategoryID != nil && *prize.CategoryID == *state.Tie.CategoryID
 			if !match {

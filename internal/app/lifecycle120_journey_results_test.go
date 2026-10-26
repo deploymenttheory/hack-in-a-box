@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/results"
+	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/google/uuid"
 )
 
@@ -51,11 +52,23 @@ func (r *lifecycleJourney) decideJudgeResults(t *testing.T) {
 			t.Fatal("native result source lacks current judging or predeclared prizes")
 		}
 		page = r.changeResults(t, item, page, map[string]any{"action": "prepare", "source_binding": page.Preview.Binding})
-		if !page.Current || page.Round.Source.Binding != page.Preview.Binding || page.Round.Confirmation != nil || len(page.Round.Votes) != 0 || len(page.TieStates) < 2 {
+		expectedTies := 1
+		if page.Preview.Criteria.Mode == rubric.AllTeams {
+			expectedTies += len(page.Preview.Criteria.Categories)
+		} else if page.Preview.Criteria.Mode != rubric.MentorQualification {
+			t.Fatal("unrecognised native assessment mode")
+		}
+		if !page.Current || page.Round.Source.Binding != page.Preview.Binding || page.Round.Confirmation != nil || len(page.Round.Votes) != 0 || len(page.TieStates) != expectedTies {
 			t.Fatal("native result preparation inferred ballots or confirmation")
 		}
 		receipt.SourceBinding = page.Preview.Binding
-		page = r.adviseCurrentCategoryTie(t, item, page)
+		if page.Preview.Criteria.Mode == rubric.AllTeams {
+			receipt.AdvisoryScope = "current_category_ties"
+			page = r.adviseCurrentCategoryTie(t, item, page)
+		} else {
+			receipt.AdvisoryScope = "none_categories_already_signed_by_qualification"
+			r.verifyQualificationAdvisoryScope(t, item, page)
+		}
 		tallies := page.Preview.Tallies
 		judges := map[uuid.UUID]bool{}
 		for _, actor := range []string{"judge-a", "judge-b", "judge-c"} {
