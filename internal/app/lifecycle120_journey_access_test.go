@@ -171,6 +171,29 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 				if grant.State != "accepted" || !grant.Managed || grant.Diagnostic != "" || grant.Uncertain {
 					t.Fatal("native refresh did not independently verify accepted current collaborator")
 				}
+				client := r.participant(t, grant.Member.PersonID)
+				var own repositoryaccess.OwnView
+				ownPath := fmt.Sprintf("/api/v1/events/%s/repositories/%s/invitations", item.view.ID, receipt.TeamID)
+				if err := client.call(ctx, http.MethodGet, ownPath, -1, nil, &own, http.StatusOK); err != nil {
+					t.Fatal(err)
+				}
+				if len(own.Grants) != 1 || own.Grants[0].ID != grant.ID || own.Grants[0].State != "accepted" || !own.Grants[0].Managed {
+					t.Fatal("current own API did not retain only its accepted managed grant")
+				}
+			}
+			var original repositoryaccess.Receipt
+			if err := r.owner.call(ctx, http.MethodGet, path+"/receipts/"+receipt.PlanID.String()+"?action=approve", -1, nil, &original, http.StatusOK); err != nil {
+				t.Fatal(err)
+			}
+			if original.Plan == nil || original.Plan.ID != receipt.PlanID || original.Plan.Version != receipt.PlanVersion || original.ActorID == nil || *original.ActorID != r.owner.person || original.CommandFingerprint == nil {
+				t.Fatal("native original approval receipt lost exact actor/source/version")
+			}
+			var repeated repositoryaccess.Result
+			if err := r.owner.call(ctx, http.MethodPost, path, refreshed.Current.Revision, map[string]any{"action": "approve", "plan_id": receipt.PlanID, "plan_version": receipt.PlanVersion, "reason": "Explicitly approve exact verified frozen team access"}, &repeated, http.StatusOK); err != nil {
+				t.Fatal(err)
+			}
+			if repeated.Receipt == nil || repeated.Receipt.ID != receipt.PlanID || len(repeated.Current.Grants) != len(refreshed.Current.Grants) {
+				t.Fatal("known approval replay replaced original access history")
 			}
 			receipt.Accepted = len(refreshed.Current.Grants)
 		}
