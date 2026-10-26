@@ -290,3 +290,29 @@ boundary stops the curve and remains visible. Smoke cannot stand in for that
 curve or the separate 1,800-second sustained baseline. These primitives still
 need the coherent native fixture, complete CLI/oracle integration and actual
 baseline execution; no capacity evidence is inferred from their configuration.
+
+
+## Shared external issuer bridge
+
+The load branch carries the canonical `lifecycle120_oidc_test.go` byte for byte
+from `0aad4fb9` (SHA256 `552b7f1307b19e6b80b25847ac483740a0c00f0f7468715cf42b33db942a64c4`).
+Both bounded reviews approved that seam before integration. Its default52
+subjects remain unchanged; the explicit constructor takes only the declared
+cohort. The original people-test file also calls an independent GitHub helper,
+so it is not copied. Dedicated123-prefixed protocol controls keep the issuer
+independent of the GitHub provider and historical lifecycle/domain runner.
+
+The strict bounded manifest declares all known synthetic subjects and exact
+HTTPS callback clients; it has no native session seed or clock option. The
+external-only fixture process exposes the actual issuer handler behind the
+profile TLS proxy. It is compiled into a private test-provider image, not the
+normal API/admin/worker images. Its default CI invocation is skipped; no process
+execution is claimed from compilation. Bootstrap is one declared staff member
+inside the1,000-person cohort, not an additional dormant count proxy.
+
+At clean `3ef1889b`, all four dedicated provider protocol parents passed with
+race detection (package1.873s). They check known-set isolation and default52,
+ambiguous identity refusal, real RSA signatures, PKCE/client/redirect/nonce,
+single use and wall-relative expiry. The [bounded component receipt](evidence/oidc-provider-component.json)
+explicitly records zero native application/session/load evidence. Full provider
+process/TLS/native-auth and actual profile execution remain required.
