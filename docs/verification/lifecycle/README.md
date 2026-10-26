@@ -1355,3 +1355,14 @@ projects and the read-only diagnostic container were removed; all owned
 resource classes were verified empty. Schema controls pass(package0.612s) and
 configured lint reports0issues. A complete fresh native run on the rebased
 source is still required, along with every remaining full-acceptance gate.
+
+After storage recovery, source `89590a6b` (runtime inputs byte-identical to
+image-build source`e94d0e95`, main`5f78d51f`) ran fresh native90117. It
+**failed365.56s** awaiting headers from the first formal submission PUT. Both
+reviewed common versions per event were persisted in the earlier HTTP-progress
+snapshot. The Docker socket then became unavailable during read-only export,
+so the PUT's commit status remains **unknown**, native SQL corroboration was
+not captured, and cleanup of this project awaits daemon recovery. The original
+write has not been replayed. The [bounded failure record](evidence/journey-clarification-daemon-loss-red.json)
+keeps these limits explicit; empty SQL/daemon-error files are not promoted to
+native evidence. A subsequent healthy complete run remains necessary.

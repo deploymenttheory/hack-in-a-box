@@ -1,0 +1,58 @@
+{
+  "checkpoint": "restored-clarification-run-transport-timeout-and-later-daemon-loss",
+  "complete_lifecycle": false,
+  "result": "red",
+  "provenance": {
+    "source": "89590a6bc2b2d8cf160c0c00063894fce8567278",
+    "main_base": "5f78d51f6f22bd11f58344f529d52daeebf475b1",
+    "image_build_source": "e94d0e9512c67bb271254e7761669f2f732dda5a",
+    "runtime_inputs_byte_identical": true,
+    "schema": 55,
+    "fixture_image": "sha256:7868ccb394c52392b1d99692ddcc24ff39d80b8fa8c9700d083ce3eb75a84661",
+    "build": "45270",
+    "startup": "14750",
+    "runner": "90117",
+    "duration_seconds": 365.56,
+    "production_image": false
+  },
+  "persisted_http_progress": {
+    "events_with_resolved_help": 2,
+    "events_with_two_reviewed_common_versions": 2,
+    "post_failure_sql_corroboration_captured": false
+  },
+  "failure": {
+    "phase": "first formal live submission",
+    "method": "PUT",
+    "error": "context deadline exceeded; Client.Timeout exceeded while awaiting headers",
+    "commit_status": "unknown",
+    "driver_retry_or_manual_write_replay": false,
+    "subsequent_observation": "Docker socket became unavailable while attempting read-only preservation. No causal attribution between the timeout and later daemon loss is asserted.",
+    "host_free_space_gib_when_daemon_loss_observed": 74
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-native.log",
+      "sha256": "bb12c2c9d0ba5d3a452fdd8e12788097449a76b5b5f18672363f0b149c98deb9"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-progress.json",
+      "sha256": "1a4b2b9cafd323d61a7c711736fff36a2316c2b8eacb76d0c64c18caae697546"
+    }
+  ],
+  "preservation_limits": [
+    "The earlier progress snapshot is valid; post-failure work copy is absent and SQL exports are empty.",
+    "Attempted public/admin log exports contain only daemon connection errors and are not native application-log evidence.",
+    "The uncertain original PUT must not be replayed. After daemon recovery, read-only native-state inspection is required before any accepted-versus-absent classification."
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-clarification-restored-20261026",
+    "status": "pending_daemon_recovery",
+    "verified_absent": false
+  },
+  "scope_limits": [
+    "The fresh rebase project that previously hit volume-creation EIO was separately cleaned after recovery and verified empty before this run began.",
+    "This actual failed whole journey is not complete native acceptance; no production timeout, guard or clock was changed.",
+    "No raw progress JSON, private prose, assessments, sessions, credentials or provider configuration is published.",
+    "All remaining full120 acceptance criteria and final native/browser/recovery/independent-review/CI gates remain required."
+  ]
+}
