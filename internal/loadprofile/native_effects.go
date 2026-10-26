@@ -81,6 +81,13 @@ func (n NativeDatabase) effect(ctx context.Context, spec WriteSpec) (EffectFact,
 			}
 			fact.Fingerprint, err = payloadFingerprint(evidence)
 		}
+	case CueEffect:
+		// The native owner has no command-id receipt. Its immutable decision
+		// reason carries our synthetic marker and cue hash; the independent
+		// audit revision proves the corresponding committed transition. The
+		// exact cue body is additionally checked in the original ACK and SSE.
+		err = n.pool.QueryRow(ctx, `SELECT min(split_part(d.reason,':',3)),count(*)*(SELECT count(*) FROM audit_events a WHERE a.event_id=$1 AND a.actor_id=$2 AND a.target_id=$1 AND a.action='presentation.changed' AND a.metadata->>'revision'=$4) FROM event_decisions d WHERE d.event_id=$1 AND d.actor_id=$2 AND d.kind='presentation.override' AND d.reason LIKE $3||'%' GROUP BY d.event_id,d.actor_id`, spec.Event, spec.Actor, "load-cue:"+spec.Command.String()+":", fmt.Sprint(spec.Version)).
+			Scan(&fact.Fingerprint, &fact.Effects)
 	case HelpEffect:
 		var request uuid.UUID
 		var version int64
@@ -102,7 +109,7 @@ func (n NativeDatabase) effect(ctx context.Context, spec WriteSpec) (EffectFact,
 		return fact, fmt.Errorf("read independent immutable native effect: %w", err)
 	}
 	fact.Present = true
-	if spec.Kind != HelpEffect {
+	if spec.Kind != HelpEffect && spec.Kind != CueEffect {
 		fact.Effects = 1
 	}
 	return fact, nil

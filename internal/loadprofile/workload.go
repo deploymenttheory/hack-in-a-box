@@ -10,6 +10,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/observations"
+	"github.com/deploymenttheory/hack-in-a-box/internal/presentation"
 )
 
 // Journey selects native role-specific behavior prepared by the fixture. It
@@ -20,6 +21,7 @@ type Journey struct {
 	Observation   uuid.UUID
 	RequestHelp   bool
 	WorkHelpQueue bool
+	PublishCues   bool
 }
 
 type NativeWorkload struct {
@@ -27,12 +29,19 @@ type NativeWorkload struct {
 	writes   NativeWrites
 	journeys map[string]Journey
 	run      uuid.UUID
+	tracking CueTracking
+}
+
+type CueTracking struct {
+	Database NativeDatabase
+	Displays *DisplayLedger
 }
 
 func NewNativeWorkload(
 	journeys map[string]Journey,
 	writes NativeWrites,
 	run uuid.UUID,
+	tracking CueTracking,
 ) (*NativeWorkload, error) {
 	if run == uuid.Nil || writes.Attempts == nil || writes.Metrics == nil {
 		return nil, fmt.Errorf(
@@ -46,6 +55,13 @@ func NewNativeWorkload(
 			journey.Read.Team == uuid.Nil {
 			return nil, fmt.Errorf("%w: role write needs a prepared native team", errNativeWrite)
 		}
+		if journey.PublishCues &&
+			(tracking.Database.pool == nil || !tracking.Database.events[journey.Read.Event] || tracking.Displays == nil) {
+			return nil, fmt.Errorf(
+				"%w: scoped native cue audit and display ledger required",
+				errNativeWrite,
+			)
+		}
 		bindings[actor] = journey.Read
 	}
 	reads, err := NewNativeReads(bindings)
@@ -57,7 +73,13 @@ func NewNativeWorkload(
 		journey.Read = reads.bindings[actor]
 		owned[actor] = journey
 	}
-	return &NativeWorkload{reads: reads, writes: writes, journeys: owned, run: run}, nil
+	return &NativeWorkload{
+		reads:    reads,
+		writes:   writes,
+		journeys: owned,
+		run:      run,
+		tracking: tracking,
+	}, nil
 }
 
 // Action runs within the actor's sequential stream. An unknown original write
@@ -73,19 +95,33 @@ func (w *NativeWorkload) Action(
 		return Measurement{}, nil, fmt.Errorf("%w: undeclared native journey", errNativeRead)
 	}
 	if !w.writes.Attempts.ActorBlocked(actor.Session.Person()) {
+		if journey.PublishCues && sequence%2 == 0 {
+			return w.publishCue(ctx, actor, journey.Read.Event, sequence)
+		}
 		if journey.Observation != uuid.Nil && sequence%3 == 2 {
 			return w.writes.Mentor(ctx, actor, journey.Read.Event, journey.Read.Team,
 				journey.Observation, observations.Evidence{
 					Category: "progress",
-					Evidence: fmt.Sprintf("Load run %s observation %d", w.run, sequence),
-					Outcome:  "Synthetic capacity evidence; not a competition score",
+					Evidence: fmt.Sprintf(
+						"Load run %s phase %s observation %d",
+						w.run,
+						actor.Phase,
+						sequence,
+					),
+					Outcome: "Synthetic capacity evidence; not a competition score",
 				})
 		}
 		if journey.RequestHelp && sequence%30 == 7 {
 			return w.writes.HelpCreate(ctx, actor, journey.Read.Event, uuid.New(), help.Input{
-				TeamID: journey.Read.Team, Category: "setup",
-				Description: fmt.Sprintf("Load run %s help request %d", w.run, sequence),
-				Location:    "Capacity fixture desk",
+				TeamID:   journey.Read.Team,
+				Category: "setup",
+				Description: fmt.Sprintf(
+					"Load run %s phase %s help request %d",
+					w.run,
+					actor.Phase,
+					sequence,
+				),
+				Location: "Capacity fixture desk",
 			})
 		}
 		if journey.WorkHelpQueue && sequence%2 == 1 {
@@ -159,4 +195,43 @@ func (w *NativeWorkload) helpQueue(
 		return w.writes.HelpResolve(ctx, actor, binding.Event, request, page.Request.Revision)
 	}
 	return w.writes.HelpClaim(ctx, actor, binding.Event, request, page.Request.Revision)
+}
+
+func (w *NativeWorkload) publishCue(
+	ctx context.Context,
+	actor Actor,
+	event uuid.UUID,
+	sequence uint64,
+) (Measurement, *AcceptedWrite, error) {
+	measurement, write, receipt, err := w.writes.Cue(
+		ctx,
+		actor,
+		event,
+		presentation.Cue{
+			ID:    uuid.New(),
+			Title: "Capacity profile update",
+			Text: fmt.Sprintf(
+				"Load run %s phase %s cue %d",
+				w.run,
+				actor.Phase,
+				sequence,
+			),
+			DurationSeconds: 60,
+		},
+	)
+	if err != nil || receipt == nil {
+		return measurement, write, err
+	}
+	anchor, err := w.tracking.Database.CuePublication(
+		ctx,
+		event,
+		actor.Session.Person(),
+		receipt.Revision,
+		actor.Phase,
+	)
+	if err != nil {
+		return measurement, write, err
+	}
+	err = w.tracking.Displays.Published(event, receipt.Revision, anchor, receipt.Current)
+	return measurement, write, err
 }

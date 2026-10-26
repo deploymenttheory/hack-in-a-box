@@ -16,6 +16,7 @@ const (
 	RegistrationEffect EffectKind = "registration"
 	MentorEffect       EffectKind = "mentor-observation"
 	HelpEffect         EffectKind = "help-command"
+	CueEffect          EffectKind = "presentation-cue"
 )
 
 // WriteSpec contains only identity/version/fingerprint, never private evidence,
@@ -60,6 +61,14 @@ func (l *AttemptLedger) Begin(spec WriteSpec) (uuid.UUID, error) {
 	case MentorEffect:
 		if spec.Team == uuid.Nil || spec.Version < 1 {
 			return uuid.Nil, fmt.Errorf("%w: native mentor team/version required", errWriteAttempt)
+		}
+	case CueEffect:
+		if spec.Resource != spec.Event || spec.Version < 1 || spec.Command == uuid.Nil ||
+			spec.Action != "override" {
+			return uuid.Nil, fmt.Errorf(
+				"%w: exact cue revision and decision marker required",
+				errWriteAttempt,
+			)
 		}
 	case HelpEffect:
 		if spec.Command == uuid.Nil || spec.Version < 1 ||

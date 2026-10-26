@@ -43,7 +43,7 @@ func TestCurrentReadCannotUnblockUnknownOriginalRoleWrite(t *testing.T) {
 	workload, err := NewNativeWorkload(map[string]Journey{actor.ID: {
 		Read:        ReadBinding{Event: event, Team: team, Operations: []Operation{SessionRead}},
 		Observation: uuid.New(), RequestHelp: true, WorkHelpQueue: true,
-	}}, NativeWrites{Attempts: &attempts, Metrics: &metrics}, uuid.New())
+	}}, NativeWrites{Attempts: &attempts, Metrics: &metrics}, uuid.New(), CueTracking{})
 	if err != nil {
 		t.Fatal(err)
 	}
