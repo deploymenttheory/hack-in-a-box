@@ -102,6 +102,19 @@ func (c *lifecycleClient) call(
 	input, output any,
 	want int,
 ) error {
+	return c.callIntent(ctx, method, path, revision, input, output, want, uuid.Nil)
+}
+
+// Only APIs that require a caller-owned Idempotency-Key use this explicit
+// intent. Default callers keep their existing headers and transport behavior.
+func (c *lifecycleClient) callIntent(
+	ctx context.Context,
+	method, path string,
+	revision int64,
+	input, output any,
+	want int,
+	commandID uuid.UUID,
+) error {
 	if !strings.HasPrefix(path, "/api/v1/") || strings.HasPrefix(path, "//") {
 		return errors.New("lifecycle commands must target a native API route")
 	}
@@ -128,6 +141,12 @@ func (c *lifecycleClient) call(
 	if revision >= 0 {
 		request.Header.Set("If-Match", fmt.Sprintf("\"%d\"", revision))
 	}
+	if commandID != uuid.Nil {
+		request.Header.Set("Idempotency-Key", commandID.String())
+		// A keyed write must still return uncertainty to this caller after an
+		// accepted response is lost, rather than replaying the body automatically.
+		request.GetBody = nil
+	}
 	response, err := c.http.Do(request)
 	if err != nil {
 		return err
@@ -140,7 +159,7 @@ func (c *lifecycleClient) call(
 	if response.StatusCode != want {
 		// Do not copy session tokens, credentials or private domain prose from an
 		// unexpected response into the release evidence/logs.
-		return fmt.Errorf("%s native API returned %d, expected %d", method, response.StatusCode, want)
+		return &lifecycleStatusError{Method: method, Actual: response.StatusCode, Expected: want}
 	}
 	if !strings.Contains(response.Header.Get("Cache-Control"), "no-store") {
 		return errors.New("native API response did not retain no-store")
@@ -151,4 +170,13 @@ func (c *lifecycleClient) call(
 		}
 	}
 	return nil
+}
+
+type lifecycleStatusError struct {
+	Method           string
+	Actual, Expected int
+}
+
+func (e *lifecycleStatusError) Error() string {
+	return fmt.Sprintf("%s native API returned %d, expected %d", e.Method, e.Actual, e.Expected)
 }
