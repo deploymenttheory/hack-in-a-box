@@ -58,7 +58,7 @@ func assets(directory string) http.HandlerFunc {
 			return
 		}
 		w.Header().
-			Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
+			Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
 		w.Header().Set("Referrer-Policy", "same-origin")
 		http.ServeContent(w, r, "index.html", info.ModTime(), file)
 	}

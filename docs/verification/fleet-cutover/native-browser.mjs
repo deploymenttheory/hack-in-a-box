@@ -97,6 +97,11 @@ async function mediaJourney(page, eventID, name) {
       ui_status: photo.status(), ui_content_length: photo.headers()['content-length'] ?? null, ui_bytes: bytes.length,
       direct_status: direct.status(), direct_content_length: direct.headers()['content-length'] ?? null, direct_bytes: directBytes.length,
       direct_prefix: [...directBytes.subarray(0, 8)],
+      browser_fetch: await page.evaluate(async path => {
+        const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store' })
+        const data = new Uint8Array(await response.arrayBuffer())
+        return { status: response.status, type: response.type, content_length: response.headers.get('content-length'), bytes: data.length, prefix: [...data.subarray(0, 8)] }
+      }, photoPath),
       browser: await article.evaluate(node => ({ focused: document.hasFocus(), hidden: document.hidden, image_present: !!node.querySelector('img'), natural_width: node.querySelector('img')?.naturalWidth ?? null })) })
   }
   assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], 'Native PNG thumbnail bytes')
