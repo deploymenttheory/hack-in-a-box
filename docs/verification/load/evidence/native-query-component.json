@@ -1,0 +1,31 @@
+{
+  "source_commit": "3eb99300bbed45b6fec8816f62e4ecb37d3dc6a9",
+  "source_worktree_clean": true,
+  "full_load": false,
+  "release_passed": false,
+  "scope": "Real PostgreSQL read-query component compatibility over explicitly seeded inputs; not native owner commands, normal OIDC, genuine guarded worker attempts, production images or load evidence.",
+  "parent": "TestNativeDatabaseQueriesRetainPendingFactsAndScope",
+  "command": "GOMAXPROCS=2 HACKBOX_INTEGRATION=1 go test -p 1 -race ./internal/loadprofile -run ^TestNativeDatabaseQueriesRetainPendingFactsAndScope$ -count=1 -parallel=1 -timeout=2m -v",
+  "parent_seconds": 2.08,
+  "package_seconds": 3.443,
+  "exit_code": 0,
+  "skips": 0,
+  "failures": 0,
+  "private_log_sha256": "2f3d87ca4df54e8924ff30997c82e8dd59ee856feda9e7287ef0db012ca57cec",
+  "actual_checks": [
+    "Native admission configuration and distinct staff/people census; outside-event refusal",
+    "Raw overdue approved queue counts retain runnable intents and non-runnable teams.published source facts separately by kind",
+    "Unstarted and missing operation identities do not disappear; explicitly seeded timestamp/count survives projection",
+    "Absent create/claim/resolve command queries preserve missing effects rather than accepted effects"
+  ],
+  "limitations": [
+    "People, events, pending operations and one attempt timestamp are seeded query inputs, not executed application/worker journeys",
+    "No 1,000-session, burst, saturation, SSE, due-start, provider, privacy or 1,800-second acceptance is claimed"
+  ],
+  "cleanup": {
+    "owned_containers": 0,
+    "owned_networks": 0,
+    "owned_volumes": 0,
+    "unrelated_resources_modified": false
+  }
+}

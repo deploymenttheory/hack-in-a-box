@@ -1,0 +1,35 @@
+# Explicit private setup ONLY. Stop these API processes before dropping this
+# override and launching the normal production images/default-wall worker.
+services:
+  api:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    entrypoint: [/app/app.test]
+    command: [-test.run=^TestLoad123SetupProcess$, -test.timeout=0]
+    environment:
+      HACKBOX_LOAD_SETUP: synthetic-only
+      HACKBOX_LOAD_SETUP_ROLE: public
+      HACKBOX_LOAD_SETUP_CLOCK: /fixture/domain-time
+      HACKBOX_BOOTSTRAP_SUBJECT: load-e01-p181
+    volumes: [fixture_private:/fixture:ro]
+    healthcheck: {disable: true}
+  admin:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    entrypoint: [/app/app.test]
+    command: [-test.run=^TestLoad123SetupProcess$, -test.timeout=0]
+    environment:
+      HACKBOX_LOAD_SETUP: synthetic-only
+      HACKBOX_LOAD_SETUP_ROLE: admin
+      HACKBOX_LOAD_SETUP_CLOCK: /fixture/domain-time
+      HACKBOX_BOOTSTRAP_SUBJECT: load-e01-p181
+    volumes: [fixture_private:/fixture:ro]
+    healthcheck: {disable: true}
+  worker:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    profiles: [setup]
+    entrypoint: [/app/app.test]
+    command: [-test.run=^TestLoad123SetupProcess$, -test.timeout=0]
+    environment:
+      HACKBOX_LOAD_SETUP: synthetic-only
+      HACKBOX_LOAD_SETUP_ROLE: worker
+      HACKBOX_LOAD_SETUP_CLOCK: /fixture/domain-time
+    volumes: [fixture_private:/fixture:ro]

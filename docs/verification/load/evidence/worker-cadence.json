@@ -1,0 +1,85 @@
+{
+  "scope": "native worker cadence component, not full load acceptance",
+  "full_load": false,
+  "release_passed": false,
+  "production_image_baseline_executed": false,
+  "wall_clock": true,
+  "provider_boundary": "deterministic in-process healthy Handler only; no end-recipient delivery claim",
+  "setup": "real migrated PostgreSQL; existing native durable-intent query mirrors repository producers; not full owner API or event-lifecycle evidence",
+  "runtime": "normal jobs.Service.Run, actual River insertion/execution and database guarded-attempt timestamps; no manual Reconcile/Execute/Deliver/clock advance",
+  "observations": 31,
+  "p95_target_seconds": 30,
+  "red": {
+    "source": "857ece74cad1c78bb24a9c22459baf187fae8d5f",
+    "p95_seconds": 55.701732,
+    "package_seconds": 63.49
+  },
+  "green": {
+    "source": "e38a642d619e456f8d176db5f8f77fc6f0ca7a4b",
+    "p95_seconds": 5.710714,
+    "maximum_seconds": 5.711054,
+    "package_seconds": 15.714
+  },
+  "all_owners_race": {
+    "source": "e38a642d619e456f8d176db5f8f77fc6f0ca7a4b",
+    "package_seconds": 42.433,
+    "due_start_p95_seconds": 5.572473,
+    "due_start_maximum_seconds": 5.573023,
+    "parents": [
+      {
+        "name": "TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent",
+        "seconds": 2.05
+      },
+      {
+        "name": "TestEligibilityCannotBlockEventCancellation",
+        "seconds": 1.44
+      },
+      {
+        "name": "TestRecoveryCannotBlockEventCancellation",
+        "seconds": 1.56
+      },
+      {
+        "name": "TestApprovalChangedDuringEligibilityRequiresFreshCheck",
+        "seconds": 1.53
+      },
+      {
+        "name": "TestRiverKeepsDeferredOperationsResumable",
+        "seconds": 14.44
+      },
+      {
+        "name": "TestDurableEnqueueTwoWorkersAndRecovery",
+        "seconds": 4.73
+      },
+      {
+        "name": "TestApprovalCancellationRollbackAndOutcomes",
+        "seconds": 1.49
+      },
+      {
+        "name": "TestApprovedIntentCreatedAfterWorkerStartupStartsWithinThirtySeconds",
+        "seconds": 13.83
+      }
+    ]
+  },
+  "controls": [
+    "actual worker startup barrier",
+    "post-start ordinary Enqueue/InsertTx positive control",
+    "unapproved/cancelled durable intents excluded",
+    "one guarded attempt per accepted effect",
+    "all eight current-authority/approval/cancellation/lease/deferred/recovery/rollback owners pass with race detector"
+  ],
+  "production_delta": "8 insertions/1 deletion: separate ten-second durable-intent reconciliation from unchanged five-second fast publication and sixty-second provider/retention maintenance",
+  "logs": [
+    {
+      "name": "load123-due-start-native-red.log",
+      "sha256": "6000df8694d7ff62bae9ae2e3e2fc3920c1684dc57a971179c9905b441e61478"
+    },
+    {
+      "name": "load123-due-start-native-green.log",
+      "sha256": "53b467632add73f2d8889fdb37104b8e60bab9ef932b8a8a6ba5c0aa1452d160"
+    },
+    {
+      "name": "load123-jobs-native-owners.log",
+      "sha256": "9844dc0a1d3a7e806cdd8a792a354f94093cbbe2c0093e9d95ea3c4f469a820f"
+    }
+  ]
+}

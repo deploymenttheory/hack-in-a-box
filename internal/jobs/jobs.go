@@ -583,6 +583,12 @@ func (s *Service) Run(ctx context.Context, shutdown time.Duration) error {
 	}
 	fastTicker := time.NewTicker(5 * time.Second)
 	defer fastTicker.Stop()
+	// Some native owners commit approved durable intents without inserting a
+	// River job. Discover those independently of the slower provider/retention
+	// sweep so a healthy due operation does not wait almost a minute to start.
+	// Reconciliation still uses the same eligibility, leases and unique jobs.
+	intentTicker := time.NewTicker(10 * time.Second)
+	defer intentTicker.Stop()
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	for {
@@ -606,13 +612,14 @@ func (s *Service) Run(ctx context.Context, shutdown time.Duration) error {
 					return err
 				}
 			}
-		case <-ticker.C:
+		case <-intentTicker.C:
 			if err := s.Reconcile(ctx); err != nil {
 				stop, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdown)
 				defer cancel()
 				_ = s.Client.StopAndCancel(stop)
 				return err
 			}
+		case <-ticker.C:
 			if s.Maintenance != nil {
 				if err := s.Maintenance(ctx); err != nil {
 					stop, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdown)

@@ -1,0 +1,32 @@
+{
+  "source_commit": "5a10ee5a342847c4dc49f3bb5218924c57aa8456",
+  "source_worktree_clean": true,
+  "full_load": false,
+  "release_passed": false,
+  "scope": "One native presentation-owner transaction/immutable-effect component over real PostgreSQL and a native display pairing. Not HTTP/OIDC/SSE transport, production-image throughput or latency/load evidence.",
+  "parent": "TestNativeCueOwnerRevisionAndImmutableEffects",
+  "command": "GOMAXPROCS=2 HACKBOX_INTEGRATION=1 go test -p 1 -race ./internal/loadprofile -run ^TestNativeCueOwnerRevisionAndImmutableEffects$ -count=1 -parallel=1 -timeout=2m -v",
+  "parent_seconds": 1.62,
+  "package_seconds": 2.853,
+  "exit_code": 0,
+  "skips": 0,
+  "failures": 0,
+  "private_log_sha256": "64a3f7904d9b111d812de8bf8e8870f25d2ebe8a6740cd057a81deec16224169",
+  "actual_checks": [
+    "Actual native owner reads current revision, creates scoped pairing and commits explicit override with exact cue hash/decision marker",
+    "Independent immutable native audit anchors the committed revision; paired native snapshot exposes the actual matching positive cue",
+    "A deliberately different later native override does not erase/change the original marker/hash/audit effect"
+  ],
+  "fixture_boundaries": [
+    "Synthetic fixture identities and event/owner assignment",
+    "No injected clock; native owner uses normal wall defaults",
+    "No application HTTP/OIDC or SSE delivery latency measured",
+    "No full burst, saturation or 1,800-second/1,000-active-person execution"
+  ],
+  "cleanup": {
+    "owned_containers": 0,
+    "owned_networks": 0,
+    "owned_volumes": 0,
+    "unrelated_resources_modified": false
+  }
+}

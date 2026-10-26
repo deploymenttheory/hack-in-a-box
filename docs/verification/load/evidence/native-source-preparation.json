@@ -1,0 +1,122 @@
+{
+  "classification": "actual native go/team/rubric/challenge/mentor-coverage setup checkpoint only",
+  "full_load": false,
+  "release_accepted": false,
+  "driver_source": "c9f8ac74a9b8f23c8280cf26ce425fa432ef6cce",
+  "api_source": "735b44f86b76b4d8ff72b4ba28cdbec00be4d456",
+  "images": {
+    "private_setup_api": "sha256:79b0b5c634c6602eb5caf843c8f0a226c58989f378d0bbffabb837ec1da5e703",
+    "tls_proxy": "sha256:2207142f765a531ed9e5acbfe06d6e040e945843575a88e08f0b61a041bd6433"
+  },
+  "original_admission_sha256": "407e347f9a8375dcac7740f973c6e0a9cc8bc9d820869dc24b3febdc47891577",
+  "authentication": {
+    "started": "2026-10-26T13:24:54.237509Z",
+    "monotonic_elapsed_ns": 6935691125,
+    "attempted": 1000,
+    "authenticated": 1000,
+    "distinct_people": 1000,
+    "failed": 0,
+    "concurrency": 20,
+    "sustained_proof": false,
+    "unattempted": 0
+  },
+  "installation_after_cleanup": {
+    "events": 5,
+    "people": 1000,
+    "active_people": 1000,
+    "unexpired_sessions": 0
+  },
+  "setup_session_cleanup": {
+    "attempted": 1000,
+    "original_acknowledgements": 1000,
+    "unresolved_original_responses": 0,
+    "http_statuses": {
+      "204": 1000
+    },
+    "monotonic_elapsed_ns": 10351426500
+  },
+  "native_event_sources": [
+    {
+      "event_id": "858c8199-7480-5aa4-899f-a545500f31c8",
+      "stage": "registration",
+      "confirmed_competitors": 180,
+      "teams": 0,
+      "frozen": false,
+      "published_mentor_assignments": 0,
+      "published_mentor_gaps": 0,
+      "challenge_state": "",
+      "challenge_released_at": null
+    },
+    {
+      "event_id": "d8456699-28f5-5bda-a068-0d67e7b7ff46",
+      "stage": "preparation",
+      "confirmed_competitors": 180,
+      "teams": 36,
+      "frozen": false,
+      "published_mentor_assignments": 72,
+      "published_mentor_gaps": 0,
+      "challenge_state": "approved",
+      "challenge_released_at": null
+    },
+    {
+      "event_id": "a6b2d385-b91e-5440-ba0f-5c6810cfde2f",
+      "stage": "preparation",
+      "confirmed_competitors": 180,
+      "teams": 36,
+      "frozen": true,
+      "published_mentor_assignments": 72,
+      "published_mentor_gaps": 0,
+      "challenge_state": "approved",
+      "challenge_released_at": null
+    },
+    {
+      "event_id": "50e81a5a-fe4d-55f2-ba05-ed49b7e1a32c",
+      "stage": "preparation",
+      "confirmed_competitors": 180,
+      "teams": 36,
+      "frozen": true,
+      "published_mentor_assignments": 72,
+      "published_mentor_gaps": 0,
+      "challenge_state": "approved",
+      "challenge_released_at": null
+    },
+    {
+      "event_id": "1e5f8692-508a-54de-9658-ae647890df04",
+      "stage": "preparation",
+      "confirmed_competitors": 180,
+      "teams": 36,
+      "frozen": true,
+      "published_mentor_assignments": 72,
+      "published_mentor_gaps": 0,
+      "challenge_state": "approved",
+      "challenge_released_at": null
+    }
+  ],
+  "preparation_http": {
+    "calls": 2831,
+    "raw_status_counts": {
+      "200": 1831,
+      "204": 1000
+    },
+    "incomplete_original_responses": 0
+  },
+  "resource_envelope": "unchanged admission.compose.yaml:2.625CPU/1856MiB; no worker",
+  "remaining": "actual shared-worker publication, formal URL capture/archive, normal default-wall production handover, full native oracles and real1800s/saturation remain unexecuted",
+  "private_artifact_sha256": {
+    "native-sources-c9f8.json": "e46adf295cbc5e05fae3f0a57a9c46cf0efa460cc0a738b1ecd8b1e9a98fde19",
+    "native-sources-driver-c9f8.log": "4a546d63fb99c29fed86583ee841d7bae3adfe8041d17b15ff5a4a5c07031cd7",
+    "source-phase-start.log": "e538552e180fe1f0912c5104ed885dcf4b6100a61c2c5f2808266caba42e54ab",
+    "source-phase-stop.log": "5314cdba87d75beadb10d93d839a91ffc02b2e14281be4f641cfdae2154e5ad2"
+  },
+  "shutdown": {
+    "containers": 0,
+    "networks": 0,
+    "retained_volumes": [
+      "database",
+      "files",
+      "fixture_ca",
+      "fixture_private"
+    ],
+    "reason": "retain admitted/prepared dataset for next actual native worker phases"
+  }
+}

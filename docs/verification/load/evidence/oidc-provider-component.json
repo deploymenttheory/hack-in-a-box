@@ -1,0 +1,39 @@
+{
+  "source_commit": "3ef1889bbf9dd3a08f19010687937a7da6c68aef",
+  "source_worktree_clean": true,
+  "full_load": false,
+  "release_passed": false,
+  "native_application_executed": false,
+  "fixture_process_executed": false,
+  "canonical_provider": {
+    "source_commit": "0aad4fb959a6eaa9e0473f00f304d6399b0dfe32",
+    "path": "internal/app/lifecycle120_oidc_test.go",
+    "sha256": "552b7f1307b19e6b80b25847ac483740a0c00f0f7468715cf42b33db942a64c4",
+    "byte_identical": true,
+    "original_people_controls_not_copied": "They depend on the independent GitHub actor helper. Dedicated123-prefixed controls avoid importing the GitHub provider/domain runner."
+  },
+  "scope": "Four external synthetic-provider protocol component parents, not normal native OIDC callbacks, issued application sessions or active load users.",
+  "command": "GOMAXPROCS=2 go test -p 1 -race ./internal/app -run '^TestLoad123OIDC(Explicit|Default|Real|Rejects)' -count=1 -timeout=2m -v",
+  "selected_parents": 4,
+  "parent_failures": 0,
+  "parent_skips": 0,
+  "package_race_seconds": 1.873,
+  "private_log_sha256": "1d75d85fbd1f91015bb5451ef69a7c865adc50e1e98d82e4db417277d42429dc",
+  "actual_checks": [
+    "1000 explicit known fixture subjects with copied maps, source isolation and unknown/default actor refusal; not1000native people/sessions",
+    "Original forty-attendee plus twelve-role default remains separate",
+    "Matching subject/name and normalized distinct mailbox validation",
+    "Actual RS256 token signature verifies under own key and fails under different key; exact issuer/subject/client/nonce and wall-relative JWT expiry",
+    "Actual S256 code verifier/client/redirect/secret binding; consumed or past-expired code rejected"
+  ],
+  "additional_checks": {
+    "loadprofile_race_seconds": 1.687,
+    "scoped_app_and_loadprofile_lint_issues": 0
+  },
+  "remaining": [
+    "Provider process/TLS normal-image and native authentication integration",
+    "Coherent five-event prepared dataset and full runtime CLI/oracle integration",
+    "Actual200-actor burst, saturation and1800-second/1000-active-person execution",
+    "Full independent123reviews and exact-final-head CI"
+  ]
+}
