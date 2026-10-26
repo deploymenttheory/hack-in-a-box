@@ -1,0 +1,129 @@
+{
+  "kind": "Source-attributed original receipt scope and native panel read readiness corrections; not full release acceptance",
+  "current_code_source": "7db51c31be213925b33891d050e753f4f1c7bfe9",
+  "base": "6764e89aabcb5bdae91b33aaf4f3ff6d3d5620bc",
+  "original_receipt_scope": {
+    "patch": "dfe1fc881c80814c4e58c09726d9255f5471830e",
+    "cause": "Safe original receipt record lives outside the private workspace. Body text changed only through unrelated roster label hydration; waiting for disclosed team rows was invalid when an unknown panel legitimately has none.",
+    "correction": "Dedicated reader captures exact original button/record/owner nodes, safe actor/event/run/request/revision/generation metadata and trusted input-boundary identity. No body fallback, private payload, original POST replay or default helper weakening.",
+    "native_initial": {
+      "source": "9900459e",
+      "cases": 4,
+      "parent_seconds": 24.3,
+      "package_race_seconds": 25.844,
+      "passed": true,
+      "scope": "admin and public, desktop and mobile, initial only"
+    }
+  },
+  "current_controlled_checks": {
+    "source": "c26e79b0",
+    "unit": {
+      "files": 51,
+      "tests": 248,
+      "seconds": 49.01,
+      "max_workers": 2
+    },
+    "browser": {
+      "tests": 126,
+      "seconds": 39.0,
+      "workers": 1,
+      "scope": "Complete qualification and native-keyboard controlled browser files, desktop/mobile. These use controlled HTTP, not native PostgreSQL."
+    },
+    "lint_both_portal_builds_guide": true,
+    "generated_client_byte_parity": true
+  },
+  "native_failures_preserved": [
+    {
+      "source": "9900459e",
+      "scope": "full eight",
+      "parent_seconds": 426.19,
+      "package_race_seconds": 426.662,
+      "passed": 7,
+      "failed": 1,
+      "failure": "Owner current-ballot assertion expired before the next intrinsic 15-second native panel poll; both votes had native original ACKs."
+    },
+    {
+      "source": "c26e79b0",
+      "scope": "admin/mobile/final",
+      "parent_seconds": 113.97,
+      "package_race_seconds": 114.759,
+      "failure": "Accepted review gesture had an unfinished authoritative preflight GET and no POST; long scheduling gap observed. No source/timeout change justified by that run."
+    },
+    {
+      "source": "c26e79b0",
+      "scope": "admin/mobile/final in quiet host window",
+      "parent_seconds": 30.47,
+      "package_race_seconds": 31.131,
+      "failure": "Review another team original button remained connected and unchanged; only independent original-evidence loading text hydrated inside the private workspace before input."
+    }
+  ],
+  "logs": {
+    "initial_four": {
+      "private_path": "/private/tmp/hackbox245-9900459e-initial-native.log",
+      "sha256": "ac61f5f6f55dafbe2f928960b23e37f7485f6698f0c66e4854647a7001cdbbe6"
+    },
+    "original_owner_controls": {
+      "private_path": "/private/tmp/hackbox-qualification-original-record-dfe-final-controls.log",
+      "sha256": "742d86acf50efa8eeb6db764a9afe43300969a87e3b355768c7e25b4973f8972"
+    },
+    "current_owner_controls": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-owner-controls.log",
+      "sha256": "9813f9fd789912e3a0c7ea67965109de59fc1c66a33000f400029e3a255d871c"
+    },
+    "current_unit": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-web-unit-bounded.log",
+      "sha256": "a98cc427771f6f9b40cbbf7fd950c5a86bb961fe020902b2d5106dcafd514fde"
+    },
+    "current_build": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-build.log",
+      "sha256": "b7aa4f8be5abbab828760058941c647a96265a1020aee26ddac8a853af978cff"
+    },
+    "current_lint": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-web-lint.log",
+      "sha256": "ac23124da20094d656a717b4260340572dfc05a28e6145a4207fc7c3d2d39c64"
+    },
+    "current_guide": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-styleguide.log",
+      "sha256": "bff5ecfa3aeb01124e654e61d2a352bf96c452bf698f13ad962940e110e01627"
+    },
+    "failed_full_eight": {
+      "private_path": "/private/tmp/hackbox245-9900459e-all-native.log",
+      "sha256": "92875a85f3795990c224d0017abffe9666f4ed59b8cc0d39ad869d1abbe37f97"
+    },
+    "failed_preflight": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-admin-mobile-final.log",
+      "sha256": "7c87e68364deee91ddc5fdb8d3435b1895ad8815571204e16dc78a5120c43365"
+    },
+    "failed_lazy_evidence": {
+      "private_path": "/private/tmp/hackbox245-c26e79b0-admin-mobile-final-quiet.log",
+      "sha256": "c7a9bd174f91691979d53f9c89e1754c1fbcb5ad938507e25d92290d7028b749"
+    },
+    "native_corrected_admin_mobile_final": {
+      "private_path": "/private/tmp/hackbox245-7db51c31-admin-mobile-final.log",
+      "sha256": "50997a87f323b1894dff9eaf2042d33b6d09d9a91167d443903d3d43139ecd4e"
+    }
+  },
+  "remaining_gate": "Complete current-head CI, including all eight native qualification scopes, before merge. Lifecycle remains120/296. Earlier normal-image794214f5 retains its historical source.",
+  "post_sign_readiness": {
+    "patch": "d218ee0aebf1dd1bbc5e4cbb1dbd0fd6d38cab33",
+    "carried_source": "7db51c31be213925b33891d050e753f4f1c7bfe9",
+    "correction": "After every signed native card, require the current independent original-evidence region and all ten expected evidence labels before capturing the next-team control. Default helper, original command/receipt assertions and all timeouts are unchanged.",
+    "native_result": {
+      "source": "7db51c31be213925b33891d050e753f4f1c7bfe9",
+      "scope": "admin/mobile/final",
+      "parent_seconds": 96.19,
+      "package_race_seconds": 98.04,
+      "passed": true,
+      "exit_code": 0,
+      "postgres_container": "8d12a0d1b186",
+      "cleanup": "Termination logged; no other projects changed."
+    }
+  },
+  "source_sha256": {
+    "web/src/qualification-command.tsx": "5dcd67d0057a6e312f907e3dce70bbd3505eb8a7c7058bba44199375d8aba97c",
+    "web/qualification-native/keyboard.ts": "e99c6e7219a32df69ca2ec625a78f16918e0ffe43a94e410827ac45c0767e727",
+    "web/qualification-native/qualification.spec.ts": "2c6735905cd57363ee97c18858d5100171a14b01a5c0bdca2d0ad5325e0e046a",
+    "web/qualification-native/current-panel-read.ts": "6b2b39cb494d1b61d05dbdcf6cc833898c61a68ec3ab31ffeb0fa9d4e98082af",
+    "web/qualification-native/final.spec.ts": "8c097223d5e30eea74b790f8ca6ab7c7a67cdca0e56b90ce0a7c18842dcce265"
+  }
+}

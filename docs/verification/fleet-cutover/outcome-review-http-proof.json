@@ -64,5 +64,17 @@
     "Only this one native parent executed at this source; no full HTTP suite or whole #245 acceptance claim",
     "Credential unassignment positive belongs to existing historical HTTP parent, not this execution"
   ],
-  "cleanup": "Both test PostgreSQL containers terminated in logs; all four specific PostgreSQL/Ryuk container IDs absent on post-run docker ps."
+  "cleanup": "Both test PostgreSQL containers terminated in logs; all four specific PostgreSQL/Ryuk container IDs absent on post-run docker ps.",
+  "post_rebase_verification": {
+    "source": "7db51c31be213925b33891d050e753f4f1c7bfe9",
+    "base": "6764e89aabcb5bdae91b33aaf4f3ff6d3d5620bc",
+    "test": "TestCutoverOutcomeReviewHTTPCommandsAndCurrentReader",
+    "parent_seconds": 4.94,
+    "package_race_seconds": 6.54,
+    "passed": true,
+    "skipped": false,
+    "reason": "Recheck actual HTTP/PG contract after main tightened outcome retention equality. Original fd89304b receipt remains historical.",
+    "log_private_path": "/private/tmp/hackbox245-7db51c31-outcome-http.log",
+    "log_sha256": "ee7ada97a5e937d6aeb9a98596ede278ea9f66ca80cae36eb97473ddb8ef48ef"
+  }
 }

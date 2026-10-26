@@ -2,7 +2,10 @@
 
 ## Integrated candidate — 26 October 2026
 
-Current executable checkpoint `1d1fef8a` is rebased on merged main `03bfae7b`.
+Current executable checkpoint `7db51c31` is rebased on merged main `6764e89a`.
+The 752-file historical snapshot currently reconciles as 726 unchanged files,
+26 changed files and zero missing files. Source-attributed historical executions
+remain historical; final current-head CI remains a merge gate.
 The regenerated inventory resolves **96 registrations, 30 route owners and 318
 reachable modules**, with one Tailwind theme owner and no source errors. Both
 mentor-advisory routes are included. The original 94-route/29-owner native
@@ -10,12 +13,35 @@ contract snapshot below remains attributed to `4d1808ac`; it is not relabelled.
 [Current source reconciliation](current-source-reconciliation.json) records every
 changed file against that snapshot and the merged mentor-advisory owner.
 
+
+The latest qualification corrections distinguish safe original-request metadata
+from the private workspace and observe real native read completion. They retain
+original actor/run/request/revision/fingerprint checks, exact target identity,
+trusted keyboard guards and separate current-source reads. After each signed
+card, the scenario now waits for its ten native original evidence entries before
+capturing the next-team action. The strict default helper and timeouts are
+unchanged. [Source-attributed corrections and failed attempts](qualification-original-record-proof.json)
+retain the four-initial native pass, the 7/8 run and subsequent failed scopes.
+At `c26e79b0`, all 248 unit tests and 126 controlled browser cases pass; these do
+not establish a complete current native matrix. The corrected admin/mobile/final native scope passes at `7db51c31`
+(96.19s parent; 98.040s race package), including both actual read barriers.
+All final-head CI checks, including the complete eight-scope matrix, remain required.
+
+The normal-image `794214f5` walkthrough below remains historical. Main `6764e89a`
+adds worker composition, optional fixture domain clocks and a stricter outcome
+retention boundary. Normal production still supplies no fixture clock. The
+source differential records those changes; it does not relabel the earlier
+Docker installation as the rebased executable. Full lifecycle acceptance remains
+open in #120 and its continuation #296.
+
 The focused real PostgreSQL/HTTP outcome-review parent passed with race checking
 at `fd89304b` (4.04s parent; 5.571s package), proving draft/approve/exact replay/
 cancel, current/history readers, version and privacy denials, and exactly three
 retained review versions. [Receipt](outcome-review-http-proof.json) records source
 hashes, actual raw-log hash, the preceding fixture failure and scope limits. It
-does not prove reminder transport or OIDC browser execution.
+does not prove reminder transport or OIDC browser execution. The same parent
+passes again after the `6764e89a` rebase at `7db51c31` (4.94s parent;
+6.540s race package), with no skipped scopes.
 
 The protected photo flow exposed a real CSP defect: the UI fetched protected
 images as Blob URLs, while `img-src` disallowed Blob URLs. The sole production
