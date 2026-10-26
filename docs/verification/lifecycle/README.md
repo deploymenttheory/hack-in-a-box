@@ -814,3 +814,24 @@ to add two90s cutoff waits to the already measured248s setup; individual existin
 guards, native windows, auth/lease/transport clocks and retry policy are unchanged.
 All remaining full L01–L18 requirements and integrated schema55 owners/browser/CI
 remain gates; **complete_lifecycle remains false.**
+
+The first-reconciliation400 diagnosis was then reproduced against the actual
+native OpenAPI schema: the extracted unchanged wire-body factory failed at
+`/observation_ids` because JSONnull is not nullable (80759,0.04s/package0.492s).
+The correction initializes the two optional evidence-reference arrays as empty
+arrays; it retains the exact source/native/submission revision, selected earlier
+work SHA, original request identity and reasoned external-provenance fields.
+Native production validation is unchanged. A regression checks the actual factory
+against the independent native schema, rather than duplicating its implementation.
+
+After the now-merged #292 owner,291 rebased additively onto mainbba43a6/schema55
+at2dc366a2. All57 lifecycle patches were identical and its source/evidence bytes
+were unchanged; six loopback protocol parents compiled/passed package0.998s.
+A local evidence branch preserves the prior schema54 source graph. These are
+rebase/component results, not a new schema55 native execution. The corrected
+schema test plus six provider protocol parents passed19441 (package0.845s).
+A bounded `work-progress.json` now retains synthetic preparation/later-work
+receipt metadata before subsequent phases can fail, without bodies or sessions;
+the historical58 failure's missing work-receipt IDs remain missing. Corrected
+full native execution, all remaining lifecycle variants and final integrated
+advisory/browser/CI gates remain required.

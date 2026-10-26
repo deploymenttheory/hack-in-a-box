@@ -108,5 +108,6 @@ func (r *lifecycleJourney) buildDuringPreparation(t *testing.T) {
 		if len(item.work) != 6 {
 			t.Fatal("preweek work omitted a current team")
 		}
+		r.persistWorkProgress(t)
 	}
 }

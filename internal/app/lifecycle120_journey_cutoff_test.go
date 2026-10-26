@@ -102,6 +102,7 @@ func (r *lifecycleJourney) captureAndReconcileCutoff(t *testing.T) {
 		t.Fatal("late external work was not a separate post-cutoff transaction")
 	}
 	r.events[0].lateWork = &late
+	r.persistWorkProgress(t)
 	// A later current ref is not a replacement submission, even while the event
 	// stage remains live. The member command uses the exact current native state.
 	submissionPath := fmt.Sprintf("/api/v1/events/%s/teams/%s/submission", r.events[0].view.ID, target.TeamID)
@@ -216,7 +217,7 @@ func (r *lifecycleJourney) captureAndReconcileCutoff(t *testing.T) {
 				if work.ID == uuid.Nil || !work.DomainObservedAt.Before(source.Cutoff) || page.CurrentSubmissionRevision == nil || !page.CanReconcile {
 					t.Fatal("review has no exact current native source or actual retained pre-cutoff work")
 				}
-				command := submissionfreeze.Command{RequestID: uuid.New(), Action: "reconcile", SourceID: source.ID, NativeRevision: page.NativeRevision, SubmissionRevision: *page.CurrentSubmissionRevision, SHA: work.SHA, Reason: "Explicit synthetic organiser cutoff review: retained preparation work; current ref and its observation time do not establish history", ExternalEvidence: fmt.Sprintf("Retained synthetic external work receipt %s observed in actual preparation phase %s; independently later work is excluded", work.ID, work.DomainObservedAt.Format(time.RFC3339))}
+				command := lifecycleCutoffReviewCommand(page, work)
 				path := fmt.Sprintf("/api/v1/events/%s/teams/%s/submission-freeze", item.view.ID, team.ID)
 				var acknowledged submissionfreeze.Receipt
 				if err := r.owner.call(ctx, http.MethodPost, path, page.Revision, command, &acknowledged, http.StatusOK); err != nil {
@@ -256,5 +257,17 @@ func (r *lifecycleJourney) captureAndReconcileCutoff(t *testing.T) {
 			t.Fatal("cutoff proof depended on advancing to assessment")
 		}
 		item.view = actual
+	}
+}
+
+func lifecycleCutoffReviewCommand(page submissionfreeze.Page, work lifecycleWorkReceipt) submissionfreeze.Command {
+	source := page.Source
+	return submissionfreeze.Command{
+		RequestID: uuid.New(), Action: "reconcile", SourceID: source.ID,
+		NativeRevision: page.NativeRevision, SubmissionRevision: *page.CurrentSubmissionRevision,
+		SHA:            work.SHA,
+		ObservationIDs: []uuid.UUID{}, PushIDs: []uuid.UUID{},
+		Reason:           "Explicit synthetic organiser cutoff review: retained preparation work; current ref and its observation time do not establish history",
+		ExternalEvidence: fmt.Sprintf("Retained synthetic external work receipt %s observed in actual preparation phase %s; independently later work is excluded", work.ID, work.DomainObservedAt.Format(time.RFC3339)),
 	}
 }
