@@ -1095,3 +1095,40 @@ same connected earlier lifecycle phases pass, and all project resources were
 cleaned. Fresh final judge cards, advisory-only input, all-required-judge strict
 majority and the remaining lifecycle variants/later phases/final validation stay
 required. **complete_lifecycle=false; no L01–L18 row is fully complete.**
+
+
+## Fresh independent judge cards and guarded deliberation — native PASS
+
+Frozen `bfb58c59556cac0b95b60e6ab1297d3f53937c60` passed runner48916 in
+**285.71s**, build12132/start41435, fixture
+`sha256:a4a73a6850765fb2c39819d654af3e1973b66557c882bc5e86f1671eda6398f5`,
+main03bfae7/schema55. The [validated bounded receipt](evidence/journey-fresh-judges.json)
+contains21 actual card acknowledgements and current frozen references matched
+against native SQL, plus two actual opening acknowledgements. Full runtime
+exports/private scores/guidance remain local with hashes. Ten component parents
+compiled/passed1.208s and lint0 before actual native execution.
+
+The planned judge-final runs remain unstarted after fictional practice and
+mentor qualification. Four all-team frozen entries and three genuine signed
+finalists each receive three new version1 cards. The reserve returns403; a
+current mentor's real judge-card read returns403 in both events. Judges receive
+the intended private guidance and their own exact formal/repository source;
+independent peer cards remain hidden. Fresh judge values differ from the
+fictional practice maximum, live checkpoint minimum and final mentor maximum.
+Original actor-bound card acknowledgements are recovered with GET, not POST
+replay. No mentor total or previous card populates an independent judge card.
+
+With two judges complete, actual open-deliberation commands return409 and leave
+round revision/open state unchanged. Only after the third required judge submits
+for every eligible entry does the organiser open deliberation; each intended
+judge can then read exactly three current submitted cards per entry. Native SQL
+contains21 judge cards and41 distinct command records:21 submissions, two
+openings, six separate practice acknowledgements and12 planning assignments.
+Both native rounds are open. Earlier connected lifecycle/qualification phases
+pass in the same execution, and all owned resources were cleaned.
+
+Actual judge-only strict-majority tie votes and advisory-only mentor input,
+results/awards/feedback/showcase/archive/owned outcomes, remaining lifecycle
+variants and final native-browser/normal-image/recovery/CI gates remain required.
+Synthetic repository hashes do not claim real GitHub history.
+**complete_lifecycle=false; no L01–L18 row is fully complete.**
