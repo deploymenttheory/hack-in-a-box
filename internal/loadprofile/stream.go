@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -307,9 +306,7 @@ func consumeDisplay(
 				}
 			}
 			var snapshot presentation.Snapshot
-			decoder := json.NewDecoder(bytes.NewReader(raw))
-			decoder.DisallowUnknownFields()
-			if decoder.Decode(&snapshot) != nil || snapshot.EventID != event ||
+			if decodeNative(raw, &snapshot) != nil || snapshot.EventID != event ||
 				id != strconv.FormatInt(snapshot.Sequence, 10) {
 				return fmt.Errorf("%w: stream source/event/revision mismatch", errDisplayProof)
 			}

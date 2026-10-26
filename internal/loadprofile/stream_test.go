@@ -85,7 +85,7 @@ func TestDisplayParserRequiresExactEventRevisionAndPositiveProjection(t *testing
 	); err != nil {
 		t.Fatal(err)
 	}
-	for name, body := range map[string]string{"wrong-event": frame(7, presentation.Snapshot{EventID: uuid.New(), Sequence: 7}), "wrong-id": frame(8, presentation.Snapshot{EventID: event, Sequence: 7}), "private-canary": strings.Replace(valid, "\"event_name\":\"\"", "\"event_name\":\"PRIVATE_FIXTURE_WORDS\"", 1), "unknown-private-field": strings.Replace(valid, "\"sequence\":7", "\"unexpected_private_field\":\"hidden\",\"sequence\":7", 1), "truncated": strings.TrimSuffix(valid, "\n\n"), "revoked": "event: revoked\ndata: {}\n\n"} {
+	for name, body := range map[string]string{"trailing-json": strings.Replace(valid, "\n\n", "{}\n\n", 1), "wrong-event": frame(7, presentation.Snapshot{EventID: uuid.New(), Sequence: 7}), "wrong-id": frame(8, presentation.Snapshot{EventID: event, Sequence: 7}), "private-canary": strings.Replace(valid, "\"event_name\":\"\"", "\"event_name\":\"PRIVATE_FIXTURE_WORDS\"", 1), "unknown-private-field": strings.Replace(valid, "\"sequence\":7", "\"unexpected_private_field\":\"hidden\",\"sequence\":7", 1), "truncated": strings.TrimSuffix(valid, "\n\n"), "revoked": "event: revoked\ndata: {}\n\n"} {
 		t.Run(name, func(t *testing.T) {
 			err := consumeDisplay(
 				strings.NewReader(body),
