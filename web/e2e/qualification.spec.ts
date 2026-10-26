@@ -350,7 +350,9 @@ test('owner awaits actual casting projection and ignores pending stale or differ
  await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
   if(route.request().method()!=='GET'){writes++;return route.abort()}
   const projection=structuredClone(state.page);reads++
-  if(hold)await pending
+  // Controlled transport latency: fake browser time may advance while this
+  // deliberately stale owner response is still in flight.
+  if(hold){await pending;await new Promise(resolve=>setTimeout(resolve,100))}
   await route.fulfill({json:projection})
  })
  await page.goto(path)
@@ -360,11 +362,16 @@ test('owner awaits actual casting projection and ignores pending stale or differ
  await page.clock.pauseAt(frozenAt);await (await setupRead).finished()
  await expect(page.getByRole('button',{name:'Read current panel source',exact:true})).toBeEnabled()
  // This GET began before the second ballot and retains the earlier projection.
+ const heldRead=page.waitForResponse(response=>response.url()===new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href&&response.request().method()==='GET'&&response.status()===200)
  hold=true;const before=reads;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect.poll(()=>reads).toBeGreaterThan(before)
  const {waitForCastingRead}=await import('../qualification-native/current-panel-read')
  let settled=false
  const current=waitForCastingRead(page,new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href,category.id,1).then(()=>{settled=true})
  hold=false;release()
+ await (await heldRead).finished()
+ await expect(page.getByRole('button',{name:'Read current panel source',exact:true})).toBeEnabled()
+ await expect(tie).toContainText('Required current ballots incomplete')
+ expect(settled).toBe(false)
  // A following native read with a complete OTHER tie must not satisfy the barrier.
  state.page.tie_actions[0]={...state.page.tie_actions[0],votes_complete:true,casting:true,seat:2}
  await page.clock.runFor(15_000)
