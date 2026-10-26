@@ -674,3 +674,54 @@ actual tied-source result and explicit limitations. The unique audit project and
 all profile volumes were removed; all final container/volume/network label checks
 were empty. Actual latest-source notification/obsolete zero-effect evidence and
 queued access-poll reconciliation remain pending at this audit checkpoint.
+
+## Connected current-team notice and live access-poll checkpoint
+
+The next unchanged normal-owner journey passed **225.23s** at frozen source
+`5c5833e34a8cb9f8f4a389208cb8dc51f4fbbf33`, fixture image
+`sha256:f0bcbd14229f085df7e390006c35527512249a7dedacd89d7cc3741190876bfe`
+(main076f/schema54). Build86157 and startup89213 completed before actual runner78431.
+The [safe receipt](evidence/journey-team-notice-poll.json) preserves the original
+coherent two-event admission/freeze/App/GitHub/repository/access/publication/live
+journey and adds native notifications and actual queued live-phase polling.
+This remains the explicit test-entrypoint image, not the production image.
+
+The fixture advances its existing private domain clock by one second between
+separate actual publication/review commands. The original tied-source audit above
+remains unchanged. In the first event, old publication, binding approval and
+corrected publication are respectively March14 at09:00:00,09:00:01,09:00:02Z;
+the second event uses09:00:06,09:00:07,09:00:08Z. Their reviewed notice due times
+are09:00:06Z and09:00:12Z. No production latest-source ordering, worker cadence,
+lease/auth/transport/River clock, deadline or policy changed.
+
+Each event's real campaign preview/approval binds exactly32 current confirmed
+people; the automation binding is approved before the corrected source exists.
+Real queued dispatch produces exactly one reviewed-content native inbox record
+per current person and none for its four withdrawn people. The retained old
+source has `missed/source_precedes_approval`, no dispatch operation and zero
+effects. The corrected source has the current queued occurrence and32 locally
+persisted records; the two actual dispatch operations and attempts are delivered.
+Both underlying `teams.published` source facts remain pending intentionally:
+these are resolver inputs without direct job handlers, not unexecuted notices.
+The source IDs, revisions, due times, occurrence references and channel reports
+are retained separately from wall-clock creation/attempt timestamps.
+
+After both native live transitions, the driver issues only current access GETs;
+it sends no refresh/reapproval/reconciliation command. Normal minute maintenance
+creates12 live poll intents and normal reconciliation/River workers deliver all12
+with one delivered native attempt each. Every original approved plan remains
+version1 with its exact identity/fingerprint and accepted managed grant census.
+The12 observations move from actual publication March23 at09:00Z to actual live
+March30 at08:00Z. The receipt retains each poll's due/current source, wall attempt
+and lease references, current native observation, original plan and64 accepted
+grants. All operation leases are released. The12 repository provisions and64
+original access effects remain delivered.
+
+Only the unique `hackbox-lifecycle120-team-poll-20261026` deployment and its profile
+volumes/network were removed. All final container/volume/network label queries
+were empty; the normal user preview and other projects were untouched. The
+historical pending-notice/poll counts above describe their earlier runs, not this
+later result. Precutoff captures remain due later; output/cutoff, support, all
+judging/advisory/awards/showcase/archive/outcomes, final integrated owners/browser
+journeys and CI remain required. **complete_lifecycle remains false, and no
+L01–L18 row is declared fully complete.**

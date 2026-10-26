@@ -1,0 +1,1323 @@
+{
+  "assertions": [
+    "single-connected-native-http-journey",
+    "both-judging-templates",
+    "distinct-native-event-brands-objectives",
+    "overlapping-native-person-identities",
+    "independent-team-and-event-state",
+    "actual-admission-fifo-go-remediation-and-freeze",
+    "native-common-publication-in-both-events",
+    "same-exact-public-rubric-within-event",
+    "private-guidance-excluded",
+    "exact-version-acknowledgements",
+    "early-live-denied-without-mutation",
+    "native-scheduled-live-transition",
+    "normal-configured-encrypted-github-app-owner",
+    "real-app-jwt-scoped-template-rest",
+    "single-use-native-installation-callback",
+    "actual-queued-private-template-repositories-for-every-frozen-team",
+    "actual-native-participant-github-pkce-session-and-numeric-ownership",
+    "reviewed-current-team-source-notification-and-obsolete-zero-effect",
+    "actual-native-queued-access-poll-current-live-source"
+  ],
+  "checkpoint": "connected-two-event-start-to-live-only",
+  "complete_lifecycle": false,
+  "events": [
+    {
+      "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+      "mode": "all_teams",
+      "stage": "live",
+      "objective": {
+        "id": "8eeca3d8-065c-479d-84b8-32f5317d5b3a",
+        "version": 1
+      },
+      "primary": "#164e63",
+      "team_ids": [
+        "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+        "9257331d-7681-4f94-a8ce-94fcef402eb0",
+        "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+        "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+        "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+        "4ab68839-160d-49c8-b20a-663e7827ef79"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "42c3d458-212f-4415-bd6e-2e2ef11e5b77",
+      "rubric": {
+        "id": "f0cffffd-affa-4db9-8767-0bf232e2be29",
+        "version": 1,
+        "digest": "8a7c97d8d030e88d3dcc0b73fac75e5457f4124bde62f543cb3cc41fa12faee7"
+      },
+      "common_sha256": "cb5175a93f80c9cdc3aaa9d5c8f3d0d824532b8384330dd8ce61d7cf16f9b13a",
+      "published_at": "2026-03-23T09:00:00Z",
+      "repositories": [
+        {
+          "team_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-2d459c14ed3b46ecb5d8870287e48aed",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1004,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-4ab68839160d49c8b20a663e7827ef79",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1006,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-5d4cf73d2a284d329fa8383c1b06844c",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1003,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-9257331d76814f94a8ce94fcef402eb0",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1001,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-d9e97c9f1aa648a3aee6225265e49519",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1002,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+          "name": "hackbox-a3a23905047245728703fa79d197daba-dcf375fc6e6640ae966b3a8dd200ef85",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1000,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        }
+      ],
+      "repository_access": [
+        {
+          "team_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+          "plan_id": "389123ba-7fb6-4a6c-b845-9f14b66705ad",
+          "plan_version": 1,
+          "repository_id": 1003,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "ec966180aafa625cda8c433f17c06d9010ae2ec9fb658bc7dd89ce673c99fbaa",
+          "action_ids": [
+            "bac73348-e88e-456c-adeb-c1560220f3bb",
+            "40b3b43a-5141-4eb0-a124-0dd59c03950c",
+            "928b3544-5995-45e3-a5b3-4414ba2283df",
+            "19c6753c-b066-4eed-a611-02873d5b6701",
+            "3d31b0df-6909-44f4-a0f6-36f06d01ca8b",
+            "e725fa14-1bdf-402d-9a46-1496f0dcd713"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 6,
+          "accepted_after_native_refresh": 6
+        },
+        {
+          "team_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+          "plan_id": "061914df-9193-4bde-b8c6-e7178dba02ed",
+          "plan_version": 1,
+          "repository_id": 1001,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "b0f7c3008a2c4d4fded033594185cb9cbe333288ea86140214894a66f922403e",
+          "action_ids": [
+            "d35d1c42-ff53-4ac3-a620-71a0a16cec1f",
+            "a5d8f5c4-a5d7-4755-ae9d-392f17db4459",
+            "1d05a2da-7ac2-4f76-b664-aee21f607ede",
+            "7c51e869-7fd7-4c01-a4f1-773eb21f62a0",
+            "08f1194f-8eb5-4098-99e0-2a5c1f571693",
+            "26d497c4-42b3-4532-a4f4-df1694045f8c"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 6,
+          "accepted_after_native_refresh": 6
+        },
+        {
+          "team_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+          "plan_id": "35b9b177-9656-4284-a563-72f31b72283f",
+          "plan_version": 1,
+          "repository_id": 1002,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "2f44b4811a23ee605957d59773fc9837fa5106f824695efce67cfea14c7d68f0",
+          "action_ids": [
+            "df0c9073-bc14-449c-b876-f8dc126b45c3",
+            "cbc80d71-1acc-4fa2-a9b8-09b2f735da60",
+            "3059d739-72b8-4b9b-8954-b681e8a66b0d",
+            "08777d79-513b-401e-a848-bbf64d104c28",
+            "6553ee9f-3f0a-45b2-92ab-e3d5d9b1bc41"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+          "plan_id": "dfe1928a-151f-4c59-a0e1-46c1cc49d4b9",
+          "plan_version": 1,
+          "repository_id": 1000,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "de28a4535b9a52a0db2d6084f1cc9d91d6cc6d1e9c4644d2e47d95aaa7af050b",
+          "action_ids": [
+            "e3f8f61c-6164-455e-849c-2e3b2ddfc3c4",
+            "b7b0e30e-79ec-423d-9b1e-676c8199d981",
+            "184f3517-e3b8-4913-8878-66c59fcd2b83",
+            "7a8f36ff-7ffe-47fa-a25c-99ef5f2b37cb",
+            "9efdcfa6-479b-475b-addc-e2214a5a7c22"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+          "plan_id": "c6052a3a-a5fd-4f0f-934d-b5a4c2d834e3",
+          "plan_version": 1,
+          "repository_id": 1004,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "074e0444a044d5fc37e0634cfb30e125013dec94548cbb584db0f8cf4e8d8afd",
+          "action_ids": [
+            "8d840dc2-46c5-4a17-81c9-cd8d9806f664",
+            "d65839ac-7c6b-456f-b4d2-b26211de8a86",
+            "6fe68ba7-5e69-4fc2-aa1e-2d4fbaa9653b",
+            "e8c94284-a5f1-49bd-9cce-bce6acf06214",
+            "e5533a6c-bbc8-4876-a8ba-8573c0cfbed0"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+          "plan_id": "eefd6aca-40ef-4e27-81af-5457a42f2d04",
+          "plan_version": 1,
+          "repository_id": 1006,
+          "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+          "fingerprint": "382ddaddde715b5595f08a26f914aff7d04ffaa6e55043b783e63edb88734ff7",
+          "action_ids": [
+            "261aa246-9695-4e9d-aca3-92551372b588",
+            "25d25a82-0ae0-4109-8f00-a674b25d90c5",
+            "e61365f1-f1cb-4bff-a4bc-90c812e5cdb4",
+            "bc57e096-b6fa-47a8-a602-23dff734cf68",
+            "c5d2138e-fbc4-4276-a412-deafbef84a64"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        }
+      ],
+      "team_notice": {
+        "campaign_id": "07bc0692-306c-4291-9a34-faf9d6ac3a9d",
+        "campaign_version": 3,
+        "binding_id": "6a45bd32-e52e-41a5-84cd-8d0c406c8851",
+        "binding_version": 2,
+        "approved_at": "2026-03-14T09:00:01Z",
+        "due_at": "2026-03-14T09:00:06Z",
+        "current_source_id": "2e022e7e-df91-4654-8f0e-93279dee06c7",
+        "obsolete_source_id": "f2b306bf-95d3-4732-962c-11e1b0ae569d",
+        "occurrence_id": "85dcb922-b3d2-4de7-b55f-727b2efe2ab4",
+        "current_recipients": 32,
+        "content_sha256": "8ef4cf43e373c9302e033b5b525f4bce865026e2439b6bd973c54772a16cb10c",
+        "observed_wall_seconds": 4.443198377
+      },
+      "access_poll": [
+        {
+          "team_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+          "plan_id": "389123ba-7fb6-4a6c-b845-9f14b66705ad",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 6
+        },
+        {
+          "team_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+          "plan_id": "061914df-9193-4bde-b8c6-e7178dba02ed",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 6
+        },
+        {
+          "team_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+          "plan_id": "35b9b177-9656-4284-a563-72f31b72283f",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+          "plan_id": "dfe1928a-151f-4c59-a0e1-46c1cc49d4b9",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+          "plan_id": "c6052a3a-a5fd-4f0f-934d-b5a4c2d834e3",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+          "plan_id": "eefd6aca-40ef-4e27-81af-5457a42f2d04",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        }
+      ]
+    },
+    {
+      "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+      "mode": "mentor_qualification",
+      "stage": "live",
+      "objective": {
+        "id": "9390d806-0b53-49b6-9af6-9a1bbd4fe66b",
+        "version": 1
+      },
+      "primary": "#5b21b6",
+      "team_ids": [
+        "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+        "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+        "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+        "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+        "e3541a9b-2119-4823-9709-05f71901ce50",
+        "e50ad6dd-8d25-4b3c-9c41-988300d27e7d"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "66179884-68cb-405b-9f4c-d0c7db22a7fc",
+      "rubric": {
+        "id": "2ea1ac86-09d2-4f00-bfce-85c8852429d9",
+        "version": 1,
+        "digest": "15091c41bb0bb45aee46e43d3dac9b221aa1da03ca87fedf296fa37327ee056d"
+      },
+      "common_sha256": "d5b2756b368f1cf2e354a8635dd3bdc88e30bd2d0bb8f0568bc3257e4641db7b",
+      "published_at": "2026-03-23T09:00:00Z",
+      "repositories": [
+        {
+          "team_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-0c59b8f411ad429d932fd9fe545a899a",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1010,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-281bc6eaec6a4298aae8eb0092d39410",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1005,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-6187ec7fb0b849d0974337b334aedce3",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1007,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-e3541a9b21194823970905f71901ce50",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1011,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-e50ad6dd8d254b3c9c41988300d27e7d",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1008,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+          "name": "hackbox-3727e3ba4a314c058bb904a2b3c6305f-ee4e83b0d83c4353b7ec6fdcd0664167",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1009,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        }
+      ],
+      "repository_access": [
+        {
+          "team_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+          "plan_id": "74df266e-4a4a-4196-ad94-d3fb62750e9f",
+          "plan_version": 1,
+          "repository_id": 1007,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "5c0afdb503ac39c0032a18b4165acc739a4451820a7c844bb75773584141b0de",
+          "action_ids": [
+            "e0349609-036a-42f1-953a-e8bdbe6bc3c3",
+            "70a85928-8d9e-447e-ae9d-74bea41ef79a",
+            "cd6b32f5-a4aa-4103-8bd1-b24e3cce9a98",
+            "d5a694b2-bb7e-42a1-b02f-a69445770a48",
+            "58beaad9-789e-44a3-b55d-f8643af9253f",
+            "651fb75c-e033-48b8-a47b-475147309093"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 6,
+          "accepted_after_native_refresh": 6
+        },
+        {
+          "team_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+          "plan_id": "4b6029ea-a0ec-4310-9286-886fbab953f8",
+          "plan_version": 1,
+          "repository_id": 1005,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "2009d9a33b72efd818a9808888d008270cc1a19c216e3e938111c1ad3c1743c8",
+          "action_ids": [
+            "be3c0773-386e-4c34-9022-bc6c0a516b8d",
+            "b09c4778-1763-4cf7-b2b9-47271a22a8fc",
+            "f04a1781-de41-4b79-9870-c4133652fafd",
+            "9d67f33a-d7f7-4293-b3bf-da0cbcbbf255",
+            "f09c2984-4896-4278-a2d7-2db65c736d4e",
+            "a8432dd1-9660-4561-91a0-f69490466a1d"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 6,
+          "accepted_after_native_refresh": 6
+        },
+        {
+          "team_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+          "plan_id": "7c7a8c33-d02f-42dd-94ce-dd936722c2ac",
+          "plan_version": 1,
+          "repository_id": 1010,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "f951877f16312a5f77f4adb5d393432a207a7a859b67058ee3d41c21f97cb2d6",
+          "action_ids": [
+            "61a38798-fa4e-4911-80a3-717b3ab7d40a",
+            "fcb954cb-ae83-4bef-b5d7-884c7642d2bb",
+            "2fb3d6f1-2bde-42b5-bac3-17004d2ef79c",
+            "5a9e0163-1289-459d-92d6-eb2d1beb3958",
+            "826879bd-62eb-486f-ac94-6cdd2313ce2a"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+          "plan_id": "4831b412-c6e7-4c77-a296-75ed8d442c1b",
+          "plan_version": 1,
+          "repository_id": 1009,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "be7786d8b3068129bea415d01b722990093b697b8850a6d64e75573b81f0f010",
+          "action_ids": [
+            "deafc256-20ed-458f-bd5c-9336b8e4d5b8",
+            "478b8aea-3b1f-49f8-be1b-6f9ee9f77174",
+            "734b0e1a-ef3e-474f-827d-0cb1402bff3f",
+            "a00ed9e1-e3ca-4643-91bb-663531e3a4a2",
+            "7658313c-8ea7-44db-a205-2d3e63b29199"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+          "plan_id": "447c46d8-699e-433d-ac16-a6da1db99850",
+          "plan_version": 1,
+          "repository_id": 1011,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "650fee12689e256d31cbd99ae329721a16693966f6de81a6843857f6edd38435",
+          "action_ids": [
+            "bc1fd137-2fec-4902-ab86-9d19d493db49",
+            "1df333b8-d164-4c07-aa2d-8b6c9bfcff1b",
+            "10da525d-f3bd-4f49-8e77-a1188baf0bc7",
+            "12a3b983-3988-4872-bbd3-c7c807c97395",
+            "d10cdba2-f15b-4a95-93c6-06f8687b64d5"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        },
+        {
+          "team_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+          "plan_id": "6894c9b7-c341-4c0b-a069-54059474b7d3",
+          "plan_version": 1,
+          "repository_id": 1008,
+          "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+          "fingerprint": "23df0d2e01ca8a4bd0db879295f72e8a8487473e1b7076a01c2de488f29715ba",
+          "action_ids": [
+            "5fffa4da-e613-458d-ade2-9c4e18db4978",
+            "6aa19465-c924-4d49-934b-406fa8f7b180",
+            "c8823f73-e1fb-48f6-849c-532d56dbe840",
+            "75b46f42-fe8a-4c5c-b4bf-5645287af662",
+            "ead508d0-7aa8-4b48-9ee7-be89cfda47c5"
+          ],
+          "approver_id": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a",
+          "pending_before_external_acceptance": 5,
+          "accepted_after_native_refresh": 5
+        }
+      ],
+      "team_notice": {
+        "campaign_id": "b85664c8-47e1-4135-8e84-c3c4857fdf22",
+        "campaign_version": 3,
+        "binding_id": "519e822d-a972-4444-bb4c-e2f498160786",
+        "binding_version": 2,
+        "approved_at": "2026-03-14T09:00:07Z",
+        "due_at": "2026-03-14T09:00:12Z",
+        "current_source_id": "ccfb1b29-e0df-4c10-87ab-116d688cce9c",
+        "obsolete_source_id": "7182df14-5f58-469f-8305-253d87da6db4",
+        "occurrence_id": "515dc9e1-9ba1-4c33-9238-41959e3b8ca0",
+        "current_recipients": 32,
+        "content_sha256": "b23e18f2c75fa939e542cd52827d469dcca3f77b56c24da441299d2dcc282a5d",
+        "observed_wall_seconds": 4.409078211
+      },
+      "access_poll": [
+        {
+          "team_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+          "plan_id": "74df266e-4a4a-4196-ad94-d3fb62750e9f",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 6
+        },
+        {
+          "team_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+          "plan_id": "4b6029ea-a0ec-4310-9286-886fbab953f8",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 6
+        },
+        {
+          "team_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+          "plan_id": "7c7a8c33-d02f-42dd-94ce-dd936722c2ac",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+          "plan_id": "4831b412-c6e7-4c77-a296-75ed8d442c1b",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+          "plan_id": "447c46d8-699e-433d-ac16-a6da1db99850",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        },
+        {
+          "team_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+          "plan_id": "6894c9b7-c341-4c0b-a069-54059474b7d3",
+          "plan_version": 1,
+          "previous_observed_at": "2026-03-23T09:00:00Z",
+          "current_observed_at": "2026-03-30T08:00:00Z",
+          "accepted_grants": 5
+        }
+      ]
+    }
+  ],
+  "explicit_retention_days": 120,
+  "github_transport_proof": {
+    "app_jwts_verified": 840,
+    "installation_tokens_minted": 292,
+    "template_reads": 52,
+    "repository_creates": 12,
+    "repository_reads": 228,
+    "oauth_exchanges_verified": 36,
+    "oauth_user_reads": 36,
+    "invitation_creates": 64,
+    "invitation_acceptances": 64
+  },
+  "live_start": "2026-03-30T09:00:00+01:00",
+  "overlapping_oidc_people": 36,
+  "publication": "2026-03-23T09:00:00Z",
+  "remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
+  "retention_reason": "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
+  "provenance": {
+    "source": "5c5833e34a8cb9f8f4a389208cb8dc51f4fbbf33",
+    "fixture_image": "sha256:f0bcbd14229f085df7e390006c35527512249a7dedacd89d7cc3741190876bfe",
+    "main_base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+    "schema": 54,
+    "runner": "78431",
+    "duration_seconds": 225.23,
+    "production_image": false,
+    "startup": "89213",
+    "build": "86157"
+  },
+  "native_state": {
+    "captured_wall_at": "2026-10-26T02:06:37.861819+00:00",
+    "operations": [
+      {
+        "id": "9723cc0d-46af-4898-89e4-29e1998e68c4",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "515dc9e1-9ba1-4c33-9238-41959e3b8ca0",
+        "operation_key": "communication-dispatch:515dc9e1-9ba1-4c33-9238-41959e3b8ca0:0",
+        "kind": "communication.dispatch",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:12+00:00",
+        "created_at": "2026-10-26T02:02:17.565125+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "13bc3a8a-bd5c-45e6-a1ad-118a29db1688",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+        "operation_key": "repository-access-poll:ee4e83b0-d83c-4353-b7ec-6fdcd0664167:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "240f8494-f945-47e2-9276-fb5b453e14f9",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+        "operation_key": "repository-access-poll:281bc6ea-ec6a-4298-aae8-eb0092d39410:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "3adcc929-910a-4165-aa29-ed87bfae327f",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+        "operation_key": "repository-access-poll:e3541a9b-2119-4823-9709-05f71901ce50:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "c1b771ca-f4fa-4d95-a0e4-9272aec846b8",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+        "operation_key": "repository-access-poll:6187ec7f-b0b8-49d0-9743-37b334aedce3:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "d04b4bbd-220b-4cfc-9298-db6b2348dbd6",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+        "operation_key": "repository-access-poll:0c59b8f4-11ad-429d-932f-d9fe545a899a:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "ea8c3737-fd31-412e-97c8-93c46e95833c",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+        "operation_key": "repository-access-poll:e50ad6dd-8d25-4b3c-9c41-988300d27e7d:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.573555+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "7182df14-5f58-469f-8305-253d87da6db4",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "operation_key": "teams-published:89",
+        "kind": "teams.published",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:06+00:00",
+        "created_at": "2026-10-26T02:02:16.326897+00:00",
+        "state": "pending",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 0,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "ccfb1b29-e0df-4c10-87ab-116d688cce9c",
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "target_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "operation_key": "teams-published:109",
+        "kind": "teams.published",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:08+00:00",
+        "created_at": "2026-10-26T02:02:16.406751+00:00",
+        "state": "pending",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 0,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "7fddaa39-4d79-4716-90cd-63c72caa2eac",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "85dcb922-b3d2-4de7-b55f-727b2efe2ab4",
+        "operation_key": "communication-dispatch:85dcb922-b3d2-4de7-b55f-727b2efe2ab4:0",
+        "kind": "communication.dispatch",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:06+00:00",
+        "created_at": "2026-10-26T02:02:12.566577+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "2d9e4550-7672-4e06-93bb-22ebbe08b919",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+        "operation_key": "repository-access-poll:9257331d-7681-4f94-a8ce-94fcef402eb0:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "3bff2e29-fdd3-4c07-a9c9-3d1ceece5204",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+        "operation_key": "repository-access-poll:d9e97c9f-1aa6-48a3-aee6-225265e49519:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "c13b628b-163b-4440-9c2d-15d986ced31c",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+        "operation_key": "repository-access-poll:dcf375fc-6e66-40ae-966b-3a8dd200ef85:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "e4afe594-b380-4f23-9827-28ec9e2c130a",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+        "operation_key": "repository-access-poll:2d459c14-ed3b-46ec-b5d8-870287e48aed:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "e569cd8e-2a26-4e69-a61c-5aef3703b36f",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+        "operation_key": "repository-access-poll:4ab68839-160d-49c8-b20a-663e7827ef79:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "f7467521-07f5-4154-a906-3352904b6c05",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+        "operation_key": "repository-access-poll:5d4cf73d-2a28-4d32-9fa8-383c1b06844c:2026-03-30T08:00:00Z",
+        "kind": "repository.access.poll",
+        "revision": 1,
+        "due_at": "2026-03-30T08:00:00+00:00",
+        "created_at": "2026-10-26T02:04:52.60959+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "f2b306bf-95d3-4732-962c-11e1b0ae569d",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "operation_key": "teams-published:89",
+        "kind": "teams.published",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:00+00:00",
+        "created_at": "2026-10-26T02:02:11.329579+00:00",
+        "state": "pending",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 0,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "2e022e7e-df91-4654-8f0e-93279dee06c7",
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "target_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "operation_key": "teams-published:109",
+        "kind": "teams.published",
+        "revision": 1,
+        "due_at": "2026-03-14T09:00:02+00:00",
+        "created_at": "2026-10-26T02:02:11.445893+00:00",
+        "state": "pending",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 0,
+        "lease_until": null,
+        "lease_token": null
+      }
+    ],
+    "attempts": [
+      {
+        "operation_id": "7fddaa39-4d79-4716-90cd-63c72caa2eac",
+        "kind": "communication.dispatch",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:02:15.68625+00:00",
+        "finished_at": "2026-10-26T02:02:15.729795+00:00",
+        "lease_token": "4b31d829-ec60-4469-9f4f-2792c5bd9b6d"
+      },
+      {
+        "operation_id": "9723cc0d-46af-4898-89e4-29e1998e68c4",
+        "kind": "communication.dispatch",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:02:20.682245+00:00",
+        "finished_at": "2026-10-26T02:02:20.709243+00:00",
+        "lease_token": "06f53175-dd81-48c2-89f7-6424bda197bf"
+      },
+      {
+        "operation_id": "ea8c3737-fd31-412e-97c8-93c46e95833c",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.680174+00:00",
+        "finished_at": "2026-10-26T02:05:55.689519+00:00",
+        "lease_token": "bcf9861b-47c1-4f85-af54-582ae43a685e"
+      },
+      {
+        "operation_id": "e4afe594-b380-4f23-9827-28ec9e2c130a",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.680221+00:00",
+        "finished_at": "2026-10-26T02:05:55.689736+00:00",
+        "lease_token": "acec5a0a-4f04-4e44-9630-8cf30b2027cc"
+      },
+      {
+        "operation_id": "13bc3a8a-bd5c-45e6-a1ad-118a29db1688",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.680254+00:00",
+        "finished_at": "2026-10-26T02:05:55.696199+00:00",
+        "lease_token": "e26839e7-af2c-421a-86bc-ee97549514b0"
+      },
+      {
+        "operation_id": "e569cd8e-2a26-4e69-a61c-5aef3703b36f",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.680302+00:00",
+        "finished_at": "2026-10-26T02:05:55.695785+00:00",
+        "lease_token": "caae552c-2991-49bd-824a-a59ffa9c70ae"
+      },
+      {
+        "operation_id": "f7467521-07f5-4154-a906-3352904b6c05",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.783605+00:00",
+        "finished_at": "2026-10-26T02:05:55.792635+00:00",
+        "lease_token": "cafbc86d-23eb-4280-8074-754847f3a764"
+      },
+      {
+        "operation_id": "3bff2e29-fdd3-4c07-a9c9-3d1ceece5204",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.783701+00:00",
+        "finished_at": "2026-10-26T02:05:55.798724+00:00",
+        "lease_token": "71ce3868-9572-45fc-82c6-3ac052dbd7de"
+      },
+      {
+        "operation_id": "c13b628b-163b-4440-9c2d-15d986ced31c",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.783985+00:00",
+        "finished_at": "2026-10-26T02:05:55.804825+00:00",
+        "lease_token": "19def81b-c2cc-4a47-98b2-bb91adbc12be"
+      },
+      {
+        "operation_id": "2d9e4550-7672-4e06-93bb-22ebbe08b919",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.784005+00:00",
+        "finished_at": "2026-10-26T02:05:55.80994+00:00",
+        "lease_token": "90bde83f-b5d7-41b9-a9a9-e8e080b1fec9"
+      },
+      {
+        "operation_id": "c1b771ca-f4fa-4d95-a0e4-9272aec846b8",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.883437+00:00",
+        "finished_at": "2026-10-26T02:05:55.896266+00:00",
+        "lease_token": "c8d64847-f226-4f15-bb8d-efe4870b997d"
+      },
+      {
+        "operation_id": "3adcc929-910a-4165-aa29-ed87bfae327f",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.883489+00:00",
+        "finished_at": "2026-10-26T02:05:55.890822+00:00",
+        "lease_token": "f9b4cf6e-a661-40df-b05e-0b9910f13417"
+      },
+      {
+        "operation_id": "240f8494-f945-47e2-9276-fb5b453e14f9",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.883516+00:00",
+        "finished_at": "2026-10-26T02:05:55.901079+00:00",
+        "lease_token": "943cc6df-efe1-4b62-8afc-4ded9eb197c0"
+      },
+      {
+        "operation_id": "d04b4bbd-220b-4cfc-9298-db6b2348dbd6",
+        "kind": "repository.access.poll",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T02:05:55.883587+00:00",
+        "finished_at": "2026-10-26T02:05:55.906293+00:00",
+        "lease_token": "2e56f502-933c-44e1-9083-558be862ff27"
+      }
+    ],
+    "occurrences": [
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "id": "515dc9e1-9ba1-4c33-9238-41959e3b8ca0",
+        "binding_id": "519e822d-a972-4444-bb4c-e2f498160786",
+        "binding_version": 2,
+        "source_kind": "teams.published",
+        "source_id": "ccfb1b29-e0df-4c10-87ab-116d688cce9c",
+        "source_revision": 1,
+        "due_at": "2026-03-14T09:00:12+00:00",
+        "deadline": "2026-03-14T09:01:12+00:00",
+        "state": "queued",
+        "reason": "provider_intents_recorded",
+        "operation_id": "9723cc0d-46af-4898-89e4-29e1998e68c4",
+        "channel_reports": {
+          "in_app": {
+            "queued": 0,
+            "preexisting": {},
+            "unavailable": 0,
+            "local_persisted": 32
+          }
+        },
+        "created_at": "2026-10-26T02:02:17.565125+00:00"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "id": "8536e06d-d572-46f2-b81c-1f619fe5d2e2",
+        "binding_id": "519e822d-a972-4444-bb4c-e2f498160786",
+        "binding_version": 2,
+        "source_kind": "teams.published",
+        "source_id": "7182df14-5f58-469f-8305-253d87da6db4",
+        "source_revision": 1,
+        "due_at": "2026-03-14T09:00:12+00:00",
+        "deadline": "2026-03-14T09:01:12+00:00",
+        "state": "missed",
+        "reason": "source_precedes_approval",
+        "operation_id": null,
+        "channel_reports": {},
+        "created_at": "2026-10-26T02:02:17.565125+00:00"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "id": "85dcb922-b3d2-4de7-b55f-727b2efe2ab4",
+        "binding_id": "6a45bd32-e52e-41a5-84cd-8d0c406c8851",
+        "binding_version": 2,
+        "source_kind": "teams.published",
+        "source_id": "2e022e7e-df91-4654-8f0e-93279dee06c7",
+        "source_revision": 1,
+        "due_at": "2026-03-14T09:00:06+00:00",
+        "deadline": "2026-03-14T09:01:06+00:00",
+        "state": "queued",
+        "reason": "provider_intents_recorded",
+        "operation_id": "7fddaa39-4d79-4716-90cd-63c72caa2eac",
+        "channel_reports": {
+          "in_app": {
+            "queued": 0,
+            "preexisting": {},
+            "unavailable": 0,
+            "local_persisted": 32
+          }
+        },
+        "created_at": "2026-10-26T02:02:12.566577+00:00"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "id": "a9698cc7-d5f2-4950-b005-10bc5bac7909",
+        "binding_id": "6a45bd32-e52e-41a5-84cd-8d0c406c8851",
+        "binding_version": 2,
+        "source_kind": "teams.published",
+        "source_id": "f2b306bf-95d3-4732-962c-11e1b0ae569d",
+        "source_revision": 1,
+        "due_at": "2026-03-14T09:00:06+00:00",
+        "deadline": "2026-03-14T09:01:06+00:00",
+        "state": "missed",
+        "reason": "source_precedes_approval",
+        "operation_id": null,
+        "channel_reports": {},
+        "created_at": "2026-10-26T02:02:12.566577+00:00"
+      }
+    ],
+    "observations": [
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+        "observed_at": "2026-03-30T08:00:00+00:00",
+        "diagnostic": ""
+      }
+    ],
+    "plans": [
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "0c59b8f4-11ad-429d-932f-d9fe545a899a",
+        "id": "7c7a8c33-d02f-42dd-94ce-dd936722c2ac",
+        "version": 1,
+        "fingerprint": "f951877f16312a5f77f4adb5d393432a207a7a859b67058ee3d41c21f97cb2d6",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "281bc6ea-ec6a-4298-aae8-eb0092d39410",
+        "id": "4b6029ea-a0ec-4310-9286-886fbab953f8",
+        "version": 1,
+        "fingerprint": "2009d9a33b72efd818a9808888d008270cc1a19c216e3e938111c1ad3c1743c8",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "6187ec7f-b0b8-49d0-9743-37b334aedce3",
+        "id": "74df266e-4a4a-4196-ad94-d3fb62750e9f",
+        "version": 1,
+        "fingerprint": "5c0afdb503ac39c0032a18b4165acc739a4451820a7c844bb75773584141b0de",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "e3541a9b-2119-4823-9709-05f71901ce50",
+        "id": "447c46d8-699e-433d-ac16-a6da1db99850",
+        "version": 1,
+        "fingerprint": "650fee12689e256d31cbd99ae329721a16693966f6de81a6843857f6edd38435",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "e50ad6dd-8d25-4b3c-9c41-988300d27e7d",
+        "id": "6894c9b7-c341-4c0b-a069-54059474b7d3",
+        "version": 1,
+        "fingerprint": "23df0d2e01ca8a4bd0db879295f72e8a8487473e1b7076a01c2de488f29715ba",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "team_id": "ee4e83b0-d83c-4353-b7ec-6fdcd0664167",
+        "id": "4831b412-c6e7-4c77-a296-75ed8d442c1b",
+        "version": 1,
+        "fingerprint": "be7786d8b3068129bea415d01b722990093b697b8850a6d64e75573b81f0f010",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "2d459c14-ed3b-46ec-b5d8-870287e48aed",
+        "id": "c6052a3a-a5fd-4f0f-934d-b5a4c2d834e3",
+        "version": 1,
+        "fingerprint": "074e0444a044d5fc37e0634cfb30e125013dec94548cbb584db0f8cf4e8d8afd",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "4ab68839-160d-49c8-b20a-663e7827ef79",
+        "id": "eefd6aca-40ef-4e27-81af-5457a42f2d04",
+        "version": 1,
+        "fingerprint": "382ddaddde715b5595f08a26f914aff7d04ffaa6e55043b783e63edb88734ff7",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "5d4cf73d-2a28-4d32-9fa8-383c1b06844c",
+        "id": "389123ba-7fb6-4a6c-b845-9f14b66705ad",
+        "version": 1,
+        "fingerprint": "ec966180aafa625cda8c433f17c06d9010ae2ec9fb658bc7dd89ce673c99fbaa",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "9257331d-7681-4f94-a8ce-94fcef402eb0",
+        "id": "061914df-9193-4bde-b8c6-e7178dba02ed",
+        "version": 1,
+        "fingerprint": "b0f7c3008a2c4d4fded033594185cb9cbe333288ea86140214894a66f922403e",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "d9e97c9f-1aa6-48a3-aee6-225265e49519",
+        "id": "35b9b177-9656-4284-a563-72f31b72283f",
+        "version": 1,
+        "fingerprint": "2f44b4811a23ee605957d59773fc9837fa5106f824695efce67cfea14c7d68f0",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "team_id": "dcf375fc-6e66-40ae-966b-3a8dd200ef85",
+        "id": "dfe1928a-151f-4c59-a0e1-46c1cc49d4b9",
+        "version": 1,
+        "fingerprint": "de28a4535b9a52a0db2d6084f1cc9d91d6cc6d1e9c4644d2e47d95aaa7af050b",
+        "created_at": "2026-03-23T09:00:00+00:00",
+        "approved_at": "2026-03-23T09:00:00+00:00",
+        "approved_by": "3fee52ca-9bc7-4d30-a2e6-1b47b2f6c14a"
+      }
+    ],
+    "grant_census": [
+      {
+        "event_id": "3727e3ba-4a31-4c05-8bb9-04a2b3c6305f",
+        "state": "accepted",
+        "app_managed": true,
+        "diagnostic": "",
+        "count": 32
+      },
+      {
+        "event_id": "a3a23905-0472-4572-8703-fa79d197daba",
+        "state": "accepted",
+        "app_managed": true,
+        "diagnostic": "",
+        "count": 32
+      }
+    ],
+    "operation_census": [
+      {
+        "kind": "communication.dispatch",
+        "state": "delivered",
+        "count": 2
+      },
+      {
+        "kind": "repository.access",
+        "state": "delivered",
+        "count": 64
+      },
+      {
+        "kind": "repository.access.poll",
+        "state": "delivered",
+        "count": 12
+      },
+      {
+        "kind": "repository.provision",
+        "state": "delivered",
+        "count": 12
+      },
+      {
+        "kind": "teams.published",
+        "state": "pending",
+        "count": 4
+      }
+    ]
+  },
+  "remaining_queued_scope": "Four teams.published pending rows are approved retained source facts without direct handlers: each earlier source has a missed/source_precedes_approval occurrence with no operation/effect; each corrected source has the current queued occurrence and32 native inbox records. All12 actual live access poll operations delivered. Precutoff submission captures and later lifecycle phases remain pending; this is not full issue120 acceptance.",
+  "cleanup": {
+    "project": "hackbox-lifecycle120-team-poll-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0,
+    "normal_user_projects_untouched": true
+  }
+}
