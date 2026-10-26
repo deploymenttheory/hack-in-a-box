@@ -232,3 +232,16 @@ not merely a matching sequence number. A wrong cue at the right revision remains
 an unexpected receipt. Synthetic HTTPS and pure component controls verify these
 measurement boundaries; real application/OIDC/SQL/SSE acceptance and the complete
 1800-second profile are still unexecuted.
+
+
+Due-start accounting selects exact expected native owner operation identities,
+event/kind/key and original due timestamps, rather than all approved pending
+rows. It retains not-yet-due and unstarted work, duplicate attempts and invalid
+start order; these cannot pass the independent complete-work oracle. A missing
+start contributes its actual overdue duration and an unexpected observation,
+not a zero or an omitted sample. Database time supplies the final boundary.
+The admission census also records total attendee applications and waitlisted
+counts separately from confirmed competitors/current staff, so the cross-event
+burst cannot conceal extra waitlist records inside the 200-attendee description.
+The scoped SQL-component parent seeds query inputs solely to verify native SQL
+compatibility; its execution is pending and is not an owner/worker/load journey.

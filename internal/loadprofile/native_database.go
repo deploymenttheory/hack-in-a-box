@@ -48,10 +48,10 @@ func (n NativeDatabase) scoped(eventIDs []uuid.UUID) error {
 }
 
 type AdmissionFact struct {
-	EventID                                                                                   uuid.UUID
-	ConfiguredCapacity                                                                        int
-	Confirmed, Offered, ClaimedConfirmed, Staff, People, DuplicateActive, ExcludedCompetitors int
-	LastConfirmedSequence, FirstWaitlistedSequence                                            *int64
+	EventID                                                                                                             uuid.UUID
+	ConfiguredCapacity                                                                                                  int
+	Applications, Confirmed, Waitlisted, Offered, ClaimedConfirmed, Staff, People, DuplicateActive, ExcludedCompetitors int
+	LastConfirmedSequence, FirstWaitlistedSequence                                                                      *int64
 }
 
 // Admission reads committed owner facts in a PostgreSQL read-only snapshot.
@@ -73,7 +73,9 @@ func (n NativeDatabase) Admission(
 	}
 	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 	rows, err := tx.Query(ctx, `SELECT e.id,(e.configuration->>'capacity')::integer,
+ (SELECT count(*) FROM registrations r WHERE r.event_id=e.id AND r.kind='attendee'),
  (SELECT count(*) FROM registrations r WHERE r.event_id=e.id AND r.kind='attendee' AND r.state='confirmed'),
+ (SELECT count(*) FROM registrations r WHERE r.event_id=e.id AND r.kind='attendee' AND r.state='waitlisted'),
  (SELECT count(*) FROM registrations r WHERE r.event_id=e.id AND r.kind='attendee' AND r.state='offered'),
  (SELECT count(*) FROM competition_claims c WHERE c.event_id=e.id AND c.state='confirmed'),
  (SELECT count(DISTINCT m.person_id) FROM event_memberships m JOIN people p ON p.id=m.person_id AND p.active WHERE m.event_id=e.id AND m.active AND NOT EXISTS(SELECT 1 FROM competition_claims c WHERE c.event_id=e.id AND c.person_id=m.person_id AND c.state='confirmed')),
@@ -93,7 +95,9 @@ func (n NativeDatabase) Admission(
 		if err := rows.Scan(
 			&fact.EventID,
 			&fact.ConfiguredCapacity,
+			&fact.Applications,
 			&fact.Confirmed,
+			&fact.Waitlisted,
 			&fact.Offered,
 			&fact.ClaimedConfirmed,
 			&fact.Staff,
@@ -148,6 +152,16 @@ type JobStartFact struct {
 	FirstStarted        *time.Time
 	Attempts            int64
 	Approved, Cancelled bool
+}
+
+// DatabaseTime supplies the native timestamp boundary for due-work accounting.
+// It does not alter the clock or release any work.
+func (n NativeDatabase) DatabaseTime(ctx context.Context) (time.Time, error) {
+	var at time.Time
+	if err := n.pool.QueryRow(ctx, `SELECT clock_timestamp()`).Scan(&at); err != nil {
+		return at, fmt.Errorf("read native database measurement boundary: %w", err)
+	}
+	return at, nil
 }
 
 // JobStarts keeps missing/unstarted due operations in the result. The caller
