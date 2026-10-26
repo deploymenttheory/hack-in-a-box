@@ -118,6 +118,18 @@ async function mediaJourney(page, eventID, name) {
     const task = article.getByRole('region', { name: 'Private media task', exact: true })
     const opener = task.getByRole('button', { name: 'Open private media review', exact: true })
     if (await opener.count()) await opener.click()
+    if (decisions.length) {
+      // Acknowledgement does not silently replace an editor's selected base.
+      // Explicitly select current metadata before preparing a different intent.
+      await expect(task.getByLabel('Reason for this action', { exact: true })).toBeDisabled()
+      const confirmation = page.waitForEvent('dialog')
+      const selection = task.getByRole('button', { name: 'Load current media metadata', exact: true }).click()
+      const dialog = await confirmation
+      assert.equal(dialog.message(), 'Replace the unsent draft with current media metadata?')
+      await dialog.accept()
+      await selection
+      recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'select_current_metadata', version: decisions.at(-1).acknowledged_version })
+    }
     await task.getByLabel('Reason for this action', { exact: true }).fill(`Synthetic explicit ${action}`)
     if (action === 'review') {
       await task.getByRole('checkbox', { name: 'I checked the media and identified every recognisable person.', exact: true }).check()
@@ -132,6 +144,7 @@ async function mediaJourney(page, eventID, name) {
     assert.equal(response.status(), 200, `Native media ${action}`)
     const intent = response.request().postDataJSON(), result = await response.json()
     assert.equal(intent.action, action)
+    assert.equal(intent.version, decisions.at(-1)?.acknowledged_version ?? media.acknowledged_version, 'Next intent explicitly uses the last acknowledged current version')
     assert.equal(result.id, media.id)
     assert.equal(result.acknowledged_version, intent.version + 1, 'Exact original decision acknowledgement')
     assert.equal(result.state, expectedState)
