@@ -29,6 +29,11 @@ func main() {
 	)
 	expected := flag.String("expected-time", "", "exact existing setup domain time, RFC3339Nano")
 	next := flag.String("next-time", "", "strictly later setup domain time, RFC3339Nano")
+	knownPrefix := flag.String(
+		"known-release-prefix",
+		"",
+		"ONE strictly recognised read-only failed release prefix; no domain replay",
+	)
 	release := flag.String(
 		"release-from-sources",
 		"",
@@ -66,8 +71,8 @@ func main() {
 		}
 	}
 	phase := nativePreparationPhase{
-		Admission: *sources,
-		Sources:   *release,
+		Admission: *sources, KnownPrefix: *knownPrefix,
+		Sources: *release,
 		Clock: loadprofile.DockerSetupClock{
 			Project: *setupProject,
 			Image:   *setupImage,
@@ -228,12 +233,16 @@ func admitNative(
 var errSetupCommand = errors.New("invalid private setup command")
 
 type nativePreparationPhase struct {
-	Admission string
-	Sources   string
-	Clock     loadprofile.DockerSetupClock
+	KnownPrefix string
+	Admission   string
+	Sources     string
+	Clock       loadprofile.DockerSetupClock
 }
 
 func (p nativePreparationPhase) valid(native bool) bool {
+	if p.KnownPrefix != "" && p.Sources == "" {
+		return false
+	}
 	if !native {
 		return p.Admission == "" && p.Sources == "" && p.Clock.Project == "" &&
 			p.Clock.Image == "" &&
@@ -258,22 +267,26 @@ func releaseNativeSources(
 	if err != nil {
 		return nil, fmt.Errorf("read private original source checkpoint: %w", err)
 	}
-	original, err := loadprofile.ParseSourceCheckpoint(raw)
-	if err != nil {
-		return nil, fmt.Errorf("validate original source checkpoint: %w", err)
+	var prefix []byte
+	if phase.KnownPrefix != "" {
+		prefix, err = loadprofile.ReadPrivateInput(phase.KnownPrefix, 8<<20)
+		if err != nil {
+			return nil, fmt.Errorf("read known original release prefix: %w", err)
+		}
 	}
 	prepared, err := loadprofile.PrepareFactoryRelease(
 		ctx,
-		plan,
-		original,
+		loadprofile.NativeReleaseInputs{
+			Plan:            plan,
+			SourcesJSON:     raw,
+			KnownPrefixJSON: prefix,
+			Clock:           &phase.Clock,
+		},
 		origins,
 		"https://issuer.load.test:8445",
 		transport,
 		database,
-		&phase.Clock,
 	)
-	digest := sha256.Sum256(raw)
-	prepared.OriginalSourcesSHA256 = hex.EncodeToString(digest[:])
 	if err != nil {
 		return prepared, fmt.Errorf("native release/capture setup incomplete: %w", err)
 	}

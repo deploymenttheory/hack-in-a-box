@@ -177,12 +177,16 @@ func (n NativeDatabase) Queue(ctx context.Context, eventIDs []uuid.UUID) (QueueS
 }
 
 type JobStartFact struct {
-	ID, EventID         uuid.UUID
-	Kind, Key, State    string
-	Due                 time.Time
-	FirstStarted        *time.Time
-	Attempts            int64
-	Approved, Cancelled bool
+	ID           uuid.UUID  `json:"id"`
+	EventID      uuid.UUID  `json:"event_id"`
+	Kind         string     `json:"kind"`
+	Key          string     `json:"key"`
+	State        string     `json:"state"`
+	Due          time.Time  `json:"due"`
+	FirstStarted *time.Time `json:"first_started"`
+	Attempts     int64      `json:"attempts"`
+	Approved     bool       `json:"approved"`
+	Cancelled    bool       `json:"cancelled"`
 }
 
 // DatabaseTime supplies the native timestamp boundary for due-work accounting.

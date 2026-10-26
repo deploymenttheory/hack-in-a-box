@@ -3,6 +3,8 @@ package loadprofile
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,7 +29,15 @@ type NativeCutoffReceipt struct {
 	Capture      submissionfreeze.Page `json:"immutable_capture_source"`
 }
 
+type NativeReleaseInputs struct {
+	Plan            FactoryPlan
+	SourcesJSON     []byte
+	KnownPrefixJSON []byte
+	Clock           *DockerSetupClock
+}
+
 type ReleasePreparation struct {
+	KnownPrefixSHA256    string    `json:"known_prefix_sha256,omitempty"`
 	CaptureStartBoundary time.Time `json:"capture_start_database_wall_boundary"`
 	AdmissionPreparation
 	OriginalSourcesSHA256   string                 `json:"original_sources_sha256"`
@@ -44,27 +54,48 @@ type ReleasePreparation struct {
 }
 
 type factoryRelease struct {
-	plan     FactoryPlan
-	sources  map[uuid.UUID]PreparedEventSources
-	owners   map[uuid.UUID]*Session
-	people   map[uuid.UUID]*Session
-	preparer *NativePreparer
-	database NativeDatabase
-	clock    *DockerSetupClock
-	now      time.Time
-	receipt  *ReleasePreparation
+	knownArchiveControl bool
+	plan                FactoryPlan
+	sources             map[uuid.UUID]PreparedEventSources
+	owners              map[uuid.UUID]*Session
+	people              map[uuid.UUID]*Session
+	preparer            *NativePreparer
+	database            NativeDatabase
+	clock               *DockerSetupClock
+	now                 time.Time
+	receipt             *ReleasePreparation
 }
 
 // PrepareFactoryRelease performs historical SETUP through the canonical worker
 // and native HTTP owners. Normal auth, River scheduling, attempts, transport and
 // leases keep real wall time. It cannot certify any sustained runtime target.
 func PrepareFactoryRelease(
-	ctx context.Context, plan FactoryPlan, original SourcePreparation,
-	origins map[Surface]string, issuer string, transport http.RoundTripper,
-	database NativeDatabase, clock *DockerSetupClock,
+	ctx context.Context, input NativeReleaseInputs,
+	origins map[Surface]string, issuer string, transport http.RoundTripper, database NativeDatabase,
 ) (receipt ReleasePreparation, returnedErr error) {
+	plan, clock := input.Plan, input.Clock
 	if err := plan.Validate(); err != nil {
 		return receipt, err
+	}
+	original, err := ParseSourceCheckpoint(input.SourcesJSON)
+	if err != nil {
+		return receipt, err
+	}
+	sourceDigest := sha256.Sum256(input.SourcesJSON)
+	receipt.OriginalSourcesSHA256 = hex.EncodeToString(sourceDigest[:])
+	known, hasKnown, err := parseKnownArchivePrefix(
+		input.KnownPrefixJSON,
+		plan,
+		original,
+		receipt.OriginalSourcesSHA256,
+		clock,
+	)
+	if err != nil {
+		return receipt, err
+	}
+	if hasKnown {
+		digest := sha256.Sum256(input.KnownPrefixJSON)
+		receipt.KnownPrefixSHA256 = hex.EncodeToString(digest[:])
 	}
 	if clock == nil {
 		return receipt, fmt.Errorf("%w: source-pinned private setup clock required", errCohort)
@@ -109,6 +140,11 @@ func PrepareFactoryRelease(
 		clock:    clock,
 		now:      plan.SetupStart,
 		receipt:  &receipt,
+	}
+	if hasKnown {
+		release.knownArchiveControl = true
+		release.now = known.ClockSteps[0].Next
+		clock.Steps = append(clock.Steps, known.ClockSteps...)
 	}
 	defer func() {
 		receipt.Calls = append(release.preparer.Calls, receipt.Calls...)
@@ -237,14 +273,22 @@ func (r *factoryRelease) validateCurrent(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if current.ID != planned.Input.ID ||
-			current.Revision != r.sources[planned.Input.ID].Event.Revision ||
+		expectedRevision := r.sources[planned.Input.ID].Event.Revision
+		publishedAllowed := current.PublishedAt == nil
+		if r.knownArchiveControl && planned.DesiredStage == "archived" &&
+			current.PublishedAt != nil {
+			publishedAllowed = current.PublishedAt.Equal(
+				planned.Input.Configuration.LiveStart.AddDate(0, 0, -7),
+			)
+			expectedRevision++
+		}
+		if current.ID != planned.Input.ID || current.Revision != expectedRevision ||
 			!reflect.DeepEqual(current.Configuration, planned.Input.Configuration) ||
 			current.Stage != r.sources[planned.Input.ID].Event.Stage ||
 			current.OwnerID == nil ||
 			*current.OwnerID != owner.Person() ||
 			current.ConfirmedAttendees != 180 ||
-			current.PublishedAt != nil {
+			!publishedAllowed {
 			return fmt.Errorf(
 				"%w: native release source/authority changed; do not replay setup",
 				errCohort,
@@ -271,7 +315,7 @@ func (r *factoryRelease) common(ctx context.Context, planned FactoryEvent) error
 			r.preparer,
 			r.owners[planned.Input.ID],
 			http.MethodGet,
-			"/api/v1/events/"+planned.Input.ID.String()+"/content/"+source.Challenge.ID.String(),
+			"/api/v1/events/"+planned.Input.ID.String()+"/content/"+source.Challenge.ID.String()+"?preview=true",
 			nil,
 			nil,
 		)
@@ -294,7 +338,34 @@ func (r *factoryRelease) common(ctx context.Context, planned FactoryEvent) error
 			errCohort,
 		)
 	}
-	r.receipt.Released = append(r.receipt.Released, released)
+	member, err := r.teamMember(source.Teams.Teams[0])
+	if err != nil {
+		return err
+	}
+	public, err := prepareCall[content.Page](
+		ctx,
+		r.preparer,
+		member,
+		http.MethodGet,
+		"/api/v1/events/"+planned.Input.ID.String()+"/content/"+source.Challenge.ID.String(),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	if public.ID != released.ID || public.ReleasedVersion == nil ||
+		released.ReleasedVersion == nil ||
+		*public.ReleasedVersion != *released.ReleasedVersion ||
+		public.Document.Rubric == nil ||
+		source.Challenge.Document.Rubric == nil ||
+		*public.Document.Rubric != *source.Challenge.Document.Rubric {
+		return fmt.Errorf(
+			"%w: confirmed member cannot read exact common released source",
+			errCohort,
+		)
+	}
+	r.receipt.Released = append(r.receipt.Released, public)
 	return nil
 }
 
@@ -306,8 +377,13 @@ func (r *factoryRelease) archive(ctx context.Context) error {
 	owner := r.owners[planned.Input.ID]
 	source := r.sources[planned.Input.ID]
 	r.receipt.Step = "archive-native-T-7-release"
-	if err := r.advance(ctx, planned.Input.Configuration.LiveStart.AddDate(0, 0, -7)); err != nil {
-		return err
+	if !r.knownArchiveControl {
+		if err := r.advance(
+			ctx,
+			planned.Input.Configuration.LiveStart.AddDate(0, 0, -7),
+		); err != nil {
+			return err
+		}
 	}
 	if err := r.common(ctx, planned); err != nil {
 		return err

@@ -591,3 +591,21 @@ New plans derive schedules at PostgreSQL's microsecond timestamp precision,
 without relaxing any release/cutoff comparison. The whole phase remains setup,
 not due-start/SSE or capacity acceptance. Stop private worker/APIs before normal
 production images/default-wall operation and fresh runtime authentication.
+
+A first actual worker run at `bd0058c7` stopped because the observer used a
+normal content read as an organiser for a confirmed-competitor audience. The
+native worker had already published correctly at T−7; a SELECT-only, READ ONLY
+query confirmed the exact source/version/timestamp. This is retained as a failed
+reader checkpoint, not successful completion or a product publication failure.
+The corrected observer polls the explicit organiser `?preview=true` view, then
+requires a normal confirmed member to read the same released version/rubric.
+
+`-known-release-prefix` supports only that one positively identified read-only
+prefix: exactly the acknowledged first archive clock control, the original
+source/admission hashes, five successful event reads, the one normal-content404,
+and 1,000 acknowledged logouts with zero remaining sessions. Unknown control or
+request outcomes, domain writes, later phases, changed sources and unrecognised
+reads are rejected. The acknowledged clock advance is retained without replay;
+current native owner/configuration/version/publication guards still run, and
+the next advance uses the existing private clock's exact compare-and-replace.
+No ordinary source read is interpreted as an original domain-write receipt.
