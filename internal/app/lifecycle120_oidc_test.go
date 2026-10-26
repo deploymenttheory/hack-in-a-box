@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -43,6 +44,31 @@ type lifecycleCode struct {
 }
 
 func newLifecycleOIDC(issuer string, clients map[string]string) (*lifecycleOIDC, error) {
+	people := map[string]lifecyclePerson{}
+	for _, role := range []string{"owner", "coordinator", "mentor-a", "mentor-b", "judge-a", "judge-b", "judge-c", "mc", "logistics", "stranger", "former-organiser", "early-access"} {
+		people[role] = lifecyclePerson{Subject: role, Name: "Synthetic " + role, Email: role + "@example.test"}
+	}
+	for i := 1; i <= 40; i++ {
+		subject := fmt.Sprintf("attendee-%02d", i)
+		people[subject] = lifecyclePerson{Subject: subject, Name: fmt.Sprintf("Synthetic attendee %02d", i), Email: subject + "@example.test"}
+	}
+	return newLifecycleOIDCForPeople(issuer, clients, people)
+}
+
+func newLifecycleOIDCForPeople(issuer string, clients map[string]string, people map[string]lifecyclePerson) (*lifecycleOIDC, error) {
+	people = maps.Clone(people)
+	clients = maps.Clone(clients)
+	if len(people) == 0 {
+		return nil, fmt.Errorf("explicit synthetic people are required")
+	}
+	emails := map[string]bool{}
+	for subject, person := range people {
+		email := strings.ToLower(strings.TrimSpace(person.Email))
+		if subject == "" || person.Subject != subject || strings.TrimSpace(person.Name) == "" || email == "" || emails[email] {
+			return nil, fmt.Errorf("synthetic people require matching distinct subjects, names and mailboxes")
+		}
+		emails[email] = true
+	}
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -53,14 +79,6 @@ func newLifecycleOIDC(issuer string, clients map[string]string) (*lifecycleOIDC,
 	)
 	if err != nil {
 		return nil, err
-	}
-	people := map[string]lifecyclePerson{}
-	for _, role := range []string{"owner", "coordinator", "mentor-a", "mentor-b", "judge-a", "judge-b", "judge-c", "mc", "logistics", "stranger", "former-organiser", "early-access"} {
-		people[role] = lifecyclePerson{Subject: role, Name: "Synthetic " + role, Email: role + "@example.test"}
-	}
-	for i := 1; i <= 40; i++ {
-		subject := fmt.Sprintf("attendee-%02d", i)
-		people[subject] = lifecyclePerson{Subject: subject, Name: fmt.Sprintf("Synthetic attendee %02d", i), Email: subject + "@example.test"}
 	}
 	return &lifecycleOIDC{
 		issuer: issuer, signer: signer,
