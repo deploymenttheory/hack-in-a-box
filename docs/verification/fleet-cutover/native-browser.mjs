@@ -88,24 +88,23 @@ async function mediaJourney(page, eventID, name) {
   assert.equal(photo.status(), 200, 'Native protected thumbnail')
   assert.match(photo.headers()['content-type'] ?? '', /^application\/octet-stream/)
   assert.match(photo.headers()['cache-control'] ?? '', /no-store/)
-  const bytes = await photo.body()
-  if (bytes.length === 0) {
-    // Read-only diagnostic, never a replacement for the UI's original byte/render check.
-    const direct = await page.request.get(`${origins.admin}${photoPath}`)
-    const directBytes = await direct.body()
-    recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'empty_ui_thumbnail_diagnostic',
-      ui_status: photo.status(), ui_content_length: photo.headers()['content-length'] ?? null, ui_bytes: bytes.length,
-      direct_status: direct.status(), direct_content_length: direct.headers()['content-length'] ?? null, direct_bytes: directBytes.length,
-      direct_prefix: [...directBytes.subarray(0, 8)],
-      browser_fetch: await page.evaluate(async path => {
-        const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store' })
-        const data = new Uint8Array(await response.arrayBuffer())
-        return { status: response.status, type: response.type, content_length: response.headers.get('content-length'), bytes: data.length, prefix: [...data.subarray(0, 8)] }
-      }, photoPath),
-      browser: await article.evaluate(node => ({ focused: document.hasFocus(), hidden: document.hidden, image_present: !!node.querySelector('img'), natural_width: node.querySelector('img')?.naturalWidth ?? null })) })
-  }
-  assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], 'Native PNG thumbnail bytes')
-  recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'thumbnail', status: photo.status(), media_type: photo.headers()['content-type'], sha256: createHash('sha256').update(bytes).digest('hex') })
+  // CDP body collection returned zero bytes while the actual browser fetched
+  // all PNG bytes and rendered640px. Inspect the same immutable native resource
+  // inside the browser instead; this read never acknowledges a write.
+  const payload = await page.evaluate(async path => {
+    const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store' })
+    const data = new Uint8Array(await response.arrayBuffer())
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data))
+    return { status: response.status, type: response.type, content_length: response.headers.get('content-length'), bytes: data.length, prefix: [...data.subarray(0, 8)], sha256: [...digest].map(value => value.toString(16).padStart(2, '0')).join('') }
+  }, photoPath)
+  assert.equal(payload.status, 200, 'Browser native protected-byte read')
+  assert.equal(payload.type, 'basic', 'Protected read stays same-origin')
+  assert.ok(payload.bytes > 0)
+  assert.equal(payload.bytes, Number(payload.content_length), 'Complete native body')
+  assert.equal(payload.content_length, photo.headers()['content-length'], 'Original UI response retains the same native representation')
+  assert.deepEqual(payload.prefix, [137, 80, 78, 71, 13, 10, 26, 10], 'Native PNG thumbnail bytes')
+  assert.match(payload.sha256, /^[a-f0-9]{64}$/)
+  recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'thumbnail', ui_status: photo.status(), byte_inspection: 'separate same-origin browser read; not original write acknowledgement', ...payload })
   const image = article.getByRole('img', { name: title, exact: true })
   await expect(image).toBeVisible()
   await expect.poll(() => image.evaluate(element => element.complete && element.naturalWidth > 0)).toBe(true)
@@ -148,7 +147,7 @@ async function mediaJourney(page, eventID, name) {
   assert.match(withdrawn.headers()['content-type'] ?? '', /application\/json/)
   recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'withdrawn_thumbnail', status: withdrawn.status() })
   await page.goto(`${origins.admin}/events/${eventID}`, { waitUntil: 'domcontentloaded' })
-  return { media_id: media.id, upload_status: uploaded.status(), thumbnail_status: photo.status(), decisions, withdrawn_thumbnail_status: withdrawn.status() }
+  return { media_id: media.id, upload_status: uploaded.status(), thumbnail_status: photo.status(), thumbnail_browser_bytes: payload.bytes, thumbnail_sha256: payload.sha256, decisions, withdrawn_thumbnail_status: withdrawn.status() }
 }
 
 const browser = await chromium.launch({ headless: true })
@@ -239,7 +238,7 @@ try {
     }
   }
   const immutableImages = Object.fromEntries(['PUBLIC', 'ADMIN', 'GUIDE'].map(kind => [kind.toLowerCase(), execFileSync('docker', ['image', 'inspect', '--format', '{{.Id}}', process.env[`FLEET_UI_${kind}_IMAGE`]], { encoding: 'utf8' }).trim()]))
-  writeFileSync(join(output, 'native-normal-ui.json'), JSON.stringify({ source, project, kind: 'Normal production commands with a synthetic external OIDC provider; actual browser/HTTP/PostgreSQL', cases, images, immutable_images: immutableImages, scope: 'Shared shells, reviewed native draft creation, event reading, independent sessions/guide and public-process failure; not every domain route or complete lifecycle certification.' }, null, 2) + '\n', { mode: 0o600 })
+  writeFileSync(join(output, 'native-normal-ui.json'), JSON.stringify({ source, project, kind: 'Normal production commands with a synthetic external OIDC provider; actual browser/HTTP/PostgreSQL', cases, images, immutable_images: immutableImages, scope: 'Shared shells, reviewed native draft creation, event reading, protected media upload/review/release/withdrawal and byte denial, independent sessions/guide and public-process failure. Same organiser reads both portals; not a confirmed-competitor journey, every domain route or complete lifecycle certification.' }, null, 2) + '\n', { mode: 0o600 })
 } finally {
   await browser.close()
 }
