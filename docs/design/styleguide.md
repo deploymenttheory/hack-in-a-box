@@ -437,3 +437,18 @@ the MC console uses `presentation`, and authored content uses `document`.
 every workspace. The interactive production catalogue includes these registry
 entries automatically. Keep visible labels and the native narrow-screen section
 selector; an icon does not authorise or expose a destination.
+
+### Emphasise the next action within its task
+
+Use the shared primary/outline variants to distinguish the next reviewed action
+from preparation or alternatives. A campaign preview is primary until a current
+preview exists, then approval takes priority. Saving a private assessment draft
+is secondary to submitting the independent card. An owner review plan first
+emphasises drafting, then approval of its saved current draft. Within a selected
+panel team, the next card/evidence decision takes priority over global selection
+work; the panel overview has its own next proposal/signoff decision.
+
+Derive presentation from existing native state and keep current capability,
+disabled, confirmation and receipt rules intact. Colour never grants authority
+or acknowledges a write. Separate tasks on one page can each have a primary
+action; avoid competing primary actions within the same editor/review group.
