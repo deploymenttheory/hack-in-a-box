@@ -1,0 +1,56 @@
+{
+  "kind": "Qualification source-read keyboard continuity correction; separate causal owner and actual native proofs",
+  "source": "1d1fef8afbb65079b7d547c13458214507cc4839",
+  "patch": "3b3dc92a9d6ed9fa3543e9d67f8805d8e1810817 carried byte-equivalently",
+  "failed_ci": "https://github.com/deploymenttheory/hack-in-a-box/actions/runs/40272499208/job/121408140184",
+  "cause": "A benign current-source read natively disabled the focused History button. Chromium moved focus to BODY before Enter; the strict helper correctly refused it.",
+  "correction": "The two same-owner read-only controls use existing focusableWhenDisabled while retaining their original disabled conditions and callbacks. Private inert/denial and write/unknown boundaries remain.",
+  "strict_keyboard_helper_equal_failed_ci_source": true,
+  "production_owner_regression": {
+    "original": "Actual owner loses focus under held current-source GET; retained-focus assertion fails750ms.",
+    "corrected": "Both read controls retain disabled keyboard focus, Enter performs no read/write, release then exactly one intended read; desktop/mobile4cases.",
+    "combined_with_existing_keyboard_controls": 28,
+    "duration_seconds": 5.8,
+    "scope": "Production React and shared Button; API responses controlled, no native DB claim from these cases."
+  },
+  "native_regression": {
+    "command": "HACKBOX_INTEGRATION=1 HACKBOX_QUALIFICATION_BROWSER=1 HACKBOX_QUALIFICATION_SURFACE=admin HACKBOX_QUALIFICATION_SCENARIO=final GOMAXPROCS=2 GOFLAGS=-p=1 go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestQualificationBrowsers$/^admin$/^desktop$/^final$' -count=1 -timeout=5m",
+    "exit_code": 0,
+    "browser_cases": 1,
+    "parent_seconds": 66.64,
+    "package_seconds": 68.235,
+    "postgres_container": "d6a85dae6392",
+    "cleanup": "Termination logged; exact container absent on post-run query; user app healthy."
+  },
+  "source_sha256": {
+    "web/src/qualification.tsx": "ec0d017eb8330aa99a62b8a30080a287cdfd12a5d4d3d9d15591d74b5e389885",
+    "web/src/qualification-history.tsx": "47e49707efd10e8cb74330c968d684e007dc4dbf7e81ba999534e6fa4463eb53",
+    "web/e2e/qualification.spec.ts": "5d3d90e2817abb395970e7c89bb6f8c66f04c49a08135859d92bf5d63c67f896",
+    "web/src/styleguide/primitives.tsx": "a6dbc71b20ddaf8cd401895dcbb0b3176fe17d7c02e8022a6d68b86d5271b818",
+    "docs/design/styleguide.md": "b0d3264d14054871c2be1321ef3bc80a9dc7382648a5df2545b88e6d5654e52c",
+    "web/qualification-native/keyboard.ts": "f00756197c2f45c025d523af97412a45b8087cc30177594954cdc23ead2dc870"
+  },
+  "logs": {
+    "production_owner_red": {
+      "private_path": "/private/tmp/hackbox-qualification-owner-focus-red.log",
+      "sha256": "d6ee2e4bdc85ccc5205aee3cfac85d4b6d78725ab7f2f9dfefafee5bd36ba1f7"
+    },
+    "production_owner_and_keyboard_green": {
+      "private_path": "/private/tmp/hackbox-qualification-owner-focus-production-green.log",
+      "sha256": "1fb7e9dda6f490eec07e07a845c9b08a038e749787336c3197773d453d4f5ff0"
+    },
+    "native_admin_desktop_final": {
+      "private_path": "/private/tmp/hackbox245-1d1-qualification-final-desktop.log",
+      "sha256": "f29148607d5bd1b7c43beb5e535247fc6aea348a5a387632b08d9581dee04731"
+    },
+    "both_portal_builds": {
+      "private_path": "/private/tmp/hackbox245-1d1-read-focus-build.log",
+      "sha256": "195780fad2fb2e481a86bc355fb4cfb8e438dc5468f643a0203c3eb4c1810a6c"
+    },
+    "guide_build": {
+      "private_path": "/private/tmp/hackbox245-1d1-read-focus-guide.log",
+      "sha256": "02464544560ab6ed7b0490a9da1e919b8626d8b0ea8fdb9b1e89fbcc65852ced"
+    }
+  },
+  "remaining_gate": "All checks on final head, including complete eight-scope native qualification matrix; bounded local result is not relabelled as all-eight execution."
+}

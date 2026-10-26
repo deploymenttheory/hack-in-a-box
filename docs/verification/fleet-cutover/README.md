@@ -2,7 +2,7 @@
 
 ## Integrated candidate — 26 October 2026
 
-Current executable checkpoint `794214f5` is rebased on merged main `03bfae7b`.
+Current executable checkpoint `1d1fef8a` is rebased on merged main `03bfae7b`.
 The regenerated inventory resolves **96 registrations, 30 route owners and 318
 reachable modules**, with one Tailwind theme owner and no source errors. Both
 mentor-advisory routes are included. The original 94-route/29-owner native
@@ -42,6 +42,19 @@ the failed CI source, correction, exact local scope and raw-log hash. Final CI
 must still exercise the complete matrix. Full reviews and exact final-head CI
 remain gates before merge; these records do not complete lifecycle or release
 signoff.
+
+A later final-CI failure at `cbfe2c5b` exposed actual keyboard focus loss on
+native-disabled read buttons during a benign source refresh. The correction at
+`1d1fef8a` applies the existing focus-preserving disabled behavior to the two
+read-only controls; all disabled conditions, callbacks, private inert boundaries
+and strict keyboard helper remain unchanged. The production-owner held-GET RED
+becomes four desktop/mobile passes, with24 existing keyboard controls also passing
+(28cases/5.8s). The exact failed admin/desktop/final native scope passes with race
+checking (66.64s parent;68.235s package). Both rebuilt portals and the updated guide
+pass. [Correction receipt](qualification-read-focus-proof.json) retains raw hashes,
+exact scope and the failed CI. The earlier normal media/isolation run remains
+attributed to794; this later change only affects the two qualification read
+controls and the guide's interactive usage example. Final full CI is still required.
 
 Historical checkpoints below retain their original dates, sources and remaining
 gates at the time; the integrated status above takes precedence.

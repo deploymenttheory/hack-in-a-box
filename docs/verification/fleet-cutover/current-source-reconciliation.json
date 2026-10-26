@@ -1,6 +1,6 @@
 {
   "kind": "Current-source integration layer; historical executions retain their own source; not final acceptance",
-  "source": "794214f5c226d027d8de564242aea73be52fb0db",
+  "source": "1d1fef8afbb65079b7d547c13458214507cc4839",
   "base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
   "historical_snapshot": "4d1808ac61044c64fd12a154bdf28475012440f9",
   "counts": {
@@ -11,7 +11,7 @@
   },
   "source_errors": [],
   "source_comparison": {
-    "unchanged_files": 734,
+    "unchanged_files": 731,
     "missing_files": [],
     "changed_files": [
       {
@@ -80,6 +80,16 @@
         "current_sha256": "44c6d3b30c06b9b8130259af847f089bf3f1f4f26ed3956689d74443aa232bcd"
       },
       {
+        "path": "web/src/qualification-history.tsx",
+        "historical_sha256": "5a6f4e4c93c3ccffc9f07774a2541abb2fea13f49c4708c095ab937e98e6105a",
+        "current_sha256": "47e49707efd10e8cb74330c968d684e007dc4dbf7e81ba999534e6fa4463eb53"
+      },
+      {
+        "path": "web/src/qualification.tsx",
+        "historical_sha256": "bed5f7d1ece0915e447c12cf8fa9300c7e400a5acbba0522c7da85f6ed8b3be8",
+        "current_sha256": "ec0d017eb8330aa99a62b8a30080a287cdfd12a5d4d3d9d15591d74b5e389885"
+      },
+      {
         "path": "web/src/results-ballots.tsx",
         "historical_sha256": "e76d2cd49e746267e31bc9aa4cee8b71479f2c19551b9eb99b29757dbb8eb9c6",
         "current_sha256": "1bd204dc6cf343ba43e5eee926f369870d795a5a3832ca66e1d7b910f3bfddb8"
@@ -98,6 +108,11 @@
         "path": "web/src/results-workspace.tsx",
         "historical_sha256": "8f7c3d51eaeb660307fe36eaf17bb7c06810a27495223e5079782971775f1549",
         "current_sha256": "3d15c34127f0d725a691b24d3ee78090aac6298bc0c786895dbe4b47a9ee5dbf"
+      },
+      {
+        "path": "web/src/styleguide/primitives.tsx",
+        "historical_sha256": "5100d1a2e169c616bb3f95a2a0dd0f14a6626405b924f38580cbc94c5ff4ebc0",
+        "current_sha256": "a6dbc71b20ddaf8cd401895dcbb0b3176fe17d7c02e8022a6d68b86d5271b818"
       },
       {
         "path": "web/src/today-read.ts",
@@ -157,10 +172,10 @@
     "scope": "Untagged actual photo upload/review/release/withdrawal and protected-byte denial in four widths/themes; same organiser both portals. Native tagged-consent HTTP coverage remains separate."
   },
   "remaining_gates": [
-    "Full independent integrated cutover Spec review and bounded correction reviews",
-    "All final-head CI including complete native browser matrix"
+    "All final-head CI including complete native qualification matrix"
   ],
   "acceptance_complete": false,
   "qualification_correction_receipt": "qualification-foreground-proof.json",
-  "frontend_checks_receipt": "frontend-checks-746d75ab.json"
+  "frontend_checks_receipt": "frontend-checks-746d75ab.json",
+  "read_focus_correction_receipt": "qualification-read-focus-proof.json"
 }
