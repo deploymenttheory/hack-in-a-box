@@ -273,22 +273,13 @@ func (r *factoryRelease) validateCurrent(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		expectedRevision := r.sources[planned.Input.ID].Event.Revision
-		publishedAllowed := current.PublishedAt == nil
-		if r.knownArchiveControl && planned.DesiredStage == "archived" &&
-			current.PublishedAt != nil {
-			publishedAllowed = current.PublishedAt.Equal(
-				planned.Input.Configuration.LiveStart.AddDate(0, 0, -7),
-			)
-			expectedRevision++
-		}
-		if current.ID != planned.Input.ID || current.Revision != expectedRevision ||
-			!reflect.DeepEqual(current.Configuration, planned.Input.Configuration) ||
-			current.Stage != r.sources[planned.Input.ID].Event.Stage ||
-			current.OwnerID == nil ||
-			*current.OwnerID != owner.Person() ||
-			current.ConfirmedAttendees != 180 ||
-			!publishedAllowed {
+		if !releaseCurrentMatches(
+			current,
+			r.sources[planned.Input.ID],
+			planned,
+			owner.Person(),
+			r.knownArchiveControl,
+		) {
 			return fmt.Errorf(
 				"%w: native release source/authority changed; do not replay setup",
 				errCohort,
@@ -720,4 +711,30 @@ func captureHasNoRepository(capture submissionfreeze.Page) bool {
 		len(capture.Decisions) == 0 &&
 		len(source.ManagedEvidenceIDs) == 0 &&
 		len(source.UncapturedEvidenceIDs) == 0
+}
+
+func releaseCurrentMatches(
+	current event.View,
+	source PreparedEventSources,
+	planned FactoryEvent,
+	owner uuid.UUID,
+	knownArchive bool,
+) bool {
+	expectedRevision := source.Event.Revision
+	publishedAllowed := current.PublishedAt == nil
+	if knownArchive && planned.DesiredStage == "archived" && current.PublishedAt != nil {
+		publishedAllowed = current.PublishedAt.Equal(
+			planned.Input.Configuration.LiveStart.AddDate(0, 0, -7),
+		)
+		// The guarded native transaction records rubric publication (which bumps
+		// the event) and then marks challenge publication (which bumps it again).
+		expectedRevision += 2
+	}
+	return current.ID == planned.Input.ID && current.Revision == expectedRevision &&
+		reflect.DeepEqual(current.Configuration, planned.Input.Configuration) &&
+		current.Stage == source.Event.Stage &&
+		current.OwnerID != nil &&
+		*current.OwnerID == owner &&
+		current.ConfirmedAttendees == 180 &&
+		publishedAllowed
 }

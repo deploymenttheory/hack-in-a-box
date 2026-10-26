@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 )
@@ -131,5 +132,57 @@ func TestURLCutoffRejectsSubstitutedAcceptedFormalAndInventedCommit(t *testing.T
 		false,
 	); err == nil {
 		t.Fatal("missing entry invented a formal revision")
+	}
+}
+
+func TestKnownNativePublicationRequiresExactTwoEventRevisions(t *testing.T) {
+	plan, err := NewReleaseFactoryPlan(
+		uuid.New(),
+		time.Date(2026, time.October, 26, 12, 0, 0, 0, time.UTC),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	planned := plan.Events[4]
+	owner := uuid.New()
+	before := event.View{
+		ID:                 planned.Input.ID,
+		Revision:           10,
+		Stage:              "preparation",
+		OwnerID:            &owner,
+		ConfirmedAttendees: 180,
+		Configuration:      planned.Input.Configuration,
+	}
+	source := PreparedEventSources{Event: before}
+	if !releaseCurrentMatches(before, source, planned, owner, false) {
+		t.Fatal("original unchanged source rejected")
+	}
+	publication := planned.Input.Configuration.LiveStart.AddDate(0, 0, -7)
+	published := before
+	published.PublishedAt = &publication
+	published.Revision = 12
+	if !releaseCurrentMatches(published, source, planned, owner, true) {
+		t.Fatal("actual atomic rubric plus challenge publication rejected")
+	}
+	if releaseCurrentMatches(published, source, planned, owner, false) {
+		t.Fatal("publication inferred without known acknowledged control")
+	}
+	for name, alter := range map[string]func(*event.View){
+		"only-one-bump":        func(v *event.View) { v.Revision = 11 },
+		"unrelated-third-bump": func(v *event.View) { v.Revision = 13 },
+		"changed-date": func(v *event.View) {
+			v.Configuration.SubmissionCutoff = v.Configuration.SubmissionCutoff.Add(time.Second)
+		},
+		"changed-owner":             func(v *event.View) { id := uuid.New(); v.OwnerID = &id },
+		"later-stage":               func(v *event.View) { v.Stage = "live" },
+		"wrong-publication-instant": func(v *event.View) { at := publication.Add(time.Second); v.PublishedAt = &at },
+	} {
+		t.Run(name, func(t *testing.T) {
+			current := published
+			alter(&current)
+			if releaseCurrentMatches(current, source, planned, owner, true) {
+				t.Fatal("changed native source retargeted continuation")
+			}
+		})
 	}
 }
