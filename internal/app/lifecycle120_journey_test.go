@@ -53,6 +53,7 @@ type lifecycleJourneyEvent struct {
 	resultPreparations []lifecycleResultPreparationReceipt
 	teamFeedback       []lifecycleTeamFeedbackReceipt
 	liveHelp           lifecycleHelpReceipt
+	clarification      lifecycleClarificationReceipt
 	practice           []lifecyclePracticeReceipt
 	review             lifecycleMentorReviewReceipt
 	commonHash         string
@@ -229,6 +230,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
 	run.raceLiveHelp(t)
+	run.publishCommonClarifications(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
@@ -288,6 +290,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
 		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
 		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
+		Clarification      lifecycleClarificationReceipt       `json:"common_clarification"`
 		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
@@ -330,6 +333,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				ResultPreparations: item.resultPreparations,
 				TeamFeedback:       item.teamFeedback,
 				LiveHelp:           item.liveHelp,
+				Clarification:      item.clarification,
 				Review:             item.review,
 			},
 		)
