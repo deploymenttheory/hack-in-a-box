@@ -1,0 +1,16 @@
+{
+  "source": "fa92e01b8d34d20501f8cfe187324ce9aeffce94",
+  "remaining": {
+    "hackbox-operator125-fa92e01b-2417b2": {
+      "containers": "",
+      "volumes": "",
+      "networks": ""
+    },
+    "hackbox-operator125-fa92e01b-2417b2-guide": {
+      "containers": "",
+      "volumes": "",
+      "networks": ""
+    }
+  },
+  "cleanup_errors": []
+}
