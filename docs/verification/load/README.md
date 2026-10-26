@@ -518,3 +518,22 @@ active-cohort profile. The project’s containers and network were removed; four
 owned durable volumes intentionally retain the admitted dataset for the next
 native factory phases. Teams, challenge release, positive URL archive, runtime
 oracles, actual sustained targets and saturation remain open.
+
+
+The next private factory phase uses the same `-admit-plan`, CA, exact TCP targets
+and new output path, with `-sources-from-admission` pointing to the retained
+original admission JSON. It hashes that original receipt, rejects foreign or
+changed event/subject/person/stage inputs before native source writes, and
+requires the current installation to retain exactly five events, 1,000 active
+people and no old sessions. All actors authenticate again through normal OIDC.
+Native current owner/event guards remain authoritative.
+
+That phase keeps the registration event open. For the other four events it
+configures required URL evidence, approves the common rubric/challenge, obtains
+the native go decision, allocates 36 real five-person teams, freezes the two
+intended live events and archive source, and publishes complete current mentor
+coverage. The intended preparation event’s teams remain unfrozen. The early
+organiser freeze is an explicit native command, not a fabricated cutoff fact.
+This phase still does not publish a challenge or capture a submission: those
+require the actual shared worker and the later monotonic historical setup
+phases, followed by the normal default-wall runtime handover.

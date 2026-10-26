@@ -4,6 +4,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -26,6 +28,11 @@ func main() {
 	)
 	expected := flag.String("expected-time", "", "exact existing setup domain time, RFC3339Nano")
 	next := flag.String("next-time", "", "strictly later setup domain time, RFC3339Nano")
+	sources := flag.String(
+		"sources-from-admission",
+		"",
+		"continue source preparation from this private original admission receipt",
+	)
 	admit := flag.String("admit-plan", "", "private canonical plan for native admission checkpoint")
 	ca := flag.String("ca", "", "fixture CA PEM for native admission")
 	targets := flag.String("targets", "", "private exact loopback target map for native admission")
@@ -37,7 +44,8 @@ func main() {
 			modes++
 		}
 	}
-	if flag.NArg() != 0 || modes != 1 || (*advance == "" && (*expected != "" || *next != "")) {
+	if flag.NArg() != 0 || modes != 1 || (*sources != "" && *admit == "") ||
+		(*advance == "" && (*expected != "" || *next != "")) {
 		fmt.Fprintln(
 			os.Stderr,
 			"select one private input, native admission or explicit setup clock operation",
@@ -64,15 +72,15 @@ func main() {
 		return
 	}
 	if *admit != "" {
-		if err := admitNative(*admit, *ca, *targets, *output); err != nil {
+		if err := admitNative(*admit, *ca, *targets, *output, *sources); err != nil {
 			fmt.Fprintln(
 				os.Stderr,
-				"native admission failed; inspect the private checkpoint receipt",
+				"native preparation failed; inspect the private checkpoint receipt",
 			)
 			os.Exit(1)
 		}
 		fmt.Println(
-			"Native admission checkpoint recorded. Full lifecycle/export/load acceptance remains pending.",
+			"Native preparation checkpoint recorded. Full lifecycle/export/load acceptance remains pending.",
 		)
 		return
 	}
@@ -92,7 +100,7 @@ func main() {
 	)
 }
 
-func admitNative(planPath, caPath, targetsPath, outputPath string) error {
+func admitNative(planPath, caPath, targetsPath, outputPath, sourcesPath string) error {
 	raw, err := loadprofile.ReadPrivateInput(planPath, loadprofile.MaximumPreparedBytes)
 	if err != nil {
 		return fmt.Errorf("read explicit setup plan: %w", err)
@@ -138,17 +146,43 @@ func admitNative(planPath, caPath, targetsPath, outputPath string) error {
 		return fmt.Errorf("reserve NEW private setup receipt: %w", err)
 	}
 	defer func() { _ = output.Close() }()
-	receipt, runErr := loadprofile.PrepareFactoryAdmission(
-		ctx,
-		plan,
-		map[loadprofile.Surface]string{
-			loadprofile.PublicSurface: "https://public.load.test:8443",
-			loadprofile.AdminSurface:  "https://admin.load.test:8444",
-		},
-		"https://issuer.load.test:8445",
-		transport,
-		database,
-	)
+	origins := map[loadprofile.Surface]string{
+		loadprofile.PublicSurface: "https://public.load.test:8443",
+		loadprofile.AdminSurface:  "https://admin.load.test:8444",
+	}
+	var receipt any
+	var runErr error
+	if sourcesPath == "" {
+		receipt, runErr = loadprofile.PrepareFactoryAdmission(
+			ctx,
+			plan,
+			origins,
+			"https://issuer.load.test:8445",
+			transport,
+			database,
+		)
+	} else {
+		raw, err := loadprofile.ReadPrivateInput(sourcesPath, 8<<20)
+		if err != nil {
+			return fmt.Errorf("read private original admission checkpoint: %w", err)
+		}
+		original, err := loadprofile.ParseAdmissionCheckpoint(raw)
+		if err != nil {
+			return fmt.Errorf("validate original native admission checkpoint: %w", err)
+		}
+		prepared, err := loadprofile.PrepareFactorySources(
+			ctx,
+			plan,
+			original,
+			origins,
+			"https://issuer.load.test:8445",
+			transport,
+			database,
+		)
+		digest := sha256.Sum256(raw)
+		prepared.OriginalAdmissionSHA256 = hex.EncodeToString(digest[:])
+		receipt, runErr = prepared, err
+	}
 	encoder := json.NewEncoder(output)
 	encoder.SetIndent("", "  ")
 	return errors.Join(runErr, encoder.Encode(receipt), output.Sync())
