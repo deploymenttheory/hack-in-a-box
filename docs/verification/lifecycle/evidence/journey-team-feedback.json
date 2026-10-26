@@ -1,0 +1,284 @@
+{
+  "checkpoint": "private-own-team-feedback-release-amendment-and-optional-current-scores",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "02fddbc7c81a9a121ca1b08cbb1b592f6432a194",
+    "main_base": "6764e89aabcb5bdae91b33aaf4f3ff6d3d5620bc",
+    "schema": 55,
+    "fixture_image": "sha256:e41db19e914d65e3f7116cb7d25ca994b7f08c79eef33430246ef5af05aa3e1b",
+    "build": "92620",
+    "startup": "12899",
+    "runner": "64283",
+    "duration_seconds": 510.35,
+    "production_image": false,
+    "aggregate_timeout_minutes": 10,
+    "individual_domain_job_step_guards_unchanged": true
+  },
+  "events": [
+    {
+      "event_id": "4d08febe-4f62-4232-a5ff-beab51689286",
+      "mode": "all_teams",
+      "reports": [
+        {
+          "team_id": "a088b8bc-a90d-4297-944c-b97befba094a",
+          "case": "fresh_judge_scored",
+          "source_binding": "22ce87d5e64b9ba478ef70f829c365905e9b2a6ae23f1ac7646dd2d0ccb97f9c",
+          "initial_body_sha256": "7920950e79190e0cb2f2293190bbe509c91763e855373aa71682fe24ec5332f0",
+          "commands": [
+            {
+              "request_id": "1d48a0b3-c77c-4807-9071-8f8d0ca91912",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "a088b8bc-a90d-4297-944c-b97befba094a",
+              "expected_version": 0,
+              "version": 1,
+              "action": "save",
+              "fingerprint": "0a30ddb37bbde24f53681fbc50fe381dff153eca4daf74cfa8fa3a77c227192f"
+            },
+            {
+              "request_id": "d0e5ceb4-9604-4dd0-9392-1740f853473c",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "a088b8bc-a90d-4297-944c-b97befba094a",
+              "expected_version": 1,
+              "version": 2,
+              "action": "release",
+              "fingerprint": "41de8dada5d09c81116253b0ea30f40985552d0f7603c03b830f3d211a70fafe"
+            },
+            {
+              "request_id": "5f890f3d-4041-4854-92c8-0e48b2d45a2c",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "a088b8bc-a90d-4297-944c-b97befba094a",
+              "expected_version": 2,
+              "version": 3,
+              "action": "save",
+              "fingerprint": "b46fb527ff6ee456bbf87b1d7856b6c5759087014529fb1ecd783459b8d2e8c3"
+            },
+            {
+              "request_id": "16f06067-acec-4c36-93f0-729c5f32064f",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "a088b8bc-a90d-4297-944c-b97befba094a",
+              "expected_version": 3,
+              "version": 4,
+              "action": "release",
+              "fingerprint": "ad137bf1b9ee717208b85740d342477a6087d8f2f75ec3b091a0d689900b81bd"
+            }
+          ],
+          "released_versions": [
+            2,
+            4
+          ],
+          "checks": {
+            "draft_hidden": true,
+            "private_preparation_denied": true,
+            "other_team_denied": true,
+            "withdrawn_reader_denied": true,
+            "staff_reader_denied": true,
+            "wrong_source_denied": true,
+            "competition_unchanged": true,
+            "private_amendment_kept_old_release": true,
+            "amended_scores_withheld": true,
+            "original_ack_survives_amendment": true
+          },
+          "initial_scores_explicitly_included": true,
+          "score_source_binding": "17627349f714ce58cab7aa9614d36a7d44a623962b07bafe38b29deef514496f",
+          "amended_body_sha256": "10bb737734e8a1c6b47ac2176ee39ebe0e9df2445fff2fd81cff964e6d011fd3"
+        },
+        {
+          "team_id": "112ab574-e734-4b25-a5ea-1f068249299f",
+          "case": "not_submitted",
+          "source_binding": "5b24b56a6123d22eaf5f8f626321771a03b576db4b493c6851f60ca15d1f647b",
+          "initial_body_sha256": "7920950e79190e0cb2f2293190bbe509c91763e855373aa71682fe24ec5332f0",
+          "commands": [
+            {
+              "request_id": "6309b5bd-a442-4e80-b344-71994fa528d1",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "112ab574-e734-4b25-a5ea-1f068249299f",
+              "expected_version": 0,
+              "version": 1,
+              "action": "save",
+              "fingerprint": "589fc45c7ac7bf11a7f93f6dc5b85aa2758c94bef2b2b2b5f56a19f8b6893264"
+            },
+            {
+              "request_id": "d9149d0c-2207-4686-bb4f-7720d6af6075",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "112ab574-e734-4b25-a5ea-1f068249299f",
+              "expected_version": 1,
+              "version": 2,
+              "action": "release",
+              "fingerprint": "2abf51774ab3e0a880ec2b8fc5651cc9b416a8e8eb58bde4c5e4c83a3e0c0a4f"
+            }
+          ],
+          "released_versions": [
+            2
+          ],
+          "checks": {
+            "draft_hidden": true,
+            "private_preparation_denied": true,
+            "other_team_denied": true,
+            "withdrawn_reader_denied": true,
+            "staff_reader_denied": true,
+            "wrong_source_denied": true,
+            "competition_unchanged": true,
+            "unavailable_scores_denied": true
+          },
+          "initial_scores_explicitly_included": false
+        }
+      ]
+    },
+    {
+      "event_id": "dcfbb907-9e42-4924-a10d-113bfc95d29c",
+      "mode": "mentor_qualification",
+      "reports": [
+        {
+          "team_id": "3c6b4711-312a-4e0d-869d-e89712bbe8ca",
+          "case": "fresh_judge_scored",
+          "source_binding": "6fb1ff6bdfb73934934b0ad14ef776533e588799f77a5c927623354a416a5723",
+          "initial_body_sha256": "7920950e79190e0cb2f2293190bbe509c91763e855373aa71682fe24ec5332f0",
+          "commands": [
+            {
+              "request_id": "551cc4c5-e3f8-442a-9adb-66b4b588ce03",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "3c6b4711-312a-4e0d-869d-e89712bbe8ca",
+              "expected_version": 0,
+              "version": 1,
+              "action": "save",
+              "fingerprint": "0912b289ba8ce56a8f744e6c640c0df0e5b1d6c4a61ae9cc241e95a0d7127ba1"
+            },
+            {
+              "request_id": "6855be91-ca73-4924-882d-738abe053e08",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "3c6b4711-312a-4e0d-869d-e89712bbe8ca",
+              "expected_version": 1,
+              "version": 2,
+              "action": "release",
+              "fingerprint": "0ddff86c298b6de2e4b773e9f12e3b4905fa70780f4a00ea60a99e43cf00528e"
+            },
+            {
+              "request_id": "2714ae77-af35-45fb-8d1a-b04fd86cc444",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "3c6b4711-312a-4e0d-869d-e89712bbe8ca",
+              "expected_version": 2,
+              "version": 3,
+              "action": "save",
+              "fingerprint": "fab453598d50ed46d3ebdfd1455c41b0824136dabdbb1e8cc884611747ab41f0"
+            },
+            {
+              "request_id": "ad798573-049a-4beb-8c9b-52c1a0c2e4ec",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "3c6b4711-312a-4e0d-869d-e89712bbe8ca",
+              "expected_version": 3,
+              "version": 4,
+              "action": "release",
+              "fingerprint": "835f2cd76af851a0e58dd0f214ce8749e92d7541ac878c36b903e3f49929c779"
+            }
+          ],
+          "released_versions": [
+            2,
+            4
+          ],
+          "checks": {
+            "draft_hidden": true,
+            "private_preparation_denied": true,
+            "other_team_denied": true,
+            "withdrawn_reader_denied": true,
+            "staff_reader_denied": true,
+            "wrong_source_denied": true,
+            "competition_unchanged": true,
+            "private_amendment_kept_old_release": true,
+            "amended_scores_withheld": true,
+            "original_ack_survives_amendment": true
+          },
+          "initial_scores_explicitly_included": true,
+          "score_source_binding": "afef3448dcaecb759451b1b4fd459bc7d45a3e076f9f9eac457b9a2da4a68654",
+          "amended_body_sha256": "10bb737734e8a1c6b47ac2176ee39ebe0e9df2445fff2fd81cff964e6d011fd3"
+        },
+        {
+          "team_id": "cd12a06b-2a98-4ff2-8c68-ffa47c4dd7d2",
+          "case": "unscored_frozen_reserve",
+          "source_binding": "b6332bba2e1a52388d59fe0aa385f9c4bcaf17681b001106e6c53c27cdb584d0",
+          "initial_body_sha256": "7920950e79190e0cb2f2293190bbe509c91763e855373aa71682fe24ec5332f0",
+          "commands": [
+            {
+              "request_id": "ffdaedb1-5e47-4ccd-9753-1c65c98bfcc4",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "cd12a06b-2a98-4ff2-8c68-ffa47c4dd7d2",
+              "expected_version": 0,
+              "version": 1,
+              "action": "save",
+              "fingerprint": "86a3ce1bf453b12c442336fb08e6da5c0882d194aec7b45ea5dbde8d1f44102d"
+            },
+            {
+              "request_id": "9fbc4998-c281-4a41-9726-a54d014e6c82",
+              "actor_id": "c9bc8dbb-222e-452b-bcb8-fc1360d25112",
+              "team_id": "cd12a06b-2a98-4ff2-8c68-ffa47c4dd7d2",
+              "expected_version": 1,
+              "version": 2,
+              "action": "release",
+              "fingerprint": "ae30c499a97c4ace7e9f47898fe1cfa2186a6ab7f6ee5583a7ae80cecfe458d6"
+            }
+          ],
+          "released_versions": [
+            2
+          ],
+          "checks": {
+            "draft_hidden": true,
+            "private_preparation_denied": true,
+            "other_team_denied": true,
+            "withdrawn_reader_denied": true,
+            "staff_reader_denied": true,
+            "wrong_source_denied": true,
+            "competition_unchanged": true,
+            "unavailable_scores_denied": true
+          },
+          "initial_scores_explicitly_included": false
+        }
+      ]
+    }
+  ],
+  "native_census": {
+    "report_targets": 4,
+    "feedback_versions": 12,
+    "feedback_commands": 12,
+    "original_acknowledgements_crosschecked": 12,
+    "result_versions_unchanged": 31,
+    "result_publications_unchanged": 3
+  },
+  "verification": {
+    "finite_parents": 6,
+    "finite_package_seconds": 0.619,
+    "finite_skips": 0,
+    "finite_failures": 0,
+    "configured_lint_issues": 0,
+    "body_hash_scope": "Bodies were compared through authenticated native HTTP and retained history during the scenario. The SQL oracle exports only source/author/version/ACK/audience-count metadata, not prose or numeric scores."
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-feedback-02fddbc7-native.log",
+      "sha256": "ff37c887a07a9b2eae749d92cf31dff7c5d27b1a2dc1790d86b7d930f8145b64"
+    },
+    {
+      "local_basename": "hackbox120-feedback-02fddbc7-journey.json",
+      "sha256": "a2d04133e35adeab0bd3dd9f077d15eae10acc72e7a7adf621c3e75f4a6790a3"
+    },
+    {
+      "local_basename": "hackbox120-feedback-02fddbc7-work.json",
+      "sha256": "665e6f7f2d7f06e3af681f7e14737a9050570ab9f43b70f0aa79ecbb3d80b42d"
+    },
+    {
+      "local_basename": "hackbox120-feedback-02fddbc7-feedback-state.json",
+      "sha256": "135f595e183f4c31c759cbd440d2bf4d6365ed6303237551dff575adfdc48825"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-feedback-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0
+  },
+  "privacy": "Explicit whitelist of synthetic UUIDs, source/body hashes, enum states, counts and exact original ACK metadata. No feedback prose, raw assessments/numeric scores, keys, sessions or provider configuration is published. Raw exports remain local.",
+  "scope_limits": [
+    "Four actual report targets are exercised; this does not claim authored reports for every team or native survey completion.",
+    "This proves explicit native report release/current recipient reads, not queued report/result/survey notification delivery.",
+    "Live help, reviewed clarification/correction, real browser offline recovery, remaining admission/privilege/freeze/publication exceptions, consented media/surveys, reviewed non-winner showcase, archive/owned outcomes and final Fleet/production-image/recovery/CI/full independent review remain required.",
+    "No original issue120 checkbox or L01-L18 row is declared fully complete."
+  ]
+}

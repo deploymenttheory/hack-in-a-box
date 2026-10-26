@@ -1235,3 +1235,49 @@ remaining admission/eligibility/freeze/publication exceptions, reviewed non-winn
 showcase, archive/owned outcomes, final Fleet browsers/guide, production-image
 recovery and final reviews/CI remain required. **complete_lifecycle=false; no
 original acceptance checkbox or L01–L18 row is declared fully complete.**
+
+
+## Continuation: private own-team feedback and amendments — native PASS
+
+Frozen `02fddbc7c81a9a121ca1b08cbb1b592f6432a194`, main6764/schema55,
+passed first native runner64283 in **510.35s**, build92620/start12899, fixture
+`sha256:e41db19e914d65e3f7116cb7d25ca994b7f08c79eef33430246ef5af05aa3e1b`.
+The [inspected bounded receipt](evidence/journey-team-feedback.json) cross-checks
+all12 feedback acknowledgements and versions against native PostgreSQL source,
+author and audience-count metadata. Body hashes were checked through actual
+normal-auth HTTP reads and retained history; SQL exports no prose or numeric
+scores. Raw exports remain local. Six finite wire/HTTP controls passed0.619s
+without skips/failures and configured lint is clean. No production code changed.
+
+The same two connected event contexts reach publication and then author four
+actual reports: one scored team per event, an all-team not-submitted entry and
+the qualification event's signed frozen reserve without fresh judge scores.
+Wrong report-source bindings return409 without mutation. Valid requests to include
+unavailable scores also return409; unscored teams receive authored prose without
+fabricated zero scores. A private draft has no recipient release. Members cannot
+read private preparation, while other-team, withdrawn, mentor and judge readers
+receive403 from the own-team released route. Intended current members receive
+only deliberately released own-team prose and explicitly selected current
+confirmed own-team aggregate scores.
+
+Each scored report first releases version2. Its new private version3 amendment
+leaves the member's complete old version2 projection unchanged. A separate
+version4 release exposes the amended prose while intentionally withholding
+scores that remain available to the organiser. Earlier version2 body/history and
+its exact original acknowledgement remain intact. The two unscored reports release
+version2 without scores. Native storage contains12 report versions/commands for
+four targets. All12 original acknowledgements are recovered with GET. Result
+round/source/announcements compare unchanged before and after feedback; SQL still
+has31 result versions and three deliberate publications. All owned containers,
+volumes and networks were removed.
+
+Only the harness aggregate grows8→10minutes for roughly80 added native HTTP
+calls beyond the404.60s release baseline; actual runtime510.35s exceeds the old
+aggregate. Individual HTTP/job waits, leases, domain deadlines and windows are
+unchanged. This is four report targets, not authored reports for every team,
+survey completion or queued notification delivery. Live help/clarification,
+browser offline recovery, remaining lifecycle variants, consented media/native
+surveys, non-winning showcase, archive/owned outcomes and final full Fleet,
+production-image/recovery/review/CI acceptance remain required.
+**complete_lifecycle=false; no original acceptance checkbox or L01–L18 row is
+fully complete.**

@@ -19,7 +19,8 @@ schema is introduced.
 
 | Evidence | Actual result and limit |
 |---|---|
-| Frozen `f2526ef3`, runner21409 | Both connected native modes passed404.60s after the reviewed correction, including private finalist preparation/release before fresh judging and separate award publication. Thirty-one native result ACKs/versions and exactly three deliberate publications. Feedback and later phases remain unexecuted. |
+| Frozen `02fddbc7`, runner64283 | Both connected modes passed510.35s through four actual own-team reports,12 exact command ACKs, explicit draft/release/amendment/privacy and optional own-score checks. Results remain31 versions/3 publications. Live support, surveys, media and later phases remain. |
+| Frozen `f2526ef3`, runner21409 | Both connected native modes passed404.60s after the reviewed correction, including private finalist preparation/release before fresh judging and separate award publication. Thirty-one native result ACKs/versions and exactly three deliberate publications. This historical checkpoint stops before feedback and later phases. |
 | Frozen `dbe2304a`, runner7896 | Both connected native modes passed383.22s through separate award confirmation. Twenty-seven result versions/commands, two advisory versions/commands, two judge approvals and zero publications. This is the merged checkpoint, not full lifecycle acceptance. |
 | Frozen `a98924ed`, runner12337 | Failed316.71s. Explicit private finalist preparation, actual finalist publication, original acknowledgement recovery, duplicate rejection and authorised recipient reads passed. The following existing guard found independent judging had already started. No complete release-phase pass is claimed. |
 | Frozen `f5194948` native regression | Failed4.04s/package4.360s: both modes had no started run or judge cards before organiser results preview; preview alone set `started_at` while cards remained zero. |
@@ -60,14 +61,15 @@ and organiser review; anonymised archive learning without expired personal data.
 
 ## Next connected implementation sequence
 
-1. Rebuild the final carried source and rerun both modes through chronological
+1. The 404.60s checkpoint now runs both modes through chronological
    private finalist preparation/release, fresh judging, confirmation and separate
    award publication. Keep each exact original acknowledgement and current safe
    recipient projection; reject duplicate source publication without mutation.
-2. Author own-team feedback explicitly: private draft, optional current confirmed
-   own-team scores, deliberate release and amendment. A newer private draft must
-   not leak or replace the last released report. Other teams and former members
+2. The 510.35s checkpoint exercises four own-team reports: private draft, optional
+   current confirmed own-team scores, deliberate release and amendment. A new
+   private draft leaves the old release intact. Other teams and withdrawn readers
    remain denied; an unscored reserve gets prose without fabricated zero scores.
+   Final cross-event/archive integration remains required.
 3. Add live help contention, private-to-common reviewed clarification, correction
    delivery and real browser disconnection recovery. Help uses its required
    caller-owned `Idempotency-Key`; claims are not automatically replayed.
