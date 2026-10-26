@@ -179,6 +179,7 @@ func newCommunicationRuntime(
 	auto.SourceMaintenance = helpProvider.MaintainInTransaction
 	webhooks := &githubwebhooks.Service{Pool: pool, Keys: cfg.CredentialKeys}
 	repos := &repositories.Service{
+		Now:  now,
 		Pool: pool,
 		App: githubapp.Service{
 			Pool:     pool,
