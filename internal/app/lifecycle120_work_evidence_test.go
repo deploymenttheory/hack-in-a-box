@@ -22,10 +22,12 @@ func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 		Practice          []lifecyclePracticeReceipt    `json:"fictional_judge_practice,omitempty"`
 		JudgeRun          *uuid.UUID                    `json:"planned_judge_run_id,omitempty"`
 		Review            *lifecycleMentorReviewReceipt `json:"mentor_live_checkpoint,omitempty"`
+		JudgeFinal        *lifecycleJudgeFinalReceipt   `json:"independent_judge_final,omitempty"`
 	}
 	events := []item{}
 	for _, event := range r.events {
 		value := item{EventID: event.view.ID, Work: event.work, Late: event.lateWork, Practice: event.practice, PreparationAccess: event.access, LiveAccess: event.liveAccess}
+		value.JudgeFinal = event.judgeFinal
 		if event.judgeRun != uuid.Nil {
 			runID := event.judgeRun
 			value.JudgeRun = &runID

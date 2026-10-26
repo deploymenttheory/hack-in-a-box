@@ -47,6 +47,7 @@ type lifecycleJourneyEvent struct {
 	lateWork     *lifecycleWorkReceipt
 	cutoff       []lifecycleCutoffReceipt
 	judgeRun     uuid.UUID
+	judgeFinal   *lifecycleJudgeFinalReceipt
 	practice     []lifecyclePracticeReceipt
 	review       lifecycleMentorReviewReceipt
 	commonHash   string
@@ -226,6 +227,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.captureAndReconcileCutoff(t)
 	run.reviewFrozenMentorEvidence(t)
 	run.qualifyFrozenFinalists(t)
+	run.scoreIndependentJudgeFinals(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -269,6 +271,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		Cutoff       []lifecycleCutoffReceipt     `json:"cutoff_sources"`
 		JudgeRun     uuid.UUID                    `json:"planned_judge_run_id"`
 		Practice     []lifecyclePracticeReceipt   `json:"fictional_judge_practice"`
+		JudgeFinal   *lifecycleJudgeFinalReceipt  `json:"independent_judge_final,omitempty"`
 		Review       lifecycleMentorReviewReceipt `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
@@ -305,6 +308,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				Cutoff:       item.cutoff,
 				JudgeRun:     item.judgeRun,
 				Practice:     item.practice,
+				JudgeFinal:   item.judgeFinal,
 				Review:       item.review,
 			},
 		)
