@@ -158,7 +158,9 @@ services:
   journey:
     <<: *fixture
     profiles: [journey]
-    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=8m', '-test.v']
+    # The connected help/feedback baseline takes ~480s. Clarification/correction
+    # adds >500 actual current-audience HTTP reads. Individual guards stay unchanged.
+    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=12m', '-test.v']
     volumes: ['control:/control:ro', 'artifacts:/artifacts']
     depends_on:
       public: {condition: service_healthy}

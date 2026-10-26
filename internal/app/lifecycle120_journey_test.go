@@ -28,30 +28,35 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
-	view           event.View
-	cohort         lifecycleAdmissions
-	teams          teams.Page
-	challenge      content.Page
-	rubric         rubric.Configuration
-	objective      objectives.View
-	brand          templates.Branding
-	github         githubapp.Status
-	repositories   []repositories.View
-	access         []lifecycleAccessReceipt
-	liveAccess     []lifecycleAccessReceipt
-	teamNotice     lifecycleTeamNoticeReceipt
-	accessPoll     []lifecycleAccessPollReceipt
-	deliverable    uuid.UUID
-	submissions    []lifecycleSubmissionReceipt
-	work           []lifecycleWorkReceipt
-	lateWork       *lifecycleWorkReceipt
-	cutoff         []lifecycleCutoffReceipt
-	judgeRun       uuid.UUID
-	judgeFinal     *lifecycleJudgeFinalReceipt
-	resultDecision *lifecycleResultDecisionReceipt
-	practice       []lifecyclePracticeReceipt
-	review         lifecycleMentorReviewReceipt
-	commonHash     string
+	view               event.View
+	cohort             lifecycleAdmissions
+	teams              teams.Page
+	challenge          content.Page
+	rubric             rubric.Configuration
+	objective          objectives.View
+	brand              templates.Branding
+	github             githubapp.Status
+	repositories       []repositories.View
+	access             []lifecycleAccessReceipt
+	liveAccess         []lifecycleAccessReceipt
+	teamNotice         lifecycleTeamNoticeReceipt
+	accessPoll         []lifecycleAccessPollReceipt
+	deliverable        uuid.UUID
+	submissions        []lifecycleSubmissionReceipt
+	work               []lifecycleWorkReceipt
+	lateWork           *lifecycleWorkReceipt
+	cutoff             []lifecycleCutoffReceipt
+	judgeRun           uuid.UUID
+	judgeFinal         *lifecycleJudgeFinalReceipt
+	resultDecision     *lifecycleResultDecisionReceipt
+	resultReleases     []lifecycleResultReleaseReceipt
+	resultPreparations []lifecycleResultPreparationReceipt
+	teamFeedback       []lifecycleTeamFeedbackReceipt
+	liveHelp           lifecycleHelpReceipt
+	clarification      lifecycleClarificationReceipt
+	practice           []lifecyclePracticeReceipt
+	review             lifecycleMentorReviewReceipt
+	commonHash         string
 }
 type lifecycleJourney struct {
 	owner      *lifecycleClient
@@ -207,6 +212,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("early live denial mutated native competition state")
 		}
 	}
+	run.denyEarlyOutputHelp(t)
 	if err := control.advance(ctx, timeline.Live); err != nil {
 		t.Fatal(err)
 	}
@@ -223,13 +229,18 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.prepareLiveMentorAccess(t)
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
+	run.raceLiveHelp(t)
+	run.publishCommonClarifications(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
 	run.reviewFrozenMentorEvidence(t)
 	run.qualifyFrozenFinalists(t)
+	run.publishSignedFinalists(t)
 	run.scoreIndependentJudgeFinals(t)
 	run.decideJudgeResults(t)
+	run.publishConfirmedAwards(t)
+	run.releaseOwnTeamFeedback(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -250,32 +261,37 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
 	}
 	type eventReceipt struct {
-		ID             uuid.UUID                       `json:"event_id"`
-		Mode           string                          `json:"mode"`
-		Stage          string                          `json:"stage"`
-		Objective      objectives.Reference            `json:"objective"`
-		Primary        string                          `json:"primary"`
-		TeamIDs        []uuid.UUID                     `json:"team_ids"`
-		Confirmed      int64                           `json:"confirmed"`
-		Census         map[string]int64                `json:"admission_census"`
-		Challenge      uuid.UUID                       `json:"challenge_id"`
-		Rubric         rubric.Reference                `json:"rubric"`
-		CommonHash     string                          `json:"common_sha256"`
-		PublishedAt    *time.Time                      `json:"published_at"`
-		Repositories   []repositories.View             `json:"repositories"`
-		Access         []lifecycleAccessReceipt        `json:"repository_access"`
-		LiveAccess     []lifecycleAccessReceipt        `json:"live_mentor_repository_access"`
-		TeamNotice     lifecycleTeamNoticeReceipt      `json:"team_notice"`
-		AccessPoll     []lifecycleAccessPollReceipt    `json:"access_poll"`
-		Submissions    []lifecycleSubmissionReceipt    `json:"submissions"`
-		Work           []lifecycleWorkReceipt          `json:"preparation_work"`
-		LateWork       *lifecycleWorkReceipt           `json:"late_work,omitempty"`
-		Cutoff         []lifecycleCutoffReceipt        `json:"cutoff_sources"`
-		JudgeRun       uuid.UUID                       `json:"planned_judge_run_id"`
-		Practice       []lifecyclePracticeReceipt      `json:"fictional_judge_practice"`
-		JudgeFinal     *lifecycleJudgeFinalReceipt     `json:"independent_judge_final,omitempty"`
-		ResultDecision *lifecycleResultDecisionReceipt `json:"result_decision,omitempty"`
-		Review         lifecycleMentorReviewReceipt    `json:"mentor_live_checkpoint"`
+		ID                 uuid.UUID                           `json:"event_id"`
+		Mode               string                              `json:"mode"`
+		Stage              string                              `json:"stage"`
+		Objective          objectives.Reference                `json:"objective"`
+		Primary            string                              `json:"primary"`
+		TeamIDs            []uuid.UUID                         `json:"team_ids"`
+		Confirmed          int64                               `json:"confirmed"`
+		Census             map[string]int64                    `json:"admission_census"`
+		Challenge          uuid.UUID                           `json:"challenge_id"`
+		Rubric             rubric.Reference                    `json:"rubric"`
+		CommonHash         string                              `json:"common_sha256"`
+		PublishedAt        *time.Time                          `json:"published_at"`
+		Repositories       []repositories.View                 `json:"repositories"`
+		Access             []lifecycleAccessReceipt            `json:"repository_access"`
+		LiveAccess         []lifecycleAccessReceipt            `json:"live_mentor_repository_access"`
+		TeamNotice         lifecycleTeamNoticeReceipt          `json:"team_notice"`
+		AccessPoll         []lifecycleAccessPollReceipt        `json:"access_poll"`
+		Submissions        []lifecycleSubmissionReceipt        `json:"submissions"`
+		Work               []lifecycleWorkReceipt              `json:"preparation_work"`
+		LateWork           *lifecycleWorkReceipt               `json:"late_work,omitempty"`
+		Cutoff             []lifecycleCutoffReceipt            `json:"cutoff_sources"`
+		JudgeRun           uuid.UUID                           `json:"planned_judge_run_id"`
+		Practice           []lifecyclePracticeReceipt          `json:"fictional_judge_practice"`
+		JudgeFinal         *lifecycleJudgeFinalReceipt         `json:"independent_judge_final,omitempty"`
+		ResultDecision     *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
+		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
+		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
+		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
+		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
+		Clarification      lifecycleClarificationReceipt       `json:"common_clarification"`
+		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -288,32 +304,37 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				ID:             item.view.ID,
-				Mode:           item.rubric.Definition.Mode,
-				Stage:          item.view.Stage,
-				Objective:      item.objective.Reference,
-				Primary:        item.brand.Primary,
-				TeamIDs:        teams,
-				Confirmed:      item.view.ConfirmedAttendees,
-				Census:         item.cohort.census,
-				Challenge:      item.challenge.ID,
-				Rubric:         item.rubric.Reference,
-				CommonHash:     item.commonHash,
-				PublishedAt:    item.view.PublishedAt,
-				Repositories:   item.repositories,
-				Access:         item.access,
-				LiveAccess:     item.liveAccess,
-				TeamNotice:     item.teamNotice,
-				AccessPoll:     item.accessPoll,
-				Submissions:    item.submissions,
-				Work:           item.work,
-				LateWork:       item.lateWork,
-				Cutoff:         item.cutoff,
-				JudgeRun:       item.judgeRun,
-				Practice:       item.practice,
-				JudgeFinal:     item.judgeFinal,
-				ResultDecision: item.resultDecision,
-				Review:         item.review,
+				ID:                 item.view.ID,
+				Mode:               item.rubric.Definition.Mode,
+				Stage:              item.view.Stage,
+				Objective:          item.objective.Reference,
+				Primary:            item.brand.Primary,
+				TeamIDs:            teams,
+				Confirmed:          item.view.ConfirmedAttendees,
+				Census:             item.cohort.census,
+				Challenge:          item.challenge.ID,
+				Rubric:             item.rubric.Reference,
+				CommonHash:         item.commonHash,
+				PublishedAt:        item.view.PublishedAt,
+				Repositories:       item.repositories,
+				Access:             item.access,
+				LiveAccess:         item.liveAccess,
+				TeamNotice:         item.teamNotice,
+				AccessPoll:         item.accessPoll,
+				Submissions:        item.submissions,
+				Work:               item.work,
+				LateWork:           item.lateWork,
+				Cutoff:             item.cutoff,
+				JudgeRun:           item.judgeRun,
+				Practice:           item.practice,
+				JudgeFinal:         item.judgeFinal,
+				ResultDecision:     item.resultDecision,
+				ResultReleases:     item.resultReleases,
+				ResultPreparations: item.resultPreparations,
+				TeamFeedback:       item.teamFeedback,
+				LiveHelp:           item.liveHelp,
+				Clarification:      item.clarification,
+				Review:             item.review,
 			},
 		)
 	}

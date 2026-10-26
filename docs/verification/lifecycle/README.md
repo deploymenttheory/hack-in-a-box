@@ -7,21 +7,25 @@ registration, team, gate or session records will be used as this scenario's
 lifecycle setup.
 
 Initial source baseline: `56d00be40e098f9ab71b2387377d2ad7cd81b63c`.
-Results/report UI #113, independent verification #114, showcase #163 and the
-Fleet cutover #245 remain prerequisite gates, rather than inferred completion
-from their draft branches or a closed supporting issue.
+The results/report, independent judging, showcase and Fleet owners were initial
+prerequisites. They have since merged, including Fleet #293 and the separate
+judging completion correction #298. Their closure does not supply the remaining
+integrated #120 acceptance evidence.
 
 The partial receipts below retain their original source/schema provenance.
-Main subsequently gained the reports/scoring owners and schema 54; final #120
-acceptance requires integration with the final merged owners, a fresh image
-build and complete execution on that source. These verification images are
-separate from the normal latest application deployment.
+Later connected checkpoints integrate actual reports/scoring/advisory owners
+and schema55. The current continuation is rebased onto main`5f78d51f`; final
+#120 acceptance still requires complete native and browser execution on final
+integrated source. Verification images remain separate from the normal latest
+application deployment. No historical receipt is promoted to a later-head pass.
 
 The confirmed category-adjudication rule is that mentors provide advisory input
 only. All required judges must vote; only judge ballots count toward a strict
-majority, and a split remains unresolved. The backend/UI advisory-input
-capability is still a prerequisite for that integrated journey and must not be
-simulated by counting mentor ballots or inventing a completed native owner.
+majority, and a split remains unresolved. The native advisory backend/UI owner
+merged in #292. The later results receipts exercise genuine all-team category
+advice and the qualified mode's distinct availability, never counting mentor
+ballots as final judge votes. Earlier infrastructure checkpoints retain their
+explicitly narrower scope.
 
 ## Infrastructure checkpoints under construction
 
@@ -1186,3 +1190,192 @@ results/awards/feedback/showcase/archive/owned outcomes, remaining lifecycle
 variants and final native-browser/normal-image/recovery/CI gates remain required.
 Synthetic repository hashes do not claim real GitHub history.
 **complete_lifecycle=false; no L01–L18 row is fully complete.**
+
+
+## Continuation: deliberate finalist and award releases — native PASS
+
+On main6764/schema55, frozen `f2526ef365b56cf202f01e17d111c693a2312588`
+passed runner21409 in **404.60s**, build7061/start38960, immutable fixture
+`sha256:5d222948c448970d28ceafec4e8d423e34ee4ee37c601e5679e65b6f2955ba63`.
+The [inspected bounded receipt](evidence/journey-result-releases.json) cross-checks
+all31 original result acknowledgements against native PostgreSQL, and publishes
+only the four new preparation/release acknowledgements with safe source and
+publication identities. Raw exports/cards/advisory prose/auth/provider settings
+stay local with hashes. Five finite controls passed0.427s without skips/failures;
+affected-package lint is clean. All owned containers/volumes/networks were removed.
+
+The qualified event privately prepares the exact signed selection, then explicitly
+publishes three finalists and one reserve before fresh independent judge briefs
+or cards. Existing native guards verify that the judge run remains unstarted until
+an intended judge actually opens a brief. Both events repeat the fresh judge,
+advisory-only, all-required-judge majority and separate confirmation checks. Earlier
+finalist publication remains visible during confirmation, with no premature awards.
+The organiser then deliberately publishes two confirmed awards per event. Native
+storage has31 immutable result versions/commands, two advisory versions/commands,
+two judge approvals and exactly three publications: one finalist and two award
+announcements. Actual current recipients receive the exact safe snapshots, and
+private preparation remains403. A fresh duplicate source-publication intent
+returns409 without changing native event/result revisions or announcements. Original
+acknowledgements are recovered by GET, not command replay.
+
+This fixes a real boundary exposed by the first chronological release run:
+`a98924ed` passed finalist publication but failed316.71s at the following unstarted
+judge guard. The separate native component at `f5194948` proved organiser results
+preview alone changed started_at while judge cards remained zero in both modes
+(RED4.04s/package4.360s). Completion now only revalidates retained card contexts;
+its outer read/write guard, organiser requirement and current judge/assignment,
+rubric/frozen/finalist/repository/card validity gates remain. Intended judge Brief
+still starts assessment. Frozen8a94 native GREEN4.28s/package4.781s and five
+existing affected native owner parents22.207s/zero skips/failures preceded the
+full corrected404.60s HTTP run. Independent Standards and Spec reviews each
+reported zero findings for the exact bounded owner correction and regression;
+this is not a full continuation review. The rebased equivalent fix is f87e364c.
+
+PR291 merged the earlier incomplete checkpoint; [CONTINUATION.md](CONTINUATION.md)
+audits every original criterion, and reopened issue120 tracks the remaining full
+scope in Draft296. This proof covers publication and recipient reads, not approved
+queued result-notification delivery. Own-team feedback, surveys/media/support,
+remaining admission/eligibility/freeze/publication exceptions, reviewed non-winning
+showcase, archive/owned outcomes, final Fleet browsers/guide, production-image
+recovery and final reviews/CI remain required. **complete_lifecycle=false; no
+original acceptance checkbox or L01–L18 row is declared fully complete.**
+
+
+## Continuation: private own-team feedback and amendments — native PASS
+
+Frozen `02fddbc7c81a9a121ca1b08cbb1b592f6432a194`, main6764/schema55,
+passed first native runner64283 in **510.35s**, build92620/start12899, fixture
+`sha256:e41db19e914d65e3f7116cb7d25ca994b7f08c79eef33430246ef5af05aa3e1b`.
+The [inspected bounded receipt](evidence/journey-team-feedback.json) cross-checks
+all12 feedback acknowledgements and versions against native PostgreSQL source,
+author and audience-count metadata. Body hashes were checked through actual
+normal-auth HTTP reads and retained history; SQL exports no prose or numeric
+scores. Raw exports remain local. Six finite wire/HTTP controls passed0.619s
+without skips/failures and configured lint is clean. No production code changed.
+
+The same two connected event contexts reach publication and then author four
+actual reports: one scored team per event, an all-team not-submitted entry and
+the qualification event's signed frozen reserve without fresh judge scores.
+Wrong report-source bindings return409 without mutation. Valid requests to include
+unavailable scores also return409; unscored teams receive authored prose without
+fabricated zero scores. A private draft has no recipient release. Members cannot
+read private preparation, while other-team, withdrawn, mentor and judge readers
+receive403 from the own-team released route. Intended current members receive
+only deliberately released own-team prose and explicitly selected current
+confirmed own-team aggregate scores.
+
+Each scored report first releases version2. Its new private version3 amendment
+leaves the member's complete old version2 projection unchanged. A separate
+version4 release exposes the amended prose while intentionally withholding
+scores that remain available to the organiser. Earlier version2 body/history and
+its exact original acknowledgement remain intact. The two unscored reports release
+version2 without scores. Native storage contains12 report versions/commands for
+four targets. All12 original acknowledgements are recovered with GET. Result
+round/source/announcements compare unchanged before and after feedback; SQL still
+has31 result versions and three deliberate publications. All owned containers,
+volumes and networks were removed.
+
+Only the harness aggregate grows8→10minutes for roughly80 added native HTTP
+calls beyond the404.60s release baseline; actual runtime510.35s exceeds the old
+aggregate. Individual HTTP/job waits, leases, domain deadlines and windows are
+unchanged. This is four report targets, not authored reports for every team,
+survey completion or queued notification delivery. Live help/clarification,
+browser offline recovery, remaining lifecycle variants, consented media/native
+surveys, non-winning showcase, archive/owned outcomes and final full Fleet,
+production-image/recovery/review/CI acceptance remain required.
+**complete_lifecycle=false; no original acceptance checkbox or L01–L18 row is
+fully complete.**
+
+## Connected native live-help claim race
+
+Frozen source `72379c1163740bc9a788944b251c9e0e21e2fb40` on merged
+main `fdb5282a9e3b5042a19a70fe85f21b3f1ee7b607`/schema55 passed
+runner20523 in **479.73s**, build85654/start50009, immutable verification image
+`sha256:ebd202cf99e59a311700f8699ca60522237c62b0490cabdce9ae4f82bf1e7993`.
+This is the first native execution of the help extension. Both retained events
+again traverse the real registration, admission, team/common freeze, GitHub
+setup/access, practice, live evidence/cutoff, independent judging, results
+publication and own-team feedback paths. It is not a production-image proof.
+
+Before live, a current team member's output-help create returns the exact native
+`event_blocked`/`help_output_before_live`409 and subsequent read404. During live,
+the member creates a fresh waiting request; another team cannot read it. Both
+currently assigned mentors first read claim authority, then issue distinct
+single-shot commands concurrently against revision1. Exactly one returns200
+and one409. The winner owns revision2 and resolves the request at revision3.
+
+Read-only native metadata corroborates two resolved requests, six retained
+commands and six ordered transitions. Each history is exactly create by the
+actual requester, then claim and resolve by the winning mentor. Neither losing
+claim has a retained command; neither rejected prelive ID has a request. The
+[bounded receipt](evidence/journey-live-help.json) contains only synthetic IDs,
+counts, enum states, original intent/revision metadata and private artifact
+hashes. Help prose and all private runtime exports remain local. The isolated
+project's containers, volumes and network were removed and verified absent.
+
+The actual factory passed its canonical API schema control after rebase
+(package0.507s); configured lint was clean on the same help source before the
+patch-equivalent rebase. No production source changed for this checkpoint.
+Reviewed common clarification/correction remains next. Its native publication
+commits private inbox resource references in the owning transaction; this must
+not be described as queued River delivery. Other help authority/escalation
+variants, actual browser disconnection recovery and the remaining full
+acceptance matrix stay open. No original #120 checkbox or L01–L18 row is
+declared fully complete.
+
+## Common clarification/correction extension: native retries pending
+
+Test-only source `c952fd0581903d74c47b621c043b4f7584fa0ec9` adds one private
+team question and two separately authored/approved/published common answer
+versions in each retained event. Native runner84701 **failed264.15s** later at
+formal submission: its older driver expected the live-poll timestamp rather
+than the current domain clock after two one-second correction ticks. Native
+metadata already held four actual publications and128 private recipient inbox
+references, exactly32 per event/version. The [first RED receipt](evidence/journey-clarification-phase-red.json)
+keeps that partial success distinct from the failed whole journey.
+
+The minimal test-only correction reads current trusted domain time at the formal
+submission phase, rejects missing/backward/outside-live-window instants, and
+retains exact native timestamp/source/actor/revision/non-late assertions. Source
+`deb5f8672b98d9fac3a37cea2293ca277ffb84da`, image
+`sha256:7868ccb394c52392b1d99692ddcc24ff39d80b8fa8c9700d083ce3eb75a84661`,
+runner55749 **failed418.72s** later at the second event's current-results GET
+before feedback. All eight native formal revisions correctly record
+`2026-03-30T08:01:02Z`, and both judging/publication paths passed. The single
+503 access-log entry lasted10000ms, consistent with the existing finite JSON
+request timeout; its original body/code and cause were not captured.
+
+A separate normal OIDC, GET-only re-observation of retained results returned200
+in240ms/1653ms with unchanged current versions22/9. This is not a substitute
+passing run, accepted-write replay or a diagnosis of the original stall.
+No production timeout, guard, clock or automatic retry changed. The
+[second RED receipt](evidence/journey-clarification-read-timeout-red.json)
+keeps the exact failed source, logs/metadata hashes and limitations. Both private
+projects and the read-only diagnostic container were removed; all owned
+resource classes were verified empty. Schema controls pass(package0.612s) and
+configured lint reports0issues. A complete fresh native run on the rebased
+source is still required, along with every remaining full-acceptance gate.
+
+After storage recovery, source `89590a6b` (runtime inputs byte-identical to
+image-build source`e94d0e95`, main`5f78d51f`) ran fresh native90117. It
+**failed365.56s** awaiting headers during formal submission. Both
+reviewed common versions per event were persisted in the earlier HTTP-progress
+snapshot. The Docker socket then became unavailable during read-only export,
+so the PUT's commit status remains **unknown**, native SQL corroboration was
+not captured, and cleanup of this project awaits daemon recovery. The original
+write has not been replayed. The [bounded failure record](evidence/journey-clarification-daemon-loss-red.json)
+keeps these limits explicit; empty SQL/daemon-error files are not promoted to
+native evidence. A subsequent healthy complete run remains necessary.
+
+Read-only recovery after the daemon returned classified the **exact** timed-out
+event/team: state revision0, active revision null, outcome open, no formal
+revision and no submission audit change. One earlier different team has a
+successful revision1; it is not attributed to the failed target. Only the
+existing private PostgreSQL container was started. No API/provider/worker or
+original PUT was replayed. Recovered native metadata corroborates four common
+publications and128 inbox references, exactly32 per event/version. The recovered
+API503 lasted46,396ms, with health503s on both surfaces in the same interval;
+the cause remains unknown. The [separate recovery record](evidence/journey-clarification-write-recovery.json)
+retains exact facts/hashes and the failed run's limits. All private project
+containers, four volumes and its network were then removed and verified absent.
+This completes preservation/cleanup, not the full #120 rehearsal.

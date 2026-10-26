@@ -1,0 +1,199 @@
+{
+  "checkpoint": "chronological-signed-finalists-and-separate-confirmed-award-publication",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "f2526ef365b56cf202f01e17d111c693a2312588",
+    "main_base": "6764e89aabcb5bdae91b33aaf4f3ff6d3d5620bc",
+    "schema": 55,
+    "fixture_image": "sha256:5d222948c448970d28ceafec4e8d423e34ee4ee37c601e5679e65b6f2955ba63",
+    "build": "7061",
+    "startup": "38960",
+    "runner": "21409",
+    "duration_seconds": 404.6,
+    "production_image": false
+  },
+  "events": [
+    {
+      "event_id": "9d1d0f03-a2d7-411d-b655-d5444366a7d9",
+      "mode": "all_teams",
+      "judge_run_id": "e0b6544f-91d9-47fd-9738-3d3cbd468647",
+      "private_preparations": [],
+      "deliberate_releases": [
+        {
+          "kind": "awards",
+          "request_source_binding": "7c8a9ea10e4372f1334387ba9329e95e7eaa18895f7abc655d1c57253c6f30b2",
+          "publication_source_binding": "67cbea02cbc9560ab570bc177cb6edb15c27b191270b95ca6851d8fc6ca5377e",
+          "announcement_id": "2b34bb17-8c84-4cb1-b30d-69e1b5f5f11b",
+          "acknowledgement": {
+            "request_id": "dc4712d8-efda-438e-bec3-c7a1b88ac14d",
+            "actor_id": "6bd7cd97-3aef-4585-a4a1-c212f1fc1261",
+            "expected_revision": 180,
+            "expected_version": 21,
+            "version": 22,
+            "action": "publish_awards",
+            "fingerprint": "f0b08f44be5d899158d5d47aa1b8ea21cd1c8a5eec534368b93cf118544973ba",
+            "publication_id": "2b34bb17-8c84-4cb1-b30d-69e1b5f5f11b"
+          },
+          "finalist_ids": [],
+          "reserve_ids": [],
+          "award_team_ids": [
+            "33c7834c-84ff-4305-851f-7859b814adb1",
+            "33c7834c-84ff-4305-851f-7859b814adb1"
+          ],
+          "current_recipient_read": true,
+          "duplicate_release_denied": true,
+          "private_preparation_read_denied": true
+        }
+      ],
+      "announcements_before_award_release": 0,
+      "native_assertion_no_awards_before_deliberate_release": true,
+      "native_result_versions": 22
+    },
+    {
+      "event_id": "a00621f4-ea8f-4c53-9890-b8e950dccfdd",
+      "mode": "mentor_qualification",
+      "judge_run_id": "28a20c88-6b3a-4c32-9199-8997a6c95552",
+      "private_preparations": [
+        {
+          "signed_selection_binding": "d99c61a916b449de08f6503865d14dd73ab8c252742e176010258d87ec615b36",
+          "acknowledgement": {
+            "request_id": "25e194b2-8f53-4a20-83f2-8b765b848927",
+            "actor_id": "6bd7cd97-3aef-4585-a4a1-c212f1fc1261",
+            "expected_revision": 222,
+            "expected_version": 0,
+            "version": 1,
+            "action": "prepare",
+            "fingerprint": "442ea386454876e0f1d762a7dd864c9a60612924a02344f826772eb23ee93f9c"
+          }
+        }
+      ],
+      "deliberate_releases": [
+        {
+          "kind": "finalists",
+          "request_source_binding": "d99c61a916b449de08f6503865d14dd73ab8c252742e176010258d87ec615b36",
+          "publication_source_binding": "d99c61a916b449de08f6503865d14dd73ab8c252742e176010258d87ec615b36",
+          "announcement_id": "149b8a4d-f0ae-4344-8466-f81691e1ff8c",
+          "acknowledgement": {
+            "request_id": "1ea59e60-c474-47fa-8c6c-98afe14c6d70",
+            "actor_id": "6bd7cd97-3aef-4585-a4a1-c212f1fc1261",
+            "expected_revision": 223,
+            "expected_version": 1,
+            "version": 2,
+            "action": "publish_finalists",
+            "fingerprint": "cffee607a31a22fd594e744b8939fc361700c473735ca0307b22e9e1bb929109",
+            "publication_id": "149b8a4d-f0ae-4344-8466-f81691e1ff8c"
+          },
+          "finalist_ids": [
+            "3c57f026-c37b-4efa-a40d-5de0bc3726f6",
+            "8252b2dc-824c-4bb0-abd1-8a1c639c3ef1",
+            "a9f3e752-c7dc-41a7-9439-57b30945dc58"
+          ],
+          "reserve_ids": [
+            "d7041b39-1d39-4a2e-862a-6b1f5d5e2b4d"
+          ],
+          "award_team_ids": [],
+          "current_recipient_read": true,
+          "duplicate_release_denied": true,
+          "private_preparation_read_denied": true
+        },
+        {
+          "kind": "awards",
+          "request_source_binding": "c6dd2fbf421130d3ad63d30d570df30a58edbbc38f2038f96ec315efa5f0d8a5",
+          "publication_source_binding": "b9e527f0c1bb4d41dbdcd742f1428449b123e679e7b2e6b077953e457c95a456",
+          "announcement_id": "a91368e1-7a12-4e18-a0c8-764a2f6d7ea8",
+          "acknowledgement": {
+            "request_id": "2b44fe1b-eb2f-486b-b965-663af3943943",
+            "actor_id": "6bd7cd97-3aef-4585-a4a1-c212f1fc1261",
+            "expected_revision": 231,
+            "expected_version": 8,
+            "version": 9,
+            "action": "publish_awards",
+            "fingerprint": "7e5c2ff9478a519fd81a540b3925679a6353e81f5134a8fe887eed3f62878676",
+            "publication_id": "a91368e1-7a12-4e18-a0c8-764a2f6d7ea8"
+          },
+          "finalist_ids": [],
+          "reserve_ids": [],
+          "award_team_ids": [
+            "3c57f026-c37b-4efa-a40d-5de0bc3726f6",
+            "3c57f026-c37b-4efa-a40d-5de0bc3726f6"
+          ],
+          "current_recipient_read": true,
+          "duplicate_release_denied": true,
+          "private_preparation_read_denied": true
+        }
+      ],
+      "announcements_before_award_release": 1,
+      "native_assertion_no_awards_before_deliberate_release": true,
+      "native_result_versions": 9
+    }
+  ],
+  "native_census": {
+    "result_versions": 31,
+    "result_commands": 31,
+    "original_result_acknowledgements_crosschecked": 31,
+    "advisory_versions": 2,
+    "advisory_commands": 2,
+    "judge_result_approvals": 2,
+    "deliberate_finalist_publications": 1,
+    "deliberate_award_publications": 2
+  },
+  "causal_boundary_fix": {
+    "full_http_failure_source": "a98924ed3e5be0956b40f5d1eba777f01379401d",
+    "full_http_failure_seconds": 316.71,
+    "native_red_source": "f5194948",
+    "native_red_parent_seconds": 4.04,
+    "native_red_package_seconds": 4.36,
+    "native_green_source": "8a94dd7f6f2bdd2f4b17e38e7211f60691912164",
+    "rebased_equivalent_fix": "f87e364c",
+    "native_green_parent_seconds": 4.28,
+    "native_green_package_seconds": 4.781,
+    "affected_native_owner_parents": 5,
+    "affected_native_owner_package_seconds": 22.207,
+    "independent_standards_findings": 0,
+    "independent_spec_findings": 0,
+    "review_scope": "Only the completion-owner correction and causal native regression; not full continuation acceptance."
+  },
+  "finite_verification": {
+    "source": "629e23e4",
+    "exact_parents": 5,
+    "package_seconds": 0.427,
+    "skipped_parents": 0,
+    "failed_parents": 0,
+    "configured_lint_issues": 0
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-continuation-f2526ef3-native.log",
+      "sha256": "5305af6f1a950a31926dc066bb70458e8657252aec9e7d3f78fc881ffc0c2c2c"
+    },
+    {
+      "local_basename": "hackbox120-continuation-f2526ef3-journey.json",
+      "sha256": "e61613b9d86fd47fd49d7cac4429337bac31336e034b754ef37dafd0eba5b927"
+    },
+    {
+      "local_basename": "hackbox120-continuation-f2526ef3-work.json",
+      "sha256": "5f45cbfa46223a0f1717846c4409d5d17441e84be68ebc1889a3f4172ea55440"
+    },
+    {
+      "local_basename": "hackbox120-continuation-f2526ef3-result-state.json",
+      "sha256": "62d4dfe4f717916af3c2d8cb542ce5472629ebd42438122e713443cb2adc275e"
+    },
+    {
+      "local_basename": "hackbox120-continuation-f2526ef3-publication-state.json",
+      "sha256": "828b2fc1c0f562f29e3089c9feb4306bae3434c0af0e3c3fd2c20c7f4766a3df"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-continuation-release-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0
+  },
+  "privacy": "Explicit whitelist of validated synthetic UUIDs, hashes, enum states, counts and exact original acknowledgement metadata only. All private raw exports/cards/advisory prose/authentication/provider configuration remain local. Monetary metadata remains synthetic; no payment/live provider/physical Wi-Fi claim.",
+  "scope_limits": [
+    "This proves native HTTP publication and current recipient reads, not approved queued result-notification delivery.",
+    "Own-team feedback, surveys, media, support, missing/exception/admission/eligibility variants, non-winner showcase, archive and owned outcomes remain required.",
+    "Final integrated Fleet browser/guide and separate production-image/recovery/CI/full independent reviews remain required.",
+    "No original issue120 acceptance checkbox or L01-L18 row is declared fully complete."
+  ]
+}

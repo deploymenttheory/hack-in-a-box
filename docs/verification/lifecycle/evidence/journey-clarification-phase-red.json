@@ -1,0 +1,65 @@
+{
+  "checkpoint": "common-answer-correction-passed-before-later-stale-submission-clock-assertion",
+  "complete_lifecycle": false,
+  "result": "red",
+  "provenance": {
+    "source": "c952fd0581903d74c47b621c043b4f7584fa0ec9",
+    "main_base": "fdb5282a9e3b5042a19a70fe85f21b3f1ee7b607",
+    "schema": 55,
+    "fixture_image": "sha256:b98c4297310d481dcd27236675816618b1f379246836776641116aaa5907616f",
+    "build": "96695",
+    "startup": "64354",
+    "runner": "84701",
+    "duration_seconds": 264.15,
+    "production_image": false
+  },
+  "native_census_before_failure": {
+    "questions": 2,
+    "answers": 2,
+    "versions": 4,
+    "approvals": 4,
+    "publications": 4,
+    "inbox_references": 128,
+    "references_per_event_per_version": 32
+  },
+  "failure": {
+    "phase": "later formal live submission",
+    "assertion": "native live submission changed the reviewed source or identity",
+    "expected_by_old_driver": "2026-03-30T08:01:00Z",
+    "actual_native_submitted_at": "2026-03-30T08:01:02Z",
+    "native_revision": 1,
+    "native_late": false,
+    "cause": "Two distinct correction commands advanced only fixture domain time by one second each; the later driver incorrectly retained the older live-poll timestamp. The native submission correctly records current domain time.",
+    "correction_scope": "Test-only submission-phase expected instant will read the actual current trusted domain clock and retain exact timestamp/source/actor/revision/late plus explicit live/cutoff/monotonic assertions. No production bug or clock/lease/window change is inferred."
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-clarification-c952fd05-native.log",
+      "sha256": "1c84e0c4c28e3b3feffe711c84763920ad8e4712898c24d0ddeb12b4938d236b"
+    },
+    {
+      "local_basename": "hackbox120-clarification-c952fd05-work.json",
+      "sha256": "9fea4782e807a855fdc6f08d84d32aa5466673444d6335d73db7684cabee8d49"
+    },
+    {
+      "local_basename": "hackbox120-clarification-c952fd05-state.json",
+      "sha256": "deb048933855c542af9da891978a51634c07af7a402ee73742a6be45dad50c91"
+    },
+    {
+      "local_basename": "hackbox120-clarification-c952fd05-submission-state.log",
+      "sha256": "a514ca03b43384a8d75a9b3d6984a1ee0905ae0198cf1802c60f6f17411fe15a"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-clarification-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0
+  },
+  "scope_limits": [
+    "This failed whole connected journey is not a passing native acceptance result. Corrected-source full native execution remains required.",
+    "Clarification owner notifications are actual atomic native inbox references, not queued River/external-provider effects.",
+    "No question or answer prose, sessions, credentials or provider configuration is published; raw exports remain local.",
+    "All original full120 acceptance criteria remain open until the complete integrated verification."
+  ]
+}
