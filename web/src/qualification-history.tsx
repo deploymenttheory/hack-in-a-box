@@ -9,7 +9,7 @@ import {qualificationWords} from './qualification-model'
 
 export function QualificationHistory({eventID,runID,parent,paused}:{eventID:string;runID:string;parent:PrivateRequestScope;paused:boolean}){
  const [open,setOpen]=useState(false)
- return <section className="fleet-qualification-history"><h3>Recorded panel history</h3><p>History is read again under current native audience and source permissions. Earlier private records do not grant current actions or acknowledge an unknown request.</p><Button icon="book" variant="outline" disabled={paused} onClick={()=>setOpen(value=>!value)}>{open?'Close':'Read'} recorded panel history</Button>{open&&<HistoryReader eventID={eventID} runID={runID} parent={parent} paused={paused}/>}</section>
+ return <section className="fleet-qualification-history"><h3>Recorded panel history</h3><p>History is read again under current native audience and source permissions. Earlier private records do not grant current actions or acknowledge an unknown request.</p><Button focusableWhenDisabled icon="book" variant="outline" disabled={paused} onClick={()=>setOpen(value=>!value)}>{open?'Close':'Read'} recorded panel history</Button>{open&&<HistoryReader eventID={eventID} runID={runID} parent={parent} paused={paused}/>}</section>
 }
 function HistoryReader({eventID,runID,parent,paused}:{eventID:string;runID:string;parent:PrivateRequestScope;paused:boolean}){
  const [before,setBefore]=useState<number>()

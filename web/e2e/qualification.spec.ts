@@ -251,3 +251,36 @@ for(const mode of ['accepted','interrupted','changed','denied','408','lost_ack',
   }
  }finally{page.keyboard.press=press;release()}
 })
+
+for(const label of ['Read recorded panel history','Read current panel source'])test(`${label} keeps native keyboard focus during a current source pause without opening or writing`,async({page})=>{
+ const state=await fixture(page)
+ let held=false,reads=0,historyReads=0,writes=0,release:()=>void=()=>{}
+ const gate=new Promise<void>(resolve=>{release=resolve})
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
+  reads++;if(held)await gate
+  await route.fulfill({json:state.page})
+ })
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/history?*`,route=>{historyReads++;return route.fulfill({json:{items:[],next_cursor:null}})})
+ await page.goto(path)
+ const historyButton=page.getByRole('button',{name:label,exact:true})
+ const {reach}=await import('../qualification-native/keyboard')
+ await reach(historyButton)
+ page.on('request',request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))writes++})
+ try{
+  const priorReads=reads
+  held=true;await page.evaluate(()=>dispatchEvent(new Event('focus')))
+  await expect.poll(()=>reads).toBeGreaterThan(priorReads)
+  await expect(historyButton).toBeDisabled()
+  await expect(historyButton).toBeFocused({timeout:750})
+  await page.keyboard.press('Enter')
+  expect(historyReads).toBe(0);expect(writes).toBe(0)
+  await expect(page.getByRole('region',{name:'Currently authorised panel history',exact:true})).toHaveCount(0)
+  held=false;release()
+  await expect(historyButton).toBeEnabled();await expect(historyButton).toBeFocused()
+  const beforeActivation=reads
+  await page.keyboard.press('Enter')
+  if(label==='Read recorded panel history'){await expect(page.getByRole('region',{name:'Currently authorised panel history',exact:true})).toBeVisible();expect(historyReads).toBe(1)}
+  else{await expect.poll(()=>reads).toBe(beforeActivation+1);expect(historyReads).toBe(0)}
+  expect(writes).toBe(0)
+ }finally{held=false;release()}
+})

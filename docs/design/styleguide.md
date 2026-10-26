@@ -452,3 +452,12 @@ Derive presentation from existing native state and keep current capability,
 disabled, confirmation and receipt rules intact. Colour never grants authority
 or acknowledges a write. Separate tasks on one page can each have a primary
 action; avoid competing primary actions within the same editor/review group.
+
+### Keep keyboard position during a current read pause
+
+For an already-current read-only control, use the production Button's
+`focusableWhenDisabled` with the existing read-pending disabled condition when
+a brief current-source check would otherwise drop focus to the document body.
+The Components action example demonstrates that disabled activation still runs
+no callback. Preserve private inert/denial boundaries and command pending/unknown
+locks; retaining keyboard position does not grant authority or retry a write.
