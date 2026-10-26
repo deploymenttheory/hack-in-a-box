@@ -19,6 +19,7 @@ import (
 type lifecycleAdmissions struct {
 	clients       []*lifecycleClient
 	registrations []registration.View
+	staff         map[string]*lifecycleClient
 	attendeeForm  registration.FormView
 	census        map[string]int64
 	offerID       uuid.UUID
@@ -29,7 +30,7 @@ type lifecycleAdmissions struct {
 // The final integrated scenario will reuse this phase, including its negative
 // gates; independently running this checkpoint does not complete #120.
 func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current event.View) (lifecycleAdmissions, error) {
-	cohort := lifecycleAdmissions{census: map[string]int64{}}
+	cohort := lifecycleAdmissions{census: map[string]int64{}, staff: map[string]*lifecycleClient{}}
 	base := "/api/v1/events/" + current.ID.String()
 	form, err := publishLifecycleForm(ctx, owner, current.ID, "attendee")
 	if err != nil {
@@ -54,24 +55,31 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 		if err != nil {
 			return cohort, err
 		}
-		staff, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", role+"-a")
-		if err != nil {
-			return cohort, err
+		actors := []string{role + "-a", role + "-b"}
+		if role == "judge" {
+			actors = append(actors, "judge-c")
 		}
-		application, err := applyLifecycleForm(ctx, staff, current.ID, staffForm)
-		if err != nil {
-			return cohort, err
-		}
-		if application.Kind != "facilitator" || application.State != "received" {
-			return cohort, fmt.Errorf("native facilitator application was not received")
-		}
-		var selected registration.View
-		if err := owner.call(ctx, http.MethodPost, base+"/registrations/"+application.ID.String()+"/decision", application.Revision,
-			registration.ReviewInput{Action: "selected", Reason: "Synthetic lifecycle role selection", Acknowledge: true}, &selected, http.StatusOK); err != nil {
-			return cohort, err
-		}
-		if selected.State != "selected" || selected.PersonID != staff.person {
-			return cohort, fmt.Errorf("native facilitator selection did not commit its role")
+		for _, actor := range actors {
+			staff, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", actor)
+			if err != nil {
+				return cohort, err
+			}
+			application, err := applyLifecycleForm(ctx, staff, current.ID, staffForm)
+			if err != nil {
+				return cohort, err
+			}
+			if application.Kind != "facilitator" || application.State != "received" {
+				return cohort, fmt.Errorf("native facilitator application was not received")
+			}
+			var selected registration.View
+			if err := owner.call(ctx, http.MethodPost, base+"/registrations/"+application.ID.String()+"/decision", application.Revision,
+				registration.ReviewInput{Action: "selected", Reason: "Synthetic lifecycle role selection", Acknowledge: true}, &selected, http.StatusOK); err != nil {
+				return cohort, err
+			}
+			if selected.State != "selected" || selected.PersonID != staff.person {
+				return cohort, fmt.Errorf("native facilitator selection did not commit its role")
+			}
+			cohort.staff[actor] = staff
 		}
 	}
 	for i := 1; i <= 36; i++ {

@@ -14,15 +14,22 @@ import (
 func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 	t.Helper()
 	type item struct {
-		EventID uuid.UUID              `json:"event_id"`
-		Work    []lifecycleWorkReceipt `json:"preparation_work"`
-		Late    *lifecycleWorkReceipt  `json:"late_work,omitempty"`
+		EventID  uuid.UUID                  `json:"event_id"`
+		Work     []lifecycleWorkReceipt     `json:"preparation_work"`
+		Late     *lifecycleWorkReceipt      `json:"late_work,omitempty"`
+		Practice []lifecyclePracticeReceipt `json:"fictional_judge_practice,omitempty"`
+		JudgeRun *uuid.UUID                 `json:"planned_judge_run_id,omitempty"`
 	}
 	events := []item{}
 	for _, event := range r.events {
-		events = append(events, item{EventID: event.view.ID, Work: event.work, Late: event.lateWork})
+		value := item{EventID: event.view.ID, Work: event.work, Late: event.lateWork, Practice: event.practice}
+		if event.judgeRun != uuid.Nil {
+			runID := event.judgeRun
+			value.JudgeRun = &runID
+		}
+		events = append(events, value)
 	}
-	raw, err := json.MarshalIndent(map[string]any{"checkpoint": "connected-external-work-progress-only", "complete_lifecycle": false, "events": events}, "", "  ")
+	raw, err := json.MarshalIndent(map[string]any{"checkpoint": "connected-work-and-practice-progress-only", "complete_lifecycle": false, "events": events}, "", "  ")
 	if err != nil {
 		t.Fatal(err)
 	}
