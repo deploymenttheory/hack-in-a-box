@@ -24,7 +24,11 @@ for (const module of ['@playwright/test', '@axe-core/playwright']) {
   const wanted = JSON.parse(readFileSync(join(root, 'web/package.json'), 'utf8')).devDependencies[module]
   assert.equal(JSON.parse(readFileSync(join(root, 'web/node_modules', module, 'package.json'), 'utf8')).version, wanted, `${module} must match the archived lockfile install`)
 }
-const cases = [], images = []
+const cases = [], images = [], mediaProgress = []
+function recordMediaProgress(entry) {
+  mediaProgress.push(entry)
+  writeFileSync(join(output, 'native-media-progress.json'), JSON.stringify({ source, partial: true, observations: mediaProgress }, null, 2) + '\n')
+}
 for (const kind of ['PUBLIC', 'ADMIN', 'GUIDE']) {
   const image = process.env[`FLEET_UI_${kind}_IMAGE`]
   assert.ok(image, `Missing isolated ${kind} image`)
@@ -73,6 +77,7 @@ async function mediaJourney(page, eventID, name) {
   assert.match(media.id, /^[a-f0-9-]{36}$/)
   assert.equal(media.acknowledged_version, 1, 'Exact original photo acknowledgement')
   assert.equal(media.state, 'draft')
+  recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'upload', status: uploaded.status(), acknowledged_version: media.acknowledged_version })
   const article = page.locator(`[data-media-record="${media.id}"]`)
   await expect(article.getByRole('link', { name: title, exact: true })).toBeVisible()
   const photoPath = `/api/v1/events/${eventID}/media/${media.id}/thumbnail`
@@ -81,9 +86,14 @@ async function mediaJourney(page, eventID, name) {
     article.getByRole('button', { name: 'View protected photo', exact: true }).click(),
   ])
   assert.equal(photo.status(), 200, 'Native protected thumbnail')
-  assert.match(photo.headers()['content-type'] ?? '', /^image\/png/)
+  assert.match(photo.headers()['content-type'] ?? '', /^application\/octet-stream/)
   assert.match(photo.headers()['cache-control'] ?? '', /no-store/)
-  await expect(article.getByRole('img', { name: title, exact: true })).toBeVisible()
+  const bytes = await photo.body()
+  assert.deepEqual([...bytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], 'Native PNG thumbnail bytes')
+  recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'thumbnail', status: photo.status(), media_type: photo.headers()['content-type'], sha256: createHash('sha256').update(bytes).digest('hex') })
+  const image = article.getByRole('img', { name: title, exact: true })
+  await expect(image).toBeVisible()
+  await expect.poll(() => image.evaluate(element => element.complete && element.naturalWidth > 0)).toBe(true)
   await capture(page, `${name}-media-private`)
   const decisions = []
   for (const [action, expectedState, reviewLabel, confirmLabel] of [
@@ -111,7 +121,9 @@ async function mediaJourney(page, eventID, name) {
     assert.equal(result.id, media.id)
     assert.equal(result.acknowledged_version, intent.version + 1, 'Exact original decision acknowledgement')
     assert.equal(result.state, expectedState)
-    decisions.push({ action, expected_version: intent.version, acknowledged_version: result.acknowledged_version, status: response.status() })
+    const receipt = { action, command_id: intent.command_id, expected_version: intent.version, acknowledged_version: result.acknowledged_version, status: response.status() }
+    decisions.push(receipt)
+    recordMediaProgress({ name, event_id: eventID, media_id: media.id, ...receipt })
     await expect(article.getByText(expectedState, { exact: true })).toBeVisible()
     if (action === 'publish') await capture(page, `${name}-media-released`)
   }
@@ -119,6 +131,7 @@ async function mediaJourney(page, eventID, name) {
   const withdrawn = await page.request.get(`${origins.admin}${photoPath}`)
   assert.equal(withdrawn.status(), 403, 'Withdrawal prevents future protected bytes, even for organiser')
   assert.match(withdrawn.headers()['content-type'] ?? '', /application\/json/)
+  recordMediaProgress({ name, event_id: eventID, media_id: media.id, action: 'withdrawn_thumbnail', status: withdrawn.status() })
   await page.goto(`${origins.admin}/events/${eventID}`, { waitUntil: 'domcontentloaded' })
   return { media_id: media.id, upload_status: uploaded.status(), thumbnail_status: photo.status(), decisions, withdrawn_thumbnail_status: withdrawn.status() }
 }
