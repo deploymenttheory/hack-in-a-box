@@ -459,3 +459,24 @@ publish/receive timestamps; the 2-second p95 target is unchanged. Late samples
 stay late, partial/missing receipts stay in the denominator, and the actual
 1,800-second activity window is not padded by drain time. Synthetic late/partial
 controls and normalized rotation-reader controls are not native load evidence.
+
+
+### Private setup phase control
+
+The private fixture image includes `loadfixture -advance-setup-directory /fixture
+-expected-time <RFC3339Nano> -next-time <RFC3339Nano>`. Run this one-shot command
+as UID 10001 with **only this run’s** `fixture_private` volume mounted writable,
+no network and a read-only root filesystem. The setup API and worker retain
+their read-only mount of that volume. Normal production processes have no clock
+flag or writable clock volume.
+
+The command requires an existing private directory and private `domain-time`,
+an exact expected current instant, and a strictly later next instant. A private
+exclusive controller lock rejects competing commands; an atomic same-directory
+replacement prevents partial timestamps. A stale command cannot rewind a later
+phase. Advance only after the preceding native owner actions and worker receipts
+have been retained. Advancing this private file is a **setup request**, never
+proof of challenge publication, submission capture, follow-up delivery or any
+measured elapsed runtime. Observe those facts through their actual native owners.
+Stop the private setup processes before launching the default-wall production
+images and authenticating the measured cohort.

@@ -20,17 +20,48 @@ import (
 
 func main() {
 	directory := flag.String("new-directory", "", "NEW absolute private fixture input directory")
+	advance := flag.String(
+		"advance-setup-directory", "",
+		"private setup volume directory containing domain-time; never a production clock",
+	)
+	expected := flag.String("expected-time", "", "exact existing setup domain time, RFC3339Nano")
+	next := flag.String("next-time", "", "strictly later setup domain time, RFC3339Nano")
 	admit := flag.String("admit-plan", "", "private canonical plan for native admission checkpoint")
 	ca := flag.String("ca", "", "fixture CA PEM for native admission")
 	targets := flag.String("targets", "", "private exact loopback target map for native admission")
 	output := flag.String("output", "", "new private native admission receipt")
 	flag.Parse()
-	if flag.NArg() != 0 || (*directory == "") == (*admit == "") {
+	modes := 0
+	for _, value := range []string{*directory, *admit, *advance} {
+		if value != "" {
+			modes++
+		}
+	}
+	if flag.NArg() != 0 || modes != 1 || (*advance == "" && (*expected != "" || *next != "")) {
 		fmt.Fprintln(
 			os.Stderr,
-			"select either new private fixture inputs or the native admission checkpoint",
+			"select one private input, native admission or explicit setup clock operation",
 		)
 		os.Exit(1)
+	}
+	if *advance != "" {
+		previous, parseErr := time.Parse(time.RFC3339Nano, *expected)
+		following, nextErr := time.Parse(time.RFC3339Nano, *next)
+		advanceErr := errors.Join(parseErr, nextErr)
+		if advanceErr == nil {
+			advanceErr = loadprofile.AdvanceSetupClock(*advance, previous, following)
+		}
+		if advanceErr != nil {
+			fmt.Fprintln(
+				os.Stderr,
+				"private setup clock advance rejected; expected phase and private control required",
+			)
+			os.Exit(1)
+		}
+		fmt.Println(
+			"Private setup clock advanced. Native worker release/capture remains to be observed; no runtime load evidence created.",
+		)
+		return
 	}
 	if *admit != "" {
 		if err := admitNative(*admit, *ca, *targets, *output); err != nil {
