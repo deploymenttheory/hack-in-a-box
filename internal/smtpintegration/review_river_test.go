@@ -20,9 +20,14 @@ import (
 
 func (f *fixture) approvePastProduction() {
 	f.t.Helper()
-	f.now = time.Now().UTC().AddDate(0, 0, -40)
+	// Preserve a known elapsed instant even across a repeated local hour.
+	// The real worker tests start with setup's current wall clock; only the
+	// reviewed fixture clock moves earlier so native approval precedes its due.
+	due := f.now.UTC().Truncate(time.Second).Add(-time.Hour)
+	wall, choice := testdb.WallTimeForInstant(f.t, due, "Europe/London")
+	f.now = due.Add(-time.Hour)
 	d := f.campaign.Definition
-	d.Timing.Days = -32
+	d.Timing = communications.CampaignTiming{Kind: "fixed", WallTime: wall, DSTChoice: choice}
 	result, err := f.comm.ChangeCampaign(
 		f.t.Context(),
 		f.owner.ID,
@@ -41,6 +46,37 @@ func (f *fixture) approvePastProduction() {
 	}
 	f.campaign = result.Campaign.Campaign
 	f.approveProduction()
+}
+
+// Retained SMTP/River fixtures need a known elapsed instant, not an inferred
+// wall-clock occurrence. Exercise native approval on both sides of the London
+// repeated hour and spring gap without changing production timing validation.
+func TestPastProductionFixturePreservesElapsedInstantAcrossLondonTransitions(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		due    time.Time
+		choice string
+	}{
+		{"autumn_earlier", time.Date(2026, time.October, 25, 0, 30, 0, 0, time.UTC), "earlier"},
+		{"autumn_later", time.Date(2026, time.October, 25, 1, 30, 0, 0, time.UTC), "later"},
+		{"spring_before", time.Date(2026, time.March, 29, 0, 30, 0, 0, time.UTC), ""},
+		{"spring_after", time.Date(2026, time.March, 29, 1, 30, 0, 0, time.UTC), ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := setup(t)
+			f.now = tc.due.Add(time.Hour)
+			f.approvePastProduction()
+			if f.campaign.Approval == nil {
+				t.Fatal("native past campaign was not approved")
+			}
+			if !f.campaign.Approval.DueAt.Equal(tc.due) || !f.now.Equal(tc.due) {
+				t.Fatalf("native past approval due=%s fixture now=%s want %s", f.campaign.Approval.DueAt, f.now, tc.due)
+			}
+			if got := f.campaign.Definition.Timing.DSTChoice; got != tc.choice {
+				t.Fatalf("native reviewed DST choice=%q want%q", got, tc.choice)
+			}
+		})
+	}
 }
 
 func TestCancelOnlyQueuedSMTPResendRetainsAcceptedOrUncertainOriginalWithoutEffect(t *testing.T) {
