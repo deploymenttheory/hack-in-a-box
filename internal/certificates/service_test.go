@@ -317,6 +317,30 @@ func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t 
 	if !strings.Contains(string(body), "Corrected &lt;recipient&gt;") {
 		t.Fatal("corrected approved name missing")
 	}
+	_, err = f.pool.Exec(
+		ctx,
+		"UPDATE events SET writes_allowed=false,stage='archived',revision=revision+1 WHERE id=$1",
+		f.event,
+	)
+	require(t, err)
+	if _, err = f.s.Print(ctx, f.person.ID, f.event, id); err != nil {
+		t.Fatal("archive hid earned certificate", err)
+	}
+	forbidden := correction
+	forbidden.RequestID = uuid.New()
+	forbidden.Version = 2
+	if _, err = f.s.Change(
+		ctx,
+		f.owner.ID,
+		f.event,
+		id,
+		forbidden,
+	); !errors.Is(
+		err,
+		access.ErrForbidden,
+	) {
+		t.Fatal("closed event accepted certificate correction write", err)
+	}
 	revoke := certificates.Command{
 		RequestID: uuid.New(),
 		Version:   2,
@@ -332,16 +356,17 @@ func TestCertificatesRecordedAttendanceConcurrentIssueCorrectionAndRevocation(t 
 	if _, err = f.s.Print(ctx, f.person.ID, f.event, id); !errors.Is(err, access.ErrConflict) {
 		t.Fatal("revoked certificate printed", err)
 	}
-	replay, err := f.s.Change(ctx, f.owner.ID, f.event, id, cmd)
+	retained, err := f.s.Read(ctx, f.owner.ID, f.event, id)
 	require(t, err)
-	if replay.Current || replay.Certificate.Version != 1 {
-		t.Fatal("original replay impersonates current certificate", replay)
-	}
-	if replay.Receipt == nil || len(replay.History) != 3 ||
-		replay.History[0].Receipt != *replay.Receipt ||
-		replay.History[1].Receipt.Action != "correct" ||
-		replay.History[2].Receipt.Action != "revoke" {
-		t.Fatal("history lost exact original command provenance", replay)
+	if retained.Current || len(retained.History) != 3 ||
+		retained.History[0].Receipt.RequestID != cmd.RequestID ||
+		retained.History[0].Receipt.CertificateID != id ||
+		retained.History[0].Receipt.Action != "issue" ||
+		retained.History[0].Receipt.Version != 1 ||
+		len(retained.History[0].Receipt.Fingerprint) != 64 ||
+		retained.History[1].Receipt.Action != "correct" ||
+		retained.History[2].Receipt.Action != "revoke" {
+		t.Fatal("history lost exact closed-event command provenance", retained)
 	}
 }
 

@@ -149,6 +149,11 @@ func TestCertificatesRequireActualPublishedAwardAndCurrentRecipient(t *testing.T
 					t.Fatal("private assessment leaked to print", private)
 				}
 			}
+			// Private judging changes do not silently unpublish an earned award.
+			f.reopen(t, 0)
+			if _, err = s.Print(ctx, r.competitor.ID, eventID, id); err != nil {
+				t.Fatal("private judging reopen revoked explicit historical award recognition", err)
+			}
 			if _, err = s.Read(
 				ctx,
 				f.judges[0].ID,

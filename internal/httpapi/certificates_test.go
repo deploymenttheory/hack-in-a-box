@@ -15,6 +15,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/certificates"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
@@ -22,6 +23,11 @@ import (
 func TestCertificatesHTTPReviewedIssuanceCurrentPrivatePrintAndRevocation(t *testing.T) {
 	pool := testdb.New(t, true)
 	f := newEmbargoFixture(t, pool, time.Date(2027, 7, 20, 8, 0, 0, 0, time.UTC))
+	// The shared embargo seed deliberately stops at schema29; exercise the
+	// certificate adapter only after restoring the actual current migration set.
+	if err := database.Migrate(t.Context(), pool, 0); err != nil {
+		t.Fatal(err)
+	}
 	f.now = f.c.LiveStart.Add(2 * time.Hour)
 	native := certificates.Service{Pool: pool, Now: func() time.Time { return f.now }}
 	f.router = NewRouter(
@@ -60,12 +66,13 @@ func TestCertificatesHTTPReviewedIssuanceCurrentPrivatePrintAndRevocation(t *tes
 				ID:          template,
 				Kind:        "attendance",
 				Recognition: "Recorded attendance only",
-				Issuer:      "Reviewed synthetic organiser",
+				Issuer:      strings.Repeat("ReviewedBrand", 12),
 				Accent:      "#007e67",
 			},
 		},
 		Reason: "Explicit template review",
 	}
+	call(f.owner, "GET", settingsPath, nil, 200)
 	call(recipient, "PUT", settingsPath, policy, 403)
 	raw, err := json.Marshal(policy)
 	if err != nil {

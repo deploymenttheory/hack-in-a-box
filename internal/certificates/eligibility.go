@@ -89,11 +89,12 @@ func (s Service) eligibility(
 	}
 
 	out.Eligible = len(out.Blockers) == 0
+	// Bind recognition facts, not unrelated lifecycle revisions. An archive
+	// must not silently withdraw genuinely earned, explicitly issued recognition.
 	out.Binding, err = digest(struct {
-		Eligibility   Eligibility
-		EventRevision int64
-		Facts         eligibilityFacts
-	}{out, row.Revision, facts})
+		Eligibility Eligibility
+		Facts       eligibilityFacts
+	}{out, facts})
 	return out, key, failure("eligibility", err)
 }
 

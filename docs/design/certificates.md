@@ -11,11 +11,13 @@ qualifies. The current attendance owner records confirmed competitor arrivals; t
 certificates use that same current confirmed-recipient boundary. Award eligibility
 comes only from the latest explicit award release and its published frozen team.
 Private result preparation, confirmation or reopened judging never supplies a
-publication. A later explicit award release requires a newly reviewed source.
+publication and cannot silently withdraw a deliberately published award. A later explicit award release requires a newly reviewed source.
 
 A preview binds current eligibility and approved printable fields. Explicit issuance
 must use that binding. Corrections keep the certificate UUID and append provenance;
-revocation is terminal. Staff-only immutable history carries the exact original
+revocation is terminal. Earned recognition remains readable after archive while
+current recipient/event authority remains valid; unrelated lifecycle revisions
+do not impersonate corrected attendance or a replacement published award. Staff-only immutable history carries the exact original
 request/action/fingerprint receipt as well as actor and reason. Recipient reads
 never receive private issuance reasons or staff history. Current source changes block printing until an eligible,
 explicit correction. Current organiser or own-recipient access is rechecked on every
