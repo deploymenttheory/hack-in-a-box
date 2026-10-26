@@ -222,6 +222,7 @@ for(const mode of ['accepted','interrupted','changed','denied','408','lost_ack',
  const press=page.keyboard.press.bind(page.keyboard)
  try{
   await page.goto(path);await page.getByRole('button',{name:`Inspect Team ${team.team_id}`,exact:true}).press('Enter');await expect(page.getByRole('heading',{name:`Team ${team.team_id}`,exact:true,level:2})).toBeFocused();await page.getByRole('button',{name:'Review saved final card confirmation',exact:true}).press('Enter')
+  await expect(page.getByLabel('Recorded panel reason',{exact:true})).toBeFocused()
   await page.getByLabel('Recorded panel reason',{exact:true}).fill('Exact reviewed card remains unsent during current read')
   await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter')
   const dialog=page.getByRole('alertdialog',{name:'Review private panel command',exact:true}),confirm=dialog.getByRole('button',{name:'Confirm reviewed panel command',exact:true})
@@ -338,7 +339,9 @@ for(const empty of [false,true])test(`declared original record accepts exact rec
 
 
 test('owner awaits actual casting projection and ignores pending stale or different tie reads',async({page})=>{
- await page.clock.install()
+ const frozenAt=new Date()
+ // Let startup timers run, then pause at the same captured browser-clock anchor.
+ await page.clock.install({time:new Date(frozenAt.getTime()-60_000)})
  const state=await fixture(page),category=state.page.criteria.categories.find(value=>value.label==='User experience')!,tieID='synthetic-ux-tie'
  state.page.current=false;state.page.round.signoff=null;state.page.capabilities.record_locked=false
  state.page.preview!.ties=[{id:tieID,kind:'category',category_id:category.id,team_ids:state.page.teams.map(value=>value.team_id),seats:1}]
@@ -348,19 +351,28 @@ test('owner awaits actual casting projection and ignores pending stale or differ
  await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}`,async route=>{
   if(route.request().method()!=='GET'){writes++;return route.abort()}
   const projection=structuredClone(state.page);reads++
-  if(hold)await pending
+  // Controlled transport latency: fake browser time may advance while this
+  // deliberately stale owner response is still in flight.
+  if(hold){await pending;await new Promise(resolve=>setTimeout(resolve,100))}
   await route.fulfill({json:projection})
  })
  await page.goto(path)
  const tie=page.getByRole('region',{name:'Affected tie: User experience · Seat 1',exact:true})
  await expect(tie).toContainText('Required current ballots incomplete')
- await page.clock.pauseAt(new Date())
+ const setupRead=page.waitForResponse(response=>response.url()===new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href&&response.request().method()==='GET'&&response.status()===200)
+ await page.clock.pauseAt(frozenAt);await (await setupRead).finished()
+ await expect(page.getByRole('button',{name:'Read current panel source',exact:true})).toBeEnabled()
  // This GET began before the second ballot and retains the earlier projection.
+ const heldRead=page.waitForResponse(response=>response.url()===new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href&&response.request().method()==='GET'&&response.status()===200)
  hold=true;const before=reads;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect.poll(()=>reads).toBeGreaterThan(before)
  const {waitForCastingRead}=await import('../qualification-native/current-panel-read')
  let settled=false
  const current=waitForCastingRead(page,new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href,category.id,1).then(()=>{settled=true})
  hold=false;release()
+ await (await heldRead).finished()
+ await expect(page.getByRole('button',{name:'Read current panel source',exact:true})).toBeEnabled()
+ await expect(tie).toContainText('Required current ballots incomplete')
+ expect(settled).toBe(false)
  // A following native read with a complete OTHER tie must not satisfy the barrier.
  state.page.tie_actions[0]={...state.page.tie_actions[0],votes_complete:true,casting:true,seat:2}
  await page.clock.runFor(15_000)
