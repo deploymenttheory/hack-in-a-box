@@ -429,3 +429,38 @@ cutoff census, independent judging, embargoed awards/feedback, reviewed nonwinne
 showcase, immutable archive, retained outcomes and real browser journeys. Those
 phases and the remaining negative/exception/provider variants still gate every
 final L01–L18 acceptance claim.
+
+## Connected native GitHub App attachment checkpoint
+
+The same two-event journey passed in 1.85s (runner 11852), frozen source
+`0c72445bb3bbc89e43d5443f0576b49d7fa6e3c9`, fixture image
+`sha256:c8a633cc11d1f7de54469c3d40818e9d05e726ff04faeabb6849b5e828ac685a`,
+main base `076f6162`, schema 54. Normal configured credential encryption backed
+both native event App owners. Each organiser obtained a browser-session-bound
+installation state, followed the strict synthetic external installation redirect,
+and completed the real native callback (303). Replaying that callback through
+the authenticated native route returned 400 with no-store. Native diagnostics
+used the actual GitHub REST client: the external fixture verified twelve signed
+App JWTs, minted four scoped installation tokens and served four template reads.
+Read-only database assertions matched both event IDs to App 42, installation 7
+and organisation 99. The journey then completed its existing native publication,
+acknowledgement and scheduled live transitions in both contexts.
+
+The safe [journey-github-app.json](evidence/journey-github-app.json) records exact
+source/image provenance, native bindings and counters without keys or tokens.
+This is an explicitly test-only provider transport and fixture process; it does
+not demonstrate real GitHub effects, production TLS, repository provisioning,
+participant GitHub OAuth or the remaining lifecycle. `complete_lifecycle` stays
+false.
+
+The initial `48845b14` image
+`sha256:45e66bca857ba2e4d4be319aa028550bfdebff659f200d64bc9215cf130cabcd`
+failed in 0.43s after the native callback had already returned 303: the driver's
+API-only helper rejected its non-API callback replay locally. No native replay
+result was claimed for that run. An unsuccessful source replacement was followed
+by cached build 60308 of the same old bytes; that build is not corrected-source
+evidence. The correction uses an explicit same-origin authenticated callback
+request while retaining the generic API-route guard. Corrected build 26623 and
+fresh startup 26849 preceded passing runner 11852. Both private projects were
+removed; cleanup 82553 verified empty owned container, volume and network labels.
+Normal user projects were untouched.
