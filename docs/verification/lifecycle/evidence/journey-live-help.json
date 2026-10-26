@@ -1,0 +1,206 @@
+{
+  "checkpoint": "native-prelive-output-help-denial-concurrent-claim-and-winner-resolution",
+  "complete_lifecycle": false,
+  "provenance": {
+    "source": "72379c1163740bc9a788944b251c9e0e21e2fb40",
+    "main_base": "fdb5282a9e3b5042a19a70fe85f21b3f1ee7b607",
+    "schema": 55,
+    "fixture_image": "sha256:ebd202cf99e59a311700f8699ca60522237c62b0490cabdce9ae4f82bf1e7993",
+    "build": "85654",
+    "startup": "50009",
+    "runner": "20523",
+    "duration_seconds": 479.73,
+    "production_image": false,
+    "first_native_run": true
+  },
+  "events": [
+    {
+      "event_id": "5ed350b5-4bc6-429b-b2b9-5c9f6a19beb1",
+      "mode": "all_teams",
+      "team_id": "6249cefe-0733-4089-9809-8be50d14a042",
+      "early_request_id": "9e8deb27-3687-4560-b1c4-2b99958baf76",
+      "early_command_id": "68bb0fcb-2aec-46ed-8176-074582900989",
+      "request_id": "9eb7bf84-bdaa-4d72-836a-4e83b6f725b8",
+      "winner_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+      "loser_id": "fd58dc69-23d0-40e8-8da5-be4b8875ef3b",
+      "intents": [
+        {
+          "command_id": "0c446964-cd36-4076-9607-9c2aa693b276",
+          "actor_id": "1ea21ede-f7af-4313-8698-92e452208281",
+          "action": "create",
+          "expected_revision": 0,
+          "response_revision": 1,
+          "http_status": 200
+        },
+        {
+          "command_id": "2dddcb87-8571-443c-ae9c-ed853c7344b6",
+          "actor_id": "fd58dc69-23d0-40e8-8da5-be4b8875ef3b",
+          "action": "claim",
+          "expected_revision": 1,
+          "response_revision": 0,
+          "http_status": 409
+        },
+        {
+          "command_id": "dc18d0b1-cedc-4bfb-a4ed-5996e55eb100",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "action": "claim",
+          "expected_revision": 1,
+          "response_revision": 2,
+          "http_status": 200
+        },
+        {
+          "command_id": "4fff89dc-ef7a-49ce-bad5-5582898b59fd",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "action": "resolve",
+          "expected_revision": 2,
+          "response_revision": 3,
+          "http_status": 200
+        }
+      ],
+      "early_output_denied": true,
+      "early_request_absent": true,
+      "other_team_denied": true,
+      "claim_successes": 1,
+      "claim_conflicts": 1,
+      "resolved": true,
+      "final_revision": 3,
+      "native_command_count": 3,
+      "native_history": [
+        {
+          "revision": 1,
+          "action": "create",
+          "status": "waiting",
+          "actor_id": "1ea21ede-f7af-4313-8698-92e452208281",
+          "assignee_id": null
+        },
+        {
+          "revision": 2,
+          "action": "claim",
+          "status": "claimed",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "assignee_id": "dfb5b755-6689-46fc-9537-02fea4155cfb"
+        },
+        {
+          "revision": 3,
+          "action": "resolve",
+          "status": "resolved",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "assignee_id": "dfb5b755-6689-46fc-9537-02fea4155cfb"
+        }
+      ]
+    },
+    {
+      "event_id": "440eb2ba-d01e-4ff3-99b7-7bb449ecb17b",
+      "mode": "mentor_qualification",
+      "team_id": "075964bd-87d9-48d2-b66c-40729c17c2c6",
+      "early_request_id": "c3d21c47-540b-43b1-af33-9ff82784b7e4",
+      "early_command_id": "9e5bc1b4-92b1-413d-8b81-d5828af44b65",
+      "request_id": "6e3e5519-f118-458d-a938-e9c6368e2295",
+      "winner_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+      "loser_id": "fd58dc69-23d0-40e8-8da5-be4b8875ef3b",
+      "intents": [
+        {
+          "command_id": "25a0268a-202d-4707-a17a-ad86a9774463",
+          "actor_id": "1ea21ede-f7af-4313-8698-92e452208281",
+          "action": "create",
+          "expected_revision": 0,
+          "response_revision": 1,
+          "http_status": 200
+        },
+        {
+          "command_id": "a3f4e19e-d1f0-4276-9422-69ee4193ddd1",
+          "actor_id": "fd58dc69-23d0-40e8-8da5-be4b8875ef3b",
+          "action": "claim",
+          "expected_revision": 1,
+          "response_revision": 0,
+          "http_status": 409
+        },
+        {
+          "command_id": "542dd57b-87d4-4b28-9985-99c8d2196501",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "action": "claim",
+          "expected_revision": 1,
+          "response_revision": 2,
+          "http_status": 200
+        },
+        {
+          "command_id": "cde6b5bf-dfc6-4f71-a940-ba7d71886766",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "action": "resolve",
+          "expected_revision": 2,
+          "response_revision": 3,
+          "http_status": 200
+        }
+      ],
+      "early_output_denied": true,
+      "early_request_absent": true,
+      "other_team_denied": true,
+      "claim_successes": 1,
+      "claim_conflicts": 1,
+      "resolved": true,
+      "final_revision": 3,
+      "native_command_count": 3,
+      "native_history": [
+        {
+          "revision": 1,
+          "action": "create",
+          "status": "waiting",
+          "actor_id": "1ea21ede-f7af-4313-8698-92e452208281",
+          "assignee_id": null
+        },
+        {
+          "revision": 2,
+          "action": "claim",
+          "status": "claimed",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "assignee_id": "dfb5b755-6689-46fc-9537-02fea4155cfb"
+        },
+        {
+          "revision": 3,
+          "action": "resolve",
+          "status": "resolved",
+          "actor_id": "dfb5b755-6689-46fc-9537-02fea4155cfb",
+          "assignee_id": "dfb5b755-6689-46fc-9537-02fea4155cfb"
+        }
+      ]
+    }
+  ],
+  "native_census": {
+    "help_requests": 2,
+    "successful_commands": 6,
+    "history_transitions": 6,
+    "conflicted_claims_without_retained_command": 2,
+    "rejected_early_requests_without_native_record": 2
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-help-72379c11-native.log",
+      "sha256": "479074c5966f5c794542993b348f9fb4c3b98431ea51db672c03c3a27d3364b6"
+    },
+    {
+      "local_basename": "hackbox120-help-72379c11-journey.json",
+      "sha256": "5dc647aac741955424b89c252c10e22facdfca996bf6101cff1da7fa2550ca3d"
+    },
+    {
+      "local_basename": "hackbox120-help-72379c11-work.json",
+      "sha256": "9dcccdbdf9082efc96e1a40276175e915a1aaf0bbe9c5492d4f36c3f20328dd5"
+    },
+    {
+      "local_basename": "hackbox120-help-72379c11-state.json",
+      "sha256": "b67b1fe5d8c3acd4f414a2c35266ebd3933e8ea4c961a484d04f90b0535a8830"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-help-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0
+  },
+  "privacy": "Explicit whitelist of synthetic UUIDs, enum states, counts and exact native command/history metadata. No help prose, private assessments, credentials, sessions or provider configuration. Raw artifacts remain local.",
+  "scope_limits": [
+    "This proves two real native HTTP claim races and resolution, not every help-role/reassignment/escalation case.",
+    "Reviewed common clarification and correction, real browser disconnection, remaining admission/privilege/freeze/publication exceptions, media/surveys, reviewed non-winner showcase, archive/owned outcomes and final integrated production-image/Fleet/recovery/full reviews remain required.",
+    "Native clarification notices are atomic owning-transaction private inbox references, distinct from River-queued external notifications.",
+    "No original issue120 checkbox or L01-L18 row is declared fully complete."
+  ]
+}

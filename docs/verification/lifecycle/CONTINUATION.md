@@ -49,7 +49,7 @@ supporting checkpoint evidence.
 | Under-three pre-freeze reassignment; smaller/withdrawn teams after freeze; no moves/backfill; unused disbanded repos | Real pre-freeze depletion, unlock/reassignment/republication and freeze move denial. | After actual repository provision/publication, keep a smaller team's identity without reassignment; fully withdraw another; review any resulting access changes through native owners. Assert its existing repo is unused/unscored and post-freeze moves/post-cutoff replacement fail. |
 | T−7 local-calendar publication, early work, live-only formal/review, missed release and reasoned exceptions | Real worker DST/T−7 publication, private preparation work/drafts and early formal/review denial. | Actual missed/+60-second boundary, source/current audience gates, reasoned post-publication postponement and below-minimum attendance exception. Use event-specific dates and a single monotonic domain clock; do not rewind time or stretch windows. |
 | Former-organiser/privileged competitor rejection; cutoff freeze before stage advancement; assessment with an explicit outcome for every team | Native cutoff sources/retry/reconciliation while events remain live, including frozen/not-submitted/withdrawn outcomes. | Actual privilege history survives grant revocation; enforce same-event disqualification and correct cross-event scope. Reach native assessment only after complete current-team outcome census. |
-| Objectives, common rubric, exact acknowledgements, concurrent help, reviewed clarification and correction notices | Native objective/common rubric/acknowledgement and live mentor checkpoints. | Race two authorised helpers against one current revision: one claim wins. Rehearse private support, reviewed common clarification and corrected-answer current-audience notifications through actual queued native effects. |
+| Objectives, common rubric, exact acknowledgements, concurrent help, reviewed clarification and correction notices | Native objective/common rubric/acknowledgement, live mentor checkpoints and479.73s two-event help race/resolution. | Rehearse private-to-common reviewed clarification and correction, including actual current-audience inbox references committed atomically by the native owner. Keep queued external communications distinct; browser disconnected recovery remains required. |
 | Practice versus real scoring, non-winning showcase and owned30/60/90 reviews with estimated/evidenced outcomes | Isolated actual practice, new mentor/final judge cards; native retained-review components. | Reviewed consented non-winner publication/search/filter/page/withdrawal; actual owned review plans and queued30/60/90 effects. Distinguish estimates, self-reports and evidenced adoption. |
 | Archive retains only explicitly approved follow-up; audited updates leave competition immutable; M5 excluded | Exclusive default90-day expiry and explicit native120-day synthetic retention components. | Native completion/archive; approved retained follow-up only; audit/export/current owner access; compare frozen submission, rubric, scoring, decisions and publication hashes before/after authorised outcome updates. Default90 stays unchanged. |
 | Completed Fleet screens/guide and full action-to-next-action journeys | API lifecycle and separate historical UI/normal-image proofs. | Final merged Fleet routes in both actual portals, real backend actions, keyboard/narrow recovery, independent published guide and public-app outage/admin availability. Prototype/mocked-browser checks do not satisfy this row. |
@@ -70,9 +70,12 @@ and organiser review; anonymised archive learning without expired personal data.
    private draft leaves the old release intact. Other teams and withdrawn readers
    remain denied; an unscored reserve gets prose without fabricated zero scores.
    Final cross-event/archive integration remains required.
-3. Add live help contention, private-to-common reviewed clarification, correction
-   delivery and real browser disconnection recovery. Help uses its required
-   caller-owned `Idempotency-Key`; claims are not automatically replayed.
+3. The479.73s checkpoint proves prelive output-help denial and one winner
+   from two concurrent live claims per event, followed by winner resolution.
+   Help uses caller-owned `Idempotency-Key`; conflicted claims are not replayed.
+   Next add private-to-common reviewed clarification/correction. Its native
+   recipient inbox references are committed atomically with publication, not
+   queued through River. Real browser disconnection recovery remains required.
 4. Integrate admission cutoff/privilege history/post-freeze and publication
    exception variants into coherent event chronology. Keep historical approved
    access receipts distinct from later reviewed removal/coverage plans. Capture

@@ -1281,3 +1281,40 @@ surveys, non-winning showcase, archive/owned outcomes and final full Fleet,
 production-image/recovery/review/CI acceptance remain required.
 **complete_lifecycle=false; no original acceptance checkbox or L01–L18 row is
 fully complete.**
+
+## Connected native live-help claim race
+
+Frozen source `72379c1163740bc9a788944b251c9e0e21e2fb40` on merged
+main `fdb5282a9e3b5042a19a70fe85f21b3f1ee7b607`/schema55 passed
+runner20523 in **479.73s**, build85654/start50009, immutable verification image
+`sha256:ebd202cf99e59a311700f8699ca60522237c62b0490cabdce9ae4f82bf1e7993`.
+This is the first native execution of the help extension. Both retained events
+again traverse the real registration, admission, team/common freeze, GitHub
+setup/access, practice, live evidence/cutoff, independent judging, results
+publication and own-team feedback paths. It is not a production-image proof.
+
+Before live, a current team member's output-help create returns the exact native
+`event_blocked`/`help_output_before_live`409 and subsequent read404. During live,
+the member creates a fresh waiting request; another team cannot read it. Both
+currently assigned mentors first read claim authority, then issue distinct
+single-shot commands concurrently against revision1. Exactly one returns200
+and one409. The winner owns revision2 and resolves the request at revision3.
+
+Read-only native metadata corroborates two resolved requests, six retained
+commands and six ordered transitions. Each history is exactly create by the
+actual requester, then claim and resolve by the winning mentor. Neither losing
+claim has a retained command; neither rejected prelive ID has a request. The
+[bounded receipt](evidence/journey-live-help.json) contains only synthetic IDs,
+counts, enum states, original intent/revision metadata and private artifact
+hashes. Help prose and all private runtime exports remain local. The isolated
+project's containers, volumes and network were removed and verified absent.
+
+The actual factory passed its canonical API schema control after rebase
+(package0.507s); configured lint was clean on the same help source before the
+patch-equivalent rebase. No production source changed for this checkpoint.
+Reviewed common clarification/correction remains next. Its native publication
+commits private inbox resource references in the owning transaction; this must
+not be described as queued River delivery. Other help authority/escalation
+variants, actual browser disconnection recovery and the remaining full
+acceptance matrix stay open. No original #120 checkbox or L01–L18 row is
+declared fully complete.
