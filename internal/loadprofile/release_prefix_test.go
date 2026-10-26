@@ -119,6 +119,7 @@ func TestKnownReleasePrefixRejectsUnknownControlOrAnyDomainProgress(t *testing.T
 		"domain-post":              func(p *ReleasePreparation) { p.Calls[0].Method = http.MethodPost },
 		"unrecognised-get":         func(p *ReleasePreparation) { p.Calls[0].Path += "/judging/brief" },
 		"unknown-original-request": func(p *ReleasePreparation) { p.Calls[0].OriginalComplete = false },
+		"clarification-progress":   func(p *ReleasePreparation) { p.Clarifications = []PreparedClarification{{EventID: uuid.New()}} },
 		"formal-progress":          func(p *ReleasePreparation) { p.Formal = []submissions.Page{{TeamID: uuid.New()}} },
 		"old-session":              func(p *ReleasePreparation) { p.AfterCleanup.UnexpiredSessions = 1 },
 		"unknown-cleanup":          func(p *ReleasePreparation) { p.SessionCleanup.Unresolved = 1 },

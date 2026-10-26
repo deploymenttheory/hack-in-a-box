@@ -638,3 +638,11 @@ The four owned durable volumes and successful host receipts remain preserved.
 No full workload, normal production handover, baseline target or release result
 is inferred. A fresh native preparation run is required if this fixture's live
 window has expired by the time the real 1,800-second baseline is ready.
+
+The next factory source step adds native private questions and separately authored,
+approved common answers for two teams in each live/archive context. Archive
+questions are created during its actual live setup phase, before cutoff. Original
+question command identifiers remain in the setup ledger even if the response is
+lost. The read-only continuation guard rejects any clarification progress. This
+recipe has not yet run against the native fixture; the successful historical
+worker receipt above contains no clarification publication or search proof.

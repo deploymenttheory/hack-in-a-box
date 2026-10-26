@@ -139,5 +139,5 @@ func knownReadOnlyArchiveStage(previous ReleasePreparation) bool {
 		len(previous.CaptureJobs) == 0 &&
 		len(previous.Projects) == 0 &&
 		len(previous.NativeEvents) == 0 &&
-		len(previous.Released) == 0
+		len(previous.Released) == 0 && len(previous.Clarifications) == 0
 }

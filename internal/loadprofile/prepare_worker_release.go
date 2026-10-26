@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
@@ -37,8 +38,9 @@ type NativeReleaseInputs struct {
 }
 
 type ReleasePreparation struct {
-	KnownPrefixSHA256    string    `json:"known_prefix_sha256,omitempty"`
-	CaptureStartBoundary time.Time `json:"capture_start_database_wall_boundary"`
+	Clarifications       []PreparedClarification `json:"native_common_clarifications"`
+	KnownPrefixSHA256    string                  `json:"known_prefix_sha256,omitempty"`
+	CaptureStartBoundary time.Time               `json:"capture_start_database_wall_boundary"`
 	AdmissionPreparation
 	OriginalSourcesSHA256   string                 `json:"original_sources_sha256"`
 	OriginalAdmissionSHA256 string                 `json:"original_admission_sha256"`
@@ -403,6 +405,10 @@ func (r *factoryRelease) archive(ctx context.Context) error {
 		}
 		r.receipt.Formal = append(r.receipt.Formal, formal)
 	}
+	r.receipt.Step = "archive-native-private-questions-and-common-answers"
+	if err := r.clarifications(ctx, planned, source); err != nil {
+		return err
+	}
 	r.receipt.Step = "archive-native-cutoff-capture"
 	boundary, err := r.database.DatabaseTime(ctx)
 	if err != nil {
@@ -453,6 +459,9 @@ func (r *factoryRelease) live(ctx context.Context) error {
 			return err
 		}
 		if err := r.projects(ctx, planned, r.sources[planned.Input.ID], 2); err != nil {
+			return err
+		}
+		if err := r.clarifications(ctx, planned, r.sources[planned.Input.ID]); err != nil {
 			return err
 		}
 	}
@@ -737,4 +746,54 @@ func releaseCurrentMatches(
 		*current.OwnerID == owner &&
 		current.ConfirmedAttendees == 180 &&
 		publishedAllowed
+}
+
+func (r *factoryRelease) clarifications(
+	ctx context.Context,
+	planned FactoryEvent,
+	source PreparedEventSources,
+) error {
+	var common clarification.Source
+	for _, released := range r.receipt.Released {
+		if released.ID == source.Challenge.ID && released.ReleasedVersion != nil &&
+			released.Document.Rubric != nil {
+			common = clarification.Source{
+				ChallengeID:      released.ID,
+				ChallengeVersion: *released.ReleasedVersion,
+				Rubric:           *released.Document.Rubric,
+			}
+		}
+	}
+	if common.ChallengeID == uuid.Nil {
+		return fmt.Errorf(
+			"%w: actually released common source required for clarification fixture",
+			errCohort,
+		)
+	}
+	for _, team := range source.Teams.Teams[:2] {
+		member, err := r.teamMember(team)
+		if err != nil {
+			return err
+		}
+		prepared, err := r.preparer.PublishClarification(
+			ctx,
+			r.owners[planned.Input.ID],
+			member,
+			planned.Input.ID,
+			team.ID,
+			common,
+			"PRIVATE question "+r.plan.Run.String()+" "+team.ID.String(),
+			"Reviewed load clarification "+r.plan.Run.String(),
+		)
+		// Preserve an original private-question acknowledgement even when a
+		// later answer review or public read fails. A partial setup cannot be
+		// mistaken for the recognised read-only continuation prefix.
+		if prepared.Question.ID != uuid.Nil {
+			r.receipt.Clarifications = append(r.receipt.Clarifications, prepared)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

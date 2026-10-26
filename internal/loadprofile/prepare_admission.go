@@ -20,6 +20,7 @@ import (
 // response/uncertainty, without provider credentials, cookies or native prose.
 // These setup requests never enter the sustained latency distributions.
 type PreparationCall struct {
+	CommandID        *uuid.UUID    `json:"command_id,omitempty"`
 	ExpectedRevision *int64        `json:"expected_revision,omitempty"`
 	PayloadID        *uuid.UUID    `json:"payload_id,omitempty"`
 	RequestID        *uuid.UUID    `json:"request_id,omitempty"`
@@ -54,6 +55,7 @@ func prepareCall[T any](ctx context.Context, preparer *NativePreparer, actor *Se
 	var identifiers struct {
 		ID        *uuid.UUID `json:"id"`
 		RequestID *uuid.UUID `json:"request_id"`
+		CommandID *uuid.UUID `json:"command_id"`
 	}
 	// These identifiers are provenance only. The raw input hash remains complete;
 	// native owners still validate the actual request and establish authority.
@@ -66,10 +68,13 @@ func prepareCall[T any](ctx context.Context, preparer *NativePreparer, actor *Se
 	response, err := actor.Exchange(ctx, method, path, revision, input)
 	responseHash := sha256.Sum256(response.Body)
 	preparer.Calls = append(preparer.Calls, PreparationCall{
-		ExpectedRevision: expected, PayloadID: identifiers.ID, RequestID: identifiers.RequestID,
-		Actor:  actor.Person(),
-		Method: method,
-		Path:   path,
+		ExpectedRevision: expected,
+		PayloadID:        identifiers.ID,
+		RequestID:        identifiers.RequestID,
+		CommandID:        identifiers.CommandID,
+		Actor:            actor.Person(),
+		Method:           method,
+		Path:             path,
 		InputSHA256: hex.EncodeToString(
 			inputHash[:],
 		),

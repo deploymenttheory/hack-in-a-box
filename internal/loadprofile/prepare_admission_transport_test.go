@@ -35,8 +35,8 @@ func TestPreparationLostOriginalResponseRetainsCapturedIdentifiers(t *testing.T)
 	}
 	preparer := &NativePreparer{}
 	revision := int64(9)
-	id, request := uuid.New(), uuid.New()
-	input := map[string]any{"id": id, "request_id": request}
+	id, request, command := uuid.New(), uuid.New(), uuid.New()
+	input := map[string]any{"id": id, "request_id": request, "command_id": command}
 	if _, err := prepareCall[map[string]any](
 		t.Context(),
 		preparer,
@@ -50,6 +50,8 @@ func TestPreparationLostOriginalResponseRetainsCapturedIdentifiers(t *testing.T)
 	}
 	revision = 10
 	input["id"] = uuid.New()
+	input["request_id"] = uuid.New()
+	input["command_id"] = uuid.New()
 	if effects.Load() != 1 || len(preparer.Calls) != 1 {
 		t.Fatal("uncertain write was replayed")
 	}
@@ -60,7 +62,7 @@ func TestPreparationLostOriginalResponseRetainsCapturedIdentifiers(t *testing.T)
 		*call.PayloadID != id ||
 		call.RequestID == nil ||
 		*call.RequestID != request ||
-		call.InputSHA256 == "" {
+		call.InputSHA256 == "" || call.CommandID == nil || *call.CommandID != command {
 		t.Fatal(
 			"original uncertainty or exact identifiers were replaced by later caller state",
 			call,
