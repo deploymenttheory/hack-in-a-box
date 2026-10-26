@@ -107,21 +107,26 @@ func TestSecurity121CrossEventFilesExportsAndMaliciousUploads(t *testing.T) {
 		}
 	}
 	base := "/api/v1/events/" + eventA.String() + "/files"
-	for name, payload := range map[string][]byte{
-		"html.txt":     []byte(`<html><script>window.security121=true</script></html>`),
-		"svg.png":      []byte(`<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>`),
-		"oversize.txt": bytes.Repeat([]byte("a"), 1025),
+	for _, test := range []struct {
+		name      string
+		payload   []byte
+		mediaType contract.UploadFileJSONBodyMediaType
+		status    int
+	}{
+		{"html.txt", []byte(`<html><script>window.security121=true</script></html>`), contract.UploadFileJSONBodyMediaTypeImagepng, http.StatusUnsupportedMediaType},
+		{"svg.png", []byte(`<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>`), contract.UploadFileJSONBodyMediaTypeImagepng, http.StatusUnsupportedMediaType},
+		{"oversize.txt", bytes.Repeat([]byte("a"), 1025), contract.UploadFileJSONBodyMediaTypeTextplain, http.StatusRequestEntityTooLarge},
 	} {
-		w := request("POST", base, contract.UploadFileJSONRequestBody{Filename: name, MediaType: contract.UploadFileJSONBodyMediaTypeImagepng, Content: payload})
-		if w.Code < 400 || w.Code >= 500 {
-			t.Fatal("malicious/mismatched upload did not fail safely", name, w.Code)
+		w := request("POST", base, contract.UploadFileJSONRequestBody{Filename: test.name, MediaType: test.mediaType, Content: test.payload})
+		if w.Code != test.status {
+			t.Fatalf("upload %s: got status %d, want %d", test.name, w.Code, test.status)
 		}
 	}
 	var count int
 	if err := pool.QueryRow(ctx, "SELECT count(*) FROM files WHERE event_id=$1", eventA).Scan(&count); err != nil || count != 0 {
 		t.Fatal("rejected upload left authorised metadata", err)
 	}
-	good := request("POST", base, contract.UploadFileJSONRequestBody{Filename: "safe.txt", MediaType: contract.UploadFileJSONBodyMediaTypeTextplain, Content: []byte("Synthetic safe positive control")})
+	good := request("POST", base, contract.UploadFileJSONRequestBody{Filename: "safe.txt", MediaType: contract.UploadFileJSONBodyMediaTypeTextplain, Content: bytes.Repeat([]byte("a"), 1024)})
 	if good.Code != 201 {
 		t.Fatal("legitimate upload positive control failed", good.Code)
 	}
