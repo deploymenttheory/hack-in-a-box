@@ -725,3 +725,52 @@ later result. Precutoff captures remain due later; output/cutoff, support, all
 judging/advisory/awards/showcase/archive/outcomes, final integrated owners/browser
 journeys and CI remain required. **complete_lifecycle remains false, and no
 L01–L18 row is declared fully complete.**
+
+## Connected private preparation drafts and actual live submissions
+
+The same coherent two-event journey now passed **248.16s** at frozen
+`611deb9a51bf7b5b0cd14f8dfc5f6df16b89a392`, fixture image
+`sha256:627d3e184e7838dbed4f4d0f7946ecf7c44ed927a8a6a6360107e35dfec0ef2c`
+(main076f/schema54). Build54407/startup63091 preceded actual native runner68834.
+The [bounded receipt](evidence/journey-submissions-live.json) records exact native
+submission/draft identities and times without their private prose or evidence
+bodies. This is the verification image, not production-image/browser acceptance.
+
+Before common release, actual snapshot GET/PUT configures each event's required
+repository-or-URL deliverable while retaining its other native definitions.
+After common publication and64 genuinely accepted managed grants, current members
+of all12 frozen teams save actual private drafts at March23 at09:00Z. Every
+member's early formal PUT fails409 with `live_start/not_open`; every organiser's
+early formal review POST fails409 with `live_start/review_not_open`. Exact
+competition and private-draft projections remain unchanged. Each organiser and
+an actual member of another team receives403 for that private draft.
+
+After both native live transitions and real queued current-access polling, four
+teams per event explicitly submit their retained evidence through native PUT.
+Normal PostgreSQL contains eight immutable formal revisions at March30 at08:00Z:
+six managed-repository references and two non-repository demonstration URLs.
+None is late. Four other drafts remain private-only with no formal revision;
+they are inputs to future absent/not-submitted cases, not inferred submissions.
+No repository URL or draft is treated as a cutoff SHA or reviewed final output.
+All twelve repository provisions/polls and64 access effects remain delivered;
+all operation leases are released. Fourteen capture intents remain pending
+before cutoff. This run does not claim capture/freeze/judging completion.
+
+The first frozen9faf/image5ccc run failed **102.39s** because the driver sent POST
+to the formal endpoint, whose canonical OpenAPI and existing native HTTP contract
+require PUT. It had saved one real private draft and zero formal revisions.
+[journey-submissions-method-red.json](evidence/journey-submissions-method-red.json)
+preserves that source/result and bounded native state. The correction changes
+only the early-denial and live-formal method sites; all exact rejection,
+version/body/CSRF, identity, privacy, time and invariance assertions remain.
+Compilation passed0.538s; the initial new-driver app lint reported0 issues before
+this two-token method correction. No production code, clock, timeout or policy
+changed.
+
+Both unique RED and GREEN projects and profile volumes/networks were removed;
+all final label queries were empty. The normal preview and other user projects
+were untouched. The remaining post-freeze depletion/unused repository, offer and
+postponement/exception variants, provider work/cutoff reconciliation, live support,
+independent judging/advisory/awards/showcase/archive/outcomes and final integrated
+browser/CI matrix remain required. **complete_lifecycle remains false; no
+L01–L18 row is declared fully complete.**
