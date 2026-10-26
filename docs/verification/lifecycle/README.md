@@ -1028,3 +1028,39 @@ TLS and browser proof. Actual final mentor cards/qualification, fresh final judg
 cards/advisory-only mentor input/judge-only decisions, remaining variants and
 later lifecycle/final validation remain required. **complete_lifecycle=false;
 no L01–L18 row is declared fully complete.**
+
+
+## Fresh frozen-output mentor cards and recorded signed review — native PASS
+
+Frozen `ae532cefe94c2be5b57e9767809aa97f22aa6af6` passed runner24488 in
+**284.70s**, built89686/start71047 as fixture
+`sha256:f6ad29d8486d28e8413fdc317089229da19edda6da918f54b7b75f1b3057a3a0`,
+main03bfae7/schema55. Its [bounded receipt](evidence/journey-final-mentor-review.json)
+publishes validated synthetic UUIDs, counts, SHA256 hashes and current references.
+Full local runtime exports remain private; their hashes preserve attribution.
+No private scores, notes, sessions, provider configuration or keys are published.
+
+Before live, only mentor-qualification plans a distinct mentor-final run and
+checkpoint. After actual queued cutoff capture and explicit repository review,
+its four genuine frozen entries receive fresh independent primary/second cards:
+eight submitted version1 cards against exact current formal revisions. Their
+IDs and run IDs differ from all24 private live checkpoint cards, with fresh final
+scores and no other-author disclosure. All-teams correctly has no mentor-final
+requirement. Ten component parents compiled/passed0.969s and lint0 before native
+execution; these component results do not substitute for the actual phase proof.
+
+Each final entry records configure, complete-second-review, open and sign-off
+through its actual intended panel. Sixteen immutable huddle versions and four
+persisted signoffs retain exact two-card references and submission revisions.
+The response context bindings are validated SHA256 values. The export query's
+flat SQL proof.binding projection was NULL because stored signoff Context is
+nested; persisted signoff/context references are reported separately, without
+reconstructing missing SQL values. There are32 actual private cards (24live and
+eightfinal). The same connected admission/common/provider/access/poll/draft/live
+submission/cutoff phases pass. All owned project resources were removed.
+
+These signoffs prepare genuine qualification sources. They do not select
+finalists, supply independent judge cards, resolve judge ties or publish results.
+Remaining lifecycle variants and later phases/final validation stay required.
+The isolated entrypoint remains distinct from production-image/browser proof.
+**complete_lifecycle=false; no L01–L18 row is fully complete.**
