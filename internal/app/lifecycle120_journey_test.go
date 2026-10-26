@@ -38,6 +38,8 @@ type lifecycleJourneyEvent struct {
 	github       githubapp.Status
 	repositories []repositories.View
 	access       []lifecycleAccessReceipt
+	teamNotice   lifecycleTeamNoticeReceipt
+	accessPoll   []lifecycleAccessPollReceipt
 	commonHash   string
 }
 type lifecycleJourney struct {
@@ -201,6 +203,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("native connected journey did not reach live with its real confirmed census")
 		}
 	}
+	run.waitCurrentAccessPoll(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -221,20 +224,22 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal("actual external access census did not match both events' frozen thirty-two-person cohorts", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
 	}
 	type eventReceipt struct {
-		ID           uuid.UUID                `json:"event_id"`
-		Mode         string                   `json:"mode"`
-		Stage        string                   `json:"stage"`
-		Objective    objectives.Reference     `json:"objective"`
-		Primary      string                   `json:"primary"`
-		TeamIDs      []uuid.UUID              `json:"team_ids"`
-		Confirmed    int64                    `json:"confirmed"`
-		Census       map[string]int64         `json:"admission_census"`
-		Challenge    uuid.UUID                `json:"challenge_id"`
-		Rubric       rubric.Reference         `json:"rubric"`
-		CommonHash   string                   `json:"common_sha256"`
-		PublishedAt  *time.Time               `json:"published_at"`
-		Repositories []repositories.View      `json:"repositories"`
-		Access       []lifecycleAccessReceipt `json:"repository_access"`
+		ID           uuid.UUID                    `json:"event_id"`
+		Mode         string                       `json:"mode"`
+		Stage        string                       `json:"stage"`
+		Objective    objectives.Reference         `json:"objective"`
+		Primary      string                       `json:"primary"`
+		TeamIDs      []uuid.UUID                  `json:"team_ids"`
+		Confirmed    int64                        `json:"confirmed"`
+		Census       map[string]int64             `json:"admission_census"`
+		Challenge    uuid.UUID                    `json:"challenge_id"`
+		Rubric       rubric.Reference             `json:"rubric"`
+		CommonHash   string                       `json:"common_sha256"`
+		PublishedAt  *time.Time                   `json:"published_at"`
+		Repositories []repositories.View          `json:"repositories"`
+		Access       []lifecycleAccessReceipt     `json:"repository_access"`
+		TeamNotice   lifecycleTeamNoticeReceipt   `json:"team_notice"`
+		AccessPoll   []lifecycleAccessPollReceipt `json:"access_poll"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -261,6 +266,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				PublishedAt:  item.view.PublishedAt,
 				Repositories: item.repositories,
 				Access:       item.access,
+				TeamNotice:   item.teamNotice,
+				AccessPoll:   item.accessPoll,
 			},
 		)
 	}
@@ -293,6 +300,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"single-use-native-installation-callback",
 				"actual-queued-private-template-repositories-for-every-frozen-team",
 				"actual-native-participant-github-pkce-session-and-numeric-ownership",
+				"reviewed-current-team-source-notification-and-obsolete-zero-effect",
+				"actual-native-queued-access-poll-current-live-source",
 			},
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},
@@ -413,10 +422,11 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort, r.control)
+	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort, r.control, func() error { r.configureTeamNotice(t, &item); return nil })
 	if err != nil {
 		t.Fatal(err)
 	}
+	r.waitTeamNotice(t, &item)
 	item.challenge, item.rubric, err = installLifecycleChallenge(ctx, r.owner, item.view.ID, mode)
 	if err != nil {
 		t.Fatal(err)

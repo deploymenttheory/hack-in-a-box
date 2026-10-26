@@ -12,7 +12,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 )
 
-func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, cohort *lifecycleAdmissions, control *lifecycleControl) (teams.Page, error) {
+func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, cohort *lifecycleAdmissions, control *lifecycleControl, reviewPublication func() error) (teams.Page, error) {
 	base := "/api/v1/events/" + eventID.String()
 	var roster []int
 	for i, applied := range cohort.registrations {
@@ -109,6 +109,15 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 	// same frozen instant makes the native due-time/UUID ordering arbitrary.
 	if err := control.nextAction(ctx); err != nil {
 		return page, err
+	}
+	if reviewPublication != nil {
+		if err := reviewPublication(); err != nil {
+			return page, err
+		}
+		// Approval must precede the new publication, including in domain time.
+		if err := control.nextAction(ctx); err != nil {
+			return page, err
+		}
 	}
 	page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "publish"}, http.StatusOK)
 	if err != nil {
