@@ -21,3 +21,13 @@ services:
       HACKBOX_LOAD_SETUP_CLOCK: /fixture/domain-time
     volumes: [fixture_private:/fixture:ro]
     healthcheck: {disable: true}
+  worker:
+    image: ${LOAD_FIXTURE_IMAGE:?Set private source-pinned fixture image}
+    profiles: [setup]
+    entrypoint: [/app/app.test]
+    command: [-test.run=^TestLoad123SetupProcess$, -test.timeout=0]
+    environment:
+      HACKBOX_LOAD_SETUP: synthetic-only
+      HACKBOX_LOAD_SETUP_ROLE: worker
+      HACKBOX_LOAD_SETUP_CLOCK: /fixture/domain-time
+    volumes: [fixture_private:/fixture:ro]

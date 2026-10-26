@@ -16,6 +16,7 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/config"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
+	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/files"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi"
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpserver"
@@ -59,7 +60,7 @@ func runLoad123Setup(
 	clock func() time.Time,
 	role string,
 ) error {
-	if role != "public" && role != "admin" {
+	if role != "public" && role != "admin" && role != "worker" {
 		return errors.New("explicit private load setup role required")
 	}
 	pool, err := database.Open(ctx, cfg.DatabaseURL)
@@ -84,6 +85,16 @@ func runLoad123Setup(
 		return err
 	}
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	if role == "worker" {
+		if err := storage.Cleanup(ctx, dbgen.New(pool).ObjectExists); err != nil {
+			return err
+		}
+		runtime, err := newWorkerRuntime(pool, cfg, logger, storage, clock)
+		if err != nil {
+			return err
+		}
+		return runtime.Jobs.Run(ctx, cfg.ShutdownTimeout)
+	}
 
 	auth, err := identity.New(ctx, pool, identity.Settings{
 		CookiePrefix: "hackbox_" + cfg.Surface, Issuer: cfg.OIDCIssuer,
