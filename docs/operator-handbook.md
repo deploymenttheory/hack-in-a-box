@@ -28,6 +28,13 @@ The participant portal is at `http://127.0.0.1:8080`; administration is at
 `http://127.0.0.1:8081`. The worker has no published HTTP port. Compose stores
 PostgreSQL and protected files in persistent volumes. Recreating containers
 retains them; `down -v` removes them and is not an upgrade or recovery procedure.
+
+PostgreSQL, the API, admin portal and worker use `restart: unless-stopped`.
+After a Docker daemon restart, verify the database is healthy and both portals
+are ready using the checks above. A container explicitly stopped by an operator
+stays stopped until started again. If the applications repeatedly restart, check
+`docker compose ps -a` and the database logs before changing credentials or
+volumes; an unavailable database does not justify deleting persistent data.
 `init-env.sh` preserves an existing `.env`; it creates random database/metrics
 credentials only for a new one. An existing environment must be reviewed when
 new configuration keys are introduced.

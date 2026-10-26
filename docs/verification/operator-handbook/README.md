@@ -35,7 +35,8 @@ A fixture using seeded sessions is not normal OIDC evidence. Source reviews chec
 written instructions; they do not replace execution by the walkthrough operator. Live GitHub/Teams
 checks require their separately approved external prerequisites.
 
-PR #295 is currently stacked on #293 so its documentation and walkthrough use
-matching UI/API/guide source. After #293 merges, rebase onto main and retarget the
-base. The issue's #120 dependency and final integrated reviews/CI remain open;
-the scoped branded-event proof does not establish the complete event lifecycle.
+PR #295 now targets main after the Fleet cutover and PostgreSQL restart fix.
+The recorded walkthrough retains its original source and image digests; rebasing
+does not make that execution evidence apply to a later runtime. The issue's #120
+dependency and final integrated reviews/CI remain open; the scoped branded-event
+proof does not establish the complete event lifecycle.
