@@ -14,20 +14,22 @@ import (
 func (r *lifecycleJourney) persistWorkProgress(t *testing.T) {
 	t.Helper()
 	type item struct {
-		PreparationAccess []lifecycleAccessReceipt      `json:"preparation_repository_access,omitempty"`
-		LiveAccess        []lifecycleAccessReceipt      `json:"live_mentor_repository_access,omitempty"`
-		EventID           uuid.UUID                     `json:"event_id"`
-		Work              []lifecycleWorkReceipt        `json:"preparation_work"`
-		Late              *lifecycleWorkReceipt         `json:"late_work,omitempty"`
-		Practice          []lifecyclePracticeReceipt    `json:"fictional_judge_practice,omitempty"`
-		JudgeRun          *uuid.UUID                    `json:"planned_judge_run_id,omitempty"`
-		Review            *lifecycleMentorReviewReceipt `json:"mentor_live_checkpoint,omitempty"`
-		JudgeFinal        *lifecycleJudgeFinalReceipt   `json:"independent_judge_final,omitempty"`
+		PreparationAccess []lifecycleAccessReceipt        `json:"preparation_repository_access,omitempty"`
+		LiveAccess        []lifecycleAccessReceipt        `json:"live_mentor_repository_access,omitempty"`
+		EventID           uuid.UUID                       `json:"event_id"`
+		Work              []lifecycleWorkReceipt          `json:"preparation_work"`
+		Late              *lifecycleWorkReceipt           `json:"late_work,omitempty"`
+		Practice          []lifecyclePracticeReceipt      `json:"fictional_judge_practice,omitempty"`
+		JudgeRun          *uuid.UUID                      `json:"planned_judge_run_id,omitempty"`
+		Review            *lifecycleMentorReviewReceipt   `json:"mentor_live_checkpoint,omitempty"`
+		JudgeFinal        *lifecycleJudgeFinalReceipt     `json:"independent_judge_final,omitempty"`
+		ResultDecision    *lifecycleResultDecisionReceipt `json:"result_decision,omitempty"`
 	}
 	events := []item{}
 	for _, event := range r.events {
 		value := item{EventID: event.view.ID, Work: event.work, Late: event.lateWork, Practice: event.practice, PreparationAccess: event.access, LiveAccess: event.liveAccess}
 		value.JudgeFinal = event.judgeFinal
+		value.ResultDecision = event.resultDecision
 		if event.judgeRun != uuid.Nil {
 			runID := event.judgeRun
 			value.JudgeRun = &runID

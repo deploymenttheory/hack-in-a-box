@@ -26,6 +26,11 @@ func installLifecycleChallenge(ctx context.Context, owner *lifecycleClient, even
 	base := "/api/v1/events/" + eventID.String()
 	definition := rubric.Default(mode, eventID)
 	definition.RequiredJudgeCount = 3
+	demoCategory := definition.Categories[0].ID
+	definition.Prizes = []rubric.Prize{
+		{ID: uuid.NewSHA1(eventID, []byte("synthetic-overall-prize")), Name: "Synthetic overall award", Description: "Explicit fixture recognition; no payment is executed"},
+		{ID: uuid.NewSHA1(eventID, []byte("synthetic-demo-prize")), Name: "Synthetic demo award", Description: "Separate declared demo-category recognition", CategoryID: &demoCategory},
+	}
 	definition.PrivateJudgeGuidance = "PRIVATE synthetic judge guidance must never reach attendee responses"
 	var configured rubric.Configuration
 	if err := owner.call(ctx, http.MethodPost, base+"/rubric/configuration", 0,
