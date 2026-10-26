@@ -1,5 +1,39 @@
 # Fleet cutover — in-progress delivery (#245)
 
+## Integrated candidate — 26 October 2026
+
+Current executable checkpoint `746d75ab` is rebased on merged main `03bfae7b`.
+The regenerated inventory resolves **96 registrations, 30 route owners and 318
+reachable modules**, with one Tailwind theme owner and no source errors. Both
+mentor-advisory routes are included. The original 94-route/29-owner native
+contract snapshot below remains attributed to `4d1808ac`; it is not relabelled.
+[Current source reconciliation](current-source-reconciliation.json) records every
+changed file against that snapshot and the merged mentor-advisory owner.
+
+The focused real PostgreSQL/HTTP outcome-review parent passed with race checking
+at `fd89304b` (4.04s parent; 5.571s package), proving draft/approve/exact replay/
+cancel, current/history readers, version and privacy denials, and exactly three
+retained review versions. [Receipt](outcome-review-http-proof.json) records source
+hashes, actual raw-log hash, the preceding fixture failure and scope limits. It
+does not prove reminder transport or OIDC browser execution.
+
+The protected photo flow exposed a real CSP defect: the UI fetched protected
+images as Blob URLs, while `img-src` disallowed Blob URLs. The sole production
+header change adds `blob:` to image sources. Chromium controls prove actual image
+decode while Blob scripts and external scripts/images remain blocked. Native HTTP
+controls retain nonempty PNG bodies over both recorder and real socket paths.
+
+The `8da81101` normal-image journey reached actual photo upload ACK1, a rendered
+49,909-byte protected PNG and organiser review ACK2. It then stopped at the
+existing stale-editor guard before publication: selecting current metadata is an
+explicit user step. The corrected driver follows that confirmation and checks
+each subsequent original PUT version. Full four-case corrected runtime, final
+independent reviews and exact-head CI remain required. No partial media result
+is recorded as a completed publication/withdrawal journey.
+
+Historical checkpoints below retain their original dates, sources and remaining
+gates at the time; the integrated status above takes precedence.
+
 ## Current final-parity workstream — 25 October 2026
 
 The earlier checkpoints below retain their original sources and limits. The

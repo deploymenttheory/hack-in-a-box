@@ -1,0 +1,68 @@
+{
+  "kind": "fleet-cutover-focused-outcome-review-http-proof",
+  "source_commit": "fd89304b41149f2444e02522a66746358cc12fd7",
+  "test_parent": "TestCutoverOutcomeReviewHTTPCommandsAndCurrentReader",
+  "command": "HACKBOX_INTEGRATION=1 GOMAXPROCS=2 GOFLAGS=-p=1 go test -race -json ./internal/httpapi -run '^TestCutoverOutcomeReviewHTTPCommandsAndCurrentReader$' -count=1 -timeout=5m",
+  "exit_code": 0,
+  "results": [
+    {
+      "Action": "pass",
+      "Package": "github.com/deploymenttheory/hack-in-a-box/internal/httpapi",
+      "Test": "TestCutoverOutcomeReviewHTTPCommandsAndCurrentReader",
+      "Elapsed": 4.04
+    },
+    {
+      "Action": "pass",
+      "Package": "github.com/deploymenttheory/hack-in-a-box/internal/httpapi",
+      "Elapsed": 5.571
+    }
+  ],
+  "raw_log_private_path": "/private/tmp/hackbox245-cutover-fd89304b-native.jsonl",
+  "raw_log_sha256": "9882fa5a1c91321d302dc6d727c901c7f5fb40581b057816d800da094a3f4ce3",
+  "source_files_sha256": {
+    "internal/httpapi/cutover_contracts_test.go": "bcdc26b80f2468090680decd2a8e261ddec8d3997ad646955484246ebeea002f",
+    "internal/httpapi/outcomes.go": "f8ddfd74ddcc1ab067d37709c311e463d2904c25dda05f2a342effd35ed865eb",
+    "internal/outcomes/reviews.go": "76d57ffac7aeb1aea1fa95ec55c4618d902a9a0873e0cc626b66ca1baabb9897",
+    "internal/outcomes/review_model.go": "291a9d28d741a56d2855a176dba17f13f970fb768c95a91dd3a7f0d684adef6f",
+    "internal/outcomes/plans.go": "56989c6ecf32f5d6b697155996ee8bf42ad501ad0d414f44198d90699c1206bb",
+    "internal/outcomes/receipts.go": "be91265ffc268548881887339cc312c2b497a9952b59c08f7d0c016b91eafa46",
+    "internal/httpapi/router.go": "3d71c9c9269a881023f6b72f849658007e83d57d0f4feb721e5f84586793adfb",
+    "internal/inbox/delivery.go": "fca1820ff4fa2ed1ac175a55d42640dd830996d1bd75d3441fa27a83a539ae18",
+    "internal/httpapi/content_embargo_test.go": "17a25988c6e8969259e37e6217bf28cce10405a389e1a0cafa0469c096ee5e04",
+    "api/openapi.yaml": "cecb1e44aeb0887628d2292a238e353f5cb791cc06e5e37b51c2870794b564ce"
+  },
+  "asserted_http_positive": [
+    "PUT /api/v1/outcomes/{outcome_id}: propose/adopt/assign/moderate through actual router",
+    "PUT /api/v1/outcomes/{outcome_id}/reviews/{review_id}: save draft, explicit approve, exact replay, cancel",
+    "GET /api/v1/outcome-reviews/{review_id}: current/version/exact command receipt",
+    "GET /api/v1/outcomes/{outcome_id}/reviews: actual ordinary owner list"
+  ],
+  "asserted_negative": [
+    "missing CSRF400 and valid-shape wrong CSRF403",
+    "stale If-Match409 and stale source version409",
+    "ordinary owner writes403; no session401",
+    "other-event organiser read/write404 and review ID under wrong-outcome route404",
+    "same-session revoked organiser404 and inactive owner401",
+    "owner exact other-actor command receipt404; version+command selector400"
+  ],
+  "privacy_and_invariants": [
+    "ordinary owner sees no organiser composition/reason/actor identity; can read without source event membership",
+    "all responses checked against canonical OpenAPI and no-store/nosniff",
+    "exact3 persisted immutable review versions despite all denials/replay",
+    "logs contain no private composition sentinel"
+  ],
+  "fixture_correction_history": {
+    "source": "60604906",
+    "parent_elapsed_seconds": 3.86,
+    "package_elapsed_seconds": 4.572,
+    "exit_code": 1,
+    "failure": "Unrelated source-event GET expected403 received500 because new test omitted real Events dependency; corrected fixture only, retaining exact assertion.",
+    "raw_log_sha256": "84f88dae7cada0f3c13cc17223a59901aa8aa17ab89cbfec360e9d82b68113c4"
+  },
+  "limits": [
+    "Synthetic authenticated database identities/session fixture; no OIDC browser or reminder transport/delivery claim",
+    "Only this one native parent executed at this source; no full HTTP suite or whole #245 acceptance claim",
+    "Credential unassignment positive belongs to existing historical HTTP parent, not this execution"
+  ],
+  "cleanup": "Both test PostgreSQL containers terminated in logs; all four specific PostgreSQL/Ryuk container IDs absent on post-run docker ps."
+}
