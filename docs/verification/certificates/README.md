@@ -32,6 +32,6 @@ and actual response-policy rejection of injected scripts/images. This verifies
 the real HTTP-produced document in an isolated server; it is not an application
 session or future certificate UI walkthrough. Private raw logs stay outside Git.
 
-Current-source reconciliation, independent reviews and final-head CI remain
-required before this Draft is ready. No release acceptance follows from this
+The rebased receipt reconciles all 18 recorded source files byte for byte.
+Independent reviews and final-head CI remain required before this Draft is ready. No release acceptance follows from this
 receipt alone.

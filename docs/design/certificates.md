@@ -28,5 +28,6 @@ Settings/issue/correct commands require current event-write authority; explicit
 revocation remains available to current organisers to stop exposure even after
 ordinary writes close. Nothing changes frozen competition evidence.
 
-Implementation and real PostgreSQL/HTTP verification remain in progress; this
-checkpoint does not satisfy #164 or an M4/release gate.
+Source-bound real PostgreSQL/HTTP and exported print verification is recorded in
+[the verification receipt](../verification/certificates/README.md). Independent
+review and final-head CI remain required; this optional M5 owner adds no M4 gate.

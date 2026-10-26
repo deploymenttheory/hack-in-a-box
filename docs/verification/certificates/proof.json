@@ -152,7 +152,6 @@
     "sampling_not_capacity_or_hard_limit": true
   },
   "remaining_gates": [
-    "Rebase and current source reconciliation",
     "Independent full Standards and Spec reviews",
     "All final-head CI and root acceptance review"
   ],
@@ -175,5 +174,29 @@
     "internal/httpapi/contract/api.gen.go": "14dff4a83d752bf41e3ea7c3e16013508bd16e602f54502d76c3da0626471be5",
     "internal/httpapi/handlers.go": "e262e8fd588a6ca963738fb6a85c40db285b3b829148e066d1d0287451f51d0d",
     "web/src/api/schema.gen.ts": "fa6f9bc6ad0b34d86b93b4f2a9fff89fc65fb248ab1d659cd4211c4f7f52f146"
+  },
+  "rebase_reconciliation": {
+    "source": "460b006bacfa7597e521c062ed3bcbc004a2c7f4",
+    "base": "8fc614aec2a1bbc416bc466199f9ef79779dd407",
+    "all_recorded_source_files_byte_equal": true,
+    "recorded_source_file_count": 18,
+    "meaning": "Historical native and browser receipts retain their actual source; no rerun at rebased head is claimed."
+  },
+  "rebased_checks": {
+    "compile": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-compile.log",
+      "log_sha256": "461f4a1a1a8d18aba988e7973f487f685962bffc0553145de203cb83475a5303"
+    },
+    "lint": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-lint.log",
+      "log_sha256": "e92606b0bf483111dff0a120c315ea165821348f31365020e2468a0059095c47"
+    },
+    "generated": {
+      "exit_code": 0,
+      "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-generated.log",
+      "log_sha256": "fd4492a811810fea3e1baa473a08c1e76124e5257674f9de8bf15a2e475e0ec3"
+    }
   }
 }
