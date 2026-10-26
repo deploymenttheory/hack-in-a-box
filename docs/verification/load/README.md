@@ -244,4 +244,6 @@ The admission census also records total attendee applications and waitlisted
 counts separately from confirmed competitors/current staff, so the cross-event
 burst cannot conceal extra waitlist records inside the 200-attendee description.
 The scoped SQL-component parent seeds query inputs solely to verify native SQL
-compatibility; its execution is pending and is not an owner/worker/load journey.
+compatibility. At clean `3eb99300` it passed with `-race`: parent2.08s, package3.443s,
+no skip/failure and scoped resources empty. Its [source-attributed receipt](evidence/native-query-component.json)
+keeps this separate from an owner/worker/load journey.
