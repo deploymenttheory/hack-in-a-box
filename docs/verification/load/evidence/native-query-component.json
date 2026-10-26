@@ -20,7 +20,7 @@
   ],
   "limitations": [
     "People, events, pending operations and one attempt timestamp are seeded query inputs, not executed application/worker journeys",
-    "No claimed1000-session, burst, saturation, SSE, due-start, provider, privacy or1800-second acceptance"
+    "No 1,000-session, burst, saturation, SSE, due-start, provider, privacy or 1,800-second acceptance is claimed"
   ],
   "cleanup": {
     "owned_containers": 0,

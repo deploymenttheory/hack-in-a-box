@@ -206,7 +206,7 @@ The five simultaneous event stages are registration, preparation, two live
 events and one archived follow-up event. Already active other-event cohorts can
 cross-apply to the full registration event to create real waitlist contention
 without inventing another thousand people. The full role-specific workload
-driver integration, approved cue publisher, negative current-access
+driver integration, native cue/runtime acceptance, negative current-access
 cases, due follow-up/provider receipt oracles, normal-image TLS Compose bridge
 and full burst/saturation/1,800-second run remain unfinished. The prerequisite
 #120 provider's strict OIDC constructor will be reused with an explicit 1,000-person
@@ -247,3 +247,22 @@ The scoped SQL-component parent seeds query inputs solely to verify native SQL
 compatibility. At clean `3eb99300` it passed with `-race`: parent2.08s, package3.443s,
 no skip/failure and scoped resources empty. Its [source-attributed receipt](evidence/native-query-component.json)
 keeps this separate from an owner/worker/load journey.
+
+
+The cue journey now reads current controller authority, sends one native
+presentation override against that exact revision, verifies the original cue
+response and anchors its public projection to the immutable native audit. A
+synthetic decision marker binds the cue hash in the native decision history;
+it is not an invented application idempotency key. Independent reconciliation
+includes every committed cue candidate, including a lost original response, so
+an untracked committed source cannot disappear from the SSE oracle. The actual
+native cue-owner/query component is prepared but not yet executed.
+
+Two causal driver corrections protect measurement integrity. A real local HTTPS
+control reproduced net/http transparently replaying a consumed POST after its
+response was lost (two wire writes and apparent success). Clearing write GetBody
+preserves the required native Idempotency-Key while leaving the original
+response uncertain, with no consumed-body replay. A separate scheduler control
+reproduced accepted-write loss when a later independent oracle failed; exact
+original ACKs are now retained even when that later check fails. Both controls
+passed in the component/race suite; neither is application or load acceptance.
