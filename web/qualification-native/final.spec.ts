@@ -1,7 +1,7 @@
 import {writeFileSync} from 'node:fs'
 import {expect,test,type Page} from '@playwright/test'
 import {native,owner,control,teamLabel} from './native'
-import {activate,typeInto,selectNative,reach} from './keyboard'
+import {activate,typeInto,selectNative,reach,inspectCurrent} from './keyboard'
 import {confirmReviewedDialog} from './confirmation'
 import type {QualificationPage} from '../src/qualification-model'
 async function accept(page:Page,reason:string){
@@ -27,7 +27,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await accept(page,'Real native intended five-team panel')
  const values=[[10,9,10,9,9],[9,8,9,8,8],[8,7,8,7,7],[7,6,7,6,6],[1,10,10,1,1]]
  for(const [index,team] of native.team_ids.entries()){
-  await activate(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}))
+  await inspectCurrent(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}),page.getByRole('heading',{name:teamLabel(team),exact:true,level:2}))
   await expect(page.getByRole('heading',{name:teamLabel(team),exact:true,level:2})).toBeFocused()
   const source=page.getByRole('region',{name:'Independent original final evidence',exact:true})
   await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
@@ -47,7 +47,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0)
   const nextTeam=page.getByRole('button',{name:'Review another team',exact:true});await expect(nextTeam).toBeFocused();await activate(nextTeam)
   await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()
-  if(index===0){await activate(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}));await expect(page.getByRole('heading',{name:teamLabel(team),exact:true,level:2})).toBeFocused();await activate(page.getByRole('link',{name:'Back to panel',exact:true}));await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()}
+  if(index===0){await inspectCurrent(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}),page.getByRole('heading',{name:teamLabel(team),exact:true,level:2}));await expect(page.getByRole('heading',{name:teamLabel(team),exact:true,level:2})).toBeFocused();await activate(page.getByRole('link',{name:'Back to panel',exact:true}));await expect(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true})).toBeFocused()}
  }
  let proof=await control<{cards:number;current:boolean;signoff:boolean;page:QualificationPage}>('evidence');expect(proof).toMatchObject({cards:5,current:false,signoff:false})
  expect(proof.page.round.cards.every(card=>card.state==='signed')).toBe(true)
@@ -99,7 +99,7 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
  await expect(page.getByRole('region',{name:'Private category preparation',exact:true})).toHaveCount(0)
  await expect(page.getByText('Withdrawn entry · excluded from scoring',{exact:true})).toBeVisible();await expect(page.getByText('Disbanded team · repository unused; excluded from scoring',{exact:true})).toBeVisible()
  for(const team of native.team_ids.slice(0,2)){
-  await activate(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}))
+  await inspectCurrent(page.getByRole('button',{name:`Inspect ${teamLabel(team)}`,exact:true}),page.getByRole('heading',{name:teamLabel(team),exact:true,level:2}))
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('No current moderated card is disclosed. Missing evidence is not a zero score.')
   await expect(page.getByRole('button',{name:'Edit reasoned final card',exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:'Review saved final card confirmation',exact:true})).toHaveCount(0)
   await expect(page.getByText('UNUSED-DISBANDED-REPOSITORY-CANARY',{exact:false})).toHaveCount(0)

@@ -85,3 +85,46 @@ export async function observeActivation(control:Locator){
   await page.evaluate(key=>{const values=window as unknown as Record<string,{dispose:()=>void}>;values[key]?.dispose();delete values[key]},key)
  }
 }
+
+// Opt-in local inspector navigation only. A current read may reject the trusted
+// key after reach returns. Never repeat a domain command or an accepted click.
+export async function inspectCurrent(control:Locator,destination:Locator){
+ await reach(control)
+ const original=await control.elementHandle()
+ if(!original)throw new Error('Current native inspector target is absent')
+ const identity=await original.getAttribute('data-record-focus')
+ if(!identity)throw new Error('Local inspection requires an explicit current record identity')
+ const same=async()=>{
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||await original.getAttribute('data-record-focus')!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
+ }
+ try{
+  for(let attempt=0;attempt<2;attempt++){
+   await same();await reach(control);await same()
+   const observation=await original.evaluateHandle(element=>{
+    const paused=()=>element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]')
+    const state={keys:0,rejectedKeys:0,accepted:0,blocked:0,unexpected:0}
+    const key=(event:KeyboardEvent)=>{
+     if(!event.isTrusted||event.key!=='Enter')return
+     state.keys++
+     if(event.target!==element||!element.isConnected){state.unexpected++;return}
+     if(paused())state.rejectedKeys++
+    }
+    const click=(event:MouseEvent)=>{
+     if(!event.isTrusted||!(event.target instanceof Node)||!element.contains(event.target))return
+     const rejected=paused()
+     // Base UI's focusable disabled native button emits a browser click but
+     // prevents its default and never calls the supplied onClick handler.
+     if(!event.defaultPrevented)state.accepted++;else if(rejected)state.blocked++;else state.unexpected++
+    }
+    element.ownerDocument.addEventListener('keydown',key,true);element.ownerDocument.addEventListener('click',click)
+    return {state,dispose:()=>{element.ownerDocument.removeEventListener('keydown',key,true);element.ownerDocument.removeEventListener('click',click)}}
+   })
+   let observed:{keys:number;rejectedKeys:number;accepted:number;blocked:number;unexpected:number}
+   try{await control.page().keyboard.press('Enter');observed=await observation.evaluate(value=>value.state)}
+   finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
+   if(observed.accepted===1&&observed.keys===1&&observed.unexpected===0){await expect(destination).toBeFocused();return}
+   if(attempt!==0||observed.keys!==1||observed.rejectedKeys!==1||observed.accepted!==0||observed.blocked>1||observed.unexpected!==0)throw new Error('Native inspection was not positively rejected by a current read; no navigation was repeated')
+   await same();await expect(control).toBeEnabled();await same()
+  }
+ }finally{await original.dispose()}
+}

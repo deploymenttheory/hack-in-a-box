@@ -241,3 +241,39 @@ owner/schema proof at `a85f8d84`; only the browser fixture Go test changed.
 
 This corrected complete candidate awaits independent review of the P1 fix in
 full context and latest-head CI before Ready or merge.
+
+### Native qualification CI: rejected local inspection
+
+The final `d36dce65` native CI run `40247746151` failed the public desktop
+final-panel journey when reopening its first team: the required heading was
+absent, rather than present with incorrect focus. The other seven qualification
+cases passed. This remains a failed historical run, separate from the passing
+local advisory and reports matrices at that exact source.
+
+The retained private trace shows the Inspect control passed its enabled check
+at 16791 ms, then a real current-panel GET began at 16827 ms. The button had
+`aria-disabled="true"` in the 16844 ms snapshot before trusted Enter at 16859 ms.
+The GET returned 200 approximately 687 ms after starting. Its response bytes
+were identical to the preceding current read, excluding a changed source as the
+cause. Installed Base UI preserves this control's focus while disabled and
+prevents the native click's default without invoking the supplied action. The
+correct authority pause therefore rejected local navigation.
+
+A tight actual-Chromium fixture reproduces the missing inspector with the old
+helper, then exercises the same disabled/preventDefault event contract. The
+explicit read-only `inspectCurrent` helper permits one deliberate local key
+re-entry only after observing the rejected key, zero accepted activation, and
+an unchanged connected DOM element and record identity. A prevented click
+while positively paused is rejected; an unprevented click is accepted and is
+never repeated. The exact destination heading must still receive focus.
+Replacement, unexpected input and unobserved prevention fail. Default command
+activation remains single-shot; no domain write, unknown acknowledgement or
+retargeted action is retried. Source reads and polling remain active.
+
+The complete keyboard browser controls pass **18/18 (2.9s)** across desktop and
+mobile, including the causal local-navigation case and accepted-click,
+no-observed-pause, replacement and single-command negative controls. This is a
+synthetic helper proof, separate from the subsequent full native qualification
+matrix. Production code, domain/API/SQL and advisory/report fixture bytes are
+unchanged by this correction; their earlier source-attributed proofs remain
+historical evidence rather than relabelled current-head runs.

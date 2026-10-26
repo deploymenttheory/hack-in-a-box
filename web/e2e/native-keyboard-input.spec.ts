@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { activate, typeInto } from '../qualification-native/keyboard'
+import { activate, typeInto, inspectCurrent } from '../qualification-native/keyboard'
 
 test('native text-entry helper observes a read-pause rejection before deliberately re-entering the same field', async ({ page }) => {
  await page.setContent('<fieldset><textarea aria-label="Synthetic current evidence">Earlier value</textarea></fieldset>')
@@ -48,5 +48,46 @@ test('command-button activation never uses local input re-entry', async ({ page 
  let enters = 0
  page.keyboard.press = async (key, options) => { if (key === 'Enter') { enters++; await page.locator('fieldset').evaluate(fieldset => { (fieldset as HTMLFieldSetElement).disabled = true }) } await press(key, options); if (key === 'Enter') await page.locator('fieldset').evaluate(fieldset => { (fieldset as HTMLFieldSetElement).disabled = false }) }
  await activate(page.getByRole('button', { name: 'Confirm a command' }))
+ expect(enters).toBe(1)
+})
+
+test('a local inspector opening rejected during a current-read pause is not a completed navigation', async ({ page }) => {
+ await page.setContent('<button data-record-focus="current-team" aria-disabled="false">Inspect current team</button><h2 tabindex="-1" hidden>Current team inspector</h2><output></output><script>const button=document.querySelector("button");button.onclick=event=>{if(button.getAttribute("aria-disabled")==="true"){event.preventDefault();return;}document.querySelector("output").textContent="Current team inspector";const heading=document.querySelector("h2");heading.hidden=false;heading.focus()}</script>')
+ const press=page.keyboard.press.bind(page.keyboard),button=page.getByRole('button',{name:'Inspect current team'})
+ let enters=0
+ page.keyboard.press=async(key,options)=>{
+  if(key==='Enter'){enters++;if(enters===1)await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}
+  await press(key,options)
+  if(key==='Enter')await button.evaluate(element=>element.setAttribute('aria-disabled','false'))
+ }
+ await inspectCurrent(button,page.getByRole('heading',{name:'Current team inspector'}))
+ expect(enters).toBe(2)
+ expect(await page.locator('output').textContent()).toBe('Current team inspector')
+})
+
+test('an accepted local inspection is never repeated even if its key observed a read pause',async({page})=>{
+ await page.setContent('<button data-record-focus="current-team">Inspect current team</button><h2 tabindex="-1" hidden>Current team inspector</h2><script>document.querySelector("button").onclick=()=>{const heading=document.querySelector("h2");heading.hidden=false;heading.focus()}</script>')
+ const button=page.getByRole('button',{name:'Inspect current team'}),press=page.keyboard.press.bind(page.keyboard)
+ let enters=0
+ page.keyboard.press=async(key,options)=>{if(key==='Enter'){enters++;await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}await press(key,options)}
+ await inspectCurrent(button,page.getByRole('heading',{name:'Current team inspector'}))
+ expect(enters).toBe(1)
+})
+test('an unobserved prevented local activation is not permission to repeat navigation',async({page})=>{
+ await page.setContent('<button data-record-focus="current-team" onclick="event.preventDefault()">Inspect current team</button>')
+ const press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;await press(key,options)}
+ await expect(inspectCurrent(page.getByRole('button',{name:'Inspect current team'}),page.getByRole('heading'))).rejects.toThrow('not positively rejected')
+ expect(enters).toBe(1)
+})
+test('a replaced paused inspector target cannot receive the earlier local navigation',async({page})=>{
+ await page.setContent('<button data-record-focus="current-team" onclick="if(this.getAttribute(\'aria-disabled\')===\'true\')event.preventDefault()">Inspect current team</button>')
+ const button=page.getByRole('button',{name:'Inspect current team'}),press=page.keyboard.press.bind(page.keyboard);let enters=0
+ page.keyboard.press=async(key,options)=>{
+  if(key==='Enter'){enters++;await button.evaluate(element=>element.setAttribute('aria-disabled','true'))}
+  await press(key,options)
+  if(key==='Enter')await button.evaluate(element=>{const replacement=element.cloneNode(true) as HTMLElement;replacement.removeAttribute('aria-disabled');element.replaceWith(replacement)})
+ }
+ await expect(inspectCurrent(button,page.getByRole('heading'))).rejects.toThrow('target was replaced')
  expect(enters).toBe(1)
 })
