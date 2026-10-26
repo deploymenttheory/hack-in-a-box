@@ -774,3 +774,43 @@ postponement/exception variants, provider work/cutoff reconciliation, live suppo
 independent judging/advisory/awards/showcase/archive/outcomes and final integrated
 browser/CI matrix remain required. **complete_lifecycle remains false; no
 L01–L18 row is declared fully complete.**
+
+## First connected preparation-work/cutoff run — still RED
+
+Frozen58fcc1fe/image349d1a9d (main076f/schema54) compiled and passed six actual
+strict-loopback GitHub protocol parents (package0.882s), with app lint0 issues.
+The provider now requires the real OAuth browser cookie, exact Origin and actual
+accepted write collaborator for external synthetic work. Pending/read-only,
+anonymous, foreign-Origin and other-repository writes fail; native App REST reads
+require repository-scoped metadata/contents permission and matching numeric
+identity. A later current ref never becomes a historical lookup. The added hashes
+are opaque synthetic work receipts, not real Git objects or live GitHub effects.
+The initial missing scoped branch contract failed (0.02s/package0.324s) before
+implementation; its corrected missing-branch proof passed package0.491s. An
+extended unit initially omitted the native request provenance marker and failed;
+correcting that request preserved native validation and passed package0.521s.
+
+Actual connected runner39200 then failed **236.74s** on its first organiser
+reconciliation POST (400, expected200). Before that failure, the same actors and
+normal APIs completed12 authenticated preparation-work transactions/native branch
+configurations,12 private drafts, strict early formal/review denials,8 actual live
+submissions, current queued access polling and real queued cutoff capture.
+Read-only SQL independently records14 delivered capture operations/14 delivered
+attempts plus one retryable attempt,14 immutable sources (8 frozen,4 not-submitted,
+2 withdrawn), six current-ref observations plus one provider-unavailable
+observation,12 configuration acknowledgements, zero reconciliation decisions and
+zero retained leases. Both events remain live: cutoff does not require advancing
+to assessment. The late replacement PUT denial/nonmutation check also completed.
+
+[journey-cutoff-command-red.json](evidence/journey-cutoff-command-red.json)
+retains exact source/image, actual native references/timestamps and limitations.
+The original400 body and terminated driver's exact external-work receipts were
+not exported and are not reconstructed. The likely driver issue is its domain
+Command JSONnull slices against nonnullable API arrays; contract reproduction and
+correction remain pending. No production bug or completed reconciliation is
+claimed. The unique project/profile volumes/network were removed and all final
+resource label queries were empty. The aggregate journey budget is now8m solely
+to add two90s cutoff waits to the already measured248s setup; individual existing
+guards, native windows, auth/lease/transport clocks and retry policy are unchanged.
+All remaining full L01–L18 requirements and integrated schema55 owners/browser/CI
+remain gates; **complete_lifecycle remains false.**

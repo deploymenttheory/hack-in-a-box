@@ -1,0 +1,814 @@
+{
+  "checkpoint": "first-connected-preparation-work-and-cutoff-red",
+  "complete_lifecycle": false,
+  "source": "58fcc1fedb9dd9449922aeeba4072ce8092162c6",
+  "fixture_image": "sha256:349d1a9dc78249f994717b6709a2aa267ccf9e5c3ff3c8c128dd558307d00a88",
+  "main_base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+  "schema": 54,
+  "production_image": false,
+  "build": "56016",
+  "startup": "47643",
+  "runner": "39200",
+  "duration_seconds": 236.74,
+  "result": "FAIL",
+  "observed": "First native organiser reconciliation POST returned400, expected200. All fourteen actual queued capture operations/immutable native sources had completed first; no organiser decision was recorded.",
+  "diagnosis_status": "Canonical command schema has nonnullable optional observation_ids/push_ids arrays, while the driver domain Command serializes nil slices as JSONnull. Contract reproduction pending; no production defect inferred. The original error body was deliberately not retained.",
+  "native_state": {
+    "captured_wall_at": "2026-10-26T03:13:42.068482+00:00",
+    "events": [
+      {
+        "id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "stage": "live",
+        "revision": 118
+      },
+      {
+        "id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "stage": "live",
+        "revision": 118
+      }
+    ],
+    "sources": [
+      {
+        "id": "34237695-7168-423f-8020-e61a443cad87",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "43499394-d3e7-4e95-9526-ff7b1afa625f",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "0",
+        "original_status": "withdrawn"
+      },
+      {
+        "id": "6b38c678-995b-4c64-bc9e-50858900c91d",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "5e685390-19db-49f1-bcce-49c0aef5b7c6",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1010",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "06bbafce-e994-4ae1-ad61-fd217a3ec522",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "7d702d43-aead-431c-bca0-9e7e02e1964c",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1004",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "0119051e-59b8-42f1-a68a-0d3a13d9407e",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "a06e54ce-6e21-488f-8e2c-ac6b6d89b0ef",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1011",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "e8dbd6e8-4872-4116-a07d-20008f86e687",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "b1708a71-ff87-4af2-8879-4b122cdfb169",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "not_submitted",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1009",
+        "original_status": "not_submitted"
+      },
+      {
+        "id": "e8696166-cf8a-4c02-8b62-b238fd415173",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "d3820dce-547c-4121-9637-abaf59c69c30",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1006",
+        "original_status": "not_applicable"
+      },
+      {
+        "id": "c5926033-c33d-4049-af07-70d2fe6088e6",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "e02ec95a-143f-46e4-a09f-ec975a0f07e0",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "not_submitted",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1008",
+        "original_status": "not_submitted"
+      },
+      {
+        "id": "da57b005-c182-4684-a841-2e8dbc329f86",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "06baa7e8-4ce3-45b5-832e-e8485dbcf74c",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "not_submitted",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1005",
+        "original_status": "not_submitted"
+      },
+      {
+        "id": "7ccbbe9b-19e1-4618-be8c-84733d18f129",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "2e38bbfe-46ee-4b46-948b-425e91173649",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1002",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "116fe58e-9a1e-4239-b961-af1ff965b1d8",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "52c59c0a-e7e2-44d4-bc7f-ab97d02bcddd",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1001",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "4d50ff04-4fa9-4ae3-9d70-2aa0e7529a3c",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "96cb6a9c-d9b2-4797-a0e2-e173db652a91",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "1000",
+        "original_status": "not_applicable"
+      },
+      {
+        "id": "89e08b3d-e9a1-4c85-88a9-e733aa742c72",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "a7b60e9a-bb09-421a-b33d-fa836f6418d0",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "not_submitted",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:01Z",
+        "branch": "main",
+        "repository_id": "1007",
+        "original_status": "not_submitted"
+      },
+      {
+        "id": "5d9cbe8d-6b0d-41e7-b41d-e784afe027dd",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "ad0105b8-78c2-45d8-925d-1a84404916d1",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "frozen",
+        "submission_revision": "1",
+        "recorded_at": "2026-03-30T15:00:01Z",
+        "branch": "main",
+        "repository_id": "1003",
+        "original_status": "unresolved"
+      },
+      {
+        "id": "846edff8-e618-403c-b2f3-03c6d4dce3fa",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "ec6ea90b-1c21-4bef-a35f-68a8498ba68c",
+        "cutoff": "2026-03-30T15:00:00+00:00",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "recorded_at": "2026-03-30T15:00:00Z",
+        "branch": "main",
+        "repository_id": "0",
+        "original_status": "withdrawn"
+      }
+    ],
+    "observations": [
+      {
+        "id": "26060cbb-500c-4dd3-9354-d8bbac511a62",
+        "source_id": "116fe58e-9a1e-4239-b961-af1ff965b1d8",
+        "observed_at": "2026-03-30T15:00:00+00:00",
+        "status": "current_ref",
+        "sha": "51c2fb79a0077925d23c452e1357f547819332a8",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "693efe9b-e368-4e6c-9bd6-3db6322ad8bd",
+        "source_id": "0119051e-59b8-42f1-a68a-0d3a13d9407e",
+        "observed_at": "2026-03-30T15:00:00+00:00",
+        "status": "current_ref",
+        "sha": "19ea7839ca4a9d3279eef664523caf11fb7d96ed",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "996e8a99-1df9-4a44-8fec-9c1021469237",
+        "source_id": "7ccbbe9b-19e1-4618-be8c-84733d18f129",
+        "observed_at": "2026-03-30T15:00:00+00:00",
+        "status": "provider_unavailable",
+        "sha": "",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "be4e7436-6d40-404d-95c6-fb9f828f0b2e",
+        "source_id": "6b38c678-995b-4c64-bc9e-50858900c91d",
+        "observed_at": "2026-03-30T15:00:00+00:00",
+        "status": "current_ref",
+        "sha": "1d2d4620d2cae054b46a81c6ea6f2d763a0d752d",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "d275f641-a84d-4fd4-9941-d05e42525622",
+        "source_id": "06bbafce-e994-4ae1-ad61-fd217a3ec522",
+        "observed_at": "2026-03-30T15:00:00+00:00",
+        "status": "current_ref",
+        "sha": "de6d49b83cda1b0bf4e9d4ab3f09b43671038427",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "236dbed1-3f2d-4d04-a918-660500b12a4c",
+        "source_id": "7ccbbe9b-19e1-4618-be8c-84733d18f129",
+        "observed_at": "2026-03-30T15:00:01+00:00",
+        "status": "current_ref",
+        "sha": "4c2ff46b5c686d39f659a23d77bdab964761a573",
+        "provenance": "github_app_current_ref"
+      },
+      {
+        "id": "55e3314c-83e7-42a2-8520-db58fb3cc280",
+        "source_id": "5d9cbe8d-6b0d-41e7-b41d-e784afe027dd",
+        "observed_at": "2026-03-30T15:00:01+00:00",
+        "status": "current_ref",
+        "sha": "315cf042624d2c2209b39bed81e4ee413314be4c",
+        "provenance": "github_app_current_ref"
+      }
+    ],
+    "decisions": null,
+    "commands": [
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "5e685390-19db-49f1-bcce-49c0aef5b7c6",
+        "request_id": "182ceab4-70e3-40a1-8e1d-a1fb4136bb4d",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "2d27514d2b5ab4a91674185b6990631eec47f584d3a1688bd30e400dd9233e8e",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "7d702d43-aead-431c-bca0-9e7e02e1964c",
+        "request_id": "e27f43f1-99bc-4542-82c2-51d1d1cdd664",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "40546db6a23109107fa4d1dad21a559402710594a7cc3bff3d13e420e95adc95",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "a06e54ce-6e21-488f-8e2c-ac6b6d89b0ef",
+        "request_id": "4aba82ba-8ad6-4921-aeff-3822e806bd8b",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "59d627807586f256428a1f9c20d9c660dd9299fb427677d3db4c905abb511ee5",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "b1708a71-ff87-4af2-8879-4b122cdfb169",
+        "request_id": "cb6e1f64-5be1-4aa3-8b6c-e1c411a46eef",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "f81857fb620c8fa7cbde743ceba167e856954adf47f6f498c5f8e4ebbc68492a",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "d3820dce-547c-4121-9637-abaf59c69c30",
+        "request_id": "163414fe-7ff2-4961-a293-8bc2fffe213a",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "679e5816a13dcf17b066a5d7e21caf1b13bbaaa45973577e56fc542eef08ffb1",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "e02ec95a-143f-46e4-a09f-ec975a0f07e0",
+        "request_id": "1ca5c3db-ebc0-4f40-88e0-42a108a31dbb",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "1f2a67eadd493e9bfc07c1c454dd3b0da5b361fc4623c9ac8c0f3542104d788d",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "06baa7e8-4ce3-45b5-832e-e8485dbcf74c",
+        "request_id": "db9a44a4-2651-4f4a-8cf1-2d125a16c6b5",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "4654294501095febca2b3ba58dd0b4dbf6671a97fa1fb8c383a0c4d0a80c03ca",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "2e38bbfe-46ee-4b46-948b-425e91173649",
+        "request_id": "fa10773e-aa3b-4268-b6e3-7138b5f75a9a",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "798c9dbce932545650eb14aa0707aa23c8734a4e95c2b907d760ab3fe77464a8",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "52c59c0a-e7e2-44d4-bc7f-ab97d02bcddd",
+        "request_id": "9ac134bc-af48-4c47-8ee3-c21e1b8b43bf",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "1951e6cf38e21e666789d38423cb3d4977c06f9967c6142c630c5594df9e026d",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "96cb6a9c-d9b2-4797-a0e2-e173db652a91",
+        "request_id": "0d43f381-632a-435d-9080-d54167a1021a",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "76309911f23bb4b80c638e28746fb0bad692c6ad7b4803c1f779a71b888bd49d",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "a7b60e9a-bb09-421a-b33d-fa836f6418d0",
+        "request_id": "1d0cfe45-ac25-4d55-b1d4-9ceea04d97d2",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "f133358c8d791988d4e9d8fd0577431d82dc61cf6afde6b6e4e250125bae26b9",
+        "action": "configure",
+        "revision": "1"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "ad0105b8-78c2-45d8-925d-1a84404916d1",
+        "request_id": "cd6be9cb-6434-45a4-8d55-10ef8cdcf7b5",
+        "actor_id": "a4ed86c0-cb13-4433-9190-d570949ca20d",
+        "fingerprint": "50fef1e864203d9a8c958c62eeb178ad6abbc18de29ad1fd9c50e281b4ecd069",
+        "action": "configure",
+        "revision": "1"
+      }
+    ],
+    "operations": [
+      {
+        "id": "3d02035e-86ef-450e-bd3f-ff90a69883c4",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "43499394-d3e7-4e95-9526-ff7b1afa625f",
+        "operation_key": "submission-cutoff:43499394-d3e7-4e95-9526-ff7b1afa625f:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "72bcb583-ba4e-4be5-bddd-545254b82be1",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "5e685390-19db-49f1-bcce-49c0aef5b7c6",
+        "operation_key": "submission-cutoff:5e685390-19db-49f1-bcce-49c0aef5b7c6:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "dae0ba2b-7bf9-4765-9b63-30ce1ed93d34",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "7d702d43-aead-431c-bca0-9e7e02e1964c",
+        "operation_key": "submission-cutoff:7d702d43-aead-431c-bca0-9e7e02e1964c:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "5fcff74c-e8f1-4407-820f-274efdf80b8c",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "a06e54ce-6e21-488f-8e2c-ac6b6d89b0ef",
+        "operation_key": "submission-cutoff:a06e54ce-6e21-488f-8e2c-ac6b6d89b0ef:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "d77ff7cf-12c5-4bfb-8b4b-1f0855fe4e68",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "b1708a71-ff87-4af2-8879-4b122cdfb169",
+        "operation_key": "submission-cutoff:b1708a71-ff87-4af2-8879-4b122cdfb169:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "d4f44c2d-a4f0-4324-a6fc-6a71ec66c7a8",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "d3820dce-547c-4121-9637-abaf59c69c30",
+        "operation_key": "submission-cutoff:d3820dce-547c-4121-9637-abaf59c69c30:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "151ba06a-1d3a-43fc-9f9f-3d18ec292203",
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "target_id": "e02ec95a-143f-46e4-a09f-ec975a0f07e0",
+        "operation_key": "submission-cutoff:e02ec95a-143f-46e4-a09f-ec975a0f07e0:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.206645+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "77597f35-6a5f-42ab-9f72-77c4ae202217",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "06baa7e8-4ce3-45b5-832e-e8485dbcf74c",
+        "operation_key": "submission-cutoff:06baa7e8-4ce3-45b5-832e-e8485dbcf74c:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "6378fce8-6d82-480f-9451-297ca3e9c638",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "2e38bbfe-46ee-4b46-948b-425e91173649",
+        "operation_key": "submission-cutoff:2e38bbfe-46ee-4b46-948b-425e91173649:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 2,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "7d32de1b-9cf1-481d-853e-5ece958a6c31",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "52c59c0a-e7e2-44d4-bc7f-ab97d02bcddd",
+        "operation_key": "submission-cutoff:52c59c0a-e7e2-44d4-bc7f-ab97d02bcddd:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "a1b2e642-16a5-468b-9612-8f498fe1ac17",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "96cb6a9c-d9b2-4797-a0e2-e173db652a91",
+        "operation_key": "submission-cutoff:96cb6a9c-d9b2-4797-a0e2-e173db652a91:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "c4cd8e13-9173-49af-9a85-ef88024d0ce8",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "a7b60e9a-bb09-421a-b33d-fa836f6418d0",
+        "operation_key": "submission-cutoff:a7b60e9a-bb09-421a-b33d-fa836f6418d0:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "50aaa3fe-abc1-46c3-844b-8d710d8d883d",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "ad0105b8-78c2-45d8-925d-1a84404916d1",
+        "operation_key": "submission-cutoff:ad0105b8-78c2-45d8-925d-1a84404916d1:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      },
+      {
+        "id": "7539f134-8845-4b0e-8c64-ee962be4862d",
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "target_id": "ec6ea90b-1c21-4bef-a35f-68a8498ba68c",
+        "operation_key": "submission-cutoff:ec6ea90b-1c21-4bef-a35f-68a8498ba68c:2026-03-30T15:00:00Z",
+        "revision": 1,
+        "due_at": "2026-03-30T15:00:00+00:00",
+        "created_at": "2026-10-26T03:09:41.208531+00:00",
+        "state": "delivered",
+        "approved": true,
+        "cancelled": false,
+        "attempts": 1,
+        "lease_until": null,
+        "lease_token": null
+      }
+    ],
+    "attempts": [
+      {
+        "operation_id": "151ba06a-1d3a-43fc-9f9f-3d18ec292203",
+        "lease_token": "830e90fe-abd7-4f6d-a9a0-28fd8a9bf547",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.349566+00:00",
+        "finished_at": "2026-10-26T03:11:46.365832+00:00"
+      },
+      {
+        "operation_id": "dae0ba2b-7bf9-4765-9b63-30ce1ed93d34",
+        "lease_token": "b77249c7-44d8-4bd1-9791-9d24c0a4434c",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.34971+00:00",
+        "finished_at": "2026-10-26T03:11:46.381907+00:00"
+      },
+      {
+        "operation_id": "72bcb583-ba4e-4be5-bddd-545254b82be1",
+        "lease_token": "d7268cb7-8750-40aa-b9aa-71f9b11ff229",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.349722+00:00",
+        "finished_at": "2026-10-26T03:11:46.382744+00:00"
+      },
+      {
+        "operation_id": "3d02035e-86ef-450e-bd3f-ff90a69883c4",
+        "lease_token": "92e1cfb3-072a-4b4b-91f2-d75aaa09cad4",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.349753+00:00",
+        "finished_at": "2026-10-26T03:11:46.368571+00:00"
+      },
+      {
+        "operation_id": "d77ff7cf-12c5-4bfb-8b4b-1f0855fe4e68",
+        "lease_token": "e700e78a-7889-4659-ac0e-53a5896c137f",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.456401+00:00",
+        "finished_at": "2026-10-26T03:11:46.461219+00:00"
+      },
+      {
+        "operation_id": "a1b2e642-16a5-468b-9612-8f498fe1ac17",
+        "lease_token": "a80d3c51-74fe-4788-aed3-02f055118843",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.456455+00:00",
+        "finished_at": "2026-10-26T03:11:46.461943+00:00"
+      },
+      {
+        "operation_id": "d4f44c2d-a4f0-4324-a6fc-6a71ec66c7a8",
+        "lease_token": "19fd5e83-a443-49f2-8716-e308a4eade1c",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.456469+00:00",
+        "finished_at": "2026-10-26T03:11:46.46335+00:00"
+      },
+      {
+        "operation_id": "5fcff74c-e8f1-4407-820f-274efdf80b8c",
+        "lease_token": "7be128fc-5724-4ef8-a0b5-f8c585e6f314",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.45659+00:00",
+        "finished_at": "2026-10-26T03:11:46.472964+00:00"
+      },
+      {
+        "operation_id": "6378fce8-6d82-480f-9451-297ca3e9c638",
+        "lease_token": "5d972354-1b46-4108-b9ec-0baf65b90717",
+        "outcome": "retryable",
+        "started_at": "2026-10-26T03:11:46.561101+00:00",
+        "finished_at": "2026-10-26T03:11:46.591176+00:00"
+      },
+      {
+        "operation_id": "7d32de1b-9cf1-481d-853e-5ece958a6c31",
+        "lease_token": "060725a1-8c5b-4f29-8112-0c40c597ff83",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.561116+00:00",
+        "finished_at": "2026-10-26T03:11:46.592369+00:00"
+      },
+      {
+        "operation_id": "77597f35-6a5f-42ab-9f72-77c4ae202217",
+        "lease_token": "9722130c-a472-447c-8879-2a6bcb78cec3",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.561152+00:00",
+        "finished_at": "2026-10-26T03:11:46.569133+00:00"
+      },
+      {
+        "operation_id": "7539f134-8845-4b0e-8c64-ee962be4862d",
+        "lease_token": "b7abae63-c2ec-40de-91b9-7e21f231df8c",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.561338+00:00",
+        "finished_at": "2026-10-26T03:11:46.576099+00:00"
+      },
+      {
+        "operation_id": "50aaa3fe-abc1-46c3-844b-8d710d8d883d",
+        "lease_token": "0a92562f-5ef2-4863-93d7-52269cf9ded5",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.662182+00:00",
+        "finished_at": "2026-10-26T03:11:46.682149+00:00"
+      },
+      {
+        "operation_id": "c4cd8e13-9173-49af-9a85-ef88024d0ce8",
+        "lease_token": "049207f9-76df-4ad8-9637-d8fa57c5d0e0",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:46.662497+00:00",
+        "finished_at": "2026-10-26T03:11:46.669814+00:00"
+      },
+      {
+        "operation_id": "6378fce8-6d82-480f-9451-297ca3e9c638",
+        "lease_token": "89cc2b9d-bc7b-45f7-b4f3-3f9062d76725",
+        "outcome": "delivered",
+        "started_at": "2026-10-26T03:11:48.478261+00:00",
+        "finished_at": "2026-10-26T03:11:48.486001+00:00"
+      }
+    ],
+    "outcomes": [
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "43499394-d3e7-4e95-9526-ff7b1afa625f",
+        "revision": 2,
+        "active_revision": null,
+        "outcome": "withdrawn",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "5e685390-19db-49f1-bcce-49c0aef5b7c6",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "7d702d43-aead-431c-bca0-9e7e02e1964c",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "a06e54ce-6e21-488f-8e2c-ac6b6d89b0ef",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "b1708a71-ff87-4af2-8879-4b122cdfb169",
+        "revision": 1,
+        "active_revision": null,
+        "outcome": "not_submitted",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "d3820dce-547c-4121-9637-abaf59c69c30",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "5fbfc85a-31c3-43af-b8f0-ff3ae2c589b2",
+        "team_id": "e02ec95a-143f-46e4-a09f-ec975a0f07e0",
+        "revision": 1,
+        "active_revision": null,
+        "outcome": "not_submitted",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "06baa7e8-4ce3-45b5-832e-e8485dbcf74c",
+        "revision": 1,
+        "active_revision": null,
+        "outcome": "not_submitted",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "2e38bbfe-46ee-4b46-948b-425e91173649",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "52c59c0a-e7e2-44d4-bc7f-ab97d02bcddd",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "96cb6a9c-d9b2-4797-a0e2-e173db652a91",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "a7b60e9a-bb09-421a-b33d-fa836f6418d0",
+        "revision": 1,
+        "active_revision": null,
+        "outcome": "not_submitted",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "ad0105b8-78c2-45d8-925d-1a84404916d1",
+        "revision": 2,
+        "active_revision": 1,
+        "outcome": "frozen",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      },
+      {
+        "event_id": "67b2c707-c1d2-4dc1-9e89-1f449cb420a0",
+        "team_id": "ec6ea90b-1c21-4bef-a35f-68a8498ba68c",
+        "revision": 2,
+        "active_revision": null,
+        "outcome": "withdrawn",
+        "frozen_at": "2026-03-30T15:00:00+00:00"
+      }
+    ]
+  },
+  "limitations": [
+    "No completed reconciliation or L12/full lifecycle claim.",
+    "The failure occurred before final journey receipt emission; exact early/later external work receipt IDs were not exported from the terminated driver and are not reconstructed. Native observation/source/attempt references remain independently retained.",
+    "Native source status is the immutable original applicability; absence of any decision means no selected final SHA."
+  ],
+  "cleanup": {
+    "project": "hackbox-lifecycle120-cutoff-20261026",
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  }
+}
