@@ -53,7 +53,11 @@ func (r *lifecycleJourney) changeResults(t *testing.T, item *lifecycleJourneyEve
 	ack := next.Receipt
 	// Organiser acknowledgements bind the exact command/version; the native
 	// prepared source carries its judge run (ballot receipts carry RunID too).
-	if ack == nil || ack.RequestID != id || ack.ActorID != r.owner.person || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || ack.Fingerprint == "" || next.Round.Source.JudgeRunID != item.judgeRun || next.Round.Source.Binding != body["source_binding"] {
+	binding := next.Round.Source.Binding
+	if body["action"] == "publish_finalists" || body["action"] == "prepare" && page.Preview.Binding == "" && body["source_binding"] == page.Preview.FinalistsBinding {
+		binding = next.Round.Source.FinalistsBinding
+	}
+	if ack == nil || ack.RequestID != id || ack.ActorID != r.owner.person || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || ack.Fingerprint == "" || next.Round.Source.JudgeRunID != item.judgeRun || binding != body["source_binding"] {
 		t.Fatal("native result command lost original actor/source/version acknowledgement")
 	}
 	var recovered results.Recovery
@@ -63,7 +67,15 @@ func (r *lifecycleJourney) changeResults(t *testing.T, item *lifecycleJourneyEve
 	if !reflect.DeepEqual(recovered.Receipt, ack) {
 		t.Fatal("read-only original result acknowledgement changed")
 	}
-	item.resultDecision.Commands = append(item.resultDecision.Commands, *ack)
+	if body["action"] == "publish_finalists" || body["action"] == "publish_awards" {
+		if ack.PublicationID == nil {
+			t.Fatal("deliberate native release lacks its exact original publication identity")
+		}
+	} else if item.resultDecision == nil && body["action"] == "prepare" {
+		item.resultPreparations = append(item.resultPreparations, lifecycleResultPreparationReceipt{SourceBinding: binding, Acknowledgement: *ack})
+	} else {
+		item.resultDecision.Commands = append(item.resultDecision.Commands, *ack)
+	}
 	r.persistWorkProgress(t)
 	return next
 }

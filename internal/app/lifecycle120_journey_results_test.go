@@ -131,9 +131,10 @@ func (r *lifecycleJourney) decideJudgeResults(t *testing.T) {
 		awards := lifecycleSyntheticAwards(t, page)
 		page = r.changeResults(t, item, page, map[string]any{"action": "confirm", "source_binding": page.Preview.Binding, "awards": awards})
 		confirmed := page.Round.Confirmation
-		if confirmed == nil || confirmed.ID == uuid.Nil || confirmed.JudgeApprovalID == uuid.Nil || confirmed.SourceBinding != receipt.SourceBinding || confirmed.DecisionBinding == "" || !reflect.DeepEqual(confirmed.Awards, awards) || len(page.Announcements) != 0 {
+		if confirmed == nil || confirmed.ID == uuid.Nil || confirmed.JudgeApprovalID == uuid.Nil || confirmed.SourceBinding != receipt.SourceBinding || confirmed.DecisionBinding == "" || !reflect.DeepEqual(confirmed.Awards, awards) {
 			t.Fatal("separate native award confirmation changed source or implicitly published results")
 		}
+		lifecycleAssertReleaseKinds(t, item, page.Announcements, false)
 		id, approval := confirmed.ID, confirmed.JudgeApprovalID
 		receipt.ConfirmationID = &id
 		receipt.JudgeApprovalID = &approval
@@ -154,9 +155,7 @@ func (r *lifecycleJourney) decideJudgeResults(t *testing.T) {
 		if err := member.call(t.Context(), http.MethodGet, "/api/v1/events/"+item.view.ID.String()+"/results/announcements", -1, nil, &released, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
-		if len(released.Items) != 0 {
-			t.Fatal("preparation or confirmation bypassed separate deliberate release")
-		}
+		lifecycleAssertReleaseKinds(t, item, released.Items, false)
 		receipt.AnnouncementsBeforeRelease = len(released.Items)
 		r.persistWorkProgress(t)
 	}

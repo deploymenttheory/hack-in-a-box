@@ -76,6 +76,26 @@ func TestLifecycleResultAwardBodyPreservesModeSpecificCategoryOwner(t *testing.T
 			if err := swagger.Components.Schemas["ResultCommand"].Value.VisitJSON(wire); err != nil {
 				t.Fatalf("actual mode-specific confirmation violates native schema: %v", err)
 			}
+			// The shared schema accepts these wire shapes; their distinct current
+			// source/authority and mode gates are proved by native HTTP, not here.
+			for _, action := range []string{"prepare", "publish_finalists", "publish_awards"} {
+				binding := page.Preview.Binding
+				if action == "publish_finalists" {
+					binding = strings.Repeat("c", 64)
+				}
+				body := lifecycleResultCommandBody(uuid.New(), page, map[string]any{"action": action, "source_binding": binding})
+				raw, err := json.Marshal(body)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var releaseWire any
+				if err := json.Unmarshal(raw, &releaseWire); err != nil {
+					t.Fatal(err)
+				}
+				if err := swagger.Components.Schemas["ResultCommand"].Value.VisitJSON(releaseWire); err != nil {
+					t.Fatalf("actual %s wire factory violates native schema: %v", action, err)
+				}
+			}
 		})
 	}
 }
