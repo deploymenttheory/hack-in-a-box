@@ -1,0 +1,256 @@
+{
+  "assertions": [
+    "single-connected-native-http-journey",
+    "both-judging-templates",
+    "distinct-native-event-brands-objectives",
+    "overlapping-native-person-identities",
+    "independent-team-and-event-state",
+    "actual-admission-fifo-go-remediation-and-freeze",
+    "native-common-publication-in-both-events",
+    "same-exact-public-rubric-within-event",
+    "private-guidance-excluded",
+    "exact-version-acknowledgements",
+    "early-live-denied-without-mutation",
+    "native-scheduled-live-transition",
+    "normal-configured-encrypted-github-app-owner",
+    "real-app-jwt-scoped-template-rest",
+    "single-use-native-installation-callback",
+    "actual-queued-private-template-repositories-for-every-frozen-team"
+  ],
+  "checkpoint": "connected-two-event-start-to-live-only",
+  "complete_lifecycle": false,
+  "events": [
+    {
+      "event_id": "bae90aef-41c7-4184-83f5-f05b52fffac8",
+      "mode": "all_teams",
+      "stage": "live",
+      "objective": {
+        "id": "bd497e8e-da53-4fd9-8c62-224a93a66546",
+        "version": 1
+      },
+      "primary": "#164e63",
+      "team_ids": [
+        "940e7244-9d1e-40d5-a65a-3a4af4ecc0c9",
+        "ff4a99c6-4547-4feb-a33e-3935a086cfb9",
+        "a042275f-a659-4a46-b76d-a4ed5e2a769d",
+        "f4f154ee-2c8d-46a4-8b2a-e19bc048b7c5",
+        "d28f011d-4fe6-4356-be92-4a5c5a0f4252",
+        "f0609b8d-ebe7-4c3b-b991-64321b7394a4"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "7e511bc0-3801-4876-84e1-0610b8f97eaa",
+      "rubric": {
+        "id": "1a0b635c-655d-4278-8cba-b7d5c8120ae7",
+        "version": 1,
+        "digest": "82b7f530f23b8631d8ce716a7fc75c0971b413dff2050891cfcceac1488c66dd"
+      },
+      "common_sha256": "e90f9c2a2f713cf9462adda5d29573fc24953146f5240ded1a03bf188c5b4d1b",
+      "published_at": "2026-03-23T09:00:00Z",
+      "repositories": [
+        {
+          "team_id": "940e7244-9d1e-40d5-a65a-3a4af4ecc0c9",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-940e72449d1e40d5a65a3a4af4ecc0c9",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1003,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "a042275f-a659-4a46-b76d-a4ed5e2a769d",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-a042275fa6594a46b76da4ed5e2a769d",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1002,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "d28f011d-4fe6-4356-be92-4a5c5a0f4252",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-d28f011d4fe64356be924a5c5a0f4252",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1004,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "f0609b8d-ebe7-4c3b-b991-64321b7394a4",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-f0609b8debe74c3bb99164321b7394a4",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1005,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "f4f154ee-2c8d-46a4-8b2a-e19bc048b7c5",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-f4f154ee2c8d46a48b2ae19bc048b7c5",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1001,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "ff4a99c6-4547-4feb-a33e-3935a086cfb9",
+          "name": "hackbox-bae90aef41c7418483f5f05b52fffac8-ff4a99c645474feba33e3935a086cfb9",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1000,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        }
+      ]
+    },
+    {
+      "event_id": "f2333d79-3a36-4770-9787-126b83a354d6",
+      "mode": "mentor_qualification",
+      "stage": "live",
+      "objective": {
+        "id": "3f0de17a-c343-4bd5-a2f3-4f0c0f793761",
+        "version": 1
+      },
+      "primary": "#5b21b6",
+      "team_ids": [
+        "90f55c01-2fb0-4e07-94d0-e9eb76a8ace6",
+        "f5dd9927-be69-4f9e-ae1a-0df1a6616922",
+        "36a8782f-50db-4666-9764-e91435bd3625",
+        "cb0a2369-8945-47a4-a489-9508f399c904",
+        "456021bc-6ee8-4204-92b5-993f7b942853",
+        "342bd06e-a7f5-4942-a146-b9b6f2958233"
+      ],
+      "confirmed": 32,
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34
+      },
+      "challenge_id": "9dc46dc2-7779-4a98-ac79-710079d5a431",
+      "rubric": {
+        "id": "e8b3fb13-3ae7-4fbd-b122-408024598f37",
+        "version": 1,
+        "digest": "d3a133ca0fd656958bc5091b61503d2562519c0f40ce59703e7029db155566ab"
+      },
+      "common_sha256": "fdf390225b8ef3e4bda988705de5ecaa611970baeb32191b32de6e5d14474f7f",
+      "published_at": "2026-03-23T09:00:00Z",
+      "repositories": [
+        {
+          "team_id": "342bd06e-a7f5-4942-a146-b9b6f2958233",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-342bd06ea7f54942a146b9b6f2958233",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1009,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "36a8782f-50db-4666-9764-e91435bd3625",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-36a8782f50db46669764e91435bd3625",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1007,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "456021bc-6ee8-4204-92b5-993f7b942853",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-456021bc6ee8420492b5993f7b942853",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1010,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "90f55c01-2fb0-4e07-94d0-e9eb76a8ace6",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-90f55c012fb04e0794d0e9eb76a8ace6",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1008,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "cb0a2369-8945-47a4-a489-9508f399c904",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-cb0a2369894547a4a4899508f399c904",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1011,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        },
+        {
+          "team_id": "f5dd9927-be69-4f9e-ae1a-0df1a6616922",
+          "name": "hackbox-f2333d793a3647709787126b83a354d6-f5dd9927be694f9eae1a0df1a6616922",
+          "organization": "lifecycle-synthetic-org",
+          "github_repository_id": 1006,
+          "state": "ready",
+          "diagnostic": "",
+          "unused": false
+        }
+      ]
+    }
+  ],
+  "explicit_retention_days": 120,
+  "github_transport_proof": {
+    "app_jwts_verified": 156,
+    "installation_tokens_minted": 64,
+    "template_reads": 52,
+    "repository_creates": 12,
+    "repository_reads": 0
+  },
+  "live_start": "2026-03-30T09:00:00+01:00",
+  "overlapping_oidc_people": 36,
+  "publication": "2026-03-23T09:00:00Z",
+  "remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
+  "retention_reason": "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
+  "provenance": {
+    "source": "2a711829bfb667378a9cc28e1dd99fcc5c853f28",
+    "fixture_image": "sha256:ce5234c44fd42ffac28abc02a868ca8e3e15b49bd9228d3ccb8c8fdc2ba54d26",
+    "main_base": "076f6162558df2ac3d7fb1ff7c23b3d35dc21784",
+    "schema": 54,
+    "runner": "59117",
+    "duration_seconds": 53.29,
+    "production_image": false
+  },
+  "native_operations": {
+    "states": [
+      {
+        "state": "ready",
+        "count": 12
+      }
+    ],
+    "operations": [
+      {
+        "state": "delivered",
+        "count": 12,
+        "earliest_due": "2026-03-14T09:00:00+00:00",
+        "leases_released": true
+      }
+    ],
+    "river": [
+      {
+        "state": "completed",
+        "count": 12
+      }
+    ],
+    "attempts": [
+      {
+        "outcome": "delivered",
+        "count": 12
+      }
+    ]
+  }
+}

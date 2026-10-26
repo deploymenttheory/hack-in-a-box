@@ -464,3 +464,60 @@ request while retaining the generic API-route guard. Corrected build 26623 and
 fresh startup 26849 preceded passing runner 11852. Both private projects were
 removed; cleanup 82553 verified empty owned container, volume and network labels.
 Normal user projects were untouched.
+
+## Connected real queued repository checkpoint
+
+The same two retained events now provision their twelve actual frozen teams'
+private repositories **before common T−7 theme release**, then continue through
+actual common publication, exact acknowledgement and scheduled live entry.
+Normal authenticated APIs deny an attendee's queue command and accept the current
+organiser's command. The normal worker's minute reconciliation inserts real River
+jobs; no driver invokes a handler/maintenance callback or writes queue timestamps.
+
+Frozen source `2a711829bfb667378a9cc28e1dd99fcc5c853f28`, fixture image
+`sha256:ce5234c44fd42ffac28abc02a868ca8e3e15b49bd9228d3ccb8c8fdc2ba54d26`,
+main base `076f6162`, schema 54 passed in **53.29s**, runner 59117. The strict
+external fixture verified 156 signed App JWTs, minted 64 scoped tokens, served 52
+template reads and created exactly twelve repositories. Native PostgreSQL held
+twelve ready mappings with distinct GitHub IDs, twelve delivered operations,
+twelve completed River jobs and twelve delivered attempts; every operation lease
+was released. Exact current event/team-derived names, private/template/provenance
+identity and native creation policy are retained, not seeded into native state.
+[journey-repositories.json](evidence/journey-repositories.json) records the safe
+source-pinned receipt. The fixture transport is not actual GitHub/TLS acceptance.
+
+The preceding same-order source `27b332b1`, image
+`sha256:97d3a21066e6803465267b7f100fc7ed94ab5d055971a66a1c7c35afa5f2bd7e`,
+failed in **90.78s**, runner 14262. Normal reconciliation created twelve actual
+scheduled River jobs, but repository intent due times used database wall time
+(October 26) while domain eligibility remained historical (March). All twelve
+operations/mappings stayed pending with zero attempts. That actual RED is
+preserved in [journey-repositories-clock-red.json](evidence/journey-repositories-clock-red.json).
+
+The correction supplies the repository owner with the existing optional trusted
+domain clock and captures one instant per new queue batch. With no injected
+clock, due time remains **exactly the original native repository CreatedAt**;
+audit/created timestamps, auth, transport, River and leases retain wall time.
+Repeated queue commands preserve the original operation/due/provenance. The
+PostgreSQL default/explicit-clock/two-team/requeue invariant test passed **1.90s**
+(package 3.225s), with normal fixture termination; affected lint reported zero
+issues. Both independent Standards and Spec reviews of the three-file production
+seam reported zero findings before publication. This fixes test composition
+consistency; it is not a claim that normal production wall-time behavior was
+broken. Build 86874 and startup 60303 preceded the successful native run. Both
+RED and GREEN projects were removed, including profile volumes, and every owned
+resource-class label query was empty. No user deployment was changed.
+
+The strict real REST-client component also retains a genuine initial creation
+RED (0.11s) before fixture protocol implementation, then explicit inspection and
+creation/lookup/duplicate tests passed (0.06s/0.02s; package 0.490s). Those loopback
+checks require no PostgreSQL and do not substitute for the queued native result.
+
+This advances portions of L08/L11/L12 only. Verified participant GitHub linking,
+actual access grants/provider invitation acceptance, early private work, repo and
+non-repo submissions, cutoff fault/reconciliation, frozen census, remaining
+negative/provider/eligibility variants, live support, judging/advisory, results,
+showcase, archive/outcomes and final browser matrix remain pending. All L01–L18
+rows still require their full integrated actions/assertions; **complete_lifecycle
+remains false**. New access setup belongs before pre-week work, rather than being
+reconstructed after it.

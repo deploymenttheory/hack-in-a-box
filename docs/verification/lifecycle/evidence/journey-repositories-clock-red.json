@@ -1,0 +1,33 @@
+{
+  "source": "27b332b11cd223b0ceccc91b798b0753a237b116",
+  "fixture_image": "sha256:97d3a21066e6803465267b7f100fc7ed94ab5d055971a66a1c7c35afa5f2bd7e",
+  "runner": "14262",
+  "duration_seconds": 90.78,
+  "passed": false,
+  "complete_lifecycle": false,
+  "failure": "Normal reconciliation budget elapsed; database-wall due times remained after historical domain eligibility clock. No native delivery attempt occurred.",
+  "native_operations": {
+    "states": [
+      {
+        "state": "pending",
+        "count": 12
+      }
+    ],
+    "operations": [
+      {
+        "state": "pending",
+        "count": 12,
+        "earliest_due": "2026-10-26T00:22:29.10911+00:00"
+      }
+    ],
+    "river": [
+      {
+        "state": "scheduled",
+        "count": 12
+      }
+    ],
+    "attempts": 0
+  },
+  "classification": "Explicit domain-clock composition mismatch, not a production default defect",
+  "cleanup": "All owned container, volume and network label queries empty"
+}
