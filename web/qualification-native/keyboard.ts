@@ -89,24 +89,43 @@ export async function observeActivation(control:Locator){
 // Explicitly opted-in local UI/read-only steps only: editor/review opening,
 // inspection and navigation. Mutation confirmation must use its own command
 // barrier. A positively rejected key permits one re-entry of the unchanged step.
-export async function openLocal(control:Locator,destination:Locator,outcome:'focused'|'visible'='focused'){
+async function captureOriginalRecord(original:import('@playwright/test').ElementHandle<HTMLElement|SVGElement>){
+ return original.evaluateHandle(element=>{
+  const record=element.closest('[data-original-panel-record]'),owner=record?.closest('[data-original-panel-owner]')
+  if(!record||!owner||owner.getAttribute('aria-label')!=='Original panel command history'||!owner.contains(record)||!record.contains(element))throw new Error('A declared original panel record and owner are required')
+  const parse=(value:string|null)=>{try{const parsed:unknown=JSON.parse(value??'');if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error();return parsed as Record<string,unknown>}catch{throw new Error('Malformed declared original panel context')}}
+  const ownerIdentity=parse(owner.getAttribute('data-original-panel-owner')),requestIdentity=parse(record.getAttribute('data-original-panel-record')),uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if(!['actor','event','run','generation'].every(key=>typeof ownerIdentity[key]==='string'&&uuid.test(ownerIdentity[key] as string))||typeof requestIdentity.request!=='string'||!uuid.test(requestIdentity.request)||!['event_revision','panel_version'].every(key=>Number.isSafeInteger(requestIdentity[key])&&(requestIdentity[key] as number)>=0)||location.pathname!==`/events/${ownerIdentity.event}/panel/${ownerIdentity.run}`)throw new Error('Invalid declared original panel identity')
+  const read=()=>JSON.stringify({url:location.href,tag:element.tagName,name:element.textContent,href:element.getAttribute('href'),owner:owner.getAttribute('data-original-panel-owner'),ownerName:owner.getAttribute('aria-label'),record:record.getAttribute('data-original-panel-record'),text:record.textContent})
+  const identity=read()
+  return {read,identity,current:()=>element.isConnected&&record.isConnected&&owner.isConnected&&element.closest('[data-original-panel-record]')===record&&record.closest('[data-original-panel-owner]')===owner&&owner.contains(record)&&record.contains(element)&&read()===identity}
+ })
+}
+
+async function openLocalStep(control:Locator,destination:Locator,outcome:'focused'|'visible',originalRecord=false){
  await reach(control)
  const original=await control.elementHandle()
  if(!original)throw new Error('Current native inspector target is absent')
- const context=()=>original.evaluate(element=>JSON.stringify({url:location.href,tag:element.tagName,name:element.textContent,record:element.getAttribute('data-record-focus'),href:element.getAttribute('href'),workspace:(element.closest('[data-private-qualification]')??element.ownerDocument.body).textContent}))
- const identity=await context()
+ let declared:Awaited<ReturnType<typeof captureOriginalRecord>>|undefined
+ try{if(originalRecord)declared=await captureOriginalRecord(original)}catch(error){await original.dispose();throw error}
+ const context=()=>declared?declared.evaluate(value=>value.read()):original.evaluate(element=>JSON.stringify({url:location.href,tag:element.tagName,name:element.textContent,record:element.getAttribute('data-record-focus'),href:element.getAttribute('href'),workspace:(element.closest('[data-private-qualification]')??element.ownerDocument.body).textContent}))
+ const identity=declared?await declared.evaluate(value=>value.identity):await context()
  const mutations:string[]=[]
  const request=(value:Request)=>{if(!['GET','HEAD','OPTIONS'].includes(value.method()))mutations.push(value.method())}
  control.page().on('request',request)
  const same=async()=>{
-  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||await context()!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||declared&&!await declared.evaluate(value=>value.current())||await context()!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
  }
  try{
   for(let attempt=0;attempt<2;attempt++){
    await same();await reach(control);await same()
-   const observation=await original.evaluateHandle(element=>{
+   const observation=await original.evaluateHandle((element,recordScope)=>{
     const paused=()=>element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]')
     const state={keys:0,rejectedKeys:0,accepted:0,blocked:0,unexpected:0}
+    const originalGuard=(event:Event)=>{
+     if(!recordScope||!event.isTrusted||event.type==='keydown'&&(event as KeyboardEvent).key!=='Enter')return
+     if(!recordScope.current()||!(event.target instanceof Node)||!element.contains(event.target)||event.type==='keydown'&&element!==element.ownerDocument.activeElement){state.unexpected++;event.preventDefault();event.stopImmediatePropagation()}
+    }
     const key=(event:KeyboardEvent)=>{
      if(!event.isTrusted||event.key!=='Enter')return
      state.keys++
@@ -120,9 +139,10 @@ export async function openLocal(control:Locator,destination:Locator,outcome:'foc
      // prevents its default and never calls the supplied onClick handler.
      if(!event.defaultPrevented)state.accepted++;else if(rejected)state.blocked++;else state.unexpected++
     }
+    if(recordScope){element.ownerDocument.addEventListener('keydown',originalGuard,true);element.ownerDocument.addEventListener('click',originalGuard,true)}
     element.ownerDocument.addEventListener('keydown',key,true);element.ownerDocument.addEventListener('click',click)
-    return {state,dispose:()=>{element.ownerDocument.removeEventListener('keydown',key,true);element.ownerDocument.removeEventListener('click',click)}}
-   })
+    return {state,dispose:()=>{element.ownerDocument.removeEventListener('keydown',originalGuard,true);element.ownerDocument.removeEventListener('click',originalGuard,true);element.ownerDocument.removeEventListener('keydown',key,true);element.ownerDocument.removeEventListener('click',click)}}
+   },declared??null)
    let observed:{keys:number;rejectedKeys:number;accepted:number;blocked:number;unexpected:number}
    try{await control.page().keyboard.press('Enter');observed=await observation.evaluate(value=>value.state)}
    finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
@@ -135,7 +155,16 @@ export async function openLocal(control:Locator,destination:Locator,outcome:'foc
    if(attempt!==0||observed.keys!==1||observed.rejectedKeys!==1||observed.accepted!==0||observed.blocked>1||observed.unexpected!==0)throw new Error('Native inspection was not positively rejected by a current read; no navigation was repeated')
    await expect(control).toBeEnabled();await same()
   }
- }finally{control.page().off('request',request);await original.dispose()}
+ }finally{control.page().off('request',request);await declared?.dispose();await original.dispose()}
+}
+
+export async function openLocal(control:Locator,destination:Locator,outcome:'focused'|'visible'='focused'){
+ await openLocalStep(control,destination,outcome)
+}
+
+// Exact safe original request only: never a private-workspace/body fallback.
+export async function readOriginalAcknowledgement(control:Locator,destination:Locator){
+ await openLocalStep(control,destination,'visible',true)
 }
 
 export async function inspectCurrent(control:Locator,destination:Locator){

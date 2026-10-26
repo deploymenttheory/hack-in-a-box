@@ -63,7 +63,7 @@ test('current native discovery and editable panel validation support keyboard re
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
 
-async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|'408'){
+async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|'408',beforeLoad?:(state:Awaited<ReturnType<typeof fixture>>)=>Promise<void>){
  const state=await fixture(page),writes:QualificationCommand[]=[],organiser=initial.round.panel.organiser_id,mentor=initial.round.panel.mentor_ids[0]
  state.page.round.version=0;state.page.round.cards=[];state.page.round.signoff=null;state.page.current=false;state.page.preview=null;state.page.capabilities={can_read_panel:false,can_configure_panel:true,can_propose:false,can_sign_off:false,read_only:false,record_locked:false}
  let release:()=>void=()=>{};const gate=new Promise<void>(resolve=>{release=resolve})
@@ -76,6 +76,7 @@ async function pendingPanel(page:import('@playwright/test').Page,response:'ack'|
   if(response==='408')return route.fulfill({status:408,json:{error:{code:'timeout',message:'Synthetic response timeout after dispatch',request_id:'synthetic'}}})
   return route.fulfill({json:{...state.page,receipt}})
  })
+ if(beforeLoad)await beforeLoad(state)
  await page.goto(path);await page.getByRole('button',{name:'Configure intended panel',exact:true}).press('Enter');await expect(page.getByRole('button',{name:'Review entered panel decision',exact:true})).toBeEnabled();await page.getByLabel('Recorded panel reason',{exact:true}).fill('Private panel reason must disappear on current denial');await page.getByRole('button',{name:'Review entered panel decision',exact:true}).press('Enter');await page.getByRole('alertdialog',{name:'Review private panel command',exact:true}).getByRole('button',{name:'Confirm reviewed panel command',exact:true}).press('Enter')
  await expect.poll(()=>writes.length).toBe(1)
  return {state,writes,release}
@@ -313,4 +314,24 @@ for(const preparing of [false,true])test(`${preparing?'Unsent review':'Final-car
   else await expect(reason).toBeVisible()
   expect(writes).toBe(0)
  }finally{held=false;release()}
+})
+
+for(const empty of [false,true])test(`declared original record accepts exact receipt with ${empty?'empty rows':'delayed unrelated labels'}`,async({page})=>{
+ let releaseLabels:()=>void=()=>{};const gate=new Promise<void>(resolve=>{releaseLabels=resolve})
+ const task=await pendingPanel(page,'408',async(state)=>{if(empty)state.page.teams=[];await page.route(`**/api/v1/events/${firstID}/teams`,async route=>{await gate;await route.fulfill({json:{teams:[{id:initial.teams[0].team_id,name:'Disclosed current team'}]}})})})
+ task.release()
+ const history=page.getByLabel('Original panel command history')
+ await expect(history).toContainText('Outcome unknown')
+ await expect(page.getByRole('heading',{name:'Original panel outcome unknown',exact:true})).toBeVisible()
+ if(empty)await expect(page.getByRole('button',{name:/^Inspect /})).toHaveCount(0)
+ const label=page.getByRole('button',{name:'Inspect Disclosed current team',exact:true})
+ const ack=page.getByRole('button',{name:'Read original panel acknowledgement',exact:true}),element=ack.elementHandle.bind(ack)
+ let snapshots=0,ackReads=0,enters=0
+ const body=task.writes[0],fingerprint=await qualificationFingerprint(body,task.state.page.revision)
+ await page.route(`**/api/v1/events/${firstID}/mentor-qualification/${run}/commands/${body.request_id}`,route=>{ackReads++;return route.fulfill({json:{receipt:{request_id:body.request_id,run_id:run,action:body.action,expected_revision:task.state.page.revision,expected_version:0,version:1,fingerprint}}})})
+ ack.elementHandle=async(...args)=>{const handle=await element(...args);if(handle){const capture=handle.evaluateHandle.bind(handle);handle.evaluateHandle=(async(...values:Parameters<typeof handle.evaluateHandle>)=>{const scope=await capture(...values),evaluate=scope.evaluate.bind(scope);scope.evaluate=(async(...values:Parameters<typeof scope.evaluate>)=>{const result=await evaluate(...values);if(typeof result==='string'&&result.startsWith('{"url"')&&snapshots++===0){releaseLabels();if(!empty)await expect(label).toBeVisible();await expect(history).toContainText('Outcome unknown')}return result}) as typeof scope.evaluate;return scope}) as typeof handle.evaluateHandle}return handle}
+ const press=page.keyboard.press.bind(page.keyboard);page.keyboard.press=async(key,options)=>{if(key==='Enter')enters++;return press(key,options)}
+ const {readOriginalAcknowledgement}=await import('../qualification-native/keyboard')
+ try{await readOriginalAcknowledgement(ack,page.getByText('Original configure panel acknowledged at panel version 1. Current panel state must be read separately.',{exact:true}))}catch(error){console.log(JSON.stringify({ackReads,enters,writes:task.writes.length}));throw error}finally{releaseLabels()}
+ expect(task.writes).toHaveLength(1);expect(ackReads).toBe(1);expect(enters).toBe(1);expect(snapshots).toBeGreaterThan(0)
 })
