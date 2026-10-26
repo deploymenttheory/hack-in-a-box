@@ -76,6 +76,7 @@ test('coalesced current write loss and restoration permits a new command only af
   render(<Theme><QueryClientProvider client={cache}><IdentityContext.Provider value={session}><CommunicationSafety><RepositoryWorkspace event={event} administration /></CommunicationSafety></IdentityContext.Provider></QueryClientProvider></Theme>)
   await screen.findByRole('button', { name: 'Refresh current status' })
   fireEvent.click(screen.getByRole('button', { name: 'Open App setup' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Change App details' }))
   fireEvent.change(await screen.findByLabelText('App setup action'), { target: { value: 'rotate' } })
   fireEvent.click(screen.getByRole('button', { name: 'Review App setup change' }))
   fireEvent.click(await screen.findByRole('button', { name: 'Confirm App setup change' }))

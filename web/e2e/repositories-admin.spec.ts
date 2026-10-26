@@ -48,7 +48,7 @@ test('transient access read preserves captured reason and review but pauses writ
 })
 
 test('App secret review never renders values or retains them in unknown history; transient collection failure preserves the unsent authorised editor', async ({ page }) => {
-  const state = await repositoryFixture(page); await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByLabel('App private key (PEM)', { exact: true }).fill('SYNTHETIC-KEY-PRIVATE-CANARY'); await page.getByLabel('Optional replacement webhook secret', { exact: true }).fill('SYNTHETIC-WEBHOOK-PRIVATE-CANARY')
+  const state = await repositoryFixture(page); await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByRole('button', { name: 'Change App details', exact: true }).click(); await page.getByLabel('App private key (PEM)', { exact: true }).fill('SYNTHETIC-KEY-PRIVATE-CANARY'); await page.getByLabel('Optional replacement webhook secret', { exact: true }).fill('SYNTHETIC-WEBHOOK-PRIVATE-CANARY')
   state.collectionError = true; await page.getByRole('button', { name: 'Refresh current status', exact: true }).click(); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveValue('SYNTHETIC-KEY-PRIVATE-CANARY'); await expect(page.getByRole('button', { name: 'Review App setup change', exact: true })).toBeDisabled(); expect(state.writes).toHaveLength(0)
   state.collectionError = false; await page.getByRole('button', { name: 'Refresh current status', exact: true }).click(); await expect(page.getByRole('button', { name: 'Review App setup change', exact: true })).toBeEnabled(); await page.getByRole('button', { name: 'Review App setup change', exact: true }).click(); const review = page.getByRole('region', { name: 'Review App setup change', exact: true }); await expect(review).not.toContainText('PRIVATE-CANARY'); await expect(review).toContainText('Private key supplied; value hidden')
   state.mode = 'lost-after'; await review.getByRole('button', { name: 'Confirm App setup change', exact: true }).click(); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveValue(''); await expect(page.getByLabel('Optional replacement webhook secret', { exact: true })).toHaveValue(''); await expect(page.getByRole('complementary', { name: 'Unconfirmed command history' })).not.toContainText('PRIVATE-CANARY'); expect(state.writes).toHaveLength(1)
@@ -104,7 +104,7 @@ test('fresh readonly authority fences a held installation continuation without r
 })
 
 test('stored credential re-encryption follows the native rotate contract without sending a private key or resetting installation', async ({ page }) => {
-  const state = await repositoryFixture(page); await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByLabel('App setup action', { exact: true }).selectOption('rotate'); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveCount(0); await page.getByRole('button', { name: 'Review App setup change', exact: true }).click()
+  const state = await repositoryFixture(page); await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click(); await page.getByRole('button', { name: 'Change App details', exact: true }).click(); await page.getByLabel('App setup action', { exact: true }).selectOption('rotate'); await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveCount(0); await page.getByRole('button', { name: 'Review App setup change', exact: true }).click()
   const review = page.getByRole('region', { name: 'Review App setup change', exact: true }); await expect(review).toContainText('does not replace the GitHub key or change the installation'); await review.getByRole('button', { name: 'Confirm App setup change', exact: true }).click(); await expect(page.getByText('The App configuration request was acknowledged.', { exact: false })).toBeVisible(); expect(state.writes.map(request => request.body)).toEqual([{ action: 'rotate' }]); expect(state.app.installation_id).toBe(45678)
 })
 
@@ -150,4 +150,47 @@ test('native readonly EventEdit loss keeps StaffRead setup and historical access
   await expect(page.getByLabel('Reason for repository access change', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Review selected repository reconciliation', exact: true })).toHaveCount(0)
   expect(state.writes).toHaveLength(0)
+})
+
+test('App setup progresses downward with associated field errors, corrective focus and save-to-install guidance', async ({ page }, testInfo) => {
+  const state = await repositoryFixture(page)
+  state.app.configured = false; state.app.installation_id = 0; delete state.app.configuration; state.app.diagnostics.code = 'not_configured'; state.app.webhook_configured = false; state.app.diagnostics.checks = []
+  await open(page); await page.getByRole('button', { name: 'Open App setup', exact: true }).click()
+  const reviewButton = page.getByRole('button', { name: 'Review App setup change', exact: true })
+  const install = page.getByRole('button', { name: 'Review organisation installation', exact: true })
+  const readiness = page.getByRole('button', { name: 'Check current App readiness', exact: true })
+  await expect(install).toBeDisabled()
+  const id = page.getByLabel('GitHub App numeric ID', { exact: true })
+  await expect(id).not.toHaveAttribute('aria-invalid', 'true')
+  await id.fill('Iv23-client-id'); await id.press('Tab')
+  await expect(id).toHaveAttribute('aria-invalid', 'true')
+  await expect(id).toHaveAccessibleDescription(/positive whole-number ID/)
+  await reviewButton.click(); await expect(id).toBeFocused(); expect(state.writes).toHaveLength(0)
+  await page.screenshot({ path: testInfo.outputPath('setup-field-errors.png'), fullPage: true })
+  await id.fill('42'); await id.press('Tab')
+  await expect(id).not.toHaveAttribute('aria-invalid', 'true')
+  await expect(id).toHaveAccessibleDescription(/Format looks right; connection not yet verified/)
+  await page.getByLabel('GitHub App slug', { exact: true }).fill('synthetic-app')
+  await page.getByLabel('GitHub organisation numeric ID', { exact: true }).fill('99')
+  await page.getByLabel('GitHub organisation', { exact: true }).fill('synthetic-org')
+  await page.getByLabel('Template repository name', { exact: true }).fill('https://github.com/synthetic-org/template')
+  await reviewButton.click(); await expect(page.getByLabel('Template repository name', { exact: true })).toBeFocused()
+  await page.getByLabel('Template repository name', { exact: true }).fill('synthetic-template')
+  await page.getByLabel('App private key (PEM)', { exact: true }).fill('SYNTHETIC-KEY-ONLY')
+  // The review, installation and readiness actions follow the same DOM/keyboard order.
+  const buttons = [await reviewButton.elementHandle(), await install.elementHandle(), await readiness.elementHandle()]
+  expect(await page.evaluate(elements => elements.slice(1).every((element, index) => !!(elements[index]!.compareDocumentPosition(element!) & Node.DOCUMENT_POSITION_FOLLOWING)), buttons)).toBe(true)
+  await reviewButton.click(); await page.getByRole('button', { name: 'Correct details', exact: true }).click(); await expect(reviewButton).toBeFocused()
+  await expect(page.getByLabel('Template repository name', { exact: true })).toHaveValue('synthetic-template')
+  await reviewButton.click(); await page.getByRole('button', { name: 'Confirm App setup change', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '2. Install on GitHub', exact: true })).toBeFocused()
+  await expect(install).toBeEnabled(); expect(state.writes).toHaveLength(1)
+  await page.screenshot({ path: testInfo.outputPath('setup-install-next.png'), fullPage: true })
+  await expect(page.getByLabel('App private key (PEM)', { exact: true })).toBeHidden()
+  await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveValue('')
+  await expect(page.getByRole('status').filter({ hasText: 'The App configuration request was acknowledged.' })).toContainText('Next, install')
+  await expect(page.getByRole('list', { name: 'GitHub connection steps' })).not.toContainText('Ready')
+  await page.getByRole('button', { name: 'Change App details', exact: true }).click()
+  await expect(page.getByLabel('App setup action', { exact: true })).toBeFocused()
+  await expect(page.getByLabel('App private key (PEM)', { exact: true })).toHaveValue('')
 })

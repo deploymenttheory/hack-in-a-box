@@ -11,3 +11,10 @@
 .fleet-repositories .fleet-review-flow :is(p,li), .fleet-repositories .fleet-reference { overflow-wrap: anywhere; }
 
 .fleet-repositories .fleet-repository-inspect { white-space: nowrap; overflow-wrap: normal; min-width: max-content; flex-shrink: 0; }
+
+/* Connection setup follows document/keyboard order; no floating action bar. */
+.fleet-setup-steps { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8); list-style: none; padding: 0; margin: 0 0 var(--space-6); }
+.fleet-setup-steps li { display: grid; gap: var(--space-1); }
+.fleet-setup-steps span { color: var(--muted-foreground); }
+.fleet-setup-field-valid { display: flex; align-items: center; gap: var(--space-2); color: var(--success); margin-block-start: var(--space-1); }
+.fleet-setup-steps [aria-current=step] { border-inline-start: 2px solid var(--primary); padding-inline-start: var(--space-2); }
