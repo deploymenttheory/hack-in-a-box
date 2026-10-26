@@ -338,7 +338,9 @@ for(const empty of [false,true])test(`declared original record accepts exact rec
 
 
 test('owner awaits actual casting projection and ignores pending stale or different tie reads',async({page})=>{
- await page.clock.install()
+ const frozenAt=new Date()
+ // Let startup timers run, then pause at the same captured browser-clock anchor.
+ await page.clock.install({time:new Date(frozenAt.getTime()-60_000)})
  const state=await fixture(page),category=state.page.criteria.categories.find(value=>value.label==='User experience')!,tieID='synthetic-ux-tie'
  state.page.current=false;state.page.round.signoff=null;state.page.capabilities.record_locked=false
  state.page.preview!.ties=[{id:tieID,kind:'category',category_id:category.id,team_ids:state.page.teams.map(value=>value.team_id),seats:1}]
@@ -354,7 +356,9 @@ test('owner awaits actual casting projection and ignores pending stale or differ
  await page.goto(path)
  const tie=page.getByRole('region',{name:'Affected tie: User experience · Seat 1',exact:true})
  await expect(tie).toContainText('Required current ballots incomplete')
- await page.clock.pauseAt(new Date())
+ const setupRead=page.waitForResponse(response=>response.url()===new URL(`/api/v1/events/${firstID}/mentor-qualification/${run}`,page.url()).href&&response.request().method()==='GET'&&response.status()===200)
+ await page.clock.pauseAt(frozenAt);await (await setupRead).finished()
+ await expect(page.getByRole('button',{name:'Read current panel source',exact:true})).toBeEnabled()
  // This GET began before the second ballot and retains the earlier projection.
  hold=true;const before=reads;await page.evaluate(()=>dispatchEvent(new Event('focus')));await expect.poll(()=>reads).toBeGreaterThan(before)
  const {waitForCastingRead}=await import('../qualification-native/current-panel-read')
