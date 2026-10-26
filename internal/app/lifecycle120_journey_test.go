@@ -40,6 +40,8 @@ type lifecycleJourneyEvent struct {
 	access       []lifecycleAccessReceipt
 	teamNotice   lifecycleTeamNoticeReceipt
 	accessPoll   []lifecycleAccessPollReceipt
+	deliverable  uuid.UUID
+	submissions  []lifecycleSubmissionReceipt
 	commonHash   string
 }
 type lifecycleJourney struct {
@@ -142,6 +144,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		run.readCommonPublication(t, &run.events[i])
 	}
 	run.prepareRepositoryAccess(t)
+	run.preparePrivateDrafts(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
@@ -204,6 +207,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 	}
 	run.waitCurrentAccessPoll(t)
+	run.submitLiveEvidence(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -240,6 +244,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		Access       []lifecycleAccessReceipt     `json:"repository_access"`
 		TeamNotice   lifecycleTeamNoticeReceipt   `json:"team_notice"`
 		AccessPoll   []lifecycleAccessPollReceipt `json:"access_poll"`
+		Submissions  []lifecycleSubmissionReceipt `json:"submissions"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -268,6 +273,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				Access:       item.access,
 				TeamNotice:   item.teamNotice,
 				AccessPoll:   item.accessPoll,
+				Submissions:  item.submissions,
 			},
 		)
 	}
@@ -446,6 +452,7 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	r.configureGitHubApp(t, &item)
+	r.configureDeliverables(t, &item)
 	return item
 }
 
