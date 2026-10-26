@@ -204,6 +204,12 @@ func (s *Session) exchange(
 	if err != nil {
 		return result, fmt.Errorf("%w: load native request invalid", errLoadSession)
 	}
+	if method != http.MethodGet && method != http.MethodHead {
+		// bytes.Reader normally supplies GetBody. Combined with the native
+		// Idempotency-Key, that lets net/http replay a consumed POST whose
+		// response was lost. Keep the real key, but never rewind a write body.
+		request.GetBody = nil
+	}
 	request.Header.Set("Origin", s.origin)
 	request.Header.Set("Cache-Control", "no-store")
 	if input != nil {
