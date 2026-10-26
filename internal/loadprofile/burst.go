@@ -18,9 +18,10 @@ type RegistrationTask struct {
 }
 
 type BurstConfig struct {
-	Profile     string
-	Event, Form uuid.UUID
-	FormVersion int32
+	Profile     string    `json:"profile"`
+	Event       uuid.UUID `json:"event"`
+	Form        uuid.UUID `json:"form"`
+	FormVersion int32     `json:"form_version"`
 }
 
 type BurstResult struct {

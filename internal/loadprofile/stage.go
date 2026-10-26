@@ -58,12 +58,14 @@ func (c StageConfig) Validate(actors int) error {
 }
 
 type StageResult struct {
-	Started, PhaseEnded, Finished time.Time
-	Elapsed                       time.Duration
-	Activity                      ActivityReport
-	Executed                      uint64
-	Interrupted                   bool
-	Completed                     bool
+	Started     time.Time      `json:"started"`
+	PhaseEnded  time.Time      `json:"phase_ended"`
+	Finished    time.Time      `json:"finished"`
+	Elapsed     time.Duration  `json:"monotonic_elapsed_ns"`
+	Activity    ActivityReport `json:"activity"`
+	Executed    uint64         `json:"executed"`
+	Interrupted bool           `json:"interrupted"`
+	Completed   bool           `json:"completed"`
 }
 
 // RunStage uses the real monotonic clock. It never accepts an injected clock,

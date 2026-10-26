@@ -11,9 +11,11 @@ import (
 // It selects runnable healthy-provider work, never the aggregate pending gauge
 // containing non-runnable automation source facts such as teams.published.
 type DueExpectation struct {
-	ID, Event uuid.UUID
-	Kind, Key string
-	Due       time.Time
+	ID    uuid.UUID `json:"id"`
+	Event uuid.UUID `json:"event"`
+	Kind  string    `json:"kind"`
+	Key   string    `json:"key"`
+	Due   time.Time `json:"due"`
 }
 
 type DueReport struct {

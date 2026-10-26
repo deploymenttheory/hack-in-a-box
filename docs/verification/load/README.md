@@ -316,3 +316,33 @@ ambiguous identity refusal, real RSA signatures, PKCE/client/redirect/nonce,
 single use and wall-relative expiry. The [bounded component receipt](evidence/oidc-provider-component.json)
 explicitly records zero native application/session/load evidence. Full provider
 process/TLS/native-auth and actual profile execution remain required.
+
+
+## Native driver source checkpoint
+
+`go run ./cmd/loadprofile` consumes owner-only prepared-fixture, exact-loopback
+TCP target and scoped-container JSON files. It authenticates each declared
+person through normal HTTPS OIDC/state/PKCE/callback/session paths, releases the
+registration barrier alongside routine reads from the whole cohort, runs the
+real monotonic sustained stage, freezes baseline observations and then records
+the pressure curve. Every sent write remains in the same reconciliation ledger
+across phases, including unknown original responses and saturation effects.
+The read-only PostgreSQL observer is explicitly loopback-bound and is separate
+from native API commands. Normal application routes perform all writes.
+
+The transport trusts only the fixture CA, preserves external URL/Host/SNI,
+rejects undeclared destinations and uses no ambient proxy or DNS fallback. Its
+bounded pool supports the full cohort; the limit must remain in baseline
+metadata. A real HTTPS control passed correct-CA/hostname and rejected wrong
+CA/hostname, plaintext, undeclared targets, alternate Host and caller-map
+retargeting. This is transport evidence, not application authentication proof.
+
+The CLI refuses release duration overrides, reserves a new mode-0600 receipt
+before traffic, never overwrites historical output and keeps provider bodies,
+capabilities, cookies and database credentials off stdout/stderr. The prepared
+manifest is private acknowledged native setup output; validation does not turn
+its claims into authority or an oracle. The runner still requires the complete
+native preparation/export, Compose integration and independent current-
+permission, contention, provider receipt and follow-up oracles. Its workload
+receipt explicitly cannot return `release_passed: true` at this checkpoint.
+No native driver process or full load profile has run yet.

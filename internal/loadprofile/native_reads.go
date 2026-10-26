@@ -27,24 +27,26 @@ var errNativeRead = errors.New("native load reader invariant failed")
 // publications and current role/audience grants. Never derive an allowlist from
 // the response currently being tested. These private IDs/prose are not reports.
 type SearchVisibility struct {
-	ProjectEvent                    uuid.UUID
-	ProjectStatus                   string
-	Answers                         map[uuid.UUID]int64
-	Projects                        map[uuid.UUID]int64
-	Events                          map[uuid.UUID]string
-	AllowedTeams                    map[uuid.UUID]bool
-	Forbidden                       []string
-	Needle                          string
-	MinimumAnswers, MinimumProjects int
+	ProjectEvent    uuid.UUID            `json:"project_event"`
+	ProjectStatus   string               `json:"project_status"`
+	Answers         map[uuid.UUID]int64  `json:"answers"`
+	Projects        map[uuid.UUID]int64  `json:"projects"`
+	Events          map[uuid.UUID]string `json:"events"`
+	AllowedTeams    map[uuid.UUID]bool   `json:"allowed_teams"`
+	Forbidden       []string             `json:"forbidden"`
+	Needle          string               `json:"needle"`
+	MinimumAnswers  int                  `json:"minimum_answers"`
+	MinimumProjects int                  `json:"minimum_projects"`
 }
 
 // ReadBinding selects only journeys valid at this target event's real stage.
 // Negative/revocation probes are separate deliberate cases, not a blanket
 // classification that hides unexpected 403/409/429 from normal traffic.
 type ReadBinding struct {
-	Event, Team uuid.UUID
-	Operations  []Operation
-	Visibility  SearchVisibility
+	Event      uuid.UUID        `json:"event"`
+	Team       uuid.UUID        `json:"team"`
+	Operations []Operation      `json:"operations"`
+	Visibility SearchVisibility `json:"visibility"`
 }
 
 type NativeReads struct{ bindings map[string]ReadBinding }

@@ -48,10 +48,19 @@ func (n NativeDatabase) scoped(eventIDs []uuid.UUID) error {
 }
 
 type AdmissionFact struct {
-	EventID                                                                                                             uuid.UUID
-	ConfiguredCapacity                                                                                                  int
-	Applications, Confirmed, Waitlisted, Offered, ClaimedConfirmed, Staff, People, DuplicateActive, ExcludedCompetitors int
-	LastConfirmedSequence, FirstWaitlistedSequence                                                                      *int64
+	EventID                 uuid.UUID `json:"event_id"`
+	ConfiguredCapacity      int       `json:"configured_capacity"`
+	Applications            int       `json:"applications"`
+	Confirmed               int       `json:"confirmed"`
+	Waitlisted              int       `json:"waitlisted"`
+	Offered                 int       `json:"offered"`
+	ClaimedConfirmed        int       `json:"claimed_confirmed"`
+	Staff                   int       `json:"staff"`
+	People                  int       `json:"people"`
+	DuplicateActive         int       `json:"duplicate_active"`
+	ExcludedCompetitors     int       `json:"excluded_competitors"`
+	LastConfirmedSequence   *int64    `json:"last_confirmed_sequence"`
+	FirstWaitlistedSequence *int64    `json:"first_waitlisted_sequence"`
 }
 
 // Admission reads committed owner facts in a PostgreSQL read-only snapshot.

@@ -17,11 +17,11 @@ import (
 // confers no permission: every request obtains current native authority. Only
 // one designated competitor per team should request help in the declared mix.
 type Journey struct {
-	Read          ReadBinding
-	Observation   uuid.UUID
-	RequestHelp   bool
-	WorkHelpQueue bool
-	PublishCues   bool
+	Read          ReadBinding `json:"read"`
+	Observation   uuid.UUID   `json:"observation"`
+	RequestHelp   bool        `json:"request_help"`
+	WorkHelpQueue bool        `json:"work_help_queue"`
+	PublishCues   bool        `json:"publish_cues"`
 }
 
 type NativeWorkload struct {
