@@ -931,3 +931,27 @@ qualification/checkpoints/advisory input, judge-only strict-majority decisions,
 remaining lifecycle variants, awards/showcase/archive/owned outcomes and final
 CI/native-browser/normal-image recovery gates are still required.
 **complete_lifecycle=false; no L01–L18 row is declared fully complete.**
+
+
+## Native mentor coverage/access-source RED — preserved guard
+
+The next frozen driver `d61a4bc1e3faac3a0b8f717264ba95b12c8fa975`
+(build81739, image`sha256:643a73d2d63243624e28f3dee58b94ea88d0a02aca2050295ae2017980491db4`,
+main03bfae7/schema55) failed runner21370 at **112.28s**. Its
+[original safe failure capture](evidence/journey-mentor-coverage-access-red.json)
+retains the actual old approval and current native flags: two
+`verified_account_required` plus`plan_stale`. Publishing actual primary/second
+mentor coverage after competitor-only access approval legitimately expands the
+desired source. Both selected mentors lack verified GitHub accounts. The original
+plan ID/version/fingerprint and all its delivered grants remain intact; the
+strict current-source access-poll guard correctly refuses to call it current.
+
+Actual native setup has six isolated practice cards, twelve published coverage
+slots per event, and zero live mentor cards. This proves a missing scenario
+setup step, not a production defect. The next driver must link explicit selected
+staff identities through real PKCE, prepare coverage before access review, and
+approve/accept the expanded current grant set. It must preserve the canonical
+default52 OIDC people/36 participant GitHub accounts and the strict stale-plan
+guard. No reapproval/write retry or source substitution happened in this RED.
+Safe metadata was exported; scoped containers, networks and volumes are empty.
+Full lifecycle acceptance remains false.
