@@ -73,6 +73,21 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 			item.repositories = current
 		}
 		if ready {
+			for _, item := range r.events {
+				for _, team := range item.teams.Teams {
+					if team.State == "disbanded" {
+						continue
+					}
+					if len(team.Published) == 0 {
+						t.Fatal("native frozen team lost its members")
+					}
+					member := r.participant(t, team.Published[0].ID)
+					path := "/api/v1/events/" + item.view.ID.String() + "/repositories/" + team.ID.String() + "/invitations"
+					if err := member.call(ctx, http.MethodGet, path, -1, nil, nil, http.StatusForbidden); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
 			return
 		}
 		select {

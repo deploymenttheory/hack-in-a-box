@@ -61,7 +61,20 @@ func (g *lifecycleGitHub) oauthHTTP(w http.ResponseWriter, r *http.Request) bool
 			return true
 		}
 		g.codes[code] = lifecycleGitHubCode{Actor: actor, Redirect: redirect, Challenge: challenge, Expires: time.Now().Add(5 * time.Minute)}
+		browser := rand.Text() + rand.Text()
+		for key, value := range g.webSessions {
+			if time.Now().After(value.Expires) {
+				delete(g.webSessions, key)
+			}
+		}
+		if len(g.webSessions) >= 128 {
+			g.mu.Unlock()
+			fail(http.StatusTooManyRequests)
+			return true
+		}
+		g.webSessions[browser] = lifecycleGitHubUserToken{Actor: actor, Expires: time.Now().Add(time.Hour)}
 		g.mu.Unlock()
+		http.SetCookie(w, &http.Cookie{Name: "lifecycle_github_browser", Value: browser, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 		target, _ := url.Parse(redirect)
 		query := target.Query()
 		query.Set("state", q.Get("state"))

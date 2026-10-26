@@ -49,18 +49,23 @@ type (
 		RepositoryReads          int `json:"repository_reads"`
 		OAuthExchangesVerified   int `json:"oauth_exchanges_verified"`
 		OAuthUserReads           int `json:"oauth_user_reads"`
+		InvitationCreates        int `json:"invitation_creates"`
+		InvitationAcceptances    int `json:"invitation_acceptances"`
 	}
 	// This is an external-provider fixture only. It cannot create competition facts
 	// or report native owner success. Actual clients must present verified wall-time
 	// App JWTs and repository-scoped installation tokens for their REST requests.
 	lifecycleGitHub struct {
-		key          *rsa.PrivateKey
-		mu           sync.Mutex
-		tokens       map[string]lifecycleGitHubToken
-		proof        lifecycleGitHubProof
-		repositories map[string]githubapp.Repository
-		codes        map[string]lifecycleGitHubCode
-		users        map[string]lifecycleGitHubUserToken
+		key           *rsa.PrivateKey
+		mu            sync.Mutex
+		tokens        map[string]lifecycleGitHubToken
+		proof         lifecycleGitHubProof
+		repositories  map[string]githubapp.Repository
+		codes         map[string]lifecycleGitHubCode
+		users         map[string]lifecycleGitHubUserToken
+		webSessions   map[string]lifecycleGitHubUserToken
+		invitations   map[int64]lifecycleGitHubInvitation
+		collaborators map[string]map[int64]string
 	}
 )
 
@@ -82,7 +87,7 @@ func newLifecycleGitHub(directory string) (*lifecycleGitHub, error) {
 	); err != nil {
 		return nil, err
 	}
-	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}, codes: map[string]lifecycleGitHubCode{}, users: map[string]lifecycleGitHubUserToken{}}, nil
+	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}, codes: map[string]lifecycleGitHubCode{}, users: map[string]lifecycleGitHubUserToken{}, webSessions: map[string]lifecycleGitHubUserToken{}, invitations: map[int64]lifecycleGitHubInvitation{}, collaborators: map[string]map[int64]string{}}, nil
 }
 
 func (g *lifecycleGitHub) appJWT(r *http.Request) bool {
@@ -144,6 +149,9 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if g.oauthHTTP(w, r) {
+		return
+	}
+	if g.accessHTTP(w, r) {
 		return
 	}
 	switch r.URL.Path {

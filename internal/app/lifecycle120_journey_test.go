@@ -37,6 +37,7 @@ type lifecycleJourneyEvent struct {
 	brand        templates.Branding
 	github       githubapp.Status
 	repositories []repositories.View
+	access       []lifecycleAccessReceipt
 	commonHash   string
 }
 type lifecycleJourney struct {
@@ -138,6 +139,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	for i := range run.events {
 		run.readCommonPublication(t, &run.events[i])
 	}
+	run.prepareRepositoryAccess(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
@@ -215,20 +217,24 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if providerProof.RepositoryCreates != 12 {
 		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
 	}
+	if providerProof.InvitationCreates != 64 || providerProof.InvitationAcceptances != 64 {
+		t.Fatal("actual external access census did not match both events' frozen thirty-two-person cohorts", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
+	}
 	type eventReceipt struct {
-		ID           uuid.UUID            `json:"event_id"`
-		Mode         string               `json:"mode"`
-		Stage        string               `json:"stage"`
-		Objective    objectives.Reference `json:"objective"`
-		Primary      string               `json:"primary"`
-		TeamIDs      []uuid.UUID          `json:"team_ids"`
-		Confirmed    int64                `json:"confirmed"`
-		Census       map[string]int64     `json:"admission_census"`
-		Challenge    uuid.UUID            `json:"challenge_id"`
-		Rubric       rubric.Reference     `json:"rubric"`
-		CommonHash   string               `json:"common_sha256"`
-		PublishedAt  *time.Time           `json:"published_at"`
-		Repositories []repositories.View  `json:"repositories"`
+		ID           uuid.UUID                `json:"event_id"`
+		Mode         string                   `json:"mode"`
+		Stage        string                   `json:"stage"`
+		Objective    objectives.Reference     `json:"objective"`
+		Primary      string                   `json:"primary"`
+		TeamIDs      []uuid.UUID              `json:"team_ids"`
+		Confirmed    int64                    `json:"confirmed"`
+		Census       map[string]int64         `json:"admission_census"`
+		Challenge    uuid.UUID                `json:"challenge_id"`
+		Rubric       rubric.Reference         `json:"rubric"`
+		CommonHash   string                   `json:"common_sha256"`
+		PublishedAt  *time.Time               `json:"published_at"`
+		Repositories []repositories.View      `json:"repositories"`
+		Access       []lifecycleAccessReceipt `json:"repository_access"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -254,6 +260,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				CommonHash:   item.commonHash,
 				PublishedAt:  item.view.PublishedAt,
 				Repositories: item.repositories,
+				Access:       item.access,
 			},
 		)
 	}
