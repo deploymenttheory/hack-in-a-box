@@ -114,3 +114,46 @@ The public report must omit cookies, CSRF/bearer tokens, provider codes,
 credentials and private domain prose. Raw authenticated traces/private
 reconciliation rows stay private; publish bounded counts, hashes, distributions,
 source/configuration provenance, commands, failures and limitations instead.
+
+## Measured worker-cadence correction (component evidence only)
+
+A real normal-wall-clock worker probe exposed a release-target defect before
+full profile execution. At `857ece74`, 31 newly approved durable intents created
+**after** the actual worker startup barrier reached guarded attempt start with
+p95 **55.701732s**, exceeding the fixed 30s target. The separate post-start native
+`Enqueue`/`InsertTx` positive control succeeded. The old minute reconciliation
+cadence delayed intent-only producers; this was measured from native
+`operations.due_at` to `delivery_attempts.started_at`, not provider completion.
+
+The minimal correction at local `e38a642d` gives durable intent reconciliation
+its own 10s ticker. Existing startup reconciliation, 5s publication maintenance,
+60s provider/retention maintenance, current policy, approval/cancellation,
+leases, recovery, retry/snooze and River deduplication remain in force. The same
+31-sample probe passed **15.714s**, p95 **5.710714s**, maximum **5.711054s**.
+All eight affected native jobs owners then passed with `-race` in **42.433s**;
+the repeated due-start probe measured p95 **5.572473s**. Scoped jobs/load-profile
+lint passed 0 issues.
+
+The [bounded receipt](evidence/worker-cadence.json) records exact sources, all
+native parent results and private-log hashes. Commands:
+
+```sh
+# Exact RED at 857ece74; same command GREEN at e38a642d.
+GOMAXPROCS=2 HACKBOX_INTEGRATION=1 go test -p 1 ./internal/jobs \
+  -run '^TestApprovedIntentCreatedAfterWorkerStartupStartsWithinThirtySeconds$' \
+  -count=1 -parallel=1 -timeout=2m -v
+# Complete affected native owner regression at e38a642d.
+GOMAXPROCS=2 HACKBOX_INTEGRATION=1 go test -p 1 -race ./internal/jobs \
+  -count=1 -parallel=1 -timeout=5m -v
+```
+
+This uses real PostgreSQL, the normal `jobs.Service.Run`, actual River and
+native guarded attempt timestamps. Only the external handler is an immediate
+healthy deterministic fixture. Event/intent setup uses the native database
+query shape used by repository producers; it is not a full owner-API journey,
+production-image baseline or real SMTP recipient observation. No test manually
+calls reconciliation, execution or delivery, advances time or treats a later
+current read as an original command acknowledgement. The release-load result
+remains **not executed**: this receipt sets `full_load=false` and
+`release_passed=false`. The full baseline still needs measured burst/saturation,
+all workload/oracles and actual 1,800s/1,000-person sustained execution.
