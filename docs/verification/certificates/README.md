@@ -32,6 +32,7 @@ and actual response-policy rejection of injected scripts/images. This verifies
 the real HTTP-produced document in an isolated server; it is not an application
 session or future certificate UI walkthrough. Private raw logs stay outside Git.
 
-The rebased receipt reconciles all 18 recorded source files byte for byte.
+The rebase snapshot reconciles all 18 historical files; the final documentation
+link/status change is separate. All 17 code/API/test files remain byte-equal.
 Independent reviews and final-head CI remain required before this Draft is ready. No release acceptance follows from this
 receipt alone.

@@ -198,5 +198,10 @@
       "log_path": "/private/tmp/hackbox-backlog-evidence/certificates164/rebased-generated.log",
       "log_sha256": "fd4492a811810fea3e1baa473a08c1e76124e5257674f9de8bf15a2e475e0ec3"
     }
+  },
+  "final_documentation_delta": {
+    "source": "47324ffbe7dbf416165d44340212b62f9a051fa4",
+    "code_api_test_files_byte_equal": 17,
+    "historical_design_document_changed": "docs/design/certificates.md gains current verification link and independent-review/CI status only; its historical source hash is retained above."
   }
 }
