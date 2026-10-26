@@ -980,3 +980,51 @@ this native run, including unknown-actor zero-code/session and accepted
 read-only mentor external-work denial. These component results never substitute
 for the failed native journey. All owned project resources were cleaned;
 complete_lifecycle remains false.
+
+
+## Connected current-window mentor access and live checkpoint cards — native PASS
+
+Actual runner47326 passed **295.62s** on frozen
+`5e7abc62e6fb4191cf7bd0b6e6a8d4052f54cd73`, fixture
+`sha256:812dc43a7410fef08cf35e567de1f5681528809547de88d2a81bf43dac5cde39`,
+main03bfae7/schema55 (build27531/start52669). The
+[source-pinned receipt](evidence/journey-live-mentor-checkpoints.json) includes
+actual two-event source/plan/card references, real operation and attempt metadata,
+and the same connected cutoff census. Earlier d61a/6dd failures remain separate
+and were not reclassified as successful executions.
+
+Canonical default52 OIDC people and36 participant GitHub actors remain unchanged.
+The isolated provider explicitly copies those36 plus selected mentor-a/b with
+distinct numeric IDs and logins. Ten real component parents passed1.071s and
+lint0 at the corrected source: input mutation/identity collision/unknown-actor
+zero-code/session controls, PKCE and native scoped REST, including accepted
+read-only mentor access that still cannot create external work. Actual native
+execution links38 people through PKCE; it never seeds accounts or grant facts.
+
+Both actual mentors publish independent primary/second coverage for six teams
+per event, with native availability/capacity and a distinct checkpoint configured
+before live. Coverage is valid only inside its published live window: initial
+T7 access remains64 competitor grants. At live, twelve distinct version2 plans
+explicitly review and approve only24 additional read-only mentor invitations.
+Original competitor approval receipts stay historical. All88 external invitations
+are separately accepted and verified by the native provider refresh and current
+own invitation readers. The retained external GitHub browser is selected only
+after exact native-person equality; the other event's native reader is retained.
+
+Explicit refresh is not queued-poll evidence. The domain advances one actual live
+minute after acceptance. With no further refresh, twelve real queued polls
+observe08:01 after earlier08:00 observations. Native metadata proves88 access
+and12 poll operations delivered,100 distinct real wall-clock attempt leases and
+zero retained leases. Both contexts then submit twelve independent private live
+checkpoint cards (24 total), with actual author/team/card/run references and nil
+final-submission revision. The second author never inherits another author's
+card. Early checkpoint writes remain403; the six fictional judge practices close
+at live and never supply final judge scores. Eight formal entries and the
+existing14 actual queued cutoff captures/one retry/explicit reconciliation also
+pass in these same contexts. All project resources were exported and cleaned.
+
+This remains test-entrypoint/native-HTTP proof, distinct from production-image,
+TLS and browser proof. Actual final mentor cards/qualification, fresh final judge
+cards/advisory-only mentor input/judge-only decisions, remaining variants and
+later lifecycle/final validation remain required. **complete_lifecycle=false;
+no L01–L18 row is declared fully complete.**
