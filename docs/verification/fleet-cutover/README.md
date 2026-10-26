@@ -2,7 +2,7 @@
 
 ## Integrated candidate — 26 October 2026
 
-Current executable checkpoint `746d75ab` is rebased on merged main `03bfae7b`.
+Current executable checkpoint `794214f5` is rebased on merged main `03bfae7b`.
 The regenerated inventory resolves **96 registrations, 30 route owners and 318
 reachable modules**, with one Tailwind theme owner and no source errors. Both
 mentor-advisory routes are included. The original 94-route/29-owner native
@@ -23,13 +23,25 @@ header change adds `blob:` to image sources. Chromium controls prove actual imag
 decode while Blob scripts and external scripts/images remain blocked. Native HTTP
 controls retain nonempty PNG bodies over both recorder and real socket paths.
 
-The `8da81101` normal-image journey reached actual photo upload ACK1, a rendered
-49,909-byte protected PNG and organiser review ACK2. It then stopped at the
-existing stale-editor guard before publication: selecting current metadata is an
-explicit user step. The corrected driver follows that confirmation and checks
-each subsequent original PUT version. Full four-case corrected runtime, final
-independent reviews and exact-head CI remain required. No partial media result
-is recorded as a completed publication/withdrawal journey.
+The corrected `794214f5` normal-image run passes all four desktop/mobile and
+light/dark cases: actual upload ACK1, rendered protected PNG bytes, organiser
+approval1→2, explicit release2→3 and withdrawal3→4, followed by thumbnail403.
+Every later intent uses the existing explicit current-metadata confirmation and
+each original PUT acknowledgement is checked. Separate logout, guide isolation
+and public-process failure isolation also pass. All22 unchanged captures, image
+IDs and scoped cleanup are in [normal runtime evidence](normal-runtime-794214f5/README.md).
+This is the same organiser in both portals and an untagged photograph; native
+HTTP covers tagged-person consent rather than implying that case ran here.
+
+The exact public/mobile/final qualification case that failed CI also passes with
+race checking (66.98s parent;68.551s package). Foreground ballot reconciliation
+legitimately replaced the old workspace; the caller now waits for the actual
+completed ballot state before selecting its control. The strict stale-target
+helper remains unchanged. [Receipt](qualification-foreground-proof.json) retains
+the failed CI source, correction, exact local scope and raw-log hash. Final CI
+must still exercise the complete matrix. Full reviews and exact final-head CI
+remain gates before merge; these records do not complete lifecycle or release
+signoff.
 
 Historical checkpoints below retain their original dates, sources and remaining
 gates at the time; the integrated status above takes precedence.

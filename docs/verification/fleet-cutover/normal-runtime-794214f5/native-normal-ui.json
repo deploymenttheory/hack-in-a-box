@@ -1,0 +1,263 @@
+{
+  "source": "794214f5c226d027d8de564242aea73be52fb0db",
+  "project": "hackbox-fleet245-794214f5c226-66e2e6bd",
+  "kind": "Normal production commands with a synthetic external OIDC provider; actual browser/HTTP/PostgreSQL",
+  "cases": [
+    {
+      "name": "desktop-light",
+      "event_id": "7fb01252-4f83-4221-902e-e2738afdc9d7",
+      "result": "pass",
+      "native_creation": 200,
+      "media": {
+        "media_id": "f96363aa-7f5f-4830-9d39-630d2d495a2b",
+        "upload_status": 200,
+        "thumbnail_status": 200,
+        "thumbnail_browser_bytes": 49909,
+        "thumbnail_sha256": "5106249c49826c3ba1de3f443076d05f78735f6efffb13385a34c9cdf718c297",
+        "decisions": [
+          {
+            "action": "review",
+            "command_id": "944f213e-4b1f-401a-9af3-b76b2f929b4b",
+            "expected_version": 1,
+            "acknowledged_version": 2,
+            "status": 200
+          },
+          {
+            "action": "publish",
+            "command_id": "1e26f955-ce3e-456b-9119-0663e82f8d1d",
+            "expected_version": 2,
+            "acknowledged_version": 3,
+            "status": 200
+          },
+          {
+            "action": "withdraw",
+            "command_id": "61b57a8f-1113-4b87-90d4-6195acb2da0a",
+            "expected_version": 3,
+            "acknowledged_version": 4,
+            "status": 200
+          }
+        ],
+        "withdrawn_thumbnail_status": 403
+      },
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "desktop-dark",
+      "event_id": "6aaa8f05-2c9d-4cb6-98a1-cc36c16d0d6f",
+      "result": "pass",
+      "native_creation": 200,
+      "media": {
+        "media_id": "c93ac5b3-caa5-4297-a439-bb3e5f6e9aee",
+        "upload_status": 200,
+        "thumbnail_status": 200,
+        "thumbnail_browser_bytes": 49909,
+        "thumbnail_sha256": "5106249c49826c3ba1de3f443076d05f78735f6efffb13385a34c9cdf718c297",
+        "decisions": [
+          {
+            "action": "review",
+            "command_id": "413f6a7c-acee-4840-89cd-6a14a4b56f87",
+            "expected_version": 1,
+            "acknowledged_version": 2,
+            "status": 200
+          },
+          {
+            "action": "publish",
+            "command_id": "aa4adb6b-9b3f-4f53-8bd4-9811dbe8cebd",
+            "expected_version": 2,
+            "acknowledged_version": 3,
+            "status": 200
+          },
+          {
+            "action": "withdraw",
+            "command_id": "861aebfa-e617-4505-9a49-16c13a817732",
+            "expected_version": 3,
+            "acknowledged_version": 4,
+            "status": 200
+          }
+        ],
+        "withdrawn_thumbnail_status": 403
+      },
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "mobile-light",
+      "event_id": "3a0926a3-ca80-4077-88bf-42e9487aed71",
+      "result": "pass",
+      "native_creation": 200,
+      "media": {
+        "media_id": "76d908e9-1af1-4eb6-b076-b7eb5f8ff90f",
+        "upload_status": 200,
+        "thumbnail_status": 200,
+        "thumbnail_browser_bytes": 49909,
+        "thumbnail_sha256": "5106249c49826c3ba1de3f443076d05f78735f6efffb13385a34c9cdf718c297",
+        "decisions": [
+          {
+            "action": "review",
+            "command_id": "7d2eae94-5965-4435-b7aa-43c154ceca96",
+            "expected_version": 1,
+            "acknowledged_version": 2,
+            "status": 200
+          },
+          {
+            "action": "publish",
+            "command_id": "29900b6a-43bc-459b-842e-c5a4728e9d53",
+            "expected_version": 2,
+            "acknowledged_version": 3,
+            "status": 200
+          },
+          {
+            "action": "withdraw",
+            "command_id": "d7dfccce-9d7c-4515-a72a-75161f935377",
+            "expected_version": 3,
+            "acknowledged_version": 4,
+            "status": 200
+          }
+        ],
+        "withdrawn_thumbnail_status": 403
+      },
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": false
+    },
+    {
+      "name": "mobile-dark",
+      "event_id": "28369cbd-62ae-46c9-b874-0a987daf6091",
+      "result": "pass",
+      "native_creation": 200,
+      "media": {
+        "media_id": "948248d9-dda0-4504-bda4-d4116a9f0038",
+        "upload_status": 200,
+        "thumbnail_status": 200,
+        "thumbnail_browser_bytes": 49909,
+        "thumbnail_sha256": "5106249c49826c3ba1de3f443076d05f78735f6efffb13385a34c9cdf718c297",
+        "decisions": [
+          {
+            "action": "review",
+            "command_id": "cdad0ae5-842c-4d4c-9134-b6e1fc858330",
+            "expected_version": 1,
+            "acknowledged_version": 2,
+            "status": 200
+          },
+          {
+            "action": "publish",
+            "command_id": "ed764513-e7de-4a76-8238-47ac2dcaee9c",
+            "expected_version": 2,
+            "acknowledged_version": 3,
+            "status": 200
+          },
+          {
+            "action": "withdraw",
+            "command_id": "65929e61-61d2-4dac-8ab8-bcd5b5407199",
+            "expected_version": 3,
+            "acknowledged_version": 4,
+            "status": 200
+          }
+        ],
+        "withdrawn_thumbnail_status": 403
+      },
+      "independent_logout": true,
+      "guide_api_requests": 0,
+      "public_failure_isolation": true
+    }
+  ],
+  "images": [
+    {
+      "name": "desktop-light-admin-event.png",
+      "sha256": "2b62f298b87401757ce08ab35d54f83dfed236f4f52c43c00c98293ba01f19c6"
+    },
+    {
+      "name": "desktop-light-participant-event.png",
+      "sha256": "102016bd4e1d1bf2eb8a68c1d718a54edbdff10e8275d402a514f8a7f2645bd4"
+    },
+    {
+      "name": "desktop-light-media-private.png",
+      "sha256": "39e98c462c386ecc0d25aa57295e441856ad19a6540d973b123822db76c0ad4c"
+    },
+    {
+      "name": "desktop-light-media-released.png",
+      "sha256": "c6269d861e967c69e137af62f9875b9def523cd088b4803019f7b59f724c33b0"
+    },
+    {
+      "name": "desktop-light-guide.png",
+      "sha256": "2325ca186418ac405f9c3b252cf566acdee97be772a25b2bc915459b095b2ffd"
+    },
+    {
+      "name": "desktop-dark-admin-event.png",
+      "sha256": "0b4b36a97dfb06e8a303531978d36cd2bd64cb9854065226707ce7552644468d"
+    },
+    {
+      "name": "desktop-dark-participant-event.png",
+      "sha256": "70ee88cc9687cddaf75c84b5b579c656b6ae17e4b8fff4541365b191e6f79cef"
+    },
+    {
+      "name": "desktop-dark-media-private.png",
+      "sha256": "104347744aa1b12af1707a7c1f2c8ebacf441a469725d51836909d6e06a0d6cd"
+    },
+    {
+      "name": "desktop-dark-media-released.png",
+      "sha256": "fc1da9e9a5e0614d3c4ae2f63b31d9d5042ed596aa7a9d2aca7d13b941cd449c"
+    },
+    {
+      "name": "desktop-dark-guide.png",
+      "sha256": "58f5a35270f317645cc1f5b8219fa9e16b41c244964a8e539314eb1af6cf4483"
+    },
+    {
+      "name": "mobile-light-admin-event.png",
+      "sha256": "b6b822c8f7b2344923e8a268fe2b3e96fb09bcc71ea767849679cdc4e48aef39"
+    },
+    {
+      "name": "mobile-light-participant-event.png",
+      "sha256": "0d2ae6d3aee9042140fc6a6c47e051aaee156a3b750fd3e53ebb5d3dcb6ec567"
+    },
+    {
+      "name": "mobile-light-media-private.png",
+      "sha256": "6d7c725624b8dea084b07244ba1547f5168b05ff414b229ba9845a2b229ce117"
+    },
+    {
+      "name": "mobile-light-media-released.png",
+      "sha256": "ee3424dcac28b71ac955181a27bef53004e95ef3fdd8e7690a14803e98b16431"
+    },
+    {
+      "name": "mobile-light-guide.png",
+      "sha256": "9dbdb02767d8f5e3d933d1457e7f689cff75d8509a7a97256ca4952bfc1e8bda"
+    },
+    {
+      "name": "mobile-dark-admin-event.png",
+      "sha256": "09b1b8b042b1097db560266080c8c97287fbca9f570d0706d30b2fd9d272d8a9"
+    },
+    {
+      "name": "mobile-dark-participant-event.png",
+      "sha256": "521d32fd5873f29ba0e421f73d51d1f6e01ad1bd5a7f5523caab345a549e6fa1"
+    },
+    {
+      "name": "mobile-dark-media-private.png",
+      "sha256": "20bb79b7b92d1c296f329ba5b0b27a45c2863b8cfe5f72dc22fefbf121fdd1eb"
+    },
+    {
+      "name": "mobile-dark-media-released.png",
+      "sha256": "f2fb91225e8239e945508d5a9d7779136b5a6109df574da89999bfa443282138"
+    },
+    {
+      "name": "mobile-dark-guide.png",
+      "sha256": "87f0fbce771fc6f1bf87b8617f510dba8b1292156b27c56216c796e58f3a12eb"
+    },
+    {
+      "name": "mobile-dark-admin-public-stopped.png",
+      "sha256": "b20a807501c81d3f66ccbce3f6f47f2c439fe1a686fe0004ded53527770efd80"
+    },
+    {
+      "name": "mobile-dark-guide-public-stopped.png",
+      "sha256": "87f0fbce771fc6f1bf87b8617f510dba8b1292156b27c56216c796e58f3a12eb"
+    }
+  ],
+  "immutable_images": {
+    "public": "sha256:caa584aee03a05e2a301c5a933833af13cd99e8e339f019f385aa1b36c30d610",
+    "admin": "sha256:7bce0462fb1053237ae1d33f333a12f967220bcfceddbaccea215a92e59fe77b",
+    "guide": "sha256:f75b49aac891537aa077b818236f5e2410b3e18a0f0c49c997de4e5c0df6d300"
+  },
+  "scope": "Shared shells, reviewed native draft creation, event reading, protected media upload/review/release/withdrawal and byte denial, independent sessions/guide and public-process failure. Same organiser reads both portals; not a confirmed-competitor journey, every domain route or complete lifecycle certification."
+}

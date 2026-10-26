@@ -1,6 +1,6 @@
 {
   "kind": "Current-source integration layer; historical executions retain their own source; not final acceptance",
-  "source": "746d75ab239278fd993bcd9ec907e2ea44e8d142",
+  "source": "794214f5c226d027d8de564242aea73be52fb0db",
   "base": "03bfae7be2fcc86d61b450953b332ee8246c6713",
   "historical_snapshot": "4d1808ac61044c64fd12a154bdf28475012440f9",
   "counts": {
@@ -150,16 +150,17 @@
   },
   "focused_outcome_http_receipt": "outcome-review-http-proof.json",
   "media": {
-    "source": "8da81101c08df471dc949ba71b2158ba5d1c5b60",
-    "partial_only": true,
-    "observed": "Native upload ACK1, protected browser PNG49909bytes/render, organiser review ACK2; subsequent publication blocked by deliberate stale editor guard.",
-    "correction": "746d75ab follows existing explicit Load current media metadata and confirmation before later intents; next actual PUT version must match last original ACK.",
-    "complete_four_case_runtime": "NOT YET RUN AT CORRECTED SOURCE"
+    "source": "794214f5c226d027d8de564242aea73be52fb0db",
+    "complete_four_case_runtime": "PASS",
+    "receipt": "normal-runtime-794214f5/native-normal-ui.json",
+    "cleanup": "normal-runtime-794214f5/cleanup.json",
+    "scope": "Untagged actual photo upload/review/release/withdrawal and protected-byte denial in four widths/themes; same organiser both portals. Native tagged-consent HTTP coverage remains separate."
   },
   "remaining_gates": [
-    "Corrected four-case normal runtime through review/publish/withdraw and independent process failure",
-    "Full independent cutover Standards and Spec reviews",
-    "All current-head CI including native browser suites"
+    "Full independent integrated cutover Spec review and bounded correction reviews",
+    "All final-head CI including complete native browser matrix"
   ],
-  "acceptance_complete": false
+  "acceptance_complete": false,
+  "qualification_correction_receipt": "qualification-foreground-proof.json",
+  "frontend_checks_receipt": "frontend-checks-746d75ab.json"
 }
