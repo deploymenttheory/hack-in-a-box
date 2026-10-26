@@ -18,6 +18,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/attendance"
 	"github.com/deploymenttheory/hack-in-a-box/internal/audit"
 	"github.com/deploymenttheory/hack-in-a-box/internal/automation"
+	"github.com/deploymenttheory/hack-in-a-box/internal/certificates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/clarification"
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/content"
@@ -69,6 +70,7 @@ import (
 )
 
 type Dependencies struct {
+	Certificates         certificates.Service
 	TeamReports          teamreports.Service
 	Results              results.Service
 	ResultsAdminSurface  bool

@@ -3,9 +3,10 @@
 package certificates
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"time"
 )
 
 type Service struct {
@@ -98,7 +99,16 @@ type History struct {
 	Reason      string      `json:"reason"`
 	RequestID   uuid.UUID   `json:"request_id"`
 }
+type Receipt struct {
+	RequestID     uuid.UUID `json:"request_id"`
+	CertificateID uuid.UUID `json:"certificate_id"`
+	Version       int64     `json:"version"`
+	Action        string    `json:"action"`
+	Fingerprint   string    `json:"fingerprint"`
+}
+
 type View struct {
+	Receipt     *Receipt    `json:"receipt"`
 	Certificate Certificate `json:"certificate"`
 	Current     bool        `json:"current"`
 	History     []History   `json:"history"`
