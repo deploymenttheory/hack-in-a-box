@@ -76,7 +76,7 @@ func (c *lifecycleControl) initialTimeline(ctx context.Context) (lifecycleTimeli
 
 func (c *lifecycleControl) call(ctx context.Context, method, path string, input, output any) error {
 	switch path {
-	case "/clock", "/mail/fault", "/mail/messages", "/github/proof":
+	case "/clock", "/mail/fault", "/mail/messages", "/github/proof", "/github/branch-fault":
 	default:
 		return errors.New("unknown owner-private lifecycle control")
 	}

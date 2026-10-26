@@ -1,17 +1,13 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"net/http/cookiejar"
-	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/google/uuid"
-	"golang.org/x/oauth2"
 )
 
 func TestLifecycleSyntheticGitHubAccessRESTContract(t *testing.T) {
@@ -35,29 +31,7 @@ func TestLifecycleSyntheticGitHubAccessRESTContract(t *testing.T) {
 	if err != nil || len(snapshot.Collaborators) != 0 || len(snapshot.Invitations) != 1 || snapshot.Invitations[0].ID != result.Invitation.ID {
 		t.Fatal("pending invitation was mistaken for accepted collaborator")
 	}
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	browser := &http.Client{Jar: jar, Transport: http.DefaultTransport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	oauth := oauth2.Config{ClientID: "lifecycle-github", ClientSecret: "synthetic-github-secret", RedirectURL: "http://public:8080/auth/github/callback", Endpoint: oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize", TokenURL: "https://github.com/login/oauth/access_token", AuthStyle: oauth2.AuthStyleInParams}}
-	verifier := oauth2.GenerateVerifier()
-	authorize, _ := url.Parse(oauth.AuthCodeURL("synthetic-access-state-at-least-thirty-two-bytes", oauth2.S256ChallengeOption(verifier)))
-	query := authorize.Query()
-	query.Set("actor", "attendee-01")
-	authorize.RawQuery = query.Encode()
-	response, err := browser.Get(authorize.String())
-	if err != nil {
-		t.Fatal("external browser login unavailable")
-	}
-	callback, locationErr := response.Location()
-	response.Body.Close()
-	if response.StatusCode != 302 || locationErr != nil {
-		t.Fatal("external browser login did not bind OAuth authorization")
-	}
-	if _, err := oauth.Exchange(context.WithValue(t.Context(), oauth2.HTTPClient, browser), callback.Query().Get("code"), oauth2.VerifierOption(verifier)); err != nil {
-		t.Fatal("external browser PKCE exchange rejected")
-	}
+	browser := lifecycleExternalBrowser(t, "attendee-01")
 	accept := fmt.Sprintf("https://github.com/invitations/%d/accept", result.Invitation.ID)
 	for _, attempt := range []struct {
 		client *http.Client

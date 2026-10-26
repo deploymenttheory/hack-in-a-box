@@ -27,7 +27,7 @@ func (g *lifecycleGitHub) allowedToken(names []string, permissions map[string]st
 	g.mu.Lock()
 	_, exists := g.repositories[name]
 	g.mu.Unlock()
-	return exists && (len(permissions) == 1 || len(permissions) == 2 && (permissions["administration"] == "read" || permissions["administration"] == "write"))
+	return exists && (len(permissions) == 1 || len(permissions) == 2 && (permissions["administration"] == "read" || permissions["administration"] == "write" || permissions["contents"] == "read"))
 }
 
 func lifecycleRepositoryJSON(repository githubapp.Repository) map[string]any {

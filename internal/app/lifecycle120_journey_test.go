@@ -42,6 +42,9 @@ type lifecycleJourneyEvent struct {
 	accessPoll   []lifecycleAccessPollReceipt
 	deliverable  uuid.UUID
 	submissions  []lifecycleSubmissionReceipt
+	work         []lifecycleWorkReceipt
+	lateWork     *lifecycleWorkReceipt
+	cutoff       []lifecycleCutoffReceipt
 	commonHash   string
 }
 type lifecycleJourney struct {
@@ -144,6 +147,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		run.readCommonPublication(t, &run.events[i])
 	}
 	run.prepareRepositoryAccess(t)
+	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
@@ -208,6 +212,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	run.waitCurrentAccessPoll(t)
 	run.submitLiveEvidence(t)
+	run.captureAndReconcileCutoff(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -245,6 +250,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		TeamNotice   lifecycleTeamNoticeReceipt   `json:"team_notice"`
 		AccessPoll   []lifecycleAccessPollReceipt `json:"access_poll"`
 		Submissions  []lifecycleSubmissionReceipt `json:"submissions"`
+		Work         []lifecycleWorkReceipt       `json:"preparation_work"`
+		LateWork     *lifecycleWorkReceipt        `json:"late_work,omitempty"`
+		Cutoff       []lifecycleCutoffReceipt     `json:"cutoff_sources"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
@@ -274,12 +282,15 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				TeamNotice:   item.teamNotice,
 				AccessPoll:   item.accessPoll,
 				Submissions:  item.submissions,
+				Work:         item.work,
+				LateWork:     item.lateWork,
+				Cutoff:       item.cutoff,
 			},
 		)
 	}
 	receipt, err := json.MarshalIndent(
 		map[string]any{
-			"checkpoint":              "connected-two-event-start-to-live-only",
+			"checkpoint":              "connected-two-event-through-cutoff-partial",
 			"complete_lifecycle":      false,
 			"github_transport_proof":  providerProof,
 			"events":                  items,

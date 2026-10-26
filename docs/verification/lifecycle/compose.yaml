@@ -158,7 +158,7 @@ services:
   journey:
     <<: *fixture
     profiles: [journey]
-    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=5m', '-test.v']
+    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=8m', '-test.v']
     volumes: ['control:/control:ro', 'artifacts:/artifacts']
     depends_on:
       public: {condition: service_healthy}

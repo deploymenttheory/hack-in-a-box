@@ -51,6 +51,9 @@ type (
 		OAuthUserReads           int `json:"oauth_user_reads"`
 		InvitationCreates        int `json:"invitation_creates"`
 		InvitationAcceptances    int `json:"invitation_acceptances"`
+		BranchReads              int `json:"branch_reads"`
+		BranchFailures           int `json:"branch_failures"`
+		WorkTransactions         int `json:"work_transactions"`
 	}
 	// This is an external-provider fixture only. It cannot create competition facts
 	// or report native owner success. Actual clients must present verified wall-time
@@ -66,6 +69,8 @@ type (
 		webSessions   map[string]lifecycleGitHubUserToken
 		invitations   map[int64]lifecycleGitHubInvitation
 		collaborators map[string]map[int64]string
+		branchHeads   map[string]lifecycleExternalWorkReceipt
+		branchFaults  map[string]int
 	}
 )
 
@@ -149,6 +154,9 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if g.oauthHTTP(w, r) {
+		return
+	}
+	if g.branchHTTP(w, r) {
 		return
 	}
 	if g.accessHTTP(w, r) {
@@ -267,6 +275,30 @@ func (g *lifecycleGitHub) repositoryToken(r *http.Request, name, permission, lev
 }
 
 func (g *lifecycleGitHub) control(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost && r.URL.Path == "/github/branch-fault" {
+		var body struct {
+			Repository string `json:"repository"`
+			Failures   int    `json:"failures"`
+		}
+		decoder := json.NewDecoder(io.LimitReader(r.Body, 4096))
+		decoder.DisallowUnknownFields()
+		if decoder.Decode(&body) != nil || body.Failures != 1 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		g.mu.Lock()
+		defer g.mu.Unlock()
+		if _, exists := g.repositories[body.Repository]; !exists {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if g.branchFaults == nil {
+			g.branchFaults = map[string]int{}
+		}
+		g.branchFaults[body.Repository] = 1
+		lifecycleJSON(w, map[string]any{"repository": body.Repository, "failures": 1})
+		return
+	}
 	if r.Method != http.MethodGet || r.URL.Path != "/github/proof" {
 		http.NotFound(w, r)
 		return
