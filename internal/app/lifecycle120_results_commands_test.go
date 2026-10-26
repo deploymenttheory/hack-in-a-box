@@ -51,7 +51,9 @@ func (r *lifecycleJourney) changeResults(t *testing.T, item *lifecycleJourneyEve
 		t.Fatal(err)
 	}
 	ack := next.Receipt
-	if ack == nil || ack.RequestID != id || ack.ActorID != r.owner.person || ack.RunID != item.judgeRun || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || ack.Fingerprint == "" {
+	// Organiser acknowledgements bind the exact command/version; the native
+	// prepared source carries its judge run (ballot receipts carry RunID too).
+	if ack == nil || ack.RequestID != id || ack.ActorID != r.owner.person || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || ack.Fingerprint == "" || next.Round.Source.JudgeRunID != item.judgeRun || next.Round.Source.Binding != body["source_binding"] {
 		t.Fatal("native result command lost original actor/source/version acknowledgement")
 	}
 	var recovered results.Recovery
