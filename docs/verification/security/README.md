@@ -12,6 +12,9 @@ cookies, signed tokens, credentials or private payloads. Native tests require
 
 ## Acceptance and threat matrix
 
+[requirements-matrix.json](requirements-matrix.json) maps every live acceptance
+criterion, current assertion boundaries, actual artifacts and remaining gates.
+
 | Issue #121 boundary | Executable proof and current scope | Status |
 | --- | --- | --- |
 | SSO, session, CSRF | New `identity/TestSecurity121OIDCTokenBrowserAndSessionAbuse`: actual local RS256/JWKS discovery and PKCE exchange; forged issuer/audience/authorised party/signature/algorithm/payload/nonce; browser-bound and expired/replayed state; anonymous-session fixation; exact Origin/CSRF; current session revocation; same email with distinct subjects | Native PASS at initial checkpoint |
@@ -147,9 +150,9 @@ builds and advisory/dependency-graph log digests are retained separately in
   against main076. Reconcile final integrated feature changes with this scope;
   the future/live competition and mentor boundaries still require their native
   owners. Historical preview observations retain their narrower source/scope.
-- Execute the supported production HTTPS/Secure-cookie profile with a local
-  trusted synthetic issuer/proxy; the completed private HTTP/development walk
-  does not establish that transport scope.
+- Preserve the now-executed production HTTPS/Secure-cookie profile proof and
+  validate later integrated production changes against its pinned application
+  source. The earlier private HTTP walk retains its separate transport scope.
 - Obtain independent reviews and complete final current-head required CI. Keep
   this PR Draft and #121 open; no critical/high-severity release sign-off or full
   release completion is claimed by these scoped results.
@@ -326,3 +329,38 @@ identifiers and requires strict X509 verification before any deployment starts.
 The strict generation/CA-loading/host checks pass; an actual TLS rerun remains
 required. No application TLS check, normal API binary, timeout or certificate
 verification requirement was weakened. The failed run remains `passed:false`.
+
+
+## Executed production HTTPS/Secure-cookie profile
+
+At clean verification source `d3dba5f8190321f6345ccf6b85e10111b5862a5e`, the
+production HTTPS profile passed **57 observed native API outcomes** and all three
+required transport assertions. It used the same independently built normal main
+`076f6162558df2ac3d7fb1ff7c23b3d35dc21784` binaries, now configured with
+`HACKBOX_ENV=production`, exact HTTPS public/admin origins and HTTPS issuer. The
+separate synthetic Node process performed real external TLS termination and
+RS256 OIDC; application requests were proxied to the real APIs without fabricated
+success responses, clock controls, SQL or invented sessions.
+
+The actual clients rejected an untrusted CA and a trusted certificate with the
+wrong hostname. Successful HTTPS logins observed real Secure/HttpOnly/
+SameSite=Lax/host-only login and session cookies on both portals. The same signed-in
+cookie jars received native401 on a cleartext downgrade to each identical hostname;
+All55 earlier CSRF, private-object, role-grant/revocation,
+fresh-login and independent-logout outcomes also passed in this supported profile.
+Normal Go issuer/token traffic used standard CA verification; no insecure TLS
+switch was used. Temporary CA/server private keys were removed with the frozen
+snapshot after teardown and are absent from evidence.
+
+[tls-deployment-observations.json](tls-deployment-observations.json) retains only
+scenario labels/statuses, cookie names, source and transport assertions.
+[tls-deployment-summary.json](tls-deployment-summary.json) records immutable
+application/provider/runner IDs, embedded application revisions, public-certificate
+hashes, private-log digests and zero remaining project containers/volumes/networks.
+The first527192a5 failed attempt remains separately scoped; the corrected strict
+certificate profile was actually executed, rather than inferred from syntax or
+certificate-only checks.
+
+This closes the previously missing supported transport execution for main076.
+Final mentor-feature integration, current-source authority proof, independent
+reviews and latest-head CI remain required before release sign-off.

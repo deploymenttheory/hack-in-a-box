@@ -1,0 +1,365 @@
+{
+  "issue": "https://github.com/deploymenttheory/hack-in-a-box/issues/121",
+  "release_signoff": "pending",
+  "criteria": [
+    {
+      "id": "AC1",
+      "requirement": "No unresolved critical/high-severity issue affecting the supported deployment remains at release sign-off.",
+      "status": "pending_final_integrated_source_and_independent_review",
+      "observed_findings": "No application security finding established by the completed scoped cases. Harness-method/status/certificate failures are separately retained; they are not application findings.",
+      "remaining": [
+        "Integrate #292 mentor feature and execute its current owner privacy/authority assertion",
+        "Latest-head full CI/advisory scan",
+        "Independent Standards/Spec review and root release sign-off"
+      ]
+    },
+    {
+      "id": "AC2",
+      "requirement": "Tests include SSRF attempts through URLs/webhooks, malicious Markdown/assets and cross-event object references.",
+      "status": "executed_scoped",
+      "assertions": [
+        "Malicious destination and unsafe/mixed DNS answers produce zero dials; valid pinned-address control dials once; proxy/redirect/TLS policies remain enforced.",
+        "GitHub webhook verifies exact raw bytes and current native provenance rather than trusting payload identifiers.",
+        "Production SafeMarkdown ignores active/raw HTML and images; browser traps observe no executable/remote side effects and current403 disposes text. Its API is explicitly mocked.",
+        "Actual native/normal APIs reject foreign event/file/export references and spoofed active MIME; positive owner/file and exact authorised publication controls remain."
+      ],
+      "evidence": [
+        {
+          "artifact": "native-matrix.json",
+          "scope": "51 exact parents on6bab692b; URL/webhook/upload/object cases"
+        },
+        {
+          "artifact": "frontend-advisory-summary.json",
+          "scope": "4 production-renderer browser cases with mocked APIs; source-scoped"
+        },
+        {
+          "artifact": "native-showcase-matrix.json",
+          "scope": "2 native showcase parents on9d787fe2"
+        },
+        {
+          "artifact": "tls-deployment-observations.json",
+          "scope": "57 actual configured production-profile API outcomes on d3dba5f8 verifier/main076 applications"
+        }
+      ]
+    },
+    {
+      "id": "AC3",
+      "requirement": "Findings have reproducible steps, affected boundaries and linked remediation; sensitive values are absent from evidence.",
+      "status": "interim_ledger_complete_final_review_pending",
+      "assertions": [
+        "Executable manifests and scripts reproduce each scoped scenario.",
+        "The failed POST/PUT and MIME400/415 test expectations are documented separately from application security findings.",
+        "The failed TLS probe and reproduced strict-certificate defect retain separate observed/diagnosed attribution; corrected actual TLS execution is recorded.",
+        "Published evidence stores labels/statuses, source, immutable image IDs and log/public-certificate hashes; no cookie/token/private response bodies or private keys."
+      ],
+      "evidence": [
+        {
+          "artifact": "threat-model.md",
+          "scope": "boundaries/finding-reporting rules and dependency-advisory limitation"
+        },
+        {
+          "artifact": "README.md",
+          "scope": "failure/remediation source history"
+        },
+        {
+          "artifact": "normal-deployment-summary.json",
+          "scope": "HTTP run provenance and cleanup"
+        },
+        {
+          "artifact": "tls-deployment-summary.json",
+          "scope": "production TLS run provenance and cleanup"
+        }
+      ]
+    },
+    {
+      "id": "AC4",
+      "requirement": "Include revoked-organiser/early-access eligibility bypass, conflicting registration/grant races, direct early-theme URLs, post-freeze roster mutation and premature submission/review/scoring requests in abuse scenarios.",
+      "status": "executed_native_scoped",
+      "assertions": [
+        "Lasting exclusion survives privileged-role revocation; incompatible grant/registration and admission-offer races serialize.",
+        "Direct theme/content URLs cannot bypass actual common challenge/rubric publication or current audience.",
+        "Roster moves serialize with freeze/publication facts; post-freeze reassignment is rejected.",
+        "Native live/submission/checkpoint/judge gates reject premature formal work and practice carryover.",
+        "Actual configured sessions retain identity but lose revoked event/file/draft authority immediately; fresh login cannot resurrect it."
+      ],
+      "evidence": [
+        {
+          "artifact": "native-matrix.json",
+          "scope": "permissions/registration/content/submission/scorecard/judging groups"
+        },
+        {
+          "artifact": "tls-deployment-observations.json",
+          "scope": "same-session role/file/draft access before and after revocation, production transport"
+        }
+      ]
+    },
+    {
+      "id": "AC5",
+      "requirement": "Include help-request claiming/access, private-to-common Q&A publication, goal/rubric early-disclosure, synthetic-practice isolation, showcase search/media leakage and post-archive follow-up in abuse scenarios.",
+      "status": "executed_scoped_mentor_feature_addition_pending",
+      "assertions": [
+        "Concurrent help claiming and current helper/requester context are native; operational helper access never grants assessment access.",
+        "Official clarification is deliberately published common text, not an implicit release of private question/attachment.",
+        "Objective/rubric access follows actual common publication and exact reviewed versions; practice cannot enter either live scoring mode.",
+        "Published showcase read is independent of private source/results/media authority; literal search, consent correction/withdrawal and archive are native.",
+        "Only authorised audited archived follow-up/reminders survive; ordinary archived campaigns/writes remain cancelled/closed."
+      ],
+      "evidence": [
+        {
+          "artifact": "native-matrix.json",
+          "scope": "help/clarification/objectives/rubric/judging/privacy/outcomes/automation groups"
+        },
+        {
+          "artifact": "native-showcase-matrix.json",
+          "scope": "native publication/search/media/current audiences"
+        },
+        {
+          "artifact": "native-delivery-matrix.json",
+          "scope": "current queued/stream/file/channel authority"
+        }
+      ],
+      "pending": [
+        "mentor-advisory-cases.json after #292 integration; do not treat absent test as success"
+      ]
+    },
+    {
+      "id": "VERIFY_LOCAL_DEPLOYMENT",
+      "requirement": "Run automated checks plus manual abuse scenarios against a local synthetic deployment.",
+      "status": "executed_supported_profile_final_integration_pending",
+      "assertions": [
+        "Private HTTP/development walkthrough:55 actual API outcomes.",
+        "Production normal binaries, external real TLS, HTTPS RS256 issuer, PKCE/callbacks:57 actual API outcomes.",
+        "Standard verification rejects unknown CA/wrong hostname; real Secure/HttpOnly/Lax/host-only cookies observed and withheld on same-host HTTP downgrade.",
+        "Fresh uniquely named projects use immutable images, a frozen verification snapshot, all-resource preflight and zero-resource cleanup.",
+        "No SQL, clock controls, fabricated application cookies or fake successful API response supplies manual-walk authority."
+      ],
+      "evidence": [
+        {
+          "artifact": "normal-deployment-summary.json",
+          "scope": "verifier c2f7c69d/application076"
+        },
+        {
+          "artifact": "tls-deployment-summary.json",
+          "scope": "verifier d3dba5f8/application076"
+        }
+      ],
+      "limits": [
+        "This manual walk uses future draft events, not a full clocked competition rehearsal. Native scenario owners cover live/frozen/practice/archive gates.",
+        "Source attribution is retained; new feature/final candidate coverage is a separate gate."
+      ]
+    }
+  ],
+  "native_case_assertion_index": [
+    {
+      "criterion": "SSO/session/CSRF",
+      "package": "identity",
+      "tests": [
+        "TestSecurity121OIDCTokenBrowserAndSessionAbuse",
+        "TestOIDCStatePKCENonceAudienceAndRevocation"
+      ]
+    },
+    {
+      "criterion": "SSRF URL/DNS/TLS/proxy/redirect and safe receipts",
+      "package": "teamsworkflow",
+      "tests": [
+        "TestSecurity121SSRFTransportRejectsDestinationsBeforeDial",
+        "TestEndpointPolicy",
+        "TestPublicAddresses",
+        "TestPinnedTLSNoProxyNoRedirectAndProviderClassification",
+        "TestRejectsUnsafeDNSAndDoesNotDial"
+      ]
+    },
+    {
+      "criterion": "HTTP object references, uploads, redaction and current privacy",
+      "package": "httpapi",
+      "tests": [
+        "TestSecurity121RequestFailuresDoNotLogCredentialsOrUntrustedMetadata",
+        "TestSecurity121CrossEventFilesExportsAndMaliciousUploads",
+        "TestGitHubWebhookRawMachineAuthenticationAndStatusPolicy",
+        "TestContentEmbargoHTTPRoleTeamAndCacheMatrix",
+        "TestContentEmbargoHTTPGatesAndMissedPostponement",
+        "TestContentEmbargoHTTPPrivilegedGrantsAndLastingExclusion",
+        "TestHelpHTTPCurrentTeamContextAndLiveReviewGate",
+        "TestClarificationHTTPCurrentTeamPrivacyCSRFActualPublicationAndPrivateAttachment",
+        "TestMediaHTTPCurrentConsentSessionCSRFProtectedBytesAndMinimalGuidance",
+        "TestOutcomesHTTPOrdinaryMemberPrivateHistoryAndReviewedPublication"
+      ]
+    },
+    {
+      "criterion": "lasting eligibility and incompatible grant/registration races",
+      "package": "permissions",
+      "tests": [
+        "TestGrantHistoryEligibilityAndConcurrentRegistration",
+        "TestRoleResourceMatrixAndImmediateRevocation"
+      ]
+    },
+    {
+      "criterion": "offer/grant race and post-freeze roster abuse",
+      "package": "registration",
+      "tests": [
+        "TestOfferAcceptanceAndOrganiserGrantCannotCreateCompetingOrganiser",
+        "TestFreezeAndMembershipMoveSerializeAgainstPublicationFacts",
+        "TestFreezeSerializesWithManualMovesAndQueuedPublication"
+      ]
+    },
+    {
+      "criterion": "formal submission common publication and live/frozen timing",
+      "package": "submissions",
+      "tests": [
+        "TestSubmissionBoundariesHistoryAndAuthorization",
+        "TestCompetitionDefinitionsWaitForActualCommonPublication"
+      ]
+    },
+    {
+      "criterion": "pre-live/provisional/private mentor review",
+      "package": "scorecards",
+      "tests": [
+        "TestIndependentCheckpointLifecycleUsesNativeRubricAndKeepsPendingPrivate",
+        "TestConfiguredWindowAndEvidenceReferencesCannotBypassNativeOwnership"
+      ]
+    },
+    {
+      "criterion": "synthetic practice and current independent judge authority",
+      "package": "judging",
+      "tests": [
+        "TestPracticeBeforeLiveCannotEnterEitherNativeScoringMode",
+        "TestConcurrentVersionFenceAndDeclaredConflictRevocation",
+        "TestCurrentAssignmentLossRevokesNativeSubmissionAndAuthoredHistoryReads"
+      ]
+    },
+    {
+      "criterion": "goal and measure early disclosure",
+      "package": "objectives",
+      "tests": [
+        "TestObjectiveNativeContentDisclosureAudienceEmbargoAndExactVersion",
+        "TestObjectiveThemeDisclosurePublishesOnlyInsideActualGuardedCommonChallenge"
+      ]
+    },
+    {
+      "criterion": "rubric common release/exact version and correction",
+      "package": "rubric",
+      "tests": [
+        "TestRubricSharesActualChallengeGateAndPublishesReviewedCorrectionAtomically",
+        "TestChallengeRequiresExactApprovedRubricAndCurrentIndependentApprover"
+      ]
+    },
+    {
+      "criterion": "help claim/concurrency/current helper and requester scope",
+      "package": "help",
+      "tests": [
+        "TestHelpConcurrentClaimIdempotencyAndCurrentAuthority",
+        "TestHelpCurrentMentorDeactivationCannotClaimOrKeepAssignment",
+        "TestHelpRequestContextExposesOnlyCurrentConfirmedPublishedOwnTeam",
+        "TestHelpRevocationTransactionWinsAgainstBlockedContextRead"
+      ]
+    },
+    {
+      "criterion": "private Q&A and common source/attachment/current audience",
+      "package": "clarification",
+      "tests": [
+        "TestPrivateQuestionRechecksActualPublicationCurrentTeamAndStaff",
+        "TestWorkspaceDerivesOwnTeamAndStaffOnlyAudienceFromCurrentReleasedAuthority"
+      ]
+    },
+    {
+      "criterion": "credentials encryption, current reveal, rotation and audit failure",
+      "package": "credentials",
+      "tests": [
+        "TestCredentialCurrentMembershipPrivacyAndAuditedDenials",
+        "TestCredentialKeyFaultRotationReplacementAndSafeRecovery",
+        "TestCredentialAuditFailurePreventsDisclosureAndStaleWrites"
+      ]
+    },
+    {
+      "criterion": "context-bound encryption and key redaction",
+      "package": "secretbox",
+      "tests": [
+        "TestContextBoundEncryptionAndRotationRecovery",
+        "TestInvalidKeyringNeverEchoesConfiguration"
+      ]
+    },
+    {
+      "criterion": "retention and archived consent",
+      "package": "privacy",
+      "tests": [
+        "TestRetentionRemovesFieldsAndDraftsButPreservesSafeHistory",
+        "TestNativePhotoConsentIncarnationRevisionAndArchivedSelfRevocation"
+      ]
+    },
+    {
+      "criterion": "post-archive audited follow-through and reviewed publication",
+      "package": "outcomes",
+      "tests": [
+        "TestNativeOrganisationMemberPitchOwnershipHistoryArchiveAndRevocation",
+        "TestActualNativeArchivedPlanDeliversToNoEventRoleOwnerAndRetainsHistory",
+        "TestReviewedProjectPositiveProjectionSearchWithdrawalAndExactReplay"
+      ]
+    },
+    {
+      "criterion": "archived work cannot resurrect ordinary campaigns",
+      "package": "automation",
+      "tests": [
+        "TestArchiveCancelsOperationalWorkButOnlyValidatedRetainedFollowupSurvives",
+        "TestRetainedDeadlineCannotExceedEventPrivacyPolicy"
+      ]
+    }
+  ],
+  "delivery_case_assertion_index": [
+    {
+      "criterion": "actual display transport, capability scope and stream revocation",
+      "package": "httpapi",
+      "tests": [
+        "TestPresentationHTTPContractsAndCapabilityBoundary",
+        "TestDisplayStreamFlushesBeyondJSONTimeoutAndRechecksRevocation"
+      ]
+    },
+    {
+      "criterion": "long-lived subscription denies before private payload read",
+      "package": "access",
+      "tests": [
+        "TestSubscriptionPolicyReevaluatesEveryDelivery"
+      ]
+    },
+    {
+      "criterion": "queued effects recheck current role assignment and event",
+      "package": "jobs",
+      "tests": [
+        "TestQueuedOperationsRecheckCurrentRoleAssignmentAndEvent"
+      ]
+    },
+    {
+      "criterion": "native protected file overlapping role and current revocation",
+      "package": "files",
+      "tests": [
+        "TestFileAccessWithOverlappingRolesAndRevocation"
+      ]
+    },
+    {
+      "criterion": "room projection cannot disclose private or early common sources",
+      "package": "presentation",
+      "tests": [
+        "TestDisplayTokensAreScopedHashedRevocableAndAuthorityBound",
+        "TestDisplayProjectionRequiresReleasedCommonContentAndOmitsPrivateFields",
+        "TestDisplayWithholdsForeignTeamPrivateAndEarlyChallengeSources"
+      ]
+    },
+    {
+      "criterion": "approved multi-channel confidentiality and execution source authority",
+      "package": "automation",
+      "tests": [
+        "TestApprovedMultiChannelAutomationCannotProjectNativePrivateCardsCredentialsOrOtherMailboxes",
+        "TestProductionTeamsOccurrenceQueuesReferencesAndRechecksCurrentPublicScope"
+      ]
+    },
+    {
+      "criterion": "GitHub App provider authentication and least-privilege operation tokens",
+      "package": "githubapp",
+      "tests": [
+        "TestProviderVerifiesAppOrganizationTemplateAndLeastPrivilegeTokens",
+        "TestOperationTokensNeverDefaultToInstallationWideAccess"
+      ]
+    }
+  ],
+  "pending_feature_manifest": "mentor-advisory-cases.json",
+  "limits": "Explicit selected assertions and measured outcomes only; names, compilation, inherited screenshots and historical green CI do not establish a broader/final-source pass."
+}
