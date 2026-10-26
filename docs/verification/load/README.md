@@ -646,3 +646,11 @@ question command identifiers remain in the setup ledger even if the response is
 lost. The read-only continuation guard rejects any clarification progress. This
 recipe has not yet run against the native fixture; the successful historical
 worker receipt above contains no clarification publication or search proof.
+
+A normal-wall follow-up preparer now reads the actual accepted outcome and its
+assigned ordinary owner, saves an explicit future UTC in-app review, separately
+approves that exact source/version/owner, and verifies the ordinary owner's
+redacted current reading. Original save and approval acknowledgements remain
+separate from that current read. It must run after normal production warmup;
+approval is not delivery or guarded-attempt-start evidence. This source recipe
+has not yet been executed natively or included in a release result.
