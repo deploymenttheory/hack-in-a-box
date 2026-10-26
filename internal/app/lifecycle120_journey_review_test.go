@@ -14,14 +14,15 @@ import (
 )
 
 type lifecycleMentorReviewReceipt struct {
-	CoverageRevision  int64                         `json:"coverage_revision"`
-	Assignments       []mentors.Assignment          `json:"assignments"`
-	Checkpoint        scorecards.Checkpoint         `json:"checkpoint"`
-	Cards             []lifecycleMentorCardReceipt  `json:"live_checkpoint_cards"`
-	EarlyWritesDenied int                           `json:"early_checkpoint_writes_denied"`
-	FinalCheckpoint   *scorecards.Checkpoint        `json:"final_checkpoint,omitempty"`
-	FinalCards        []lifecycleMentorCardReceipt  `json:"final_cards,omitempty"`
-	FinalHuddles      []lifecycleFinalHuddleReceipt `json:"final_huddles,omitempty"`
+	CoverageRevision  int64                          `json:"coverage_revision"`
+	Assignments       []mentors.Assignment           `json:"assignments"`
+	Checkpoint        scorecards.Checkpoint          `json:"checkpoint"`
+	Cards             []lifecycleMentorCardReceipt   `json:"live_checkpoint_cards"`
+	EarlyWritesDenied int                            `json:"early_checkpoint_writes_denied"`
+	FinalCheckpoint   *scorecards.Checkpoint         `json:"final_checkpoint,omitempty"`
+	FinalCards        []lifecycleMentorCardReceipt   `json:"final_cards,omitempty"`
+	FinalHuddles      []lifecycleFinalHuddleReceipt  `json:"final_huddles,omitempty"`
+	Qualification     *lifecycleQualificationReceipt `json:"qualification,omitempty"`
 }
 
 type lifecycleMentorCardReceipt struct {

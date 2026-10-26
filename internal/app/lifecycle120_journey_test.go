@@ -225,6 +225,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
 	run.reviewFrozenMentorEvidence(t)
+	run.qualifyFrozenFinalists(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
