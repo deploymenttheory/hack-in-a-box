@@ -647,3 +647,30 @@ browser behavior on a private network, not a claim of GitHub's production web UI
 TLS or live sandbox. **complete_lifecycle remains false.** Early private work,
 provider failure/reconciliation variants, all output/cutoff/judging/advisory,
 awards/showcase/archive/outcomes and final integrated browser/CI gates remain.
+
+## Actual remaining team-source fact audit
+
+A fresh unchanged `2a9fc5d1`/`ff9b91e0` admission profile passed **0.46s** and
+retained actual operation ID/key/version/due/creation timestamps. Its domain now
+was `2026-03-14T09:00:00Z`. Both initial (`teams-published:87`) and corrected
+(`teams-published:100`) facts were due at exactly that domain instant; their
+physical database creation times were respectively
+`2026-10-26T01:21:51.398361Z` and `01:21:51.460031Z`. Thus these facts were not
+waiting for domain time to reach database October. There was no reviewed team
+binding: zero binding versions, approvals and communication occurrences.
+
+`teams.published` is deliberately a native automation source fact, not a direct
+jobs handler. The production resolver checks its approved/current source and
+uses latest `due_at,id` ordering. The frozen fixture timestamp tied both separate
+commands, and the actual UUID ordering selected the physically earlier initial
+publication. This is not claimed as a production latest-source defect. The
+fixture must advance monotonically between separate real publication commands,
+then review its notification binding before the new source, rather than alter
+production ordering or retrospectively approve an old source. The source-only
+one-second action tick is not yet a native passing result.
+
+[team-source-fact-audit.json](evidence/team-source-fact-audit.json) preserves the
+actual tied-source result and explicit limitations. The unique audit project and
+all profile volumes were removed; all final container/volume/network label checks
+were empty. Actual latest-source notification/obsolete zero-effect evidence and
+queued access-poll reconciliation remain pending at this audit checkpoint.

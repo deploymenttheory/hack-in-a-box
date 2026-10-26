@@ -1,0 +1,50 @@
+{
+  "source": "2a9fc5d11619ff74c77c842da3f07c1b1d16aaf9",
+  "fixture_image": "sha256:ff9b91e06bc54c4a980a330045e0fa1ba8ea6485c7f7927c583cecdd4557d077",
+  "test": "TestLifecycleComposeAdmission",
+  "duration_seconds": 0.46,
+  "complete_lifecycle": false,
+  "domain_now": "2026-03-14T09:00:00Z",
+  "native_team_facts": [
+    {
+      "id": "219f5622-5bc5-442a-956f-46e1e1ed7165",
+      "event_id": "cce2b0cf-158f-4962-bb18-3d379c6f5bcb",
+      "target_id": "cce2b0cf-158f-4962-bb18-3d379c6f5bcb",
+      "operation_key": "teams-published:100",
+      "source_revision": 1,
+      "state": "pending",
+      "approved": true,
+      "cancelled": false,
+      "due_at": "2026-03-14T09:00:00+00:00",
+      "created_at": "2026-10-26T01:21:51.460031+00:00",
+      "stage": "preparation",
+      "current_event_revision": 101,
+      "native_current_order": 2,
+      "direct_delivery_attempts": 0
+    },
+    {
+      "id": "881fd5ab-f58d-49e1-86ad-033c95ffb433",
+      "event_id": "cce2b0cf-158f-4962-bb18-3d379c6f5bcb",
+      "target_id": "cce2b0cf-158f-4962-bb18-3d379c6f5bcb",
+      "operation_key": "teams-published:87",
+      "source_revision": 1,
+      "state": "pending",
+      "approved": true,
+      "cancelled": false,
+      "due_at": "2026-03-14T09:00:00+00:00",
+      "created_at": "2026-10-26T01:21:51.398361+00:00",
+      "stage": "preparation",
+      "current_event_revision": 101,
+      "native_current_order": 1,
+      "direct_delivery_attempts": 0
+    }
+  ],
+  "native_automation_counts": {
+    "binding_versions": 0,
+    "publication_approvals": 0,
+    "occurrences": 0
+  },
+  "classification": "Unbound lifecycle source facts, not direct worker handlers. Both due at current historical domain instant; neither is waiting for database wall time. Current native due/UUID ordering selected initial publication because distinct fixture commands shared the same frozen instant.",
+  "cleanup": "All unique project container, volume and network labels empty; no user projects changed",
+  "remaining": "Actual causally separated latest-source reviewed notification and current live-phase queued access-poll effects remain unexecuted at this checkpoint."
+}
