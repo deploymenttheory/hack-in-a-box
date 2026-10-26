@@ -269,7 +269,7 @@ func TestLifecycleComposeAdmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	page, err := allocateLifecycleTeams(t.Context(), owner, current.ID, &cohort)
+	page, err := allocateLifecycleTeams(t.Context(), owner, current.ID, &cohort, control)
 	if err != nil {
 		t.Fatal(err)
 	}

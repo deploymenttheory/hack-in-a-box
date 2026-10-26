@@ -40,6 +40,21 @@ func newLifecycleControl(directory string) (*lifecycleControl, error) {
 
 func (c *lifecycleControl) close() { c.http.CloseIdleConnections() }
 
+// Distinct real commands must also be chronologically distinct in the fixture.
+// This advances only domain time; auth, leases, provider TTLs and timers stay real.
+func (c *lifecycleControl) nextAction(ctx context.Context) error {
+	var phase struct {
+		Now time.Time `json:"now"`
+	}
+	if err := c.call(ctx, http.MethodGet, "/clock", nil, &phase); err != nil {
+		return err
+	}
+	if phase.Now.IsZero() {
+		return errors.New("fixture action has no current domain instant")
+	}
+	return c.advance(ctx, phase.Now.Add(time.Second))
+}
+
 func (c *lifecycleControl) initialTimeline(ctx context.Context) (lifecycleTimeline, error) {
 	var phase struct {
 		Now      time.Time         `json:"now"`

@@ -413,7 +413,7 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort)
+	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort, r.control)
 	if err != nil {
 		t.Fatal(err)
 	}

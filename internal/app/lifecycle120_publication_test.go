@@ -98,7 +98,7 @@ func TestLifecycleComposePublication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := allocateLifecycleTeams(ctx, owner, current.ID, &cohort); err != nil {
+	if _, err := allocateLifecycleTeams(ctx, owner, current.ID, &cohort, control); err != nil {
 		t.Fatal(err)
 	}
 	challenge, approved, err := installLifecycleChallenge(ctx, owner, current.ID, rubric.AllTeams)
