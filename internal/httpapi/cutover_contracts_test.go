@@ -15,6 +15,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/communications"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
@@ -32,7 +33,7 @@ func TestCutoverOutcomeReviewHTTPCommandsAndCurrentReader(t *testing.T) {
 	mailbox := &inbox.Service{Pool: pool, Communications: composer, Now: func() time.Time { return f.now }}
 	composer.Channels = map[string]communications.ChannelProvider{"in_app": mailbox}
 	native := &outcomes.Service{Pool: pool, Composer: composer, Now: func() time.Time { return f.now }}
-	f.router = NewRouter(f.cfg, slog.New(slog.NewJSONHandler(&f.logs, nil)), Dependencies{Pool: pool, Auth: f.auth, Outcomes: native})
+	f.router = NewRouter(f.cfg, slog.New(slog.NewJSONHandler(&f.logs, nil)), Dependencies{Pool: pool, Auth: f.auth, Outcomes: native, Events: event.Service{Pool: pool}})
 	request := func(actor dbgen.Person, method, path string, body any, revision int64, status int) *httptest.ResponseRecorder {
 		t.Helper()
 		w := f.request(actor, method, path, body, revision)
