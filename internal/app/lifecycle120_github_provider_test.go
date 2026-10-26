@@ -47,6 +47,8 @@ type (
 		TemplateReads            int `json:"template_reads"`
 		RepositoryCreates        int `json:"repository_creates"`
 		RepositoryReads          int `json:"repository_reads"`
+		OAuthExchangesVerified   int `json:"oauth_exchanges_verified"`
+		OAuthUserReads           int `json:"oauth_user_reads"`
 	}
 	// This is an external-provider fixture only. It cannot create competition facts
 	// or report native owner success. Actual clients must present verified wall-time
@@ -57,6 +59,8 @@ type (
 		tokens       map[string]lifecycleGitHubToken
 		proof        lifecycleGitHubProof
 		repositories map[string]githubapp.Repository
+		codes        map[string]lifecycleGitHubCode
+		users        map[string]lifecycleGitHubUserToken
 	}
 )
 
@@ -78,7 +82,7 @@ func newLifecycleGitHub(directory string) (*lifecycleGitHub, error) {
 	); err != nil {
 		return nil, err
 	}
-	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}}, nil
+	return &lifecycleGitHub{key: key, tokens: map[string]lifecycleGitHubToken{}, repositories: map[string]githubapp.Repository{}, codes: map[string]lifecycleGitHubCode{}, users: map[string]lifecycleGitHubUserToken{}}, nil
 }
 
 func (g *lifecycleGitHub) appJWT(r *http.Request) bool {
@@ -137,6 +141,9 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			state,
 		)
 		http.Redirect(w, r, target, http.StatusFound)
+		return
+	}
+	if g.oauthHTTP(w, r) {
 		return
 	}
 	switch r.URL.Path {

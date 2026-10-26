@@ -108,6 +108,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 		run.events = append(run.events, item)
 	}
+	run.linkGitHubParticipants(t)
 	// Published frozen team identities already exist; prepare their private
 	// repositories before any common theme disclosure or live transition.
 	run.provisionRepositories(t)
@@ -208,6 +209,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			"native GitHub installation did not exercise actual verified App/scoped REST transport",
 		)
 	}
+	if providerProof.OAuthExchangesVerified != 36 || providerProof.OAuthUserReads != 36 {
+		t.Fatal("participant linking did not retain exactly36 real PKCE/user verifications")
+	}
 	if providerProof.RepositoryCreates != 12 {
 		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
 	}
@@ -281,6 +285,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"real-app-jwt-scoped-template-rest",
 				"single-use-native-installation-callback",
 				"actual-queued-private-template-repositories-for-every-frozen-team",
+				"actual-native-participant-github-pkce-session-and-numeric-ownership",
 			},
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},

@@ -27,6 +27,9 @@ x-fixture: &fixture
     HACKBOX_OIDC_CLIENT_ID: lifecycle-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
     HACKBOX_BOOTSTRAP_SUBJECT: owner
+    HACKBOX_GITHUB_CLIENT_ID: lifecycle-github
+    HACKBOX_GITHUB_CLIENT_SECRET: synthetic-github-secret
+    HACKBOX_GITHUB_TOKEN_KEY: AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=
     # Public synthetic-only fixture key; normal config/encryption owners remain active.
     HACKBOX_CREDENTIAL_KEYRING: '{"active":"lifecycle","keys":{"lifecycle":"AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA="}}'
     HACKBOX_SMTP_HOST: provider
