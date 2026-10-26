@@ -19,11 +19,16 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  version: (page: P) => number; revision: (page: P) => number; read: (signal: AbortSignal) => Promise<P>;
  fingerprint: (body: B, revision: number) => Promise<string>; ready: (page: P, body: B) => void;
  send: (body: B, revision: number) => Promise<R>; matches: (result: R, intent: DecisionMetadata) => boolean;
- refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
+ observeCurrent?: (page: P) => void; contextDenied?: (error: unknown) => boolean; refresh: () => Promise<unknown>; acknowledged?: (current?: P) => void;
 }) {
  const identity = useIdentity(), commands = useCommunicationCommands(options.owner), scope = usePrivateRequestScope(`${options.owner}:editor`, options.parent)
- const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failure, setFailure] = useState<unknown>(), [failureStage, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
+ const [review, setReview] = useState<{ body: B; intent: DecisionMetadata; summary: ReactNode }>(), [preparing, setPreparing] = useState(false), [failureValue, setFailure] = useState<unknown>(), [unknownAttempt, setUnknownAttempt] = useState<string>(), [failureStageValue, setFailureStage] = useState<'before_write' | 'rejected' | 'unknown'>(), [notice, setNotice] = useState(''), [base, setBase] = useState<{ revision: number; version: number }>()
  const sending = useRef(false), opener = useRef<HTMLElement | null>(null), baseOpener = useRef<HTMLElement | null>(null), fallback = useRef<HTMLHeadingElement | null>(null)
+ // A current read or selected base leaves the unknown attempt in history.
+ // Only exact completion removes it; disposal of this private scope is never ACK.
+ const recovered = failureStageValue === 'unknown' && !!unknownAttempt && scope.capture().current() && !commands.attempts.some(attempt => attempt.id === unknownAttempt)
+ const failure = recovered ? undefined : failureValue, failureStage = recovered ? undefined : failureStageValue
+ const deferredFocus = useRef<{ source: HTMLElement; fallback: HTMLElement; current: () => boolean } | undefined>(undefined)
  const pending = preparing || commands.pending, stale = !!review && (options.version(options.page) !== review.intent.version || options.revision(options.page) !== review.intent.revision), blocked = options.paused || pending || commands.unconfirmed || stale
  usePlanningDepartureBarrier(pending)
  async function prepare(body: B, summary: ReactNode, source: HTMLElement) {
@@ -42,7 +47,7 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   const captured = review, ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined); setFailureStage(undefined)
   let attempt: string | undefined
   try {
-   const current = await options.read(ticket.signal); ticket.assert()
+   const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert()
    if (options.revision(current) !== captured.intent.revision || options.version(current) !== captured.intent.version) throw new Error('The current starting point changed. Nothing was sent. Cancel, read current facts and review again.')
    options.ready(current, captured.body); ticket.assert()
    attempt = commands.begin({ operation: 'Reviewed ' + captured.body.action.replaceAll('_', ' '), revision: captured.intent.revision, command: { requestID: captured.intent.requestID, action: captured.intent.action, expectedVersion: captured.intent.version, intentFingerprint: captured.intent.fingerprint, resourceID: captured.intent.resourceID ?? options.resourceID, subjectID: captured.intent.subjectID, intentID: captured.intent.intentID } })
@@ -52,14 +57,14 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
    if (ticket.current()) { setReview(undefined); setNotice('Original ' + captured.body.action.replaceAll('_', ' ') + ' acknowledged. Read current facts for the next action.'); options.acknowledged?.(); await options.refresh() }
   } catch (error) {
    const rejected = error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 408
-   if (attempt) { if (rejected) commands.complete(attempt); else commands.uncertain(attempt) }
-   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status)) { scope.invalidate(); await options.refresh() } }
+   if (attempt) { if (rejected) commands.complete(attempt); else { commands.uncertain(attempt); if (ticket.current()) setUnknownAttempt(attempt) } }
+   if (ticket.current()) { setFailure(error); setFailureStage(!attempt ? 'before_write' : rejected ? 'rejected' : 'unknown'); if (attempt) setReview(undefined); if (error instanceof APIError && [401, 403, 404].includes(error.status) || !attempt && options.contextDenied?.(error)) { scope.invalidate(); await options.refresh() } else if (attempt && options.contextDenied?.(error)) { await options.refresh() } }
   } finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
  async function readBase(source: HTMLElement) {
   if (pending || options.paused || sending.current) return
   const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined)
-  try { const current = await options.read(ticket.signal); ticket.assert(); baseOpener.current = source; setBase({ revision: options.revision(current), version: options.version(current) }) }
+  try { const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert(); baseOpener.current = source; setBase({ revision: options.revision(current), version: options.version(current) }) }
   catch (error) { if (ticket.current()) { setFailure(error); await options.refresh() } }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
@@ -67,13 +72,30 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   if (!base || pending || options.paused || sending.current) return
   const ticket = scope.capture(); sending.current = true; setPreparing(true); setFailure(undefined)
   try {
-   const current = await options.read(ticket.signal); ticket.assert()
+   const current = await options.read(ticket.signal); ticket.assert(); options.observeCurrent?.(current); ticket.assert()
    if (options.revision(current) !== base.revision || options.version(current) !== base.version) throw new Error('The current starting point changed again. Review current facts.')
    commands.selectNewBase(); setBase(undefined); setReview(undefined); options.acknowledged?.(current); await options.refresh()
   } catch (error) { if (ticket.current()) setFailure(error) }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
- const focus = (source: HTMLElement | null) => source?.isConnected && !source.matches(':disabled') ? source : fallback.current ?? false
+ // Dialog teardown can precede the form's unhide commit, and a current read
+ // can temporarily disable its opener. Reconcile focus after that commit, within
+ // the same private owner and without overriding another user destination.
+ useEffect(() => {
+  const deferred = deferredFocus.current
+  if (!deferred?.current()) { deferredFocus.current = undefined; return }
+  const stillReturning = document.activeElement === deferred.fallback || document.activeElement === document.body
+  if (options.paused || pending) {
+   if (stillReturning && document.activeElement === document.body) deferred.fallback.focus()
+   return
+  }
+  deferredFocus.current = undefined
+  if (!commands.unconfirmed && deferred.source.isConnected && !deferred.source.matches(':disabled') && !deferred.source.closest('[hidden]') && stillReturning) deferred.source.focus()
+ }, [options.paused, pending, commands.unconfirmed, review])
+ const focus = (source: HTMLElement | null) => {
+  deferredFocus.current = source?.isConnected && fallback.current ? { source, fallback: fallback.current, current: scope.capture().current } : undefined
+  return source?.isConnected && !source.matches(':disabled') ? source : fallback.current ?? false
+ }
  return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
 }
 export function ResultDecisionState({ failure, failureStage, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'failureStage' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {

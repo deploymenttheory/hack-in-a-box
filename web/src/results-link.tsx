@@ -12,4 +12,4 @@ export function ResultsLink({ href, variant = 'outline', size = 'default', icon,
  const destination = new URL(href, window.location.origin)
  return <Link {...props} to={destination.pathname} search={Object.fromEntries(destination.searchParams)} hash={destination.hash.slice(1)} className={cn(buttonVariants({ variant, size, className }))}>{icon && <Icon name={icon} />}{children}</Link>
 }
-export const isResultsDestination = (href: string) => /^\/events\/[a-f0-9-]+\/(?:results(?:\/(?:prepare|ballots))?|team-feedback|teams\/[a-f0-9-]+\/feedback-report)$/i.test(href)
+export const isResultsDestination = (href: string) => /^\/events\/[a-f0-9-]+\/(?:results(?:\/(?:prepare|ballots|mentor-advisories))?|team-feedback|teams\/[a-f0-9-]+\/feedback-report)$/i.test(href)

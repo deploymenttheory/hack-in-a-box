@@ -1,4 +1,4 @@
-import {expect,type Locator} from '@playwright/test'
+import {expect,type Locator,type Request} from '@playwright/test'
 
 // Actual native focus traversal. Merely pressing a locator can implicitly wake
 // a background tab and race the real source-read pause. The journey activates
@@ -14,8 +14,51 @@ export async function reach(control:Locator){
  }
  throw new Error(`Native keyboard focus could not reach ${control.toString()} in180 tabs`)
 }
-export async function activate(control:Locator,key:'Enter'|'Space'='Enter'){await reach(control);await control.page().keyboard.press(key)}
-export async function typeInto(control:Locator,value:string){await reach(control);await control.page().keyboard.press('ControlOrMeta+A');await control.page().keyboard.insertText(value)}
+// Recover only a positively observed rejected local input, never a command.
+// Native polling/authority checks remain enabled; replacement elements and
+// accepted-but-wrong values are genuine failures, not permission to replay.
+async function acceptedInput(control:Locator,enter:()=>Promise<void>,accepted:()=>Promise<boolean>){
+ await reach(control)
+ const original=await control.elementHandle()
+ if(!original)throw new Error('Current native input is absent')
+ const same=async()=>{
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original))throw new Error('Current native input was replaced; no input was retargeted')
+ }
+ try{
+  for(let attempt=0;attempt<2;attempt++){
+   await same();await reach(control);await same()
+   const observation=await original.evaluateHandle(element=>{
+    const paused=()=>element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]')
+    const state={paused:paused(),inputs:0}
+    const observer=new MutationObserver(()=>{if(paused())state.paused=true})
+    observer.observe(element.ownerDocument.documentElement,{subtree:true,attributes:true,attributeFilter:['disabled','aria-disabled','inert']})
+    const input=(event:Event)=>{if(event.isTrusted&&event.target===element)state.inputs++}
+    element.ownerDocument.addEventListener('input',input,true)
+    return {state,dispose:()=>{observer.disconnect();element.ownerDocument.removeEventListener('input',input,true)}}
+   })
+   let observed:{paused:boolean;inputs:number}
+   try{await enter();observed=await observation.evaluate(value=>value.state)}
+   finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
+   await same()
+   if(await accepted()){await expect(control).toBeEnabled();await same();if(await accepted())return;throw new Error('Accepted native input changed after the current read')}
+   if(!observed.paused||observed.inputs!==0||attempt!==0)throw new Error('Native input did not accept its trusted keys; no command was replayed')
+   // Only an observed pause with zero accepted input permits one deliberate
+   // text/checkbox re-entry after that same current element becomes enabled.
+   await expect(control).toBeEnabled();await same()
+  }
+ }finally{await original.dispose()}
+}
+export async function activate(control:Locator,key:'Enter'|'Space'='Enter'){
+ if(key==='Space'&&await control.evaluate(element=>element instanceof HTMLInputElement&&element.type==='checkbox')){
+  const checked=await control.isChecked()
+  await acceptedInput(control,()=>control.page().keyboard.press(key),async()=>await control.isChecked()!==checked)
+  return
+ }
+ await reach(control);await control.page().keyboard.press(key)
+}
+export async function typeInto(control:Locator,value:string){
+ await acceptedInput(control,async()=>{await control.page().keyboard.press('ControlOrMeta+A');await control.page().keyboard.insertText(value)},async()=>await control.inputValue()===value)
+}
 export async function selectNative(control:Locator,value:string){
  await reach(control)
  const label=await control.locator('option').evaluateAll((options,wanted)=>options.find(option=>option instanceof HTMLOptionElement&&option.value===wanted)?.textContent,value)
@@ -41,4 +84,61 @@ export async function observeActivation(control:Locator){
  }finally{
   await page.evaluate(key=>{const values=window as unknown as Record<string,{dispose:()=>void}>;values[key]?.dispose();delete values[key]},key)
  }
+}
+
+// Explicitly opted-in local UI/read-only steps only: editor/review opening,
+// inspection and navigation. Mutation confirmation must use its own command
+// barrier. A positively rejected key permits one re-entry of the unchanged step.
+export async function openLocal(control:Locator,destination:Locator,outcome:'focused'|'visible'='focused'){
+ await reach(control)
+ const original=await control.elementHandle()
+ if(!original)throw new Error('Current native inspector target is absent')
+ const context=()=>original.evaluate(element=>JSON.stringify({url:location.href,tag:element.tagName,name:element.textContent,record:element.getAttribute('data-record-focus'),href:element.getAttribute('href'),workspace:(element.closest('[data-private-qualification]')??element.ownerDocument.body).textContent}))
+ const identity=await context()
+ const mutations:string[]=[]
+ const request=(value:Request)=>{if(!['GET','HEAD','OPTIONS'].includes(value.method()))mutations.push(value.method())}
+ control.page().on('request',request)
+ const same=async()=>{
+  if(!await original.evaluate(element=>element.isConnected)||!await control.evaluate((element,expected)=>element===expected,original)||await context()!==identity)throw new Error('Current inspector target was replaced; no navigation was retargeted')
+ }
+ try{
+  for(let attempt=0;attempt<2;attempt++){
+   await same();await reach(control);await same()
+   const observation=await original.evaluateHandle(element=>{
+    const paused=()=>element.matches(':disabled,[aria-disabled="true"]')||!!element.closest('[inert]')
+    const state={keys:0,rejectedKeys:0,accepted:0,blocked:0,unexpected:0}
+    const key=(event:KeyboardEvent)=>{
+     if(!event.isTrusted||event.key!=='Enter')return
+     state.keys++
+     if(event.target!==element||element!==element.ownerDocument.activeElement||!element.isConnected){state.unexpected++;return}
+     if(paused())state.rejectedKeys++
+    }
+    const click=(event:MouseEvent)=>{
+     if(!event.isTrusted||!(event.target instanceof Node)||!element.contains(event.target))return
+     const rejected=paused()
+     // Base UI's focusable disabled native button emits a browser click but
+     // prevents its default and never calls the supplied onClick handler.
+     if(!event.defaultPrevented)state.accepted++;else if(rejected)state.blocked++;else state.unexpected++
+    }
+    element.ownerDocument.addEventListener('keydown',key,true);element.ownerDocument.addEventListener('click',click)
+    return {state,dispose:()=>{element.ownerDocument.removeEventListener('keydown',key,true);element.ownerDocument.removeEventListener('click',click)}}
+   })
+   let observed:{keys:number;rejectedKeys:number;accepted:number;blocked:number;unexpected:number}
+   try{await control.page().keyboard.press('Enter');observed=await observation.evaluate(value=>value.state)}
+   finally{await observation.evaluate(value=>value.dispose());await observation.dispose()}
+   expect(mutations,'Opening a local step must not send an HTTP mutation').toEqual([])
+   if(observed.accepted===1&&observed.keys===1&&observed.unexpected===0){
+    if(outcome==='focused')await expect(destination).toBeFocused();else await expect(destination).toBeVisible()
+    expect(mutations,'A local destination must not send an HTTP mutation').toEqual([])
+    return
+   }
+   if(attempt!==0||observed.keys!==1||observed.rejectedKeys!==1||observed.accepted!==0||observed.blocked>1||observed.unexpected!==0)throw new Error('Native inspection was not positively rejected by a current read; no navigation was repeated')
+   await expect(control).toBeEnabled();await same()
+  }
+ }finally{control.page().off('request',request);await original.dispose()}
+}
+
+export async function inspectCurrent(control:Locator,destination:Locator){
+ if(!await control.getAttribute('data-record-focus'))throw new Error('Local inspection requires an explicit current record identity')
+ await openLocal(control,destination)
 }

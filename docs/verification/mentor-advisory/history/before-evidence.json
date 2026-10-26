@@ -1,0 +1,7 @@
+{
+  "source": "a85f8d847af0960cedbe9e9be88c077b412eeb2f",
+  "scope": "public-desktop",
+  "artifact": "stale-transport-error-before.png",
+  "sha256": "1cb033f4af5a8146fa141f18dfea54043f3f44f9e560b3d607a80d0ed4ae600c",
+  "finding": "Exact original ACK is known at the top while the obsolete transport-failure banner remains in the private decision component."
+}

@@ -14,8 +14,9 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
 )
 
-// BallotPage exposes current assigned ties and only the caller's own evidence.
-// It cannot carry raw cards, qualification data or another judge's prose.
+// BallotPage exposes current assigned ties, the caller's own ballot and
+// separately authored current mentor advisory. It cannot carry raw cards,
+// qualification data or another judge's vote prose.
 type BallotPage struct {
 	JudgeRunID    uuid.UUID  `json:"judge_run_id"`
 	Revision      int64      `json:"revision"`
@@ -25,8 +26,9 @@ type BallotPage struct {
 	Receipt       *Receipt   `json:"receipt"`
 }
 type JudgeTie struct {
-	State   TieState `json:"state"`
-	OwnVote *Vote    `json:"own_vote"`
+	State      TieState         `json:"state"`
+	OwnVote    *Vote            `json:"own_vote"`
+	Advisories []MentorAdvisory `json:"advisories"`
 }
 
 // ballotSource composes the source using the recorded preparer's current
@@ -78,6 +80,10 @@ func (s Service) ballotPage(
 	if err != nil {
 		return out, err
 	}
+	advice, err := currentAdvisories(ctx, tx, eventID, source)
+	if err != nil {
+		return out, err
+	}
 	for _, state := range states {
 		if !slices.Contains(state.RequiredJudgeIDs, actor) {
 			continue
@@ -94,7 +100,13 @@ func (s Service) ballotPage(
 				return BallotPage{}, failure("current ballot target", err)
 			}
 		}
-		item := JudgeTie{State: state}
+		item := JudgeTie{State: state, Advisories: []MentorAdvisory{}}
+		for _, a := range advice {
+			if state.Tie.Kind == "category" && a.TieID == state.Tie.ID &&
+				slices.Contains(state.Tie.TeamIDs, a.TeamID) {
+				item.Advisories = append(item.Advisories, a)
+			}
+		}
 		for _, vote := range round.Votes {
 			if vote.JudgeID == actor && vote.TieID == state.Tie.ID {
 				own := vote

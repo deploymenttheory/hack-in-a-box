@@ -93,13 +93,14 @@ type (
 	Announcement   = resultpublication.Announcement
 	AnnouncedAward = resultpublication.AnnouncedAward
 	Page           struct {
-		TieStates     []TieState     `json:"tie_states"`
-		Receipt       *Receipt       `json:"receipt"`
-		Revision      int64          `json:"revision"`
-		Round         Round          `json:"round"`
-		Preview       Preview        `json:"preview"`
-		Current       bool           `json:"current"`
-		Announcements []Announcement `json:"announcements"`
+		Advisories    []MentorAdvisory `json:"advisories"`
+		TieStates     []TieState       `json:"tie_states"`
+		Receipt       *Receipt         `json:"receipt"`
+		Revision      int64            `json:"revision"`
+		Round         Round            `json:"round"`
+		Preview       Preview          `json:"preview"`
+		Current       bool             `json:"current"`
+		Announcements []Announcement   `json:"announcements"`
 	}
 )
 

@@ -4,6 +4,43 @@
  */
 
 export interface paths {
+    "/api/v1/events/{event_id}/results/mentor-advisories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        get: operations["getMentorAdvisories"];
+        put?: never;
+        post: operations["recordMentorAdvisory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{event_id}/results/mentor-advisories/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getMentorAdvisoryReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}/teams/{team_id}/feedback-report": {
         parameters: {
             query?: never;
@@ -4363,6 +4400,89 @@ export interface components {
         ReleasedTeamFeedback: {
             report: components["schemas"]["ReleasedTeamFeedbackReport"] | null;
         };
+        ResultMentorAdvisory: {
+            tie_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            author_id: string;
+            author_name: string;
+            /** Format: int64 */
+            version: number;
+            /** Format: int64 */
+            previous_version: number;
+            /** Format: uuid */
+            run_id: string;
+            source_binding: string;
+            /** Format: int64 */
+            submission_revision: number;
+            views: string;
+            reason: string;
+            /** Format: date-time */
+            at: string;
+        };
+        ResultAdvisoryTarget: {
+            tie_id: string;
+            /** Format: uuid */
+            category_id: string;
+            category_name: string;
+            /** Format: uuid */
+            team_id: string;
+            team_name: string;
+            /** Format: int64 */
+            submission_revision: number;
+            /** Format: int64 */
+            version: number;
+            own: components["schemas"]["ResultMentorAdvisory"] | null;
+        };
+        ResultAdvisoryReceipt: {
+            /** Format: uuid */
+            request_id: string;
+            /** Format: uuid */
+            actor_id: string;
+            /** @enum {string} */
+            action: "advise";
+            /** Format: uuid */
+            run_id: string;
+            tie_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            expected_revision: number;
+            /** Format: int64 */
+            expected_version: number;
+            /** Format: int64 */
+            version: number;
+            fingerprint: string;
+        };
+        ResultAdvisoryCommand: {
+            /** Format: uuid */
+            request_id: string;
+            /** @enum {string} */
+            action: "advise";
+            /** Format: int64 */
+            version: number;
+            source_binding: string;
+            tie_id: string;
+            /** Format: uuid */
+            team_id: string;
+            /** Format: int64 */
+            submission_revision: number;
+            views: string;
+            reason: string;
+        };
+        ResultAdvisoryPage: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            run_id: string;
+            source_binding: string;
+            targets: components["schemas"]["ResultAdvisoryTarget"][];
+            receipt: components["schemas"]["ResultAdvisoryReceipt"] | null;
+        };
+        ResultAdvisoryRecovery: {
+            receipt: components["schemas"]["ResultAdvisoryReceipt"] | null;
+        };
         ResultExact: {
             numerator: string;
             denominator: string;
@@ -4544,10 +4664,14 @@ export interface components {
             preview: components["schemas"]["ResultPreview"];
             current: boolean;
             announcements: components["schemas"]["ResultAnnouncement"][];
+            /** @description Current separately authored advisory views only; never mentor scores/ranks or counted ballots. */
+            advisories?: components["schemas"]["ResultMentorAdvisory"][];
         };
         ResultJudgeTie: {
             state: components["schemas"]["ResultTieState"];
             own_vote: components["schemas"]["ResultVote"] | null;
+            /** @description Current separately authored advisory views only; never mentor scores/ranks or counted ballots. */
+            advisories?: components["schemas"]["ResultMentorAdvisory"][];
         };
         ResultBallotPage: {
             /** Format: int64 */
@@ -9552,6 +9676,84 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getMentorAdvisories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current assigned mentor own category-tie contribution targets, with no scores, ranks or other mentor/judge prose. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultAdvisoryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    recordMentorAdvisory: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Quoted current event revision for results commands; result version is captured separately in the body. */
+                "If-Match": components["parameters"]["ResultRevision"];
+                "X-CSRF-Token": components["parameters"]["CSRF"];
+            };
+            path: {
+                event_id: components["parameters"]["EventID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResultAdvisoryCommand"];
+            };
+        };
+        responses: {
+            /** @description Explicit own advisory contribution/correction, immutable provenance and exact original acknowledgement. No votes or final scoring are changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultAdvisoryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMentorAdvisoryReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: components["parameters"]["EventID"];
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Actor-exact original advisory acknowledgement under current mentor assignment; no private prose or current-state inference. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultAdvisoryRecovery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getTeamFeedbackReport: {
         parameters: {
             query?: never;
@@ -9746,7 +9948,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Only current own assigned ties and own ballots; no private mentor or other judge prose. */
+            /** @description Current assigned ties, own ballots and separately authored current mentor advisory; no raw mentor cards or another judge's vote prose. */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -50,6 +50,7 @@ func (s Service) page(
 	}
 	out := Page{
 		TieStates:     []TieState{},
+		Advisories:    []MentorAdvisory{},
 		Revision:      current.event.Revision,
 		Round:         round,
 		Preview:       source.preview,
@@ -74,6 +75,12 @@ func (s Service) page(
 			source.completion.Assignments,
 			out.Round.Votes,
 		)
+		if err != nil {
+			return Page{}, err
+		}
+	}
+	if fullCurrent {
+		out.Advisories, err = currentAdvisories(ctx, tx, eventID, source)
 		if err != nil {
 			return Page{}, err
 		}

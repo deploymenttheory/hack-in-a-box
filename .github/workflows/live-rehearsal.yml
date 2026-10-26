@@ -55,6 +55,10 @@ jobs:
         env:
           HACKBOX_SHOWCASE_BROWSER: '1'
         run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestShowcaseBrowsers$' -count=1 -timeout=10m
+      - name: Native mentor advisory and judge category-tie browsers
+        env:
+          HACKBOX_ADVISORY_BROWSER: '1'
+        run: go test -v -race -p 1 -parallel 1 ./internal/app -run '^TestMentorAdvisoryBrowsers$' -count=1 -timeout=10m
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
@@ -96,4 +100,10 @@ jobs:
         with:
           name: native-project-showcase-proof
           path: web/test-results-showcase-native
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: native-mentor-advisory-proof
+          path: web/test-results-advisory-native
           retention-days: 7

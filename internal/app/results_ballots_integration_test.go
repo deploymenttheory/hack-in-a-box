@@ -17,9 +17,16 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
-func newTiedResultsFixture(t *testing.T) (*resultsSourceFixture, uuid.UUID) {
+func newTiedResultsFixture(
+	t *testing.T,
+	configure ...func(*rubric.Definition),
+) (*resultsSourceFixture, uuid.UUID) {
 	t.Helper()
-	return newTwoTeamResultsFixture(t, [2]int{6, 8}, nil)
+	return newTwoTeamResultsFixture(t, [2]int{6, 8}, func(d *rubric.Definition) {
+		for _, apply := range configure {
+			apply(d)
+		}
+	})
 }
 
 // The real two-team setup supports an exact tie and an independently scored
