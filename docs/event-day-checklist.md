@@ -14,6 +14,8 @@ The [glossary](../GLOSSARY.md) and [ADRs 0001–0005](adr/) define the policy.
   waitlisted people, staff and spectators do not count toward that threshold.
   Confirming the threshold enables an organiser decision; it does not advance
   the event automatically. Advancing to preparation closes new registration.
+  Each team has one competition entry per event; working revisions do not create
+  additional entries.
 - Explain event-lifetime eligibility before granting organiser or unreleased-theme
   access. Anyone who has held that role/access cannot compete in that event after
   revocation. An active attendee, including a waitlisted person, must explicitly
@@ -38,6 +40,8 @@ The [glossary](../GLOSSARY.md) and [ADRs 0001–0005](adr/) define the policy.
   clock time in the event timezone. Inspect timezone/DST resolution explicitly;
   seven calendar days can differ from 168 elapsed hours. Use the current native
   schedule/readiness view rather than an independently calculated reminder.
+  The worker may dispatch within the accepted 60-second window and records the
+  actual publication instant; later dispatch is missed, not a catch-up release.
 - If publication is blocked or missed, postpone to preserve the preparation week
   or cancel. Do not bypass the gate with manual early access. A shortfall during
   preparation does not automatically cancel or roll back the event.
