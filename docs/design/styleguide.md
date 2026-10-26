@@ -467,3 +467,22 @@ source is being read. Gate it with read pause and no pending or unknown command;
 keep the original disabled condition and local validation/readiness checks.
 Actual HTTP confirmation/retry controls and private inert/denial boundaries keep
 their existing locks. Preserving focus never prepares or submits a disabled step.
+
+### GitHub connection setup
+
+Keep preparation, installation and readiness checks in that document and keyboard
+order. Place the installation action after the saved configuration and the current
+readiness check after installation, so users progress down the page. After an
+acknowledged configuration save, collapse the saved details and focus the installation heading.
+Use an explicit Change App details action to reopen the editor. Keep preparation
+surfaces mounted but hidden during review; correction restores the actual opener.
+
+Use production `GitHubSetupFields` for inline field feedback. Empty fields begin
+neutral; blur checks the field, and a review attempt reveals all errors and focuses
+the first invalid control. Errors use associated Field text and `aria-invalid`;
+valid local formats use a visible icon and text. Keep review available for invalid
+input so it can explain errors, while native authority, read pauses and unresolved
+command locks still prevent unavailable work. Format feedback does not establish
+App identity, key validity, installation, permissions or template access. Those
+remain server/provider checks. Never echo a secret in errors or review summaries.
+The independent guide demonstrates these fields with synthetic local state only.
