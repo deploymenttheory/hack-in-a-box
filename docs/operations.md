@@ -1,4 +1,4 @@
-# Operating the foundation
+# Operating Hack-in-a-Box
 
 ## Probes and metrics
 
@@ -26,7 +26,7 @@ Approval and due time are separate. Revocation/cancellation can modify pending w
 
 An application lease lasts two minutes and handlers receive a 30-second context. A PostgreSQL advisory guard also remains held throughout dispatch, preventing another live worker from acquiring that operation even if the lease expires. Handlers must respect cancellation and use bounded network calls. After a crash, the second worker checks the provider with the same stable operation key. Only an explicit proof that retry is safe may return `Retryable`; missing provider evidence yields `Ambiguous`.
 
-This is at-least-once execution. A unique job does not prove exactly-once external delivery. A process may die after the provider accepted a send but before PostgreSQL recorded its outcome. Ambiguous or permanent operations are retained and never automatically resent. A future integration's reconciliation workflow must resolve these records explicitly through its domain policy and audit trail.
+This is at-least-once execution. A unique job does not prove exactly-once external delivery. A process may die after the provider accepted a send but before PostgreSQL recorded its outcome. Ambiguous or permanent operations are retained and never automatically resent. The owning integration's reconciliation workflow must resolve these records explicitly through its domain policy and audit trail.
 
 ## Files and recovery
 

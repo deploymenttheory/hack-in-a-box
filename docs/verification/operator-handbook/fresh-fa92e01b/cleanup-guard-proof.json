@@ -1,0 +1,24 @@
+{
+  "kind": "Fault injection into exact orchestrator finally AST; no Docker execution or installation proof",
+  "orchestrator_sha256": "0394490fcc163f802b13156433b55153138eac1e513b948326065b4521946ae8",
+  "cases": [
+    {
+      "failed_step": null,
+      "both_cleanup_commands_attempted": true,
+      "inventory_recorded": true,
+      "nonzero_outcome_preserved": false
+    },
+    {
+      "failed_step": "12-cleanup-guide",
+      "both_cleanup_commands_attempted": true,
+      "inventory_recorded": true,
+      "nonzero_outcome_preserved": true
+    },
+    {
+      "failed_step": "13-cleanup-app",
+      "both_cleanup_commands_attempted": true,
+      "inventory_recorded": true,
+      "nonzero_outcome_preserved": true
+    }
+  ]
+}

@@ -2,7 +2,15 @@
 
 A self-hosted hackathon platform: a Go API and durable worker, a React/TypeScript browser application, PostgreSQL and private persistent-volume file storage. The product vocabulary is in [GLOSSARY.md](GLOSSARY.md), and the agreed rules are in [docs/adr](docs/adr).
 
-The foundation implements database migrations, the application shell, generated REST contracts, OIDC sessions, audit records, durable delivery operations, protected files and operational checks. Versioned registration forms, FIFO allocation and offers, organiser applicant review, and published/frozen team membership now supply attendance and team lifecycle facts. Challenge publication, team suggestions, mentor assignment and judging remain in their domain tickets. See [preparation verification](docs/preparation-verification.md) for the implementation sequence and tested boundaries. Event-resource access uses current event memberships and resource assignments. Platform administration manages ownership without implicitly granting private content, credentials or assessments. See [organiser verification](docs/organiser-verification.md).
+The application includes independent participant and administration portals,
+registration and team allocation, preparation and challenge publication, managed
+repository workflows, live support, judging and explicit results, and reviewed
+project outcomes. Current event/resource permissions govern private content,
+credentials and assessments; platform administration does not grant those reads
+implicitly. Start with the [operator handbook](docs/operator-handbook.md),
+[event-day checklist](docs/event-day-checklist.md) and [documentation index](docs/README.md).
+Release verification and live-provider prerequisites remain separate gates; a
+feature being present does not establish release readiness.
 
 ## Run with Docker Compose
 

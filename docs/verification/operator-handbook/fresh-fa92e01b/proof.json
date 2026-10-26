@@ -1,0 +1,39 @@
+{
+  "kind": "Actual fresh tracked checkout/normal production Compose walkthrough; source-fa92; not whole lifecycle/release",
+  "source": "fa92e01b8d34d20501f8cfe187324ce9aeffce94",
+  "installation_receipt": "installation.json",
+  "browser_receipt": "branded-event.json",
+  "cleanup_receipt": "cleanup.json",
+  "orchestrator_sha256": "0394490fcc163f802b13156433b55153138eac1e513b948326065b4521946ae8",
+  "raw_log_hashes": {
+    "00-install-browser-verification-dependencies.log": "4f2d5d3a452d92ebb15fb6badffc6c6f360cb73f3edd529e662259d7525c5be9",
+    "01-init-env.log": "9562926b9a07309386e16b4e3b7db7346236bea5adbfacd6d11e79c97528786f",
+    "02-compose-validation.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "03-build-portals.log": "7df83973702ff689f845a06a38b3feb3c2666572a6809410824594429163ad1c",
+    "04-build-guide.log": "16495ee382276ea86f5f588bc356981c29b5b15bd072bdd81e6238a8d57e1785",
+    "05-start-database-provider.log": "6c4843ebd14db7b2e75c2b5adeb0b907ddee52a36b7ceb6e897120a2443e343f",
+    "06-migrate.log": "d82d2ea92acba46a896bfb803b05e74f9902931b444b499ace7fe7b93ae305de",
+    "07-start-app.log": "504afb2522d781b35ed406d0b9dc3d7d010da0b288603c4bf17fb1df091fdaf9",
+    "08-start-guide.log": "9afc454fe5a09cb4eb713a27c3d358d89a89e4c0a613862d9815815861161fab",
+    "09-initial-operator-login.log": "f744819d7b88da2af87e0dbf554c07f718fa5f62ee7a45c202b162843808565e",
+    "10-remove-bootstrap-recreate.log": "4688bf5301d783a5b1561d122efae0d1080fd471f403b663bdcf6291dff7bea8",
+    "11-branded-event.log": "b9a43f69e964138308ff9a6b0f2cbedd45755d19d1c4dfb747a3fd885cd08981",
+    "12-cleanup-guide.log": "9e5f80bbc6a6a5b2160562e8aa9643c9ce159c36161afe8a8706fb33965dbe49",
+    "13-cleanup-app.log": "1975e0759f69d02c665d3a892732d7fb0cb8367e03270d63255961d122d310e5"
+  },
+  "initial_failure": {
+    "artifacts_private": "/private/tmp/hackbox125-fresh-fa92e01b",
+    "stage": "Initial operator browser fixture could not import Playwright because a symlink targeted absent host node_modules; normal Compose build/migration/start had succeeded.",
+    "correction": "Install exact locked browser verification dependencies in the fresh archived checkout; no product/auth/permission assertion change.",
+    "failed_log_sha256": "ad1e2be0f4bda86ec3863a69e476edf31e9d2979c44a06234e7835b545f66a7e",
+    "both_project_resource_inventories_empty": true
+  },
+  "resource_guard_correction": "Independent review caught cleanup failure potentially skipping second project. Corrected before successful run; exact finally-AST fault injection preserves nonzero failure and both cleanup/inventory attempts. Controls are not a Docker installation proof.",
+  "scope_limits": [
+    "Existing Docker Desktop host; new clean source checkout and fresh isolated database/file volumes, not a new physical machine.",
+    "Synthetic external OIDC provider through normal PKCE/session checks; no seeded session or authentication bypass.",
+    "Same organiser reads both portals; no confirmed competitor claim.",
+    "Local development origins; production TLS/live-provider/recovery/full lifecycle remain separate acceptance and dependencies."
+  ],
+  "publication": "Only safe receipts, hashes and two original synthetic captures; no .env, private keys, cookies, source snapshot or auth traces."
+}

@@ -1,0 +1,25 @@
+{
+  "source": "fa92e01b8d34d20501f8cfe187324ce9aeffce94",
+  "event_id": "f7df2cdc-42ef-47df-846d-345cfe369ca5",
+  "event_preview": 200,
+  "event_creation": 200,
+  "branding_write": 200,
+  "branding_revision": 2,
+  "primary": "#1d4ed8",
+  "logo_count": 1,
+  "native_logo_decode_both_portals": true,
+  "independent_logout": true,
+  "guide_revision": "fa92e01b8d34",
+  "errors": [],
+  "images": [
+    {
+      "name": "admin-branded-event.png",
+      "sha256": "bd087706a958d620a01d31b1c7a329e3d3cb822d5c87160ea719054bb38d9368"
+    },
+    {
+      "name": "participant-branded-event.png",
+      "sha256": "9bd74a6a0666ab030e1a414f66cf97b407096b3c36fa542122ccc2d0df4aef2f"
+    }
+  ],
+  "scope": "Fresh isolated local Docker checkout/data; real OIDC with synthetic provider, same organiser in both portals. Not external TLS/live providers/full lifecycle or a separate fresh physical host."
+}

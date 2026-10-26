@@ -1,0 +1,202 @@
+{
+  "source": "fa92e01b8d34d20501f8cfe187324ce9aeffce94",
+  "projects": [
+    "hackbox-operator125-fa92e01b-2417b2",
+    "hackbox-operator125-fa92e01b-2417b2-guide"
+  ],
+  "normal_production_compose": true,
+  "fresh_tracked_checkout_and_volumes": true,
+  "init_env_random_secrets": true,
+  "bootstrap_removed_before_event_walkthrough": true,
+  "image_ids": {
+    "public": "sha256:60eb51e1e5e506ac1d8ef9be9129bfba097ef8bad9c003608b8c240aae8d28e1",
+    "admin": "sha256:74974bf995d04a17b360ef1ebd7c1dac69a9b60afd626186c472b2c4280e6a9d",
+    "guide": "sha256:945599323a7687363f00967aa667d2c6e57656918f2b999cc182c3df38264b91"
+  },
+  "commands": [
+    {
+      "step": "00-install-browser-verification-dependencies",
+      "argv": [
+        "npm",
+        "--prefix",
+        "web",
+        "ci"
+      ]
+    },
+    {
+      "step": "01-init-env",
+      "argv": [
+        "sh",
+        "scripts/init-env.sh"
+      ]
+    },
+    {
+      "step": "02-compose-validation",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "config",
+        "--quiet"
+      ]
+    },
+    {
+      "step": "03-build-portals",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "build",
+        "api",
+        "admin"
+      ]
+    },
+    {
+      "step": "04-build-guide",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2-guide",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.styleguide.yaml",
+        "--profile",
+        "styleguide",
+        "build",
+        "styleguide"
+      ]
+    },
+    {
+      "step": "05-start-database-provider",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "up",
+        "-d",
+        "--wait",
+        "postgres",
+        "provider"
+      ]
+    },
+    {
+      "step": "06-migrate",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "run",
+        "--rm",
+        "migrate"
+      ]
+    },
+    {
+      "step": "07-start-app",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "up",
+        "-d",
+        "--wait",
+        "api",
+        "admin",
+        "worker"
+      ]
+    },
+    {
+      "step": "08-start-guide",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2-guide",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.styleguide.yaml",
+        "--profile",
+        "styleguide",
+        "up",
+        "-d",
+        "--no-build",
+        "--wait"
+      ]
+    },
+    {
+      "step": "09-initial-operator-login",
+      "argv": [
+        "node",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/docs/verification/operator-handbook/branded-browser.mjs",
+        "--bootstrap-only"
+      ]
+    },
+    {
+      "step": "10-remove-bootstrap-recreate",
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/.env",
+        "-p",
+        "hackbox-operator125-fa92e01b-2417b2",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/compose.yaml",
+        "-f",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/synthetic-provider.override.json",
+        "up",
+        "-d",
+        "--no-build",
+        "--wait",
+        "api",
+        "admin",
+        "worker"
+      ]
+    },
+    {
+      "step": "11-branded-event",
+      "argv": [
+        "node",
+        "/private/tmp/hackbox125-fresh-fa92e01b-02/source/docs/verification/operator-handbook/branded-browser.mjs"
+      ]
+    }
+  ],
+  "limits": "Synthetic OIDC issuer on loopback; existing Docker host, fresh isolated checkout/data. No production TLS/live provider/full lifecycle claim."
+}
