@@ -1,0 +1,164 @@
+{
+  "classification": "actual canonical shared-worker historical setup release/capture; not a capacity or normal-wall due-latency result",
+  "full_load": false,
+  "release_accepted": false,
+  "driver_source": "d1efa1a2178aaf145df7afca2c8d44df829beab6",
+  "driver_base": "5f78d51f6f22bd11f58344f529d52daeebf475b1",
+  "historical_api_worker_source": "735b44f86b76b4d8ff72b4ba28cdbec00be4d456",
+  "private_api_worker_image": "sha256:79b0b5c634c6602eb5caf843c8f0a226c58989f378d0bbffabb837ec1da5e703",
+  "original_admission_sha256": "407e347f9a8375dcac7740f973c6e0a9cc8bc9d820869dc24b3febdc47891577",
+  "original_sources_sha256": "e46adf295cbc5e05fae3f0a57a9c46cf0efa460cc0a738b1ecd8b1e9a98fde19",
+  "known_read_only_prefix_sha256": "06ec620dec1fb66298aa25b6073166ed70bfd591ae49c9e5f55703bc9fe4f8c7",
+  "authentication": {
+    "started": "2026-10-26T15:27:37.4267Z",
+    "monotonic_elapsed_ns": 6393114708,
+    "attempted": 1000,
+    "authenticated": 1000,
+    "distinct_people": 1000,
+    "failed": 0,
+    "concurrency": 20,
+    "sustained_proof": false,
+    "unattempted": 0
+  },
+  "setup_session_cleanup": {
+    "attempted": 1000,
+    "original_acknowledgements": 1000,
+    "unresolved_original_responses": 0,
+    "http_statuses": {
+      "204": 1000
+    },
+    "monotonic_elapsed_ns": 8777563167
+  },
+  "installation_after_session_cleanup": {
+    "events": 5,
+    "people": 1000,
+    "active_people": 1000,
+    "unexpired_sessions": 0
+  },
+  "clock_controls": {
+    "count": 5,
+    "original_responses_complete": true,
+    "first_control_retained_without_replay": true,
+    "networkless_source_pinned_controller": true
+  },
+  "released_common_sources": [
+    {
+      "id": "b79fb7ca-3529-402d-ade3-317e56bcd151",
+      "version": 1,
+      "domain_released_at": "2026-09-18T12:44:29.356057Z"
+    },
+    {
+      "id": "fa4e85db-c9c4-4311-8dcf-a398728939c7",
+      "version": 1,
+      "domain_released_at": "2026-10-19T11:44:29.356057Z"
+    },
+    {
+      "id": "ff4a83c9-bd13-4805-9eb1-45f458c7404f",
+      "version": 1,
+      "domain_released_at": "2026-10-19T11:44:29.356057Z"
+    }
+  ],
+  "native_stages": [
+    {
+      "id": "858c8199-7480-5aa4-899f-a545500f31c8",
+      "stage": "registration"
+    },
+    {
+      "id": "d8456699-28f5-5bda-a068-0d67e7b7ff46",
+      "stage": "preparation"
+    },
+    {
+      "id": "a6b2d385-b91e-5440-ba0f-5c6810cfde2f",
+      "stage": "live"
+    },
+    {
+      "id": "50e81a5a-fe4d-55f2-ba05-ed49b7e1a32c",
+      "stage": "live"
+    },
+    {
+      "id": "1e5f8692-508a-54de-9658-ae647890df04",
+      "stage": "archived"
+    }
+  ],
+  "original_formal_url_acknowledgements": 34,
+  "native_cutoff_census": {
+    "frozen": 34,
+    "not_submitted": 2
+  },
+  "url_capture_repository_ids": [
+    0
+  ],
+  "url_capture_observations": 0,
+  "capture": {
+    "actual_native_operations": 36,
+    "states": {
+      "delivered": 36
+    },
+    "attempt_counts": {
+      "1": 36
+    },
+    "missing_first_start": 0,
+    "database_wall_start_boundary": "2026-10-26T15:27:44.837808Z",
+    "actual_first_start_range": [
+      "2026-10-26T15:28:02.91134Z",
+      "2026-10-26T15:28:03.842877Z"
+    ],
+    "historical_due": "2026-09-25T17:44:29.356057+01:00",
+    "due_latency_slo_claimed": false
+  },
+  "positive_reviewed_projects": {
+    "count": 7,
+    "events": {
+      "1e5f8692-508a-54de-9658-ae647890df04": 3,
+      "a6b2d385-b91e-5440-ba0f-5c6810cfde2f": 2,
+      "50e81a5a-fe4d-55f2-ba05-ed49b7e1a32c": 2
+    },
+    "awards_or_finalists_created": false
+  },
+  "http_calls": {
+    "count": 2579,
+    "raw_statuses": {
+      "200": 1579,
+      "204": 1000
+    },
+    "incomplete_original_responses": 0
+  },
+  "resource_envelope": {
+    "service_cpu": 2.875,
+    "service_memory_mib": 1984,
+    "transient_controller_cpu": 0.125,
+    "transient_controller_memory_mib": 64,
+    "maximum_peak_cpu": 3,
+    "maximum_peak_memory_mib": 2048
+  },
+  "earlier_failed_checkpoints": [
+    {
+      "source": "bd0058c7",
+      "result": "failed organiser normal-content reader; actual worker publication subsequently confirmed in READ ONLY SQL",
+      "receipt_sha256": "06ec620dec1fb66298aa25b6073166ed70bfd591ae49c9e5f55703bc9fe4f8c7",
+      "diagnostic_sha256": "f5b336083f96517612e1d5ac7fd972df5f9c87ca04a984e872a928cc81aa7678"
+    },
+    {
+      "source": "09fd0dda",
+      "result": "failed current-source fence before any new clock/domain write; fixture assumed one event revision increment, native atomic rubric/challenge publication increments two",
+      "receipt_sha256": "b1efc94f01f3902a5308f7fc6f5d188ee8a129daaa6d39b329c0bfb47d0cc38e"
+    }
+  ],
+  "private_artifact_sha256": {
+    "native-worker-release.json": "c7f86dcbdbfc6875d9c9b679b1ad8d24dcb0e065d0cdd2aa1008cf48d6cf0cae",
+    "native-worker-driver.log": "4a546d63fb99c29fed86583ee841d7bae3adfe8041d17b15ff5a4a5c07031cd7"
+  },
+  "storage_incident_after_checkpoint": {
+    "new_heavy_work_held": true,
+    "four_durable_volumes_preserved": true,
+    "logical_backup": "failed before pg_dump: container no longer running; zero-byte file is not backup evidence",
+    "restore_verified": false
+  },
+  "remaining": [
+    "current-permission/help/clarification/showcase and native scheduled/followup oracles",
+    "normal production images/default-wall handover with latest main and fresh cohort",
+    "fresh fixture anchor if current live window expires before baseline",
+    "actual200burst/1800s sustained every-minute1000activity/fullfixedsaturation/all thresholds",
+    "final source-bound acceptance wiring/full independent review/currentCI"
+  ]
+}

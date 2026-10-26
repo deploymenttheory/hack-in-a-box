@@ -609,3 +609,32 @@ reads are rejected. The acknowledged clock advance is retained without replay;
 current native owner/configuration/version/publication guards still run, and
 the next advance uses the existing private clock's exact compare-and-replace.
 No ordinary source read is interpreted as an original domain-write receipt.
+
+The [actual worker release/capture receipt](evidence/native-worker-release-capture.json)
+records the successful continuation at `d1efa1a2` on main `5f78d51f`, retaining
+the explicitly historical private API/worker image at `735b44f8`. Native state
+reached registration, preparation, live, live and archived across the five events.
+Three challenges released at their exact T−7 instants; a confirmed member read
+each common source. The archive retained 34 original formal URL submissions and
+two explicit not-submitted entries, 36 native capture operations with exactly one
+guarded actual-wall attempt each, and no invented repository/commit evidence.
+Seven separately reviewed positive projects span the archive and both live events.
+All 1,000 fresh actors logged out with original acknowledgements; the independent
+installation census again found five events, 1,000 active people and zero sessions.
+
+Both earlier failed harness checkpoints remain separately source-attributed:
+the staff/audience read error, and an over-strict single-revision assumption.
+The native common publication transaction bumps the event twice (rubric record
+and challenge publication), so continuation accepts exactly that known delta
+while rejecting unrelated revisions/configuration/authority changes. The first
+acknowledged clock operation was retained without replay. Setup timestamps and
+historical due dates are not normal-wall job-start latency evidence.
+
+During subsequent Docker storage recovery, the project PostgreSQL container
+was no longer running when the private logical backup was attempted. Its
+zero-byte failed output is not backup/restore proof; the stop cause is not
+inferred from that response.
+The four owned durable volumes and successful host receipts remain preserved.
+No full workload, normal production handover, baseline target or release result
+is inferred. A fresh native preparation run is required if this fixture's live
+window has expired by the time the real 1,800-second baseline is ready.
