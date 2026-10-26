@@ -1,0 +1,134 @@
+{
+  "checkpoint": "read-only-durable-state-recovery-of-uncertain-formal-put",
+  "complete_lifecycle": false,
+  "original_run_result": "red",
+  "provenance": {
+    "original_run_source": "89590a6bc2b2d8cf160c0c00063894fce8567278",
+    "main_base": "5f78d51f6f22bd11f58344f529d52daeebf475b1",
+    "fixture_image": "sha256:7868ccb394c52392b1d99692ddcc24ff39d80b8fa8c9700d083ce3eb75a84661",
+    "original_runner": "90117",
+    "original_duration_seconds": 365.56,
+    "production_image": false
+  },
+  "original_uncertain_target": {
+    "event_id": "1f487600-1013-4254-9266-a3940a2aae15",
+    "team_id": "1322c030-3e43-4caa-ae9d-1c84a884ae37",
+    "method": "PUT",
+    "native_state_revision": 0,
+    "active_revision": null,
+    "outcome": "open",
+    "frozen_at": null,
+    "durable_formal_revision_count": 0,
+    "audit_change_count": 0,
+    "classification": "no durable formal commit at the exact timed-out target"
+  },
+  "distinct_prior_success": {
+    "event_id": "1f487600-1013-4254-9266-a3940a2aae15",
+    "team_id": "7f529a07-4e39-4ee3-957f-a0e07fbdd9da",
+    "actor_id": "2162b5ef-5e06-4bd7-979e-c45ccf68602d",
+    "revision": 1,
+    "submitted_at": "2026-03-30T08:01:02+00:00",
+    "late": false,
+    "meaning": "An earlier different team succeeded; its single row is not attributed to the timed-out target."
+  },
+  "clarification_native_census": {
+    "questions": 2,
+    "answers": 2,
+    "versions": 4,
+    "approvals": 4,
+    "publications": 4,
+    "inbox_references": 128,
+    "references_per_event_per_version": 32
+  },
+  "recovered_native_failure_metadata": [
+    {
+      "surface": "public",
+      "time": "2026-10-26T16:21:32.943389625Z",
+      "route": "api",
+      "status": 503,
+      "duration_ms": 46396,
+      "request_id": "DVI4GFVJ67QVH4GCR2RTU57POS"
+    },
+    {
+      "surface": "public",
+      "time": "2026-10-26T16:21:42.669711671Z",
+      "route": "health",
+      "status": 503,
+      "duration_ms": 4983,
+      "request_id": "IPXV4FGJV4IO2US3E2H32HVO74"
+    },
+    {
+      "surface": "admin",
+      "time": "2026-10-26T16:21:40.622696337Z",
+      "route": "health",
+      "status": 503,
+      "duration_ms": 3497,
+      "request_id": "ED6FOVXF6BBOJZIJD4ZC6YWSFW"
+    },
+    {
+      "surface": "admin",
+      "time": "2026-10-26T16:21:42.68651563Z",
+      "route": "health",
+      "status": 503,
+      "duration_ms": 5425,
+      "request_id": "WNTBOSUWD5HYFUMIBLQUL7PHVH"
+    }
+  ],
+  "interpretation": "The recovered application log contains a46,396ms API503 and simultaneous health503s on both surfaces. These are observed broader-stall symptoms; their cause and causal relationship to later daemon loss remain unknown. No production clock, timeout or guard was changed.",
+  "recovery_actions": {
+    "started_only_existing_private_postgres": true,
+    "api_provider_worker_restarted": false,
+    "domain_writes_or_original_put_replay": false,
+    "native_http_get_recovery_claimed": false,
+    "database_inspection": "Read-only SELECTs against retained existing volume after daemon recovery; exact target state, formal revisions and audit changes were compared."
+  },
+  "preceding_record": "journey-clarification-daemon-loss-red.json",
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-native.log",
+      "sha256": "bb12c2c9d0ba5d3a452fdd8e12788097449a76b5b5f18672363f0b149c98deb9"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-progress.json",
+      "sha256": "1a4b2b9cafd323d61a7c711736fff36a2316c2b8eacb76d0c64c18caae697546"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-state-recovered.json",
+      "sha256": "94c67bedff55f4c5edcf0e4ad373b593de1b33fd7079ecbf0513ae187023035f"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-submission-state-recovered.json",
+      "sha256": "11f6c60a0547ebe676672f0d4dbae9d9f4db7d40ac4a48287b618834903bf6ba"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-uncertain-target-recovered.json",
+      "sha256": "71586cfb0e498e927130b1f16ac5b4ba78a34f26e57919fa394df938b153300f"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-public-recovered.log",
+      "sha256": "3d8f60784dc335bcb648411c795b8396ddbd159ef4a0515d7fab797742f6bb58"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-admin-recovered.log",
+      "sha256": "a140f77880d2a38086ff4d2bed1eb4a514d13867b8b08ec148c3c81bd8806e6d"
+    },
+    {
+      "local_basename": "hackbox120-clarification-89590a6b-recovered-cleanup.log",
+      "sha256": "afee0e50f74555eb89f7b73a726d2d9ba9a094fa029e36d4cfb27e50daabb381"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-clarification-restored-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0,
+    "verified_absent": true
+  },
+  "privacy": "Explicit whitelist of synthetic UUIDs, enum states, counts, timestamps, non-secret request correlation IDs and raw artifact hashes. No question/answer/report prose, numeric assessments, personal names or contact details, sessions, credentials or provider configuration is published.",
+  "scope_limits": [
+    "This recovery classifies durable state; it does not turn the failed whole run into a passing lifecycle rehearsal.",
+    "Earlier shorthand called the failure the first formal PUT. Exact target recovery shows one prior different-team success, followed by the timed-out target.",
+    "The earlier unknown-commit/pending-cleanup record remains historical; this separate recovery record supplies the later authoritative facts.",
+    "All remaining full120 acceptance criteria stay open for follow-up. No new native write or full rerun occurred during recovery."
+  ]
+}

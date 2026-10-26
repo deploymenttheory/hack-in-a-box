@@ -1358,7 +1358,7 @@ source is still required, along with every remaining full-acceptance gate.
 
 After storage recovery, source `89590a6b` (runtime inputs byte-identical to
 image-build source`e94d0e95`, main`5f78d51f`) ran fresh native90117. It
-**failed365.56s** awaiting headers from the first formal submission PUT. Both
+**failed365.56s** awaiting headers during formal submission. Both
 reviewed common versions per event were persisted in the earlier HTTP-progress
 snapshot. The Docker socket then became unavailable during read-only export,
 so the PUT's commit status remains **unknown**, native SQL corroboration was
@@ -1366,3 +1366,16 @@ not captured, and cleanup of this project awaits daemon recovery. The original
 write has not been replayed. The [bounded failure record](evidence/journey-clarification-daemon-loss-red.json)
 keeps these limits explicit; empty SQL/daemon-error files are not promoted to
 native evidence. A subsequent healthy complete run remains necessary.
+
+Read-only recovery after the daemon returned classified the **exact** timed-out
+event/team: state revision0, active revision null, outcome open, no formal
+revision and no submission audit change. One earlier different team has a
+successful revision1; it is not attributed to the failed target. Only the
+existing private PostgreSQL container was started. No API/provider/worker or
+original PUT was replayed. Recovered native metadata corroborates four common
+publications and128 inbox references, exactly32 per event/version. The recovered
+API503 lasted46,396ms, with health503s on both surfaces in the same interval;
+the cause remains unknown. The [separate recovery record](evidence/journey-clarification-write-recovery.json)
+retains exact facts/hashes and the failed run's limits. All private project
+containers, four volumes and its network were then removed and verified absent.
+This completes preservation/cleanup, not the full #120 rehearsal.
