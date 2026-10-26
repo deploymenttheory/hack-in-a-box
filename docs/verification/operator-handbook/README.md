@@ -28,7 +28,7 @@ Full #120 lifecycle, final integrated reviews/CI and release signoff remain open
 | Final integrated source review and candidate CI | Pending |
 
 The fresh walkthrough uses separate projects, volumes, ports and synthetic
-identity/provider fixtures, preserve existing local installations, and record its
+identity/provider fixtures, preserves existing local installations, and records its
 source/image digests, actual commands/outcomes, portal logins, event branding and
 cleanup. A Compose health-only smoke does not satisfy the branded-event criterion.
 A fixture using seeded sessions is not normal OIDC evidence. Source reviews check
