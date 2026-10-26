@@ -5113,7 +5113,8 @@
           }
         ],
         "asserted_positive": [
-          "Actual create200,masked inventory and explicitly authorised team-member reveal with value; immutable audited attempts."
+          "Actual create200,masked inventory and explicitly authorised team-member reveal with value; immutable audited attempts.",
+          "TestCredentialsHTTPPrivacyExplicitRevealAndFailures positively POSTs assign with team_ids=[] (200), then proves same-session reveal403 and absence from masked inventory; POST assign with the original team (200) restores that audience. This is credential unassignment/reassignment, not physical return."
         ],
         "asserted_denial": [
           "Other team/current organiser without reveal audience denied; removal/reassignment/withdrawal/key failure deny; room capability cannot reveal."
@@ -6757,7 +6758,7 @@
       "current_ui_files_changed_since_ci27": []
     },
     {
-      "id": "event-configuration-inventory-return-gap",
+      "id": "event-configuration-snapshot",
       "ui_owner_files": [
         "web/src/event-form.tsx"
       ],
@@ -6843,16 +6844,15 @@
         "asserted_privacy": [
           "Public clone/snapshot restrictions preserved."
         ],
-        "gaps": [
-          "No explicit HTTP positive assignment/return invariant for every configuration-inventory object was identified in these assertions; do not mark complete from event-root save alone."
-        ]
+        "gaps": []
       },
       "completion": "reconciled native seam only; no full owner/browser/lifecycle acceptance inferred",
       "current_ui_files_changed_since_go_ci": [
         "web/src/components/ui/icon.tsx",
         "web/src/planning-layout.tsx"
       ],
-      "current_ui_files_changed_since_ci27": []
+      "current_ui_files_changed_since_ci27": [],
+      "scope_correction": "Configuration/snapshot routes do not define physical inventory checkout or return. The actual ResourceInventory UI is team credentials, reconciled separately in event-credentials-inventory-team-access; no physical-return workflow is claimed."
     }
   ],
   "independent_entries": [
@@ -26044,7 +26044,7 @@
     "Exact27 native-browser and Go workflows are green; later4d bounded variant delta and final292integration still need final-source CI and visual/normalruntime/fullreviews. Originalefa browserRED is historical,not hidden or treated as latest.",
     "MediaHTTP setup uses nativeCollectPhoto; controlled mockMedia browser and security files-only55/57 probes do not establish actual mediaupload/create\u2192review\u2192read\u2192consentrevoke journey. Keep this gap open until concrete normal/native proof.",
     "Assignedbuild/judge-card positives are reconciled to actual27 nativebrowser scripts and passing parent/subtest receipts,with currentUIhash equality recorded. They are not inferred from the narrower HTTPtest or renamed current4d execution.",
-    "Nested configuration-inventory assignment/return details and outcome-review HTTPpositive subroutes remain explicit partialcoverage limits; eventroot save/servicepositive alone is insufficient.",
+    "Outcome-review HTTP positive subroutes remain an explicit coverage limit until the focused actual HTTP/database parent passes. The former physical-inventory return gap was a legacy description error: no such canonical endpoint exists; real credential unassignment already has native HTTP assertions.",
     "Issues120/121/122/123/126 and optionalM5 retain their own acceptance and source-attributed evidence. This contract artifact does not complete them."
   ],
   "acceptance_complete": false,
