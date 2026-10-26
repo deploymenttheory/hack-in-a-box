@@ -1,0 +1,34 @@
+{
+  "source": "111bcbcfa09262470e837cbfa01c6866e9e4a474",
+  "kind": "Controlled old shared upstream transport mutation; actual TLS/HTTP effect test; not native/load runtime",
+  "restored_source_sha256": "f4b14e60df66bf91820fb64c26808d75fa4764934605f134bebda562cffb97ff",
+  "mutated_source_sha256": "4d7d2a7732aa4025a53aa34b5d1986dc217dfeb32d894c336db971e773f1072c",
+  "controlled_red_exit": 1,
+  "controlled_red_observation": "HTTP200 after2 effects despite original response loss",
+  "restored_green_exit": 0,
+  "controlled_red_log_sha256": "13982cb550218ed98ecab48c74721251563153e31996d14bc2cc3b1887994ba6",
+  "restored_green_log_sha256": "af19a6b2742a6cedd6cc5ebfd7692343f7fc5377e798c4cfc901388f913461a7",
+  "full_five_parent_green_log_sha256": "bfb53a99a2085ac22b6bbc6bb9598ab123498f767538a3b024cb11634536ea76",
+  "full_five_parent_package_seconds": 1.395,
+  "image_packaging": {
+    "source": "111bcbcfa09262470e837cbfa01c6866e9e4a474",
+    "image_id": "sha256:2207142f765a531ed9e5acbfe06d6e040e945843575a88e08f0b61a041bd6433",
+    "tag": "hackbox-load-tls:111bcbcf",
+    "user": "10001:10001",
+    "entrypoint": [
+      "/app/tlsproxy"
+    ],
+    "scope": "Image packaging/source/nonroot proof only; no native deployment/capacity result"
+  },
+  "image_build_log_sha256": "3e41a3921ddc02322cb14be85e7a6cf4efdee7e707f82cc16e729e5ac125a0f6",
+  "independent_reviews": {
+    "standards": "0 findings; work/reviews/load123-tlsproxy-standards.md",
+    "spec": "0 findings; work/reviews/load123-tlsproxy-spec.md"
+  },
+  "remaining_scope": [
+    "Actual Compose CA/key ownership and network aliases",
+    "Normal app/issuer authentication and SSE integration",
+    "All five-event/1000-active-person/1800-second workloads and independent oracles",
+    "All final-head CI and issue acceptance"
+  ]
+}

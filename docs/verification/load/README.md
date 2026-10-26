@@ -318,6 +318,7 @@ explicitly records zero native application/session/load evidence. Full provider
 process/TLS/native-auth and actual profile execution remain required.
 
 
+
 ## Native driver source checkpoint
 
 `go run ./cmd/loadprofile` consumes owner-only prepared-fixture, exact-loopback
@@ -399,3 +400,17 @@ response. The causal control passes with one effect. TLS connection cost stays
 inside measured write latency, including at the separate front-door proxy; it
 is not removed as external-provider time. No domain/provider write is retried
 by the driver to improve the measurements.
+
+## TLS streaming proxy component
+
+The [private fixture proxy](tlsproxy/README.md) now has real loopback TLS/SSE and
+native-header/acknowledgement controls. Five component parents pass with race
+checking (1.395s package). A controlled shared-connection mutation reproduced a
+lost bodyless keyed write returning200 after two effects; the restored transport
+returns502 after one effect. Native intent headers remain intact and the driver
+must retain uncertainty. The allowlisted image builds as UID10001 with a full
+source label; independent Standards and Spec reviews found no issues. The
+[component receipt](evidence/tls-proxy-component.json) keeps source/log/image
+hashes and scope. This is neither the normal app deployment nor a capacity result;
+CA mounts, actual issuer/SSE integration and the complete profile remain gates.
+
