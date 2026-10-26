@@ -1,0 +1,104 @@
+{
+  "checkpoint": "corrected-common-answer-journey-later-finite-result-read-timeout",
+  "complete_lifecycle": false,
+  "result": "red",
+  "provenance": {
+    "source": "deb5f8672b98d9fac3a37cea2293ca277ffb84da",
+    "main_base": "fdb5282a9e3b5042a19a70fe85f21b3f1ee7b607",
+    "schema": 55,
+    "fixture_image": "sha256:7868ccb394c52392b1d99692ddcc24ff39d80b8fa8c9700d083ce3eb75a84661",
+    "build": "59117",
+    "startup": "57303",
+    "runner": "55749",
+    "duration_seconds": 418.72,
+    "production_image": false
+  },
+  "native_census_before_failure": {
+    "private_questions": 2,
+    "answers": 2,
+    "versions": 4,
+    "approvals": 4,
+    "publications": 4,
+    "inbox_references": 128,
+    "references_per_event_per_version": 32,
+    "formal_submissions": 8,
+    "all_formal_submission_times": "2026-03-30T08:01:02Z",
+    "all_formal_late_flags": false,
+    "result_publications": 3,
+    "completed_first_event_feedback_targets": 2
+  },
+  "failure": {
+    "phase": "initial current results read before second-event feedback",
+    "method": "GET",
+    "actual_status": 503,
+    "expected_status": 200,
+    "native_access_log_duration_ms": 10000,
+    "request_id": "ERXXEKAAR2VDMEAQDJDJ3UU3PJ",
+    "observed_native503_count": 1,
+    "interpretation": "The exact ten-second duration is consistent with the existing finite JSON request timeout. Original response body/code was not captured; the cause of the stall remains unknown. No production bug, resource cause, timeout widening or automatic retry is inferred."
+  },
+  "read_only_reobservation": {
+    "normal_oidc": true,
+    "domain_writes": 0,
+    "accepted_write_replays": 0,
+    "checks": [
+      {
+        "status": 200,
+        "duration_ms": 240,
+        "current_result_version": 22,
+        "body_sha256": "c4e42e8b907d78df351a7940c540d96fc7c619ddcabe63d6314a378087f6a0d4"
+      },
+      {
+        "status": 200,
+        "duration_ms": 1653,
+        "current_result_version": 9,
+        "body_sha256": "60574af01928a4ab91e4571b867887a5190c9406775058909eddb0ed0b5bb3dd"
+      }
+    ],
+    "meaning": "Separate later GET-only observation of retained native state, not a replacement passing journey or original write acknowledgement recovery."
+  },
+  "local_raw_artifacts": [
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-native.log",
+      "sha256": "c864793ab49d4a595dcd204ea640867135aba9c860527dd106d3bf4e809e5e26"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-work.json",
+      "sha256": "89f7e6ffaacd1d1500643fc78108e8cd34ba5083610991c44e896de7763e63e6"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-state.json",
+      "sha256": "d7e07c019b9972da7873dc1758ed29e8753e89b0685822effd108b655b497f7d"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-submission-state.json",
+      "sha256": "9e2a35e0c79020140538e56f2e743d3b4dc1cccf64ab4f54a6acd7d7f4289f85"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-read-diagnostic.json",
+      "sha256": "4ebe0c69160a10c847db78575ec52a3be9c49e3e53b7dad41d83e49d24868e3e"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-admin.log",
+      "sha256": "82d7a0c0c93ec8e89eb1da07efa51e00b624c161ebbfbc66456beeb051b6c8c4"
+    },
+    {
+      "local_basename": "hackbox120-clarification-deb5f867-public.log",
+      "sha256": "e9d059407d38db6cb1edce99b6fae8e35e80d2164dc09e8ff54336bbe4ed2f6c"
+    }
+  ],
+  "owned_cleanup": {
+    "project": "hackbox-lifecycle120-clarification-green-20261026",
+    "containers_remaining": 0,
+    "volumes_remaining": 0,
+    "networks_remaining": 0,
+    "read_diagnostic_containers_remaining": 0
+  },
+  "scope_limits": [
+    "This whole connected run failed. A fresh complete native run remains required after the upstream judging-fix rebase.",
+    "The former stale timestamp failure is corrected: all eight native formal revisions match actual current domain time, preserve actor/source checks and are not late.",
+    "Clarification notices are actual atomic native inbox references; they are not queued River or live external provider effects.",
+    "No question/answer/report prose, numeric assessments, sessions, credentials or provider configuration is published. Raw exports remain local.",
+    "All original full120 acceptance criteria remain open until the complete integrated verification."
+  ]
+}

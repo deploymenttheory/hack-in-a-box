@@ -1318,3 +1318,36 @@ not be described as queued River delivery. Other help authority/escalation
 variants, actual browser disconnection recovery and the remaining full
 acceptance matrix stay open. No original #120 checkbox or L01–L18 row is
 declared fully complete.
+
+## Common clarification/correction extension: native retries pending
+
+Test-only source `c952fd0581903d74c47b621c043b4f7584fa0ec9` adds one private
+team question and two separately authored/approved/published common answer
+versions in each retained event. Native runner84701 **failed264.15s** later at
+formal submission: its older driver expected the live-poll timestamp rather
+than the current domain clock after two one-second correction ticks. Native
+metadata already held four actual publications and128 private recipient inbox
+references, exactly32 per event/version. The [first RED receipt](evidence/journey-clarification-phase-red.json)
+keeps that partial success distinct from the failed whole journey.
+
+The minimal test-only correction reads current trusted domain time at the formal
+submission phase, rejects missing/backward/outside-live-window instants, and
+retains exact native timestamp/source/actor/revision/non-late assertions. Source
+`deb5f8672b98d9fac3a37cea2293ca277ffb84da`, image
+`sha256:7868ccb394c52392b1d99692ddcc24ff39d80b8fa8c9700d083ce3eb75a84661`,
+runner55749 **failed418.72s** later at the second event's current-results GET
+before feedback. All eight native formal revisions correctly record
+`2026-03-30T08:01:02Z`, and both judging/publication paths passed. The single
+503 access-log entry lasted10000ms, consistent with the existing finite JSON
+request timeout; its original body/code and cause were not captured.
+
+A separate normal OIDC, GET-only re-observation of retained results returned200
+in240ms/1653ms with unchanged current versions22/9. This is not a substitute
+passing run, accepted-write replay or a diagnosis of the original stall.
+No production timeout, guard, clock or automatic retry changed. The
+[second RED receipt](evidence/journey-clarification-read-timeout-red.json)
+keeps the exact failed source, logs/metadata hashes and limitations. Both private
+projects and the read-only diagnostic container were removed; all owned
+resource classes were verified empty. Schema controls pass(package0.612s) and
+configured lint reports0issues. A complete fresh native run on the rebased
+source is still required, along with every remaining full-acceptance gate.
