@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -144,6 +145,24 @@ func TestCertificatesHTTPReviewedIssuanceCurrentPrivatePrintAndRevocation(t *tes
 		!strings.Contains(w.Header().Get("Content-Security-Policy"), "default-src 'none'") ||
 		!strings.Contains(w.Header().Get("Content-Disposition"), "attachment;") {
 		t.Fatal("unsafe printable representation")
+	}
+	// Optional private artifact for actual-browser print/accessibility verification.
+	if artifact := os.Getenv("HACKBOX_CERTIFICATE_PRINT_ARTIFACT"); artifact != "" {
+		if err = os.WriteFile(artifact, w.Body.Bytes(), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		headers, err := json.Marshal(
+			map[string]string{
+				"content_security_policy": w.Header().Get("Content-Security-Policy"),
+				"cache_control":           w.Header().Get("Cache-Control"),
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = os.WriteFile(artifact+".headers.json", headers, 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
 	revoke := certificates.Command{
 		RequestID: uuid.New(),

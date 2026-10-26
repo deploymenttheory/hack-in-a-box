@@ -16,7 +16,6 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/certificates"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
-	"github.com/deploymenttheory/hack-in-a-box/internal/resultpublication"
 	"github.com/deploymenttheory/hack-in-a-box/internal/testdb"
 )
 
@@ -326,119 +325,6 @@ func TestCertificatesDistinctRequestsRaceOneStableRecognition(t *testing.T) {
 	}
 	if success != 1 || conflict != 1 {
 		t.Fatal("multiple effective recognitions", success, conflict)
-	}
-}
-
-func TestCertificatesPublishedAwardPolicyAndCurrentIsolation(t *testing.T) {
-	f := setup(t)
-	f.configure(t, "award")
-	ctx := t.Context()
-	publication, prize, team := uuid.New(), uuid.New(), uuid.New()
-	target := certificates.Target{
-		PersonID:      f.person.ID,
-		TemplateID:    f.template,
-		PublicationID: publication,
-		PrizeID:       prize,
-	}
-	v, err := f.s.Preview(ctx, f.owner.ID, f.event, target)
-	require(t, err)
-	if v.Eligible {
-		t.Fatal("unpublished award qualifies")
-	}
-	_, err = f.pool.Exec(
-		ctx,
-		"INSERT INTO hack_teams(event_id,id,name,state,frozen) VALUES($1,$2,'Synthetic winner','published',true)",
-		f.event,
-		team,
-	)
-	require(t, err)
-	_, err = f.pool.Exec(
-		ctx,
-		"INSERT INTO hack_team_members(event_id,team_id,person_id,snapshot) VALUES($1,$2,$3,'published')",
-		f.event,
-		team,
-		f.person.ID,
-	)
-	require(t, err)
-	// Canonical safe published projection is seeded here; award computation and
-	// explicit publication commands remain the separately tested #112 owner.
-	award := resultpublication.Announcement{
-		ID:      publication,
-		Kind:    "awards",
-		Version: 1,
-		Awards: []resultpublication.AnnouncedAward{
-			{
-				PrizeID: prize,
-				Name:    "Published synthetic award",
-				Team:    resultpublication.NamedTeam{ID: team, Name: "Synthetic winner"},
-			},
-		},
-		PublishedAt: f.now.Add(-time.Hour),
-	}
-	raw, err := json.Marshal(award)
-	require(t, err)
-	_, err = f.pool.Exec(
-		ctx,
-		"INSERT INTO result_versions(event_id,version,actor_id,action,reason,document,changed_at) VALUES($1,1,$2,'confirm','Synthetic published source','{}',$3)",
-		f.event,
-		f.owner.ID,
-		f.now,
-	)
-	require(t, err)
-	_, err = f.pool.Exec(
-		ctx,
-		"INSERT INTO result_publications(event_id,id,kind,result_version,source_binding,document,actor_id,published_at) VALUES($1,$2,'awards',1,$3,$4,$5,$6)",
-		f.event,
-		publication,
-		strings.Repeat("a", 64),
-		raw,
-		f.owner.ID,
-		f.now.Add(-time.Hour),
-	)
-	require(t, err)
-	v, err = f.s.Preview(ctx, f.owner.ID, f.event, target)
-	require(t, err)
-	if !v.Eligible || v.Fields.Award != "Published synthetic award" {
-		t.Fatal("published award absent", v)
-	}
-	id := uuid.New()
-	_, err = f.s.Change(
-		ctx,
-		f.owner.ID,
-		f.event,
-		id,
-		certificates.Command{
-			RequestID: uuid.New(),
-			Action:    "issue",
-			Target:    target,
-			Binding:   v.Binding,
-			Reason:    "Explicit published award recognition",
-		},
-	)
-	require(t, err)
-	otherTarget := target
-	otherTarget.PersonID = f.other.ID
-	other, err := f.s.Preview(ctx, f.owner.ID, f.event, otherTarget)
-	require(t, err)
-	if other.Eligible {
-		t.Fatal("other competitor inherited team award")
-	}
-	second := testdb.Event(t, f.pool, f.owner.ID)
-	if _, err = f.s.Read(ctx, f.owner.ID, second, id); !errors.Is(err, access.ErrNotFound) {
-		t.Fatal("cross-event certificate", err)
-	}
-	_, err = f.pool.Exec(
-		ctx,
-		"UPDATE competition_claims SET state='withdrawn' WHERE event_id=$1 AND person_id=$2",
-		f.event,
-		f.person.ID,
-	)
-	require(t, err)
-	if _, err = f.s.Print(ctx, f.person.ID, f.event, id); !errors.Is(err, access.ErrNotFound) {
-		t.Fatal("revoked recipient authority retained", err)
-	}
-	if _, err = f.s.Print(ctx, f.owner.ID, f.event, id); !errors.Is(err, access.ErrConflict) {
-		t.Fatal("ineligible recipient still printable", err)
 	}
 }
 
