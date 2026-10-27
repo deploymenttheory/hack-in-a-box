@@ -83,3 +83,12 @@ PR #338 still requires every separate CI check green before merge; a later
 native optional-session CI assertion needs inspector scoping because the new
 visible record heading shares the inspector's name. None of this completes the
 remaining original #120 criteria.
+
+The next extension drives team creation, draft placement, explicit unlocking and
+both publications through Fleet controls on those same events. The native
+journey independently checks revisions, exact membership, retained published
+snapshots and unrelated event/admission state after every acknowledged command.
+It requires seven creations, thirty placements, seven unlocks and two reviewed
+publications per event. Rejected premature publication and post-freeze moves
+remain native API assertions. This extension is implemented and compiles; it has
+not yet passed a connected browser run and is not new acceptance evidence.

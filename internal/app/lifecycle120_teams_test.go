@@ -42,6 +42,28 @@ func allocateLifecycleTeamsWithInitialPublication(
 	initialPublication func(teams.Page) error,
 	reviewPublication func() error,
 ) (teams.Page, error) {
+	return allocateLifecycleTeamsWithActions(ctx, owner, eventID, cohort, control,
+		initialPublication, reviewPublication, nil)
+}
+
+// Successful commands can be owned by the real browser. Rejected commands still
+// exercise the native API and prove that its publication/freeze guards hold.
+func allocateLifecycleTeamsWithActions(
+	ctx context.Context,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	cohort *lifecycleAdmissions,
+	control *lifecycleControl,
+	initialPublication func(teams.Page) error,
+	reviewPublication func() error,
+	browserCommand func(teams.Command) (teams.Page, error),
+) (teams.Page, error) {
+	command := func(input teams.Command, want int) (teams.Page, error) {
+		if browserCommand != nil && want == http.StatusOK {
+			return browserCommand(input)
+		}
+		return lifecycleTeamCommand(ctx, owner, eventID, input, want)
+	}
 	base := "/api/v1/events/" + eventID.String()
 	var roster []int
 	for i, applied := range cohort.registrations {
@@ -59,10 +81,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 	for start := 0; start < len(roster); start += 5 {
 		captain := cohort.clients[roster[start]].person
 		var err error
-		page, err = lifecycleTeamCommand(
-			ctx,
-			owner,
-			eventID,
+		page, err = command(
 			teams.Command{
 				Action:   "create",
 				PersonID: captain,
@@ -84,10 +103,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 		}
 		groups = append(groups, id)
 		for _, index := range roster[start+1 : start+5] {
-			page, err = lifecycleTeamCommand(
-				ctx,
-				owner,
-				eventID,
+			page, err = command(
 				teams.Command{Action: "move", TeamID: id, PersonID: cohort.clients[index].person},
 				http.StatusOK,
 			)
@@ -97,10 +113,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 		}
 	}
 	var err error
-	page, err = lifecycleTeamCommand(
-		ctx,
-		owner,
-		eventID,
+	page, err = command(
 		teams.Command{Action: "publish"},
 		http.StatusOK,
 	)
@@ -188,20 +201,14 @@ func allocateLifecycleTeamsWithInitialPublication(
 	if depleted == nil || len(depleted.Draft) != 2 || len(depleted.Published) != 2 {
 		return page, fmt.Errorf("native withdrawal did not leave the actual remaining pair")
 	}
-	if _, err := lifecycleTeamCommand(
-		ctx,
-		owner,
-		eventID,
+	if _, err := command(
 		teams.Command{Action: "publish"},
 		http.StatusConflict,
 	); err != nil {
 		return page, err
 	}
 	for _, id := range groups {
-		page, err = lifecycleTeamCommand(
-			ctx,
-			owner,
-			eventID,
+		page, err = command(
 			teams.Command{Action: "unlock", TeamID: id},
 			http.StatusOK,
 		)
@@ -210,10 +217,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 		}
 	}
 	for i, index := range roster[3:5] {
-		page, err = lifecycleTeamCommand(
-			ctx,
-			owner,
-			eventID,
+		page, err = command(
 			teams.Command{
 				Action:   "move",
 				TeamID:   groups[i+1],
@@ -244,10 +248,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 			return page, err
 		}
 	}
-	page, err = lifecycleTeamCommand(
-		ctx,
-		owner,
-		eventID,
+	page, err = command(
 		teams.Command{Action: "publish"},
 		http.StatusOK,
 	)
@@ -278,10 +279,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 		// deliberate freeze; freezing earlier would expire it for another reason.
 		return page, nil
 	}
-	page, err = lifecycleTeamCommand(
-		ctx,
-		owner,
-		eventID,
+	page, err = command(
 		teams.Command{Action: "freeze"},
 		http.StatusOK,
 	)
@@ -296,10 +294,7 @@ func allocateLifecycleTeamsWithInitialPublication(
 			return page, fmt.Errorf("native freeze left an active team mutable")
 		}
 	}
-	if _, err := lifecycleTeamCommand(
-		ctx,
-		owner,
-		eventID,
+	if _, err := command(
 		teams.Command{
 			Action:   "move",
 			TeamID:   groups[2],

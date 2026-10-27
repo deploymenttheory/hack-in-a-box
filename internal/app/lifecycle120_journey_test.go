@@ -37,6 +37,7 @@ type lifecycleJourneyEvent struct {
 
 	browserApplications        []lifecycleBrowserApplicationReceipt
 	browserSelections          []lifecycleBrowserSelectionReceipt
+	browserTeamCommands        []string
 	browserPublishedForms      []string
 	browserAdmissionDecisions  []string
 	browserOfferPolicyApproved bool
@@ -327,6 +328,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		for _, item := range run.events {
 			if !item.browserEventCreated || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
+				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
 				len(item.browserApplications) != 4 ||
 				len(item.browserSelections) != 2 ||
 				!reflect.DeepEqual(
@@ -376,6 +378,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		FailedMessage              lifecycleFailedMessageReceipt        `json:"failed_message"`
 		BrowserApplications        []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
 		BrowserSelections          []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserTeamCommands        []string                             `json:"browser_team_commands,omitempty"`
 		BrowserPublishedForms      []string                             `json:"browser_published_forms,omitempty"`
 		BrowserAdmissionDecisions  []string                             `json:"browser_admission_decisions,omitempty"`
 		BrowserOfferPolicyApproved bool                                 `json:"browser_offer_policy_approved"`
@@ -460,6 +463,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				BrowserBrandVerified:       item.browserBrandVerified,
 				BrowserEventCreated:        item.browserEventCreated,
 				BrowserPublishedForms:      item.browserPublishedForms,
+				BrowserTeamCommands:        item.browserTeamCommands,
 				BrowserAdmissionDecisions:  item.browserAdmissionDecisions,
 				BrowserOfferPolicyApproved: item.browserOfferPolicyApproved,
 				BrowserRegistrationOpened:  item.browserRegistrationOpened,
@@ -686,7 +690,7 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeamsWithInitialPublication(
+	item.teams, err = allocateLifecycleTeamsWithActions(
 		ctx,
 		r.owner,
 		item.view.ID,
@@ -694,6 +698,7 @@ func (r *lifecycleJourney) prepareEvent(
 		r.control,
 		func(page teams.Page) error { r.provisionInitialRepositories(t, &item, page); return nil },
 		func() error { r.configureTeamNotice(t, &item); return nil },
+		r.browserTeamActions(t, &item, index),
 	)
 	if err != nil {
 		t.Fatal(err)
