@@ -112,7 +112,11 @@ func (s Service) Change(
 		if err != nil {
 			return failure("read changed event", err)
 		}
-		out, err = s.page(ctx, tx, actor, eventID, current)
+		round, err = load(ctx, tx, eventID)
+		if err != nil {
+			return err
+		}
+		out, err = s.pageFromSource(ctx, tx, eventID, current, round, source)
 		out.Receipt = &receipt
 		return err
 	})
