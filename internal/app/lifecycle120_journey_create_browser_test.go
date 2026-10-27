@@ -89,7 +89,10 @@ func (r *lifecycleJourney) createEventInBrowser(
 		t.Fatal(err)
 	}
 	if current.ID != ack.EventID || current.Name != input.Name || current.Slug != input.Slug ||
-		!reflect.DeepEqual(current.Configuration, input.Configuration) ||
+		!reflect.DeepEqual(
+			lifecycleCreationInstantsUTC(current.Configuration),
+			lifecycleCreationInstantsUTC(input.Configuration),
+		) ||
 		current.OwnerID == nil ||
 		*current.OwnerID != r.owner.person ||
 		current.Stage != "draft" ||
@@ -124,4 +127,15 @@ func (r *lifecycleJourney) createEventInBrowser(
 	}
 	item.view = current
 	item.browserEventCreated = true
+}
+
+// The time resolver returns UTC while the fixture timeline carries the event's
+// numeric offset. Compare exact instants while retaining timezone/calendar data.
+func lifecycleCreationInstantsUTC(value event.Configuration) event.Configuration {
+	value.LiveStart = value.LiveStart.UTC()
+	value.LiveEnd = value.LiveEnd.UTC()
+	value.AdmissionCutoff = value.AdmissionCutoff.UTC()
+	value.TeamFreeze = value.TeamFreeze.UTC()
+	value.SubmissionCutoff = value.SubmissionCutoff.UTC()
+	return value
 }
