@@ -61,7 +61,7 @@ services:
       POSTGRES_PASSWORD: synthetic-lifecycle-only
     volumes: [database:/var/lib/postgresql/data]
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U lifecycle -d lifecycle']
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U lifecycle -d lifecycle']
       interval: 2s
       timeout: 2s
       retries: 30

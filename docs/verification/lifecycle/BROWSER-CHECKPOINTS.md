@@ -62,3 +62,14 @@ The fresh fixture's containers, volumes and networks were all removed and the
 source remained clean. These receipts prove the browser transport and portal
 boundaries only; same-event actions, offline recovery, role checks and the full
 #120 acceptance matrix remain open.
+
+## Same-event action rehearsal
+
+The first connected branding run (`cc1f031d`) stopped before the UI: the Unix-
+socket PostgreSQL readiness check returned success during its temporary first-
+start server. Migration began at 12:58:52.308Z, during that server's shutdown;
+the durable TCP server became ready at 12:58:52.411Z. A disposable pinned-image
+probe reproduced local readiness before TCP readiness (8 samples). The isolated
+fixture now probes TCP on 127.0.0.1, matching the native processes' transport.
+All failed-run project resources were removed. No browser action pass is claimed
+from that startup failure; a fresh full connected execution is required.
