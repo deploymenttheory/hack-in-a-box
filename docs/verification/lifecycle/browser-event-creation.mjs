@@ -12,7 +12,7 @@ export async function createEventInFleet({page,expect,phase,output}){
  assert.equal(phase.event_id,'00000000-0000-0000-0000-000000000000')
  const input=phase.create,c=input.configuration
  await page.clock.setFixedTime(new Date(phase.domain_now))
- await page.goto('http://admin.localhost:8080/events')
+ await page.goto('http://admin.localhost:8080/')
  await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
  await page.getByRole('link',{name:'Create event',exact:true}).click()
  await expect(page.getByRole('heading',{name:'Create an event',exact:true})).toBeVisible()
