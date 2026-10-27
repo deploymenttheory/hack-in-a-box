@@ -21,8 +21,11 @@ test('rubric draft and exact approval are separate reviewed versioned commands',
   await page.getByRole('button', { name: 'Review draft save', exact: true }).click(); await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click()
   await expect(dialog(page)).toHaveCount(0); await expect(page.getByRole('status').filter({ hasText: 'Private draft saved' })).toBeVisible()
   expect(state.posts).toHaveLength(1); expect(state.posts[0].revision).toBe('"0"'); expect(state.configuration.definition.finalist_count).toBe(4); expect(state.configuration.approved).toBe(false)
+  await expect(page.getByLabel('Rubric decision reason', { exact: true })).toBeFocused()
   await page.getByLabel('Rubric decision reason', { exact: true }).fill('Approve exact saved version one')
   await page.getByRole('button', { name: 'Review version approval', exact: true }).click(); await expect(dialog(page)).toContainText('Starting revision 1 · Version 1'); expect(state.posts).toHaveLength(1)
+  await dialog(page).getByRole('button', { name: 'Cancel', exact: true }).click(); await expect(page.getByRole('button', { name: 'Review version approval', exact: true })).toBeFocused()
+  await page.getByRole('button', { name: 'Review version approval', exact: true }).click()
   await dialog(page).getByRole('button', { name: 'Approve reviewed version', exact: true }).click(); await expect(page.getByRole('status').filter({ hasText: 'Exact rubric version approved' })).toBeVisible()
   expect(state.posts).toHaveLength(2); expect(state.posts[1]).toEqual({ revision: '"1"', body: { action: 'approve', version: 1, reason: 'Approve exact saved version one' } }); expect(state.configuration.published_version).toBeNull()
   await page.reload(); await expect(page.getByLabel('Rubric name', { exact: true })).toHaveValue('Reviewed common event criteria'); await expect(page.getByRole('button', { name: 'Review version approval', exact: true })).toBeDisabled()
@@ -87,6 +90,17 @@ test('failed read preflight does not invent an unknown mutation or block a later
   state.deny = 0; await page.evaluate(() => window.dispatchEvent(new Event('focus')))
   await expect(dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true })).toBeEnabled()
   await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click(); await expect(dialog(page)).toHaveCount(0); expect(state.posts).toHaveLength(1)
+})
+
+test('pending rubric reads retain local editing focus while decisions stay paused', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'administrator', 'Administrator editor')
+  const state = await rubricPlanningFixture(page); await open(page)
+  const reason = page.getByLabel('Rubric decision reason', { exact: true }); await reason.fill('Retained local decision input'); await reason.focus()
+  let release!: () => void, started!: () => void; state.held = new Promise<void>(resolve => { release = resolve }); const held = new Promise<void>(resolve => { started = resolve }); state.started = started
+  await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await held
+  try { await expect(reason).toBeFocused(); await reason.press('End'); await reason.press('!'); await expect(page.getByRole('button', { name: 'Review draft save', exact: true })).toBeDisabled(); expect(state.posts).toHaveLength(0) }
+  finally { release(); state.held = undefined }
+  await expect(reason).toHaveValue('Retained local decision input!'); await expect(reason).toBeFocused()
 })
 
 test('current rubric denial scrubs private fields and does not automatically renew disclosure', async ({ page }, info) => {

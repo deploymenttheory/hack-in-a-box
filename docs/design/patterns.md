@@ -196,5 +196,7 @@ one save or approval command. Cancellation preserves input and returns focus to
 the actual opener. Approval is private and never releases common criteria.
 Current reads must not acknowledge uncertain requests or silently reinterpret
 started assessments. Definite event/account/role loss clears private guidance;
-uncertain reads pause writes. The independent guide imports these same components
+uncertain reads pause decisions while local inputs retain editing focus. After
+a confirmed save, focus the next approval reason; cancellation returns to the
+actual save or approval opener. The independent guide imports these same components
 with synthetic local callbacks and no API, auth or storage dependency.
