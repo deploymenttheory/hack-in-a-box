@@ -202,8 +202,8 @@ identities/database and includes the later archive/retained-review extension.
 
 ### R5 diagnostic boundary and disk recovery
 
-Frozen source `842a4cb1` failed after246.09s with another team-feedback POST503
-before the new outcomes/archive phases. Both event report censuses were empty
+Frozen source `842a4cb1` failed after246.09s with POST503 during fresh independent
+judge scoring (exact source line248), before feedback/outcomes/archive. Both event report censuses were empty
 at that terminal boundary. No failed command was replayed. The protected
 original database dump was taken before any subsequent diagnostic writes.
 
@@ -226,3 +226,33 @@ be used to retry an unresolved original intent. The original failed fixture was
 retained privately, diagnostic effects recorded separately, and all owned R5
 resources removed. R6 uses the exact unchanged `842a4cb1` image in fresh volumes
 after disk recovery; its result is pending.
+
+### R6 timeout attribution and ongoing #319 investigation
+
+The exact unchanged `842a4cb1` image failed R6 after274.15s during result
+decisions (source line249), with HTTP503 at10,000ms and8.3GB free. This rules out
+using the adjacent disk-full500 as an explanation for every timeout. The private
+read-only observer retained55 samples: transaction/tuple waits included a worker
+session blocked by an API-held transaction for over8s. The API blocker's later
+absence does not identify why it held its transaction. A protected dump and raw
+artifacts were retained; the R6 stack remains available for scoped reproduction.
+The causal timeout fix is tracked separately in #319. No original command was
+replayed, no production behavior changed and no request/test timeout increased.
+The earlier R5 phase label was incorrect and is corrected above from its exact
+frozen source; its failure is not a media/survey/outcome/archival verdict.
+
+The next connected driver now includes actual organiser/early-theme grant and
+revocation before registration: both active and revoked grants must cause the
+specific lifetime-exclusion error, with no rejected-registration mutation.
+The same people must first be admitted and explicitly withdraw in the other
+event before its own grant, proving event scope rather than global exclusion.
+This new native execution is pending. The existing standalone admission
+entrypoint remains unchanged through an optional connected-scenario hook.
+
+The journey now journals positive-projection mutation metadata before the wire
+attempt, including original caller UUIDs, actor, target path and expected
+revision. Its private file excludes payloads, query strings, credentials, CSRF
+and cookies. An unwritable journal prevents the request from being sent. The
+privacy and pre-wire failure tests plus existing exact-header and accepted-reply
+loss/no-replay controls pass with race detection (1.579s); this is HTTP/helper
+evidence, not a complete lifecycle or a fix for #319.

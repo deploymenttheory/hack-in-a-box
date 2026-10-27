@@ -157,6 +157,9 @@ services:
 
   journey:
     <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_INTENT_JOURNAL: /artifacts/intent-journal.jsonl
     profiles: [journey]
     # The connected help/feedback baseline takes ~480s. Clarification/correction
     # adds >500 actual current-audience HTTP reads. Individual guards stay unchanged.

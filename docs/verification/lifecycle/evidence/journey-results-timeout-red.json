@@ -1,0 +1,16 @@
+{
+  "source_revision": "842a4cb1",
+  "image": "sha256:e0841a445849e99dbe57a6fb7b64de9dcf956857545f62260aea7a053d1898eb",
+  "complete_lifecycle": false,
+  "exit_code": 1,
+  "duration_seconds": 274.15,
+  "phase": "result_decisions",
+  "http_status": 503,
+  "observed_server_duration_ms": 10000,
+  "free_docker_vm_gb": 8.3,
+  "private_wait_metadata_sha256": "e2c99eb5b5d9d1de0e898f89b7399ee491ddff43b645e190582825dd9abdcbc5",
+  "wait_samples": 55,
+  "root_cause_established": false,
+  "causal_incident": 319,
+  "original_command_replayed": false
+}

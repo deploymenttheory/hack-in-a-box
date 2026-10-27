@@ -19,6 +19,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -31,6 +32,7 @@ import (
 type lifecycleJourneyEvent struct {
 	view               event.View
 	cohort             lifecycleAdmissions
+	eligibility        []lifecycleEligibilityReceipt
 	teams              teams.Page
 	challenge          content.Page
 	rubric             rubric.Configuration
@@ -277,6 +279,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
 	}
 	type eventReceipt struct {
+		Eligibility        []lifecycleEligibilityReceipt       `json:"eligibility"`
 		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
 		Showcase           lifecycleShowcaseReceipt            `json:"showcase"`
 		Archive            lifecycleArchiveReceipt             `json:"archive"`
@@ -324,6 +327,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				Eligibility:        item.eligibility,
 				PostEvent:          item.postEvent,
 				Showcase:           item.showcase,
 				Archive:            item.archive,
@@ -509,7 +513,7 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	var err error
-	item.cohort, err = admitLifecycleCohort(ctx, r.owner, item.view)
+	item.cohort, err = admitLifecycleCohortChecking(ctx, r.owner, item.view, func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) })
 	if err != nil {
 		t.Fatal(err)
 	}

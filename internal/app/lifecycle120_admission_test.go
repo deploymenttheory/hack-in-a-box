@@ -30,6 +30,10 @@ type lifecycleAdmissions struct {
 // The final integrated scenario will reuse this phase, including its negative
 // gates; independently running this checkpoint does not complete #120.
 func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current event.View) (lifecycleAdmissions, error) {
+	return admitLifecycleCohortChecking(ctx, owner, current, nil)
+}
+
+func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, current event.View, beforeApplications func(registration.FormView)) (lifecycleAdmissions, error) {
 	cohort := lifecycleAdmissions{census: map[string]int64{}, staff: map[string]*lifecycleClient{}}
 	base := "/api/v1/events/" + current.ID.String()
 	form, err := publishLifecycleForm(ctx, owner, current.ID, "attendee")
@@ -47,6 +51,9 @@ func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current e
 	}
 	if !offerPolicy.Automated || offerPolicy.WorkingDays != 2 {
 		return cohort, fmt.Errorf("native FIFO automation was not explicitly approved")
+	}
+	if beforeApplications != nil {
+		beforeApplications(form)
 	}
 	// Selected facilitators use the application/review workflow and cannot
 	// inflate the count that determines the competition go/no-go decision.

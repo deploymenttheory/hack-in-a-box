@@ -119,11 +119,13 @@ func (c *lifecycleClient) callIntent(
 		return errors.New("lifecycle commands must target a native API route")
 	}
 	var body io.Reader
+	var payload []byte
 	if input != nil {
 		raw, err := json.Marshal(input)
 		if err != nil {
 			return err
 		}
+		payload = raw
 		body = bytes.NewReader(raw)
 	}
 	request, err := http.NewRequestWithContext(ctx, method, c.origin+path, body)
@@ -146,6 +148,9 @@ func (c *lifecycleClient) callIntent(
 		// A keyed write must still return uncertainty to this caller after an
 		// accepted response is lost, rather than replaying the body automatically.
 		request.GetBody = nil
+	}
+	if err := retainLifecycleIntent(c.person, method, path, revision, payload, commandID); err != nil {
+		return err
 	}
 	response, err := c.http.Do(request)
 	if err != nil {
