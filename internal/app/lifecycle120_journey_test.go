@@ -30,6 +30,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	expiry             lifecycleExpiryReceipt
 	offerCutoff        lifecycleOfferCutoffReceipt
 	attendance         lifecycleAttendanceReceipt
 	postponement       lifecyclePostponementReceipt
@@ -293,6 +294,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		Expiry             lifecycleExpiryReceipt              `json:"retention_expiry"`
 		OfferCutoff        lifecycleOfferCutoffReceipt         `json:"surviving_offer_cutoff"`
 		Attendance         lifecycleAttendanceReceipt          `json:"attendance_exception"`
 		Postponement       lifecyclePostponementReceipt        `json:"postponement"`
@@ -344,6 +346,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				Expiry:             item.expiry,
 				OfferCutoff:        item.offerCutoff,
 				Attendance:         item.attendance,
 				Postponement:       item.postponement,

@@ -522,3 +522,13 @@ Original journals, runner logs and final database are hashed in the
 generated containers/volumes/networks. This repeats the complete native journey
 through archive and all retained30/60/90-day effects; full Fleet/browser/role/
 expiry/provider/normal-image acceptance remains open.
+
+## Configured retention expiry — implementation awaiting native execution
+
+The connected journey now advances from the actual archived completion anchor
+to one second before and exactly at its explicit120-day deadline. Original
+outcome owners must read before expiry; at equality both owner and organiser
+lose outcome/history reads, and the original delivered day90 notification is
+unreadable. Full competition hashes must remain unchanged. Equal deadlines
+are grouped to preserve monotonic domain time. The default90 component proof
+remains separate; this new API case has no passing verdict yet.
