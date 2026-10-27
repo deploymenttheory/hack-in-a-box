@@ -12,7 +12,7 @@ async function confirmAcrossNativeChange(page: Page, confirm: Locator, action: s
   await confirm.click(); await reads.pending
   await expect(confirm).toHaveAttribute('aria-busy', 'true')
   await control(action)
-  reads.release()
+  reads.release(); await reads.relayed
   await expect(page.getByRole('alertdialog', { name: 'Review mentor advisory', exact: true })).toHaveCount(0)
  } finally { reads.release(); await reads.dispose() }
 }
