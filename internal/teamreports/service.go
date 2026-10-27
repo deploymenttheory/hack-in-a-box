@@ -53,6 +53,22 @@ func (s Service) page(
 	tx pgx.Tx,
 	actor, eventID, teamID uuid.UUID,
 ) (Page, error) {
+	source, err := s.source(ctx, tx, actor, eventID, teamID)
+	if err != nil {
+		return Page{}, err
+	}
+	return pageWithSource(ctx, tx, eventID, teamID, source)
+}
+
+// The report mutation and its response share the source already validated under
+// the same event lock. Retaining a report never changes result confirmation,
+// judging, or membership. Every new read/replay still obtains a fresh source.
+func pageWithSource(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID, teamID uuid.UUID,
+	source CurrentSource,
+) (Page, error) {
 	var out Page
 	record, err := latest(ctx, tx, eventID, teamID, false)
 	if err != nil {
@@ -61,10 +77,6 @@ func (s Service) page(
 	out.Latest = record
 	if record != nil {
 		out.Version = record.Version
-	}
-	source, err := s.source(ctx, tx, actor, eventID, teamID)
-	if err != nil {
-		return out, err
 	}
 	out.CurrentSource = &source
 	if record != nil && record.IncludeFinalScores && !currentScores(record, source) {
@@ -190,7 +202,7 @@ func (s Service) Change(
 		if err = retain(ctx, tx, eventID, next, accepted); err != nil {
 			return err
 		}
-		out, err = s.page(ctx, tx, actor, eventID, teamID)
+		out, err = pageWithSource(ctx, tx, eventID, teamID, source)
 		out.Receipt = &accepted
 		return err
 	})
