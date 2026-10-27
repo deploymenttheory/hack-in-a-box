@@ -37,3 +37,10 @@ loop reproduced zero exact matches before and one after an explicit for/id
 label association. Only the synthetic provider's label markup changes; normal
 OIDC actor selection, authorization-code/PKCE/state/nonce/native session checks
 remain untouched. No passing OIDC checkpoint is claimed until fresh execution.
+
+At `226f9d84`, normal browser sign-in reached the native `Your events` screen,
+but the ancillary Playwright request client's session read returned403 through
+the guarded proxy. That client is not the browser's own same-origin request
+context. The checkpoint now reads its normal session using browser-native fetch,
+with actual cookies/metadata/Origin behavior; the proxy and application authority
+rules stay unchanged. The two-portal checkpoint remains unproven until rerun.

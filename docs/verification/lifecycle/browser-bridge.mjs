@@ -23,12 +23,12 @@ try{
   await page.getByLabel('Synthetic actor',{exact:true}).selectOption('owner')
   await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
   await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
-  const response=await page.request.get(origin+'/api/v1/session');assert.equal(response.status(),200)
-  return {page,session:await response.json()}
+  const response=await page.evaluate(async()=>{const result=await fetch('/api/v1/session',{credentials:'same-origin'});return {status:result.status,value:await result.json()}});assert.equal(response.status,200)
+  return {page,session:response.value}
  }
  const admin=await signIn(origins.admin),publicPortal=await signIn(origins.public)
  assert.equal(admin.session.person.id,publicPortal.session.person.id)
- assert.notEqual(admin.session.csrf_token,publicPortal.session.csrf_token)
+ assert.ok(admin.session.csrf_token!==publicPortal.session.csrf_token,'Normal portal CSRF values must be independent')
  await admin.page.screenshot({path:join(output,'native-admin-index.png'),fullPage:true})
  await publicPortal.page.setViewportSize({width:390,height:844})
  await publicPortal.page.screenshot({path:join(output,'native-public-index-mobile.png'),fullPage:true})
