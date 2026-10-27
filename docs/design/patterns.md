@@ -181,3 +181,20 @@ second copies of private controls solely for responsive presentation.
 Record headers allow their action to wrap below the title. A long action must
 not reduce a normal record name to a letter-by-letter column. Keep the shared
 spacing and title basis; do not hide names or columns to make an inspector fit.
+
+## Rubric authoring and decision review
+
+`RubricPlanningFields` provides the production model, category bounds/weights,
+anchors, declared awards, evidence-only side quests and private guidance controls.
+Use the section navigation and retain stable category/award identities. Field
+errors must name the correction; reveal their section and category before moving
+keyboard focus. Neither optional evidence nor an award creates bonus points.
+
+`RubricPlanningReview` renders a captured definition, reason, native revision and
+exact version. The owner performs a fresh event/configuration preflight before
+one save or approval command. Cancellation preserves input and returns focus to
+the actual opener. Approval is private and never releases common criteria.
+Current reads must not acknowledge uncertain requests or silently reinterpret
+started assessments. Definite event/account/role loss clears private guidance;
+uncertain reads pause writes. The independent guide imports these same components
+with synthetic local callbacks and no API, auth or storage dependency.
