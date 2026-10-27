@@ -1,9 +1,10 @@
 # Native challenge dispatch boundary and recovery
 
 This is part of #120's original timing matrix. It does not replace the complete
-connected event journey or establish release readiness. The new native cases
-are implemented but have not yet executed; compilation and the independent DST
-calendar oracle passed. Record actual source/image/results below after running.
+connected event journey or establish release readiness. Both native cases passed on clean source `db8f2343c433a68332a68b2d49150f8f2b01a0f8`,
+image `sha256:9adf7dfe67cb381e7bb6d638400be6fa81667006fa0ffb94932d30cca1d4621b`.
+See the [bounded receipt](dispatch-window-proof.json); the original full matrix
+remains open.
 
 From a clean checkout with Docker, Git and Python 3:
 
@@ -73,3 +74,21 @@ logs remain private. The fixture now uses the explicit privileged-preview query
 for organiser-only state reads; confirmed-attendee embargo probes retain their
 ordinary URLs. Production disclosure rules are unchanged. Fresh execution is
 still required for the corrected fixture.
+
+## Passing corrected execution — R15
+
+The fresh corrected run passed with actual runner exit0 in both cases: 5.09s
+for `last-on-time`, 8.62s for `first-late`. Each used both judging modes. The
+host kept the worker absent until the recorded ready barrier, then started
+the actual native worker. At exactly+60seconds the original approved version
+released and recorded that instant. At+60seconds+1microsecond it remained
+missed/private, with denied manual live and past-schedule reapproval. Normal
+postponement/review/approval then released a newer version at its future T−7,
+retaining frozen teams and the original missed history.
+
+Both original intent journals, final databases, private logs and source ledgers
+were retained; their hashes are in the bounded receipt. The generated projects
+were removed and no generated containers, volumes or networks remain. False
+late-only receipt fields in the on-time case mean those recovery-only assertions
+are not applicable to that case; all are true in the late case. This focused
+proof does not close #120 or infer provider delivery or a complete lifecycle.

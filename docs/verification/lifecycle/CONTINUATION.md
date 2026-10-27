@@ -473,3 +473,18 @@ unreleased-reader URL (correctly404). No worker dispatch was attempted. Only the
 fixture's organiser reads now request explicit privileged preview; attendee
 embargo checks and production permissions remain unchanged. Failed original
 artifacts are retained, and a fresh run remains pending.
+
+## Passing native dispatch boundary/recovery — R15
+
+Corrected clean source `db8f2343c433a68332a68b2d49150f8f2b01a0f8`, image
+`sha256:9adf7dfe67cb381e7bb6d638400be6fa81667006fa0ffb94932d30cca1d4621b`,
+passed both native cases (5.09s and8.62s, exit0 each), both judging modes.
+Exact+60seconds released; +60seconds+1microsecond stayed missed and embargoed,
+rejected manual-live/past reapproval, then recovered through actual postponed
+T−7 and a new reviewed version with unchanged frozen teams/history. The actual
+worker started only after the host ready barrier. Private original journals,
+logs/databases and scoped cleanup were checked. See
+[bounded proof](dispatch-window-proof.json) and [details](DISPATCH-WINDOW.md).
+Earlier failed startup/preview attempts remain failures, not replaced verdicts.
+The remaining original retired-repository, Fleet/browser/role/expiry/provider
+and normal-image matrix remains open; `complete_lifecycle` stays false.
