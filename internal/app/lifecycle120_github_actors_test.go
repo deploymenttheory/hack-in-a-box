@@ -50,7 +50,7 @@ func TestLifecycleGitHubActorAuthorizationFailsClosed(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, actor := range []string{"unknown", "attendee-37", "mentor-b", "mentor-a"} {
-			query := url.Values{"actor": {actor}, "redirect_uri": {"http://public:8080/auth/github/callback"}, "client_id": {"lifecycle-github"}, "response_type": {"code"}, "state": {"synthetic-state-at-least-thirty-two-bytes"}, "code_challenge_method": {"S256"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(make([]byte, 32))}}
+			query := url.Values{"actor": {actor}, "redirect_uri": {"http://public.localhost:8080/auth/github/callback"}, "client_id": {"lifecycle-github"}, "response_type": {"code"}, "state": {"synthetic-state-at-least-thirty-two-bytes"}, "code_challenge_method": {"S256"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(make([]byte, 32))}}
 			response := httptest.NewRecorder()
 			fixture.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/github/login/oauth/authorize?"+query.Encode(), nil))
 			want := http.StatusBadRequest

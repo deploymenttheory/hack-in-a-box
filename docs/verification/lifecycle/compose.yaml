@@ -18,12 +18,12 @@ x-fixture: &fixture
     HACKBOX_ENV: test
     HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-lifecycle-only@postgres:5432/lifecycle?sslmode=disable
     HACKBOX_HTTP_ADDR: 0.0.0.0:8080
-    HACKBOX_PUBLIC_ORIGIN: http://public:8080
-    HACKBOX_ADMIN_ORIGIN: http://admin:8080
-    HACKBOX_WORKSPACE_ORIGIN: http://public:8080
+    HACKBOX_PUBLIC_ORIGIN: http://public.localhost:8080
+    HACKBOX_ADMIN_ORIGIN: http://admin.localhost:8080
+    HACKBOX_WORKSPACE_ORIGIN: http://public.localhost:8080
     HACKBOX_STORAGE_PATH: /data/files
     HACKBOX_WEB_DIR: /app/web-public
-    HACKBOX_OIDC_ISSUER: http://provider:8080
+    HACKBOX_OIDC_ISSUER: http://provider.localhost:8080
     HACKBOX_OIDC_CLIENT_ID: lifecycle-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
     HACKBOX_BOOTSTRAP_SUBJECT: owner
@@ -96,7 +96,7 @@ services:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: admin
       HACKBOX_SURFACE: admin
-      HACKBOX_PUBLIC_ORIGIN: http://admin:8080
+      HACKBOX_PUBLIC_ORIGIN: http://admin.localhost:8080
       HACKBOX_OIDC_CLIENT_ID: lifecycle-admin
       HACKBOX_WEB_DIR: /app/web-admin
     healthcheck: *healthcheck

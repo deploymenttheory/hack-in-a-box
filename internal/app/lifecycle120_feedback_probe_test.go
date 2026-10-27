@@ -33,7 +33,7 @@ func TestLifecycleRetainedFeedbackSourceProbe(t *testing.T) {
 	if err != nil || foreignID == teamID {
 		t.Fatal("distinct explicit synthetic source required")
 	}
-	owner, err := signInLifecycle(t.Context(), "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(t.Context(), "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestLifecycleRetainedFeedbackContentionProbe(t *testing.T) {
 	if err != nil || count < 1 || count > 6 {
 		t.Fatal("explicit one-to-six diagnostic writers required")
 	}
-	owner, err := signInLifecycle(t.Context(), "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(t.Context(), "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}

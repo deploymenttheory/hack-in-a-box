@@ -29,8 +29,8 @@ func (r *lifecycleJourney) captureTeamOutcomesAndShowcase(t *testing.T) {
 	t.Helper()
 	stranger, err := signInLifecycle(
 		t.Context(),
-		"http://public:8080",
-		"http://provider:8080",
+		"http://public.localhost:8080",
+		"http://provider.localhost:8080",
 		"stranger",
 	)
 	if err != nil {

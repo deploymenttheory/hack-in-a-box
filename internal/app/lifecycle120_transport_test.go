@@ -29,9 +29,23 @@ func (t *lifecycleProviderTransport) RoundTrip(request *http.Request) (*http.Res
 		return nil, errors.New("invalid isolated provider destination")
 	}
 	if request.URL.Scheme == "http" {
+		var destination string
 		switch request.URL.Host {
-		case "public:8080", "admin:8080", "provider:8080", "styleguide:8080":
-			return t.base.RoundTrip(request)
+		case "public.localhost:8080":
+			destination = "public:8080"
+		case "admin.localhost:8080":
+			destination = "admin:8080"
+		case "provider.localhost:8080":
+			destination = "provider:8080"
+		case "styleguide.localhost:8080":
+			destination = "styleguide:8080"
+		}
+		if destination != "" {
+			copy := request.Clone(request.Context())
+			target := *request.URL
+			target.Host = destination
+			copy.URL, copy.Host = &target, request.URL.Host
+			return t.base.RoundTrip(copy)
 		}
 	}
 	if request.URL.Scheme != "https" {

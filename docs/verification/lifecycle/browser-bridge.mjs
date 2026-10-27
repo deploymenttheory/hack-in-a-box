@@ -11,8 +11,8 @@ const {chromium,expect}=require('@playwright/test')
 const output=process.env.HACKBOX_LIFECYCLE_BROWSER_ARTIFACTS
 const source=process.env.HACKBOX_LIFECYCLE_BROWSER_SOURCE
 assert.ok(output);assert.match(source??'',/^[a-f0-9]{40}$/)
-const origins={admin:'http://admin:8080',public:'http://public:8080',guide:'http://styleguide:8080'}
-const browser=await chromium.launch({headless:true,args:[`--unsafely-treat-insecure-origin-as-secure=${Object.values(origins).join(',')},http://provider:8080`]})
+const origins={admin:'http://admin.localhost:8080',public:'http://public.localhost:8080',guide:'http://styleguide.localhost:8080'}
+const browser=await chromium.launch({headless:true})
 try{
  const context=await browser.newContext({viewport:{width:1440,height:1000},proxy:{server:process.env.HACKBOX_LIFECYCLE_BROWSER_PROXY??'http://127.0.0.1:18088',bypass:'<-loopback>'}})
  const errors=[]

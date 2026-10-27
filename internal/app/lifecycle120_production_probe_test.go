@@ -19,11 +19,11 @@ func TestLifecycleNormalImageCalendarAPI(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_ISOLATED") != "synthetic-only" || os.Getenv("HACKBOX_LIFECYCLE_NORMAL_IMAGES") != "normal-commands" {
 		t.Skip("run only against the separately configured normal-image probe")
 	}
-	owner, err := signInLifecycle(t.Context(), "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(t.Context(), "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}
-	public, err := signInLifecycle(t.Context(), "http://public:8080", "http://provider:8080", "owner")
+	public, err := signInLifecycle(t.Context(), "http://public.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}

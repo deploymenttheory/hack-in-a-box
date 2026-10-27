@@ -45,12 +45,12 @@ const errors=[],receipts=[]
 let recovery
 
 let step='launch'
-const browser=await chromium.launch({headless:true,args:['--unsafely-treat-insecure-origin-as-secure=http://admin:8080,http://public:8080,http://provider:8080']})
+const browser=await chromium.launch({headless:true})
 try{
  const context=await browser.newContext({viewport:{width:1440,height:1100},proxy:{server:'http://127.0.0.1:18088',bypass:'<-loopback>'}})
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message))
  step='normal-owner-oidc'
- await page.goto('http://admin:8080/auth/login')
+ await page.goto('http://admin.localhost:8080/auth/login')
  await expect(page.getByRole('heading',{name:'Synthetic identity provider',exact:true})).toBeVisible()
  await page.getByLabel('Synthetic actor',{exact:true}).selectOption('owner')
  await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
@@ -65,7 +65,7 @@ try{
   // OIDC expiry, HTTP budgets and the native backend's gates remain real.
   await page.clock.setFixedTime(new Date(phase.domain_now))
   step=`open-branding-${sequence}`
-  await page.goto(`http://admin:8080/events/${phase.event_id}?section=branding`)
+  await page.goto(`http://admin.localhost:8080/events/${phase.event_id}?section=branding`)
   await expect(page.getByRole('heading',{name:'Event branding',exact:true})).toBeVisible()
   await page.getByRole('navigation',{name:'Event branding sections',exact:true}).getByRole('button',{name:'Colours',exact:true}).click()
   await page.getByLabel('Primary colour',{exact:true}).fill(phase.primary)

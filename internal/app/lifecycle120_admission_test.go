@@ -72,7 +72,7 @@ func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, c
 			actors = append(actors, "judge-c")
 		}
 		for _, actor := range actors {
-			staff, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", actor)
+			staff, err := signInLifecycle(ctx, "http://public.localhost:8080", "http://provider.localhost:8080", actor)
 			if err != nil {
 				return cohort, err
 			}
@@ -95,7 +95,7 @@ func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, c
 		}
 	}
 	for i := 1; i <= applicants; i++ {
-		client, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", fmt.Sprintf("attendee-%02d", i))
+		client, err := signInLifecycle(ctx, "http://public.localhost:8080", "http://provider.localhost:8080", fmt.Sprintf("attendee-%02d", i))
 		if err != nil {
 			return cohort, err
 		}
@@ -274,7 +274,7 @@ func TestLifecycleComposeAdmission(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_ISOLATED") != "synthetic-only" {
 		t.Skip("run only in the isolated lifecycle Compose project")
 	}
-	owner, err := signInLifecycle(t.Context(), "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(t.Context(), "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}

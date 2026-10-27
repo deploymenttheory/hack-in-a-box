@@ -20,18 +20,18 @@ func TestLifecycleComposeBootstrap(t *testing.T) {
 		t.Skip("run only in the isolated lifecycle Compose project")
 	}
 	ctx := t.Context()
-	admin, err := signInLifecycle(ctx, "http://admin:8080", "http://provider:8080", "owner")
+	admin, err := signInLifecycle(ctx, "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}
-	public, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", "owner")
+	public, err := signInLifecycle(ctx, "http://public.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if public.person != admin.person || public.csrf == admin.csrf {
 		t.Fatal("independent portals must resolve one native person with separate session contexts")
 	}
-	stranger, err := signInLifecycle(ctx, "http://admin:8080", "http://provider:8080", "stranger")
+	stranger, err := signInLifecycle(ctx, "http://admin.localhost:8080", "http://provider.localhost:8080", "stranger")
 	if err != nil {
 		t.Fatal(err)
 	}

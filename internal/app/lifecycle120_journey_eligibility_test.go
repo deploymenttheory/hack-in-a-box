@@ -24,7 +24,7 @@ func (r *lifecycleJourney) proveLastingEligibility(t *testing.T, item *lifecycle
 	t.Helper()
 	base := "/api/v1/events/" + item.view.ID.String()
 	for _, subject := range []struct{ actor, role string }{{"former-organiser", "organiser"}, {"early-access", "early_brief_access"}} {
-		client, err := signInLifecycle(t.Context(), "http://public:8080", "http://provider:8080", subject.actor)
+		client, err := signInLifecycle(t.Context(), "http://public.localhost:8080", "http://provider.localhost:8080", subject.actor)
 		if err != nil {
 			t.Fatal(err)
 		}

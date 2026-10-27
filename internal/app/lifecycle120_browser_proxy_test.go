@@ -38,7 +38,7 @@ func lifecycleBrowserProxy(transport http.RoundTripper) http.Handler {
 			return
 		}
 		switch r.URL.Host {
-		case "public:8080", "admin:8080", "provider:8080", "styleguide:8080":
+		case "public.localhost:8080", "admin.localhost:8080", "provider.localhost:8080", "styleguide.localhost:8080":
 			proxy.ServeHTTP(w, r)
 		default:
 			http.Error(w, "outside isolated browser origins", http.StatusForbidden)
@@ -86,17 +86,17 @@ func TestLifecycleBrowserProxyRestrictsOriginsAndPreservesNativeAuthority(t *tes
 		{
 			"native public",
 			http.MethodGet,
-			"http://public:8080/api/v1/session",
+			"http://public.localhost:8080/api/v1/session",
 			http.StatusNoContent,
 		},
-		{"native admin", http.MethodGet, "http://admin:8080/auth/login", http.StatusNoContent},
+		{"native admin", http.MethodGet, "http://admin.localhost:8080/auth/login", http.StatusNoContent},
 		{
 			"synthetic issuer",
 			http.MethodGet,
-			"http://provider:8080/authorize",
+			"http://provider.localhost:8080/authorize",
 			http.StatusNoContent,
 		},
-		{"independent guide", http.MethodGet, "http://styleguide:8080/", http.StatusNoContent},
+		{"independent guide", http.MethodGet, "http://styleguide.localhost:8080/", http.StatusNoContent},
 		{"external origin", http.MethodGet, "http://example.com/", http.StatusForbidden},
 		{"external TLS tunnel", http.MethodConnect, "https://github.com/", http.StatusForbidden},
 		{"wrong native port", http.MethodGet, "http://admin:5432/", http.StatusForbidden},
@@ -115,7 +115,7 @@ func TestLifecycleBrowserProxyRestrictsOriginsAndPreservesNativeAuthority(t *tes
 					called = true
 					if r.Header.Get("Cookie") != "synthetic-session=original" ||
 						r.Header.Get("X-CSRF-Token") != "synthetic-original-csrf" ||
-						r.Header.Get("Origin") != "http://public:8080" {
+						r.Header.Get("Origin") != "http://public.localhost:8080" {
 						t.Fatal("proxy replaced native browser authority")
 					}
 					if r.Header.Get("Proxy-Authorization") != "" {
@@ -131,7 +131,7 @@ func TestLifecycleBrowserProxyRestrictsOriginsAndPreservesNativeAuthority(t *tes
 			request := httptest.NewRequest(test.method, test.url, nil)
 			request.Header.Set("Cookie", "synthetic-session=original")
 			request.Header.Set("X-CSRF-Token", "synthetic-original-csrf")
-			request.Header.Set("Origin", "http://public:8080")
+			request.Header.Set("Origin", "http://public.localhost:8080")
 			request.Header.Set("Proxy-Authorization", "synthetic-proxy-only")
 			response := httptest.NewRecorder()
 			handler.ServeHTTP(response, request)

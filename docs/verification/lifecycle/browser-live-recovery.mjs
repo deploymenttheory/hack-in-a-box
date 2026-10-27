@@ -11,7 +11,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
   const context=await browser.newContext({viewport:{width:1280,height:1000},proxy:{server:'http://127.0.0.1:18088',bypass:'<-loopback>'}})
   contexts.push(context)
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message))
-  await page.goto('http://public:8080/auth/login')
+  await page.goto('http://public.localhost:8080/auth/login')
   await expect(page.getByRole('heading',{name:'Synthetic identity provider',exact:true})).toBeVisible()
   await page.getByLabel('Synthetic actor',{exact:true}).selectOption(alias)
   await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
@@ -25,7 +25,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
   const path=`/api/v1/events/${phase.event_id}/help/`
   const own=await actor(phase.actor),writes=[]
   own.page.on('request',request=>{if(request.method()==='PUT'&&new URL(request.url()).pathname.startsWith(path))writes.push(request.url())})
-  await own.page.goto(`http://public:8080/events/${phase.event_id}/help`)
+  await own.page.goto(`http://public.localhost:8080/events/${phase.event_id}/help`)
   const form=own.page.getByRole('region',{name:'Request help',exact:true})
   await form.getByLabel('Support category',{exact:true}).selectOption('competition_output')
   await form.getByLabel('What do you need help with?',{exact:true}).fill('PRIVATE synthetic browser recovery help')
@@ -53,7 +53,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
     }else await cdp.send('Fetch.continueRequest',{requestId:event.requestId})
    })().catch(rejectDrop)
   })
-  await cdp.send('Fetch.enable',{patterns:[{urlPattern:`http://public:8080${path}*`,requestStage:'Response'}]})
+  await cdp.send('Fetch.enable',{patterns:[{urlPattern:`http://public.localhost:8080${path}*`,requestStage:'Response'}]})
   await own.page.getByRole('region',{name:'Review private help request',exact:true}).getByRole('button',{name:'Submit help request',exact:true}).click()
   await Promise.race([dropped,pause(15000).then(()=>{throw new Error('No actual accepted help response was intercepted')})])
   assert.equal(await own.page.evaluate(()=>navigator.onLine),false)
@@ -71,7 +71,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
   assert.equal(writes.length,1,'Recovery must not replay the original PUT')
   await saved.click()
   const mentor=await actor('mentor-a')
-  await mentor.page.goto(`http://public:8080/events/${phase.event_id}/help/${requestID}`)
+  await mentor.page.goto(`http://public.localhost:8080/events/${phase.event_id}/help/${requestID}`)
   for(const [label,status] of [['Claim request','claimed'],['Resolve request','resolved']]){
    await mentor.page.getByRole('region',{name:'Current request actions',exact:true}).getByRole('button',{name:label,exact:true}).click()
    const accepted=mentor.page.waitForResponse(response=>new URL(response.url()).pathname===path+requestID+'/actions'&&response.request().method()==='POST')

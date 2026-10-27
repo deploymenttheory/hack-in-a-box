@@ -211,9 +211,9 @@ func runLifecycleProvider(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	provider, err := newLifecycleOIDC("http://provider:8080", map[string]string{
-		"lifecycle-public": "http://public:8080/auth/callback",
-		"lifecycle-admin":  "http://admin:8080/auth/callback",
+	provider, err := newLifecycleOIDC("http://provider.localhost:8080", map[string]string{
+		"lifecycle-public": "http://public.localhost:8080/auth/callback",
+		"lifecycle-admin":  "http://admin.localhost:8080/auth/callback",
 	})
 	if err != nil {
 		return err
