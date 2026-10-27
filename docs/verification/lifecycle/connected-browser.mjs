@@ -1,6 +1,7 @@
 // Host browser actions on the very same events as TestLifecycleComposeJourney.
 // The controller supplies no sessions, application responses or native writes.
 import assert from 'node:assert/strict'
+import {checkLiveRoles} from './browser-live-roles.mjs'
 import {recoverLiveHelp} from './browser-live-recovery.mjs'
 import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
@@ -35,14 +36,14 @@ async function readPhase(sequence,budget){
 }
 async function acknowledge(ack){
  const sequence=ack.sequence,result=join(output,`result-${sequence}.json`)
- await writeFile(result,JSON.stringify(ack)+'\n',{mode:0o600})
+ await writeFile(result,JSON.stringify({...ack,completed_by_ui:true})+'\n',{mode:0o600})
  await chmod(result,0o644)
  assert.equal((await stat(result)).mode&0o777,0o644)
  await docker('docker',['cp',result,`${runner}:/artifacts/browser/result-${sequence}.tmp`])
  await docker('docker',['exec',runner,'mv',`/artifacts/browser/result-${sequence}.tmp`,`/artifacts/browser/result-${sequence}.json`])
 }
 const errors=[],receipts=[]
-let recovery
+let recovery,liveRoles
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -87,18 +88,22 @@ try{
   await acknowledge(ack)
   receipts.push({...ack,preview_matches:true,persisted_after_reload:true})
  }
- if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='live-recovery'){
+ if(['live-recovery','role-matrix'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
   step='await-live-recovery'
   const phase=await readPhase(3,720000)
   step='live-help-response-loss'
   recovery=await recoverLiveHelp({browser,expect,phase,output,errors})
   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true,help:recovery})
  }
+ if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='role-matrix'){
+  step='live-role-matrix'
+  liveRoles=await checkLiveRoles({browser,expect,owner:page,readPhase,acknowledge,output,errors})
+ }
  step='native-journey-completion'
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,planning:receipts,live_help_recovery:recovery},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)

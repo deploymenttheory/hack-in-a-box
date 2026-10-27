@@ -20,21 +20,23 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	Sequence int        `json:"sequence"`
-	Action   string     `json:"action"`
-	EventID  uuid.UUID  `json:"event_id"`
-	Now      time.Time  `json:"domain_now"`
-	Primary  string     `json:"primary"`
-	Actor    string     `json:"actor,omitempty"`
-	TeamID   *uuid.UUID `json:"team_id,omitempty"`
+	Sequence int                         `json:"sequence"`
+	Action   string                      `json:"action"`
+	EventID  uuid.UUID                   `json:"event_id"`
+	Now      time.Time                   `json:"domain_now"`
+	Primary  string                      `json:"primary"`
+	Actor    string                      `json:"actor,omitempty"`
+	TeamID   *uuid.UUID                  `json:"team_id,omitempty"`
+	Roles    *lifecycleBrowserRolesPhase `json:"roles,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
-	Sequence int                      `json:"sequence"`
-	Action   string                   `json:"action"`
-	EventID  uuid.UUID                `json:"event_id"`
-	Saved    bool                     `json:"saved_by_ui"`
-	Help     *lifecycleBrowserHelpAck `json:"help,omitempty"`
+	Sequence  int                      `json:"sequence"`
+	Action    string                   `json:"action"`
+	EventID   uuid.UUID                `json:"event_id"`
+	Saved     bool                     `json:"saved_by_ui"`
+	Completed bool                     `json:"completed_by_ui"`
+	Help      *lifecycleBrowserHelpAck `json:"help,omitempty"`
 }
 
 func lifecycleBrowserRequired(t *testing.T) bool {
@@ -42,7 +44,7 @@ func lifecycleBrowserRequired(t *testing.T) bool {
 	switch os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") {
 	case "":
 		return false
-	case "planning", "live-recovery":
+	case "planning", "live-recovery", "role-matrix":
 		return true
 	default:
 		t.Fatal("unknown native browser phase selection")
@@ -50,7 +52,11 @@ func lifecycleBrowserRequired(t *testing.T) bool {
 	}
 }
 
-func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourneyEvent, sequence int) {
+func (r *lifecycleJourney) saveBrandInBrowser(
+	t *testing.T,
+	item *lifecycleJourneyEvent,
+	sequence int,
+) {
 	t.Helper()
 	var clock struct {
 		Now time.Time `json:"now"`
@@ -62,10 +68,20 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 		Sequence: sequence, Action: "save-branding", EventID: item.view.ID,
 		Now: clock.Now, Primary: item.brand.Primary,
 	}
-	r.awaitBrowserPhase(t, phase)
+	ack := r.awaitBrowserPhase(t, phase)
+	if !ack.Saved {
+		t.Fatal("branding phase did not report a UI save")
+	}
 	var native templates.BrandView
-	if err := r.owner.call(t.Context(), http.MethodGet,
-		"/api/v1/events/"+item.view.ID.String()+"/branding", -1, nil, &native, http.StatusOK); err != nil {
+	if err := r.owner.call(
+		t.Context(),
+		http.MethodGet,
+		"/api/v1/events/"+item.view.ID.String()+"/branding",
+		-1,
+		nil,
+		&native,
+		http.StatusOK,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(native.Branding, item.brand) || native.Revision != item.view.Revision+1 {
@@ -74,7 +90,10 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 	item.browserBrandVerified = true
 }
 
-func (r *lifecycleJourney) awaitBrowserPhase(t *testing.T, phase lifecycleBrowserPhase) lifecycleBrowserAcknowledgement {
+func (r *lifecycleJourney) awaitBrowserPhase(
+	t *testing.T,
+	phase lifecycleBrowserPhase,
+) lifecycleBrowserAcknowledgement {
 	t.Helper()
 	directory := "/artifacts/browser"
 	if err := os.MkdirAll(directory, 0o700); err != nil {
@@ -103,7 +122,9 @@ func (r *lifecycleJourney) awaitBrowserPhase(t *testing.T, phase lifecycleBrowse
 			if err := json.Unmarshal(body, &ack); err != nil {
 				t.Fatal("invalid browser phase receipt")
 			}
-			if ack.Sequence != phase.Sequence || ack.EventID != phase.EventID || ack.Action != phase.Action || !ack.Saved {
+			if ack.Sequence != phase.Sequence || ack.EventID != phase.EventID ||
+				ack.Action != phase.Action ||
+				!ack.Completed {
 				t.Fatal("browser phase did not acknowledge the exact native event action")
 			}
 			return ack
@@ -141,7 +162,10 @@ type lifecycleBrowserHelpReceipt struct {
 
 func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	t.Helper()
-	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") != "live-recovery" {
+	if mode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); mode != "live-recovery" &&
+		mode != "role-matrix" {
 		return
 	}
 	item := &r.events[0]
@@ -161,26 +185,68 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	if err := r.control.call(t.Context(), http.MethodGet, "/clock", nil, &clock); err != nil {
 		t.Fatal(err)
 	}
-	ack := r.awaitBrowserPhase(t, lifecycleBrowserPhase{Sequence: 3, Action: "recover-live-help", EventID: item.view.ID, Now: clock.Now, Actor: actor, TeamID: &item.liveHelp.TeamID})
-	if ack.Help == nil || ack.Help.RequestID == uuid.Nil || !ack.Help.AcceptedResponseDropped || !ack.Help.OfflineObserved || ack.Help.PutAttempts != 1 {
+	ack := r.awaitBrowserPhase(
+		t,
+		lifecycleBrowserPhase{
+			Sequence: 3,
+			Action:   "recover-live-help",
+			EventID:  item.view.ID,
+			Now:      clock.Now,
+			Actor:    actor,
+			TeamID:   &item.liveHelp.TeamID,
+		},
+	)
+	if !ack.Saved || ack.Help == nil || ack.Help.RequestID == uuid.Nil ||
+		!ack.Help.AcceptedResponseDropped ||
+		!ack.Help.OfflineObserved ||
+		ack.Help.PutAttempts != 1 {
 		t.Fatal("browser recovery lacks an actual accepted-response loss and one submitted request")
 	}
 	path := "/api/v1/events/" + item.view.ID.String() + "/help/" + ack.Help.RequestID.String()
 	var current help.Page
-	if err := own.call(t.Context(), http.MethodGet, path, -1, nil, &current, http.StatusOK); err != nil {
+	if err := own.call(
+		t.Context(),
+		http.MethodGet,
+		path,
+		-1,
+		nil,
+		&current,
+		http.StatusOK,
+	); err != nil {
 		t.Fatal(err)
 	}
 	request := current.Request
 	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
 		request.Category != "competition_output" || request.Description != "PRIVATE synthetic browser recovery help" || request.Location != "Synthetic recovery desk" || request.MeetingURL != "" ||
-		request.Status != "resolved" || request.Revision != 3 || request.AssigneeID == nil || *request.AssigneeID != item.cohort.staff["mentor-a"].person || request.FirstClaimedAt == nil || request.ResolvedAt == nil {
-		t.Fatal("recovered UI request differs from independently read native identity/input/claim/resolution")
+		request.Status != "resolved" || request.Revision != 3 || request.AssigneeID == nil ||
+		*request.AssigneeID != item.cohort.staff["mentor-a"].person ||
+		request.FirstClaimedAt == nil ||
+		request.ResolvedAt == nil {
+		t.Fatal(
+			"recovered UI request differs from independently read native identity/input/claim/resolution",
+		)
 	}
-	if err := other.call(t.Context(), http.MethodGet, path, -1, nil, nil, http.StatusNotFound); err != nil {
+	if err := other.call(
+		t.Context(),
+		http.MethodGet,
+		path,
+		-1,
+		nil,
+		nil,
+		http.StatusNotFound,
+	); err != nil {
 		t.Fatal(err)
 	}
 	var queue help.Queue
-	if err := r.owner.call(t.Context(), http.MethodGet, "/api/v1/events/"+item.view.ID.String()+"/help", -1, nil, &queue, http.StatusOK); err != nil {
+	if err := r.owner.call(
+		t.Context(),
+		http.MethodGet,
+		"/api/v1/events/"+item.view.ID.String()+"/help",
+		-1,
+		nil,
+		&queue,
+		http.StatusOK,
+	); err != nil {
 		t.Fatal(err)
 	}
 	ids := map[uuid.UUID]bool{item.liveHelp.RequestID: true, request.ID: true}
@@ -196,5 +262,14 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	if len(ids) != 0 {
 		t.Fatal("native recovery queue lost an original request")
 	}
-	item.browserHelp = &lifecycleBrowserHelpReceipt{EventID: item.view.ID, RequestID: request.ID, AcceptedResponseDropped: true, OfflineObserved: true, PutAttempts: 1, NativeResolved: true, OtherTeamDenied: true, NativeQueueExact: true}
+	item.browserHelp = &lifecycleBrowserHelpReceipt{
+		EventID:                 item.view.ID,
+		RequestID:               request.ID,
+		AcceptedResponseDropped: true,
+		OfflineObserved:         true,
+		PutAttempts:             1,
+		NativeResolved:          true,
+		OtherTeamDenied:         true,
+		NativeQueueExact:        true,
+	}
 }

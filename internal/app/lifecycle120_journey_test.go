@@ -85,6 +85,7 @@ type lifecycleJourney struct {
 	timeline   lifecycleTimeline
 	events     []lifecycleJourneyEvent
 	livePollAt time.Time
+	liveRoles  *lifecycleBrowserRoleReceipt
 }
 
 func TestLifecycleComposeJourney(t *testing.T) {
@@ -101,7 +102,12 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	owner, err := signInLifecycle(ctx, "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
+	owner, err := signInLifecycle(
+		ctx,
+		"http://admin.localhost:8080",
+		"http://provider.localhost:8080",
+		"owner",
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -258,6 +264,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.closeJudgePracticeAtLive(t)
 	run.raceLiveHelp(t)
 	run.recoverLiveHelpInBrowser(t)
+	run.checkLiveRolesInBrowser(t)
 	run.publishCommonClarifications(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
@@ -284,10 +291,25 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.deliverRetainedReviews(t)
 	run.verifyRetiredRepositoriesUnscored(t)
 	run.expireRetainedOutcomes(t)
-	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "live-recovery" {
+	if mode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); mode == "live-recovery" ||
+		mode == "role-matrix" {
 		proof := run.events[0].browserHelp
-		if proof == nil || !proof.NativeResolved || !proof.OtherTeamDenied || !proof.NativeQueueExact || proof.PutAttempts != 1 {
+		if proof == nil || !proof.NativeResolved || !proof.OtherTeamDenied ||
+			!proof.NativeQueueExact ||
+			proof.PutAttempts != 1 {
 			t.Fatal("required browser recovery was not actually verified")
+		}
+	}
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "role-matrix" {
+		proof := run.liveRoles
+		if proof == nil || proof.UIStaffGrants != 6 || len(proof.Cases) != 12 ||
+			proof.NativeChecks != 24 ||
+			!proof.MentorRevocationCleared ||
+			!proof.OtherEventRetained ||
+			!proof.NativeRevocationAndRestoreAudited {
+			t.Fatal("required live browser role matrix was not independently verified")
 		}
 	}
 	var providerProof lifecycleGitHubProof
@@ -476,6 +498,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"reviewed-current-team-source-notification-and-obsolete-zero-effect",
 				"actual-native-queued-access-poll-current-live-source",
 			},
+			"live_role_matrix": run.liveRoles,
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},
 		"",
