@@ -16,3 +16,16 @@ production TLS remains separately verified by the normal deployment envelope.
 
 This transport checkpoint is not a substitute for the same-event phase/action,
 offline/ambiguous-write recovery and current-role matrix required by #120.
+
+The first host execution at `7ab3a869` failed before OIDC with
+`ERR_PROXY_CONNECTION_FAILED`: the proxy was healthy internally, but the
+internal-only Docker network could not return published-port host traffic.
+Its private original logs/database and cleanup remain retained. A single-variable
+topology probe on the same image measured host readiness000 before,200 after
+adding a proxy-only edge network; the real native login then returned302.
+
+Only the localhost-bound proxy now joins both the isolated synthetic network
+and its scoped edge network. Native APIs, database and provider remain on the
+internal-only network, with unchanged cookies/CSRF/Origin and destination guards.
+Fresh normal browser OIDC execution is still required; neither connectivity nor
+component isolation alone is counted as a browser or complete lifecycle pass.

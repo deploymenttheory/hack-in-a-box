@@ -172,6 +172,7 @@ services:
   browser-proxy:
     <<: *fixture
     profiles: [browser]
+    networks: [synthetic, browser-edge]
     environment:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: browser-proxy
@@ -205,3 +206,4 @@ volumes:
   artifacts:
 networks:
   synthetic: {internal: true}
+  browser-edge: {}
