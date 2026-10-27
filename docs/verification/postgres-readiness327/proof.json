@@ -1,0 +1,18 @@
+{
+  "normal_compose_healthcheck": [
+    "CMD-SHELL",
+    "pg_isready -h 127.0.0.1 -U hackbox -d hackbox"
+  ],
+  "pinned_postgres": "postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd",
+  "normal_migration_image": "sha256:13349fa27d08e56d710734930c86f38b530c02b0a65e525d821967304ee68d16",
+  "fresh_database": true,
+  "native_migration_exit_code": 0,
+  "native_schema_version": 56,
+  "retained_user_data_touched": false,
+  "disposable_probe": {
+    "temporary_local_server_reports_ready_before_tcp": true,
+    "tcp_ready_after_init": true,
+    "sample_count": 8
+  },
+  "scoped_cleanup_verified": true
+}
