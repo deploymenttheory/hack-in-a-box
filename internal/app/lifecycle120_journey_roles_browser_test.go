@@ -170,7 +170,7 @@ func (r *lifecycleJourney) roleMentorAudit(
 		if err := r.owner.call(
 			t.Context(),
 			http.MethodGet,
-			fmt.Sprintf("/api/v1/events/%s/audit?after=%d&limit=100", item.view.ID, cursor),
+			fmt.Sprintf("/api/v1/events/%s/audit?cursor=%d&limit=100", item.view.ID, cursor),
 			-1,
 			nil,
 			&page,
