@@ -64,3 +64,11 @@ composition and limits. R47 remains failed at archive scheduling (#335); R48
 failed a confirmation-role locator before a selection write. Later form-authoring
 and offer-policy UI increments are not established by R49. Remaining original
 criteria and complete_lifecycle=false are unchanged.
+
+R50 adds actual Fleet form authoring/preview/save/acknowledged publication and
+reviewed FIFO offer-policy approval: all48 browser barriers and the subsequent
+native journey pass441.15s. See form-publication-browser-proof.json and the
+ADMISSION-BROWSER.md follow-up. #335 is closed by merged PR #336 and the draft
+is rebased. Collection readability defect #337 remains separate. The original
+team/content/publication, assessment, feedback/archive, remaining role/provider
+and final audit requirements remain open; complete_lifecycle stays false.

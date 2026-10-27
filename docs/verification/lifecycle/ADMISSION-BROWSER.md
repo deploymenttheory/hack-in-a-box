@@ -42,3 +42,24 @@ team/content/publication, assessment and feedback/archive UI paths, remaining
 role/stage/provider cases and the full twelve-criterion audit remain open.
 Private native/provider artifacts stay outside the committed summaries. This
 shared-host elapsed time is not a #123 load or capacity result.
+
+## Form publication and reviewed offer policy
+
+R50 subsequently passes441.15s with **48 required browser barriers**, including
+six actual owner form-authoring sequences (three audiences on each event) and
+two reviewed FIFO-policy approvals. The browser adds a required question,
+validates preview answers without saving, saves one draft, explicitly
+acknowledges publication effects, publishes version1 and reloads the persisted
+form. Native before/after reads preserve previous forms and independently verify
+form/question identities, definitions, versions, stage and confirmed census.
+The two-working-day automatic FIFO policy is reviewed before its single PUT.
+
+Both events again finish archived after owned queued30/60/90 reviews and exact
+configured120-day expiry. Cleanup leaves zero scoped resources. See
+form-publication-browser-proof.json for actual source/image/hashes and the
+published revision whose cmd/internal/web/scripts trees were independently
+compared byte-for-byte with the executed source. PR #336 has since merged and
+#335 is closed; PR #316 is rebased onto that main. Earlier evidence retains its
+original executed hashes. The visually discovered compressed collection is
+tracked separately in #337; a passing workflow does not excuse that defect.
+The original remaining #120 acceptance criteria are unchanged.
