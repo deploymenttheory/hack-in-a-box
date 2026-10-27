@@ -1,0 +1,89 @@
+{
+  "source_revision": "d3375144fef1932817aefc652863d804cc366792",
+  "source_worktree_clean": true,
+  "verification_image": "sha256:19c00441e691380fadffab00d98b7d74cc118a5b82159e70f98beeb721e6e31d",
+  "case": "journey",
+  "project": "hackbox-lifecycle-journey-1793098346-93678",
+  "actual_runner_exit_code": 0,
+  "complete_lifecycle": false,
+  "elapsed_seconds": 247.63,
+  "original_twelve_acceptance_criteria_complete": false,
+  "full_lifecycle": false,
+  "github_transport_proof": {
+    "app_jwts_verified": 1174,
+    "installation_tokens_minted": 410,
+    "template_reads": 67,
+    "repository_creates": 14,
+    "repository_reads": 329,
+    "oauth_exchanges_verified": 38,
+    "oauth_user_reads": 38,
+    "invitation_creates": 82,
+    "invitation_acceptances": 82,
+    "branch_reads": 7,
+    "branch_failures": 1,
+    "work_transactions": 13
+  },
+  "events": [
+    {
+      "event_id": "c780560d-e661-4673-9ed8-4b051eff46d8",
+      "mode": "all_teams",
+      "stage": "archived",
+      "original_repository_count": 7,
+      "retired_repository": {
+        "team_id": "e9f79928-aa81-4202-9617-786df5d69278",
+        "name": "hackbox-c780560de66146739ed84b051eff46d8-e9f79928aa8142029617786df5d69278",
+        "organization": "lifecycle-synthetic-org",
+        "github_repository_id": 1003,
+        "state": "ready",
+        "diagnostic": "",
+        "unused": true
+      },
+      "retired_cutoff_source": {
+        "team_id": "e9f79928-aa81-4202-9617-786df5d69278",
+        "source_id": "4a1ff380-b42e-44cb-807c-356449634eee",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "status": "withdrawn",
+        "cutoff": "2026-03-31T15:00:00Z",
+        "recorded_at": "2026-03-31T15:00:00Z",
+        "provider_unavailable_observations": 0
+      },
+      "current_participant_lists_exclude_retired_mapping": true,
+      "real_judging_excludes_retired_team": true,
+      "outcomes_exclude_retired_team": true,
+      "competition_unchanged_after_archive_and_followup": true
+    },
+    {
+      "event_id": "b99caf5c-ca44-48ad-b2df-192393b3d025",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "original_repository_count": 7,
+      "retired_repository": {
+        "team_id": "d92faf20-e57c-4817-8acd-d2952b08b940",
+        "name": "hackbox-b99caf5cca4448adb2df192393b3d025-d92faf20e57c48178acdd2952b08b940",
+        "organization": "lifecycle-synthetic-org",
+        "github_repository_id": 1009,
+        "state": "ready",
+        "diagnostic": "",
+        "unused": true
+      },
+      "retired_cutoff_source": {
+        "team_id": "d92faf20-e57c-4817-8acd-d2952b08b940",
+        "source_id": "50b1edb7-3a2e-4ea2-a0c5-c5887ddf8745",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "status": "withdrawn",
+        "cutoff": "2026-03-31T15:00:00Z",
+        "recorded_at": "2026-03-31T15:00:00Z",
+        "provider_unavailable_observations": 0
+      },
+      "current_participant_lists_exclude_retired_mapping": true,
+      "real_judging_excludes_retired_team": true,
+      "outcomes_exclude_retired_team": true,
+      "competition_unchanged_after_archive_and_followup": true
+    }
+  ],
+  "runner_log_sha256": "5d8f2c9e48a68f1d881db76b2d3cf11c910e31dc48a955be93ffb28671ea89da",
+  "intent-journal_jsonl_sha256": "3f79ae9ca1ae43ef6e54f81a3c249529f17be672cb14536eb364f264139c0165",
+  "final_dump_sha256": "96f85044bc0b7c5bf7458ee018762c090cf33a70c4fe08acf824f354166cce92"
+}

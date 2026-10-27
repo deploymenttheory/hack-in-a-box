@@ -503,3 +503,22 @@ competitor/mentor invitations remain unchanged.
 `scripts/verify-lifecycle-journey.sh` adds a clean-source, capacity-guarded native
 runner with original private journal/database capture and scoped cleanup. This
 extension compiles but no full-run verdict is claimed until it executes.
+
+## Passing connected original-repository retirement — R16
+
+The full connected native API journey passed247.63s, actual exit0, clean source
+`d3375144fef1932817aefc652863d804cc366792`, verification image
+`sha256:19c00441e691380fadffab00d98b7d74cc118a5b82159e70f98beeb721e6e31d`.
+Both event modes provisioned all seven original published-team repositories
+before the real under-three remediation. Each retained exactly one discarded
+original repository as ready/unused through subsequent queueing and archive.
+Its native cutoff outcome was withdrawn without a selected SHA/decision; it
+never entered real judging, outcomes or any current participant repository list.
+The actual provider observed fourteen creates while the unchanged58 surviving
+competitor plus24 mentor invitations all completed (82).
+
+Original journals, runner logs and final database are hashed in the
+[bounded receipt](retired-repository-proof.json). Scoped cleanup removed all
+generated containers/volumes/networks. This repeats the complete native journey
+through archive and all retained30/60/90-day effects; full Fleet/browser/role/
+expiry/provider/normal-image acceptance remains open.
