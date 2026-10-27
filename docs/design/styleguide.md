@@ -486,3 +486,17 @@ command locks still prevent unavailable work. Format feedback does not establish
 App identity, key validity, installation, permissions or template access. Those
 remain server/provider checks. Never echo a secret in errors or review summaries.
 The independent guide demonstrates these fields with synthetic local state only.
+
+### Consecutive reads after review cancellation
+
+Use `useReviewReturnFocus` when the native owner temporarily disables a review
+opener during current reads. Supply the original source, a local status fallback,
+and a captured private-lifetime check. Retain the return intention through
+consecutive reads; the first successful restoration must not discard it before
+a following read disables the opener again. A real focus or pointer move to
+another destination clears that intention. Unknown commands and ended authority
+never gain a confirmation or replay through focus restoration.
+
+The Final ballot example uses this production helper in an independent synthetic
+preview that simulates two background reads after cancellation. Timers model
+only local guide presentation; they perform no authentication, API call or write.

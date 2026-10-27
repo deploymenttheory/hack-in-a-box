@@ -8,6 +8,7 @@ import { Button } from './components/ui/button'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { Failure } from './components/states'
 import { usePlanningDepartureBarrier } from './planning-operations'
+import { useReviewReturnFocus } from './review-return-focus'
 export type DecisionMetadata = { requestID: string; actorID: string; action: string; revision: number; version: number; fingerprint: string; resourceID?: string; subjectID?: string; intentID?: string }
 export type DecisionBody = { request_id: string; action: string; reason: string }
 export const decisionNamespace = (actor: string, session: string, eventID: string, resource = 'results') => `${actor}:${session}:${eventID}:${resource}`
@@ -28,7 +29,6 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
  // Only exact completion removes it; disposal of this private scope is never ACK.
  const recovered = failureStageValue === 'unknown' && !!unknownAttempt && scope.capture().current() && !commands.attempts.some(attempt => attempt.id === unknownAttempt)
  const failure = recovered ? undefined : failureValue, failureStage = recovered ? undefined : failureStageValue
- const deferredFocus = useRef<{ source: HTMLElement; fallback: HTMLElement; current: () => boolean } | undefined>(undefined)
  const pending = preparing || commands.pending, stale = !!review && (options.version(options.page) !== review.intent.version || options.revision(options.page) !== review.intent.revision), blocked = options.paused || pending || commands.unconfirmed || stale
  usePlanningDepartureBarrier(pending)
  async function prepare(body: B, summary: ReactNode, source: HTMLElement) {
@@ -78,25 +78,9 @@ export function useResultDecision<B extends DecisionBody, P, R>(options: {
   } catch (error) { if (ticket.current()) setFailure(error) }
   finally { sending.current = false; if (ticket.current()) setPreparing(false) }
  }
- // Dialog teardown can precede the form's unhide commit, and a current read
- // can temporarily disable its opener. Reconcile focus after that commit, within
- // the same private owner and without overriding another user destination.
- useEffect(() => {
-  const deferred = deferredFocus.current
-  if (!deferred?.current()) { deferredFocus.current = undefined; return }
-  const stillReturning = document.activeElement === deferred.fallback || document.activeElement === document.body
-  if (options.paused || pending) {
-   if (stillReturning && document.activeElement === document.body) deferred.fallback.focus()
-   return
-  }
-  deferredFocus.current = undefined
-  if (!commands.unconfirmed && deferred.source.isConnected && !deferred.source.matches(':disabled') && !deferred.source.closest('[hidden]') && stillReturning) deferred.source.focus()
- }, [options.paused, pending, commands.unconfirmed, review])
- const focus = (source: HTMLElement | null) => {
-  deferredFocus.current = source?.isConnected && fallback.current ? { source, fallback: fallback.current, current: scope.capture().current } : undefined
-  return source?.isConnected && !source.matches(':disabled') ? source : fallback.current ?? false
- }
- return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current) }
+ const focus = useReviewReturnFocus({ paused: options.paused, pending, unknown: commands.unconfirmed, reviewing: !!review || !!base, capture: () => scope.capture().current })
+
+ return { review, pending, blocked, stale, unknown: commands.unconfirmed, failure, failureStage, notice, prepare, confirm, cancel: () => { if (!pending) setReview(undefined) }, returnFocus: () => focus(opener.current, fallback.current), headingRef: (element: HTMLHeadingElement | null) => { fallback.current = element }, base, readBase, chooseBase, cancelBase: () => { if (!pending) setBase(undefined) }, returnBaseFocus: () => focus(baseOpener.current, fallback.current) }
 }
 export function ResultDecisionState({ failure, failureStage, notice, unknown, pending, stale, headingRef, base, readBase, chooseBase, cancelBase, returnBaseFocus }: Pick<ReturnType<typeof useResultDecision>, 'failure' | 'failureStage' | 'notice' | 'unknown' | 'pending' | 'stale' | 'headingRef' | 'base' | 'readBase' | 'chooseBase' | 'cancelBase' | 'returnBaseFocus'>) {
  return <div className="fleet-result-history"><h3 ref={headingRef} tabIndex={-1}>Decision status</h3>{failureStage === 'before_write' && <p role="alert">Current access, source or starting point could not be confirmed. Nothing was sent. Read current facts and review again.</p>}{!!failure && <Failure error={failure} />}{notice && <p role="status">{notice}</p>}{stale && <p role="status">The starting point changed. Cancel this review, read current facts and review a fresh decision.</p>}{unknown && <><p role="status">The original outcome is unknown. Read its original acknowledgement below. A current read does not establish success or failure.</p><Button icon="refresh" variant="outline" disabled={pending} onClick={event => void readBase(event.currentTarget)}>Review a fresh starting point</Button></>}{base && <ConfirmationDialog open title="Review a fresh starting point" description="Permit a different deliberate request while retaining the earlier unknown request in history." confirmLabel="Use reviewed current starting point" pending={pending} onConfirm={() => void chooseBase()} onOpenChange={open => { if (!open) cancelBase() }} finalFocus={returnBaseFocus} printExcluded><p>Version {base.version} · Source revision {base.revision}</p><p>This clears unsent private inputs. It does not acknowledge or replay the earlier request.</p></ConfirmationDialog>}</div>

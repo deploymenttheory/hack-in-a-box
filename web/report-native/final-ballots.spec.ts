@@ -11,8 +11,9 @@ test('native assigned overall and category ties require explicit selection, all 
   await page.getByLabel('Reason for your tie vote', { exact: true }).fill(note)
   const submit = page.getByRole('button', { name: 'Review tie vote', exact: true }); await submit.click()
   const review = page.getByRole('alertdialog', { name: 'Review your tie vote', exact: true })
-  // Exercise the CI-observed current-read/cancel overlap deterministically. Hold
-  // only the actual native200 response; neither data nor authority is fabricated.
+  // Exercise cancellation and the immediately following read, matching the
+  // CI-observed periodic overlap. Hold actual native200s without fabricating authority.
+  for (let cycle = 0; cycle < 2; cycle++) {
   let release!: () => void, ready!: () => void, held = false
   const resume = new Promise<void>(resolve => { release = resolve }), started = new Promise<void>(resolve => { ready = resolve })
   const holdRead = async (route: Route) => {
@@ -22,9 +23,10 @@ test('native assigned overall and category ties require explicit selection, all 
   const readPath = '**/api/v1/events/' + native.ballot_event_id + '/results/ballots'
   await page.route(readPath, holdRead)
   await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await started
-  await review.getByRole('button', { name: 'Cancel', exact: true }).click()
+  if (cycle === 0) await review.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Decision status', exact: true })).toBeFocused()
   release(); await expect(submit).toBeFocused(); await page.unroute(readPath, holdRead)
+  }
   await submit.click(); await review.getByRole('button', { name: 'Record reviewed tie vote', exact: true }).click()
  }
  try {
