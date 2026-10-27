@@ -8,7 +8,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Original criterion | Inspected evidence | Remaining acceptance |
 | --- | --- | --- |
 | Both judging modes, concurrent brands, overlapping people | Connected R23/R24, `retention-cases-proof.json`; original full private run retains both native events | Complete browser journey for both |
-| Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff | Actual browser interruption and ambiguous-write recovery; complete message-failure variants |
+| Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff; CONNECTED-MESSAGE.md adds same-event queued permanent SMTP failure with immutable history and denied retry | Actual browser interruption and ambiguous-write recovery; remaining provider/role variants |
 | Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes | Complete organiser/coordinator/attendee/captain/mentor/judge/MC/logistics/member/stranger/revoked-role matrix and archive/export inspection |
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
 | Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; actual late original offer expires without confirmation, freeze precedes common disclosure | Final integrated browser coverage |
@@ -35,3 +35,9 @@ R21 used the separate #325 fix from PR #326 in its private integration. The
 feedback fix is now merged in main and the published draft is rebased onto it.
 Both default90 and configured120 pass on the same native source/image in R23/R24.
 Complete Fleet/browser/offline/current-role/provider acceptance remains open.
+
+The configured120 integration at6133691d passes403.03s with actual Fleet branding
+actions on both events and queued same-event failed-message receipts, then full
+native judging/archive/retention. See CONNECTED-MESSAGE.md. It uses the separate
+production correction from PR #332; this does not establish the remaining full
+Fleet action/offline/role matrix or remove that dependency.
