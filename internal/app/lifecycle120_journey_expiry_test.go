@@ -59,12 +59,12 @@ func (r *lifecycleJourney) expireRetainedOutcomes(t *testing.T) {
 		); err != nil {
 			t.Fatal(err)
 		}
-		if policy.RetentionDays != 120 || archive.CompletedAt == nil {
+		if policy.RetentionDays != lifecycleRetentionDays(t) || archive.CompletedAt == nil {
 			t.Fatal("expiry case lost its original native completion/policy")
 		}
 		// Calendar addition is independently applied to the observed native anchor;
 		// no implementation retention helper defines the test's expected instant.
-		deadline := archive.CompletedAt.UTC().AddDate(0, 0, 120)
+		deadline := archive.CompletedAt.UTC().AddDate(0, 0, int(lifecycleRetentionDays(t)))
 		item.expiry = lifecycleExpiryReceipt{
 			EventID:       item.view.ID,
 			CompletedAt:   *archive.CompletedAt,
@@ -130,9 +130,12 @@ func (r *lifecycleJourney) expireRetainedOutcomes(t *testing.T) {
 			}
 			item.expiry.OwnerDeniedAt = true
 			item.expiry.OrganiserDeniedAt = true
-			review := item.reviews[2]
+			if len(item.reviews) == 0 {
+				t.Fatal("expiry has no actual delivered review")
+			}
+			review := item.reviews[len(item.reviews)-1]
 			if review.NotificationID == uuid.Nil {
-				t.Fatal("expiry test lacks the actual delivered day90 notification")
+				t.Fatal("expiry test lacks the actual last approved review notification")
 			}
 			if err := owner.call(
 				t.Context(),

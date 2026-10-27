@@ -30,6 +30,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	retentionBoundary         *lifecycleReviewBoundaryReceipt
 	retiredRepositoryVerified bool
 	expiry                    lifecycleExpiryReceipt
 	offerCutoff               lifecycleOfferCutoffReceipt
@@ -297,49 +298,55 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
-		Expiry             lifecycleExpiryReceipt              `json:"retention_expiry"`
-		OfferCutoff        lifecycleOfferCutoffReceipt         `json:"surviving_offer_cutoff"`
-		Attendance         lifecycleAttendanceReceipt          `json:"attendance_exception"`
-		Postponement       lifecyclePostponementReceipt        `json:"postponement"`
-		Eligibility        []lifecycleEligibilityReceipt       `json:"eligibility"`
-		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
-		Showcase           lifecycleShowcaseReceipt            `json:"showcase"`
-		Archive            lifecycleArchiveReceipt             `json:"archive"`
-		Reviews            []lifecycleOwnedReviewReceipt       `json:"owned_reviews"`
-		ID                 uuid.UUID                           `json:"event_id"`
-		Mode               string                              `json:"mode"`
-		Stage              string                              `json:"stage"`
-		Objective          objectives.Reference                `json:"objective"`
-		Primary            string                              `json:"primary"`
-		TeamIDs            []uuid.UUID                         `json:"team_ids"`
-		Confirmed          int64                               `json:"confirmed"`
-		Census             map[string]int64                    `json:"admission_census"`
-		Challenge          uuid.UUID                           `json:"challenge_id"`
-		Rubric             rubric.Reference                    `json:"rubric"`
-		CommonHash         string                              `json:"common_sha256"`
-		PublishedAt        *time.Time                          `json:"published_at"`
-		Repositories       []repositories.View                 `json:"repositories"`
-		Access             []lifecycleAccessReceipt            `json:"repository_access"`
-		LiveAccess         []lifecycleAccessReceipt            `json:"live_mentor_repository_access"`
-		TeamNotice         lifecycleTeamNoticeReceipt          `json:"team_notice"`
-		AccessPoll         []lifecycleAccessPollReceipt        `json:"access_poll"`
-		Submissions        []lifecycleSubmissionReceipt        `json:"submissions"`
-		Work               []lifecycleWorkReceipt              `json:"preparation_work"`
-		LateWork           *lifecycleWorkReceipt               `json:"late_work,omitempty"`
-		Cutoff             []lifecycleCutoffReceipt            `json:"cutoff_sources"`
-		JudgeRun           uuid.UUID                           `json:"planned_judge_run_id"`
-		Practice           []lifecyclePracticeReceipt          `json:"fictional_judge_practice"`
-		JudgeFinal         *lifecycleJudgeFinalReceipt         `json:"independent_judge_final,omitempty"`
-		ResultDecision     *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
-		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
-		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
-		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
-		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
-		Clarification      lifecycleClarificationReceipt       `json:"common_clarification"`
-		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
+		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
+		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
+		Expiry                    lifecycleExpiryReceipt              `json:"retention_expiry"`
+		OfferCutoff               lifecycleOfferCutoffReceipt         `json:"surviving_offer_cutoff"`
+		Attendance                lifecycleAttendanceReceipt          `json:"attendance_exception"`
+		Postponement              lifecyclePostponementReceipt        `json:"postponement"`
+		Eligibility               []lifecycleEligibilityReceipt       `json:"eligibility"`
+		PostEvent                 lifecyclePostEventReceipt           `json:"post_event"`
+		Showcase                  lifecycleShowcaseReceipt            `json:"showcase"`
+		Archive                   lifecycleArchiveReceipt             `json:"archive"`
+		Reviews                   []lifecycleOwnedReviewReceipt       `json:"owned_reviews"`
+		ID                        uuid.UUID                           `json:"event_id"`
+		Mode                      string                              `json:"mode"`
+		Stage                     string                              `json:"stage"`
+		Objective                 objectives.Reference                `json:"objective"`
+		Primary                   string                              `json:"primary"`
+		TeamIDs                   []uuid.UUID                         `json:"team_ids"`
+		Confirmed                 int64                               `json:"confirmed"`
+		Census                    map[string]int64                    `json:"admission_census"`
+		Challenge                 uuid.UUID                           `json:"challenge_id"`
+		Rubric                    rubric.Reference                    `json:"rubric"`
+		CommonHash                string                              `json:"common_sha256"`
+		PublishedAt               *time.Time                          `json:"published_at"`
+		Repositories              []repositories.View                 `json:"repositories"`
+		Access                    []lifecycleAccessReceipt            `json:"repository_access"`
+		LiveAccess                []lifecycleAccessReceipt            `json:"live_mentor_repository_access"`
+		TeamNotice                lifecycleTeamNoticeReceipt          `json:"team_notice"`
+		AccessPoll                []lifecycleAccessPollReceipt        `json:"access_poll"`
+		Submissions               []lifecycleSubmissionReceipt        `json:"submissions"`
+		Work                      []lifecycleWorkReceipt              `json:"preparation_work"`
+		LateWork                  *lifecycleWorkReceipt               `json:"late_work,omitempty"`
+		Cutoff                    []lifecycleCutoffReceipt            `json:"cutoff_sources"`
+		JudgeRun                  uuid.UUID                           `json:"planned_judge_run_id"`
+		Practice                  []lifecyclePracticeReceipt          `json:"fictional_judge_practice"`
+		JudgeFinal                *lifecycleJudgeFinalReceipt         `json:"independent_judge_final,omitempty"`
+		ResultDecision            *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
+		ResultReleases            []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
+		ResultPreparations        []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
+		TeamFeedback              []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
+		LiveHelp                  lifecycleHelpReceipt                `json:"live_help"`
+		Clarification             lifecycleClarificationReceipt       `json:"common_clarification"`
+		Review                    lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
+		if lifecycleRetentionDays(t) == 90 &&
+			(len(item.reviews) != 2 || item.retentionBoundary == nil || !item.retentionBoundary.ApprovalRejected || item.retentionBoundary.Days != 90) {
+			t.Fatal("default90 receipt lacks the actual rejected boundary approval")
+		}
 		if !item.retiredRepositoryVerified || item.expiry.EventID != item.view.ID ||
 			!item.expiry.OwnerReadableBefore ||
 			!item.expiry.OwnerDeniedAt ||
@@ -359,60 +366,63 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				Expiry:             item.expiry,
-				OfferCutoff:        item.offerCutoff,
-				Attendance:         item.attendance,
-				Postponement:       item.postponement,
-				Eligibility:        item.eligibility,
-				PostEvent:          item.postEvent,
-				Showcase:           item.showcase,
-				Archive:            item.archive,
-				Reviews:            item.reviews,
-				ID:                 item.view.ID,
-				Mode:               item.rubric.Definition.Mode,
-				Stage:              item.view.Stage,
-				Objective:          item.objective.Reference,
-				Primary:            item.brand.Primary,
-				TeamIDs:            teams,
-				Confirmed:          item.view.ConfirmedAttendees,
-				Census:             item.cohort.census,
-				Challenge:          item.challenge.ID,
-				Rubric:             item.rubric.Reference,
-				CommonHash:         item.commonHash,
-				PublishedAt:        item.view.PublishedAt,
-				Repositories:       item.repositories,
-				Access:             item.access,
-				LiveAccess:         item.liveAccess,
-				TeamNotice:         item.teamNotice,
-				AccessPoll:         item.accessPoll,
-				Submissions:        item.submissions,
-				Work:               item.work,
-				LateWork:           item.lateWork,
-				Cutoff:             item.cutoff,
-				JudgeRun:           item.judgeRun,
-				Practice:           item.practice,
-				JudgeFinal:         item.judgeFinal,
-				ResultDecision:     item.resultDecision,
-				ResultReleases:     item.resultReleases,
-				ResultPreparations: item.resultPreparations,
-				TeamFeedback:       item.teamFeedback,
-				LiveHelp:           item.liveHelp,
-				Clarification:      item.clarification,
-				Review:             item.review,
+				RetentionBoundary:         item.retentionBoundary,
+				RetiredRepositoryVerified: item.retiredRepositoryVerified,
+				Expiry:                    item.expiry,
+				OfferCutoff:               item.offerCutoff,
+				Attendance:                item.attendance,
+				Postponement:              item.postponement,
+				Eligibility:               item.eligibility,
+				PostEvent:                 item.postEvent,
+				Showcase:                  item.showcase,
+				Archive:                   item.archive,
+				Reviews:                   item.reviews,
+				ID:                        item.view.ID,
+				Mode:                      item.rubric.Definition.Mode,
+				Stage:                     item.view.Stage,
+				Objective:                 item.objective.Reference,
+				Primary:                   item.brand.Primary,
+				TeamIDs:                   teams,
+				Confirmed:                 item.view.ConfirmedAttendees,
+				Census:                    item.cohort.census,
+				Challenge:                 item.challenge.ID,
+				Rubric:                    item.rubric.Reference,
+				CommonHash:                item.commonHash,
+				PublishedAt:               item.view.PublishedAt,
+				Repositories:              item.repositories,
+				Access:                    item.access,
+				LiveAccess:                item.liveAccess,
+				TeamNotice:                item.teamNotice,
+				AccessPoll:                item.accessPoll,
+				Submissions:               item.submissions,
+				Work:                      item.work,
+				LateWork:                  item.lateWork,
+				Cutoff:                    item.cutoff,
+				JudgeRun:                  item.judgeRun,
+				Practice:                  item.practice,
+				JudgeFinal:                item.judgeFinal,
+				ResultDecision:            item.resultDecision,
+				ResultReleases:            item.resultReleases,
+				ResultPreparations:        item.resultPreparations,
+				TeamFeedback:              item.teamFeedback,
+				LiveHelp:                  item.liveHelp,
+				Clarification:             item.clarification,
+				Review:                    item.review,
 			},
 		)
 	}
 	receipt, err := json.MarshalIndent(
 		map[string]any{
-			"checkpoint":              "connected-two-event-through-cutoff-partial",
-			"complete_lifecycle":      false,
-			"github_transport_proof":  providerProof,
-			"events":                  items,
-			"overlapping_oidc_people": len(run.events[0].cohort.clients),
-			"explicit_retention_days": 120,
-			"retention_reason":        "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
-			"publication":             timeline.Publication,
-			"live_start":              run.timeline.Live,
+			"checkpoint":                             "connected-two-event-through-cutoff-partial",
+			"complete_lifecycle":                     false,
+			"github_transport_proof":                 providerProof,
+			"events":                                 items,
+			"overlapping_oidc_people":                len(run.events[0].cohort.clients),
+			"retention_days":                         lifecycleRetentionDays(t),
+			"retention_policy_explicitly_configured": lifecycleRetentionDays(t) == 120,
+			"retention_reason":                       "Configured120 exercises retained day90 plus response window; default90 preserves the native default and rejects the exclusive boundary",
+			"publication":                            timeline.Publication,
+			"live_start":                             run.timeline.Live,
 			"assertions": []string{
 				"single-connected-native-http-journey",
 				"both-judging-templates",
@@ -537,16 +547,33 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	var policy privacy.Settings
-	if err := r.owner.call(
-		ctx,
-		http.MethodPut,
-		base+"/privacy",
-		item.view.Revision,
-		privacy.Settings{RetentionDays: 120, DraftDays: 7},
-		&policy,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
+	if lifecycleRetentionDays(t) == 120 {
+		if err := r.owner.call(
+			ctx,
+			http.MethodPut,
+			base+"/privacy",
+			item.view.Revision,
+			privacy.Settings{RetentionDays: 120, DraftDays: 7},
+			&policy,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		if err := r.owner.call(
+			ctx,
+			http.MethodGet,
+			base+"/privacy",
+			-1,
+			nil,
+			&policy,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if policy.RetentionDays != lifecycleRetentionDays(t) {
+		t.Fatal("native event policy differs from the selected retention case")
 	}
 	var err error
 	item.cohort, err = admitLifecycleCohortChecking(

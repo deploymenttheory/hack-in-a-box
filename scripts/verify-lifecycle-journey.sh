@@ -2,6 +2,9 @@
 # Connected native lifecycle journey, including already-provisioned retired repositories.
 set -eu
 umask 077
+retention_case=${HACKBOX_LIFECYCLE_RETENTION_CASE:-configured120}
+case "$retention_case" in configured120|default90) ;; *) printf '%s\n' 'Choose configured120 or default90 retention case.' >&2; exit 1 ;; esac
+export HACKBOX_LIFECYCLE_RETENTION_CASE="$retention_case"
 
 task_root=$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)
 if [ -n "$(git -C "$task_root" status --porcelain)" ]; then
@@ -94,12 +97,13 @@ for case_name in journey; do
   runner_exit=$(docker wait "$runner_name")
   capture_case
   python3 - "$case_dir/source.json" "$source_revision" "$image_id" "$case_name" "$project_name" "$runner_exit" <<'PY'
-import json, pathlib, sys
+import json, os, pathlib, sys
 path, source, image, case, project, result = sys.argv[1:]
 pathlib.Path(path).write_text(json.dumps({
     'source_revision': source, 'source_worktree_clean': True,
     'verification_image': image, 'case': case, 'project': project,
     'actual_runner_exit_code': int(result), 'complete_lifecycle': False,
+    'retention_case': os.environ['HACKBOX_LIFECYCLE_RETENTION_CASE'],
 }, indent=2) + '\n')
 PY
   if [ "$runner_exit" != 0 ]; then

@@ -7,10 +7,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/inbox"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
-	"github.com/google/uuid"
 )
+
+type lifecycleReviewBoundaryReceipt struct {
+	ReviewID         uuid.UUID `json:"review_id"`
+	Days             int       `json:"days"`
+	OriginalVersion  int64     `json:"original_version"`
+	StateAfter       string    `json:"state_after"`
+	ApprovalRejected bool      `json:"approval_rejected"`
+}
 
 type lifecycleOwnedReviewReceipt struct {
 	OutcomeID      uuid.UUID `json:"outcome_id"`
@@ -43,18 +52,103 @@ func (r *lifecycleJourney) prepareRetainedReviews(t *testing.T) {
 			due := r.timeline.Completed.In(location).AddDate(0, 0, days)
 			path := "/api/v1/outcomes/" + source.ID.String() + "/reviews/" + id.String()
 			var plan outcomes.PlanView
-			command := outcomes.PlanCommand{ID: uuid.New(), Action: "save", SourceVersion: source.Version.Version, Reason: "Explicit retained synthetic owner review and response window", Schedule: &outcomes.ReviewSchedule{Days: days, WallTime: due.Format("2006-01-02T15:04:05"), Timezone: "Europe/London", Channels: []string{"in_app"}}, Message: &outcomes.ReviewMessage{Subject: fmt.Sprintf("Owned day-%d review", days), Body: "Hello {{recipient.name}}; review {{outcome.url}} at {{review.date}}."}}
-			if err := r.owner.call(t.Context(), http.MethodPut, path, 0, command, &plan, http.StatusOK); err != nil {
+			command := outcomes.PlanCommand{
+				ID:            uuid.New(),
+				Action:        "save",
+				SourceVersion: source.Version.Version,
+				Reason:        "Explicit retained synthetic owner review and response window",
+				Schedule: &outcomes.ReviewSchedule{
+					Days:     days,
+					WallTime: due.Format("2006-01-02T15:04:05"),
+					Timezone: "Europe/London",
+					Channels: []string{"in_app"},
+				},
+				Message: &outcomes.ReviewMessage{
+					Subject: fmt.Sprintf("Owned day-%d review", days),
+					Body:    "Hello {{recipient.name}}; review {{outcome.url}} at {{review.date}}.",
+				},
+			}
+			if err := r.owner.call(
+				t.Context(),
+				http.MethodPut,
+				path,
+				0,
+				command,
+				&plan,
+				http.StatusOK,
+			); err != nil {
 				t.Fatal(err)
 			}
-			command = outcomes.PlanCommand{ID: uuid.New(), Action: "approve", SourceVersion: source.Version.Version, Reason: "Approve exact owned source, private composition and retained timing"}
-			if err := r.owner.call(t.Context(), http.MethodPut, path, plan.Version, command, &plan, http.StatusOK); err != nil {
+			command = outcomes.PlanCommand{
+				ID:            uuid.New(),
+				Action:        "approve",
+				SourceVersion: source.Version.Version,
+				Reason:        "Approve exact owned source, private composition and retained timing",
+			}
+			if lifecycleRetentionDays(t) == 90 && days == 90 {
+				before := plan
+				if err := r.owner.call(
+					t.Context(),
+					http.MethodPut,
+					path,
+					plan.Version,
+					command,
+					nil,
+					http.StatusBadRequest,
+				); err != nil {
+					t.Fatal(err)
+				}
+				if err := r.owner.call(
+					t.Context(),
+					http.MethodGet,
+					path,
+					-1,
+					nil,
+					&plan,
+					http.StatusOK,
+				); err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(before, plan) || plan.State != "draft" {
+					t.Fatal("exclusive default90 review rejection mutated the original draft")
+				}
+				item.retentionBoundary = &lifecycleReviewBoundaryReceipt{
+					ReviewID:         id,
+					Days:             days,
+					OriginalVersion:  before.Version,
+					StateAfter:       plan.State,
+					ApprovalRejected: true,
+				}
+				continue
+			}
+			if err := r.owner.call(
+				t.Context(),
+				http.MethodPut,
+				path,
+				plan.Version,
+				command,
+				&plan,
+				http.StatusOK,
+			); err != nil {
 				t.Fatal(err)
 			}
-			if plan.State != "approved" || plan.CommandID != command.ID || plan.OwnerID != *source.OwnerID || !plan.DueAt.Equal(due) || plan.SourceVersion != source.Version.Version {
+			if plan.State != "approved" || plan.CommandID != command.ID ||
+				plan.OwnerID != *source.OwnerID ||
+				!plan.DueAt.Equal(due) ||
+				plan.SourceVersion != source.Version.Version {
 				t.Fatal("native review approval lost exact owned schedule/source")
 			}
-			item.reviews = append(item.reviews, lifecycleOwnedReviewReceipt{OutcomeID: source.ID, OwnerID: *source.OwnerID, ReviewID: id, Days: days, Version: plan.Version, DueAt: due.UTC()})
+			item.reviews = append(
+				item.reviews,
+				lifecycleOwnedReviewReceipt{
+					OutcomeID: source.ID,
+					OwnerID:   *source.OwnerID,
+					ReviewID:  id,
+					Days:      days,
+					Version:   plan.Version,
+					DueAt:     due.UTC(),
+				},
+			)
 		}
 	}
 }
@@ -63,7 +157,8 @@ func (r *lifecycleJourney) deliverRetainedReviews(t *testing.T) {
 	t.Helper()
 	// Domain eligibility advances monotonically. River leases, scheduling and
 	// HTTP authentication keep real wall time; no jobs or receipts are seeded.
-	for phase, days := range []int{30, 60, 90} {
+	for phase, review := range r.events[0].reviews {
+		days := review.Days
 		due := r.events[0].reviews[phase].DueAt
 		if err := r.control.advance(t.Context(), due); err != nil {
 			t.Fatal(err)
@@ -77,18 +172,36 @@ func (r *lifecycleJourney) deliverRetainedReviews(t *testing.T) {
 			deadline := time.Now().Add(75 * time.Second)
 			for time.Now().Before(deadline) {
 				var page inbox.Page
-				if err := owner.call(t.Context(), http.MethodGet, path, -1, nil, &page, http.StatusOK); err != nil {
+				if err := owner.call(
+					t.Context(),
+					http.MethodGet,
+					path,
+					-1,
+					nil,
+					&page,
+					http.StatusOK,
+				); err != nil {
 					t.Fatal(err)
 				}
 				if page.NextCursor != nil {
-					t.Fatal("review inbox census requires pagination rather than silently omitting evidence")
+					t.Fatal(
+						"review inbox census requires pagination rather than silently omitting evidence",
+					)
 				}
 				for _, entry := range page.Items {
 					if opened[entry.ID] {
 						continue
 					}
 					var detail inbox.Detail
-					if err := owner.call(t.Context(), http.MethodGet, "/api/v1/inbox/"+entry.ID.String(), -1, nil, &detail, http.StatusOK); err != nil {
+					if err := owner.call(
+						t.Context(),
+						http.MethodGet,
+						"/api/v1/inbox/"+entry.ID.String(),
+						-1,
+						nil,
+						&detail,
+						http.StatusOK,
+					); err != nil {
 						t.Fatal(err)
 					}
 					opened[entry.ID] = true
@@ -100,17 +213,22 @@ func (r *lifecycleJourney) deliverRetainedReviews(t *testing.T) {
 						if review.ReviewID != detail.Destination.ResourceID {
 							continue
 						}
-						if review.Days > days || detail.Subject != fmt.Sprintf("Owned day-%d review", review.Days) || entry.EventName != "" {
+						if review.Days > days ||
+							detail.Subject != fmt.Sprintf("Owned day-%d review", review.Days) ||
+							entry.EventName != "" {
 							t.Fatal("retained review sent early or disclosed private event context")
 						}
-						if previous, exists := observed[review.ReviewID]; exists && previous != entry.ID {
+						if previous, exists := observed[review.ReviewID]; exists &&
+							previous != entry.ID {
 							t.Fatal("owned review created duplicate native notifications")
 						}
 						observed[review.ReviewID] = entry.ID
 						matched = true
 					}
 					if !matched {
-						t.Fatal("retained inbox reminder does not reference an approved native plan")
+						t.Fatal(
+							"retained inbox reminder does not reference an approved native plan",
+						)
 					}
 				}
 				if len(observed) == phase+1 {
@@ -125,7 +243,10 @@ func (r *lifecycleJourney) deliverRetainedReviews(t *testing.T) {
 			if item.reviews[phase].NotificationID == uuid.Nil {
 				t.Fatal("current owned review was absent from actual native inbox")
 			}
-			if !reflect.DeepEqual(item.competitionBefore, lifecycleCompetitionSnapshot(t, item.view.ID, len(item.review.FinalHuddles))) {
+			if !reflect.DeepEqual(
+				item.competitionBefore,
+				lifecycleCompetitionSnapshot(t, item.view.ID, len(item.review.FinalHuddles)),
+			) {
 				t.Fatal("retained queued follow-up mutated frozen competition evidence")
 			}
 		}
