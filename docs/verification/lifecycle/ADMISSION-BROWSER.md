@@ -109,3 +109,9 @@ native-team-reassignment.png shows the corrected six-team publication and unused
 retired team. Depletion withdrawals and the later hard freeze still use native
 APIs; this is not complete team UI or full120 acceptance. Missing rubric
 authoring is separately tracked in339. Earlier runs and failures are retained.
+
+The next extension replaces direct rubric setup with normal-UI draft save and
+exact-version approval for each event, then independently reads the complete
+native definition, generated award identities, public digest and unchanged
+approved reference consumed by challenge authoring. This extension compiles;
+its connected run with draft340 is pending and is not acceptance evidence yet.

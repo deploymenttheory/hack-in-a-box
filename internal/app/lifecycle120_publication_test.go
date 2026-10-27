@@ -23,6 +23,10 @@ import (
 )
 
 func installLifecycleChallenge(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, mode string) (content.Page, rubric.Configuration, error) {
+	return installLifecycleChallengeWithConfiguration(ctx, owner, eventID, mode, nil)
+}
+
+func installLifecycleChallengeWithConfiguration(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, mode string, configure func(rubric.Definition) (rubric.Configuration, error)) (content.Page, rubric.Configuration, error) {
 	base := "/api/v1/events/" + eventID.String()
 	definition := rubric.Default(mode, eventID)
 	definition.RequiredJudgeCount = 3
@@ -32,18 +36,29 @@ func installLifecycleChallenge(ctx context.Context, owner *lifecycleClient, even
 		{ID: uuid.NewSHA1(eventID, []byte("synthetic-demo-prize")), Name: "Synthetic demo award", Description: "Separate declared demo-category recognition", CategoryID: &demoCategory},
 	}
 	definition.PrivateJudgeGuidance = "PRIVATE synthetic judge guidance must never reach attendee responses"
-	var configured rubric.Configuration
-	if err := owner.call(ctx, http.MethodPost, base+"/rubric/configuration", 0,
-		map[string]any{"action": "save", "definition": definition, "reason": "Synthetic exact common assessment contract"}, &configured, http.StatusOK); err != nil {
-		return content.Page{}, configured, err
-	}
 	var approved rubric.Configuration
-	if err := owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision,
-		map[string]any{"action": "approve", "version": configured.Reference.Version, "reason": "Explicit exact common rubric approval"}, &approved, http.StatusOK); err != nil {
-		return content.Page{}, approved, err
+	if configure != nil {
+		var err error
+		approved, err = configure(definition)
+		if err != nil {
+			return content.Page{}, approved, err
+		}
+	} else {
+		var configured rubric.Configuration
+		if err := owner.call(ctx, http.MethodPost, base+"/rubric/configuration", 0,
+			map[string]any{"action": "save", "definition": definition, "reason": "Synthetic exact common assessment contract"}, &configured, http.StatusOK); err != nil {
+			return content.Page{}, configured, err
+		}
+		if err := owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision,
+			map[string]any{"action": "approve", "version": configured.Reference.Version, "reason": "Explicit exact common rubric approval"}, &approved, http.StatusOK); err != nil {
+			return content.Page{}, approved, err
+		}
+		if !approved.Approved || approved.Reference != configured.Reference {
+			return content.Page{}, approved, fmt.Errorf("native rubric approval changed its exact public reference")
+		}
 	}
-	if !approved.Approved || approved.Reference != configured.Reference {
-		return content.Page{}, approved, fmt.Errorf("native rubric approval changed its exact public reference")
+	if !approved.Approved || approved.Reference.Version < 1 {
+		return content.Page{}, approved, fmt.Errorf("challenge requires an exact approved rubric")
 	}
 	input := content.Input{Kind: "challenge", Document: content.Document{
 		Title: "Synthetic common lifecycle challenge", Markdown: "Build a synthetic working service and demonstrate its outcome evidence.",
