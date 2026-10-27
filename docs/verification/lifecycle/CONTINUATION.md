@@ -145,3 +145,32 @@ contract's PUT. The native API returned a definite HTTP 405. This was a driver
 protocol error, not a product defect or passing post-event evidence. The next
 source uses the declared PUT operation and explicitly authors a replacement media
 draft before reviewing after reconsent; revocation retires the old publication.
+
+## PR #316 connected completion, media and survey evidence
+
+Frozen clean source `b47c8c1cad5afe7b697a0fd2d85bb9fe18a122fb` passed
+`TestLifecycleComposeJourney` in 365.86 seconds with exit 0 in isolated Compose
+project `hackbox-lifecycle120-completion-r3`. Both normal authenticated event
+lifetimes reached assessment after cutoff reconciliation, then completion after
+result publication and private team feedback. Each event exercised reviewed media
+publication, immediate consent-revocation denial, reconsent without resurrection,
+and a new explicit draft/review/release. Each published survey received six actual
+current participant responses, retained the original duplicate-intent response,
+and denied peer responses and cross-event configuration reads.
+
+The positive-projection receipt is `completion-media-survey-proof.json`. Its
+source and image identify the actual execution before the later rebase onto
+`64c37bde`; that rebase is not a rerun. Full private artifacts remain local.
+All owned R3 containers, network and disposable volumes were removed after
+retaining artifacts. Earlier R1/R2 driver failures remain failures.
+
+`complete_lifecycle=false` remains explicit. This checkpoint does not establish
+survey notification delivery/reporting, non-winning showcase, retained reviews,
+archive immutability, remaining exceptions or final browser/runtime acceptance.
+No original acceptance checkbox is closed by this checkpoint.
+
+The next driver extension creates one owned native outcome per published team,
+keeps estimates distinct from demonstrated-adoption evidence, and selects an
+actual frozen non-winning team for separate organisation-project publication,
+search, private-source denial and withdrawal. Its connected execution is pending;
+the R3 receipt above predates this extension and cannot establish its assertions.

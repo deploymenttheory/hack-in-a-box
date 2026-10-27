@@ -17,6 +17,7 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
+	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
@@ -57,6 +58,8 @@ type lifecycleJourneyEvent struct {
 	practice           []lifecyclePracticeReceipt
 	review             lifecycleMentorReviewReceipt
 	postEvent          lifecyclePostEventReceipt
+	outcomes           []outcomes.View
+	showcase           lifecycleShowcaseReceipt
 	commonHash         string
 }
 type lifecycleJourney struct {
@@ -244,6 +247,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.publishConfirmedAwards(t)
 	run.releaseOwnTeamFeedback(t)
 	run.completeAndCollectFeedback(t)
+	run.captureTeamOutcomesAndShowcase(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -265,6 +269,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	type eventReceipt struct {
 		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
+		Showcase           lifecycleShowcaseReceipt            `json:"showcase"`
 		ID                 uuid.UUID                           `json:"event_id"`
 		Mode               string                              `json:"mode"`
 		Stage              string                              `json:"stage"`
@@ -309,6 +314,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			items,
 			eventReceipt{
 				PostEvent:          item.postEvent,
+				Showcase:           item.showcase,
 				ID:                 item.view.ID,
 				Mode:               item.rubric.Definition.Mode,
 				Stage:              item.view.Stage,
