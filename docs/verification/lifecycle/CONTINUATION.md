@@ -295,3 +295,30 @@ before the correction. The journey's shared evidence constructor now supplies
 an explicit empty array for all three cases, including its later archived
 self-report. No production API, validation or evidence policy changed. The new
 original whole journey remains pending; R8 is a failure, not complete acceptance.
+
+## Passing connected outcomes, archive and owned reviews — R9
+
+Clean private integration `a8ce5a8851a0af5ffd84d5bfed98c6a59cfa2e48`
+(on main `3a72453a`, PR #316 drivers plus PR #320 correction) used verification
+image `sha256:fe04ec6c8738bc7d2ba37b97dceec0ea122f5fe04eb54f92c6dfd7d03fa327aa`.
+The fresh original `TestLifecycleComposeJourney` **passed in 270.63s**, exit 0.
+Both event lifetimes reached archived through all preceding native scoring,
+results, feedback, media and surveys. Each event recorded six team outcomes,
+distinct estimates and demonstrated-adoption evidence, reviewed/discovered/
+withdrawn a real frozen non-winner showcase, retained three explicitly approved
+owner plans, and observed their actual queued day-30/60/90 inbox notifications.
+Organiser versus attendee archive projections and the authorised audited
+post-archive outcome update passed; all competition hashes remained unchanged.
+The exact mentor sign-off census is zero for all-team mode and four for mentor
+qualification. Actual role grant/revocation preserved local disqualification
+while other-event history remained independent.
+
+The [bounded receipt](outcomes-archive-review-proof.json) publishes only synthetic
+IDs, counts, timestamps, capability assertions and immutable hashes. The private
+original intent journal, full checkpoint, logs and final database are retained.
+Failed R7/R8 executions remain failures and are not overwritten by this pass.
+This is the connected verification image with controlled domain eligibility,
+not a normal production-image release or capacity proof. `complete_lifecycle`
+remains false: outstanding exception/browser/expiry/normal-image variants in the
+original twelve criteria and L01–L18 still require implementation and final
+acceptance before #316 merges or #120 closes.
