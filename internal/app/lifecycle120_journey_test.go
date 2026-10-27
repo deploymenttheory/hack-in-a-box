@@ -30,6 +30,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	failedMessage lifecycleFailedMessageReceipt
+
 	browserBrandVerified bool
 
 	retentionBoundary         *lifecycleReviewBoundaryReceipt
@@ -152,6 +154,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			}
 		}
 	}
+	run.rehearseFailedMessages(t)
 	run.linkGitHubParticipants(t)
 	// Let the genuine remaining offer expire at admission cutoff, then freeze
 	// the published teams before repository setup or common theme disclosure.
@@ -307,6 +310,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		FailedMessage        lifecycleFailedMessageReceipt `json:"failed_message"`
+		BrowserBrandVerified bool                          `json:"browser_brand_verified"`
+
 		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
 		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
 		Expiry                    lifecycleExpiryReceipt              `json:"retention_expiry"`
@@ -356,6 +362,10 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			(len(item.reviews) != 2 || item.retentionBoundary == nil || !item.retentionBoundary.ApprovalRejected || item.retentionBoundary.Days != 90) {
 			t.Fatal("default90 receipt lacks the actual rejected boundary approval")
 		}
+		if item.failedMessage.EventID != item.view.ID || item.failedMessage.State != "permanent" ||
+			!item.failedMessage.RetryDenied || !item.failedMessage.HistoryIntact || !item.failedMessage.NoAcceptedData {
+			t.Fatal("required same-event failed-message phase was not verified")
+		}
 		if !item.retiredRepositoryVerified || item.expiry.EventID != item.view.ID ||
 			!item.expiry.OwnerReadableBefore ||
 			!item.expiry.OwnerDeniedAt ||
@@ -375,6 +385,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				FailedMessage:             item.failedMessage,
+				BrowserBrandVerified:      item.browserBrandVerified,
 				RetentionBoundary:         item.retentionBoundary,
 				RetiredRepositoryVerified: item.retiredRepositoryVerified,
 				Expiry:                    item.expiry,
