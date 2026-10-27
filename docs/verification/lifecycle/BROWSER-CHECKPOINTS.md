@@ -108,3 +108,10 @@ Run this bounded connected checkpoint with
 `sh scripts/verify-lifecycle-connected-browser.sh`. It is still planning-browser
 evidence plus a full native API journey, not the complete role/action/offline
 Fleet acceptance matrix. #120 stays open and PR #316 stays draft.
+
+The secure-context capability probe at7a60bd07 also verifies actual
+isSecureContext, native crypto.randomUUID and structuredClone on both portals,
+using standard localhost origins without unsafe-origin flags. Exact isolated
+Docker aliases make the same origins available to the native journey runner.
+See RECOVERY-BROWSER.md for the later same-event accepted-response-loss recovery
+pass and its remaining complete-lifecycle limits.

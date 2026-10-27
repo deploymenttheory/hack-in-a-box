@@ -1,38 +1,52 @@
 # Same-event live browser recovery
 
-In progress; no recovery pass is claimed yet. The driver uses normal competitor
-and mentor OIDC on the same native event, an accepted200 response interrupted
-at Chromium Fetch response stage, actual browser offline/online transitions,
-explicit original-request recovery and actual mentor claim/resolve controls.
-The native runner independently requires exact requester/team/input, one request,
-revision3/resolution, correct assignee and other-team denial. The final native
-receipt refuses a missing recovery proof when this mode is required.
+The connected run passed at clean integration source
+`3671d66f47eab4fd229039f867582baaf414fe0e`: native journey **282.15s**,
+browser exit0, both events archived and exact retention checks passed.
+`connected-recovery-proof.json` records immutable source/image identities and
+bounded native receipts. Production Go/UI/runtime inputs match separate
+PR #332 head `456f308a`; this draft contains only its dependent test fixtures.
 
-The first clean source eca15134 run reached the live barrier but failed before
-submitting the help request: the driver looked for an alertdialog while the
-mentoring UI uses an inline named review section. Original logs/database and
-scoped cleanup were retained. It is not a network-loss or recovery pass. Only
-the synthetic driver's locators now match those actual inline sections; no
-application response, session or UI state is fabricated.
+On the first event, a competitor signed in through normal OIDC, reviewed and
+submitted a private help request. Chromium intercepted the genuine accepted200
+response, failed its delivery and put that browser offline. The UI displayed an
+unconfirmed outcome. After reconnecting, the original identity was recovered by
+GET; exactly one PUT occurred. A separately signed-in mentor used the actual
+claim/resolve review controls. No application API response or session was
+fabricated. The driver observed zero page errors.
 
-The response interception follows the Chromium Fetch response-stage API:
-https://chromedevtools.github.io/devtools-protocol/tot/Fetch/
+Go independently verified exact requester/team/input, revision3/resolution,
+mentor-a assignment and timestamps, other-team denial, and exactly the original
+native help plus this recovered request in the owner queue. Both same-event
+branding save/reload phases, queued permanent message failure, judging, feedback,
+archive and configured120-day expiry also completed. All scoped containers,
+volumes and networks were removed. Original private journal, dump, screenshots
+and logs are retained outside this repository.
+
+This is a bounded recovery verdict. `complete_lifecycle` remains false: full
+Fleet action-to-next-action journeys, role matrix, remaining provider/live
+sandbox prerequisites and final audit reconciliation remain open.
+
+## Failed probes and corrected fixture assumptions
+
+Earlier runs failed before an accepted help response: an alertdialog locator did
+not match the actual inline review section; then the synthetic HTTP origins
+lacked secure-context UUID support. The small capability probe at84f948d0
+recorded isSecureContext=false and crypto.randomUUID undefined. These are failed
+attempts, not recovery passes. Earlier branding proofs exercised different,
+explicitly bounded actions.
+
+The fixture now uses four exact localhost origins without unsafe-origin flags
+or UUID shims. The guarded proxy preserves native Host/Origin/cookies/CSRF and
+rejects other destinations. The smaller probe at7a60bd07 passed ordinary OIDC,
+independent sessions/logout, guide and actual secure-context/UUID capabilities
+on both portals. The first connected attempt with those names failed immediately
+at native sign-in because Docker DNS lacked aliases. Exact isolated aliases at
+3671d66f fixed that transport boundary; the complete connected run above passed.
+Normal production images have no fixture transport, provider or clock override.
 
 Use HACKBOX_LIFECYCLE_BROWSER_PHASES=live-recovery with the versioned connected
-browser runner. Full role/route/archive browser acceptance remains separate.
+browser runner. Host and Docker free space are checked before builds and runs.
 
-The smaller transport probe at84f948d0 found the missing transition's root
-cause: isSecureContext=false and crypto.randomUUID undefined on the synthetic
-HTTP names. structuredClone was available. The earlier restricted-origin flag
-had not established browser trust; earlier branding/OIDC proofs did not exercise
-UUID creation, so their bounded actions remain distinct from recovery evidence.
-
-The fixture now uses four exact localhost origins, relying on the browser's
-standard local-origin treatment rather than flags or a UUID shim. The guarded
-proxy and test-only Go transport map those logical origins to the same isolated
-services, preserve native Host/Origin/cookies/CSRF, and still deny all other
-destinations. Native OIDC callbacks use those actual configured origins. No
-normal application or user deployment changes. The capability checkpoint must
-pass on both portals before the full recovery is attempted again.
-
-[Secure Contexts: trustworthy origins](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy)
+The response interception follows the [Chromium Fetch response-stage API](https://chromedevtools.github.io/devtools-protocol/tot/Fetch/).
+Local browser trust follows [Secure Contexts: trustworthy origins](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy).
