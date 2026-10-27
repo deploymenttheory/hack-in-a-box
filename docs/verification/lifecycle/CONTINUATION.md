@@ -422,3 +422,26 @@ exchanges remain unchanged. Standalone admission checkpoints retain36 people;
 the full journey explicitly records37 overlapping applicants. Compilation and
 the existing outcome wire check passed. No whole-run evidence for this new
 case is claimed yet; all remaining original acceptance stays open.
+
+## Passing connected surviving-offer cutoff — R12
+
+The full original journey **passed252.90s**, exit0, on clean private integration
+`1ff9d58808c7a703ab9ff67880c14882c541e202`, main`975fa1aa`, verification image
+`sha256:13e8c95493da0c3d211c628256a438e9f81a59b30d63ed6663cfd95028b72ff0`.
+Each event had37 overlapping native applicants: the original FIFO offer was
+accepted, while a separate reserve's later offer remained pending one second
+before the genuine admission cutoff under the unchanged two-working-day policy.
+Its single late acceptance command returned HTTP200 with actual declined/expired
+state and the original offer identity, never a confirmation. The32-person
+published roster stayed unchanged, and the owner froze it only after cutoff,
+before repository provisioning and the actual T−7 common release. Both events
+then repeated the verified postponement, post-freeze pair/29-person attendance
+exception, scoring, outcomes, archive and real30/60/90-day queue effects with
+unchanged competition hashes. See [bounded proof](offer-cutoff-proof.json).
+
+No offer window or benchmark target was widened. The unconfirmed reserve did
+not receive a GitHub link/grant; the strict36-participant-plus2-mentor OAuth
+transport still observed exactly38 verifications. Raw receipts, original intent
+metadata and final database remain private. Missing dispatch-window, retired
+repository, full Fleet/browser/role/expiry and normal-image cases still keep
+the complete original matrix and #120 open.
