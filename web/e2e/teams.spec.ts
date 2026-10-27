@@ -205,6 +205,8 @@ test('freeze deadline crossing while reviewing a draft prevents reassignment', a
   await mockWorkspace(page)
   const teams = teamPage(true); teams.freeze_at = '2027-06-12T10:00:00Z'
   await page.clock.install({ time: new Date('2027-06-12T09:59:59Z') })
+  // Hold wall time during setup while browser timers continue to run.
+  await page.clock.setFixedTime(new Date('2027-06-12T09:59:59Z'))
   let writes = 0
   await page.route(`**/events/${firstID}/teams`, route => { if (route.request().method() === 'POST') writes++; return route.fulfill({ json: teams }) })
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Teams')
@@ -214,6 +216,7 @@ test('freeze deadline crossing while reviewing a draft prevents reassignment', a
   await expect(page.getByRole('button', { name: 'Assign draft member', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: 'Assign draft member', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Confirm team change', exact: true })).toBeEnabled()
+  await page.clock.setFixedTime(new Date('2027-06-12T10:00:15Z'))
   await page.clock.fastForward(16000)
   await expect(page.getByRole('button', { name: 'Confirm team change', exact: true })).toBeDisabled()
   await expect(page.getByText('The team freeze cutoff has passed. Reassignment is unavailable.')).toBeVisible()
