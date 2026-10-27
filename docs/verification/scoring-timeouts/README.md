@@ -65,12 +65,14 @@ the actual maintenance session to appear in `pg_blocking_pids` behind the API
 backend. This adds no artificial lock holder, provider success or retry.
 
 The identical test file on unmodified main `d048b465` returned HTTP503 in10.046s,
-with the native worker blocked for9.988s. Candidate production source `5d79134b`
+with native maintenance completing in9.988s and blocking observed. Candidate production source `5d79134b`
 plus that test-only delta returned HTTP200 in8.709s/1,320 queries; PostgreSQL
-observed the native worker blocked behind that API for8.638s. Both runs used
+observed blocking behind that API; maintenance completed in8.638s. Both runs used
 real PostgreSQL, race detection, the same4ms cost and unchanged10-second request
 budget. The original eight qualification browser cases also passed198.410s
 against that production source with the same test-only delta compiled in.
 All seven affected-owner race suites passed on frozen production source
 `5d79134b`. These results address the initial review's missing concurrency
 reproduction; the full connected lifecycle and final-head CI remain pending.
+
+The maintenance elapsed values include its full execution, not just sampled lock-wait duration. Fixed4ms is a controlled latency model and does not uniquely identify every historical timeout cause.
