@@ -30,6 +30,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	browserBrandVerified bool
+
 	retentionBoundary         *lifecycleReviewBoundaryReceipt
 	retiredRepositoryVerified bool
 	expiry                    lifecycleExpiryReceipt
@@ -142,6 +144,13 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			}
 		}
 		run.events = append(run.events, item)
+	}
+	if lifecycleBrowserRequired(t) {
+		for _, item := range run.events {
+			if !item.browserBrandVerified {
+				t.Fatal("required same-event browser branding verification was not executed")
+			}
+		}
 	}
 	run.linkGitHubParticipants(t)
 	// Let the genuine remaining offer expire at admission cutoff, then freeze
@@ -485,17 +494,21 @@ func (r *lifecycleJourney) prepareEvent(
 	brand.Assets = []templates.Asset{}
 	brand.Primary = []string{"#164e63", "#5b21b6"}[index]
 	item.brand = brand
-	var branded templates.BrandView
-	if err := r.owner.call(
-		ctx,
-		http.MethodPut,
-		base+"/branding",
-		item.view.Revision,
-		brand,
-		&branded,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
+	if lifecycleBrowserRequired(t) {
+		r.saveBrandInBrowser(t, &item, index+1)
+	} else {
+		var branded templates.BrandView
+		if err := r.owner.call(
+			ctx,
+			http.MethodPut,
+			base+"/branding",
+			item.view.Revision,
+			brand,
+			&branded,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
 	}
 	target := "5"
 	definition := objectives.Definition{
