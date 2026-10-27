@@ -25,6 +25,9 @@ export function useReviewReturnFocus({ paused, pending, unknown, reviewing, capt
   }, [paused, pending, unknown, reviewing])
   return (source: HTMLElement | null, fallback: HTMLElement | null) => {
     deferred.current = source?.isConnected && fallback ? { source, fallback, current: capture() } : undefined
-    return source?.isConnected && !source.matches(':disabled') && !source.closest('[hidden]') ? source : fallback ?? false
+    // Base UI resolves this destination during teardown, before React unhides
+    // the editor. Its final focus runs after that commit; keep the real opener
+    // for ordinary cancellation and use the fallback only while disabled.
+    return source?.isConnected && !source.matches(':disabled') ? source : fallback ?? false
   }
 }
