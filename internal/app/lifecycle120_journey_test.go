@@ -253,7 +253,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.releaseOwnTeamFeedback(t)
 	run.completeAndCollectFeedback(t)
 	for i := range run.events {
-		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(t, run.events[i].view.ID)
+		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(t, run.events[i].view.ID, len(run.events[i].review.FinalHuddles))
 	}
 	run.captureTeamOutcomesAndShowcase(t)
 	run.prepareRetainedReviews(t)

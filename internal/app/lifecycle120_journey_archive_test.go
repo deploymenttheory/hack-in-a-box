@@ -31,7 +31,7 @@ type lifecycleArchiveReceipt struct {
 // The fixture's only SQL access here is a repeatable-read, read-only oracle.
 // Native HTTP creates every lifecycle/evidence effect. Full private rows exist
 // only in memory for hashing and are never logged or put into public receipts.
-func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID) map[string]lifecycleCompetitionDigest {
+func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID, expectedSignoffs int) map[string]lifecycleCompetitionDigest {
 	t.Helper()
 	if os.Getenv("HACKBOX_LIFECYCLE_ISOLATED") != "synthetic-only" {
 		t.Fatal("competition oracle requires the isolated fixture")
@@ -61,7 +61,14 @@ func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID) map[string]li
 		if err := tx.QueryRow(t.Context(), "SELECT count(*),COALESCE(jsonb_agg(row ORDER BY row),'[]'::jsonb)::text FROM ("+source+") native_rows", eventID).Scan(&count, &raw); err != nil {
 			t.Fatal("read isolated competition source: " + name)
 		}
-		if count == 0 {
+		if name == "mentor_scorecard_signoffs" {
+			// All-team judging has no final mentor huddles. Qualification's four
+			// acknowledged huddles each have an immutable sign-off; retain and hash
+			// the empty all-team set rather than inventing a qualification gate.
+			if count != int64(expectedSignoffs) {
+				t.Fatalf("competition sign-off census differs from acknowledged final huddles: got %d, want %d", count, expectedSignoffs)
+			}
+		} else if count == 0 {
 			t.Fatal("competition oracle unexpectedly has no native rows: " + name)
 		}
 		hash := sha256.Sum256([]byte(raw))
@@ -123,7 +130,7 @@ func (r *lifecycleJourney) archiveCompetitionAndUpdateOutcome(t *testing.T) {
 		if !found {
 			t.Fatal("archived outcome update lacks exact retained actor/evidence history")
 		}
-		after := lifecycleCompetitionSnapshot(t, item.view.ID)
+		after := lifecycleCompetitionSnapshot(t, item.view.ID, len(item.review.FinalHuddles))
 		if !reflect.DeepEqual(item.competitionBefore, after) {
 			t.Fatal("archive or authorised outcomes mutated frozen competition evidence")
 		}

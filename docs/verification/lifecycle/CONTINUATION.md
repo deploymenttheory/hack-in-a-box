@@ -256,3 +256,24 @@ and cookies. An unwritable journal prevents the request from being sent. The
 privacy and pre-wire failure tests plus existing exact-header and accepted-reply
 loss/no-replay controls pass with race detection (1.579s); this is HTTP/helper
 evidence, not a complete lifecycle or a fix for #319.
+
+## Fixed-timeout private integration R7 — oracle correction
+
+Private clean integration `377c27570eb52d4d686a82aa8f4e7e76ba7145ed` combined
+PR #316 source `74080be3` with PR #320 source `41ce5ff1` on main `d048b465`.
+Verification image `sha256:0c6521bea636e20c06c2e66a9f1522c2b31415ffe73767364c504fbbeedb93b0`
+ran the original connected journey once on fresh isolated PostgreSQL. It failed
+after **209.29s**, after both events reached completion, at the newly reached
+read-only competition oracle. Earlier independent scoring, result decisions,
+team feedback, media and survey phases passed in this run; this is not a complete
+lifecycle pass or a unique proof of every historical timeout's cause.
+
+The oracle incorrectly required nonempty final mentor sign-offs in all-team
+judging, which deliberately has no final mentor run. A read-only census of the
+preserved original database found zero final runs/sign-offs for all-team mode
+and one final run/four actual sign-offs for mentor qualification. All other
+required competition tables were nonempty in both events. The corrected oracle
+requires the exact count of already acknowledged final huddles (zero versus
+four), retaining a hash even for the empty set. Missing qualification sign-offs
+remain a failure. No production gate or data was changed; the corrected fresh
+whole journey remains pending.

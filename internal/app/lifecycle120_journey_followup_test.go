@@ -125,7 +125,7 @@ func (r *lifecycleJourney) deliverRetainedReviews(t *testing.T) {
 			if item.reviews[phase].NotificationID == uuid.Nil {
 				t.Fatal("current owned review was absent from actual native inbox")
 			}
-			if !reflect.DeepEqual(item.competitionBefore, lifecycleCompetitionSnapshot(t, item.view.ID)) {
+			if !reflect.DeepEqual(item.competitionBefore, lifecycleCompetitionSnapshot(t, item.view.ID, len(item.review.FinalHuddles))) {
 				t.Fatal("retained queued follow-up mutated frozen competition evidence")
 			}
 		}
