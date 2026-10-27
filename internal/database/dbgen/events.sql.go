@@ -33,11 +33,16 @@ func (q *Queries) ApproveScheduleItem(ctx context.Context, arg ApproveScheduleIt
 const cancelEventOperations = `-- name: CancelEventOperations :exec
 UPDATE operations SET cancelled=true,approved=false,revision=revision+1,updated_at=now()
 WHERE event_id=$1 AND state IN ('pending','running')
-AND NOT (retained_occurrence_id IS NOT NULL AND EXISTS(SELECT 1 FROM events e WHERE e.id=$1 AND e.stage='archived') AND retained_communication_occurrence(event_id,retained_occurrence_id,now()))
+AND NOT (retained_occurrence_id IS NOT NULL AND EXISTS(SELECT 1 FROM events e WHERE e.id=$1 AND e.stage='archived') AND retained_communication_occurrence(event_id,retained_occurrence_id,$2::timestamptz))
 `
 
-func (q *Queries) CancelEventOperations(ctx context.Context, eventID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, cancelEventOperations, eventID)
+type CancelEventOperationsParams struct {
+	EventID uuid.UUID
+	AtTime  time.Time
+}
+
+func (q *Queries) CancelEventOperations(ctx context.Context, arg CancelEventOperationsParams) error {
+	_, err := q.db.Exec(ctx, cancelEventOperations, arg.EventID, arg.AtTime)
 	return err
 }
 

@@ -605,7 +605,10 @@ func (s Service) Transition(
 			return fmt.Errorf("change stage: %w", err)
 		}
 		if !changed.WritesAllowed {
-			if err := q.CancelEventOperations(ctx, id); err != nil {
+			if err := q.CancelEventOperations(ctx, dbgen.CancelEventOperationsParams{
+				EventID: id,
+				AtTime:  now,
+			}); err != nil {
 				return fmt.Errorf("cancel event operations: %w", err)
 			}
 			if err := q.CancelEventSchedule(ctx, id); err != nil {

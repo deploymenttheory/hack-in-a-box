@@ -34,7 +34,7 @@ SELECT * FROM event_decisions WHERE event_id=$1 ORDER BY created_at DESC,id LIMI
 -- name: CancelEventOperations :exec
 UPDATE operations SET cancelled=true,approved=false,revision=revision+1,updated_at=now()
 WHERE event_id=$1 AND state IN ('pending','running')
-AND NOT (retained_occurrence_id IS NOT NULL AND EXISTS(SELECT 1 FROM events e WHERE e.id=$1 AND e.stage='archived') AND retained_communication_occurrence(event_id,retained_occurrence_id,now()));
+AND NOT (retained_occurrence_id IS NOT NULL AND EXISTS(SELECT 1 FROM events e WHERE e.id=$1 AND e.stage='archived') AND retained_communication_occurrence(event_id,retained_occurrence_id,sqlc.arg(at_time)::timestamptz));
 
 -- name: ScheduleItems :many
 SELECT * FROM schedule_items WHERE event_id=$1 ORDER BY due_at,id;
