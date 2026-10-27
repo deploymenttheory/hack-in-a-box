@@ -24,6 +24,9 @@ try{
   await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
   await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
   const response=await page.evaluate(async()=>{const result=await fetch('/api/v1/session',{credentials:'same-origin'});return {status:result.status,value:await result.json()}});assert.equal(response.status,200)
+  const capabilities=await page.evaluate(()=>({secure_context:window.isSecureContext,random_uuid:typeof crypto.randomUUID,structured_clone:typeof structuredClone}))
+  writeFileSync(join(output,origin.includes('admin')?'admin-capabilities.json':'public-capabilities.json'),JSON.stringify(capabilities,null,2)+'\n',{mode:0o600})
+  assert.equal(capabilities.secure_context,true);assert.equal(capabilities.random_uuid,'function');assert.equal(capabilities.structured_clone,'function')
   return {page,session:response.value}
  }
  const admin=await signIn(origins.admin),publicPortal=await signIn(origins.public)
