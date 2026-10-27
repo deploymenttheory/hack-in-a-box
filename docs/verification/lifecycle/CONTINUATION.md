@@ -376,3 +376,26 @@ census now expects58 actual surviving competitors plus24 mentors, and common
 answers must reach29 current recipients per event; historical pre-withdrawal
 notices retain their32-person receipts. Compilation passed; a fresh whole run
 is still required before any new acceptance claim.
+
+## Passing connected frozen-pair and attendance exception — R11
+
+The full original journey **passed210.62s**, exit0, on clean private integration
+`2d23165e2081f2bedcf6142653186c211464a022` on main`975fa1aa`, verification image
+`sha256:9b53eaa155d3a5d551af002498ba41ae35c05aac12847897f554fb3b2e238c54`.
+In each event, three actual post-freeze registration withdrawals left the
+original frozen pair and private repository intact, with no reassignment or
+post-cutoff new admission. Confirmed attendance fell32→29 against the unchanged
+minimum30 after the original explicit go and common publication. Unwaived live
+entry and an empty exception reason were denied without mutation; each approved
+live exception retained its exact actor/reason/revision decision and left the
+other event unchanged. Native scoring, outcomes, archive and actual queued
+30/60/90-day reviews then passed with unchanged competition hashes.
+
+The independent provider census was58 surviving competitors plus24 selected
+mentors, and each common-answer version reached29 current confirmed recipients;
+pre-withdrawal roster notices retained their original32-person receipts. No
+benchmark target or go floor was lowered. [Bounded proof](frozen-pair-attendance-proof.json)
+retains each pair's actual cutoff outcome rather than inventing a score or
+automatic success. Full private receipts, original intents and final database
+remain local. Surviving-offer, missed-release, retired-repository, complete UI/
+role/expiry and normal-image variants still keep #120 and L01–L18 incomplete.

@@ -1,0 +1,100 @@
+{
+  "project": "hackbox-lifecycle120-attendance-r11",
+  "runner": "hackbox-lifecycle120-attendance-r11-journey",
+  "source_revision": "2d23165e2081f2bedcf6142653186c211464a022",
+  "source_worktree_clean_at_build": true,
+  "image": "sha256:9b53eaa155d3a5d551af002498ba41ae35c05aac12847897f554fb3b2e238c54",
+  "main_base": "975fa1aa6ff71af7479437a24ffc402ae07de804",
+  "verification_image_only": true,
+  "complete_lifecycle": false,
+  "private_integration_of_prs": [
+    316,
+    320
+  ],
+  "additional_variants": [
+    "approved post-publication postponement",
+    "post-freeze surviving pair",
+    "post-cutoff new-admission denial",
+    "actual below-minimum reasoned attendance exception"
+  ],
+  "result": "PASS",
+  "duration_seconds": 210.62,
+  "events": [
+    {
+      "event_id": "94da05ad-325e-4532-bb78-ec439e108928",
+      "mode": "all_teams",
+      "stage": "archived",
+      "attendance_exception": {
+        "smaller_team_id": "8321fbd7-7f69-4cbe-b528-f0175ba522e1",
+        "retained_repository_id": 1000,
+        "withdrawn_people": [
+          "ca1da694-418e-4e9e-b2ab-008e213ee104",
+          "d38fec45-74c7-43b2-ad82-efa11634e534",
+          "eb2b6cb1-afa1-4a8d-b05f-51d4c0e5bd0b"
+        ],
+        "unmoved_survivors": [
+          "0ac32ded-0937-4e81-ba6b-16e675bbc6bb",
+          "b1975036-5dde-4492-90ed-991704a1c6f2"
+        ],
+        "confirmed_before": 32,
+        "confirmed_after": 29,
+        "configured_minimum": 30,
+        "post_freeze_move_denied": true,
+        "post_cutoff_backfill_denied": true,
+        "unwaived_live_denied": true,
+        "empty_exception_reason_denied": true,
+        "attendance_exception_decision_id": "c6fdce01-8a49-45fe-8905-7ca81cd6718b",
+        "attendance_exception_revision": 153,
+        "exception_reason_sha256": "5a6cffb85e6fc6246ad07b556c6c41de4d6bb2f7701535cccdf0abf6640d9ba5",
+        "other_event_unchanged": true
+      },
+      "smaller_team_cutoff_outcome": "frozen",
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    },
+    {
+      "event_id": "d1bb20d2-fc12-4221-b858-f4ceb9220cdb",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "attendance_exception": {
+        "smaller_team_id": "ca63ae63-c4ad-489d-b849-5be540fb8576",
+        "retained_repository_id": 1008,
+        "withdrawn_people": [
+          "ca1da694-418e-4e9e-b2ab-008e213ee104",
+          "d38fec45-74c7-43b2-ad82-efa11634e534",
+          "eb2b6cb1-afa1-4a8d-b05f-51d4c0e5bd0b"
+        ],
+        "unmoved_survivors": [
+          "0ac32ded-0937-4e81-ba6b-16e675bbc6bb",
+          "b1975036-5dde-4492-90ed-991704a1c6f2"
+        ],
+        "confirmed_before": 32,
+        "confirmed_after": 29,
+        "configured_minimum": 30,
+        "post_freeze_move_denied": true,
+        "post_cutoff_backfill_denied": true,
+        "unwaived_live_denied": true,
+        "empty_exception_reason_denied": true,
+        "attendance_exception_decision_id": "ee653b2a-1463-47c3-aa46-6efcab4351dd",
+        "attendance_exception_revision": 159,
+        "exception_reason_sha256": "5a6cffb85e6fc6246ad07b556c6c41de4d6bb2f7701535cccdf0abf6640d9ba5",
+        "other_event_unchanged": true
+      },
+      "smaller_team_cutoff_outcome": "frozen",
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    }
+  ],
+  "actual_competitor_invitation_count": 58,
+  "actual_mentor_invitation_count": 24,
+  "private_checkpoint_sha256": "2aa9d2e9423f6385fbf661336e5b99c920081c1b14341c32451a0b13c1be7048",
+  "remaining_acceptance": "Original twelve criteria and L01-L18 remain open for outstanding surviving-offer/missed-release/disbanded-repository/browser/expiry/normal-image variants."
+}
