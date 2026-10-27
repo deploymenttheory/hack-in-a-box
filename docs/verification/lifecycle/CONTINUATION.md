@@ -604,3 +604,21 @@ The unchanged-state check now reads the actual supported review collection,
 requires exactly the three original plans, selects the exact rejected ID and
 compares the native draft/version/command projection. No application endpoint
 or approval/retention rule changed. Fresh execution remains required.
+
+## Passing full native default90 retention — R23
+
+Clean `922ad7b250bbfcc90ab974d7611c018b70701596`, verification image
+`sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8`,
+passed199.11s, exit0, through both actual event modes and final guards. The
+original intent journal contains zero privacy-policy writes; both events retain
+the untouched native90-day policy. Actual day90 approval is rejected400, and
+the supported native review collection retains the same original version1 draft.
+Only the actual approved30/60-day plans deliver their native notifications.
+
+Both events completed2026-03-31T16:00Z and expired2026-06-29T16:00Z. Owners read
+one second before; equality denies owner/organiser outcome/history and the last
+approved notification. Executed retired-repository/current-list assertions and
+full competition hashes remain valid. See [bounded receipt](default-retention-expiry-proof.json).
+Original logs/journal/database and scoped cleanup are retained. Full Fleet/
+browser/current-role/provider acceptance stays open. The complementary120-day
+case is being repeated on this same source/image; no new verdict is inferred.

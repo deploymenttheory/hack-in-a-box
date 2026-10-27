@@ -23,5 +23,7 @@ No production retention default/window, approval rule or API timeout changes.
 The private monotonic fixture clock permits the already-configured120-day
 boundary after postponement; it is absent from production images.
 
-Implementation compiles. Actual full native verdicts must be recorded from each
-fresh run; the previous uninvoked-helper receipts do not supply them.
+The default90 case passes199.11s on clean `922ad7b2`; see
+[actual receipt](default-retention-expiry-proof.json). The earlier120-day case
+passed211.23s on `92f988ae`; its same-driver repeat is pending. Earlier
+uninvoked-helper receipts do not supply these executed verdicts.
