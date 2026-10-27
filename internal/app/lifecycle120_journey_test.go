@@ -30,6 +30,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	attendance         lifecycleAttendanceReceipt
 	postponement       lifecyclePostponementReceipt
 	view               event.View
 	cohort             lifecycleAdmissions
@@ -169,6 +170,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		run.readCommonPublication(t, &run.events[i])
 	}
 	run.postponePublishedEvents(t)
+	run.depleteFrozenTeams(t)
 	run.prepareMentorReview(t)
 	run.planFinalMentorReview(t)
 	run.prepareRepositoryAccess(t)
@@ -231,16 +233,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if err := control.advance(ctx, run.timeline.Live); err != nil {
 		t.Fatal(err)
 	}
-	for i := range run.events {
-		item := &run.events[i]
-		item.view, err = lifecycleTransition(ctx, owner, item.view.ID, "live", http.StatusOK)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if item.view.Stage != "live" || item.view.ConfirmedAttendees != 32 {
-			t.Fatal("native connected journey did not reach live with its real confirmed census")
-		}
-	}
+	run.enterLiveWithAttendanceException(t)
 	run.prepareLiveMentorAccess(t)
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
@@ -290,14 +283,15 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			providerProof.RepositoryCreates,
 		)
 	}
-	if providerProof.InvitationCreates != 88 || providerProof.InvitationAcceptances != 88 {
+	if providerProof.InvitationCreates != 82 || providerProof.InvitationAcceptances != 82 {
 		t.Fatal(
-			"actual external access census did not match64 frozen competitor plus24 read-only mentor grants",
+			"actual external access census did not match58 surviving frozen competitor plus24 read-only mentor grants",
 			providerProof.InvitationCreates,
 			providerProof.InvitationAcceptances,
 		)
 	}
 	type eventReceipt struct {
+		Attendance         lifecycleAttendanceReceipt          `json:"attendance_exception"`
 		Postponement       lifecyclePostponementReceipt        `json:"postponement"`
 		Eligibility        []lifecycleEligibilityReceipt       `json:"eligibility"`
 		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
@@ -347,6 +341,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				Attendance:         item.attendance,
 				Postponement:       item.postponement,
 				Eligibility:        item.eligibility,
 				PostEvent:          item.postEvent,

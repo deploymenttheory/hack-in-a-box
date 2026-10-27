@@ -359,3 +359,20 @@ remain retained. Remaining withdrawal, surviving-offer/cutoff, missed-release,
 browser/role/expiry and normal-image variants still keep #120 and its entire
 L01–L18 matrix open. The earlier not-yet-executed section records implementation
 provenance, not a different scope or a claim that this complete matrix passed.
+
+## Post-freeze pair and attendance-exception extension — not yet executed
+
+The next same-event extension withdraws three actual confirmed people from a
+frozen team of five after publication, retaining the remaining pair, team ID
+and provisioned private repository. It rejects a survivor move and a new
+post-cutoff application. Both native event censuses must fall from32 to29 while
+remaining in preparation; the original configured minimum remains30. At the
+revised live start, a missing exception and an empty reason must each fail
+without mutation. Only an explicit reasoned exception may enter live, with its
+exact actor/revision decision and independent other-event comparison. Original
+pre-freeze target-five/four-to-six checks remain unchanged; the smaller access
+plan is accepted only for this recorded frozen pair. The independent provider
+census now expects58 actual surviving competitors plus24 mentors, and common
+answers must reach29 current recipients per event; historical pre-withdrawal
+notices retain their32-person receipts. Compilation passed; a fresh whole run
+is still required before any new acceptance claim.

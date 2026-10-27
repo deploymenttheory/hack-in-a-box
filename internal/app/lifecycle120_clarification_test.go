@@ -222,8 +222,8 @@ func (r *lifecycleJourney) publishCommonClarifications(t *testing.T) {
 				receipt.NotificationIDs = append(receipt.NotificationIDs, added[0])
 				receipt.RecipientIDs = append(receipt.RecipientIDs, client.person)
 			}
-			if len(receipt.RecipientIDs) != 32 {
-				t.Fatal("common answer did not retain exactly32 actual confirmed recipients")
+			if len(receipt.RecipientIDs) != 29 {
+				t.Fatal("common answer did not retain exactly29 current confirmed recipients after post-freeze withdrawals")
 			}
 			proof.Versions = append(proof.Versions, receipt)
 			r.persistWorkProgress(t)
