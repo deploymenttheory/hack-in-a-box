@@ -136,3 +136,12 @@ The corrected driver explicitly advances to assessment after actual cutoff
 settlement/reconciliation, preserving the demonstration that cutoff runs while
 the event is still live. Completion follows the independent review/results work.
 This corrects fixture chronology; no production gate, API or time policy changed.
+
+The corrected frozen `8ebe509a` image
+`sha256:88b39fe88f663414572b9e38f38ba1eb94140dea8772dab4a3b00dcfc17f9412`
+passed the native assessment transition and reached post-event completion, then
+failed after **322.51s** when the new media driver used POST instead of the
+contract's PUT. The native API returned a definite HTTP 405. This was a driver
+protocol error, not a product defect or passing post-event evidence. The next
+source uses the declared PUT operation and explicitly authors a replacement media
+draft before reviewing after reconsent; revocation retires the old publication.

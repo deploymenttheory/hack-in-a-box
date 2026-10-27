@@ -100,7 +100,7 @@ func (r *lifecycleJourney) reviewConsentedRecording(t *testing.T, item *lifecycl
 		if action == "save" {
 			input.Metadata = &metadata
 		}
-		if err := r.owner.call(t.Context(), http.MethodPost, path, revision, input, &current, http.StatusOK); err != nil {
+		if err := r.owner.call(t.Context(), http.MethodPut, path, revision, input, &current, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		if current.AcknowledgedVersion == nil || *current.AcknowledgedVersion != current.Version {
@@ -140,6 +140,7 @@ func (r *lifecycleJourney) reviewConsentedRecording(t *testing.T, item *lifecycl
 	if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &current, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
+	change("save", nil) // Revocation retired the old publication; opt-in cannot revive it.
 	change("review", &media.Review{ContentReviewed: true, IdentificationReviewed: true})
 	change("publish", nil)
 	if err := peer.call(t.Context(), http.MethodGet, path, -1, nil, &visible, http.StatusOK); err != nil {
