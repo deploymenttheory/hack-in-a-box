@@ -459,7 +459,10 @@ func TestPreparationTemplateDatesFollowScheduleChanges(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	s := Service{Pool: pool}
+	// Both schedules must remain ahead of the native T−7 gate regardless
+	// of the wall date on which this calendar/DST fixture executes.
+	clock := func() time.Time { return time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC) }
+	s := Service{Pool: pool, Now: clock}
 	page, err := s.List(ctx, owner.ID, id, Filter{})
 	if err != nil {
 		t.Fatal(err)
@@ -476,7 +479,7 @@ func TestPreparationTemplateDatesFollowScheduleChanges(t *testing.T) {
 		t.Fatal(err)
 	}
 	c.LiveStart = c.LiveStart.AddDate(0, 0, 7)
-	_, err = (event.Service{Pool: pool}).Update(
+	_, err = (event.Service{Pool: pool, Clock: clock}).Update(
 		ctx,
 		owner.ID,
 		id,
