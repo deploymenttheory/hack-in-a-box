@@ -84,11 +84,18 @@ func (s Service) ballotPage(
 	if err != nil {
 		return out, err
 	}
+	// All ties share this actor/run/source in the same event transaction. The
+	// native completion owner holds the event lock; each unique candidate still
+	// passes its current authority/frozen-final checks before projection.
+	checked := map[uuid.UUID]bool{}
 	for _, state := range states {
 		if !slices.Contains(state.RequiredJudgeIDs, actor) {
 			continue
 		}
 		for _, team := range state.Tie.TeamIDs {
+			if checked[team] {
+				continue
+			}
 			if err := s.Judging.AuthorizeResultTargetInTransaction(
 				ctx,
 				tx,
@@ -99,6 +106,7 @@ func (s Service) ballotPage(
 			); err != nil {
 				return BallotPage{}, failure("current ballot target", err)
 			}
+			checked[team] = true
 		}
 		item := JudgeTie{State: state, Advisories: []MentorAdvisory{}}
 		for _, a := range advice {
@@ -107,12 +115,7 @@ func (s Service) ballotPage(
 				item.Advisories = append(item.Advisories, a)
 			}
 		}
-		for _, vote := range round.Votes {
-			if vote.JudgeID == actor && vote.TieID == state.Tie.ID {
-				own := vote
-				item.OwnVote = &own
-			}
-		}
+		item.OwnVote = projectOwnBallot(round.Votes, actor, state.Tie.ID)
 		out.Ties = append(out.Ties, item)
 	}
 	return out, nil
@@ -275,7 +278,7 @@ func (s Service) Vote(
 		if err != nil {
 			return failure("read event after vote", err)
 		}
-		out, err = s.ballotPage(ctx, tx, actor, eventID, current, round, source)
+		out, err = updateRecordedBallotPage(page, actor, current.event.Revision, round, source)
 		out.Receipt = &receipt
 		return err
 	})
@@ -292,6 +295,51 @@ func validateVote(expected int64, input Command) error {
 			input.Reason,
 		) > 2000 || len(input.Evidence) == 0 || len(input.Evidence) > 30 || len(input.Awards) != 0 {
 		return access.ErrInvalid
+	}
+	return nil
+}
+
+// The successful Vote still holds the event lock. Its source, candidate
+// authority and advisory projection were checked before the write; recording
+// a ballot changes only the result version, counts and this judge's own vote.
+// New reads and original-command replays still perform all current checks.
+func updateRecordedBallotPage(
+	page BallotPage,
+	actor uuid.UUID,
+	revision int64,
+	round Round,
+	source assessmentSource,
+) (BallotPage, error) {
+	if page.SourceBinding != source.preview.Binding ||
+		page.JudgeRunID != source.preview.JudgeRunID {
+		return BallotPage{}, access.ErrConflict
+	}
+	states, err := resolveJudgeTies(source.preview.Ties, source.completion.Assignments, round.Votes)
+	if err != nil {
+		return BallotPage{}, err
+	}
+	for index := range page.Ties {
+		tie := &page.Ties[index]
+		state := slices.IndexFunc(
+			states,
+			func(v TieState) bool { return v.Tie.ID == tie.State.Tie.ID },
+		)
+		if state < 0 {
+			return BallotPage{}, access.ErrConflict
+		}
+		tie.State = states[state]
+		tie.OwnVote = projectOwnBallot(round.Votes, actor, tie.State.Tie.ID)
+	}
+	page.Revision, page.Version = revision, round.Version
+	return page, nil
+}
+
+func projectOwnBallot(votes []Vote, actor uuid.UUID, tieID string) *Vote {
+	for _, vote := range votes {
+		if vote.JudgeID == actor && vote.TieID == tieID {
+			own := vote
+			return &own
+		}
 	}
 	return nil
 }

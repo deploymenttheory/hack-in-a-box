@@ -48,6 +48,24 @@ func (s Service) page(
 	if err != nil {
 		return Page{}, err
 	}
+	return s.pageFromSource(ctx, tx, eventID, current, round, source)
+}
+
+// Result writes already validate the source under their event lock. Their
+// decisions update the result round, not its frozen judging evidence. Reuse is
+// local to that transaction; ordinary reads and receipt replays refresh it.
+func (s Service) pageFromSource(
+	ctx context.Context,
+	tx pgx.Tx,
+	eventID uuid.UUID,
+	current authority,
+	round Round,
+	source assessmentSource,
+) (Page, error) {
+	if !current.organiser {
+		return Page{}, access.ErrForbidden
+	}
+	var err error
 	out := Page{
 		TieStates:     []TieState{},
 		Advisories:    []MentorAdvisory{},
