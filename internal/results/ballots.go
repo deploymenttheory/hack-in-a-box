@@ -310,7 +310,8 @@ func updateRecordedBallotPage(
 	round Round,
 	source assessmentSource,
 ) (BallotPage, error) {
-	if page.SourceBinding != source.preview.Binding || page.JudgeRunID != source.preview.JudgeRunID {
+	if page.SourceBinding != source.preview.Binding ||
+		page.JudgeRunID != source.preview.JudgeRunID {
 		return BallotPage{}, access.ErrConflict
 	}
 	states, err := resolveJudgeTies(source.preview.Ties, source.completion.Assignments, round.Votes)
@@ -319,7 +320,10 @@ func updateRecordedBallotPage(
 	}
 	for index := range page.Ties {
 		tie := &page.Ties[index]
-		state := slices.IndexFunc(states, func(v TieState) bool { return v.Tie.ID == tie.State.Tie.ID })
+		state := slices.IndexFunc(
+			states,
+			func(v TieState) bool { return v.Tie.ID == tie.State.Tie.ID },
+		)
 		if state < 0 {
 			return BallotPage{}, access.ErrConflict
 		}
