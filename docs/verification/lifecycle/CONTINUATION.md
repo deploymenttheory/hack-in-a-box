@@ -112,3 +112,27 @@ queued workers/PostgreSQL. SQL is a read-only evidence oracle, not a way to seed
 registration, admission, freeze, challenge, rubric, scores or successful effects.
 The verification entrypoint remains distinct from the production image. Neither
 the continuation Draft nor a green CI run alone completes these acceptance rows.
+
+## Full acceptance completion branch — work in progress
+
+The current completion branch continues the same two native event/actor
+lifetimes into organiser completion, reviewed consented recording publication,
+revocation/reconsent with a new review, configurable published surveys, actual
+private responses and exact duplicate-response acknowledgement. The full
+original acceptance matrix remains unchanged. Showcase, retained follow-up,
+archive/immutability, remaining exception variants and final browser/runtime
+proof still require implementation and execution before this deliverable merges.
+
+The first extended isolated image
+`sha256:49a73b5dcadad419ae94f347ba37c947ff317d1369bdfa5ed10ec71f57659b14`
+ran from an uncommitted extension of `1d283469` and failed after **335.17s**:
+its new driver attempted `live` → `completed`, and the native transition returned
+a definite HTTP 409. Before that rejection, both events completed the existing
+award-publication and private team-feedback phases. No full acceptance or new
+post-event pass is claimed. Its private artifacts and source hashes were retained;
+all owned containers, volumes and its internal network were removed afterward.
+
+The corrected driver explicitly advances to assessment after actual cutoff
+settlement/reconciliation, preserving the demonstration that cutoff runs while
+the event is still live. Completion follows the independent review/results work.
+This corrects fixture chronology; no production gate, API or time policy changed.

@@ -56,6 +56,7 @@ type lifecycleJourneyEvent struct {
 	clarification      lifecycleClarificationReceipt
 	practice           []lifecyclePracticeReceipt
 	review             lifecycleMentorReviewReceipt
+	postEvent          lifecyclePostEventReceipt
 	commonHash         string
 }
 type lifecycleJourney struct {
@@ -234,6 +235,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
+	run.advanceReconciledAssessment(t)
 	run.reviewFrozenMentorEvidence(t)
 	run.qualifyFrozenFinalists(t)
 	run.publishSignedFinalists(t)
@@ -241,6 +243,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.decideJudgeResults(t)
 	run.publishConfirmedAwards(t)
 	run.releaseOwnTeamFeedback(t)
+	run.completeAndCollectFeedback(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -261,6 +264,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
 	}
 	type eventReceipt struct {
+		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
 		ID                 uuid.UUID                           `json:"event_id"`
 		Mode               string                              `json:"mode"`
 		Stage              string                              `json:"stage"`
@@ -304,6 +308,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				PostEvent:          item.postEvent,
 				ID:                 item.view.ID,
 				Mode:               item.rubric.Definition.Mode,
 				Stage:              item.view.Stage,
