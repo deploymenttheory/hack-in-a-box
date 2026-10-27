@@ -76,3 +76,21 @@ All seven affected-owner race suites passed on frozen production source
 reproduction; the full connected lifecycle and final-head CI remain pending.
 
 The maintenance elapsed values include its full execution, not just sampled lock-wait duration. Fixed4ms is a controlled latency model and does not uniquely identify every historical timeout cause.
+
+## Original connected lifecycle rerun
+
+The fresh R9 `TestLifecycleComposeJourney` passed **270.63s**, exit 0, on clean
+private integration `a8ce5a8851a0af5ffd84d5bfed98c6a59cfa2e48`, image
+`sha256:fe04ec6c8738bc7d2ba37b97dceec0ea122f5fe04eb54f92c6dfd7d03fa327aa`.
+It combines current-main dependencies, this production correction and the
+separate #316 verification drivers. Both modes passed the previously failing
+independent judge scoring, result decision and team feedback phases, continuing
+through actual native outcomes, archive and queued 30/60/90-day reviews with
+unchanged competition hashes. [Bounded provenance](lifecycle-proof.json) retains
+private artifact hashes, not raw assessment/authentication data.
+
+R7/R8 had already passed the former timeout stages but failed newly reached
+driver-only oracle/wire assertions. Those failures and their separate #316
+corrections remain recorded, with no accepted-write replay or widened limits.
+This passing connected verification run does not complete #120's remaining
+exception/browser/normal-image matrix. Final-head CI remains required for #319.

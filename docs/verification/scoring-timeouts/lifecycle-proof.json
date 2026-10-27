@@ -1,0 +1,48 @@
+{
+  "source_revision": "a8ce5a8851a0af5ffd84d5bfed98c6a59cfa2e48",
+  "main_base": "3a72453a12131a3c92f9fe3ea0f36f666142968b",
+  "image": "sha256:fe04ec6c8738bc7d2ba37b97dceec0ea122f5fe04eb54f92c6dfd7d03fa327aa",
+  "source_worktree_clean_at_build": true,
+  "private_integration_of_prs": [
+    316,
+    320
+  ],
+  "result": "PASS",
+  "duration_seconds": 270.63,
+  "complete_lifecycle": false,
+  "verification_image_only": true,
+  "clock_model": "Monotonic controlled domain eligibility; actual PostgreSQL, HTTP, River leases and worker scheduling. Not a normal-image capacity/release rehearsal.",
+  "private_artifact_sha256": {
+    "journey-start-live.json": "ad221fb34f5e08f7354930c8b5abd93549206d46c699d3ad6286890929dc33cf",
+    "intent-journal.jsonl": "75062cdbef65e63e9a0c86b0d9d1dd6794f132643aaea3e437534eb582035dcf",
+    "lifecycle-r9-final.dump": "09e56fd6fced6fa72c9a7b581019dc020fec20cceb18df0ad48bfe41e657c773"
+  },
+  "remaining_acceptance": "Original #120 twelve criteria and L01-L18 matrix remain open for missing business/provider/browser/normal-image variants; this run does not close #120.",
+  "event_modes": [
+    "all_teams",
+    "mentor_qualification"
+  ],
+  "final_stages": [
+    "archived",
+    "archived"
+  ],
+  "native_outcomes_per_event": [
+    6,
+    6
+  ],
+  "owned_review_days_per_event": [
+    [
+      30,
+      60,
+      90
+    ],
+    [
+      30,
+      60,
+      90
+    ]
+  ],
+  "competition_unchanged_in_both_events": true,
+  "production_source_equivalent_to_pr_head": "bda41ac168464320c37eca4deeefd93ed20377e9",
+  "code_difference_is_lifecycle_verification_tests_only": true
+}
