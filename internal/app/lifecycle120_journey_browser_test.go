@@ -20,24 +20,26 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	Sequence int                          `json:"sequence"`
-	Action   string                       `json:"action"`
-	EventID  uuid.UUID                    `json:"event_id"`
-	Now      time.Time                    `json:"domain_now"`
-	Primary  string                       `json:"primary"`
-	Actor    string                       `json:"actor,omitempty"`
-	TeamID   *uuid.UUID                   `json:"team_id,omitempty"`
-	Roles    *lifecycleBrowserRolesPhase  `json:"roles,omitempty"`
-	Create   *lifecycleBrowserCreateEvent `json:"create,omitempty"`
+	Sequence    int                          `json:"sequence"`
+	Action      string                       `json:"action"`
+	EventID     uuid.UUID                    `json:"event_id"`
+	Now         time.Time                    `json:"domain_now"`
+	Primary     string                       `json:"primary"`
+	Actor       string                       `json:"actor,omitempty"`
+	TeamID      *uuid.UUID                   `json:"team_id,omitempty"`
+	Roles       *lifecycleBrowserRolesPhase  `json:"roles,omitempty"`
+	Create      *lifecycleBrowserCreateEvent `json:"create,omitempty"`
+	Application *lifecycleBrowserApplication `json:"application,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
-	Sequence  int                      `json:"sequence"`
-	Action    string                   `json:"action"`
-	EventID   uuid.UUID                `json:"event_id"`
-	Saved     bool                     `json:"saved_by_ui"`
-	Completed bool                     `json:"completed_by_ui"`
-	Help      *lifecycleBrowserHelpAck `json:"help,omitempty"`
+	Sequence      int                      `json:"sequence"`
+	Action        string                   `json:"action"`
+	EventID       uuid.UUID                `json:"event_id"`
+	Saved         bool                     `json:"saved_by_ui"`
+	Completed     bool                     `json:"completed_by_ui"`
+	ApplicationID *uuid.UUID               `json:"application_id,omitempty"`
+	Help          *lifecycleBrowserHelpAck `json:"help,omitempty"`
 }
 
 func lifecycleBrowserRequired(t *testing.T) bool {
@@ -223,7 +225,8 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	request := current.Request
 	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
 		request.Category != "competition_output" || request.Description != "PRIVATE synthetic browser recovery help" || request.Location != "Synthetic recovery desk" || request.MeetingURL != "" ||
-		request.Status != "resolved" || request.Revision != 3 ||
+		request.Status != "resolved" ||
+		request.Revision != 3 ||
 		request.AssigneeID == nil ||
 		*request.AssigneeID != item.cohort.staff["mentor-a"].person ||
 		request.FirstClaimedAt == nil ||

@@ -34,8 +34,10 @@ type lifecycleJourneyEvent struct {
 
 	failedMessage lifecycleFailedMessageReceipt
 
-	browserEventCreated  bool
-	browserBrandVerified bool
+	browserApplications       []lifecycleBrowserApplicationReceipt
+	browserRegistrationOpened bool
+	browserEventCreated       bool
+	browserBrandVerified      bool
 
 	retentionBoundary         *lifecycleReviewBoundaryReceipt
 	retiredRepositoryVerified bool
@@ -318,7 +320,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !item.browserEventCreated {
+			if !item.browserEventCreated || !item.browserRegistrationOpened ||
+				len(item.browserApplications) != 4 {
 				t.Fatal("required native event was not created through the Fleet UI")
 			}
 		}
@@ -352,10 +355,12 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
-		BrowserHelp          *lifecycleBrowserHelpReceipt  `json:"browser_help_recovery,omitempty"`
-		FailedMessage        lifecycleFailedMessageReceipt `json:"failed_message"`
-		BrowserEventCreated  bool                          `json:"browser_event_created"`
-		BrowserBrandVerified bool                          `json:"browser_brand_verified"`
+		BrowserHelp               *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
+		FailedMessage             lifecycleFailedMessageReceipt        `json:"failed_message"`
+		BrowserApplications       []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
+		BrowserRegistrationOpened bool                                 `json:"browser_registration_opened"`
+		BrowserEventCreated       bool                                 `json:"browser_event_created"`
+		BrowserBrandVerified      bool                                 `json:"browser_brand_verified"`
 
 		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
 		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
@@ -433,6 +438,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				FailedMessage:             item.failedMessage,
 				BrowserBrandVerified:      item.browserBrandVerified,
 				BrowserEventCreated:       item.browserEventCreated,
+				BrowserRegistrationOpened: item.browserRegistrationOpened,
+				BrowserApplications:       item.browserApplications,
 				RetentionBoundary:         item.retentionBoundary,
 				RetiredRepositoryVerified: item.retiredRepositoryVerified,
 				Expiry:                    item.expiry,
@@ -643,12 +650,13 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal("native event policy differs from the selected retention case")
 	}
 	var err error
-	item.cohort, err = admitLifecycleCohortChecking(
+	item.cohort, err = admitLifecycleCohortWithActions(
 		ctx,
 		r.owner,
 		item.view,
 		37,
 		func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) },
+		r.browserAdmissionActions(t, &item, index),
 	)
 	if err != nil {
 		t.Fatal(err)

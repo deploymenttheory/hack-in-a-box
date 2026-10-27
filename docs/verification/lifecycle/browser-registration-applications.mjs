@@ -1,0 +1,49 @@
+import assert from 'node:assert/strict'
+import {join} from 'node:path'
+
+export async function openRegistrationInFleet({page,expect,phase}){
+ assert.equal(phase.action,'open-registration')
+ await page.clock.setFixedTime(new Date(phase.domain_now))
+ await page.goto(`http://admin.localhost:8080/events/${phase.event_id}`)
+ const response=page.waitForResponse(r=>new URL(r.url()).pathname===`/api/v1/events/${phase.event_id}/transition`&&r.request().method()==='POST')
+ await page.getByRole('button',{name:'Advance to registration',exact:true}).click()
+ const saved=await response;assert.equal(saved.status(),200);assert.equal((await saved.json()).stage,'registration')
+ await expect(page.getByRole('button',{name:'Advance to preparation',exact:true})).toBeVisible()
+}
+
+export async function applyInFleet({browser,expect,phase,output,errors}){
+ assert.equal(phase.action,'apply-registration')
+ const input=phase.application,context=await browser.newContext({viewport:{width:1280,height:1000},proxy:{server:'http://127.0.0.1:18088',bypass:'<-loopback>'}})
+ const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message))
+ try{
+  await page.goto('http://public.localhost:8080/auth/login')
+  await expect(page.getByRole('heading',{name:'Synthetic identity provider',exact:true})).toBeVisible()
+  await page.getByLabel('Synthetic actor',{exact:true}).selectOption(input.actor)
+  await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
+  await page.clock.setFixedTime(new Date(phase.domain_now))
+  await page.goto(`http://public.localhost:8080/register/${phase.event_id}`)
+  await page.getByLabel('Application type',{exact:true}).selectOption(input.form.definition.id)
+  for(const field of input.form.definition.fields){
+   assert.equal(field.type,'text')
+   await page.getByLabel(field.label+(field.required?' (required)':''),{exact:true}).fill(input.answer)
+  }
+  if(input.form.definition.audience==='attendee')await page.getByLabel('Team preference',{exact:true}).selectOption('solo')
+  let writes=0;const path=`/api/v1/events/${phase.event_id}/registrations`
+  page.on('request',request=>{if(new URL(request.url()).pathname===path&&request.method()==='POST')writes++})
+  await page.getByRole('button',{name:'Review application',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'Review your application',exact:true})).toBeVisible()
+  assert.equal(writes,0)
+  const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='POST')
+  await page.getByRole('button',{name:'Submit application',exact:true}).click()
+  const saved=await response;assert.equal(saved.status(),200);const value=await saved.json()
+  assert.equal(value.event_id,phase.event_id);assert.equal(value.form_id,input.form.definition.id);assert.equal(value.form_version,input.form.published_version);assert.equal(value.state,input.state)
+  const status=page.getByRole('region',{name:`${input.form.definition.audience} application status`,exact:true})
+  await expect(status).toBeVisible();await expect(status).toContainText(value.id)
+  await page.reload();await expect(status).toContainText(value.id)
+  assert.equal(writes,1)
+  await page.screenshot({path:join(output,`native-application-${phase.sequence}.png`),fullPage:true})
+  return {application_id:value.id,actor:input.actor,audience:value.audience,submission_state:value.state,post_attempts:writes,persisted_after_reload:true}
+ }catch(error){await page.screenshot({path:join(output,`application-${phase.sequence}-failure.png`),fullPage:true}).catch(()=>{});throw error}
+ finally{await context.close()}
+}
