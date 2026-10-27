@@ -1,0 +1,138 @@
+{
+  "source_revision": "ecdfda2c1769bd3d8976d5284b52b7e62b2d4fe4",
+  "verification_image": "sha256:1235327f7c73549e3e1b8af324e889afa27ee9a7d1a7dd873cbe931b3876fc4f",
+  "normal_guide_image": "sha256:1c91e28aa7c61ffff71ff0f205915b778f97469c9209e976b8d663f9126a4d1b",
+  "normal_guide_source": "ee687d32d6e4fe61802ee83d5c70c5fa11d9c5eb",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793123026",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "role-matrix",
+  "kind": "same-event-native-live-role-boundaries",
+  "native_seconds": 303.0,
+  "normal_oidc": true,
+  "fulfilled_application_routes": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "browser_roles": {
+    "stage": "live",
+    "staff_grants": 6,
+    "cases": [
+      {
+        "role": "organiser",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "coordinator",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "captain",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "attendee",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "other-team",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "mentor",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "judge",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "mc",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "logistics",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "member-without-event",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "revoked-organiser",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      },
+      {
+        "role": "anonymous-stranger",
+        "events_checked": 2,
+        "unexpected_writes": 0
+      }
+    ],
+    "mentor_revocation_cleared": true,
+    "other_event_retained": true,
+    "mentor_restored": true
+  },
+  "native_roles": {
+    "stage": "live",
+    "ui_staff_grants": 6,
+    "native_event_checks": 24,
+    "mentor_revocation_cleared": true,
+    "other_event_retained": true,
+    "native_revocation_and_restore_audited": true
+  },
+  "final_events": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "archive": {
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "archive": {
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    }
+  ],
+  "scoped_cleanup_remaining": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "scope": "LIVE role matrix, actual staff assignment and event-scoped mentor revocation/restoration; full Fleet journeys and other-stage role cases remain incomplete",
+  "visual_inspection": [
+    "revoked mentor private context removed",
+    "peer event private help retained"
+  ]
+}

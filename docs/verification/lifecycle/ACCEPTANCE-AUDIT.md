@@ -9,7 +9,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | --- | --- | --- |
 | Both judging modes, concurrent brands, overlapping people | Connected R23/R24, `retention-cases-proof.json`; original full private run retains both native events | Complete browser journey for both |
 | Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff; CONNECTED-MESSAGE.md adds same-event queued permanent SMTP failure with immutable history and denied retry | R39 adds actual same-event browser offline/accepted-response-loss recovery with one PUT and independent native verification; remaining integrated provider/role variants |
-| Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes | Complete organiser/coordinator/attendee/captain/mentor/judge/MC/logistics/member/stranger/revoked-role matrix and archive/export inspection |
+| Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes; LIVE-ROLES.md adds twelve live actor cases on both events and audited mentor revoke/restore with peer isolation | Remaining other-stage/current-resource role cases, full action journeys and archive/export inspection |
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
 | Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; actual late original offer expires without confirmation, freeze precedes common disclosure | Final integrated browser coverage |
 | Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 executed original repository provision/retirement/archive checks, fourteen exact provider creates | Final integrated browser coverage |
@@ -48,3 +48,9 @@ one-PUT read recovery and mentor claim/resolve are independently checked by Go;
 both native events finish archived with exact configured120-day expiry checks.
 See RECOVERY-BROWSER.md and connected-recovery-proof.json. It uses the separate
 #332 runtime dependency and does not complete the full Fleet action/role matrix.
+
+R42 at ecdfda2c passes303.00s with all18 browser barriers, six real UI staff
+grants, twelve live actor cases on both events and native ordered mentor
+revocation/restoration checks, then both native archives and configured120-day
+expiry. See LIVE-ROLES.md and live-role-proof.json. This does not substitute
+LIVE reads for the remaining original Fleet action-to-next-action journeys.
