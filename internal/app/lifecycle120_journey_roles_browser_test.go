@@ -290,7 +290,10 @@ func (r *lifecycleJourney) verifyRoleCase(
 
 func (r *lifecycleJourney) checkLiveRolesInBrowser(t *testing.T) {
 	t.Helper()
-	if osMode := os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES"); osMode != "role-matrix" {
+	if osMode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); osMode != "role-matrix" &&
+		osMode != "ui-journey" {
 		return
 	}
 	actors := map[string]*lifecycleClient{

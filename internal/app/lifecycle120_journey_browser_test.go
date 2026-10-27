@@ -20,14 +20,15 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	Sequence int                         `json:"sequence"`
-	Action   string                      `json:"action"`
-	EventID  uuid.UUID                   `json:"event_id"`
-	Now      time.Time                   `json:"domain_now"`
-	Primary  string                      `json:"primary"`
-	Actor    string                      `json:"actor,omitempty"`
-	TeamID   *uuid.UUID                  `json:"team_id,omitempty"`
-	Roles    *lifecycleBrowserRolesPhase `json:"roles,omitempty"`
+	Sequence int                          `json:"sequence"`
+	Action   string                       `json:"action"`
+	EventID  uuid.UUID                    `json:"event_id"`
+	Now      time.Time                    `json:"domain_now"`
+	Primary  string                       `json:"primary"`
+	Actor    string                       `json:"actor,omitempty"`
+	TeamID   *uuid.UUID                   `json:"team_id,omitempty"`
+	Roles    *lifecycleBrowserRolesPhase  `json:"roles,omitempty"`
+	Create   *lifecycleBrowserCreateEvent `json:"create,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
@@ -44,7 +45,7 @@ func lifecycleBrowserRequired(t *testing.T) bool {
 	switch os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") {
 	case "":
 		return false
-	case "planning", "live-recovery", "role-matrix":
+	case "planning", "live-recovery", "role-matrix", "ui-journey":
 		return true
 	default:
 		t.Fatal("unknown native browser phase selection")
@@ -122,7 +123,11 @@ func (r *lifecycleJourney) awaitBrowserPhase(
 			if err := json.Unmarshal(body, &ack); err != nil {
 				t.Fatal("invalid browser phase receipt")
 			}
-			if ack.Sequence != phase.Sequence || ack.EventID != phase.EventID ||
+			sameEvent := ack.EventID == phase.EventID
+			if phase.Action == "create-event" {
+				sameEvent = phase.EventID == uuid.Nil && ack.EventID != uuid.Nil
+			}
+			if ack.Sequence != phase.Sequence || !sameEvent ||
 				ack.Action != phase.Action ||
 				!ack.Completed {
 				t.Fatal("browser phase did not acknowledge the exact native event action")
@@ -165,7 +170,7 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	if mode := os.Getenv(
 		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
 	); mode != "live-recovery" &&
-		mode != "role-matrix" {
+		mode != "role-matrix" && mode != "ui-journey" {
 		return
 	}
 	item := &r.events[0]
@@ -218,7 +223,8 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	request := current.Request
 	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
 		request.Category != "competition_output" || request.Description != "PRIVATE synthetic browser recovery help" || request.Location != "Synthetic recovery desk" || request.MeetingURL != "" ||
-		request.Status != "resolved" || request.Revision != 3 || request.AssigneeID == nil ||
+		request.Status != "resolved" || request.Revision != 3 ||
+		request.AssigneeID == nil ||
 		*request.AssigneeID != item.cohort.staff["mentor-a"].person ||
 		request.FirstClaimedAt == nil ||
 		request.ResolvedAt == nil {

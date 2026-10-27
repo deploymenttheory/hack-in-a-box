@@ -1,6 +1,7 @@
 // Host browser actions on the very same events as TestLifecycleComposeJourney.
 // The controller supplies no sessions, application responses or native writes.
 import assert from 'node:assert/strict'
+import {createEventInFleet} from './browser-event-creation.mjs'
 import {checkLiveRoles} from './browser-live-roles.mjs'
 import {recoverLiveHelp} from './browser-live-recovery.mjs'
 import {execFile} from 'node:child_process'
@@ -44,6 +45,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
+const creations=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -57,6 +59,13 @@ try{
  await page.getByRole('button',{name:'Continue through normal OIDC',exact:true}).click()
  await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
  for(let sequence=1;sequence<=2;sequence++){
+  if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='ui-journey'){
+   step=`create-event-${sequence}`
+   const creation=await readPhase(99+sequence,180000)
+   const created=await createEventInFleet({page,expect,phase:creation,output})
+   await acknowledge({sequence:creation.sequence,action:creation.action,event_id:created.event_id,saved_by_ui:true})
+   creations.push(created)
+  }
   step=`await-phase-${sequence}`
   const phase=await readPhase(sequence,180000)
   assert.equal(phase.sequence,sequence);assert.equal(phase.action,'save-branding')
@@ -88,14 +97,14 @@ try{
   await acknowledge(ack)
   receipts.push({...ack,preview_matches:true,persisted_after_reload:true})
  }
- if(['live-recovery','role-matrix'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
+ if(['live-recovery','role-matrix','ui-journey'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
   step='await-live-recovery'
   const phase=await readPhase(3,720000)
   step='live-help-response-loss'
   recovery=await recoverLiveHelp({browser,expect,phase,output,errors})
   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true,help:recovery})
  }
- if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='role-matrix'){
+ if(['role-matrix','ui-journey'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
   step='live-role-matrix'
   liveRoles=await checkLiveRoles({browser,expect,owner:page,readPhase,acknowledge,output,errors})
  }
@@ -103,7 +112,7 @@ try{
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)

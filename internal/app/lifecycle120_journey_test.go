@@ -34,6 +34,7 @@ type lifecycleJourneyEvent struct {
 
 	failedMessage lifecycleFailedMessageReceipt
 
+	browserEventCreated  bool
 	browserBrandVerified bool
 
 	retentionBoundary         *lifecycleReviewBoundaryReceipt
@@ -294,7 +295,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if mode := os.Getenv(
 		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
 	); mode == "live-recovery" ||
-		mode == "role-matrix" {
+		mode == "role-matrix" || mode == "ui-journey" {
 		proof := run.events[0].browserHelp
 		if proof == nil || !proof.NativeResolved || !proof.OtherTeamDenied ||
 			!proof.NativeQueueExact ||
@@ -302,7 +303,10 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			t.Fatal("required browser recovery was not actually verified")
 		}
 	}
-	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "role-matrix" {
+	if mode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); mode == "role-matrix" ||
+		mode == "ui-journey" {
 		proof := run.liveRoles
 		if proof == nil || proof.UIStaffGrants != 6 || len(proof.Cases) != 12 ||
 			proof.NativeEventChecks != 24 ||
@@ -310,6 +314,13 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			!proof.OtherEventRetained ||
 			!proof.NativeRevocationAndRestoreAudited {
 			t.Fatal("required live browser role matrix was not independently verified")
+		}
+	}
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		for _, item := range run.events {
+			if !item.browserEventCreated {
+				t.Fatal("required native event was not created through the Fleet UI")
+			}
 		}
 	}
 	var providerProof lifecycleGitHubProof
@@ -343,6 +354,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	type eventReceipt struct {
 		BrowserHelp          *lifecycleBrowserHelpReceipt  `json:"browser_help_recovery,omitempty"`
 		FailedMessage        lifecycleFailedMessageReceipt `json:"failed_message"`
+		BrowserEventCreated  bool                          `json:"browser_event_created"`
 		BrowserBrandVerified bool                          `json:"browser_brand_verified"`
 
 		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
@@ -420,6 +432,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				BrowserHelp:               item.browserHelp,
 				FailedMessage:             item.failedMessage,
 				BrowserBrandVerified:      item.browserBrandVerified,
+				BrowserEventCreated:       item.browserEventCreated,
 				RetentionBoundary:         item.retentionBoundary,
 				RetiredRepositoryVerified: item.retiredRepositoryVerified,
 				Expiry:                    item.expiry,
@@ -524,15 +537,10 @@ func (r *lifecycleJourney) prepareEvent(
 	t.Helper()
 	ctx := t.Context()
 	item := lifecycleJourneyEvent{}
-	if err := r.owner.call(
-		ctx,
-		http.MethodPost,
-		"/api/v1/events",
-		-1,
-		lifecycleEventInput("Journey "+mode, r.timeline),
-		&item.view,
-		http.StatusOK,
-	); err != nil {
+	input := lifecycleEventInput("Journey "+mode, r.timeline)
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		r.createEventInBrowser(t, &item, input, index)
+	} else if err := r.owner.call(ctx, http.MethodPost, "/api/v1/events", -1, input, &item.view, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
 	base := "/api/v1/events/" + item.view.ID.String()
