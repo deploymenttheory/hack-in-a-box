@@ -7,7 +7,7 @@ test -z "$(git status --porcelain)"
 browser_source=$(git rev-parse HEAD)
 browser_evidence=$(mktemp -d "${TMPDIR:-/tmp}/hackbox-connected-browser.XXXXXX")
 browser_project=hackbox-connected-browser-$(date +%s)
-export HACKBOX_LIFECYCLE_BROWSER_PHASES=planning
+export HACKBOX_LIFECYCLE_BROWSER_PHASES=${HACKBOX_LIFECYCLE_BROWSER_PHASES:-planning}
 export HACKBOX_LIFECYCLE_IMAGE=${HACKBOX_LIFECYCLE_IMAGE:-hackbox-lifecycle:connected-browser}
 browser_guide_supplied=${HACKBOX_LIFECYCLE_GUIDE_IMAGE:-}
 export HACKBOX_LIFECYCLE_GUIDE_IMAGE=${HACKBOX_LIFECYCLE_GUIDE_IMAGE:-hackbox-lifecycle:browser-guide}
@@ -63,7 +63,7 @@ python3 - "$browser_evidence/source.json" "$browser_source" "$browser_image" "$b
 from pathlib import Path
 import json,sys
 path,source,image,guide,guide_source,project,result=sys.argv[1:]
-Path(path).write_text(json.dumps({'source_revision':source,'verification_image':image,'normal_guide_image':guide,'normal_guide_source':guide_source,'guide_web_source_matches':True,'project':project,'actual_browser_exit_code':int(result),'complete_lifecycle':False,'browser_phases':'planning'},indent=2)+'\n')
+Path(path).write_text(json.dumps({'source_revision':source,'verification_image':image,'normal_guide_image':guide,'normal_guide_source':guide_source,'guide_web_source_matches':True,'project':project,'actual_browser_exit_code':int(result),'complete_lifecycle':False,'browser_phases':__import__('os').environ['HACKBOX_LIFECYCLE_BROWSER_PHASES']},indent=2)+'\n')
 PY
 printf 'Connected native browser exit: %s\n' "$browser_result"
 test "$browser_result" -eq 0

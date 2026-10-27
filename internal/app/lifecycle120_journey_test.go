@@ -30,6 +30,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	browserHelp *lifecycleBrowserHelpReceipt
+
 	failedMessage lifecycleFailedMessageReceipt
 
 	browserBrandVerified bool
@@ -255,6 +257,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
 	run.raceLiveHelp(t)
+	run.recoverLiveHelpInBrowser(t)
 	run.publishCommonClarifications(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
@@ -281,6 +284,12 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.deliverRetainedReviews(t)
 	run.verifyRetiredRepositoriesUnscored(t)
 	run.expireRetainedOutcomes(t)
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "live-recovery" {
+		proof := run.events[0].browserHelp
+		if proof == nil || !proof.NativeResolved || !proof.OtherTeamDenied || !proof.NativeQueueExact || proof.PutAttempts != 1 {
+			t.Fatal("required browser recovery was not actually verified")
+		}
+	}
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -310,6 +319,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserHelp          *lifecycleBrowserHelpReceipt  `json:"browser_help_recovery,omitempty"`
 		FailedMessage        lifecycleFailedMessageReceipt `json:"failed_message"`
 		BrowserBrandVerified bool                          `json:"browser_brand_verified"`
 
@@ -385,6 +395,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				BrowserHelp:               item.browserHelp,
 				FailedMessage:             item.failedMessage,
 				BrowserBrandVerified:      item.browserBrandVerified,
 				RetentionBoundary:         item.retentionBoundary,

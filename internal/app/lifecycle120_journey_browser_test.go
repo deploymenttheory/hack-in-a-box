@@ -13,24 +13,28 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/help"
 	"github.com/deploymenttheory/hack-in-a-box/internal/templates"
 )
 
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	Sequence int       `json:"sequence"`
-	Action   string    `json:"action"`
-	EventID  uuid.UUID `json:"event_id"`
-	Now      time.Time `json:"domain_now"`
-	Primary  string    `json:"primary"`
+	Sequence int        `json:"sequence"`
+	Action   string     `json:"action"`
+	EventID  uuid.UUID  `json:"event_id"`
+	Now      time.Time  `json:"domain_now"`
+	Primary  string     `json:"primary"`
+	Actor    string     `json:"actor,omitempty"`
+	TeamID   *uuid.UUID `json:"team_id,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
-	Sequence int       `json:"sequence"`
-	Action   string    `json:"action"`
-	EventID  uuid.UUID `json:"event_id"`
-	Saved    bool      `json:"saved_by_ui"`
+	Sequence int                      `json:"sequence"`
+	Action   string                   `json:"action"`
+	EventID  uuid.UUID                `json:"event_id"`
+	Saved    bool                     `json:"saved_by_ui"`
+	Help     *lifecycleBrowserHelpAck `json:"help,omitempty"`
 }
 
 func lifecycleBrowserRequired(t *testing.T) bool {
@@ -38,7 +42,7 @@ func lifecycleBrowserRequired(t *testing.T) bool {
 	switch os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") {
 	case "":
 		return false
-	case "planning":
+	case "planning", "live-recovery":
 		return true
 	default:
 		t.Fatal("unknown native browser phase selection")
@@ -58,6 +62,20 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 		Sequence: sequence, Action: "save-branding", EventID: item.view.ID,
 		Now: clock.Now, Primary: item.brand.Primary,
 	}
+	r.awaitBrowserPhase(t, phase)
+	var native templates.BrandView
+	if err := r.owner.call(t.Context(), http.MethodGet,
+		"/api/v1/events/"+item.view.ID.String()+"/branding", -1, nil, &native, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(native.Branding, item.brand) || native.Revision != item.view.Revision+1 {
+		t.Fatal("browser save differs from independently observed native branding/revision")
+	}
+	item.browserBrandVerified = true
+}
+
+func (r *lifecycleJourney) awaitBrowserPhase(t *testing.T, phase lifecycleBrowserPhase) lifecycleBrowserAcknowledgement {
+	t.Helper()
 	directory := "/artifacts/browser"
 	if err := os.MkdirAll(directory, 0o700); err != nil {
 		t.Fatal(err)
@@ -66,14 +84,14 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := filepath.Join(directory, fmt.Sprintf("phase-%d.json", sequence))
+	request := filepath.Join(directory, fmt.Sprintf("phase-%d.json", phase.Sequence))
 	if err := os.WriteFile(request+".tmp", encoded, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Rename(request+".tmp", request); err != nil {
 		t.Fatal(err)
 	}
-	response := filepath.Join(directory, fmt.Sprintf("result-%d.json", sequence))
+	response := filepath.Join(directory, fmt.Sprintf("result-%d.json", phase.Sequence))
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
 	deadline := time.NewTimer(90 * time.Second)
@@ -85,10 +103,10 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 			if err := json.Unmarshal(body, &ack); err != nil {
 				t.Fatal("invalid browser phase receipt")
 			}
-			if ack.Sequence != sequence || ack.EventID != item.view.ID || ack.Action != phase.Action || !ack.Saved {
+			if ack.Sequence != phase.Sequence || ack.EventID != phase.EventID || ack.Action != phase.Action || !ack.Saved {
 				t.Fatal("browser phase did not acknowledge the exact native event action")
 			}
-			break
+			return ack
 		}
 		if !errors.Is(readErr, os.ErrNotExist) {
 			t.Fatal(readErr)
@@ -97,17 +115,86 @@ func (r *lifecycleJourney) saveBrandInBrowser(t *testing.T, item *lifecycleJourn
 		case <-t.Context().Done():
 			t.Fatal("native journey cancelled while awaiting browser action")
 		case <-deadline.C:
-			t.Fatal("native browser branding action did not finish within its bounded barrier")
+			t.Fatal("native browser action did not finish within its bounded barrier")
 		case <-ticker.C:
 		}
 	}
-	var native templates.BrandView
-	if err := r.owner.call(t.Context(), http.MethodGet,
-		"/api/v1/events/"+item.view.ID.String()+"/branding", -1, nil, &native, http.StatusOK); err != nil {
+}
+
+type lifecycleBrowserHelpAck struct {
+	RequestID               uuid.UUID `json:"request_id"`
+	AcceptedResponseDropped bool      `json:"accepted_response_dropped"`
+	OfflineObserved         bool      `json:"offline_observed"`
+	PutAttempts             int       `json:"put_attempts"`
+}
+
+type lifecycleBrowserHelpReceipt struct {
+	EventID                 uuid.UUID `json:"event_id"`
+	RequestID               uuid.UUID `json:"request_id"`
+	AcceptedResponseDropped bool      `json:"accepted_response_dropped"`
+	OfflineObserved         bool      `json:"offline_observed"`
+	PutAttempts             int       `json:"put_attempts"`
+	NativeResolved          bool      `json:"native_resolved"`
+	OtherTeamDenied         bool      `json:"other_team_denied"`
+	NativeQueueExact        bool      `json:"native_queue_exact"`
+}
+
+func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
+	t.Helper()
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") != "live-recovery" {
+		return
+	}
+	item := &r.events[0]
+	own, other, _ := r.feedbackReaders(t, item, item.liveHelp.TeamID)
+	actor := ""
+	for index, person := range item.cohort.clients {
+		if person.person == own.person {
+			actor = fmt.Sprintf("attendee-%02d", index+1)
+		}
+	}
+	if actor == "" {
+		t.Fatal("browser recovery lacks the original cohort actor")
+	}
+	var clock struct {
+		Now time.Time `json:"now"`
+	}
+	if err := r.control.call(t.Context(), http.MethodGet, "/clock", nil, &clock); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(native.Branding, item.brand) || native.Revision != item.view.Revision+1 {
-		t.Fatal("browser save differs from independently observed native branding/revision")
+	ack := r.awaitBrowserPhase(t, lifecycleBrowserPhase{Sequence: 3, Action: "recover-live-help", EventID: item.view.ID, Now: clock.Now, Actor: actor, TeamID: &item.liveHelp.TeamID})
+	if ack.Help == nil || ack.Help.RequestID == uuid.Nil || !ack.Help.AcceptedResponseDropped || !ack.Help.OfflineObserved || ack.Help.PutAttempts != 1 {
+		t.Fatal("browser recovery lacks an actual accepted-response loss and one submitted request")
 	}
-	item.browserBrandVerified = true
+	path := "/api/v1/events/" + item.view.ID.String() + "/help/" + ack.Help.RequestID.String()
+	var current help.Page
+	if err := own.call(t.Context(), http.MethodGet, path, -1, nil, &current, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	request := current.Request
+	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
+		request.Category != "competition_output" || request.Description != "PRIVATE synthetic browser recovery help" || request.Location != "Synthetic recovery desk" || request.MeetingURL != "" ||
+		request.Status != "resolved" || request.Revision != 3 || request.AssigneeID == nil || *request.AssigneeID != item.cohort.staff["mentor-a"].person || request.FirstClaimedAt == nil || request.ResolvedAt == nil {
+		t.Fatal("recovered UI request differs from independently read native identity/input/claim/resolution")
+	}
+	if err := other.call(t.Context(), http.MethodGet, path, -1, nil, nil, http.StatusNotFound); err != nil {
+		t.Fatal(err)
+	}
+	var queue help.Queue
+	if err := r.owner.call(t.Context(), http.MethodGet, "/api/v1/events/"+item.view.ID.String()+"/help", -1, nil, &queue, http.StatusOK); err != nil {
+		t.Fatal(err)
+	}
+	ids := map[uuid.UUID]bool{item.liveHelp.RequestID: true, request.ID: true}
+	if len(queue.Items) != 2 {
+		t.Fatal("browser recovery duplicated or removed a native help request")
+	}
+	for _, summary := range queue.Items {
+		if !ids[summary.ID] || summary.Status != "resolved" {
+			t.Fatal("native recovery queue contains an unexpected request/state")
+		}
+		delete(ids, summary.ID)
+	}
+	if len(ids) != 0 {
+		t.Fatal("native recovery queue lost an original request")
+	}
+	item.browserHelp = &lifecycleBrowserHelpReceipt{EventID: item.view.ID, RequestID: request.ID, AcceptedResponseDropped: true, OfflineObserved: true, PutAttempts: 1, NativeResolved: true, OtherTeamDenied: true, NativeQueueExact: true}
 }

@@ -1,6 +1,7 @@
 // Host browser actions on the very same events as TestLifecycleComposeJourney.
 // The controller supplies no sessions, application responses or native writes.
 import assert from 'node:assert/strict'
+import {recoverLiveHelp} from './browser-live-recovery.mjs'
 import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
 import {createRequire} from 'node:module'
@@ -18,7 +19,31 @@ const source=process.env.HACKBOX_LIFECYCLE_BROWSER_SOURCE
 const runner=process.env.HACKBOX_LIFECYCLE_BROWSER_RUNNER
 assert.ok(output);assert.match(source??'',/^[a-f0-9]{40}$/)
 assert.match(runner??'',/^hackbox-connected-browser-[0-9]+-runner$/)
+async function readPhase(sequence,budget){
+  const file=join(output,`phase-${sequence}.json`)
+  const end=Date.now()+budget
+  for(;;){
+   try{await docker('docker',['cp',`${runner}:/artifacts/browser/phase-${sequence}.json`,file]);break}
+   catch{
+    const state=await docker('docker',['inspect','--format','{{.State.Status}}',runner])
+    assert.equal(state.stdout.trim(),'running','Native journey exited before its required browser phase')
+    assert.ok(Date.now()<end,'Native browser phase was not reached within its bounded wait')
+    await pause(500)
+   }
+  }
+  return JSON.parse(await readFile(file,'utf8'))
+}
+async function acknowledge(ack){
+ const sequence=ack.sequence,result=join(output,`result-${sequence}.json`)
+ await writeFile(result,JSON.stringify(ack)+'\n',{mode:0o600})
+ await chmod(result,0o644)
+ assert.equal((await stat(result)).mode&0o777,0o644)
+ await docker('docker',['cp',result,`${runner}:/artifacts/browser/result-${sequence}.tmp`])
+ await docker('docker',['exec',runner,'mv',`/artifacts/browser/result-${sequence}.tmp`,`/artifacts/browser/result-${sequence}.json`])
+}
 const errors=[],receipts=[]
+let recovery
+
 let step='launch'
 const browser=await chromium.launch({headless:true,args:['--unsafely-treat-insecure-origin-as-secure=http://admin:8080,http://public:8080,http://provider:8080']})
 try{
@@ -32,18 +57,7 @@ try{
  await expect(page.getByRole('heading',{name:'Your events',exact:true})).toBeVisible()
  for(let sequence=1;sequence<=2;sequence++){
   step=`await-phase-${sequence}`
-  const file=join(output,`phase-${sequence}.json`)
-  const end=Date.now()+180000
-  for(;;){
-   try{await docker('docker',['cp',`${runner}:/artifacts/browser/phase-${sequence}.json`,file]);break}
-   catch{
-    const state=await docker('docker',['inspect','--format','{{.State.Status}}',runner])
-    assert.equal(state.stdout.trim(),'running','Native journey exited before its required browser phase')
-    assert.ok(Date.now()<end,'Native browser phase was not reached within its bounded wait')
-    await pause(500)
-   }
-  }
-  const phase=JSON.parse(await readFile(file,'utf8'))
+  const phase=await readPhase(sequence,180000)
   assert.equal(phase.sequence,sequence);assert.equal(phase.action,'save-branding')
   assert.match(phase.event_id,/^[a-f0-9-]{36}$/);assert.match(phase.primary,/^#[a-f0-9]{6}$/)
   assert.ok(Number.isFinite(Date.parse(phase.domain_now)))
@@ -70,21 +84,21 @@ try{
   await expect(page.getByLabel('Primary colour',{exact:true})).toHaveValue(phase.primary)
   await page.screenshot({path:join(output,`native-event-${sequence}-branding.png`),fullPage:true})
   const ack={sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true}
-  const result=join(output,`result-${sequence}.json`)
-  // The containing host directory is owner-only; this bounded synthetic receipt
-  // must be readable by the fixture UID after docker cp creates a root-owned file.
-  await writeFile(result,JSON.stringify(ack)+'\n',{mode:0o600})
-  await chmod(result,0o644)
-  assert.equal((await stat(result)).mode&0o777,0o644)
-  await docker('docker',['cp',result,`${runner}:/artifacts/browser/result-${sequence}.tmp`])
-  await docker('docker',['exec',runner,'mv',`/artifacts/browser/result-${sequence}.tmp`,`/artifacts/browser/result-${sequence}.json`])
+  await acknowledge(ack)
   receipts.push({...ack,preview_matches:true,persisted_after_reload:true})
+ }
+ if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='live-recovery'){
+  step='await-live-recovery'
+  const phase=await readPhase(3,720000)
+  step='live-help-response-loss'
+  recovery=await recoverLiveHelp({browser,expect,phase,output,errors})
+  await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true,help:recovery})
  }
  step='native-journey-completion'
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,planning:receipts},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,planning:receipts,live_help_recovery:recovery},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)
