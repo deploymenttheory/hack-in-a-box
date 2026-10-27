@@ -10,8 +10,8 @@ Import production patterns from `web/src/components/patterns/index.ts`:
 - `CollectionHeading`: named scope, one primary action, quiet secondary actions.
 - `CollectionToolbar`: explicit complete/cursor source and optional owner search,
   filter and column controls. Cursor sources permit server search only.
-- `CollectionRecords`: native table at wide widths, labelled record list at narrow
-  widths, stable native links, controlled sort/columns/eligible page selection.
+- `CollectionRecords`: native table when its measured pane is wider than 48rem,
+  labelled record list in narrower panes (including inside a wide viewport), stable native links, controlled sort/columns/eligible page selection.
 - `CollectionPagination`: opaque next/previous callbacks and loaded counts; totals
   are displayed only when the owning API supplies them.
 - `CollectionFrame` / `CollectionStateMessage`: distinct loading, empty, no-match,
@@ -157,3 +157,27 @@ The interactive mentoring guide imports the production queue, review, unknown-st
 and detail components with synthetic local callbacks. It runs without API, session,
 cookie or private-recovery-store access. Its Reset control clears local examples;
 portal/reset keys also reset these state owners.
+
+
+## Collection width and keyboard continuity
+
+Use the production `CollectionRecords` inside a shrinkable (`min-width: 0`)
+workspace. It measures its own available width; a desktop inspector must not
+squeeze a many-column table into a narrow pane. The interactive example's
+**Collection pane width** control demonstrates the same component without
+changing viewport width. All visible columns, owner actions, controlled sort
+and eligible-page selection remain available in the labelled list.
+
+Stable record, selection and sort keys restore the equivalent focused control
+when the collection changes layout. Restoration applies only when focus was
+inside that collection before the change: an editor, toolbar or external
+control keeps its focus. Local owner actions still need their existing stable
+`data-record-focus` record key. Owners must resolve the current keyed action
+when returning from an inspector, because resizing can replace its original
+button. Focus returned while a measured layout change is pending follows that
+same key; focus moved to an external editor stays there. Do not duplicate hidden tables/lists or keep
+second copies of private controls solely for responsive presentation.
+
+Record headers allow their action to wrap below the title. A long action must
+not reduce a normal record name to a letter-by-letter column. Keep the shared
+spacing and title basis; do not hide names or columns to make an inspector fit.

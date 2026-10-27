@@ -15,7 +15,9 @@ function Before() {
 // Complete synthetic owner; cursor examples deliberately expose no sort.
 function Sorting() {
  const [sort, setSort] = useState<Pick<SortControl, 'key' | 'direction'>>({ key: 'name', direction: 'ascending' })
- const rows = [...exampleRecords].sort((a,b) => (sort.key === 'name' ? a.name.localeCompare(b.name) : a.owner.localeCompare(b.owner)) * (sort.direction === 'ascending' ? 1 : -1))
- return <Theme><main className="fleet-pattern-example"><h1>Complete synthetic sorting</h1><CollectionRecords label="Complete synthetic requests" rows={rows} rowKey={row=>row.id} rowLabel={row=>row.name} destination={row=>({label:row.name,href:'#'+row.id})} columns={[{id:'name',label:'Title',sortable:true,cell:row=>row.name},{id:'owner',label:'Contact',sortable:true,cell:row=>row.owner},{id:'status',label:'Status',cell:row=>row.status}]} sort={{...sort,onChange:(key,direction)=>setSort({key,direction})}} /><p role="status">Owner sort: {sort.key} {sort.direction}</p></main></Theme>
+ const [selection, setSelection] = useState<ReadonlySet<string>>(new Set())
+ const records = query.has('focus-keys') ? exampleRecords.map((row,index)=>({...row,id:index===0?'page':index===1?'sort:name':row.id})) : exampleRecords
+ const rows = [...records].sort((a,b) => (sort.key === 'name' ? a.name.localeCompare(b.name) : a.owner.localeCompare(b.owner)) * (sort.direction === 'ascending' ? 1 : -1))
+ return <Theme><main className="fleet-pattern-example"><h1>Complete synthetic sorting</h1><CollectionRecords label="Complete synthetic requests" rows={rows} selection={{selected:selection,onChange:setSelection,eligible:()=>true}} rowKey={row=>row.id} rowLabel={row=>row.name} destination={row=>({label:row.name,href:'#'+row.id})} columns={[{id:'name',label:'Title',sortable:true,cell:row=>row.name},{id:'owner',label:'Contact',sortable:true,cell:row=>row.owner},{id:'status',label:'Status',cell:row=>row.status}]} sort={{...sort,onChange:(key,direction)=>setSort({key,direction})}} /><p role="status">Owner sort: {sort.key} {sort.direction}</p></main></Theme>
 }
 createRoot(document.getElementById('root')!).render(query.has('sorting') ? <Sorting /> : query.has('baseline') ? <Before /> : <PatternExamples portal={portal} />)
