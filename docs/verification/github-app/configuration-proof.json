@@ -1,0 +1,62 @@
+{
+  "scope": "issue-91-approved-sandbox-configuration",
+  "observed_at": "2026-10-27T04:34:15.068Z",
+  "runtime_revision": "ba5a7c2b66b0179b9de52a5188517780a92ad6f8",
+  "event_id": "2b196e07-e42c-420e-ab38-d7faf8f87ebd",
+  "authentication": "normal local OIDC; organiser browser session; session-bound GitHub installation callback",
+  "configuration_status": {
+    "observed_at": "2026-10-27T04:34:15.068Z",
+    "http_status": 200,
+    "revision": 4,
+    "configured": true,
+    "installation_id": 175693791,
+    "configuration": {
+      "app_id": 5486012,
+      "app_slug": "deploymenttheory-hackbox-sandbox",
+      "organization": "deploymenttheory",
+      "organization_id": 103241062,
+      "template_repository": "hackbox-sandbox-template"
+    },
+    "diagnostics": {
+      "checked_at": "2026-10-27T04:34:14.362178631Z",
+      "checks": [
+        {
+          "allowed": true,
+          "operation": "read_template",
+          "required": [
+            "metadata:read"
+          ]
+        },
+        {
+          "allowed": true,
+          "operation": "create_repository",
+          "required": [
+            "contents:read",
+            "administration:write OR repository_creation:write"
+          ]
+        },
+        {
+          "allowed": true,
+          "operation": "manage_repository_invitations",
+          "required": [
+            "administration:write"
+          ]
+        },
+        {
+          "allowed": true,
+          "operation": "read_repository_activity",
+          "required": [
+            "contents:read",
+            "metadata:read"
+          ]
+        }
+      ],
+      "code": "healthy"
+    },
+    "webhook_configured": false
+  },
+  "template_repository_id": 1434900904,
+  "provider_write_exercise": false,
+  "webhook_recovery_exercise": false,
+  "full_issue_98_sandbox_event": false
+}
