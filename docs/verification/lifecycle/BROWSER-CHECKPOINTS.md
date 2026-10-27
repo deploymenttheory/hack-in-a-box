@@ -27,8 +27,8 @@ adding a proxy-only edge network; the real native login then returned302.
 Only the localhost-bound proxy now joins both the isolated synthetic network
 and its scoped edge network. Native APIs, database and provider remain on the
 internal-only network, with unchanged cookies/CSRF/Origin and destination guards.
-Fresh normal browser OIDC execution is still required; neither connectivity nor
-component isolation alone is counted as a browser or complete lifecycle pass.
+Connectivity and component isolation were not counted as browser acceptance;
+the subsequent real browser execution is recorded below.
 
 The next native execution at `efc5eb6a` reached the real synthetic provider
 heading, but its implicit select label included option text, so an exact
@@ -36,11 +36,29 @@ heading, but its implicit select label included option text, so an exact
 loop reproduced zero exact matches before and one after an explicit for/id
 label association. Only the synthetic provider's label markup changes; normal
 OIDC actor selection, authorization-code/PKCE/state/nonce/native session checks
-remain untouched. No passing OIDC checkpoint is claimed until fresh execution.
+remain untouched. That failed run did not count as a passing OIDC checkpoint.
 
 At `226f9d84`, normal browser sign-in reached the native `Your events` screen,
 but the ancillary Playwright request client's session read returned403 through
 the guarded proxy. That client is not the browser's own same-origin request
 context. The checkpoint now reads its normal session using browser-native fetch,
 with actual cookies/metadata/Origin behavior; the proxy and application authority
-rules stay unchanged. The two-portal checkpoint remains unproven until rerun.
+rules stay unchanged. That failed run did not count as a passing two-portal checkpoint.
+
+## Executed browser transport checkpoint
+
+The versioned `scripts/verify-lifecycle-browser-bridge.sh` passed at clean source
+`b0c1d1ab50203a0de89ad6f21e1d0bf0c78670d5`. The exact immutable image IDs and
+positive bounded results are in `browser-bridge-proof.json`. It used normal
+production style-guide image source `ef676fea`, with an asserted identical `web`
+tree. Normal OIDC on both actual portals, same native identity, independent CSRF,
+public UI logout retaining admin access, independent guide access and zero page
+errors all passed. No application route was fulfilled or session injected.
+
+Desktop admin and mobile public screenshots were visually inspected: both show
+the actual Fleet Your events screen and its appropriate next action. Original
+screenshots, logs and database dump remain in the private evidence directory.
+The fresh fixture's containers, volumes and networks were all removed and the
+source remained clean. These receipts prove the browser transport and portal
+boundaries only; same-event actions, offline recovery, role checks and the full
+#120 acceptance matrix remain open.
