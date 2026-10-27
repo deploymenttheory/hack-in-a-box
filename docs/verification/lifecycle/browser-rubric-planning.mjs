@@ -46,6 +46,8 @@ export async function configureRubricInFleet({page,expect,phase,output}){
   else{assert.equal(value.reference.version,before.reference.version+1);assert.equal(value.approved,false)}
   assert.equal(value.published_version,null);assert.deepEqual(value.runs,[])
   await expect(dialog).toHaveCount(0)
+  if(phase.action==='save-rubric')await expect(page.getByLabel('Rubric decision reason',{exact:true})).toBeFocused()
+  else await expect(page.getByText(`Saved version ${value.reference.version} · Revision ${value.revision} · Approved`,{exact:true})).toBeFocused()
   await page.reload();await expect(page.getByLabel('Rubric name',{exact:true})).toHaveValue(definition.name)
   await expect(page.getByRole('spinbutton',{name:'Required judges',exact:true})).toHaveValue(String(definition.required_judge_count))
   if(phase.action==='approve-rubric')await expect(page.getByRole('button',{name:'Review version approval',exact:true})).toBeDisabled()
