@@ -185,7 +185,7 @@ func (r *lifecycleJourney) roleMentorAudit(
 				rows = append(rows, row)
 			}
 		}
-		if page.NextCursor == 0 {
+		if len(page.Items) == 0 {
 			return rows
 		}
 		if page.NextCursor <= cursor {
