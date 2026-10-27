@@ -338,3 +338,24 @@ Later mentor, submission and retained-review planning uses the revised dates,
 while the receipt retains the actual original T−7 publication and original live
 start. Only compilation/the existing wire-contract test have run so far; this
 extension is not an executed acceptance claim. The full matrix remains open.
+
+## Passing connected post-publication postponement — R10
+
+The full original journey **passed 216.10s**, exit 0, on clean private integration
+`78c21ee966793a63ebdbd88f66a0669ca9ba9968`, main `33f8d29a`, verification image
+`sha256:16d47a8e4d91db1ea2d305a6d94fe23f1a39570358a678a34b9e4c565c3bf5b7`.
+Both separately approved native postponements retained the original release,
+exact challenge/rubric bytes, acknowledgements and frozen team identities.
+Unapproved changes and attempted reopening of the frozen deadline failed
+without mutation. Actual current attendee/mentor notice reads matched the
+actor/reason/revision decisions; withdrawn readers were denied. Each event was
+unchanged by the other's decision. The original live date remained blocked;
+revised mentor/scoring/cutoff/completion/30–60–90 follow-up all passed with
+unchanged competition hashes. See [bounded proof](postponement-proof.json).
+
+Revised-date notices are actual native reads; external notice delivery is not
+claimed. Private original checkpoints, intent identities and final database
+remain retained. Remaining withdrawal, surviving-offer/cutoff, missed-release,
+browser/role/expiry and normal-image variants still keep #120 and its entire
+L01–L18 matrix open. The earlier not-yet-executed section records implementation
+provenance, not a different scope or a claim that this complete matrix passed.

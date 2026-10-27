@@ -1,0 +1,77 @@
+{
+  "project": "hackbox-lifecycle120-postponement-r10",
+  "runner": "hackbox-lifecycle120-postponement-r10-journey",
+  "source_revision": "78c21ee966793a63ebdbd88f66a0669ca9ba9968",
+  "source_worktree_clean_at_build": true,
+  "image": "sha256:16d47a8e4d91db1ea2d305a6d94fe23f1a39570358a678a34b9e4c565c3bf5b7",
+  "main_base": "33f8d29ab941f147c50c858564cd7b60762fd810",
+  "verification_image_only": true,
+  "complete_lifecycle": false,
+  "private_integration_of_prs": [
+    316,
+    320
+  ],
+  "additional_variant": "post-publication postponement with original theme/frozen teams and concurrent-event isolation",
+  "result": "PASS",
+  "duration_seconds": 216.1,
+  "events": [
+    {
+      "event_id": "ef3145ac-d4a4-4163-a34b-e8284558b81a",
+      "mode": "all_teams",
+      "stage": "archived",
+      "postponement": {
+        "original_live_start": "2026-03-30T09:00:00+01:00",
+        "revised_live_start": "2026-03-31T08:00:00Z",
+        "revised_cutoff": "2026-03-31T15:00:00Z",
+        "original_publication_retained": "2026-03-23T09:00:00Z",
+        "decision_id": "b61a7fc8-856e-45cd-bf74-b6b9d83a3621",
+        "notice_id": "baca1a4b-459c-4d28-a58e-d4471a9da470",
+        "revision": 131,
+        "reason_sha256": "3e8a25d080922edb0dafc2624d9ba2406859dbebd06d95db7e204accb8c1bff8",
+        "unapproved_change_denied": true,
+        "frozen_deadline_change_denied": true,
+        "other_event_unchanged": true,
+        "frozen_teams_preserved": true,
+        "common_content_preserved": true,
+        "current_notice_audience_verified": true
+      },
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    },
+    {
+      "event_id": "5fc15b5c-1a1e-406a-950c-e4f72a581cfb",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "postponement": {
+        "original_live_start": "2026-03-30T09:00:00+01:00",
+        "revised_live_start": "2026-03-31T08:00:00Z",
+        "revised_cutoff": "2026-03-31T15:00:00Z",
+        "original_publication_retained": "2026-03-23T09:00:00Z",
+        "decision_id": "47126210-196e-4f32-bd20-3ae6e38c06e4",
+        "notice_id": "42e3000a-1f0f-4860-a571-34383fae1b75",
+        "revision": 135,
+        "reason_sha256": "3e8a25d080922edb0dafc2624d9ba2406859dbebd06d95db7e204accb8c1bff8",
+        "unapproved_change_denied": true,
+        "frozen_deadline_change_denied": true,
+        "other_event_unchanged": true,
+        "frozen_teams_preserved": true,
+        "common_content_preserved": true,
+        "current_notice_audience_verified": true
+      },
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    }
+  ],
+  "original_live_date_denied_until_revised_live_start": true,
+  "external_notice_delivery_not_claimed": true,
+  "private_checkpoint_sha256": "e9601d532d7965f08fea78acce8eead0eb20a38107a0ab12e548792ebc81e677",
+  "remaining_acceptance": "Original twelve criteria and L01-L18 remain open for outstanding withdrawal/offer/missed-release/browser/normal-image variants."
+}
