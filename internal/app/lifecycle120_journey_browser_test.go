@@ -20,6 +20,7 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
+	Form        *lifecycleBrowserFormInput         `json:"form,omitempty"`
 	Sequence    int                                `json:"sequence"`
 	Action      string                             `json:"action"`
 	EventID     uuid.UUID                          `json:"event_id"`
@@ -35,6 +36,7 @@ type lifecycleBrowserPhase struct {
 }
 
 type lifecycleBrowserAcknowledgement struct {
+	FormID        *uuid.UUID               `json:"form_id,omitempty"`
 	Sequence      int                      `json:"sequence"`
 	Action        string                   `json:"action"`
 	EventID       uuid.UUID                `json:"event_id"`

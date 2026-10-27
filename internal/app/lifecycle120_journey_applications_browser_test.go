@@ -68,6 +68,22 @@ func (r *lifecycleJourney) browserAdmissionActions(
 	}
 	base := 200 + index*20
 	return &lifecycleAdmissionActions{
+		Publish: func(audience string) (registration.FormView, error) {
+			slot, exists := map[string]int{"attendee": 0, "mentor": 1, "judge": 2}[audience]
+			if !exists {
+				t.Fatal("unknown UI form audience")
+			}
+			return r.publishRegistrationFormInBrowser(
+				t,
+				item,
+				base+16+slot,
+				lifecycleBrowserFormInput{
+					Name:     "Synthetic " + audience + " application",
+					Audience: audience,
+					Label:    "Synthetic motivation",
+				},
+			), nil
+		},
 		Go: func() (event.View, error) {
 			before := r.readRoleEvent(t, item)
 			ack := r.admissionBrowserPhase(

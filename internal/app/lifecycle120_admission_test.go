@@ -40,6 +40,7 @@ func admitLifecycleCohort(
 }
 
 type lifecycleAdmissionActions struct {
+	Publish func(string) (registration.FormView, error)
 	Open    func() (event.View, error)
 	Apply   func(string, *lifecycleClient, registration.FormView) (registration.View, error)
 	Select  func(string, registration.View) (registration.View, error)
@@ -70,7 +71,13 @@ func admitLifecycleCohortWithActions(
 	}
 	cohort := lifecycleAdmissions{census: map[string]int64{}, staff: map[string]*lifecycleClient{}}
 	base := "/api/v1/events/" + current.ID.String()
-	form, err := publishLifecycleForm(ctx, owner, current.ID, "attendee")
+	publish := func(audience string) (registration.FormView, error) {
+		return publishLifecycleForm(ctx, owner, current.ID, audience)
+	}
+	if actions != nil && actions.Publish != nil {
+		publish = actions.Publish
+	}
+	form, err := publish("attendee")
 	if err != nil {
 		return cohort, err
 	}
@@ -107,7 +114,7 @@ func admitLifecycleCohortWithActions(
 	// Selected facilitators use the application/review workflow and cannot
 	// inflate the count that determines the competition go/no-go decision.
 	for _, role := range []string{"mentor", "judge"} {
-		staffForm, err := publishLifecycleForm(ctx, owner, current.ID, role)
+		staffForm, err := publish(role)
 		if err != nil {
 			return cohort, err
 		}

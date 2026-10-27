@@ -37,6 +37,7 @@ type lifecycleJourneyEvent struct {
 
 	browserApplications       []lifecycleBrowserApplicationReceipt
 	browserSelections         []lifecycleBrowserSelectionReceipt
+	browserPublishedForms     []string
 	browserAdmissionDecisions []string
 	browserRegistrationOpened bool
 	browserEventCreated       bool
@@ -328,8 +329,13 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				!reflect.DeepEqual(
 					item.browserAdmissionDecisions,
 					[]string{"competition-go", "withdraw", "accept"},
-				) {
-				t.Fatal("required native event was not created through the Fleet UI")
+				) || !reflect.DeepEqual(
+				item.browserPublishedForms,
+				[]string{"attendee", "mentor", "judge"},
+			) {
+				t.Fatal(
+					"required Fleet event creation, form publication or admission journey is incomplete",
+				)
 			}
 		}
 	}
@@ -366,6 +372,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		FailedMessage             lifecycleFailedMessageReceipt        `json:"failed_message"`
 		BrowserApplications       []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
 		BrowserSelections         []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserPublishedForms     []string                             `json:"browser_published_forms,omitempty"`
 		BrowserAdmissionDecisions []string                             `json:"browser_admission_decisions,omitempty"`
 		BrowserRegistrationOpened bool                                 `json:"browser_registration_opened"`
 		BrowserEventCreated       bool                                 `json:"browser_event_created"`
@@ -447,6 +454,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				FailedMessage:             item.failedMessage,
 				BrowserBrandVerified:      item.browserBrandVerified,
 				BrowserEventCreated:       item.browserEventCreated,
+				BrowserPublishedForms:     item.browserPublishedForms,
 				BrowserAdmissionDecisions: item.browserAdmissionDecisions,
 				BrowserRegistrationOpened: item.browserRegistrationOpened,
 				BrowserApplications:       item.browserApplications,
