@@ -184,3 +184,18 @@ Plans are explicitly approved before archiving against a separate unchanged
 owned source; each actual queued inbox effect must reference its approved plan,
 remain private, occur at its event-local due time and appear exactly once.
 Neither a compile-only check nor a source review establishes these effects.
+
+### R4 failed before new outcomes assertions
+
+Frozen source `3f2f81ad` failed in 266.23 seconds during the pre-existing
+team-feedback phase: normal POST returned HTTP503 at the server's 10,001ms
+timeout boundary. The source-attributed failure is
+`evidence/journey-feedback-timeout-red.json`. No outcomes/showcase assertion was
+reached, so none is promoted to a pass. Read-only post-failure inspection found
+no active database transaction, exactly the six acknowledged report versions
+(two reports at versions4 and2) in the first event, and no report versions in
+the second. The command was not replayed. This does not establish the timeout's
+cause or constitute a deterministic regression/fix. Protected raw artifacts and
+a private database dump were retained; all owned R4 runtime resources were
+removed. The independently frozen R5 source `842a4cb1` starts fresh synthetic
+identities/database and includes the later archive/retained-review extension.
