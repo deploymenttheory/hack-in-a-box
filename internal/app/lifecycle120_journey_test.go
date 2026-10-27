@@ -279,9 +279,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			"participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications",
 		)
 	}
-	if providerProof.RepositoryCreates != 12 {
+	if providerProof.RepositoryCreates != 14 {
 		t.Fatal(
-			"actual provider did not create exactly one private repository per frozen team",
+			"actual provider did not retain exactly fourteen original team repositories including two retired mappings",
 			providerProof.RepositoryCreates,
 		)
 	}
@@ -543,12 +543,13 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeams(
+	item.teams, err = allocateLifecycleTeamsWithInitialPublication(
 		ctx,
 		r.owner,
 		item.view.ID,
 		&item.cohort,
 		r.control,
+		func(page teams.Page) error { r.provisionInitialRepositories(t, &item, page); return nil },
 		func() error { r.configureTeamNotice(t, &item); return nil },
 	)
 	if err != nil {
@@ -573,7 +574,6 @@ func (r *lifecycleJourney) prepareEvent(
 	); err != nil {
 		t.Fatal(err)
 	}
-	r.configureGitHubApp(t, &item)
 	r.configureDeliverables(t, &item)
 	return item
 }

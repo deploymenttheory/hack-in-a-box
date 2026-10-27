@@ -488,3 +488,18 @@ logs/databases and scoped cleanup were checked. See
 Earlier failed startup/preview attempts remain failures, not replaced verdicts.
 The remaining original retired-repository, Fleet/browser/role/expiry/provider
 and normal-image matrix remains open; `complete_lifecycle` stays false.
+
+## Already-provisioned retired-repository extension — implementation pending execution
+
+The connected journey now queues and observes all seven original published
+team repositories before its actual under-three withdrawal/reassignment. Each
+event must retain the original discarded mapping as ready/unused through
+requeue, cutoff, real judging and archive; it must have a withdrawn final source,
+no selected SHA or decision, no eligible judge entry or team outcome, and no
+current participant repository exposure. Exactly fourteen provider creates
+are required; the existing twelve surviving-team access plans and82 accepted
+competitor/mentor invitations remain unchanged.
+
+`scripts/verify-lifecycle-journey.sh` adds a clean-source, capacity-guarded native
+runner with original private journal/database capture and scoped cleanup. This
+extension compiles but no full-run verdict is claimed until it executes.

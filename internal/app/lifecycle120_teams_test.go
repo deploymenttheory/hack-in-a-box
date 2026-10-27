@@ -15,6 +15,10 @@ import (
 )
 
 func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, cohort *lifecycleAdmissions, control *lifecycleControl, reviewPublication func() error) (teams.Page, error) {
+	return allocateLifecycleTeamsWithInitialPublication(ctx, owner, eventID, cohort, control, nil, reviewPublication)
+}
+
+func allocateLifecycleTeamsWithInitialPublication(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, cohort *lifecycleAdmissions, control *lifecycleControl, initialPublication func(teams.Page) error, reviewPublication func() error) (teams.Page, error) {
 	base := "/api/v1/events/" + eventID.String()
 	var roster []int
 	for i, applied := range cohort.registrations {
@@ -59,6 +63,11 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 	for _, team := range page.Teams {
 		if len(team.Published) != 5 || len(team.Draft) != 5 {
 			return page, fmt.Errorf("reviewed initial allocation did not publish teams of five")
+		}
+	}
+	if initialPublication != nil {
+		if err := initialPublication(page); err != nil {
+			return page, err
 		}
 	}
 	// The extra reserve's offer is issued within its normal two-working-day
