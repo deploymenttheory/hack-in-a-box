@@ -92,3 +92,10 @@ It requires seven creations, thirty placements, seven unlocks and two reviewed
 publications per event. Rejected premature publication and post-freeze moves
 remain native API assertions. This extension is implemented and compiles; it has
 not yet passed a connected browser run and is not new acceptance evidence.
+
+Final-source R53 also passed all48 UI barriers and the subsequent native journey
+(372.03s), with a newly built matching independent guide and zero scoped
+containers, volumes or networks left behind. Its complete web tree matches
+PR338 revision73db4f7a. The refreshed native image was independently inspected.
+See readable-form-final-browser-proof.json; R51 remains a failed visual run.
+The new team-command extension is not included in this R53 proof.
