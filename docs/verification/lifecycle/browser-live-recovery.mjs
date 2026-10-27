@@ -45,7 +45,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
    })().catch(rejectDrop)
   })
   await cdp.send('Fetch.enable',{patterns:[{urlPattern:`http://public:8080${path}*`,requestStage:'Response'}]})
-  await own.page.getByRole('alertdialog').getByRole('button',{name:'Submit help request',exact:true}).click()
+  await own.page.getByRole('region',{name:'Review private help request',exact:true}).getByRole('button',{name:'Submit help request',exact:true}).click()
   await Promise.race([dropped,pause(15000).then(()=>{throw new Error('No actual accepted help response was intercepted')})])
   assert.equal(await own.page.evaluate(()=>navigator.onLine),false)
   await expect(form.getByRole('status',{name:'Help request save state',exact:true})).toContainText('unconfirmed')
@@ -66,7 +66,7 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
   for(const [label,status] of [['Claim request','claimed'],['Resolve request','resolved']]){
    await mentor.page.getByRole('region',{name:'Current request actions',exact:true}).getByRole('button',{name:label,exact:true}).click()
    const accepted=mentor.page.waitForResponse(response=>new URL(response.url()).pathname===path+requestID+'/actions'&&response.request().method()==='POST')
-   await mentor.page.getByRole('alertdialog').getByRole('button',{name:'Confirm reviewed change',exact:true}).click()
+   await mentor.page.getByRole('region',{name:'Review help ownership change',exact:true}).getByRole('button',{name:'Confirm reviewed change',exact:true}).click()
    const response=await accepted;assert.equal(response.status(),200)
    assert.equal((await response.json()).request.status,status)
   }
