@@ -66,7 +66,7 @@ export async function selectFacilitatorInFleet({page,expect,phase,output}){
  page.on('request',count)
  try{
   await details.getByRole('button',{name:'Select facilitator',exact:true}).click()
-  const dialog=page.getByRole('dialog',{name:'Review applicant decision',exact:true})
+  const dialog=page.getByRole('alertdialog',{name:'Review applicant decision',exact:true})
   await expect(dialog).toContainText(input.reason)
   await expect(dialog).toContainText(String(application.revision))
   assert.equal(writes,0)
@@ -118,7 +118,7 @@ export async function respondToAdmissionInFleet({browser,expect,phase,output,err
   const path=`/api/v1/events/${phase.event_id}/registrations/${application.id}/respond`
   let writes=0;page.on('request',request=>{if(new URL(request.url()).pathname===path&&request.method()==='POST')writes++})
   await status.getByRole('button',{name:labels[0],exact:true}).click()
-  const dialog=page.getByRole('dialog',{name:labels[1],exact:true})
+  const dialog=page.getByRole('alertdialog',{name:labels[1],exact:true})
   await expect(dialog).toContainText(application.id)
   await expect(dialog).toContainText(String(application.revision));assert.equal(writes,0)
   const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='POST')
