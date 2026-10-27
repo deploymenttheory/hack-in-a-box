@@ -543,3 +543,13 @@ final database/source/image receipt and scoped cleanup remain retained. #325
 tracks this intermittent native timeout separately. R16 remains the passing
 original-repository journey; R17 is a failure and proves none of the newly
 unreached expiry assertions.
+
+## R19 aborted before acceptance
+
+An edit applied the journey calls/final guard but stopped before setting the
+retired-repository execution sentinel. The host stopped only that known-incomplete
+synthetic runner (exit143), preserved its original partial logs/database and
+removed its generated resources. This is an aborted fixture repair, not a
+business/test pass. The sentinel is now set only after the actual final mapping,
+cutoff, judging, outcome and current-participant checks all succeed; a fresh
+complete run is still required.

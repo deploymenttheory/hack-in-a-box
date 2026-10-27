@@ -48,9 +48,9 @@
         "recorded_at": "2026-03-31T15:00:00Z",
         "provider_unavailable_observations": 0
       },
-      "current_participant_lists_exclude_retired_mapping": true,
-      "real_judging_excludes_retired_team": true,
-      "outcomes_exclude_retired_team": true,
+      "current_participant_lists_exclude_retired_mapping": null,
+      "real_judging_excludes_retired_team": null,
+      "outcomes_exclude_retired_team": null,
       "competition_unchanged_after_archive_and_followup": true
     },
     {
@@ -77,13 +77,14 @@
         "recorded_at": "2026-03-31T15:00:00Z",
         "provider_unavailable_observations": 0
       },
-      "current_participant_lists_exclude_retired_mapping": true,
-      "real_judging_excludes_retired_team": true,
-      "outcomes_exclude_retired_team": true,
+      "current_participant_lists_exclude_retired_mapping": null,
+      "real_judging_excludes_retired_team": null,
+      "outcomes_exclude_retired_team": null,
       "competition_unchanged_after_archive_and_followup": true
     }
   ],
   "runner_log_sha256": "5d8f2c9e48a68f1d881db76b2d3cf11c910e31dc48a955be93ffb28671ea89da",
   "intent-journal_jsonl_sha256": "3f79ae9ca1ae43ef6e54f81a3c249529f17be672cb14536eb364f264139c0165",
-  "final_dump_sha256": "96f85044bc0b7c5bf7458ee018762c090cf33a70c4fe08acf824f354166cce92"
+  "final_dump_sha256": "96f85044bc0b7c5bf7458ee018762c090cf33a70c4fe08acf824f354166cce92",
+  "receipt_audit_correction": "R16 did not invoke the final retired-repository helper. Only executed initial unused-mapping/cutoff observations are supported; helper-only claims below are unverified, not passing."
 }

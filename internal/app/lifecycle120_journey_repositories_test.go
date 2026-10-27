@@ -339,5 +339,6 @@ func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
 				"native journey lacks exactly one actually provisioned retired repository per event",
 			)
 		}
+		item.retiredRepositoryVerified = true
 	}
 }
