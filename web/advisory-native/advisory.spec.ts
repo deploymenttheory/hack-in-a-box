@@ -1,7 +1,21 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { heldCurrentReads } from '../e2e-support/held-preflight'
 import AxeBuilder from '@axe-core/playwright'
 import { actor, control, native, settleTheme } from './native'
+
+// The current GET must follow a trusted confirmation before the native owner
+// changes. Otherwise the ordinary privacy poll may correctly remove the review
+// before the test can click it. Keep polling active and relay its real response.
+async function confirmAcrossNativeChange(page: Page, confirm: Locator, action: string, expectedStatus: number) {
+ const reads = await heldCurrentReads(page, `**/api/v1/events/${native.event_id}/results/mentor-advisories`, confirm, expectedStatus)
+ try {
+  await confirm.click(); await reads.pending
+  await expect(confirm).toHaveAttribute('aria-busy', 'true')
+  await control(action)
+  reads.release()
+  await expect(page.getByRole('alertdialog', { name: 'Review mentor advisory', exact: true })).toHaveCount(0)
+ } finally { reads.release(); await reads.dispose() }
+}
 
 test('native mentor advice stays optional beside every judge ballot, with corrected provenance, original ACK and current source fences', async ({ browser }, info) => {
  const mentor = await actor(browser), judge = await actor(browser, 'judge'), outsider = await actor(browser, 'outsider'), otherJudge = await actor(browser, 'other-judge'), competitor = await actor(browser, 'competitor')
@@ -37,11 +51,12 @@ test('native mentor advice stays optional beside every judge ballot, with correc
   await page.emulateMedia({ media: 'print' }); await expect(page.getByRole('region', { name: 'Mentor advisory evidence', exact: true }).getByText(lost, { exact: true })).not.toBeVisible(); await expect(page.getByLabel('Your advisory views', { exact: true })).not.toBeVisible(); await page.emulateMedia({ media: 'screen' })
   // Positive200 narrowing must dispose the held owner while the event mentor
   // role is still active; this is distinct from the role403 scenario below.
-  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-NARROWED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Coverage200 must clear this held text.'); await opener.click(); await control('remove-coverage')
+  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-NARROWED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Coverage200 must clear this held text.'); await opener.click()
+  await confirmAcrossNativeChange(page, review.getByRole('button', { name: 'Save advisory views', exact: true }), 'remove-coverage', 200)
   const narrowed = await mentor.request.get(`/api/v1/events/${native.event_id}/results/mentor-advisories`); expect(narrowed.status()).toBe(200); expect((await narrowed.json()).targets).toEqual([])
-  await review.getByRole('button', { name: 'Save advisory views', exact: true }).click(); await expect(review).toHaveCount(0); await expect(page.getByText('PRIVATE-UNSENT-NARROWED', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(page.getByText('No current all-team category ties involve your assigned teams.', { exact: false })).toBeVisible(); expect(advisoryWrites).toBe(3)
+  await expect(review).toHaveCount(0); await expect(page.getByText('PRIVATE-UNSENT-NARROWED', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(page.getByText('No current all-team category ties involve your assigned teams.', { exact: false })).toBeVisible(); expect(advisoryWrites).toBe(3)
   await control('restore-coverage'); await page.getByRole('button', { name: 'Read current advisory assignments', exact: true }).click(); await page.getByLabel('Your assigned team and category', { exact: true }).selectOption(target); await expect(page.getByLabel('Your advisory views', { exact: true })).toHaveValue('')
-  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-REVOKED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must never send after coverage loss.'); await opener.click(); await control('revoke-mentor'); await review.getByRole('button', { name: 'Save advisory views', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Mentor advisory unavailable', exact: true })).toBeVisible(); await expect(page.getByText('PRIVATE-UNSENT-REVOKED', { exact: true })).toHaveCount(0); await expect(review).toHaveCount(0)
+  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-REVOKED'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must never send after coverage loss.'); await opener.click(); await confirmAcrossNativeChange(page, review.getByRole('button', { name: 'Save advisory views', exact: true }), 'revoke-mentor', 403); await expect(page.getByRole('heading', { name: 'Mentor advisory unavailable', exact: true })).toBeVisible(); await expect(page.getByText('PRIVATE-UNSENT-REVOKED', { exact: true })).toHaveCount(0); await expect(review).toHaveCount(0)
   await judging.getByRole('button', { name: 'Read current tie ballots', exact: true }).click(); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0)
   await control('restore-mentor'); await page.getByRole('button', { name: 'Check current advisory access', exact: true }).click(); await page.getByLabel('Your assigned team and category', { exact: true }).selectOption(target); await expect(page.getByLabel('Your advisory views', { exact: true })).toHaveValue(''); await expect(page.getByRole('region', { name: 'Mentor advisory evidence', exact: true }).getByText(lost, { exact: true })).toBeVisible()
   // A newly valid native source returns200, not409. Both owners must clear
@@ -63,7 +78,7 @@ test('native mentor advice stays optional beside every judge ballot, with correc
   await expect(voteReview).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-EVIDENCE', { exact: true })).toHaveCount(0); await expect(judging.getByText('PRIVATE-HELD-OLD-JUDGE-REASON', { exact: true })).toHaveCount(0); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0); await expect(judging.getByLabel('Your selected winner', { exact: true })).toHaveCount(0); expect(ballotWrites).toBe(0)
   await expect(review).toHaveCount(0); await expect(page.getByText('PRIVATE-HELD-REPREPARED', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(page.getByLabel('Your assigned team and category', { exact: true })).toHaveValue(''); expect(advisoryWrites).toBe(3)
   await page.getByLabel('Your assigned team and category', { exact: true }).selectOption(`${fresh.targets[0].tie_id}:${fresh.targets[0].team_id}`); await expect(page.getByLabel('Your advisory views', { exact: true })).toHaveValue('')
-  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-OLD-SOURCE'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must never send after native source reopening.'); await opener.click(); await control('reopen-source'); await review.getByRole('button', { name: 'Save advisory views', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Mentor advisory unavailable', exact: true })).toBeVisible(); await expect(page.getByText('PRIVATE-UNSENT-OLD-SOURCE', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(review).toHaveCount(0)
+  await page.getByLabel('Your advisory views', { exact: true }).fill('PRIVATE-UNSENT-OLD-SOURCE'); await page.getByLabel('Reason for this contribution or correction', { exact: true }).fill('Must never send after native source reopening.'); await opener.click(); await confirmAcrossNativeChange(page, review.getByRole('button', { name: 'Save advisory views', exact: true }), 'reopen-source', 409); await expect(page.getByRole('heading', { name: 'Mentor advisory unavailable', exact: true })).toBeVisible(); await expect(page.getByText('PRIVATE-UNSENT-OLD-SOURCE', { exact: true })).toHaveCount(0); await expect(page.getByText(lost, { exact: true })).toHaveCount(0); await expect(review).toHaveCount(0)
   await judging.getByRole('button', { name: /^(Read current tie ballots|Check current ballot access)$/ }).click(); await expect(judging.getByRole('heading', { name: 'Tie ballots unavailable', exact: true })).toBeVisible(); await expect(judging.getByText(lost, { exact: true })).toHaveCount(0); expect(advisoryWrites).toBe(3)
  } catch (error) { await page.screenshot({ path: info.outputPath('mentor-journey-failure.png'), fullPage: true }).catch(() => {}); await judging.screenshot({ path: info.outputPath('judge-journey-failure.png'), fullPage: true }).catch(() => {}); throw error }
  finally { await Promise.all([mentor.close(), judge.close(), outsider.close(), otherJudge.close(), competitor.close()]) }

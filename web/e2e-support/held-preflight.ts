@@ -5,7 +5,7 @@ import { expect, type Page, type Locator, type Route } from '@playwright/test'
 // until the native source is replaced. Poll timers remain active; this fixture
 // deliberately delays their transport too and does not claim to identify an
 // indistinguishable preflight/poll request. Every response is fetched natively.
-export async function heldCurrentReads(page: Page, path: string, confirm: Locator) {
+export async function heldCurrentReads(page: Page, path: string, confirm: Locator, expectedStatus = 200) {
  let release!: () => void, started!: () => void, cancelled = false, waiting = 0
  const resume = new Promise<void>(resolve => { release = resolve }), pending = new Promise<void>(resolve => { started = resolve }), key = `__nativePreflight_${Math.random()}`
  await confirm.evaluate((element, key) => {
@@ -20,7 +20,7 @@ export async function heldCurrentReads(page: Page, path: string, confirm: Locato
   if (!clicked) return route.fallback()
   waiting++; started(); await resume
   if (cancelled) { await route.abort('aborted'); return }
-  const response = await route.fetch(); expect(response.status()).toBe(200); await route.fulfill({ response })
+  const response = await route.fetch(); expect(response.status()).toBe(expectedStatus); await route.fulfill({ response })
  }
  await page.route(path, handler)
  return { pending, release, get waiting() { return waiting }, dispose: async () => { cancelled = true; release(); await page.unroute(path, handler); await page.evaluate(key => { const values = window as unknown as Record<string, { dispose: () => void }>; values[key]?.dispose(); delete values[key] }, key) } }
