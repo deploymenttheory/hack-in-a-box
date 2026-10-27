@@ -1,0 +1,184 @@
+{
+  "complete_lifecycle": false,
+  "same_driver_source": "922ad7b250bbfcc90ab974d7611c018b70701596",
+  "same_verification_image": "sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8",
+  "cases": [
+    {
+      "source_revision": "922ad7b250bbfcc90ab974d7611c018b70701596",
+      "source_worktree_clean": true,
+      "verification_image": "sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8",
+      "case": "journey",
+      "project": "hackbox-lifecycle-journey-1793101983-29067",
+      "actual_runner_exit_code": 0,
+      "complete_lifecycle": false,
+      "retention_case": "default90",
+      "elapsed_seconds": 199.11,
+      "native_retention_days": 90,
+      "privacy_policy_write_count": 0,
+      "complete_original_acceptance": false,
+      "events": [
+        {
+          "event_id": "6bf275c3-7d7a-46f0-96c1-f52b2983d2cd",
+          "mode": "all_teams",
+          "stage": "archived",
+          "retired_repository_verified": true,
+          "rejected_boundary_review": {
+            "review_id": "4e76cfb9-531b-4933-ac6f-68cb6bf12a6a",
+            "days": 90,
+            "original_version": 1,
+            "state_after": "draft",
+            "approval_rejected": true
+          },
+          "retention_expiry": {
+            "event_id": "6bf275c3-7d7a-46f0-96c1-f52b2983d2cd",
+            "native_completed_at": "2026-03-31T16:00:00Z",
+            "retention_days": 90,
+            "exclusive_deadline": "2026-06-29T16:00:00Z",
+            "owner_readable_one_second_before": true,
+            "owner_denied_at_deadline": true,
+            "organiser_denied_at_deadline": true,
+            "notification_denied_at_deadline": true,
+            "competition_unchanged": true
+          },
+          "delivered_reviews": [
+            {
+              "days": 30,
+              "review_id": "7c0af383-67e7-4e8d-9951-fc1f6daade71",
+              "notification_id": "01a17d37-9a0a-7080-8d8d-723d5636bcb5"
+            },
+            {
+              "days": 60,
+              "review_id": "7eafd471-5f8f-4b2f-bfe4-d987ea6747d5",
+              "notification_id": "01a17d38-0fe0-75f0-9ffc-549472157106"
+            }
+          ]
+        },
+        {
+          "event_id": "5434e74e-0cc6-48f3-b44d-72cbae521b1f",
+          "mode": "mentor_qualification",
+          "stage": "archived",
+          "retired_repository_verified": true,
+          "rejected_boundary_review": {
+            "review_id": "dc9e2313-8a48-4020-aa17-62ae860491c4",
+            "days": 90,
+            "original_version": 1,
+            "state_after": "draft",
+            "approval_rejected": true
+          },
+          "retention_expiry": {
+            "event_id": "5434e74e-0cc6-48f3-b44d-72cbae521b1f",
+            "native_completed_at": "2026-03-31T16:00:00Z",
+            "retention_days": 90,
+            "exclusive_deadline": "2026-06-29T16:00:00Z",
+            "owner_readable_one_second_before": true,
+            "owner_denied_at_deadline": true,
+            "organiser_denied_at_deadline": true,
+            "notification_denied_at_deadline": true,
+            "competition_unchanged": true
+          },
+          "delivered_reviews": [
+            {
+              "days": 30,
+              "review_id": "c485f09a-5e2d-4e59-b44a-25c9b3d7dcba",
+              "notification_id": "01a17d37-9a0a-7304-aaad-2ef797a53aa2"
+            },
+            {
+              "days": 60,
+              "review_id": "f245eeb4-1a27-4427-9edd-7f588f7abfab",
+              "notification_id": "01a17d38-0fa4-7216-a7b9-4a701b4597ed"
+            }
+          ]
+        }
+      ],
+      "runner_log_sha256": "b31c626ea3bbafe4cdca6e60dc5e12b8795bf3d46145eed0adad6da7361d01f0",
+      "intent-journal_jsonl_sha256": "faaa65667e133629850c48ec721badfc93f292ea84b1e6c20268ffbb6d43f922",
+      "final_dump_sha256": "9bce272cd73afd65386e43450e397f71fbef1fc9674b62e0f7f608fcf421974c"
+    },
+    {
+      "source_revision": "922ad7b250bbfcc90ab974d7611c018b70701596",
+      "source_worktree_clean": true,
+      "verification_image": "sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8",
+      "case": "journey",
+      "project": "hackbox-lifecycle-journey-1793102416-31725",
+      "actual_runner_exit_code": 0,
+      "complete_lifecycle": false,
+      "retention_case": "configured120",
+      "elapsed_seconds": 260.15,
+      "native_retention_days": 120,
+      "privacy_policy_write_count": 2,
+      "events": [
+        {
+          "event_id": "ba11c118-1925-4abf-823d-d88aeedffcdb",
+          "mode": "all_teams",
+          "stage": "archived",
+          "retired_repository_verified": true,
+          "retention_expiry": {
+            "event_id": "ba11c118-1925-4abf-823d-d88aeedffcdb",
+            "native_completed_at": "2026-03-31T16:00:00Z",
+            "retention_days": 120,
+            "exclusive_deadline": "2026-07-29T16:00:00Z",
+            "owner_readable_one_second_before": true,
+            "owner_denied_at_deadline": true,
+            "organiser_denied_at_deadline": true,
+            "notification_denied_at_deadline": true,
+            "competition_unchanged": true
+          },
+          "delivered_reviews": [
+            {
+              "days": 30,
+              "review_id": "357958d8-0694-456b-9059-1a52637c1d81",
+              "notification_id": "01a17d3e-ab69-7947-a107-413fa30c7bfa"
+            },
+            {
+              "days": 60,
+              "review_id": "d7b0fede-74a2-4231-9331-873a4557f375",
+              "notification_id": "01a17d3f-216c-7eda-8197-3180eb6a8147"
+            },
+            {
+              "days": 90,
+              "review_id": "c430ee18-c98b-423a-b4d0-e7a0f5fb9bad",
+              "notification_id": "01a17d3f-99d4-7b7a-b102-62ea0e4e64c2"
+            }
+          ]
+        },
+        {
+          "event_id": "769a7bdf-e4af-469c-9b92-644cfde3c8c6",
+          "mode": "mentor_qualification",
+          "stage": "archived",
+          "retired_repository_verified": true,
+          "retention_expiry": {
+            "event_id": "769a7bdf-e4af-469c-9b92-644cfde3c8c6",
+            "native_completed_at": "2026-03-31T16:00:00Z",
+            "retention_days": 120,
+            "exclusive_deadline": "2026-07-29T16:00:00Z",
+            "owner_readable_one_second_before": true,
+            "owner_denied_at_deadline": true,
+            "organiser_denied_at_deadline": true,
+            "notification_denied_at_deadline": true,
+            "competition_unchanged": true
+          },
+          "delivered_reviews": [
+            {
+              "days": 30,
+              "review_id": "8a9661b6-963d-4b42-9b73-a83a844e78d9",
+              "notification_id": "01a17d3e-ab65-794e-a0f7-51f004379503"
+            },
+            {
+              "days": 60,
+              "review_id": "3698a4d2-c692-434e-bb66-67cef5021aac",
+              "notification_id": "01a17d3f-2175-7042-8347-a78ed66f9c64"
+            },
+            {
+              "days": 90,
+              "review_id": "198ed6f5-3479-431a-afcf-81a65ec75ef7",
+              "notification_id": "01a17d3f-9a16-7791-ad27-1c360d115173"
+            }
+          ]
+        }
+      ],
+      "runner_log_sha256": "88643d35732c1639487c35a72a8f6e2ad715d281e5381eac1624db98e10adbb7",
+      "intent-journal_jsonl_sha256": "0a9f1d8e92514b95aaf4d845b459ca6c4e990bbb408f450b2a2c32cb8611a645",
+      "final_dump_sha256": "c59e0b55c66db3554883b7fd3b5d7e22bf00371781f6d9c92561eda8af89a368"
+    }
+  ]
+}

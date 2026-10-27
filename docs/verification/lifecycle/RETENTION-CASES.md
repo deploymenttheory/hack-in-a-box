@@ -24,6 +24,7 @@ The private monotonic fixture clock permits the already-configured120-day
 boundary after postponement; it is absent from production images.
 
 The default90 case passes199.11s on clean `922ad7b2`; see
-[actual receipt](default-retention-expiry-proof.json). The earlier120-day case
-passed211.23s on `92f988ae`; its same-driver repeat is pending. Earlier
+[actual receipt](default-retention-expiry-proof.json). The configured120 case passes260.15s on the same `922ad7b2` source and
+`ae2aeb10…` verification image. [Both exact-case receipts](retention-cases-proof.json)
+retain the actual journals/databases and source/image/exit provenance. Earlier
 uninvoked-helper receipts do not supply these executed verdicts.

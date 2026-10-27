@@ -622,3 +622,18 @@ full competition hashes remain valid. See [bounded receipt](default-retention-ex
 Original logs/journal/database and scoped cleanup are retained. Full Fleet/
 browser/current-role/provider acceptance stays open. The complementary120-day
 case is being repeated on this same source/image; no new verdict is inferred.
+
+## Passing both policies on the same native driver/image — R24
+
+The complementary configured120 case passed260.15s at the same clean
+`922ad7b250bbfcc90ab974d7611c018b70701596` and image
+`sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8`
+as passing default90 R23 (199.11s). The original journal contains exactly two
+privacy PUTs for120, compared with zero for the untouched90 case. Both modes
+retain actual retired-repository/current-list guards and immutable competition
+hashes at exact expiry. Configured120 delivers30/60/90; default90 delivers30/60
+and rejects unchanged day90 draft approval at its exclusive boundary.
+See [combined actual receipts](retention-cases-proof.json). All generated
+resources were cleaned; private originals remain retained. The complete Fleet/
+browser/offline/current-role/provider matrix and full release acceptance remain
+open. No failed earlier attempt is relabelled as passing.
