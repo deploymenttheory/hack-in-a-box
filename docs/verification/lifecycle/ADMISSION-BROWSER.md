@@ -63,3 +63,23 @@ compared byte-for-byte with the executed source. PR #336 has since merged and
 original executed hashes. The visually discovered compressed collection is
 tracked separately in #337; a passing workflow does not excuse that defect.
 The original remaining #120 acceptance criteria are unchanged.
+
+## Native form readability after #337
+
+R52 passes313.77s with all48 required UI barriers, a newly rebuilt independent
+guide from the exact integration source and the final #338 wrapping fix.
+The native form path requires labelled records, each long name at least160px
+wide in the fixed1440px fixture and no horizontal overflow. All six publications
+pass those assertions; the [native form image](native-readable-form.png) was
+independently inspected and is readable. The complete subsequent native
+judging/archive/queued30/60/90-review/expiry journey also passes and scoped
+cleanup is zero. readable-form-browser-proof.json preserves exact executed
+source/images/hashes and the reviewed revision with an identical web tree.
+
+R51 is intentionally stopped after its native image exposed a still-squeezed
+name beside a long action. It is not counted as a passing readability result.
+A route regression reproduces39.4375px before the final header wrapping fix.
+PR #338 still requires every separate CI check green before merge; a later
+native optional-session CI assertion needs inspector scoping because the new
+visible record heading shares the inspector's name. None of this completes the
+remaining original #120 criteria.
