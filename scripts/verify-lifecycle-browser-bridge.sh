@@ -29,6 +29,11 @@ browser_finish(){
 }
 trap browser_finish EXIT
 trap 'exit 130' INT TERM
+browser_host_free_kib=$(df -Pk "$browser_root" | awk 'NR==2 {print $4}')
+if [ "$browser_host_free_kib" -lt 8388608 ]; then
+ printf 'Insufficient host disk space: need at least 8388608 KiB free before lifecycle verification.\n' >&2
+ exit 1
+fi
 browser_free_kib=$(docker run --rm --network none --read-only --cap-drop ALL --entrypoint df postgres:17.7-bookworm -Pk / | awk 'NR==2 {print $4}')
 test "$browser_free_kib" -ge 8388608
 npm --prefix "$browser_root/web" ci > "$browser_evidence/browser-dependencies.log" 2>&1
@@ -42,6 +47,11 @@ git diff --exit-code "$browser_guide_source" "$browser_source" -- web > "$browse
 browser_guide_image=$(docker image inspect --format '{{.Id}}' "$HACKBOX_LIFECYCLE_GUIDE_IMAGE")
 docker build -f "$browser_root/docs/verification/lifecycle/Dockerfile" -t "$HACKBOX_LIFECYCLE_IMAGE" "$browser_root" > "$browser_evidence/build.log" 2>&1
 browser_image=$(docker image inspect --format '{{.Id}}' "$HACKBOX_LIFECYCLE_IMAGE")
+browser_host_free_kib=$(df -Pk "$browser_root" | awk 'NR==2 {print $4}')
+if [ "$browser_host_free_kib" -lt 4194304 ]; then
+ printf 'Insufficient host disk space: need at least 4194304 KiB free before lifecycle verification.\n' >&2
+ exit 1
+fi
 browser_free_kib=$(docker run --rm --network none --read-only --cap-drop ALL --entrypoint df postgres:17.7-bookworm -Pk / | awk 'NR==2 {print $4}')
 test "$browser_free_kib" -ge 4194304
 browser_compose up -d --wait --wait-timeout 60 --no-build public admin worker styleguide browser-proxy > "$browser_evidence/startup.log" 2>&1
