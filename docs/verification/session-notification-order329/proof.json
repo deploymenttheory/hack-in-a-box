@@ -1,0 +1,42 @@
+{
+  "native_runtime_source": "37aeba1848ce9e58b3f3180734d0fd56b842b075",
+  "native_postgres": true,
+  "race_detector": true,
+  "selection": "native concurrent bookings",
+  "repetitions_per_viewport": 3,
+  "passed_desktop": 3,
+  "passed_mobile": 3,
+  "elapsed_seconds": 57.755,
+  "timeouts_unchanged": true,
+  "forced_activation": false,
+  "sleep_added": false,
+  "latest_run_receipts": [
+    {
+      "browser_command_succeeded": true,
+      "event_id": "e4af583a-cbf4-4913-8133-1b9927daa8b8",
+      "fixture_run_id": "6b5b123f-83b8-42a7-bdc9-ad1a131d3b1a",
+      "new_session_id": "11710684-215d-497b-bb56-e25e73f43161",
+      "session_id": "580bef0c-cdf4-47f3-926e-4f499006bc2f",
+      "source_commit": "37aeba1848ce9e58b3f3180734d0fd56b842b075",
+      "source_commit_end": "37aeba1848ce9e58b3f3180734d0fd56b842b075",
+      "source_tree": "5038abf371a14c51001566b5de3c5c3aee472494",
+      "source_worktree_clean": true,
+      "test_selection": "native concurrent bookings",
+      "viewport": "desktop"
+    },
+    {
+      "browser_command_succeeded": true,
+      "event_id": "77771ae4-e101-4114-a527-785ca19997d0",
+      "fixture_run_id": "c246da55-d761-4780-8d51-ececabe36307",
+      "new_session_id": "ddd19362-6dac-4a96-b83a-d884e38bc086",
+      "session_id": "d0018b28-d6ca-4faf-978e-ecc2321a8db7",
+      "source_commit": "37aeba1848ce9e58b3f3180734d0fd56b842b075",
+      "source_commit_end": "37aeba1848ce9e58b3f3180734d0fd56b842b075",
+      "source_tree": "5038abf371a14c51001566b5de3c5c3aee472494",
+      "source_worktree_clean": true,
+      "test_selection": "native concurrent bookings",
+      "viewport": "mobile"
+    }
+  ],
+  "full_issue120_acceptance": false
+}
