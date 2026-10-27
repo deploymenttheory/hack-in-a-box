@@ -11,8 +11,8 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff; CONNECTED-MESSAGE.md adds same-event queued permanent SMTP failure with immutable history and denied retry | R39 adds actual same-event browser offline/accepted-response-loss recovery with one PUT and independent native verification; remaining integrated provider/role variants |
 | Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes; LIVE-ROLES.md adds twelve live actor cases on both events and audited mentor revoke/restore with peer isolation | Remaining other-stage/current-resource role cases, full action journeys and archive/export inspection |
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
-| Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; actual late original offer expires without confirmation, freeze precedes common disclosure | Final integrated browser coverage |
-| Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 executed original repository provision/retirement/archive checks, fourteen exact provider creates | Final integrated browser coverage |
+| Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; R54 adds92 reviewed team commands with exact native revisions, target-five initial publication and corrected preferred-size publication | Depletion withdrawals and later hard-freeze UI remain native API steps; full integrated browser coverage remains |
+| Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | Complete withdrawal/freeze and remaining before/after-freeze browser cases |
 | Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | Complete browser publication/exception paths |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
 | Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve | Remaining full action-to-next-action Fleet browser sequence |
@@ -72,3 +72,13 @@ ADMISSION-BROWSER.md follow-up. #335 is closed by merged PR #336 and the draft
 is rebased. Collection readability defect #337 remains separate. The original
 team/content/publication, assessment, feedback/archive, remaining role/provider
 and final audit requirements remain open; complete_lifecycle stays false.
+
+R53 verifies final responsive UI source73db4f7a with all48 prior UI barriers and
+both native archived journeys (372.03s). R54 then verifies140 UI barriers,
+including92 actual reviewed team commands across the same two events (427.75s).
+Its native checks independently establish exact versions, retained published
+snapshots, target-five groups and deliberate surviving-pair reassignment into
+six teams of four-to-six. Neither run completes the full twelve-criterion audit.
+Rubric configuration still lacks an administrator authoring screen; separate339
+tracks that product gap. Depletion withdrawals, later hard freeze, content and
+assessment, feedback/archive and other role/stage/provider UI paths remain.
