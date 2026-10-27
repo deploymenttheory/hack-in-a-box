@@ -13,9 +13,11 @@ import (
 )
 
 type lifecycleBrowserTeamChange struct {
-	Command  teams.Command `json:"command"`
-	Revision int64         `json:"revision"`
-	Last     bool          `json:"last"`
+	PersonName string        `json:"person_name"`
+	TeamName   string        `json:"team_name"`
+	Command    teams.Command `json:"command"`
+	Revision   int64         `json:"revision"`
+	Last       bool          `json:"last"`
 }
 
 func (r *lifecycleJourney) browserTeamActions(
@@ -46,12 +48,24 @@ func (r *lifecycleJourney) browserTeamActions(
 		if command.Action == "publish" {
 			publications++
 		}
+		input := &lifecycleBrowserTeamChange{Command: command, Revision: before.Revision, Last: publications == 2}
+		for _, person := range before.People {
+			if person.ID == command.PersonID {
+				input.PersonName = person.Name
+			}
+		}
+		for _, team := range before.Teams {
+			if team.ID == command.TeamID {
+				input.TeamName = team.Name
+			}
+		}
+		if command.Action == "create" {
+			input.TeamName = command.Name
+		}
 		ack := r.admissionBrowserPhase(t, item, lifecycleBrowserPhase{
-			Sequence: 301 + index*100 + len(item.browserTeamCommands),
-			Action:   "team-change",
-			TeamChange: &lifecycleBrowserTeamChange{
-				Command: command, Revision: before.Revision, Last: publications == 2,
-			},
+			Sequence:   301 + index*100 + len(item.browserTeamCommands),
+			Action:     "team-change",
+			TeamChange: input,
 		})
 		if !ack.Saved {
 			return after, fmt.Errorf("team command lacks its real UI acknowledgement")

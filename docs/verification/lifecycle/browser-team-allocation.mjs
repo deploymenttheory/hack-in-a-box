@@ -49,6 +49,18 @@ export async function changeTeamInFleet({page,expect,phase,output}){
     break
    default:throw new Error('Unsupported reviewed team command')
   }
+  if(command.action!=='publish'){
+   const review=page.getByRole('region',{name:'Review team change',exact:true})
+   await expect(review.getByRole('heading',{name:'Review team change',exact:true})).toBeFocused()
+   await expect(review).toContainText(`reviewed revision ${input.revision}`)
+   await expect(review).toContainText(command.reason)
+   assert.ok(input.team_name)
+   await expect(review).toContainText(input.team_name)
+   if(command.action==='create'||command.action==='move'){
+    assert.ok(input.person_name)
+    await expect(review).toContainText(input.person_name)
+   }
+  }
   await expect(confirm).toBeEnabled()
   assert.equal(writes.length,0,'Review must not perform a team write')
   const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='POST')
