@@ -29,3 +29,11 @@ and its scoped edge network. Native APIs, database and provider remain on the
 internal-only network, with unchanged cookies/CSRF/Origin and destination guards.
 Fresh normal browser OIDC execution is still required; neither connectivity nor
 component isolation alone is counted as a browser or complete lifecycle pass.
+
+The next native execution at `efc5eb6a` reached the real synthetic provider
+heading, but its implicit select label included option text, so an exact
+`Synthetic actor` accessible-label locator found no field. A minimal browser
+loop reproduced zero exact matches before and one after an explicit for/id
+label association. Only the synthetic provider's label markup changes; normal
+OIDC actor selection, authorization-code/PKCE/state/nonce/native session checks
+remain untouched. No passing OIDC checkpoint is claimed until fresh execution.
