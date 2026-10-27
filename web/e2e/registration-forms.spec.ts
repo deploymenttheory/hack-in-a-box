@@ -7,7 +7,7 @@ test('form editing validates branches, previews answers and separates save from 
   await page.setViewportSize({ width: 1440, height: 1000 })
   await mockWorkspace(page)
   const parent = '00000000-0000-4000-8000-000000000001', child = '00000000-0000-4000-8000-000000000002'
-  let form: components['schemas']['RegistrationForm'] = { revision: 0, version: 0, published_version: null, definition: { id: '00000000-0000-4000-8000-000000000003', name: 'Attendee form', audience: 'attendee', fields: [
+  let form: components['schemas']['RegistrationForm'] = { revision: 0, version: 0, published_version: null, definition: { id: '00000000-0000-4000-8000-000000000003', name: 'Synthetic attendee application', audience: 'attendee', fields: [
     { id: parent, label: 'Have a team?', type: 'single', required: true, help: '', choices: ['yes', 'no'] },
     { id: child, label: 'Team preference', type: 'text', required: true, help: '', choices: [], visible_when: { field_id: parent, equals: 'yes' } },
   ] } }
@@ -20,9 +20,11 @@ test('form editing validates branches, previews answers and separates save from 
   })
   await page.goto(`/events/${firstID}`)
   await openEventSection(page, 'Forms')
-  await page.getByRole('button', { name: 'Attendee form · Draft' }).click()
+  await page.getByRole('button', { name: 'Synthetic attendee application · Draft' }).click()
   await expect(page.getByRole('list', { name: 'Registration forms', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Attendee form · Draft', exact: true })).toBeVisible()
+  const recordName = page.getByRole('list', { name: 'Registration forms', exact: true }).getByRole('heading', { name: 'Synthetic attendee application', exact: true })
+  expect((await recordName.boundingBox())!.width).toBeGreaterThanOrEqual(160)
+  await expect(page.getByRole('button', { name: 'Synthetic attendee application · Draft', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Edit Team preference' }).click()
   await expect(page.getByRole('heading', { name: 'Editing Team preference' })).toBeFocused()
   await page.getByRole('button', { name: 'Back to questions' }).click(); await expect(page.getByRole('button', { name: 'Edit Team preference' })).toBeFocused()

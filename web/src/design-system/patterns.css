@@ -21,8 +21,8 @@
   .fleet-record-list { list-style: none; padding: 0; margin: 0; }
   .fleet-record-list > li { padding: var(--row-padding); border-bottom: 1px solid var(--border); }
   .fleet-record-list > li:last-child { border-bottom: 0; }
-  .fleet-record-heading { display: flex; align-items: start; gap: var(--space-3); }
-  .fleet-record-heading h2 { flex: 1; font-size: var(--text-body); margin: 0; }
+  .fleet-record-heading { display: flex; flex-wrap: wrap; align-items: start; gap: var(--space-3); }
+  .fleet-record-heading h2 { flex: 1 1 12rem; font-size: var(--text-body); margin: 0; }
   .fleet-record-list dl, .fleet-command-result dl { display: grid; gap: var(--space-2); margin-block: var(--space-3) 0; }
   .fleet-record-list dl > div, .fleet-command-result dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-3); }
   .fleet-record-list :is(dt,dd), .fleet-command-result :is(dt,dd) { margin: 0; overflow-wrap: anywhere; }

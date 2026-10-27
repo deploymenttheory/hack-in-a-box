@@ -45,3 +45,19 @@ counterpart before correction, then passes after internal page/selection/sort
 identities use a separate attribute and unambiguous tuple encoding. Existing
 owner record keys remain untouched. All60 shared-pattern browser checks pass
 with that correction; the original narrow-pane red result remains distinct.
+
+A native R51 image then exposed an incomplete visual result: the list was
+visible, but a long action still squeezed the long record name. The targeted
+form-route regression measured only39.4375px for the name (minimum160px in the
+fixed desktop fixture). Wrapping the record header and giving the title a
+readable flex basis fixes that case; the same long-name route/save/publication
+test now passes. The independently inspected route image above is refreshed
+with this long-name fixture. Native R51 was intentionally stopped after that
+verified visual defect; it is not counted as a passing readability result.
+
+The style-guide CI failure was reproduced separately: a newly visible record
+heading and its inspector heading shared a name, making the old focus assertion
+ambiguous. The test now names the inspector region and still requires its
+heading to receive focus. The complete independent guide browser suite passes
+all86 desktop/mobile checks after that correction. Native verification with the
+long-name gate and final wrapping change remains required before ready/merge.

@@ -174,3 +174,7 @@ inside that collection before the change: an editor, toolbar or external
 control keeps its focus. Local owner actions still need their existing stable
 `data-record-focus` record key. Do not duplicate hidden tables/lists or keep
 second copies of private controls solely for responsive presentation.
+
+Record headers allow their action to wrap below the title. A long action must
+not reduce a normal record name to a letter-by-letter column. Keep the shared
+spacing and title basis; do not hide names or columns to make an inspector fit.

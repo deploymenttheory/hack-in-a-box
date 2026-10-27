@@ -226,7 +226,7 @@ test('local records use actual action buttons and preserve detail return focus',
   await expect(local.getByRole('link', { name: 'Synthetic local draft', exact: true })).toHaveCount(0)
   const open = local.getByRole('button', { name: 'Review Synthetic local draft', exact: true })
   await open.focus(); await open.press('Enter')
-  await expect(local.getByRole('heading', { name: 'Synthetic local draft', exact: true })).toBeFocused()
+  await expect(local.getByRole('region', { name: 'Synthetic local draft', exact: true }).getByRole('heading', { name: 'Synthetic local draft', exact: true })).toBeFocused()
   await local.getByRole('link', { name: 'Back to local drafts', exact: true }).click()
   await expect(open).toBeFocused()
   await open.click()
