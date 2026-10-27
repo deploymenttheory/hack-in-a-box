@@ -445,3 +445,17 @@ transport still observed exactly38 verifications. Raw receipts, original intent
 metadata and final database remain private. Missing dispatch-window, retired
 repository, full Fleet/browser/role/expiry and normal-image cases still keep
 the complete original matrix and #120 open.
+
+## Exact dispatch window and missed-release recovery — not yet executed
+
+A separate fresh native Compose lane now exercises both judging modes at the
+inclusive60-second boundary and one PostgreSQL microsecond beyond it. The host
+keeps the worker absent until the private ready barrier and then starts the
+actual normal worker composition; no handler call or SQL due-time rewrite
+stands in for dispatch. The late case requires an unreleased/missed source,
+current route/rubric/search denial, rejected manual live entry and rejected
+past-schedule reapproval. Native postponement and a new reviewed version must
+restore the full future T−7 schedule while keeping frozen teams and original
+missed history. [The clean command](DISPATCH-WINDOW.md) captures private native
+artifacts and verifies scoped cleanup. Compilation/calendar checks passed;
+actual execution remains pending, and no complete acceptance claim is made.

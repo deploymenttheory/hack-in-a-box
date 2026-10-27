@@ -155,6 +155,20 @@ services:
       admin: {condition: service_healthy}
       worker: {condition: service_started}
 
+  dispatch-window:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_DISPATCH_CASE: ${HACKBOX_LIFECYCLE_DISPATCH_CASE:-last-on-time}
+      HACKBOX_LIFECYCLE_INTENT_JOURNAL: /artifacts/intent-journal.jsonl
+    profiles: [dispatch-window]
+    command: ['-test.run=^TestLifecycleComposeDispatchWindow$', '-test.timeout=3m', '-test.v']
+    volumes: ['control:/control:ro', 'artifacts:/artifacts']
+    # The host starts the real worker after the runner's private ready barrier.
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+
   journey:
     <<: *fixture
     environment:
