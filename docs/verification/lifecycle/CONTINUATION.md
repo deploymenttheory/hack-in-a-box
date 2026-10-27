@@ -532,3 +532,14 @@ lose outcome/history reads, and the original delivered day90 notification is
 unreadable. Full competition hashes must remain unchanged. Equal deadlines
 are grouped to preserve monotonic domain time. The default90 component proof
 remains separate; this new API case has no passing verdict yet.
+
+## R17 did not reach expiry — independent feedback report timeout
+
+The next full native run at clean `cdc6c5f3` failed240.96s before the new
+expiry helper. After actual finalist/award releases, a feedback-report POST
+at expected revision3 returned503 after10010ms under the unchanged API budget.
+No automatic write retry was made. The original intent identity, private logs,
+final database/source/image receipt and scoped cleanup remain retained. #325
+tracks this intermittent native timeout separately. R16 remains the passing
+original-repository journey; R17 is a failure and proves none of the newly
+unreached expiry assertions.
