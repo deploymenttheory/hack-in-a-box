@@ -99,3 +99,13 @@ containers, volumes or networks left behind. Its complete web tree matches
 PR338 revision73db4f7a. The refreshed native image was independently inspected.
 See readable-form-final-browser-proof.json; R51 remains a failed visual run.
 The new team-command extension is not included in this R53 proof.
+
+R54 passes the expanded journey:140 UI barriers, including all92 reviewed team
+commands (46 per event), then the native lifecycle to archived follow-up and
+retention expiry (427.75s). The complete web tree matches reviewed73db4f7a,
+and the independent guide has the same web source. All isolated resources were
+removed. team-allocation-browser-proof.json retains source/image/artifact hashes;
+native-team-reassignment.png shows the corrected six-team publication and unused
+retired team. Depletion withdrawals and the later hard freeze still use native
+APIs; this is not complete team UI or full120 acceptance. Missing rubric
+authoring is separately tracked in339. Earlier runs and failures are retained.
