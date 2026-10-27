@@ -30,6 +30,7 @@ type lifecycleBrowserPhase struct {
 	Roles       *lifecycleBrowserRolesPhase  `json:"roles,omitempty"`
 	Create      *lifecycleBrowserCreateEvent `json:"create,omitempty"`
 	Application *lifecycleBrowserApplication `json:"application,omitempty"`
+	Selection   *lifecycleBrowserSelection   `json:"selection,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
@@ -224,7 +225,10 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 	}
 	request := current.Request
 	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
-		request.Category != "competition_output" || request.Description != "PRIVATE synthetic browser recovery help" || request.Location != "Synthetic recovery desk" || request.MeetingURL != "" ||
+		request.Category != "competition_output" ||
+		request.Description != "PRIVATE synthetic browser recovery help" ||
+		request.Location != "Synthetic recovery desk" ||
+		request.MeetingURL != "" ||
 		request.Status != "resolved" ||
 		request.Revision != 3 ||
 		request.AssigneeID == nil ||

@@ -47,3 +47,39 @@ export async function applyInFleet({browser,expect,phase,output,errors}){
  }catch(error){await page.screenshot({path:join(output,`application-${phase.sequence}-failure.png`),fullPage:true}).catch(()=>{});throw error}
  finally{await context.close()}
 }
+
+export async function selectFacilitatorInFleet({page,expect,phase,output}){
+ assert.equal(phase.action,'select-facilitator')
+ const input=phase.selection,application=input.application
+ assert.equal(application.kind,'facilitator');assert.equal(application.state,'received')
+ await page.clock.setFixedTime(new Date(phase.domain_now))
+ await page.goto(`http://admin.localhost:8080/events/${phase.event_id}?section=applicants`)
+ await expect(page.getByRole('heading',{name:'Applicant review',exact:true})).toBeVisible()
+ const review=page.locator(`[data-record-focus="${application.id}"]`)
+ await review.click()
+ const details=page.getByRole('region',{name:'Applicant details',exact:true})
+ await expect(details).toContainText('received')
+ await details.getByLabel('Decision or exception reason',{exact:true}).fill(input.reason)
+ const path=`/api/v1/events/${phase.event_id}/registrations/${application.id}/decision`
+ let writes=0
+ const count=request=>{if(new URL(request.url()).pathname===path&&request.method()==='POST')writes++}
+ page.on('request',count)
+ try{
+  await details.getByRole('button',{name:'Select facilitator',exact:true}).click()
+  const dialog=page.getByRole('dialog',{name:'Review applicant decision',exact:true})
+  await expect(dialog).toContainText(input.reason)
+  await expect(dialog).toContainText(String(application.revision))
+  assert.equal(writes,0)
+  const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='POST')
+  await dialog.getByRole('button',{name:'Confirm decision',exact:true}).click()
+  const saved=await response;assert.equal(saved.status(),200);const value=await saved.json()
+  assert.equal(value.id,application.id);assert.equal(value.event_id,phase.event_id)
+  assert.equal(value.state,'selected');assert.equal(value.revision,application.revision+1)
+  await expect(details.getByRole('status').filter({hasText:'Decision recorded.'})).toBeVisible()
+  await page.reload();await review.click()
+  await expect(details).toContainText('selected');await expect(details).toContainText(input.reason)
+  assert.equal(writes,1)
+  await page.screenshot({path:join(output,`native-selection-${phase.sequence}.png`),fullPage:true})
+  return {application_id:application.id,actor:input.actor,audience:application.audience,state:value.state,review_without_write:true,post_attempts:writes,persisted_after_reload:true}
+ }finally{page.off('request',count)}
+}

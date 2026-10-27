@@ -19,6 +19,19 @@ type lifecycleBrowserApplication struct {
 	Answer string                `json:"answer"`
 	State  string                `json:"state"`
 }
+type lifecycleBrowserSelection struct {
+	Actor       string            `json:"actor"`
+	Application registration.View `json:"application"`
+	Reason      string            `json:"reason"`
+}
+
+type lifecycleBrowserSelectionReceipt struct {
+	Actor            string `json:"actor"`
+	Audience         string `json:"audience"`
+	DecisionRecorded bool   `json:"decision_recorded"`
+	ActiveNativeRole bool   `json:"active_native_role"`
+}
+
 type lifecycleBrowserApplicationReceipt struct {
 	Actor               string `json:"actor"`
 	Audience            string `json:"audience"`
@@ -81,6 +94,34 @@ func (r *lifecycleJourney) browserAdmissionActions(
 			}
 			item.browserRegistrationOpened = true
 			return after, nil
+		},
+		Select: func(alias string, application registration.View) (registration.View, error) {
+			if alias == "mentor-a" || alias == "judge-a" {
+				sequence := base + 11
+				if alias == "judge-a" {
+					sequence++
+				}
+				return r.selectFacilitatorInBrowser(t, item, sequence, lifecycleBrowserSelection{
+					Actor:       alias,
+					Application: application,
+					Reason:      "Synthetic lifecycle role selection",
+				}), nil
+			}
+			var selected registration.View
+			err := r.owner.call(
+				t.Context(),
+				http.MethodPost,
+				"/api/v1/events/"+item.view.ID.String()+"/registrations/"+application.ID.String()+"/decision",
+				application.Revision,
+				registration.ReviewInput{
+					Action:      "selected",
+					Reason:      "Synthetic lifecycle role selection",
+					Acknowledge: true,
+				},
+				&selected,
+				http.StatusOK,
+			)
+			return selected, err
 		},
 		Apply: func(alias string, actor *lifecycleClient, form registration.FormView) (registration.View, error) {
 			slot, selected := map[string]int{"mentor-a": 0, "judge-a": 1, "attendee-35": 2, "attendee-36": 3}[alias]
@@ -188,5 +229,83 @@ func (r *lifecycleJourney) applyRegistrationInBrowser(
 			OwnNativeRead:       true,
 		},
 	)
+	return current
+}
+
+func (r *lifecycleJourney) selectFacilitatorInBrowser(
+	t *testing.T,
+	item *lifecycleJourneyEvent,
+	sequence int,
+	input lifecycleBrowserSelection,
+) registration.View {
+	t.Helper()
+	var clock struct {
+		Now time.Time `json:"now"`
+	}
+	if err := r.control.call(t.Context(), http.MethodGet, "/clock", nil, &clock); err != nil {
+		t.Fatal(err)
+	}
+	before := r.readRoleEvent(t, item)
+	ack := r.awaitBrowserPhase(t, lifecycleBrowserPhase{
+		Sequence:  sequence,
+		Action:    "select-facilitator",
+		EventID:   item.view.ID,
+		Now:       clock.Now,
+		Selection: &input,
+	})
+	if !ack.Saved || ack.ApplicationID == nil || *ack.ApplicationID != input.Application.ID {
+		t.Fatal("facilitator selection lacks its exact UI command")
+	}
+	var detail registration.ApplicantDetail
+	if err := r.owner.call(
+		t.Context(),
+		http.MethodGet,
+		"/api/v1/events/"+item.view.ID.String()+"/registrations/"+input.Application.ID.String()+"/review",
+		-1,
+		nil,
+		&detail,
+		http.StatusOK,
+	); err != nil {
+		t.Fatal(err)
+	}
+	current := detail.Applicant.Registration
+	if current.ID != input.Application.ID || current.EventID != item.view.ID || current.PersonID != input.Application.PersonID ||
+		current.FormID != input.Application.FormID ||
+		current.FormVersion != input.Application.FormVersion ||
+		current.Audience != input.Application.Audience ||
+		current.State != "selected" ||
+		current.Revision != input.Application.Revision+1 {
+		t.Fatal("native selection differs from captured applicant and revision")
+	}
+	decisions := 0
+	for _, entry := range detail.History {
+		if entry.Action == "reviewed" {
+			decisions++
+			if entry.From != "received" || entry.To != "selected" || entry.Reason != input.Reason {
+				t.Fatal("recorded selection lost its reason or source state")
+			}
+		}
+	}
+	if decisions != 1 {
+		t.Fatal("selection duplicated or omitted its native decision")
+	}
+	r.verifyRoleGrants(
+		t,
+		item,
+		[]lifecycleBrowserRoleGrant{
+			{Actor: input.Actor, PersonID: current.PersonID, Role: current.Audience},
+		},
+	)
+	after := r.readRoleEvent(t, item)
+	if after.Stage != before.Stage || after.ConfirmedAttendees != before.ConfirmedAttendees ||
+		!reflect.DeepEqual(after.Configuration, before.Configuration) {
+		t.Fatal("facilitator selection changed competition stage, census or configuration")
+	}
+	item.browserSelections = append(item.browserSelections, lifecycleBrowserSelectionReceipt{
+		Actor:            input.Actor,
+		Audience:         current.Audience,
+		DecisionRecorded: true,
+		ActiveNativeRole: true,
+	})
 	return current
 }

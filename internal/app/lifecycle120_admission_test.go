@@ -40,8 +40,9 @@ func admitLifecycleCohort(
 }
 
 type lifecycleAdmissionActions struct {
-	Open  func() (event.View, error)
-	Apply func(string, *lifecycleClient, registration.FormView) (registration.View, error)
+	Open   func() (event.View, error)
+	Apply  func(string, *lifecycleClient, registration.FormView) (registration.View, error)
+	Select func(string, registration.View) (registration.View, error)
 }
 
 func admitLifecycleCohortChecking(
@@ -135,19 +136,24 @@ func admitLifecycleCohortWithActions(
 				return cohort, fmt.Errorf("native facilitator application was not received")
 			}
 			var selected registration.View
-			if err := owner.call(
-				ctx,
-				http.MethodPost,
-				base+"/registrations/"+application.ID.String()+"/decision",
-				application.Revision,
-				registration.ReviewInput{
-					Action:      "selected",
-					Reason:      "Synthetic lifecycle role selection",
-					Acknowledge: true,
-				},
-				&selected,
-				http.StatusOK,
-			); err != nil {
+			if actions != nil && actions.Select != nil {
+				selected, err = actions.Select(actor, application)
+			} else {
+				err = owner.call(
+					ctx,
+					http.MethodPost,
+					base+"/registrations/"+application.ID.String()+"/decision",
+					application.Revision,
+					registration.ReviewInput{
+						Action:      "selected",
+						Reason:      "Synthetic lifecycle role selection",
+						Acknowledge: true,
+					},
+					&selected,
+					http.StatusOK,
+				)
+			}
+			if err != nil {
 				return cohort, err
 			}
 			if selected.State != "selected" || selected.PersonID != staff.person {
