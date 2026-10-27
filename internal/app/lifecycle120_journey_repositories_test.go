@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-
 	"testing"
 	"time"
 
@@ -23,11 +22,27 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 	for i := range r.events {
 		item := &r.events[i]
 		path := "/api/v1/events/" + item.view.ID.String() + "/repositories"
-		if err := item.cohort.clients[3].call(ctx, http.MethodPost, path, item.view.Revision, map[string]string{"action": "queue"}, nil, http.StatusForbidden); err != nil {
+		if err := item.cohort.clients[3].call(
+			ctx,
+			http.MethodPost,
+			path,
+			item.view.Revision,
+			map[string]string{"action": "queue"},
+			nil,
+			http.StatusForbidden,
+		); err != nil {
 			t.Fatal(err)
 		}
 		var pending []repositories.View
-		if err := r.owner.call(ctx, http.MethodPost, path, item.view.Revision, map[string]string{"action": "queue"}, &pending, http.StatusOK); err != nil {
+		if err := r.owner.call(
+			ctx,
+			http.MethodPost,
+			path,
+			item.view.Revision,
+			map[string]string{"action": "queue"},
+			&pending,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
 		if len(pending) != 7 {
@@ -42,7 +57,15 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 			item := &r.events[i]
 			path := "/api/v1/events/" + item.view.ID.String() + "/repositories"
 			var current []repositories.View
-			if err := r.owner.call(ctx, http.MethodGet, path, -1, nil, &current, http.StatusOK); err != nil {
+			if err := r.owner.call(
+				ctx,
+				http.MethodGet,
+				path,
+				-1,
+				nil,
+				&current,
+				http.StatusOK,
+			); err != nil {
 				t.Fatal(err)
 			}
 			if len(current) != 7 {
@@ -65,12 +88,18 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 							original = reflect.DeepEqual(before, repository)
 						}
 					}
-					if !original || teams[repository.TeamID] || repository.State != "ready" || repository.GitHubID == nil {
-						t.Fatal("retired team lost or substituted its original already-provisioned repository")
+					if !original || teams[repository.TeamID] || repository.State != "ready" ||
+						repository.GitHubID == nil {
+						t.Fatal(
+							"retired team lost or substituted its original already-provisioned repository",
+						)
 					}
 					continue
 				}
-				if !teams[repository.TeamID] || repository.Name != repositories.Name(item.view.ID, repository.TeamID) || repository.Organization != lifecycleGitHubOrganization || repository.Unused {
+				if !teams[repository.TeamID] ||
+					repository.Name != repositories.Name(item.view.ID, repository.TeamID) ||
+					repository.Organization != lifecycleGitHubOrganization ||
+					repository.Unused {
 					t.Fatal("native repository identity crossed frozen event/team scope")
 				}
 				delete(teams, repository.TeamID)
@@ -102,7 +131,15 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 					}
 					member := r.participant(t, team.Published[0].ID)
 					path := "/api/v1/events/" + item.view.ID.String() + "/repositories/" + team.ID.String() + "/invitations"
-					if err := member.call(ctx, http.MethodGet, path, -1, nil, nil, http.StatusForbidden); err != nil {
+					if err := member.call(
+						ctx,
+						http.MethodGet,
+						path,
+						-1,
+						nil,
+						nil,
+						http.StatusForbidden,
+					); err != nil {
 						t.Fatal(err)
 					}
 				}
@@ -115,23 +152,45 @@ func (r *lifecycleJourney) provisionRepositories(t *testing.T) {
 		case <-time.After(250 * time.Millisecond):
 		}
 	}
-	t.Fatal("real queued repository work did not produce every native ready mapping within normal reconciliation budget")
+	t.Fatal(
+		"real queued repository work did not produce every native ready mapping within normal reconciliation budget",
+	)
 }
 
 // Provision before the genuine under-three remediation. The original mapping
 // must survive retirement as unused; later queueing must never recreate it.
-func (r *lifecycleJourney) provisionInitialRepositories(t *testing.T, item *lifecycleJourneyEvent, page teams.Page) {
+func (r *lifecycleJourney) provisionInitialRepositories(
+	t *testing.T,
+	item *lifecycleJourneyEvent,
+	page teams.Page,
+) {
 	t.Helper()
 	base := "/api/v1/events/" + item.view.ID.String()
 	if len(page.Teams) != 7 || page.Frozen {
 		t.Fatal("initial repository case needs the original seven mutable published teams")
 	}
-	if err := r.owner.call(t.Context(), http.MethodGet, base, -1, nil, &item.view, http.StatusOK); err != nil {
+	if err := r.owner.call(
+		t.Context(),
+		http.MethodGet,
+		base,
+		-1,
+		nil,
+		&item.view,
+		http.StatusOK,
+	); err != nil {
 		t.Fatal(err)
 	}
 	r.configureGitHubApp(t, item)
 	var pending []repositories.View
-	if err := r.owner.call(t.Context(), http.MethodPost, base+"/repositories", item.view.Revision, map[string]string{"action": "queue"}, &pending, http.StatusOK); err != nil {
+	if err := r.owner.call(
+		t.Context(),
+		http.MethodPost,
+		base+"/repositories",
+		item.view.Revision,
+		map[string]string{"action": "queue"},
+		&pending,
+		http.StatusOK,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if len(pending) != 7 {
@@ -140,7 +199,15 @@ func (r *lifecycleJourney) provisionInitialRepositories(t *testing.T, item *life
 	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
 		var current []repositories.View
-		if err := r.owner.call(t.Context(), http.MethodGet, base+"/repositories", -1, nil, &current, http.StatusOK); err != nil {
+		if err := r.owner.call(
+			t.Context(),
+			http.MethodGet,
+			base+"/repositories",
+			-1,
+			nil,
+			&current,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
 		if len(current) != 7 {
@@ -156,7 +223,9 @@ func (r *lifecycleJourney) provisionInitialRepositories(t *testing.T, item *life
 				ready = false
 				continue
 			}
-			if *repository.GitHubID <= 100 || ids[*repository.GitHubID] || repository.Name != repositories.Name(item.view.ID, repository.TeamID) || repository.Organization != lifecycleGitHubOrganization {
+			if *repository.GitHubID <= 100 || ids[*repository.GitHubID] ||
+				repository.Name != repositories.Name(item.view.ID, repository.TeamID) ||
+				repository.Organization != lifecycleGitHubOrganization {
 				t.Fatal("initial repository identity is not scoped to its original native team")
 			}
 			ids[*repository.GitHubID] = true
@@ -171,7 +240,9 @@ func (r *lifecycleJourney) provisionInitialRepositories(t *testing.T, item *life
 		case <-time.After(250 * time.Millisecond):
 		}
 	}
-	t.Fatal("actual initial repository work did not complete within the normal reconciliation budget")
+	t.Fatal(
+		"actual initial repository work did not complete within the normal reconciliation budget",
+	)
 }
 
 func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
@@ -189,7 +260,15 @@ func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
 			}
 			var actual []repositories.View
 			base := "/api/v1/events/" + item.view.ID.String()
-			if err := r.owner.call(t.Context(), http.MethodGet, base+"/repositories", -1, nil, &actual, http.StatusOK); err != nil {
+			if err := r.owner.call(
+				t.Context(),
+				http.MethodGet,
+				base+"/repositories",
+				-1,
+				nil,
+				&actual,
+				http.StatusOK,
+			); err != nil {
 				t.Fatal(err)
 			}
 			found := false
@@ -204,7 +283,8 @@ func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
 			cutoff := false
 			for _, receipt := range item.cutoff {
 				if receipt.TeamID == repository.TeamID {
-					cutoff = receipt.Outcome == "withdrawn" && receipt.SelectedSHA == "" && receipt.DecisionID == nil
+					cutoff = receipt.Outcome == "withdrawn" && receipt.SelectedSHA == "" &&
+						receipt.DecisionID == nil
 				}
 			}
 			if !cutoff {
@@ -216,7 +296,8 @@ func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
 				}
 			}
 			for _, outcome := range item.outcomes {
-				if outcome.Provenance.TeamID != nil && *outcome.Provenance.TeamID == repository.TeamID {
+				if outcome.Provenance.TeamID != nil &&
+					*outcome.Provenance.TeamID == repository.TeamID {
 					t.Fatal("retired repository acquired a scored team outcome")
 				}
 			}
@@ -233,18 +314,30 @@ func (r *lifecycleJourney) verifyRetiredRepositoriesUnscored(t *testing.T) {
 				if state != "confirmed" {
 					continue
 				}
-				if err := client.call(t.Context(), http.MethodGet, base+"/repositories", -1, nil, &rows, http.StatusOK); err != nil {
+				if err := client.call(
+					t.Context(),
+					http.MethodGet,
+					base+"/repositories",
+					-1,
+					nil,
+					&rows,
+					http.StatusOK,
+				); err != nil {
 					t.Fatal(fmt.Errorf("current participant repository privacy: %w", err))
 				}
 				for _, row := range rows {
 					if row.TeamID == repository.TeamID {
-						t.Fatal("discarded repository leaked into a current participant's team list")
+						t.Fatal(
+							"discarded repository leaked into a current participant's team list",
+						)
 					}
 				}
 			}
 		}
 		if retired != 1 {
-			t.Fatal("native journey lacks exactly one actually provisioned retired repository per event")
+			t.Fatal(
+				"native journey lacks exactly one actually provisioned retired repository per event",
+			)
 		}
 	}
 }

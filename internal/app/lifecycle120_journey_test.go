@@ -560,8 +560,11 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.rubric.Definition.Mode != mode || item.teams.Frozen != (item.cohort.reserveID == uuid.Nil) {
-		t.Fatal("native event did not retain its distinct rubric and expected pending-offer freeze phase")
+	if item.rubric.Definition.Mode != mode ||
+		item.teams.Frozen != (item.cohort.reserveID == uuid.Nil) {
+		t.Fatal(
+			"native event did not retain its distinct rubric and expected pending-offer freeze phase",
+		)
 	}
 	if err := r.owner.call(
 		ctx,
