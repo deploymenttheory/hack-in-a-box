@@ -262,7 +262,9 @@ func runLifecycleProvider(ctx context.Context) error {
 			if err := clock.advance(
 				directory,
 				input.At,
-				timeline.Day90.Add(24*time.Hour),
+				// Cover the explicit120-day policy after the one-day postponement.
+				// This bounds only the private fixture clock, not a production window.
+				timeline.Day90.AddDate(0, 0, 31),
 			); err != nil {
 				http.Error(w, "clock fixture unavailable", http.StatusInternalServerError)
 				return

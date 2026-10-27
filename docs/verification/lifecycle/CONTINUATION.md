@@ -553,3 +553,18 @@ removed its generated resources. This is an aborted fixture repair, not a
 business/test pass. The sentinel is now set only after the actual final mapping,
 cutoff, judging, outcome and current-participant checks all succeed; a fresh
 complete run is still required.
+
+## R20 reached the real helper, then hit the fixture clock horizon
+
+Clean `c3558cca` ran243.15s and completed the explicit final retired-repository
+helper, including current participant lists, exact retained mapping, cutoff,
+judge exclusion and no outcome. The newly invoked expiry helper then received
+control500: the private fixture capped time at original day90+1, while the
+explicit120-day policy after postponement expires at original day121. No expiry
+assertion passed. Original partial logs/database were retained and generated
+resources removed.
+
+The synthetic clock ceiling now reaches that explicit deadline, retaining its
+monotonic and bounded rules. Production scheduling, retention, authentication,
+queue leases and HTTP/request budgets are unchanged. Fresh execution is required
+for the complete corrected repository+expiry case.
