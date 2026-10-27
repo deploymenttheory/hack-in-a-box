@@ -73,3 +73,12 @@ probe reproduced local readiness before TCP readiness (8 samples). The isolated
 fixture now probes TCP on 127.0.0.1, matching the native processes' transport.
 All failed-run project resources were removed. No browser action pass is claimed
 from that startup failure; a fresh full connected execution is required.
+
+The next connected run (`d57e5f26`) passed durable database startup and the first
+actual Fleet branding save, preview and reload. It then failed the private IPC
+barrier: the runner's intentional umask077 made the host receipt0600 despite
+writeFile's requested0644; docker cp created that receipt as root, unreadable by
+the non-root native test. The bounded synthetic receipt now explicitly chmods to
+0644 inside its owner-only host directory and verifies that mode before copying.
+No session/authentication data enters that receipt. The complete native journey
+failed, and this run is not counted as passing acceptance.

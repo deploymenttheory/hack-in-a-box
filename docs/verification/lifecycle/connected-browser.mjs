@@ -6,7 +6,7 @@ import {promisify} from 'node:util'
 import {createRequire} from 'node:module'
 import {dirname,resolve,join} from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {readFile,writeFile} from 'node:fs/promises'
+import {readFile,writeFile,chmod,stat} from 'node:fs/promises'
 import {setTimeout as pause} from 'node:timers/promises'
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..')
@@ -73,7 +73,9 @@ try{
   const result=join(output,`result-${sequence}.json`)
   // The containing host directory is owner-only; this bounded synthetic receipt
   // must be readable by the fixture UID after docker cp creates a root-owned file.
-  await writeFile(result,JSON.stringify(ack)+'\n',{mode:0o644})
+  await writeFile(result,JSON.stringify(ack)+'\n',{mode:0o600})
+  await chmod(result,0o644)
+  assert.equal((await stat(result)).mode&0o777,0o644)
   await docker('docker',['cp',result,`${runner}:/artifacts/browser/result-${sequence}.tmp`])
   await docker('docker',['exec',runner,'mv',`/artifacts/browser/result-${sequence}.tmp`,`/artifacts/browser/result-${sequence}.json`])
   receipts.push({...ack,preview_matches:true,persisted_after_reload:true})
