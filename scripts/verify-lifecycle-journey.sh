@@ -56,6 +56,40 @@ cleanup_case() {
     printf 'Fixture cleanup failed: %s\n' "$project_name" >&2
     return 1
   fi
+  if [ -n "$(docker ps -aq --filter "label=com.docker.compose.project=$project_name")" ] ||
+     [ -n "$(docker volume ls -q --filter "label=com.docker.compose.project=$project_name")" ] ||
+     [ -n "$(docker network ls -q --filter "label=com.docker.compose.project=$project_name")" ]; then
+    printf 'Fixture resources remain after cleanup: %s\n' "$project_name" >&2
+    return 1
+  fi
+  project_name=
+}
+
+finish() {
+  result=$?
+  set +e
+  capture_case
+  if ! cleanup_case; then result=1; fi
+  printf 'Private journey evidence: %s\n' "$evidence_root"
+  exit "$result"
+}
+trap finish EXIT
+trap 'exit 130' INT TERM
+
+check_disk_space before-build 8388608
+docker build -f "$task_root/docs/verification/lifecycle/Dockerfile" -t "$image_reference" "$task_root" > "$evidence_root/build.log" 2>&1
+image_id=$(docker image inspect --format '{{.Id}}' "$image_reference")
+check_disk_space after-build 4194304
+
+for case_name in journey; do
+  check_disk_space "before-$case_name" 4194304
+  case_dir="$evidence_root/$case_name"
+  mkdir -m 700 "$case_dir"
+  case_captured=0
+  project_name="hackbox-lifecycle-${case_name}-$(date +%s)-$$"
+  runner_name="${project_name}-runner"
+  printf 'Running connected native lifecycle: %s\n' "$case_name"
+  compose up -d --wait --wait-timeout 60 --no-build public admin worker > "$case_dir/startup.log" 2>&1
   compose run -d --no-deps --name "$runner_name" journey > "$case_dir/runner-id.txt" 2>&1
   runner_exit=$(docker wait "$runner_name")
   capture_case
