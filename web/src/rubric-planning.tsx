@@ -13,7 +13,8 @@ import { ConfirmationDialog } from './components/ui/dialog'
 import { Failure, Loading } from './components/states'
 import { RubricPlanningFields, validateRubricPlanningForm, revealRubricInvalidField, type RubricConfiguration, type RubricDefinition } from './rubric-planning-fields'
 import { RubricPlanningReview } from './rubric-planning-review'
-import { rubricDefinitionKey } from './rubric-planning-model'
+import { rubricDefinitionKey, rubricReferenceKey } from './rubric-planning-model'
+import { usePlanningDepartureBarrier } from './planning-operations'
 
 export function RubricPlanning({ event, onDirty }: { event: EventRecord; onDirty: (dirty: boolean) => void }) {
   const identity = useIdentity(), boundary = useEventReadBoundary(event.id)
@@ -39,12 +40,15 @@ function RubricEditor({ event, initial, observed, paused, parent, onDirty, deny 
   const command = useAdmissionCommand(`${identity.person.id}:${identity.draft_scope}:${event.id}:rubric-command`)
   const [saved, setSaved] = useState(initial), [definition, setDefinition] = useState(() => structuredClone(initial.definition))
   const [reason, setReason] = useState(''), [review, setReview] = useState<Decision>(), [notice, setNotice] = useState('')
+  const [checking, setChecking] = useState(false), [preflightError, setPreflightError] = useState<unknown>(), [needsCurrent, setNeedsCurrent] = useState(false)
+  const preflightLock = useRef(false)
   const form = useRef<HTMLFormElement>(null), saveButton = useRef<HTMLButtonElement>(null), approveButton = useRef<HTMLButtonElement>(null)
-  const dirty = rubricDefinitionKey(definition) !== rubricDefinitionKey(saved.definition), blocked = paused || command.blocked
+  const dirty = rubricDefinitionKey(definition) !== rubricDefinitionKey(saved.definition), blocked = paused || command.blocked || checking
   const drifted = observed.revision > saved.revision
-  useEffect(() => { onDirty(dirty || !!reason || !!review || command.pending); return () => onDirty(false) }, [dirty, reason, review, command.pending, onDirty])
+  useEffect(() => { onDirty(dirty || !!reason || !!review || command.pending || checking); return () => onDirty(false) }, [dirty, reason, review, command.pending, checking, onDirty])
   useEffect(() => { if (command.failure instanceof APIError && [401, 403, 404].includes(command.failure.status)) deny(command.failure) }, [command.failure, deny])
-  useBlocker({ shouldBlockFn: () => command.pending || (dirty || !!reason || !!review) && !window.confirm('Leave with unsaved rubric planning?'), enableBeforeUnload: dirty || !!reason || command.pending })
+  usePlanningDepartureBarrier(checking)
+  useBlocker({ shouldBlockFn: () => command.pending || checking || (dirty || !!reason || !!review) && !window.confirm('Leave with unsaved rubric planning?'), enableBeforeUnload: dirty || !!reason || command.pending || checking })
 
   async function current() {
     const ticket = scope.capture(); ticket.assert()
@@ -61,34 +65,42 @@ function RubricEditor({ event, initial, observed, paused, parent, onDirty, deny 
   }
   async function readCurrent() {
     const ticket = scope.capture(), value = await current(); ticket.assert()
-    setSaved(value); setReview(undefined)
+    setSaved(value); setReview(undefined); setNeedsCurrent(false); setPreflightError(undefined)
     setNotice('Current rubric read. Your local definition is retained for another review. This read does not acknowledge an unknown command.')
   }
   function begin(action: Decision['action']) {
-    if (blocked || drifted || !validateRubricPlanningForm(form.current)) return
+    if (blocked || drifted || needsCurrent || !validateRubricPlanningForm(form.current)) return
     setReview({ action, configuration: structuredClone(saved), definition: structuredClone(action === 'save' ? definition : saved.definition), reason: reason.trim() })
   }
   async function confirm() {
-    if (!review || blocked) return
+    if (!review || blocked || preflightLock.current) return
     const captured = review, ticket = scope.capture()
-    await command.run({ label: captured.action === 'save' ? 'Save rubric draft' : 'Approve rubric version', resource: `${event.id}/rubric`, revision: captured.configuration.revision }, async () => {
+    preflightLock.current = true; setChecking(true); setPreflightError(undefined)
+    try {
       const latest = await current(); ticket.assert()
-      if (latest.revision !== captured.configuration.revision || JSON.stringify(latest.reference) !== JSON.stringify(captured.configuration.reference) || rubricDefinitionKey(latest.definition) !== rubricDefinitionKey(captured.configuration.definition)) throw new APIError(409, 'revision_conflict')
+      if (latest.revision !== captured.configuration.revision || rubricReferenceKey(latest.reference) !== rubricReferenceKey(captured.configuration.reference) || rubricDefinitionKey(latest.definition) !== rubricDefinitionKey(captured.configuration.definition)) { setNeedsCurrent(true); setReview(undefined); return }
+    } catch (error) {
+      if (ticket.current()) { setPreflightError(error); if (error instanceof APIError && error.status === 409) { setNeedsCurrent(true); setReview(undefined) } }
+      return
+    } finally { preflightLock.current = false; if (ticket.current()) setChecking(false) }
+    ticket.assert()
+    await command.run({ label: captured.action === 'save' ? 'Save rubric draft' : 'Approve rubric version', resource: `${event.id}/rubric`, revision: captured.configuration.revision }, async () => {
+      ticket.assert()
       const result = unwrap(await api.POST('/api/v1/events/{event_id}/rubric/configuration', { signal: ticket.signal, params: { path: { event_id: event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${captured.configuration.revision}"` } }, body: captured.action === 'save' ? { action: 'save', definition: captured.definition, reason: captured.reason } : { action: 'approve', version: captured.configuration.reference.version, reason: captured.reason } }))
       ticket.assert()
-      if (result.revision !== captured.configuration.revision + 1 || captured.action === 'save' && (result.reference.version !== captured.configuration.reference.version + 1 || rubricDefinitionKey(result.definition) !== rubricDefinitionKey(captured.definition)) || captured.action === 'approve' && (!result.approved || JSON.stringify(result.reference) !== JSON.stringify(captured.configuration.reference))) throw new Error('The rubric response did not match the reviewed decision')
+      if (result.revision !== captured.configuration.revision + 1 || captured.action === 'save' && (result.reference.version !== captured.configuration.reference.version + 1 || rubricDefinitionKey(result.definition) !== rubricDefinitionKey(captured.definition)) || captured.action === 'approve' && (!result.approved || rubricReferenceKey(result.reference) !== rubricReferenceKey(captured.configuration.reference))) throw new Error('The rubric response did not match the reviewed decision')
       return result
     }, result => { ticket.assert(); setSaved(result); setDefinition(structuredClone(result.definition)); setReason(''); setReview(undefined); return `${captured.action === 'save' ? 'Private draft saved' : 'Exact rubric version approved'} · Version ${result.reference.version} · Revision ${result.revision}. Criteria have not been released.` })
     if (ticket.current()) setReview(undefined)
   }
   return <><p>Saved version {saved.reference.version || 'not created'} · Revision {saved.revision} · {saved.approved ? 'Approved' : 'Not approved'}{saved.published_version !== null && ` · Published version ${saved.published_version}`}</p>
     {saved.runs.some(run => !!run.started_at) && <p role="status">Assessment has started. Existing runs retain their exact version. New criteria cannot silently reweight submitted scores; run restart and publication safeguards remain enforced by the server.</p>}
-    {drifted && <div role="status"><p>A newer rubric revision is available. Read and review it before another decision.</p><Button icon="refresh" variant="outline" disabled={command.pending} onClick={() => void command.readCurrent(readCurrent)}>Read current rubric version</Button></div>}
+    {(drifted || needsCurrent) && <div role="status"><h3>Current version needed</h3><p>A newer rubric revision is available. Read and review it before another decision.</p><Button icon="refresh" variant="outline" disabled={command.pending} onClick={() => void command.readCurrent(readCurrent)}>Read current rubric version</Button></div>}
     <form ref={form} onSubmit={event => { event.preventDefault(); begin('save') }} onInvalidCapture={event => revealRubricInvalidField(event.target as HTMLElement)}>
       <RubricPlanningFields value={definition} change={setDefinition} disabled={blocked} />
-      <div className="grid gap-4 border-t border-border py-5"><Field label="Rubric decision reason" error={reason && !reason.trim() ? 'Enter a decision reason.' : undefined} description="Recorded with the reviewed save or approval."><Textarea value={reason} required maxLength={2000} disabled={blocked} onChange={event => setReason(event.target.value)} /></Field><div className="fleet-pattern-actions"><Button ref={saveButton} type="submit" icon="next" disabled={blocked || drifted || (!dirty && saved.reference.version > 0)}>Review draft save</Button><Button ref={approveButton} type="button" icon="shield" variant="outline" disabled={blocked || drifted || dirty || saved.reference.version === 0 || saved.approved} onClick={() => begin('approve')}>Review version approval</Button></div></div>
+      <div className="grid gap-4 border-t border-border py-5"><Field label="Rubric decision reason" error={reason && !reason.trim() ? 'Enter a decision reason.' : undefined} description="Recorded with the reviewed save or approval."><Textarea value={reason} required maxLength={2000} disabled={blocked} onChange={event => setReason(event.target.value)} /></Field><div className="fleet-pattern-actions"><Button ref={saveButton} type="submit" icon="next" disabled={blocked || drifted || needsCurrent || (!dirty && saved.reference.version > 0)}>Review draft save</Button><Button ref={approveButton} type="button" icon="shield" variant="outline" disabled={blocked || drifted || needsCurrent || dirty || saved.reference.version === 0 || saved.approved} onClick={() => begin('approve')}>Review version approval</Button></div></div>
     </form>
     <AdmissionFeedback command={command} read={readCurrent} />{notice && <p role="status">{notice}</p>}
-    <ConfirmationDialog open={!!review} title={review?.action === 'approve' ? 'Approve exact rubric version' : 'Review private rubric draft'} description="Review the captured criteria and reason. This decision does not publish the challenge or start scoring." confirmLabel={review?.action === 'approve' ? 'Approve reviewed version' : 'Save reviewed draft'} pending={command.pending} disabled={paused || command.blocked} finalFocus={review?.action === 'approve' ? approveButton : saveButton} onOpenChange={open => { if (!open) setReview(undefined) }} onConfirm={() => void confirm()} printExcluded>{review && <RubricPlanningReview definition={review.definition} revision={review.configuration.revision} version={review.configuration.reference.version} reason={review.reason} action={review.action} />}</ConfirmationDialog>
+    <ConfirmationDialog open={!!review} title={review?.action === 'approve' ? 'Approve exact rubric version' : 'Review private rubric draft'} description="Review the captured criteria and reason. This decision does not publish the challenge or start scoring." confirmLabel={review?.action === 'approve' ? 'Approve reviewed version' : 'Save reviewed draft'} pending={command.pending || checking} disabled={paused || command.blocked || needsCurrent} finalFocus={review?.action === 'approve' ? approveButton : saveButton} onOpenChange={open => { if (!open) setReview(undefined) }} onConfirm={() => void confirm()} printExcluded>{!!preflightError && <Failure error={preflightError} />}{review && <RubricPlanningReview definition={review.definition} revision={review.configuration.revision} version={review.configuration.reference.version} reason={review.reason} action={review.action} />}</ConfirmationDialog>
   </>
 }

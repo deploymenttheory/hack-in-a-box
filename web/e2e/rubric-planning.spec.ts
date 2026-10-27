@@ -48,7 +48,7 @@ test('a changed rubric revision cannot submit its old review; explicit current r
   state.configuration = { ...state.configuration, revision: 1, reference: { ...state.configuration.reference, version: 1 }, definition: { ...state.configuration.definition, name: 'Other organiser draft' } }
   await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click()
   await expect(dialog(page)).toHaveCount(0); await expect(page.getByRole('heading', { name: 'Current version needed', exact: true })).toBeVisible(); expect(state.posts).toHaveLength(0)
-  await page.getByRole('button', { name: 'Check current status', exact: true }).click(); await expect(page.getByLabel('Rubric name', { exact: true })).toHaveValue('Reviewed common event criteria')
+  await page.getByRole('button', { name: 'Read current rubric version', exact: true }).click(); await expect(page.getByLabel('Rubric name', { exact: true })).toHaveValue('Reviewed common event criteria')
   await page.getByRole('button', { name: 'Review draft save', exact: true }).click(); await expect(dialog(page)).toContainText('Starting revision 1 · Version 1')
   await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click(); await expect(dialog(page)).toHaveCount(0); expect(state.posts).toHaveLength(1); expect(state.posts[0].revision).toBe('"1"')
 })
@@ -77,4 +77,48 @@ test('regular portal cannot turn a copied rubric planning section into organiser
   test.skip(info.project.metadata.portal !== 'regular', 'Regular portal boundary')
   const state = await rubricPlanningFixture(page); await page.goto(`/events/${firstID}?section=judging%20criteria`)
   await expect(page.getByLabel('Rubric name', { exact: true })).toHaveCount(0); await expect(page.getByRole('button', { name: 'Review draft save', exact: true })).toHaveCount(0); expect(state.reads).toBe(0); expect(state.posts).toHaveLength(0)
+})
+
+test('failed read preflight does not invent an unknown mutation or block a later deliberate confirmation', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'administrator', 'Administrator editor')
+  const state = await rubricPlanningFixture(page); await open(page); await draft(page); state.deny = 503
+  await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click()
+  await expect(dialog(page).getByRole('alert')).toBeVisible(); await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toHaveCount(0); expect(state.posts).toHaveLength(0)
+  state.deny = 0; await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true })).toBeEnabled()
+  await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click(); await expect(dialog(page)).toHaveCount(0); expect(state.posts).toHaveLength(1)
+})
+
+test('current rubric denial scrubs private fields and does not automatically renew disclosure', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'administrator', 'Administrator editor')
+  const state = await rubricPlanningFixture(page); await open(page)
+  await page.getByRole('navigation', { name: 'Rubric definition sections', exact: true }).getByRole('button', { name: 'Private guidance', exact: true }).click()
+  await page.getByLabel('Private judge guidance', { exact: true }).fill('PRIVATE UNSENT RUBRIC REASON CANARY')
+  state.deny = 403; await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByLabel('Private judge guidance', { exact: true })).toHaveCount(0); await expect(page.locator('body')).not.toContainText('PRIVATE UNSENT RUBRIC REASON CANARY')
+  state.deny = 0; await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByLabel('Rubric name', { exact: true })).toHaveCount(0); expect(state.posts).toHaveLength(0)
+})
+
+test('category identities, anchors, awards, side quests and private guidance survive the exact reviewed save', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'administrator', 'Administrator editor')
+  const state = await rubricPlanningFixture(page); await open(page)
+  const categoryID = state.configuration.definition.categories[0].id
+  const sections = page.getByRole('navigation', { name: 'Rubric definition sections', exact: true })
+  await sections.getByRole('button', { name: 'Categories', exact: true }).click(); await page.getByText('Demo', { exact: true }).click()
+  await page.getByLabel('Weight for category 1', { exact: true }).fill('3')
+  await page.getByRole('button', { name: 'Add anchor to category 1', exact: true }).click(); await page.getByLabel('Anchor 4 description for category 1', { exact: true }).fill('A limited coherent path is demonstrated.')
+  await sections.getByRole('button', { name: 'Awards', exact: true }).click(); await page.getByRole('button', { name: 'Add declared award', exact: true }).click()
+  await page.getByLabel('Award 1 name', { exact: true }).fill('Synthetic demo recognition'); await page.getByLabel('Award 1 category', { exact: true }).selectOption(categoryID)
+  await sections.getByRole('button', { name: 'Side quests', exact: true }).click(); await page.getByRole('button', { name: 'Add evidence side quest', exact: true }).click()
+  await page.getByLabel('Side quest 1 title', { exact: true }).fill('Demonstrate an observed improvement'); await page.getByLabel('Side quest 1 evidence guidance', { exact: true }).fill('Retain observations, never automatic bonus points.')
+  await sections.getByRole('button', { name: 'Private guidance', exact: true }).click(); await page.getByLabel('Private judge guidance', { exact: true }).fill('PRIVATE RUBRIC AUTHORING CANARY')
+  await page.getByLabel('Rubric decision reason', { exact: true }).fill('Review all authored fields and identities')
+  await page.getByRole('button', { name: 'Review draft save', exact: true }).click(); await expect(dialog(page)).toContainText('Synthetic demo recognition'); await expect(dialog(page)).toContainText('PRIVATE RUBRIC AUTHORING CANARY'); expect(state.posts).toHaveLength(0)
+  await page.emulateMedia({ media: 'print' }); await expect(dialog(page)).not.toBeVisible(); await expect(page.getByLabel('Private judge guidance', { exact: true })).not.toBeVisible(); await page.emulateMedia({ media: 'screen' })
+  await dialog(page).screenshot({ path: test.info().outputPath('captured-rubric-review.png') })
+  await dialog(page).getByRole('button', { name: 'Save reviewed draft', exact: true }).click(); await expect(dialog(page)).toHaveCount(0)
+  expect(state.posts).toHaveLength(1); expect(state.configuration.definition.categories[0]).toMatchObject({ id: categoryID, weight: 3, anchors: [{ score: 1 }, { score: 5 }, { score: 10 }, { score: 2 }] })
+  expect(state.configuration.definition.prizes[0].category_id).toBe(categoryID); expect(state.configuration.definition.side_quests[0]).not.toHaveProperty('points'); expect(state.configuration.definition.private_judge_guidance).toBe('PRIVATE RUBRIC AUTHORING CANARY')
+  await page.reload(); await sections.getByRole('button', { name: 'Private guidance', exact: true }).click(); await expect(page.getByLabel('Private judge guidance', { exact: true })).toHaveValue('PRIVATE RUBRIC AUTHORING CANARY')
 })
