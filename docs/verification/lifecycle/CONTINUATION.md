@@ -199,3 +199,30 @@ cause or constitute a deterministic regression/fix. Protected raw artifacts and
 a private database dump were retained; all owned R4 runtime resources were
 removed. The independently frozen R5 source `842a4cb1` starts fresh synthetic
 identities/database and includes the later archive/retained-review extension.
+
+### R5 diagnostic boundary and disk recovery
+
+Frozen source `842a4cb1` failed after246.09s with another team-feedback POST503
+before the new outcomes/archive phases. Both event report censuses were empty
+at that terminal boundary. No failed command was replayed. The protected
+original database dump was taken before any subsequent diagnostic writes.
+
+The explicitly gated retained-fixture probe signs in normally and records each
+new synthetic intent before sending it. A short current-source/denied-source/new
+draft probe passed8.29s. A separate six-writer probe failed4.29s with HTTP500;
+PostgreSQL explicitly reported no free disk space, and a read-only census
+confirmed none of those six intents created a version. After unused Docker
+build-cache cleanup, the VM had13GB free and all application containers remained
+healthy. Six fresh diagnostic draft identities then passed6.73s, each with an
+original acknowledgement (individual writes1.125–4.507s). These private
+uncommitted diagnostic-image results establish recovery from the disk-full500
+condition, not a reproduction or fix of the earlier503 timeout. They do not
+establish complete lifecycle acceptance or apply to a later committed image.
+
+`lifecycle120_feedback_probe_test.go` is a diagnostic entrypoint only: an explicit
+isolated flag, target event/teams and probe action are mandatory. Its save probes
+create disposable private drafts with fresh command identities; they must never
+be used to retry an unresolved original intent. The original failed fixture was
+retained privately, diagnostic effects recorded separately, and all owned R5
+resources removed. R6 uses the exact unchanged `842a4cb1` image in fresh volumes
+after disk recovery; its result is pending.
