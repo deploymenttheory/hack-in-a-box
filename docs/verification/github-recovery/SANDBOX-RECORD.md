@@ -1,8 +1,10 @@
 # Operator record — one approved synthetic GitHub sandbox event
 
-Status: **NOT RUN — approved sandbox organisation/App/installation unavailable.**
-This blank execution record is not a pass. Keep #98 and the linked #91 live
-acceptance open until an authorised operator has completed and reviewed it.
+Status: **NOT RUN — the full provisioning/webhook/freeze sandbox event remains pending.**
+Approved organisation/App/installation configuration is now available and was
+verified on 27 October 2026; see the [separate #91 configuration proof](../github-app/README.md).
+This incomplete execution record is not a #98 pass. Keep #98 open until its
+full authorised synthetic event has been completed and reviewed.
 
 Use the existing [GitHub App setup](../../github-app-setup.md) instructions,
 including their organisation-owner approval and protected secret-injection
