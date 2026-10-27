@@ -31,3 +31,10 @@ history or private answers in browser persistence.
 Applicant column headings may remain single-line; row names retain shared wrapping.
 The owner synchronizes focus with its 72rem detail-canvas boundary and restores the
 current source row, including after responsive row replacement.
+
+
+Registration-form collections use the shared pane-width responsive records.
+Opening an editor can make a desktop collection narrow; preserve readable form
+names, audience/version fields and its named review action in the labelled
+record view. Width changes do not save drafts, publish forms or replace the
+owner's current authority/version checks.

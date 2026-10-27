@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test'
 import { mockWorkspace, firstID } from './fixtures'
 import type { components } from '../src/api/schema.gen'
 
-test('form editing validates branches, previews answers and separates save from publication', async ({ page }) => {
+test('form editing validates branches, previews answers and separates save from publication', async ({ page }, info) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
   await mockWorkspace(page)
   const parent = '00000000-0000-4000-8000-000000000001', child = '00000000-0000-4000-8000-000000000002'
   let form: components['schemas']['RegistrationForm'] = { revision: 0, version: 0, published_version: null, definition: { id: '00000000-0000-4000-8000-000000000003', name: 'Attendee form', audience: 'attendee', fields: [
@@ -20,6 +21,8 @@ test('form editing validates branches, previews answers and separates save from 
   await page.goto(`/events/${firstID}`)
   await openEventSection(page, 'Forms')
   await page.getByRole('button', { name: 'Attendee form · Draft' }).click()
+  await expect(page.getByRole('list', { name: 'Registration forms', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Attendee form · Draft', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Edit Team preference' }).click()
   await expect(page.getByRole('heading', { name: 'Editing Team preference' })).toBeFocused()
   await page.getByRole('button', { name: 'Back to questions' }).click(); await expect(page.getByRole('button', { name: 'Edit Team preference' })).toBeFocused()
@@ -41,6 +44,7 @@ test('form editing validates branches, previews answers and separates save from 
   await page.getByRole('button', { name: 'Publish form version 1' }).click()
   await expect(page.getByRole('status').filter({ hasText: /saved|published/ })).toContainText('published for new responses')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await page.screenshot({ path: info.outputPath('form-editor-readable-pane.png'), fullPage: true })
 })
 
 test('unknown form save retains its draft and exact version context while read-only reconciliation cannot publish', async ({ page }) => {

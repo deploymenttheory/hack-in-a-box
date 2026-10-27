@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useContext, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '../ui/button'
 import { Checkbox, Input, Label } from '../ui/fields'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
@@ -26,8 +26,6 @@ export function CollectionPagination({ source, label = 'Collection pages' }: { s
 }
 
 const narrowQuery = '(max-width: 48rem)'
-function subscribeNarrow(change: () => void) { const media = window.matchMedia(narrowQuery); media.addEventListener('change', change); return () => media.removeEventListener('change', change) }
-function narrowSnapshot() { return typeof window !== 'undefined' && window.matchMedia(narrowQuery).matches }
 
 type RecordsProps<T> = { label: string; rows: readonly T[]; columns: readonly CollectionColumn<T>[]; rowKey: (row: T) => string; rowLabel: (row: T) => string; destination?: (row: T) => NavigationTarget; sort?: SortControl; selection?: SelectionControl<T>; actions?: (row: T) => ReactNode; visibleColumns?: ReadonlySet<string>; disabled?: boolean }
 function RecordName<T>({ row, destination, rowKey, rowLabel }: Pick<RecordsProps<T>, 'destination' | 'rowKey' | 'rowLabel'> & { row: T }) {
@@ -38,18 +36,39 @@ function RecordName<T>({ row, destination, rowKey, rowLabel }: Pick<RecordsProps
 function RowSelection<T>({ row, selection, rowKey, rowLabel, disabled }: Pick<RecordsProps<T>, 'selection' | 'rowKey' | 'rowLabel' | 'disabled'> & { row: T }) {
   if (!selection) return null
   const id = rowKey(row)
-  return <Checkbox aria-label={'Select ' + rowLabel(row)} checked={selection.selected.has(id)} disabled={disabled || !selection.eligible(row)} onChange={event => { const next = new Set(selection.selected); if (event.target.checked) next.add(id); else next.delete(id); selection.onChange(next) }} />
+  return <Checkbox data-record-focus={'selection:' + id} aria-label={'Select ' + rowLabel(row)} checked={selection.selected.has(id)} disabled={disabled || !selection.eligible(row)} onChange={event => { const next = new Set(selection.selected); if (event.target.checked) next.add(id); else next.delete(id); selection.onChange(next) }} />
 }
 export function CollectionRecords<T>(props: RecordsProps<T>) {
-  const narrow = useSyncExternalStore(subscribeNarrow, narrowSnapshot, () => false), root = useRef<HTMLDivElement>(null), focused = useRef<string | undefined>(undefined)
+  const [narrow, setNarrow] = useState(false), root = useRef<HTMLDivElement>(null), focused = useRef<string | undefined>(undefined), layout = useRef(false), restoreFocus = useRef(false)
   const columns = props.columns.filter(column => column.essential || !props.visibleColumns || props.visibleColumns.has(column.id))
-  useEffect(() => { if (focused.current) [...(root.current?.querySelectorAll<HTMLElement>('[data-record-focus]') ?? [])].find(link => link.dataset.recordFocus === focused.current)?.focus() }, [narrow])
+  useLayoutEffect(() => {
+    const container = root.current
+    if (!container) return
+    const media = window.matchMedia(narrowQuery)
+    const measure = () => {
+      const width = container.getBoundingClientRect().width
+      const next = width > 0 ? width <= 48 * parseFloat(getComputedStyle(document.documentElement).fontSize) : media.matches
+      if (next === layout.current) return
+      restoreFocus.current = container.contains(document.activeElement)
+      layout.current = next
+      setNarrow(next)
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    media.addEventListener('change', measure)
+    measure()
+    return () => { observer.disconnect(); media.removeEventListener('change', measure) }
+  }, [])
+  useLayoutEffect(() => {
+    if (restoreFocus.current && focused.current) [...(root.current?.querySelectorAll<HTMLElement>('[data-record-focus]') ?? [])].find(control => control.dataset.recordFocus === focused.current)?.focus()
+    restoreFocus.current = false
+  }, [narrow])
   const links = (row: T) => <RecordName row={row} destination={props.destination} rowKey={props.rowKey} rowLabel={props.rowLabel} />
-  return <div className="fleet-collection-records" ref={root} onFocusCapture={event => { focused.current = (event.target as HTMLElement).closest<HTMLElement>('[data-record-focus]')?.dataset.recordFocus }}>{narrow ? <>{props.sort && columns.some(column => column.sortable) && <fieldset className="fleet-record-sort" disabled={props.disabled}><legend>Sort {props.label}</legend><div className="fleet-pattern-actions">{columns.filter(column => column.sortable).map(column => <Button key={column.id} variant="ghost" aria-label={'Sort by ' + column.label} aria-description={props.sort?.key === column.id ? props.sort.direction : undefined} aria-pressed={props.sort?.key === column.id} icon={props.sort?.key === column.id && props.sort.direction === 'descending' ? 'sortDescending' : 'sortAscending'} onClick={() => props.sort?.onChange(column.id, props.sort.key === column.id && props.sort.direction === 'ascending' ? 'descending' : 'ascending')}>{column.label}{props.sort?.key === column.id && <span className="fleet-visually-hidden"> · {props.sort.direction}</span>}</Button>)}</div></fieldset>}<ul className="fleet-record-list" aria-label={props.label}>{props.rows.map(row => <li key={props.rowKey(row)}><div className="fleet-record-heading"><RowSelection {...props} row={row} /><h2>{links(row)}</h2>{props.actions?.(row)}</div><dl>{columns.map(column => <div key={column.id}><dt>{column.label}</dt><dd>{column.cell(row)}</dd></div>)}</dl></li>)}</ul></> : <table className="fleet-collection-table"><caption className="fleet-visually-hidden">{props.label}</caption><thead><tr>{props.selection && <th scope="col"><PageSelection {...props} /></th>}<th scope="col">Record</th>{columns.map(column => <th key={column.id} scope="col" aria-sort={props.sort?.key === column.id ? props.sort.direction : undefined}>{column.sortable && props.sort ? <Button variant="ghost" disabled={props.disabled} icon={props.sort.key === column.id && props.sort.direction === 'descending' ? 'sortDescending' : 'sortAscending'} onClick={() => props.sort?.onChange(column.id, props.sort.key === column.id && props.sort.direction === 'ascending' ? 'descending' : 'ascending')}>{column.label}</Button> : column.label}</th>)}{props.actions && <th scope="col">Actions</th>}</tr></thead><tbody>{props.rows.map(row => <tr key={props.rowKey(row)}>{props.selection && <td><RowSelection {...props} row={row} /></td>}<th scope="row">{links(row)}</th>{columns.map(column => <td key={column.id}>{column.cell(row)}</td>)}{props.actions && <td>{props.actions(row)}</td>}</tr>)}</tbody></table>}</div>
+  return <div className="fleet-collection-records" ref={root} onFocusCapture={event => { focused.current = (event.target as HTMLElement).closest<HTMLElement>('[data-record-focus]')?.dataset.recordFocus }}>{narrow ? <>{props.selection && <label className="fleet-column-option"><PageSelection {...props} />Select eligible records on this page</label>}{props.sort && columns.some(column => column.sortable) && <fieldset className="fleet-record-sort" disabled={props.disabled}><legend>Sort {props.label}</legend><div className="fleet-pattern-actions">{columns.filter(column => column.sortable).map(column => <Button key={column.id} variant="ghost" data-record-focus={'sort:' + column.id} aria-label={'Sort by ' + column.label} aria-description={props.sort?.key === column.id ? props.sort.direction : undefined} aria-pressed={props.sort?.key === column.id} icon={props.sort?.key === column.id && props.sort.direction === 'descending' ? 'sortDescending' : 'sortAscending'} onClick={() => props.sort?.onChange(column.id, props.sort.key === column.id && props.sort.direction === 'ascending' ? 'descending' : 'ascending')}>{column.label}{props.sort?.key === column.id && <span className="fleet-visually-hidden"> · {props.sort.direction}</span>}</Button>)}</div></fieldset>}<ul className="fleet-record-list" aria-label={props.label}>{props.rows.map(row => <li key={props.rowKey(row)}><div className="fleet-record-heading"><RowSelection {...props} row={row} /><h2>{links(row)}</h2>{props.actions?.(row)}</div><dl>{columns.map(column => <div key={column.id}><dt>{column.label}</dt><dd>{column.cell(row)}</dd></div>)}</dl></li>)}</ul></> : <table className="fleet-collection-table"><caption className="fleet-visually-hidden">{props.label}</caption><thead><tr>{props.selection && <th scope="col"><PageSelection {...props} /></th>}<th scope="col">Record</th>{columns.map(column => <th key={column.id} scope="col" aria-sort={props.sort?.key === column.id ? props.sort.direction : undefined}>{column.sortable && props.sort ? <Button variant="ghost" data-record-focus={'sort:' + column.id} disabled={props.disabled} icon={props.sort.key === column.id && props.sort.direction === 'descending' ? 'sortDescending' : 'sortAscending'} onClick={() => props.sort?.onChange(column.id, props.sort.key === column.id && props.sort.direction === 'ascending' ? 'descending' : 'ascending')}>{column.label}</Button> : column.label}</th>)}{props.actions && <th scope="col">Actions</th>}</tr></thead><tbody>{props.rows.map(row => <tr key={props.rowKey(row)}>{props.selection && <td><RowSelection {...props} row={row} /></td>}<th scope="row">{links(row)}</th>{columns.map(column => <td key={column.id}>{column.cell(row)}</td>)}{props.actions && <td>{props.actions(row)}</td>}</tr>)}</tbody></table>}</div>
 }
 function PageSelection<T>({ rows, selection, rowKey, disabled }: RecordsProps<T>) {
   const eligible = rows.filter(row => selection?.eligible(row)), selected = eligible.filter(row => selection?.selected.has(rowKey(row))).length
-  return <Checkbox aria-label="Select eligible records on this page" aria-checked={selected > 0 && selected < eligible.length ? 'mixed' : selected > 0} ref={element => { if (element) element.indeterminate = selected > 0 && selected < eligible.length }} checked={eligible.length > 0 && selected === eligible.length} disabled={disabled || eligible.length === 0} onChange={event => selection?.onChange(new Set(event.target.checked ? eligible.map(rowKey) : []))} />
+  return <Checkbox data-record-focus="selection:page" aria-label="Select eligible records on this page" aria-checked={selected > 0 && selected < eligible.length ? 'mixed' : selected > 0} ref={element => { if (element) element.indeterminate = selected > 0 && selected < eligible.length }} checked={eligible.length > 0 && selected === eligible.length} disabled={disabled || eligible.length === 0} onChange={event => selection?.onChange(new Set(event.target.checked ? eligible.map(rowKey) : []))} />
 }
 
 // Keying the frame resets presentation state when the owner replaces identity,
