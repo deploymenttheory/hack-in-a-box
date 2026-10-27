@@ -56,7 +56,7 @@ func (s Service) scoped(
 	if err != nil {
 		return v, err
 	}
-	if err = s.Settle(ctx, tx, v.row, s.now()); err != nil {
+	if err = s.settleLocked(ctx, tx, v.row, s.now()); err != nil {
 		return v, err
 	}
 	return loadScopeState(ctx, dbgen.New(tx), v, eventID, teamID)
@@ -109,18 +109,22 @@ func loadScopeState(
 	var err error
 	a := v.authority
 
-	if v.row.Stage != "archived" {
+	v.state, err = q.SubmissionState(
+		ctx,
+		dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID},
+	)
+	if errors.Is(err, pgx.ErrNoRows) && v.row.Stage != "archived" {
 		if err = q.EnsureSubmissionState(
 			ctx,
 			dbgen.EnsureSubmissionStateParams{EventID: eventID, TeamID: teamID},
 		); err != nil {
 			return v, fmt.Errorf("initialize submission state: %w", err)
 		}
+		v.state, err = q.SubmissionState(
+			ctx,
+			dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID},
+		)
 	}
-	v.state, err = q.SubmissionState(
-		ctx,
-		dbgen.SubmissionStateParams{EventID: eventID, TeamID: teamID},
-	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return v, access.ErrNotFound
 	}

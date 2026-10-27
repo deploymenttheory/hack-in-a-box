@@ -497,6 +497,64 @@ func (q *Queries) SubmissionRevisions(ctx context.Context, arg SubmissionRevisio
 	return items, nil
 }
 
+const submissionSettlementCensus = `-- name: SubmissionSettlementCensus :many
+SELECT e.team_id,e.active,t.state AS team_state,
+       (s.team_id IS NULL)::boolean AS state_missing,
+       COALESCE(s.revision,0)::bigint AS state_revision,
+       s.active_revision,COALESCE(s.outcome,'open')::text AS outcome,s.frozen_at,
+       COALESCE(f.submissions_ready,false)::boolean AS submissions_ready,
+       COALESCE(f.settled_submissions,0)::integer AS settled_submissions
+FROM competition_entries e
+JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id
+LEFT JOIN submission_states s ON s.event_id=e.event_id AND s.team_id=e.team_id
+LEFT JOIN event_gate_facts f ON f.event_id=e.event_id
+WHERE e.event_id=$1 ORDER BY e.team_id
+`
+
+type SubmissionSettlementCensusRow struct {
+	TeamID             uuid.UUID
+	Active             bool
+	TeamState          string
+	StateMissing       bool
+	StateRevision      int64
+	ActiveRevision     pgtype.Int8
+	Outcome            string
+	FrozenAt           pgtype.Timestamptz
+	SubmissionsReady   bool
+	SettledSubmissions int32
+}
+
+func (q *Queries) SubmissionSettlementCensus(ctx context.Context, eventID uuid.UUID) ([]SubmissionSettlementCensusRow, error) {
+	rows, err := q.db.Query(ctx, submissionSettlementCensus, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SubmissionSettlementCensusRow{}
+	for rows.Next() {
+		var i SubmissionSettlementCensusRow
+		if err := rows.Scan(
+			&i.TeamID,
+			&i.Active,
+			&i.TeamState,
+			&i.StateMissing,
+			&i.StateRevision,
+			&i.ActiveRevision,
+			&i.Outcome,
+			&i.FrozenAt,
+			&i.SubmissionsReady,
+			&i.SettledSubmissions,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const submissionState = `-- name: SubmissionState :one
 SELECT event_id, team_id, revision, active_revision, outcome, frozen_at FROM submission_states WHERE event_id=$1 AND team_id=$2
 `

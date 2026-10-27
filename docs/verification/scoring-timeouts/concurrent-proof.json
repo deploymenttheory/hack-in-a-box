@@ -1,0 +1,27 @@
+{
+  "baseline_revision": "d048b465cc58b36afb609176d9075a97116a0e68",
+  "candidate_production_revision": "5d79134ba937154bbfcbd9441c2c7b2bd07ec400",
+  "same_test_only_delta_sha256": "f1b937ba75de75649d836f4e7c27fd64ebd3e274b7bbeeac34cd9d2e05b8675d",
+  "per_query_cost_ms": 4,
+  "request_timeout_seconds": 10,
+  "real_native_maintenance": true,
+  "postgresql_lock_graph_observed": true,
+  "race_detection": true,
+  "baseline": {
+    "http_status": 503,
+    "request_seconds": 10.045931375,
+    "worker_maintenance_elapsed_seconds": 9.987809875
+  },
+  "candidate": {
+    "http_status": 200,
+    "request_seconds": 8.709367084,
+    "database_queries": 1320,
+    "worker_maintenance_elapsed_seconds": 8.638338625
+  },
+  "native_qualification_browser_cases_passed": 8,
+  "native_qualification_package_seconds": 198.41,
+  "original_lifecycle_verified": false,
+  "final_ci_verified": false,
+  "private_baseline_log_sha256": "471ae7f69bc791078e982135980ba2312f20ee2661103d010c41161bb34b3181",
+  "lock_wait_duration_measured": false
+}
