@@ -134,3 +134,33 @@ export async function respondToAdmissionInFleet({browser,expect,phase,output,err
  }catch(error){await page.screenshot({path:join(output,`response-${phase.sequence}-failure.png`),fullPage:true}).catch(()=>{});throw error}
  finally{await context.close()}
 }
+
+export async function configureOffersInFleet({page,expect,phase,output}){
+ assert.equal(phase.action,'configure-offers')
+ await page.clock.setFixedTime(new Date(phase.domain_now))
+ await page.goto(`http://admin.localhost:8080/events/${phase.event_id}?section=applicants`)
+ await page.getByText('Waitlist automation and offer policy',{exact:true}).click()
+ await page.getByLabel('Working days to respond',{exact:true}).fill('2')
+ await page.getByLabel('Approve automatic FIFO offers',{exact:true}).check()
+ const path=`/api/v1/events/${phase.event_id}/registrations/offer-policy`
+ let writes=0
+ const count=request=>{if(new URL(request.url()).pathname===path&&request.method()==='PUT')writes++}
+ page.on('request',count)
+ try{
+  await page.getByRole('button',{name:'Review offer policy',exact:true}).click()
+  const dialog=page.getByRole('alertdialog',{name:'Review offer policy',exact:true})
+  await expect(dialog).toContainText('Automatic FIFO offers approved')
+  await expect(dialog).toContainText('2 working days to respond');assert.equal(writes,0)
+  const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='PUT')
+  await dialog.getByRole('button',{name:'Save offer policy',exact:true}).click()
+  const saved=await response;assert.equal(saved.status(),200);const value=await saved.json()
+  assert.equal(value.automated,true);assert.equal(value.working_days,2)
+  await expect(dialog).not.toBeVisible()
+  await page.reload();await page.getByText('Waitlist automation and offer policy',{exact:true}).click()
+  await expect(page.getByLabel('Working days to respond',{exact:true})).toHaveValue('2')
+  await expect(page.getByLabel('Approve automatic FIFO offers',{exact:true})).toBeChecked()
+  assert.equal(writes,1)
+  await page.screenshot({path:join(output,`native-offer-policy-${phase.sequence}.png`),fullPage:true})
+  return {event_id:phase.event_id,automated:value.automated,working_days:value.working_days,revision:value.revision,review_without_write:true,put_attempts:writes,persisted_after_reload:true}
+ }finally{page.off('request',count)}
+}

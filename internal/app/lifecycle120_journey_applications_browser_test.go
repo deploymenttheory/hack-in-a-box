@@ -68,6 +68,45 @@ func (r *lifecycleJourney) browserAdmissionActions(
 	}
 	base := 200 + index*20
 	return &lifecycleAdmissionActions{
+		ConfigureOffers: func() (registration.OfferSettings, error) {
+			path := "/api/v1/events/" + item.view.ID.String() + "/registrations/offer-policy"
+			var before, after registration.OfferSettings
+			if err := r.owner.call(
+				t.Context(),
+				http.MethodGet,
+				path,
+				-1,
+				nil,
+				&before,
+				http.StatusOK,
+			); err != nil {
+				return after, err
+			}
+			ack := r.admissionBrowserPhase(
+				t,
+				item,
+				lifecycleBrowserPhase{Sequence: base + 19, Action: "configure-offers"},
+			)
+			if !ack.Saved {
+				t.Fatal("FIFO policy lacks its real UI approval")
+			}
+			if err := r.owner.call(
+				t.Context(),
+				http.MethodGet,
+				path,
+				-1,
+				nil,
+				&after,
+				http.StatusOK,
+			); err != nil {
+				return after, err
+			}
+			if after.Revision != before.Revision+1 || !after.Automated || after.WorkingDays != 2 {
+				t.Fatal("UI offer approval differs from native settings/revision")
+			}
+			item.browserOfferPolicyApproved = true
+			return after, nil
+		},
 		Publish: func(audience string) (registration.FormView, error) {
 			slot, exists := map[string]int{"attendee": 0, "mentor": 1, "judge": 2}[audience]
 			if !exists {

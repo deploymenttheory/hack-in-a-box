@@ -2,7 +2,7 @@
 // The controller supplies no sessions, application responses or native writes.
 import assert from 'node:assert/strict'
 import {publishRegistrationFormInFleet} from './browser-registration-forms.mjs'
-import {openRegistrationInFleet,applyInFleet,selectFacilitatorInFleet,competitionGoInFleet,respondToAdmissionInFleet} from './browser-registration-applications.mjs'
+import {openRegistrationInFleet,applyInFleet,selectFacilitatorInFleet,competitionGoInFleet,respondToAdmissionInFleet,configureOffersInFleet} from './browser-registration-applications.mjs'
 import {createEventInFleet} from './browser-event-creation.mjs'
 import {checkLiveRoles} from './browser-live-roles.mjs'
 import {recoverLiveHelp} from './browser-live-recovery.mjs'
@@ -47,7 +47,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -109,6 +109,10 @@ try{
    const opening=await readPhase(base,180000)
    await openRegistrationInFleet({page,expect,phase:opening})
    await acknowledge({sequence:opening.sequence,action:opening.action,event_id:opening.event_id,saved_by_ui:true})
+   step=`approve-offer-policy-${sequence}`
+   const policy=await readPhase(base+19,180000)
+   offerPolicies.push(await configureOffersInFleet({page,expect,phase:policy,output}))
+   await acknowledge({sequence:policy.sequence,action:policy.action,event_id:policy.event_id,saved_by_ui:true})
    for(let slot=0;slot<4;slot++){
     if(slot<2){
      step=`publish-facilitator-form-${sequence}-${slot}`
@@ -158,7 +162,7 @@ try{
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)

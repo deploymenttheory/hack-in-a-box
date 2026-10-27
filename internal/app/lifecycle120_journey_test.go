@@ -35,13 +35,14 @@ type lifecycleJourneyEvent struct {
 
 	failedMessage lifecycleFailedMessageReceipt
 
-	browserApplications       []lifecycleBrowserApplicationReceipt
-	browserSelections         []lifecycleBrowserSelectionReceipt
-	browserPublishedForms     []string
-	browserAdmissionDecisions []string
-	browserRegistrationOpened bool
-	browserEventCreated       bool
-	browserBrandVerified      bool
+	browserApplications        []lifecycleBrowserApplicationReceipt
+	browserSelections          []lifecycleBrowserSelectionReceipt
+	browserPublishedForms      []string
+	browserAdmissionDecisions  []string
+	browserOfferPolicyApproved bool
+	browserRegistrationOpened  bool
+	browserEventCreated        bool
+	browserBrandVerified       bool
 
 	retentionBoundary         *lifecycleReviewBoundaryReceipt
 	retiredRepositoryVerified bool
@@ -325,14 +326,17 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
 			if !item.browserEventCreated || !item.browserRegistrationOpened ||
-				len(item.browserApplications) != 4 || len(item.browserSelections) != 2 ||
+				!item.browserOfferPolicyApproved ||
+				len(item.browserApplications) != 4 ||
+				len(item.browserSelections) != 2 ||
 				!reflect.DeepEqual(
 					item.browserAdmissionDecisions,
 					[]string{"competition-go", "withdraw", "accept"},
-				) || !reflect.DeepEqual(
-				item.browserPublishedForms,
-				[]string{"attendee", "mentor", "judge"},
-			) {
+				) ||
+				!reflect.DeepEqual(
+					item.browserPublishedForms,
+					[]string{"attendee", "mentor", "judge"},
+				) {
 				t.Fatal(
 					"required Fleet event creation, form publication or admission journey is incomplete",
 				)
@@ -368,15 +372,16 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
-		BrowserHelp               *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
-		FailedMessage             lifecycleFailedMessageReceipt        `json:"failed_message"`
-		BrowserApplications       []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
-		BrowserSelections         []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
-		BrowserPublishedForms     []string                             `json:"browser_published_forms,omitempty"`
-		BrowserAdmissionDecisions []string                             `json:"browser_admission_decisions,omitempty"`
-		BrowserRegistrationOpened bool                                 `json:"browser_registration_opened"`
-		BrowserEventCreated       bool                                 `json:"browser_event_created"`
-		BrowserBrandVerified      bool                                 `json:"browser_brand_verified"`
+		BrowserHelp                *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
+		FailedMessage              lifecycleFailedMessageReceipt        `json:"failed_message"`
+		BrowserApplications        []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
+		BrowserSelections          []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserPublishedForms      []string                             `json:"browser_published_forms,omitempty"`
+		BrowserAdmissionDecisions  []string                             `json:"browser_admission_decisions,omitempty"`
+		BrowserOfferPolicyApproved bool                                 `json:"browser_offer_policy_approved"`
+		BrowserRegistrationOpened  bool                                 `json:"browser_registration_opened"`
+		BrowserEventCreated        bool                                 `json:"browser_event_created"`
+		BrowserBrandVerified       bool                                 `json:"browser_brand_verified"`
 
 		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
 		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
@@ -450,57 +455,58 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				BrowserHelp:               item.browserHelp,
-				FailedMessage:             item.failedMessage,
-				BrowserBrandVerified:      item.browserBrandVerified,
-				BrowserEventCreated:       item.browserEventCreated,
-				BrowserPublishedForms:     item.browserPublishedForms,
-				BrowserAdmissionDecisions: item.browserAdmissionDecisions,
-				BrowserRegistrationOpened: item.browserRegistrationOpened,
-				BrowserApplications:       item.browserApplications,
-				BrowserSelections:         item.browserSelections,
-				RetentionBoundary:         item.retentionBoundary,
-				RetiredRepositoryVerified: item.retiredRepositoryVerified,
-				Expiry:                    item.expiry,
-				OfferCutoff:               item.offerCutoff,
-				Attendance:                item.attendance,
-				Postponement:              item.postponement,
-				Eligibility:               item.eligibility,
-				PostEvent:                 item.postEvent,
-				Showcase:                  item.showcase,
-				Archive:                   item.archive,
-				Reviews:                   item.reviews,
-				ID:                        item.view.ID,
-				Mode:                      item.rubric.Definition.Mode,
-				Stage:                     item.view.Stage,
-				Objective:                 item.objective.Reference,
-				Primary:                   item.brand.Primary,
-				TeamIDs:                   teams,
-				Confirmed:                 item.view.ConfirmedAttendees,
-				Census:                    item.cohort.census,
-				Challenge:                 item.challenge.ID,
-				Rubric:                    item.rubric.Reference,
-				CommonHash:                item.commonHash,
-				PublishedAt:               item.view.PublishedAt,
-				Repositories:              item.repositories,
-				Access:                    item.access,
-				LiveAccess:                item.liveAccess,
-				TeamNotice:                item.teamNotice,
-				AccessPoll:                item.accessPoll,
-				Submissions:               item.submissions,
-				Work:                      item.work,
-				LateWork:                  item.lateWork,
-				Cutoff:                    item.cutoff,
-				JudgeRun:                  item.judgeRun,
-				Practice:                  item.practice,
-				JudgeFinal:                item.judgeFinal,
-				ResultDecision:            item.resultDecision,
-				ResultReleases:            item.resultReleases,
-				ResultPreparations:        item.resultPreparations,
-				TeamFeedback:              item.teamFeedback,
-				LiveHelp:                  item.liveHelp,
-				Clarification:             item.clarification,
-				Review:                    item.review,
+				BrowserHelp:                item.browserHelp,
+				FailedMessage:              item.failedMessage,
+				BrowserBrandVerified:       item.browserBrandVerified,
+				BrowserEventCreated:        item.browserEventCreated,
+				BrowserPublishedForms:      item.browserPublishedForms,
+				BrowserAdmissionDecisions:  item.browserAdmissionDecisions,
+				BrowserOfferPolicyApproved: item.browserOfferPolicyApproved,
+				BrowserRegistrationOpened:  item.browserRegistrationOpened,
+				BrowserApplications:        item.browserApplications,
+				BrowserSelections:          item.browserSelections,
+				RetentionBoundary:          item.retentionBoundary,
+				RetiredRepositoryVerified:  item.retiredRepositoryVerified,
+				Expiry:                     item.expiry,
+				OfferCutoff:                item.offerCutoff,
+				Attendance:                 item.attendance,
+				Postponement:               item.postponement,
+				Eligibility:                item.eligibility,
+				PostEvent:                  item.postEvent,
+				Showcase:                   item.showcase,
+				Archive:                    item.archive,
+				Reviews:                    item.reviews,
+				ID:                         item.view.ID,
+				Mode:                       item.rubric.Definition.Mode,
+				Stage:                      item.view.Stage,
+				Objective:                  item.objective.Reference,
+				Primary:                    item.brand.Primary,
+				TeamIDs:                    teams,
+				Confirmed:                  item.view.ConfirmedAttendees,
+				Census:                     item.cohort.census,
+				Challenge:                  item.challenge.ID,
+				Rubric:                     item.rubric.Reference,
+				CommonHash:                 item.commonHash,
+				PublishedAt:                item.view.PublishedAt,
+				Repositories:               item.repositories,
+				Access:                     item.access,
+				LiveAccess:                 item.liveAccess,
+				TeamNotice:                 item.teamNotice,
+				AccessPoll:                 item.accessPoll,
+				Submissions:                item.submissions,
+				Work:                       item.work,
+				LateWork:                   item.lateWork,
+				Cutoff:                     item.cutoff,
+				JudgeRun:                   item.judgeRun,
+				Practice:                   item.practice,
+				JudgeFinal:                 item.judgeFinal,
+				ResultDecision:             item.resultDecision,
+				ResultReleases:             item.resultReleases,
+				ResultPreparations:         item.resultPreparations,
+				TeamFeedback:               item.teamFeedback,
+				LiveHelp:                   item.liveHelp,
+				Clarification:              item.clarification,
+				Review:                     item.review,
 			},
 		)
 	}

@@ -40,12 +40,13 @@ func admitLifecycleCohort(
 }
 
 type lifecycleAdmissionActions struct {
-	Publish func(string) (registration.FormView, error)
-	Open    func() (event.View, error)
-	Apply   func(string, *lifecycleClient, registration.FormView) (registration.View, error)
-	Select  func(string, registration.View) (registration.View, error)
-	Go      func() (event.View, error)
-	Respond func(string, *lifecycleClient, registration.View, string) (registration.View, error)
+	ConfigureOffers func() (registration.OfferSettings, error)
+	Publish         func(string) (registration.FormView, error)
+	Open            func() (event.View, error)
+	Apply           func(string, *lifecycleClient, registration.FormView) (registration.View, error)
+	Select          func(string, registration.View) (registration.View, error)
+	Go              func() (event.View, error)
+	Respond         func(string, *lifecycleClient, registration.View, string) (registration.View, error)
 }
 
 func admitLifecycleCohortChecking(
@@ -91,18 +92,23 @@ func admitLifecycleCohortWithActions(
 		return cohort, err
 	}
 	var offerPolicy registration.OfferSettings
-	if err := owner.call(
-		ctx,
-		http.MethodPut,
-		base+"/registrations/offer-policy",
-		0,
-		map[string]any{
-			"automated":    true,
-			"working_days": 2,
-		},
-		&offerPolicy,
-		http.StatusOK,
-	); err != nil {
+	if actions != nil && actions.ConfigureOffers != nil {
+		offerPolicy, err = actions.ConfigureOffers()
+	} else {
+		err = owner.call(
+			ctx,
+			http.MethodPut,
+			base+"/registrations/offer-policy",
+			0,
+			map[string]any{
+				"automated":    true,
+				"working_days": 2,
+			},
+			&offerPolicy,
+			http.StatusOK,
+		)
+	}
+	if err != nil {
 		return cohort, err
 	}
 	if !offerPolicy.Automated || offerPolicy.WorkingDays != 2 {
