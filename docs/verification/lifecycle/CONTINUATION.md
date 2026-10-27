@@ -459,3 +459,10 @@ restore the full future T−7 schedule while keeping frozen teams and original
 missed history. [The clean command](DISPATCH-WINDOW.md) captures private native
 artifacts and verifies scoped cleanup. Compilation/calendar checks passed;
 actual execution remains pending, and no complete acceptance claim is made.
+
+The first dispatch-lane execution at `ad075846` failed before the native runner:
+Docker VM disk exhaustion prevented PostgreSQL `initdb`. Its failed startup
+logs are retained and the isolated project was removed. Cleanup of unused
+images/cache recovered33GiB; the existing application and encrypted App setup
+were verified healthy afterward. A pre-build/post-build capacity guard now
+prevents repeating that resource failure. No native timing pass is claimed.

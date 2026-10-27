@@ -45,3 +45,21 @@ positive-projection receipts/hashes and retain failed attempts honestly.
 These are focused native scheduling/recovery cases. The original #120 twelve
 criteria and L01–L18 still require the remaining retired-repository, complete
 Fleet/browser/role/expiry/provider and normal-image execution and final audit.
+
+## First execution: startup failed before native dispatch
+
+At initial source `ad075846`, the image built but the first project's PostgreSQL
+failed during `initdb` with `No space left on device`; the provider also failed
+and the native runner never started. This is a failed infrastructure attempt,
+not a scheduler verdict or a passing test. Its private startup/service/build
+logs are retained and its generated project was removed. No final database or
+native dispatch receipt exists for that attempt.
+
+Unused images and build cache were then reclaimed without deleting containers
+or data volumes. The local application's database, portals and worker recovered;
+normal authenticated configuration verification still passed. The runner now
+requires8GiB available before building and4GiB afterward/before each case,
+records the observed capacity, always reports its private evidence location on
+failure, and requires the actual Go receipt, intent journal and final database
+before accepting a passing case. These are host-capacity checks, not changes to
+business timing or request budgets. Fresh native execution is still pending.

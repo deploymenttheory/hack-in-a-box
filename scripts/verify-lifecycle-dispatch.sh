@@ -21,6 +21,25 @@ compose() {
     docker compose -p "$project_name" -f "$task_root/docs/verification/lifecycle/compose.yaml" --profile dispatch-window "$@"
 }
 
+check_disk_space() {
+  disk_phase=$1
+  required_kib=$2
+  # Read the Docker VM filesystem through a disposable pinned image. No host
+  # volume or application data is mounted; --rm removes its empty probe volume.
+  available_kib=$(docker run --rm --network none --read-only --cap-drop ALL \
+    --security-opt no-new-privileges:true --entrypoint df \
+    postgres:17.7-bookworm@sha256:86e0b703649d7a792bd9243ee28afc9d8f7c6b2b5638077c9d6882d4d472bbfd \
+    -Pk / 2>> "$evidence_root/disk-space.log" | awk 'NR == 2 { print $4 }')
+  case "$available_kib" in
+    ''|*[!0-9]*) printf '%s\n' 'Cannot verify Docker disk capacity.' >&2; exit 1 ;;
+  esac
+  printf '%s available_kib=%s required_kib=%s\n' "$disk_phase" "$available_kib" "$required_kib" >> "$evidence_root/disk-space.log"
+  if [ "$available_kib" -lt "$required_kib" ]; then
+    printf 'Insufficient Docker disk space at %s: %s KiB available, %s KiB required.\n' "$disk_phase" "$available_kib" "$required_kib" >&2
+    exit 1
+  fi
+}
+
 capture_case() {
   [ -n "$project_name" ] || return 0
   [ "$case_captured" = 0 ] || return 0
@@ -48,6 +67,7 @@ cleanup_case() {
 
 finish() {
   result=$?
+  set +e
   capture_case
   if ! cleanup_case; then result=1; fi
   printf 'Private dispatch evidence: %s\n' "$evidence_root"
@@ -56,10 +76,13 @@ finish() {
 trap finish EXIT
 trap 'exit 130' INT TERM
 
+check_disk_space before-build 8388608
 docker build -f "$task_root/docs/verification/lifecycle/Dockerfile" -t "$image_reference" "$task_root" > "$evidence_root/build.log" 2>&1
 image_id=$(docker image inspect --format '{{.Id}}' "$image_reference")
+check_disk_space after-build 4194304
 
 for case_name in last-on-time first-late; do
+  check_disk_space "before-$case_name" 4194304
   case_dir="$evidence_root/$case_name"
   mkdir -m 700 "$case_dir"
   case_captured=0
@@ -100,6 +123,10 @@ pathlib.Path(path).write_text(json.dumps({
 PY
   if [ "$runner_exit" != 0 ]; then
     printf 'Native dispatch case failed: %s (exit %s)\n' "$case_name" "$runner_exit" >&2
+    exit 1
+  fi
+  if [ ! -s "$case_dir/dispatch-window-proof.json" ] || [ ! -s "$case_dir/final.dump" ] || [ ! -s "$case_dir/intent-journal.jsonl" ]; then
+    printf 'Required native evidence is missing for passing case: %s\n' "$case_name" >&2
     exit 1
   fi
   cleanup_case
