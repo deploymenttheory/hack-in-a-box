@@ -35,3 +35,39 @@ The rebased production/test tree is identical to reviewed a6a9641b; the main
 6c52e4e1 predecessor adds the independent Compose readiness fix. Exact results
 are in proof.json. These are native correctness/budget results, not deployment
 capacity, full Fleet role/offline coverage or release acceptance.
+
+## Ballot extension and final owner checks
+
+The connected rerun atddd7f2e1 passed result preparation and first-event result
+confirmation, then failed on a second-event judge ballot (408.47s whole run).
+It remains a failed full lifecycle; it does not establish end-to-end acceptance.
+
+The same6ms native regression model reproduced a ballot503 after10.034s
+(1268queries before cancellation). Removing only its post-write projection was
+insufficient: that intermediate attempt still returned503. The final correction
+checks each unique tied candidate once within the fixed actor/run/source event
+transaction and rebuilds the successful write response from that authorised
+page. Every candidate still passes full native assignment, conflict, frozen
+final and deliberation checks; each evidence reference is separately authorised.
+Counts and this judge's own vote are recalculated with the original all-judges/
+strict-majority rules. Advisory scope is retained; other judges' prose is absent.
+Fresh requests and receipt replays still read current sources/authority.
+
+The ballot now returns200 in6.123s with660queries and observed native maintenance
+contention. The expanded18-test native owner suite passed430.521s under-race,
+including both budget regressions and the additional current-target/visible-
+evidence cases. The complete pure result suite passes (cached), configured CI
+lint reports0issues, and both extended review axes report0implementation defects.
+The later source change only wraps two lines for the configured formatter.
+
+Run both budget regressions with the ordinary integration setup:
+
+```sh
+HACKBOX_INTEGRATION=1 go test -race ./internal/app \
+  -run '^TestResult(Preparation|Ballot)WithDatabaseRoundTripCost$' -count=1
+```
+
+The next full connected rerun uses the exact final production tree, with its
+originals retained separately. Full CI, complete Fleet role/offline acceptance
+and load capacity remain separate gates; this bounded receipt claims none of
+those results by implication.

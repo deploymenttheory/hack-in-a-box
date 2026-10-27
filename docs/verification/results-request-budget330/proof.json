@@ -36,5 +36,47 @@
   "ci_lint_scope_zero_issues": true,
   "standards_review_findings": 0,
   "spec_review_implementation_defects": 0,
-  "does_not_claim_full_lifecycle_or_load_acceptance": true
+  "does_not_claim_full_lifecycle_or_load_acceptance": true,
+  "reviewed_extended_fix": "26f7b7743013b9ea344d992bb5c982b687a46abc",
+  "formatting_only_followup": "c63deed5e9b3f5295ffc19e1dc61639fd5b46523",
+  "ballot_before": {
+    "http_status": 503,
+    "elapsed_seconds": 10.034060959,
+    "queries_before_cancellation": 1268,
+    "native_maintenance_blocking_verified": true
+  },
+  "ballot_postpage_only_attempt": {
+    "http_status": 503,
+    "elapsed_seconds": 10.026994333,
+    "queries_before_cancellation": 1225,
+    "counted_as_passing": false
+  },
+  "ballot_after": {
+    "http_status": 200,
+    "elapsed_seconds": 6.1230595,
+    "queries": 660,
+    "native_maintenance_blocking_verified": true
+  },
+  "expanded_native_owner_suite": {
+    "top_level_tests_passed": 18,
+    "elapsed_seconds": 430.521,
+    "race_detector": true,
+    "includes_current_target_authority_and_visible_evidence": true
+  },
+  "expanded_pure_suite": {
+    "passed": true,
+    "cached": true
+  },
+  "extended_ci_lint_zero_issues": true,
+  "extended_standards_findings": 0,
+  "extended_spec_implementation_defects": 0,
+  "connected_r33": {
+    "source": "ddd7f2e13089afdc281cd7c446cd9d353b1035b9",
+    "exit": 1,
+    "seconds": 408.47,
+    "prepare_passed": true,
+    "first_event_confirmation_passed": true,
+    "second_event_ballot_failed": true,
+    "counted_as_full_pass": false
+  }
 }
