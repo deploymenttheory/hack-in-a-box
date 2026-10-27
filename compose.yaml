@@ -49,7 +49,7 @@ services:
       POSTGRES_PASSWORD: ${HACKBOX_DB_PASSWORD:?Set HACKBOX_DB_PASSWORD in .env}
     volumes: [database:/var/lib/postgresql/data]
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U hackbox -d hackbox']
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U hackbox -d hackbox']
       interval: 5s
       timeout: 3s
       retries: 20
