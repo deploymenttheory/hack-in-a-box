@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/deploymenttheory/hack-in-a-box/internal/archives"
 	"github.com/deploymenttheory/hack-in-a-box/internal/database"
 	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type lifecycleCompetitionDigest struct {
@@ -31,7 +32,11 @@ type lifecycleArchiveReceipt struct {
 // The fixture's only SQL access here is a repeatable-read, read-only oracle.
 // Native HTTP creates every lifecycle/evidence effect. Full private rows exist
 // only in memory for hashing and are never logged or put into public receipts.
-func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID, expectedSignoffs int) map[string]lifecycleCompetitionDigest {
+func lifecycleCompetitionSnapshot(
+	t *testing.T,
+	eventID uuid.UUID,
+	expectedSignoffs int,
+) map[string]lifecycleCompetitionDigest {
 	t.Helper()
 	if os.Getenv("HACKBOX_LIFECYCLE_ISOLATED") != "synthetic-only" {
 		t.Fatal("competition oracle requires the isolated fixture")
@@ -41,7 +46,10 @@ func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID, expectedSigno
 		t.Fatal("open isolated competition oracle")
 	}
 	defer pool.Close()
-	tx, err := pool.BeginTx(t.Context(), pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	tx, err := pool.BeginTx(
+		t.Context(),
+		pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly},
+	)
 	if err != nil {
 		t.Fatal("begin read-only competition oracle")
 	}
@@ -58,7 +66,8 @@ func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID, expectedSigno
 	for name, source := range sources {
 		var raw string
 		var count int64
-		if err := tx.QueryRow(t.Context(), "SELECT count(*),COALESCE(jsonb_agg(row ORDER BY row),'[]'::jsonb)::text FROM ("+source+") native_rows", eventID).Scan(&count, &raw); err != nil {
+		if err := tx.QueryRow(t.Context(), "SELECT count(*),COALESCE(jsonb_agg(row ORDER BY row),'[]'::jsonb)::text FROM ("+source+") native_rows", eventID).
+			Scan(&count, &raw); err != nil {
 			t.Fatal("read isolated competition source: " + name)
 		}
 		if name == "mentor_scorecard_signoffs" {
@@ -66,7 +75,11 @@ func lifecycleCompetitionSnapshot(t *testing.T, eventID uuid.UUID, expectedSigno
 			// acknowledged huddles each have an immutable sign-off; retain and hash
 			// the empty all-team set rather than inventing a qualification gate.
 			if count != int64(expectedSignoffs) {
-				t.Fatalf("competition sign-off census differs from acknowledged final huddles: got %d, want %d", count, expectedSignoffs)
+				t.Fatalf(
+					"competition sign-off census differs from acknowledged final huddles: got %d, want %d",
+					count,
+					expectedSignoffs,
+				)
 			}
 		} else if count == 0 {
 			t.Fatal("competition oracle unexpectedly has no native rows: " + name)
@@ -85,7 +98,13 @@ func (r *lifecycleJourney) archiveCompetitionAndUpdateOutcome(t *testing.T) {
 	for i := range r.events {
 		item := &r.events[i]
 		var err error
-		item.view, err = lifecycleTransition(t.Context(), r.owner, item.view.ID, "archived", http.StatusOK)
+		item.view, err = lifecycleTransition(
+			t.Context(),
+			r.owner,
+			item.view.ID,
+			"archived",
+			http.StatusOK,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -94,14 +113,31 @@ func (r *lifecycleJourney) archiveCompetitionAndUpdateOutcome(t *testing.T) {
 		}
 		base := "/api/v1/events/" + item.view.ID.String()
 		var archive archives.View
-		if err := r.owner.call(t.Context(), http.MethodGet, base+"/archive", -1, nil, &archive, http.StatusOK); err != nil {
+		if err := r.owner.call(
+			t.Context(),
+			http.MethodGet,
+			base+"/archive",
+			-1,
+			nil,
+			&archive,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
-		if !archive.ReadOnly || archive.Summary == nil || archive.SummaryState != "available" || archive.CompletedAt == nil {
+		if !archive.ReadOnly || archive.Summary == nil || archive.SummaryState != "available" ||
+			archive.CompletedAt == nil {
 			t.Fatal("organiser archive lacks actual retained event evidence")
 		}
 		own := r.participant(t, *item.outcomes[0].OwnerID)
-		if err := own.call(t.Context(), http.MethodGet, base+"/archive", -1, nil, &archive, http.StatusOK); err != nil {
+		if err := own.call(
+			t.Context(),
+			http.MethodGet,
+			base+"/archive",
+			-1,
+			nil,
+			&archive,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
 		if !archive.ReadOnly || archive.Summary != nil || archive.SummaryState != "restricted" {
@@ -109,21 +145,51 @@ func (r *lifecycleJourney) archiveCompetitionAndUpdateOutcome(t *testing.T) {
 		}
 		current := &item.outcomes[0]
 		before := current.Version.Version
-		command := outcomes.Command{ID: uuid.New(), Action: "evidence", Reason: "Authorised retained follow-up after competition archive", Evidence: &outcomes.Evidence{ID: uuid.New(), Basis: "self_report", Claim: "Synthetic owner progress after archive; not independently demonstrated adoption"}}
+		command := outcomes.Command{
+			ID:     uuid.New(),
+			Action: "evidence",
+			Reason: "Authorised retained follow-up after competition archive",
+			Evidence: lifecycleOutcomeEvidence(
+				"self_report",
+				"Synthetic owner progress after archive; not independently demonstrated adoption",
+				"",
+				nil,
+			),
+		}
 		path := "/api/v1/outcomes/" + current.ID.String()
-		if err := own.call(t.Context(), http.MethodPut, path, before, command, current, http.StatusOK); err != nil {
+		if err := own.call(
+			t.Context(),
+			http.MethodPut,
+			path,
+			before,
+			command,
+			current,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
-		if current.Version.Version != before+1 || current.CommandID != command.ID || !current.Capability.Archived {
+		if current.Version.Version != before+1 || current.CommandID != command.ID ||
+			!current.Capability.Archived {
 			t.Fatal("archived follow-up lost its exact native acknowledgement")
 		}
 		var history outcomes.History
-		if err := own.call(t.Context(), http.MethodGet, path+"/history", -1, nil, &history, http.StatusOK); err != nil {
+		if err := own.call(
+			t.Context(),
+			http.MethodGet,
+			path+"/history",
+			-1,
+			nil,
+			&history,
+			http.StatusOK,
+		); err != nil {
 			t.Fatal(err)
 		}
 		found := false
 		for _, version := range history.Items {
-			if version.CommandID == command.ID && version.Version == current.Version.Version && version.ActorID == own.person && version.EvidenceAddedID != nil && *version.EvidenceAddedID == command.Evidence.ID {
+			if version.CommandID == command.ID && version.Version == current.Version.Version &&
+				version.ActorID == own.person &&
+				version.EvidenceAddedID != nil &&
+				*version.EvidenceAddedID == command.Evidence.ID {
 				found = true
 			}
 		}
@@ -134,6 +200,12 @@ func (r *lifecycleJourney) archiveCompetitionAndUpdateOutcome(t *testing.T) {
 		if !reflect.DeepEqual(item.competitionBefore, after) {
 			t.Fatal("archive or authorised outcomes mutated frozen competition evidence")
 		}
-		item.archive = lifecycleArchiveReceipt{Competition: after, SummaryAvailable: true, ParticipantRestricted: true, AuditedOutcomeVersion: current.Version.Version, Unchanged: true}
+		item.archive = lifecycleArchiveReceipt{
+			Competition:           after,
+			SummaryAvailable:      true,
+			ParticipantRestricted: true,
+			AuditedOutcomeVersion: current.Version.Version,
+			Unchanged:             true,
+		}
 	}
 }

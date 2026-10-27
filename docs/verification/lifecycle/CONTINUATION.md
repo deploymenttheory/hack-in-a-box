@@ -277,3 +277,21 @@ requires the exact count of already acknowledged final huddles (zero versus
 four), retaining a hash even for the empty set. Missing qualification sign-offs
 remain a failure. No production gate or data was changed; the corrected fresh
 whole journey remains pending.
+
+## Current-dependency integration R8 — evidence wire correction
+
+Private clean integration `1f2671bc` on main `3a72453a` used image
+`sha256:f7e74709ef04233e4d6f587241237f14f90f03d1060effade238ec0a3f01df4d`.
+Its fresh original journey failed after **176.41s**, with both events completed
+and the corrected exact sign-off census passing. The first team's native
+outcome propose/moderate/assign/progress commands were acknowledged as versions
+1–4. The following estimate-evidence request received a definite HTTP 400; the
+original database and intent metadata were preserved without replay.
+
+The actual domain evidence DTO emitted `measures:null`, but the independent
+OpenAPI contract requires an array. A fast test against that schema reproduced
+the exact rejection for estimate, self-report and demonstrated-adoption inputs
+before the correction. The journey's shared evidence constructor now supplies
+an explicit empty array for all three cases, including its later archived
+self-report. No production API, validation or evidence policy changed. The new
+original whole journey remains pending; R8 is a failure, not complete acceptance.
