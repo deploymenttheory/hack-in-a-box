@@ -30,6 +30,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	offerCutoff        lifecycleOfferCutoffReceipt
 	attendance         lifecycleAttendanceReceipt
 	postponement       lifecyclePostponementReceipt
 	view               event.View
@@ -140,8 +141,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		run.events = append(run.events, item)
 	}
 	run.linkGitHubParticipants(t)
-	// Published frozen team identities already exist; prepare their private
-	// repositories before any common theme disclosure or live transition.
+	// Let the genuine remaining offer expire at admission cutoff, then freeze
+	// the published teams before repository setup or common theme disclosure.
+	run.expireSurvivingOffers(t)
 	run.provisionRepositories(t)
 	if err := control.advance(ctx, timeline.Publication.Add(-time.Second)); err != nil {
 		t.Fatal(err)
@@ -291,6 +293,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		OfferCutoff        lifecycleOfferCutoffReceipt         `json:"surviving_offer_cutoff"`
 		Attendance         lifecycleAttendanceReceipt          `json:"attendance_exception"`
 		Postponement       lifecyclePostponementReceipt        `json:"postponement"`
 		Eligibility        []lifecycleEligibilityReceipt       `json:"eligibility"`
@@ -341,6 +344,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				OfferCutoff:        item.offerCutoff,
 				Attendance:         item.attendance,
 				Postponement:       item.postponement,
 				Eligibility:        item.eligibility,
@@ -533,6 +537,7 @@ func (r *lifecycleJourney) prepareEvent(
 		ctx,
 		r.owner,
 		item.view,
+		37,
 		func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) },
 	)
 	if err != nil {
@@ -554,8 +559,8 @@ func (r *lifecycleJourney) prepareEvent(
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.rubric.Definition.Mode != mode || !item.teams.Frozen {
-		t.Fatal("native event did not retain its distinct rubric mode/frozen teams")
+	if item.rubric.Definition.Mode != mode || item.teams.Frozen != (item.cohort.reserveID == uuid.Nil) {
+		t.Fatal("native event did not retain its distinct rubric and expected pending-offer freeze phase")
 	}
 	if err := r.owner.call(
 		ctx,

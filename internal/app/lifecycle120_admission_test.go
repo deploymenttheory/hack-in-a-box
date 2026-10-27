@@ -24,16 +24,21 @@ type lifecycleAdmissions struct {
 	census        map[string]int64
 	offerID       uuid.UUID
 	waitlistedID  uuid.UUID
+	reserveID     uuid.UUID
+	reservePerson uuid.UUID
 }
 
 // Every mutation here travels through the authenticated native HTTP owner.
 // The final integrated scenario will reuse this phase, including its negative
 // gates; independently running this checkpoint does not complete #120.
 func admitLifecycleCohort(ctx context.Context, owner *lifecycleClient, current event.View) (lifecycleAdmissions, error) {
-	return admitLifecycleCohortChecking(ctx, owner, current, nil)
+	return admitLifecycleCohortChecking(ctx, owner, current, 36, nil)
 }
 
-func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, current event.View, beforeApplications func(registration.FormView)) (lifecycleAdmissions, error) {
+func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, current event.View, applicants int, beforeApplications func(registration.FormView)) (lifecycleAdmissions, error) {
+	if applicants != 36 && applicants != 37 {
+		return lifecycleAdmissions{}, fmt.Errorf("unsupported synthetic applicant census")
+	}
 	cohort := lifecycleAdmissions{census: map[string]int64{}, staff: map[string]*lifecycleClient{}}
 	base := "/api/v1/events/" + current.ID.String()
 	form, err := publishLifecycleForm(ctx, owner, current.ID, "attendee")
@@ -89,7 +94,7 @@ func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, c
 			cohort.staff[actor] = staff
 		}
 	}
-	for i := 1; i <= 36; i++ {
+	for i := 1; i <= applicants; i++ {
 		client, err := signInLifecycle(ctx, "http://public:8080", "http://provider:8080", fmt.Sprintf("attendee-%02d", i))
 		if err != nil {
 			return cohort, err
@@ -108,11 +113,17 @@ func admitLifecycleCohortChecking(ctx context.Context, owner *lifecycleClient, c
 		cohort.clients = append(cohort.clients, client)
 		cohort.registrations = append(cohort.registrations, applied)
 		if applied.State == "waitlisted" {
-			cohort.waitlistedID = applied.ID
-			if applied.WaitlistPosition == nil || *applied.WaitlistPosition != 1 {
-				return cohort, fmt.Errorf("overflow competitor did not receive the actual first FIFO position")
+			position := int64(i - current.Configuration.Capacity)
+			if applied.WaitlistPosition == nil || *applied.WaitlistPosition != position {
+				return cohort, fmt.Errorf("overflow competitor did not receive the actual FIFO position")
 			}
-			cohort.census["overflow_waitlist_position"] = *applied.WaitlistPosition
+			if position == 1 {
+				cohort.waitlistedID = applied.ID
+				cohort.census["overflow_waitlist_position"] = position
+			} else if position == 2 {
+				cohort.reserveID, cohort.reservePerson = applied.ID, applied.PersonID
+				cohort.census["reserve_waitlist_position"] = position
+			}
 		}
 		if i == 29 {
 			blocked, err := lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusConflict)

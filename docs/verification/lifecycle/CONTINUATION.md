@@ -399,3 +399,26 @@ retains each pair's actual cutoff outcome rather than inventing a score or
 automatic success. Full private receipts, original intents and final database
 remain local. Surviving-offer, missed-release, retired-repository, complete UI/
 role/expiry and normal-image variants still keep #120 and L01–L18 incomplete.
+
+## Surviving FIFO offer at the actual admission cutoff — not yet executed
+
+The connected driver now applies one extra actual FIFO reserve before go,
+keeping the original35 capacity,30 minimum and two-working-day offer policy.
+Pre-freeze remediation occurs within the final day before the real cutoff,
+so the reserve's native working-day expiry is capped by that cutoff rather
+than by an artificially extended policy. Team freeze is deliberately deferred:
+freezing earlier would itself close admission and would not prove cutoff
+expiry. Both concurrent reserves must still have their original pending offer
+one second before cutoff. A single accept command at the exact cutoff must
+return the real declined/expired outcome without adding a confirmed competitor
+or changing the published32-person roster. The response contract may return
+HTTP200 for that reconciled expired state; it is never counted as acceptance.
+Only then does the owner freeze actual published assignments before repository
+setup and T−7 common disclosure, with the existing frozen-move denial repeated.
+
+The extra reserve never confirms or receives a repository grant and remains
+unlinked; the strict36-person-plus2-mentor GitHub fixture and actual38 OAuth
+exchanges remain unchanged. Standalone admission checkpoints retain36 people;
+the full journey explicitly records37 overlapping applicants. Compilation and
+the existing outcome wire check passed. No whole-run evidence for this new
+case is claimed yet; all remaining original acceptance stays open.

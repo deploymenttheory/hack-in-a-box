@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 )
@@ -57,6 +59,28 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 	for _, team := range page.Teams {
 		if len(team.Published) != 5 || len(team.Draft) != 5 {
 			return page, fmt.Errorf("reviewed initial allocation did not publish teams of five")
+		}
+	}
+	// The extra reserve's offer is issued within its normal two-working-day
+	// policy before the real cutoff; neither policy nor deadline is stretched.
+	if cohort.reserveID != uuid.Nil {
+		var current event.View
+		if err := owner.call(ctx, http.MethodGet, base, -1, nil, &current, http.StatusOK); err != nil {
+			return page, err
+		}
+		var phase struct {
+			Now time.Time `json:"now"`
+		}
+		if err := control.call(ctx, http.MethodGet, "/clock", nil, &phase); err != nil {
+			return page, err
+		}
+		target := current.Configuration.AdmissionCutoff.Add(-24 * time.Hour)
+		if phase.Now.Before(target) {
+			if err := control.advance(ctx, target); err != nil {
+				return page, err
+			}
+		} else if !phase.Now.Before(current.Configuration.AdmissionCutoff) {
+			return page, fmt.Errorf("reserve offer cannot be created after the admission cutoff")
 		}
 	}
 	// Withdraw the captain and two members through the registration owner. The
@@ -139,6 +163,11 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 	}
 	if active != 6 || assigned != 32 || !disbanded {
 		return page, fmt.Errorf("remaining pair was not reassigned into the actual confirmed cohort")
+	}
+	if cohort.reserveID != uuid.Nil {
+		// A pending offer must reach the real admission cutoff before this
+		// deliberate freeze; freezing earlier would expire it for another reason.
+		return page, nil
 	}
 	page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "freeze"}, http.StatusOK)
 	if err != nil {
