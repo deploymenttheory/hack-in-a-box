@@ -10,7 +10,7 @@ require (
 	github.com/felixge/httpsnoop v1.1.0
 	github.com/getkin/kin-openapi v0.152.0
 	github.com/go-chi/chi/v5 v5.5.0
-	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/google/go-github/v88 v88.0.0
 	github.com/google/go-github/v89 v89.0.0
 	github.com/google/uuid v1.6.0
