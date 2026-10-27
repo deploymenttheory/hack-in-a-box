@@ -590,3 +590,17 @@ journals, logs/databases and scoped cleanup are retained.
 This supersedes only the unsupported helper-only flags from R16/R18; their
 actual previously executed native actions retain their original scope. It does
 not turn R19/R20 into passes or prove the default90/browser/provider matrix.
+
+## Default90 first execution — R22 API-read fixture correction
+
+At clean `61ab0358`, the full native run reached the actual day90 approval
+and correctly rejected it with400 under the unchanged default policy. The
+fixture then attempted an unsupported GET on the PUT-only individual review
+route and received405, failing166.89s before retained delivery/expiry. This is
+a failed fixture attempt, not a passing default-policy lifecycle. Original
+journal/database/logs are retained and generated resources were removed.
+
+The unchanged-state check now reads the actual supported review collection,
+requires exactly the three original plans, selects the exact rejected ID and
+compares the native draft/version/command projection. No application endpoint
+or approval/retention rule changed. Fresh execution remains required.

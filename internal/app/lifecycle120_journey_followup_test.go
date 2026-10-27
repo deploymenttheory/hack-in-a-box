@@ -98,16 +98,30 @@ func (r *lifecycleJourney) prepareRetainedReviews(t *testing.T) {
 				); err != nil {
 					t.Fatal(err)
 				}
+				var current outcomes.PlanPage
 				if err := r.owner.call(
 					t.Context(),
 					http.MethodGet,
-					path,
+					"/api/v1/outcomes/"+source.ID.String()+"/reviews",
 					-1,
 					nil,
-					&plan,
+					&current,
 					http.StatusOK,
 				); err != nil {
 					t.Fatal(err)
+				}
+				if len(current.Items) != 3 {
+					t.Fatal("boundary review census changed")
+				}
+				found := false
+				for _, candidate := range current.Items {
+					if candidate.ID == id {
+						plan = candidate
+						found = true
+					}
+				}
+				if !found {
+					t.Fatal("rejected original boundary review disappeared")
 				}
 				if !reflect.DeepEqual(before, plan) || plan.State != "draft" {
 					t.Fatal("exclusive default90 review rejection mutated the original draft")
