@@ -18,15 +18,21 @@ import (
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/httpapi/contract"
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissions"
 )
 
 type scoringQueryDelay struct {
-	calls   atomic.Int64
-	enabled atomic.Bool
-	delay   time.Duration
-	mu      sync.Mutex
-	names   map[string]int
+	calls     atomic.Int64
+	enabled   atomic.Bool
+	delay     time.Duration
+	mu        sync.Mutex
+	names     map[string]int
+	locked    chan struct{}
+	lockOnce  sync.Once
+	holderPID atomic.Uint32
 }
+
+type scoringLockTraceKey struct{}
 
 func (d *scoringQueryDelay) TraceQueryStart(
 	ctx context.Context,
@@ -48,10 +54,76 @@ func (d *scoringQueryDelay) TraceQueryStart(
 		case <-timer.C:
 		case <-ctx.Done():
 		}
+		if name == "LockEvent" {
+			return context.WithValue(ctx, scoringLockTraceKey{}, true)
+		}
 	}
 	return ctx
 }
-func (*scoringQueryDelay) TraceQueryEnd(context.Context, *pgx.Conn, pgx.TraceQueryEndData) {}
+
+func (d *scoringQueryDelay) TraceQueryEnd(
+	ctx context.Context,
+	conn *pgx.Conn,
+	result pgx.TraceQueryEndData,
+) {
+	if ctx.Value(scoringLockTraceKey{}) == true && result.Err == nil {
+		d.lockOnce.Do(func() { d.holderPID.Store(conn.PgConn().PID()); close(d.locked) })
+	}
+}
+
+type scoringWorkerObservation struct {
+	blocked bool
+	elapsed time.Duration
+	err     error
+}
+
+// Recreate the observed causal seam: native worker settlement waits behind the
+// actual API event transaction. Observe PostgreSQL's real lock graph rather
+// than inserting an artificial blocking transaction or forging a queue receipt.
+func observeScoringMaintenance(
+	t *testing.T,
+	r *liveRehearsal,
+	tracer *scoringQueryDelay,
+) <-chan scoringWorkerObservation {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	t.Cleanup(cancel)
+	done := make(chan scoringWorkerObservation, 1)
+	go func() {
+		defer cancel()
+		select {
+		case <-tracer.locked:
+		case <-ctx.Done():
+			done <- scoringWorkerObservation{err: ctx.Err()}
+			return
+		}
+		began := time.Now()
+		worker := make(chan error, 1)
+		go func() { worker <- (submissions.Service{Pool: r.pool, Clock: r.clock.read}).Maintain(ctx) }()
+		ticker := time.NewTicker(50 * time.Millisecond)
+		defer ticker.Stop()
+		observed := false
+		for {
+			select {
+			case err := <-worker:
+				done <- scoringWorkerObservation{blocked: observed, elapsed: time.Since(began), err: err}
+				return
+			case <-ctx.Done():
+				done <- scoringWorkerObservation{blocked: observed, elapsed: time.Since(began), err: ctx.Err()}
+				return
+			case <-ticker.C:
+				var waiting bool
+				if err := r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND $1::integer=ANY(pg_blocking_pids(pid)))", int32(tracer.holderPID.Load())).
+					Scan(&waiting); err != nil {
+					done <- scoringWorkerObservation{err: err}
+					return
+				}
+				observed = observed || waiting
+			}
+		}
+	}()
+	return done
+}
 
 // The real native five-team HTTP card-save path, with a fixed 4ms database
 // round-trip cost. The router keeps its ordinary production request timeout;
@@ -95,7 +167,7 @@ func verifyQualificationSaveWithQueryCost(t *testing.T, delay time.Duration) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tracer := &scoringQueryDelay{delay: delay, names: map[string]int{}}
+	tracer := &scoringQueryDelay{delay: delay, names: map[string]int{}, locked: make(chan struct{})}
 	poolConfig := r.pool.Config()
 	poolConfig.ConnConfig.Tracer = tracer
 	pool, err := pgxpool.NewWithConfig(t.Context(), poolConfig)
@@ -125,6 +197,10 @@ func verifyQualificationSaveWithQueryCost(t *testing.T, delay time.Duration) {
 		t.Fatal(err)
 	}
 	request := qualificationHTTPRequest(t)
+	var worker <-chan scoringWorkerObservation
+	if delay > 0 {
+		worker = observeScoringMaintenance(t, r, tracer)
+	}
 	tracer.enabled.Store(true)
 	began := time.Now()
 	status, raw := request(
@@ -137,6 +213,17 @@ func verifyQualificationSaveWithQueryCost(t *testing.T, delay time.Duration) {
 		true,
 	)
 	tracer.enabled.Store(false)
+	if worker != nil {
+		observed := <-worker
+		t.Logf(
+			"native settlement worker blocked_by_api=%t elapsed=%s",
+			observed.blocked,
+			observed.elapsed,
+		)
+		if observed.err != nil || !observed.blocked {
+			t.Errorf("native API/worker lock contention was not verified: %v", observed.err)
+		}
+	}
 	t.Logf(
 		"native save status=%d elapsed=%s database_queries=%d",
 		status,
