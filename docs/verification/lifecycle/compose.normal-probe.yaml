@@ -16,12 +16,12 @@ x-normal: &normal
     HACKBOX_ENV: development
     HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-normal-probe-only@postgres:5432/lifecycle?sslmode=disable
     HACKBOX_HTTP_ADDR: 0.0.0.0:8080
-    HACKBOX_PUBLIC_ORIGIN: http://public:8080
-    HACKBOX_ADMIN_ORIGIN: http://admin:8080
-    HACKBOX_WORKSPACE_ORIGIN: http://public:8080
+    HACKBOX_PUBLIC_ORIGIN: http://public.localhost:8080
+    HACKBOX_ADMIN_ORIGIN: http://admin.localhost:8080
+    HACKBOX_WORKSPACE_ORIGIN: http://public.localhost:8080
     HACKBOX_STORAGE_PATH: /data/files
     HACKBOX_WEB_DIR: /app/web
-    HACKBOX_OIDC_ISSUER: http://provider:8080
+    HACKBOX_OIDC_ISSUER: http://provider.localhost:8080
     HACKBOX_OIDC_CLIENT_ID: lifecycle-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
     HACKBOX_BOOTSTRAP_SUBJECT: owner
@@ -59,6 +59,7 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
   provider:
+    networks: {synthetic: {aliases: [provider.localhost]}}
     <<: *normal
     image: ${HACKBOX_LIFECYCLE_IMAGE:-hackbox-lifecycle:verification}
     entrypoint: [/app/lifecycle.test]
@@ -71,14 +72,16 @@ services:
     volumes: [control:/control]
     depends_on: {}
   public:
+    networks: {synthetic: {aliases: [public.localhost]}}
     <<: *normal
   admin:
+    networks: {synthetic: {aliases: [admin.localhost]}}
     <<: *normal
     image: ${HACKBOX_NORMAL_ADMIN_IMAGE:?Set the verified immutable normal admin image ID}
     environment:
       <<: *normal-environment
       HACKBOX_SURFACE: admin
-      HACKBOX_PUBLIC_ORIGIN: http://admin:8080
+      HACKBOX_PUBLIC_ORIGIN: http://admin.localhost:8080
       HACKBOX_OIDC_CLIENT_ID: lifecycle-admin
   probe:
     <<: *normal

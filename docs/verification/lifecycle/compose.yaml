@@ -73,6 +73,7 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
   provider:
+    networks: {synthetic: {aliases: [provider.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
@@ -85,12 +86,14 @@ services:
       timeout: 5s
       retries: 30
   public:
+    networks: {synthetic: {aliases: [public.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: public
     healthcheck: *healthcheck
   admin:
+    networks: {synthetic: {aliases: [admin.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
@@ -106,6 +109,7 @@ services:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: worker
   styleguide:
+    networks: {synthetic: {aliases: [styleguide.localhost]}}
     image: ${HACKBOX_LIFECYCLE_GUIDE_IMAGE:-hackbox-lifecycle:styleguide-verification}
     build:
       context: ../../..
@@ -118,7 +122,6 @@ services:
     tmpfs: [/tmp]
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    networks: [synthetic]
     healthcheck: *healthcheck
   bootstrap:
     <<: *fixture
