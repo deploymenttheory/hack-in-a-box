@@ -2,6 +2,7 @@
 // response or replay a write. Native Go checks the exact resulting resource.
 import assert from 'node:assert/strict'
 import {join} from 'node:path'
+import {writeFile} from 'node:fs/promises'
 import {setTimeout as pause} from 'node:timers/promises'
 
 export async function recoverLiveHelp({browser,expect,phase,output,errors}){
@@ -30,6 +31,14 @@ export async function recoverLiveHelp({browser,expect,phase,output,errors}){
   await form.getByLabel('What do you need help with?',{exact:true}).fill('PRIVATE synthetic browser recovery help')
   await form.getByLabel('Location (or an approved meeting route required)',{exact:true}).fill('Synthetic recovery desk')
   await form.getByRole('button',{name:'Review help request',exact:true}).click()
+  await own.page.screenshot({path:join(output,'live-help-after-review.png'),fullPage:true})
+  await writeFile(join(output,'live-help-after-review.json'),JSON.stringify(await own.page.evaluate(()=>({
+   route:location.pathname,
+   regions:[...document.querySelectorAll('section[aria-label]')].map(el=>el.getAttribute('aria-label')),
+   fields:[...document.querySelectorAll('input,textarea,select')].map(el=>({id:el.id,type:el.type,has_value:!!el.value,valid:el.validity.valid,message:el.validationMessage})),
+   buttons:[...document.querySelectorAll('button')].filter(el=>/help request|Correct details/.test(el.textContent??'')).map(el=>({text:el.textContent,disabled:el.disabled||!!el.closest('fieldset[disabled]')}))
+  })),null,2)+'\n',{mode:0o600})
+  await expect(own.page.getByRole('region',{name:'Review private help request',exact:true})).toBeVisible()
   const cdp=await own.context.newCDPSession(own.page)
   let resolveDrop,rejectDrop,requestID
   const dropped=new Promise((resolve,reject)=>{resolveDrop=resolve;rejectDrop=reject})
