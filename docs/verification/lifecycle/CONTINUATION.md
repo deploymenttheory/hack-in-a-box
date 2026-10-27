@@ -568,3 +568,25 @@ The synthetic clock ceiling now reaches that explicit deadline, retaining its
 monotonic and bounded rules. Production scheduling, retention, authentication,
 queue leases and HTTP/request budgets are unchanged. Fresh execution is required
 for the complete corrected repository+expiry case.
+
+## Passing executed repository and configured-expiry guards — R21
+
+The corrected full native journey passed211.23s, exit0, clean source
+`92f988ae6248a23ac867f1a2322cf6f4e314121b`, verification image
+`sha256:ed7590e11df2accd9e85c25d507c76f65a77dee7285597503f97dddf3bd58314`.
+Both final helpers are unconditional calls, and receipt construction requires
+actual successful repository/expiry sentinels. Both events completed all final
+retained-unused mapping, withdrawn-cutoff/no SHA, judge/outcome exclusion and
+current-participant repository-list assertions. All original30/60/90 reviews
+delivered through actual native queues.
+
+Both native completion anchors were2026-03-31T16:00Z. Under the explicit120-day
+policy, owners read one second before2026-07-29T16:00Z; at equality both owner
+and organiser outcome/history reads and the actual last review notification
+were denied. Full competition hashes stayed unchanged. See the actual nonzero
+[bounded expiry receipt](configured-retention-expiry-proof.json). Original
+journals, logs/databases and scoped cleanup are retained.
+
+This supersedes only the unsupported helper-only flags from R16/R18; their
+actual previously executed native actions retain their original scope. It does
+not turn R19/R20 into passes or prove the default90/browser/provider matrix.

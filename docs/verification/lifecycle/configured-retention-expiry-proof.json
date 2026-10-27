@@ -1,0 +1,122 @@
+{
+  "source_revision": "92f988ae6248a23ac867f1a2322cf6f4e314121b",
+  "source_worktree_clean": true,
+  "verification_image": "sha256:ed7590e11df2accd9e85c25d507c76f65a77dee7285597503f97dddf3bd58314",
+  "case": "journey",
+  "project": "hackbox-lifecycle-journey-1793101478-26282",
+  "actual_runner_exit_code": 0,
+  "complete_lifecycle": false,
+  "elapsed_seconds": 211.23,
+  "complete_original_acceptance": false,
+  "events": [
+    {
+      "event_id": "14ff1a61-6ba4-4b1c-95d8-7e9826b730c2",
+      "mode": "all_teams",
+      "stage": "archived",
+      "retention_expiry": {
+        "event_id": "14ff1a61-6ba4-4b1c-95d8-7e9826b730c2",
+        "native_completed_at": "2026-03-31T16:00:00Z",
+        "retention_days": 120,
+        "exclusive_deadline": "2026-07-29T16:00:00Z",
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      },
+      "retained_original_unused_repository": {
+        "team_id": "d11986bb-788d-4017-b7b6-0ac322ff64d2",
+        "name": "hackbox-14ff1a616ba44b1c95d87e9826b730c2-d11986bb788d4017b7b60ac322ff64d2",
+        "organization": "lifecycle-synthetic-org",
+        "github_repository_id": 1002,
+        "state": "ready",
+        "diagnostic": "",
+        "unused": true
+      },
+      "retired_cutoff_source": {
+        "team_id": "d11986bb-788d-4017-b7b6-0ac322ff64d2",
+        "source_id": "47b8f5a0-0141-416a-b9ad-c0b2b59f57ee",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "status": "withdrawn",
+        "cutoff": "2026-03-31T15:00:00Z",
+        "recorded_at": "2026-03-31T15:00:00Z",
+        "provider_unavailable_observations": 0
+      },
+      "executed_repository_receipt_guard": true,
+      "delivered_owned_reviews": [
+        {
+          "days": 30,
+          "review_id": "e3c77229-77c2-4afd-958a-777dfe24c61d",
+          "notification_id": "01a17d30-2028-7e3c-9d7d-dd7c5de30f56"
+        },
+        {
+          "days": 60,
+          "review_id": "ce5fa257-d710-4ab6-931c-45ac73b51d33",
+          "notification_id": "01a17d30-95a2-7e4a-8f14-3d2d662d32e2"
+        },
+        {
+          "days": 90,
+          "review_id": "7b92a47e-d439-4432-a866-9f0fe984bc54",
+          "notification_id": "01a17d30-99ac-7e78-8c7c-d97cada2d44f"
+        }
+      ]
+    },
+    {
+      "event_id": "8163380f-172f-4d4c-8de6-beafc2d9b560",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "retention_expiry": {
+        "event_id": "8163380f-172f-4d4c-8de6-beafc2d9b560",
+        "native_completed_at": "2026-03-31T16:00:00Z",
+        "retention_days": 120,
+        "exclusive_deadline": "2026-07-29T16:00:00Z",
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      },
+      "retained_original_unused_repository": {
+        "team_id": "36b80416-7de6-499d-bd39-b74c14b1a432",
+        "name": "hackbox-8163380f172f4d4c8de6beafc2d9b560-36b804167de6499dbd39b74c14b1a432",
+        "organization": "lifecycle-synthetic-org",
+        "github_repository_id": 1007,
+        "state": "ready",
+        "diagnostic": "",
+        "unused": true
+      },
+      "retired_cutoff_source": {
+        "team_id": "36b80416-7de6-499d-bd39-b74c14b1a432",
+        "source_id": "f8ac116f-e7bf-47e5-9b82-08a2fa6b97ae",
+        "native_outcome": "withdrawn",
+        "submission_revision": null,
+        "status": "withdrawn",
+        "cutoff": "2026-03-31T15:00:00Z",
+        "recorded_at": "2026-03-31T15:00:01Z",
+        "provider_unavailable_observations": 0
+      },
+      "executed_repository_receipt_guard": true,
+      "delivered_owned_reviews": [
+        {
+          "days": 30,
+          "review_id": "9458e7fa-a371-4232-9bf9-72f63c6ea456",
+          "notification_id": "01a17d30-2024-7df6-836f-0f47dfd774d0"
+        },
+        {
+          "days": 60,
+          "review_id": "8ccfa5fb-b8b6-47a4-b84c-a08cc01ab851",
+          "notification_id": "01a17d30-959f-736b-805e-0a36201274df"
+        },
+        {
+          "days": 90,
+          "review_id": "1f16a975-dab9-4cc1-b820-a27835344f2d",
+          "notification_id": "01a17d30-99a9-7aaf-8f73-91a2590a13aa"
+        }
+      ]
+    }
+  ],
+  "runner_log_sha256": "3547d2de2f170ef4979388f7bf0442541faa60ef88b7e3f9a8e84a4a0f2a2866",
+  "intent-journal_jsonl_sha256": "7c805cfa9abe98cd57c83ff2230de68cef40c90e933a6927aee6ea1f6f29dd8f",
+  "final_dump_sha256": "244c30916fc869cfdbc0cede70891e6894c4712784b97e56672132da20310a96"
+}
