@@ -1,0 +1,42 @@
+{
+  "issue": 325,
+  "fix_commit": "bc42e351",
+  "native_regression": {
+    "case": "actual amended-release HTTP with real PostgreSQL, race detection,4ms/query and observed native maintenance contention",
+    "before_http": 503,
+    "before_elapsed_seconds": 10.027464375,
+    "before_queries_before_cancellation": 1775,
+    "after_http": 200,
+    "after_elapsed_seconds": 6.690009667,
+    "after_queries": 1219,
+    "same_api_budget_seconds": 10,
+    "exact_original_acknowledgement_verified": true,
+    "authored_body_and_withheld_scores_verified": true
+  },
+  "native_owner_suite": {
+    "top_level_cases": 11,
+    "elapsed_seconds": 168.149,
+    "race_detector": true,
+    "result": "PASS"
+  },
+  "original_connected_journey": {
+    "source_revision": "c86b6b75196c31106f9afb6f53ec980642c77a61",
+    "source_worktree_clean": true,
+    "verification_image": "sha256:b959ebc556b66d2ad1ac1cd6ccae25b32fe7ba6a5398492b1333cf08d4ff2992",
+    "case": "journey",
+    "project": "hackbox-lifecycle-journey-1793100629-16198",
+    "actual_runner_exit_code": 0,
+    "complete_lifecycle": false,
+    "elapsed_seconds": 244.9,
+    "production_tree_identical_to_fix_commit": true,
+    "scope": "Actual previously failing feedback path plus both event modes through outcomes/archive/30-60-90 reviews. Additional final repository-helper and expiry assertions were not invoked in this execution and are not claimed.",
+    "runner_log_sha256": "0030f13058ee53f9bc8651215bb5d9cc5b4b045d5bc48afb4be4f0da6ba4c3cf",
+    "intent-journal_jsonl_sha256": "e1e1b19493014c0f40799ba1cbafe4a881a9e6ffdaacce8d4f0edf78822aee4c",
+    "final_dump_sha256": "b67e8eaa43f8fe85324f61479ad330596ed70e88f2f3b40fac04db8caaa27977"
+  },
+  "reviews": {
+    "standards_findings": 0,
+    "spec_implementation_findings": 0
+  },
+  "complete_issue120": false
+}
