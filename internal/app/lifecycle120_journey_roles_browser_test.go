@@ -50,7 +50,7 @@ type lifecycleBrowserRoleReceipt struct {
 	Stage                             string                     `json:"stage"`
 	UIStaffGrants                     int                        `json:"ui_staff_grants"`
 	Cases                             []lifecycleBrowserRoleCase `json:"cases"`
-	NativeChecks                      int                        `json:"native_checks"`
+	NativeEventChecks                 int                        `json:"native_event_checks"`
 	MentorRevocationCleared           bool                       `json:"mentor_revocation_cleared"`
 	OtherEventRetained                bool                       `json:"other_event_retained"`
 	NativeRevocationAndRestoreAudited bool                       `json:"native_revocation_and_restore_audited"`
@@ -344,26 +344,45 @@ func (r *lifecycleJourney) checkLiveRolesInBrowser(t *testing.T) {
 		receipt.UIStaffGrants += len(grants)
 	}
 	first := &r.events[0]
-	var captain, attendee *lifecycleClient
+	var captain, attendee, other *lifecycleClient
 	for _, team := range first.teams.Teams {
-		if team.ID != first.liveHelp.TeamID {
+		if team.State != "published" {
 			continue
 		}
-		if team.Captain != nil && lifecycleRoleMember(first, *team.Captain, team.ID) {
+		if team.Captain != nil && lifecycleRoleMember(first, *team.Captain, team.ID) &&
+			(captain == nil || team.ID == first.liveHelp.TeamID) {
 			captain = r.participant(t, *team.Captain)
 		}
-		for _, member := range team.Published {
-			if team.Captain != nil && member.ID != *team.Captain &&
-				lifecycleRoleMember(first, member.ID, team.ID) {
-				attendee = r.participant(t, member.ID)
-				break
+		if team.ID == first.liveHelp.TeamID {
+			for _, member := range team.Published {
+				if (team.Captain == nil || member.ID != *team.Captain) &&
+					lifecycleRoleMember(first, member.ID, team.ID) {
+					attendee = r.participant(t, member.ID)
+					break
+				}
 			}
 		}
 	}
 	if captain == nil || attendee == nil {
 		t.Fatal("live role matrix lacks distinct current captain and teammate")
 	}
-	_, other, _ := r.feedbackReaders(t, first, first.liveHelp.TeamID)
+	for _, team := range first.teams.Teams {
+		if team.ID == first.liveHelp.TeamID || team.State != "published" {
+			continue
+		}
+		for _, member := range team.Published {
+			if member.ID != captain.person && lifecycleRoleMember(first, member.ID, team.ID) {
+				other = r.participant(t, member.ID)
+				break
+			}
+		}
+		if other != nil {
+			break
+		}
+	}
+	if other == nil {
+		t.Fatal("live role matrix lacks a distinct current other-team attendee")
+	}
 	actorAlias := func(client *lifecycleClient) string {
 		for index, c := range first.cohort.clients {
 			if c.person == client.person {
@@ -446,7 +465,7 @@ func (r *lifecycleJourney) checkLiveRolesInBrowser(t *testing.T) {
 			&lifecycleBrowserRolesPhase{EventName: first.view.Name, Case: &current},
 		)
 		r.verifyRoleCase(t, client, current)
-		receipt.NativeChecks += len(current.Checks)
+		receipt.NativeEventChecks += len(current.Checks)
 		receipt.Cases = append(receipt.Cases, current)
 	}
 	mentor := first.cohort.staff["mentor-a"]

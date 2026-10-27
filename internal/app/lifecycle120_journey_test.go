@@ -305,7 +305,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "role-matrix" {
 		proof := run.liveRoles
 		if proof == nil || proof.UIStaffGrants != 6 || len(proof.Cases) != 12 ||
-			proof.NativeChecks != 24 ||
+			proof.NativeEventChecks != 24 ||
 			!proof.MentorRevocationCleared ||
 			!proof.OtherEventRetained ||
 			!proof.NativeRevocationAndRestoreAudited {
