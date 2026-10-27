@@ -40,9 +40,11 @@ func admitLifecycleCohort(
 }
 
 type lifecycleAdmissionActions struct {
-	Open   func() (event.View, error)
-	Apply  func(string, *lifecycleClient, registration.FormView) (registration.View, error)
-	Select func(string, registration.View) (registration.View, error)
+	Open    func() (event.View, error)
+	Apply   func(string, *lifecycleClient, registration.FormView) (registration.View, error)
+	Select  func(string, registration.View) (registration.View, error)
+	Go      func() (event.View, error)
+	Respond func(string, *lifecycleClient, registration.View, string) (registration.View, error)
 }
 
 func admitLifecycleCohortChecking(
@@ -244,7 +246,11 @@ func admitLifecycleCohortWithActions(
 			cohort.census["minimum_reached_without_auto_advance"] = current.ConfirmedAttendees
 		}
 	}
-	current, err = lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusOK)
+	if actions != nil && actions.Go != nil {
+		current, err = actions.Go()
+	} else {
+		current, err = lifecycleTransition(ctx, owner, current.ID, "preparation", http.StatusOK)
+	}
 	if err != nil {
 		return cohort, err
 	}
@@ -256,15 +262,20 @@ func admitLifecycleCohortWithActions(
 	// offer. Accept through its owner before admission closes, during preparation.
 	departed := cohort.registrations[34]
 	var withdrawn registration.View
-	if err := cohort.clients[34].call(
-		ctx,
-		http.MethodPost,
-		base+"/registrations/"+departed.ID.String()+"/respond",
-		departed.Revision,
-		map[string]string{"action": "withdraw"},
-		&withdrawn,
-		http.StatusOK,
-	); err != nil {
+	if actions != nil && actions.Respond != nil {
+		withdrawn, err = actions.Respond("attendee-35", cohort.clients[34], departed, "withdraw")
+	} else {
+		err = cohort.clients[34].call(
+			ctx,
+			http.MethodPost,
+			base+"/registrations/"+departed.ID.String()+"/respond",
+			departed.Revision,
+			map[string]string{"action": "withdraw"},
+			&withdrawn,
+			http.StatusOK,
+		)
+	}
+	if err != nil {
 		return cohort, err
 	}
 	cohort.registrations[34] = withdrawn
@@ -300,15 +311,20 @@ func admitLifecycleCohortWithActions(
 	}
 	cohort.census["pending_offer_excluded_confirmed"] = current.ConfirmedAttendees
 	var accepted registration.View
-	if err := cohort.clients[35].call(
-		ctx,
-		http.MethodPost,
-		base+"/registrations/"+own.Items[0].ID.String()+"/respond",
-		own.Items[0].Revision,
-		map[string]string{"action": "accept"},
-		&accepted,
-		http.StatusOK,
-	); err != nil {
+	if actions != nil && actions.Respond != nil {
+		accepted, err = actions.Respond("attendee-36", cohort.clients[35], own.Items[0], "accept")
+	} else {
+		err = cohort.clients[35].call(
+			ctx,
+			http.MethodPost,
+			base+"/registrations/"+own.Items[0].ID.String()+"/respond",
+			own.Items[0].Revision,
+			map[string]string{"action": "accept"},
+			&accepted,
+			http.StatusOK,
+		)
+	}
+	if err != nil {
 		return cohort, err
 	}
 	cohort.registrations[35] = accepted

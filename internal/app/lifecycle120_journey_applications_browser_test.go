@@ -43,9 +43,7 @@ type lifecycleBrowserApplicationReceipt struct {
 func (r *lifecycleJourney) admissionBrowserPhase(
 	t *testing.T,
 	item *lifecycleJourneyEvent,
-	sequence int,
-	action string,
-	application *lifecycleBrowserApplication,
+	phase lifecycleBrowserPhase,
 ) lifecycleBrowserAcknowledgement {
 	t.Helper()
 	var clock struct {
@@ -54,16 +52,9 @@ func (r *lifecycleJourney) admissionBrowserPhase(
 	if err := r.control.call(t.Context(), http.MethodGet, "/clock", nil, &clock); err != nil {
 		t.Fatal(err)
 	}
-	return r.awaitBrowserPhase(
-		t,
-		lifecycleBrowserPhase{
-			Sequence:    sequence,
-			Action:      action,
-			EventID:     item.view.ID,
-			Now:         clock.Now,
-			Application: application,
-		},
-	)
+	phase.EventID = item.view.ID
+	phase.Now = clock.Now
+	return r.awaitBrowserPhase(t, phase)
 }
 
 func (r *lifecycleJourney) browserAdmissionActions(
@@ -77,9 +68,49 @@ func (r *lifecycleJourney) browserAdmissionActions(
 	}
 	base := 200 + index*20
 	return &lifecycleAdmissionActions{
+		Go: func() (event.View, error) {
+			before := r.readRoleEvent(t, item)
+			ack := r.admissionBrowserPhase(
+				t,
+				item,
+				lifecycleBrowserPhase{Sequence: base + 13, Action: "competition-go"},
+			)
+			after := r.readRoleEvent(t, item)
+			if !ack.Saved || before.Stage != "registration" || after.Stage != "preparation" ||
+				before.ConfirmedAttendees != 35 || after.ConfirmedAttendees != 35 || after.Revision != before.Revision+1 ||
+				!reflect.DeepEqual(after.Configuration, before.Configuration) {
+				t.Fatal(
+					"UI go decision lost exact native stage, revision, configuration or confirmed census",
+				)
+			}
+			item.browserAdmissionDecisions = append(
+				item.browserAdmissionDecisions,
+				"competition-go",
+			)
+			return after, nil
+		},
+		Respond: func(alias string, actor *lifecycleClient, application registration.View, action string) (registration.View, error) {
+			sequence := base + 14
+			if action == "accept" {
+				sequence++
+			}
+			return r.respondToAdmissionInBrowser(
+				t,
+				item,
+				actor,
+				sequence,
+				lifecycleBrowserAdmissionResponse{
+					Actor: alias, Application: application, Action: action,
+				},
+			), nil
+		},
 		Open: func() (event.View, error) {
 			before := r.readRoleEvent(t, item)
-			ack := r.admissionBrowserPhase(t, item, base, "open-registration", nil)
+			ack := r.admissionBrowserPhase(
+				t,
+				item,
+				lifecycleBrowserPhase{Sequence: base, Action: "open-registration"},
+			)
 			if !ack.Saved {
 				t.Fatal("registration opening lacks its UI command")
 			}
@@ -159,7 +190,15 @@ func (r *lifecycleJourney) applyRegistrationInBrowser(
 	input lifecycleBrowserApplication,
 ) registration.View {
 	t.Helper()
-	ack := r.admissionBrowserPhase(t, item, sequence, "apply-registration", &input)
+	ack := r.admissionBrowserPhase(
+		t,
+		item,
+		lifecycleBrowserPhase{
+			Sequence:    sequence,
+			Action:      "apply-registration",
+			Application: &input,
+		},
+	)
 	if !ack.Saved || ack.ApplicationID == nil {
 		t.Fatal("registration phase lacks a real saved application")
 	}
@@ -239,19 +278,9 @@ func (r *lifecycleJourney) selectFacilitatorInBrowser(
 	input lifecycleBrowserSelection,
 ) registration.View {
 	t.Helper()
-	var clock struct {
-		Now time.Time `json:"now"`
-	}
-	if err := r.control.call(t.Context(), http.MethodGet, "/clock", nil, &clock); err != nil {
-		t.Fatal(err)
-	}
 	before := r.readRoleEvent(t, item)
-	ack := r.awaitBrowserPhase(t, lifecycleBrowserPhase{
-		Sequence:  sequence,
-		Action:    "select-facilitator",
-		EventID:   item.view.ID,
-		Now:       clock.Now,
-		Selection: &input,
+	ack := r.admissionBrowserPhase(t, item, lifecycleBrowserPhase{
+		Sequence: sequence, Action: "select-facilitator", Selection: &input,
 	})
 	if !ack.Saved || ack.ApplicationID == nil || *ack.ApplicationID != input.Application.ID {
 		t.Fatal("facilitator selection lacks its exact UI command")
@@ -269,7 +298,8 @@ func (r *lifecycleJourney) selectFacilitatorInBrowser(
 		t.Fatal(err)
 	}
 	current := detail.Applicant.Registration
-	if current.ID != input.Application.ID || current.EventID != item.view.ID || current.PersonID != input.Application.PersonID ||
+	if current.ID != input.Application.ID || current.EventID != item.view.ID ||
+		current.PersonID != input.Application.PersonID ||
 		current.FormID != input.Application.FormID ||
 		current.FormVersion != input.Application.FormVersion ||
 		current.Audience != input.Application.Audience ||

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -36,6 +37,7 @@ type lifecycleJourneyEvent struct {
 
 	browserApplications       []lifecycleBrowserApplicationReceipt
 	browserSelections         []lifecycleBrowserSelectionReceipt
+	browserAdmissionDecisions []string
 	browserRegistrationOpened bool
 	browserEventCreated       bool
 	browserBrandVerified      bool
@@ -322,7 +324,11 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
 			if !item.browserEventCreated || !item.browserRegistrationOpened ||
-				len(item.browserApplications) != 4 || len(item.browserSelections) != 2 {
+				len(item.browserApplications) != 4 || len(item.browserSelections) != 2 ||
+				!reflect.DeepEqual(
+					item.browserAdmissionDecisions,
+					[]string{"competition-go", "withdraw", "accept"},
+				) {
 				t.Fatal("required native event was not created through the Fleet UI")
 			}
 		}
@@ -360,6 +366,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		FailedMessage             lifecycleFailedMessageReceipt        `json:"failed_message"`
 		BrowserApplications       []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
 		BrowserSelections         []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserAdmissionDecisions []string                             `json:"browser_admission_decisions,omitempty"`
 		BrowserRegistrationOpened bool                                 `json:"browser_registration_opened"`
 		BrowserEventCreated       bool                                 `json:"browser_event_created"`
 		BrowserBrandVerified      bool                                 `json:"browser_brand_verified"`
@@ -440,6 +447,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				FailedMessage:             item.failedMessage,
 				BrowserBrandVerified:      item.browserBrandVerified,
 				BrowserEventCreated:       item.browserEventCreated,
+				BrowserAdmissionDecisions: item.browserAdmissionDecisions,
 				BrowserRegistrationOpened: item.browserRegistrationOpened,
 				BrowserApplications:       item.browserApplications,
 				BrowserSelections:         item.browserSelections,

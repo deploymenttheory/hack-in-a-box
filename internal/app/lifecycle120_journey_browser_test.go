@@ -20,17 +20,18 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	Sequence    int                          `json:"sequence"`
-	Action      string                       `json:"action"`
-	EventID     uuid.UUID                    `json:"event_id"`
-	Now         time.Time                    `json:"domain_now"`
-	Primary     string                       `json:"primary"`
-	Actor       string                       `json:"actor,omitempty"`
-	TeamID      *uuid.UUID                   `json:"team_id,omitempty"`
-	Roles       *lifecycleBrowserRolesPhase  `json:"roles,omitempty"`
-	Create      *lifecycleBrowserCreateEvent `json:"create,omitempty"`
-	Application *lifecycleBrowserApplication `json:"application,omitempty"`
-	Selection   *lifecycleBrowserSelection   `json:"selection,omitempty"`
+	Sequence    int                                `json:"sequence"`
+	Action      string                             `json:"action"`
+	EventID     uuid.UUID                          `json:"event_id"`
+	Now         time.Time                          `json:"domain_now"`
+	Primary     string                             `json:"primary"`
+	Actor       string                             `json:"actor,omitempty"`
+	TeamID      *uuid.UUID                         `json:"team_id,omitempty"`
+	Roles       *lifecycleBrowserRolesPhase        `json:"roles,omitempty"`
+	Create      *lifecycleBrowserCreateEvent       `json:"create,omitempty"`
+	Application *lifecycleBrowserApplication       `json:"application,omitempty"`
+	Selection   *lifecycleBrowserSelection         `json:"selection,omitempty"`
+	Response    *lifecycleBrowserAdmissionResponse `json:"response,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
@@ -224,7 +225,8 @@ func (r *lifecycleJourney) recoverLiveHelpInBrowser(t *testing.T) {
 		t.Fatal(err)
 	}
 	request := current.Request
-	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID || request.RequesterID != own.person ||
+	if request.EventID != item.view.ID || request.TeamID != item.liveHelp.TeamID ||
+		request.RequesterID != own.person ||
 		request.Category != "competition_output" ||
 		request.Description != "PRIVATE synthetic browser recovery help" ||
 		request.Location != "Synthetic recovery desk" ||
