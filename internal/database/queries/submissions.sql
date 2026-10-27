@@ -4,6 +4,19 @@ SELECT * FROM competition_entries WHERE event_id=$1 AND team_id=$2;
 -- name: SubmissionEntries :many
 SELECT e.*,t.state AS team_state,t.name AS team_name FROM competition_entries e JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id WHERE e.event_id=$1 ORDER BY e.team_id;
 
+-- name: SubmissionSettlementCensus :many
+SELECT e.team_id,e.active,t.state AS team_state,
+       (s.team_id IS NULL)::boolean AS state_missing,
+       COALESCE(s.revision,0)::bigint AS state_revision,
+       s.active_revision,COALESCE(s.outcome,'open')::text AS outcome,s.frozen_at,
+       COALESCE(f.submissions_ready,false)::boolean AS submissions_ready,
+       COALESCE(f.settled_submissions,0)::integer AS settled_submissions
+FROM competition_entries e
+JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id
+LEFT JOIN submission_states s ON s.event_id=e.event_id AND s.team_id=e.team_id
+LEFT JOIN event_gate_facts f ON f.event_id=e.event_id
+WHERE e.event_id=$1 ORDER BY e.team_id;
+
 -- name: EnsureSubmissionState :exec
 INSERT INTO submission_states(event_id,team_id) VALUES($1,$2) ON CONFLICT DO NOTHING;
 

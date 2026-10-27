@@ -17,11 +17,21 @@ import (
 // before assessment transitions. The logical freeze instant is the cutoff even
 // when maintenance observes it later. No external repository content is inferred.
 func (s Service) Settle(ctx context.Context, tx pgx.Tx, row dbgen.Event, now time.Time) error {
-	q := dbgen.New(tx)
-	locked, err := q.LockEvent(ctx, row.ID)
+	locked, err := dbgen.New(tx).LockEvent(ctx, row.ID)
 	if err != nil {
 		return fmt.Errorf("lock final outcomes: %w", err)
 	}
+	return s.settleLocked(ctx, tx, locked, now)
+}
+
+// Only callers that already hold this exact event row lock may use this seam.
+func (s Service) settleLocked(
+	ctx context.Context,
+	tx pgx.Tx,
+	locked dbgen.Event,
+	now time.Time,
+) error {
+	q := dbgen.New(tx)
 	// Archived competition facts are immutable, including absent outcomes for
 	// never-held events. A late maintenance/read must not invent a result.
 	if locked.Stage == "archived" {
@@ -31,25 +41,39 @@ func (s Service) Settle(ctx context.Context, tx pgx.Tx, row dbgen.Event, now tim
 	if err != nil {
 		return err
 	}
-	entries, err := q.SubmissionEntries(ctx, row.ID)
+	// Source owners can revalidate many cards in one event transaction. Read the
+	// current entry/state census together rather than reinitialising and loading
+	// every team's unchanged state on each nested validation. The event lock still
+	// serialises withdrawals, new states, cutoff settlement and gate facts.
+	entries, err := q.SubmissionSettlementCensus(ctx, locked.ID)
 	if err != nil {
 		return fmt.Errorf("read final outcome teams: %w", err)
 	}
 	due := !c.SubmissionCutoff.IsZero() && !now.Before(c.SubmissionCutoff)
 	var settled int32
 	for _, e := range entries {
-		if err = q.EnsureSubmissionState(
-			ctx,
-			dbgen.EnsureSubmissionStateParams{EventID: row.ID, TeamID: e.TeamID},
-		); err != nil {
-			return fmt.Errorf("initialize final outcome: %w", err)
+		state := dbgen.SubmissionState{
+			EventID:        locked.ID,
+			TeamID:         e.TeamID,
+			Revision:       e.StateRevision,
+			ActiveRevision: e.ActiveRevision,
+			Outcome:        e.Outcome,
+			FrozenAt:       e.FrozenAt,
 		}
-		state, err := q.SubmissionState(
-			ctx,
-			dbgen.SubmissionStateParams{EventID: row.ID, TeamID: e.TeamID},
-		)
-		if err != nil {
-			return fmt.Errorf("read final outcome: %w", err)
+		if e.StateMissing {
+			if err = q.EnsureSubmissionState(
+				ctx,
+				dbgen.EnsureSubmissionStateParams{EventID: locked.ID, TeamID: e.TeamID},
+			); err != nil {
+				return fmt.Errorf("initialize final outcome: %w", err)
+			}
+			state, err = q.SubmissionState(
+				ctx,
+				dbgen.SubmissionStateParams{EventID: locked.ID, TeamID: e.TeamID},
+			)
+			if err != nil {
+				return fmt.Errorf("read final outcome: %w", err)
+			}
 		}
 		active := e.Active && e.TeamState != "disbanded"
 		outcome := state.Outcome
@@ -79,8 +103,9 @@ func (s Service) Settle(ctx context.Context, tx pgx.Tx, row dbgen.Event, now tim
 			settled++
 		}
 	}
-	if due {
-		if err = event.RecordSubmissionFacts(ctx, tx, row.ID, settled); err != nil {
+	if due &&
+		(len(entries) == 0 || !entries[0].SubmissionsReady || entries[0].SettledSubmissions != settled) {
+		if err = event.RecordSubmissionFacts(ctx, tx, locked.ID, settled); err != nil {
 			return fmt.Errorf("supply assessment outcomes: %w", err)
 		}
 	}

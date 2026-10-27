@@ -24,46 +24,33 @@ func TeamPermissions(
 	actor, eventID, teamID uuid.UUID,
 ) (TeamAuthority, error) {
 	var a TeamAuthority
-	p, err := q.Person(ctx, actor)
-	if err != nil || !p.Active {
-		return a, ErrForbidden
-	}
-	entry, err := q.CompetitionEntry(
+	// Resolve the basic current scope atomically. Nested assessment/source
+	// validators still call this policy afresh; no authority is cached between
+	// requests, actors or transactions. Assignment-specific checks remain below.
+	current, err := q.SubmissionTeamAuthorityScope(
 		ctx,
-		dbgen.CompetitionEntryParams{EventID: eventID, TeamID: teamID},
+		dbgen.SubmissionTeamAuthorityScopeParams{EventID: eventID, TeamID: teamID, PersonID: actor},
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
+		return a, ErrForbidden
+	}
+	if err != nil {
+		return a, fmt.Errorf("read current submission authority: %w", err)
+	}
+	if !current.PersonActive {
+		return a, ErrForbidden
+	}
+	if !current.EntryExists {
 		return a, ErrNotFound
 	}
-	if err != nil {
-		return a, fmt.Errorf("load entry authority: %w", err)
+	if current.TeamState == "" {
+		return a, fmt.Errorf("load submission team: %w", pgx.ErrNoRows)
 	}
-	team, err := q.HackTeam(ctx, dbgen.HackTeamParams{EventID: eventID, ID: teamID})
-	if err != nil {
-		return a, fmt.Errorf("load submission team: %w", err)
-	}
-	a.Active = entry.Active && team.State != "disbanded"
-	roles, err := q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
-	if err != nil {
-		return a, fmt.Errorf("read submission grants: %w", err)
-	}
+	a.Active = current.EntryActive && current.TeamState != "disbanded"
+	roles := current.Roles
 	a.Organiser = slices.Contains(roles, "organiser")
-	membership, err := q.TeamAssignment(
-		ctx,
-		dbgen.TeamAssignmentParams{EventID: eventID, PersonID: actor, Snapshot: "published"},
-	)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return a, fmt.Errorf("read current submission membership: %w", err)
-	}
-	if err == nil && membership.TeamID == teamID && a.Active {
-		claim, err := q.CompetitionState(
-			ctx,
-			dbgen.CompetitionStateParams{EventID: eventID, PersonID: actor},
-		)
-		if err != nil {
-			return a, fmt.Errorf("check current competitor place: %w", err)
-		}
-		a.Member = claim == "confirmed"
+	if current.PublishedMember && a.Active {
+		a.Member = current.CompetitionState == "confirmed"
 	}
 	if slices.Contains(roles, "mentor") && a.Active {
 		a.Mentor, err = q.ResourceAssigned(
@@ -77,7 +64,11 @@ func TeamPermissions(
 	if slices.Contains(roles, "mentor") && a.Active {
 		a.Reviewer, err = q.ResourceAssigned(
 			ctx,
-			dbgen.ResourceAssignedParams{EventID: eventID, ResourceID: entry.ID, PersonID: actor},
+			dbgen.ResourceAssignedParams{
+				EventID:    eventID,
+				ResourceID: current.EntryID,
+				PersonID:   actor,
+			},
 		)
 		if err != nil {
 			return a, fmt.Errorf("check assigned second reviewer: %w", err)
@@ -86,7 +77,11 @@ func TeamPermissions(
 	if slices.Contains(roles, "judge") && a.Active {
 		a.Judge, err = q.ResourceAssigned(
 			ctx,
-			dbgen.ResourceAssignedParams{EventID: eventID, ResourceID: entry.ID, PersonID: actor},
+			dbgen.ResourceAssignedParams{
+				EventID:    eventID,
+				ResourceID: current.EntryID,
+				PersonID:   actor,
+			},
 		)
 		if err != nil {
 			return a, fmt.Errorf("check assigned judge: %w", err)

@@ -3,10 +3,12 @@ package access
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/database/dbgen"
 )
@@ -24,22 +26,20 @@ func ContentReader(
 	q *dbgen.Queries,
 	actor, eventID uuid.UUID,
 ) (roles []string, confirmed bool, err error) {
-	p, err := q.Person(ctx, actor)
-	if err != nil || !p.Active {
+	current, err := q.ContentReaderScope(
+		ctx,
+		dbgen.ContentReaderScopeParams{EventID: eventID, PersonID: actor},
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, false, ErrForbidden
 	}
-	roles, err = q.ActiveRoles(ctx, dbgen.ActiveRolesParams{EventID: eventID, PersonID: actor})
 	if err != nil {
-		return nil, false, fmt.Errorf("read content roles: %w", err)
+		return nil, false, fmt.Errorf("read current content scope: %w", err)
 	}
-	claim, err := q.CompetitionState(
-		ctx,
-		dbgen.CompetitionStateParams{EventID: eventID, PersonID: actor},
-	)
-	if err != nil {
-		return nil, false, fmt.Errorf("read content attendance: %w", err)
+	if !current.PersonActive {
+		return nil, false, ErrForbidden
 	}
-	return roles, claim == "confirmed", nil
+	return current.Roles, current.CompetitionState == "confirmed", nil
 }
 
 // ContentVersionForReader returns zero when the item must be undiscoverable.

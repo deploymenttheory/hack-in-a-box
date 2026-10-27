@@ -111,6 +111,33 @@ func (q *Queries) CompetitionState(ctx context.Context, arg CompetitionStatePara
 	return column_1, err
 }
 
+const contentReaderScope = `-- name: ContentReaderScope :one
+SELECT p.active AS person_active,
+       ARRAY(SELECT m.role FROM event_memberships m WHERE m.event_id=$1 AND m.person_id=p.id AND m.active ORDER BY m.role)::text[] AS roles,
+       COALESCE(c.state,'')::text AS competition_state
+FROM people p
+LEFT JOIN competition_claims c ON c.event_id=$1 AND c.person_id=p.id
+WHERE p.id=$2
+`
+
+type ContentReaderScopeParams struct {
+	EventID  uuid.UUID
+	PersonID uuid.UUID
+}
+
+type ContentReaderScopeRow struct {
+	PersonActive     bool
+	Roles            []string
+	CompetitionState string
+}
+
+func (q *Queries) ContentReaderScope(ctx context.Context, arg ContentReaderScopeParams) (ContentReaderScopeRow, error) {
+	row := q.db.QueryRow(ctx, contentReaderScope, arg.EventID, arg.PersonID)
+	var i ContentReaderScopeRow
+	err := row.Scan(&i.PersonActive, &i.Roles, &i.CompetitionState)
+	return i, err
+}
+
 const currentJudgeAssignment = `-- name: CurrentJudgeAssignment :one
 SELECT COALESCE(NOT EXISTS(SELECT 1 FROM judge_rounds r WHERE r.event_id=$1)
 OR EXISTS(SELECT 1 FROM judge_assignments a WHERE a.event_id=$1 AND a.team_id=$2 AND a.person_id=$3 AND a.active),false)::boolean AS allowed
@@ -305,6 +332,53 @@ func (q *Queries) SetMembership(ctx context.Context, arg SetMembershipParams) er
 		arg.Active,
 	)
 	return err
+}
+
+const submissionTeamAuthorityScope = `-- name: SubmissionTeamAuthorityScope :one
+SELECT p.active AS person_active,(e.id IS NOT NULL)::boolean AS entry_exists,
+       COALESCE(e.id,'00000000-0000-0000-0000-000000000000'::uuid)::uuid AS entry_id,
+       COALESCE(e.active,false)::boolean AS entry_active,COALESCE(t.state,'')::text AS team_state,
+       ARRAY(SELECT em.role FROM event_memberships em WHERE em.event_id=$1 AND em.person_id=p.id AND em.active ORDER BY em.role)::text[] AS roles,
+       (m.person_id IS NOT NULL)::boolean AS published_member,COALESCE(c.state,'')::text AS competition_state
+FROM people p
+LEFT JOIN competition_entries e ON e.event_id=$1 AND e.team_id=$2
+LEFT JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id
+LEFT JOIN hack_team_members m ON m.event_id=e.event_id AND m.team_id=e.team_id AND m.person_id=p.id AND m.snapshot='published'
+LEFT JOIN competition_claims c ON c.event_id=e.event_id AND c.person_id=p.id
+WHERE p.id=$3
+`
+
+type SubmissionTeamAuthorityScopeParams struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+}
+
+type SubmissionTeamAuthorityScopeRow struct {
+	PersonActive     bool
+	EntryExists      bool
+	EntryID          uuid.UUID
+	EntryActive      bool
+	TeamState        string
+	Roles            []string
+	PublishedMember  bool
+	CompetitionState string
+}
+
+func (q *Queries) SubmissionTeamAuthorityScope(ctx context.Context, arg SubmissionTeamAuthorityScopeParams) (SubmissionTeamAuthorityScopeRow, error) {
+	row := q.db.QueryRow(ctx, submissionTeamAuthorityScope, arg.EventID, arg.TeamID, arg.PersonID)
+	var i SubmissionTeamAuthorityScopeRow
+	err := row.Scan(
+		&i.PersonActive,
+		&i.EntryExists,
+		&i.EntryID,
+		&i.EntryActive,
+		&i.TeamState,
+		&i.Roles,
+		&i.PublishedMember,
+		&i.CompetitionState,
+	)
+	return i, err
 }
 
 const visibleEvent = `-- name: VisibleEvent :one

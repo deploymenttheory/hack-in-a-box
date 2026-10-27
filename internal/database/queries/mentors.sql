@@ -17,6 +17,25 @@ ON CONFLICT(event_id,person_id) DO UPDATE SET skills=EXCLUDED.skills,availabilit
 -- name: MentorConflicts :many
 SELECT * FROM mentor_conflicts WHERE event_id=$1 ORDER BY mentor_id,competitor_id,kind;
 
+-- name: MentorPanelTeamAuthority :one
+SELECT EXISTS (
+ SELECT 1 FROM hack_teams t
+ WHERE t.event_id=sqlc.arg(event_id) AND t.id=sqlc.arg(team_id) AND t.state='published'
+ AND NOT EXISTS (
+  SELECT 1 FROM hack_team_members m
+  WHERE m.event_id=t.event_id AND m.team_id=t.id
+  AND (m.person_id=sqlc.arg(person_id) OR EXISTS (
+   SELECT 1 FROM mentor_conflicts c
+   WHERE c.event_id=m.event_id AND c.mentor_id=sqlc.arg(person_id) AND c.competitor_id=m.person_id
+  ))
+ )
+) AS eligible,
+EXISTS (
+ SELECT 1 FROM mentor_assignments a
+ WHERE a.event_id=sqlc.arg(event_id) AND a.team_id=sqlc.arg(team_id)
+ AND a.person_id=sqlc.arg(person_id) AND a.snapshot='published'
+) AS assigned;
+
 -- name: SetMentorConflict :exec
 INSERT INTO mentor_conflicts(event_id,mentor_id,competitor_id,kind) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING;
 

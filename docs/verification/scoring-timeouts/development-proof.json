@@ -1,0 +1,22 @@
+{
+  "base_revision": "277c3e4095c56dcc2ecfcdf93ddc7f6c116f8ad3",
+  "source_attribution": "uncommitted development delta before final formatting/rebase; final-head verification pending",
+  "reproduction": "TestQualificationFiveTeamSaveWithDatabaseRoundTripCost",
+  "per_query_cost_ms": 4,
+  "request_timeout_seconds": 10,
+  "baseline_red_runs": 2,
+  "baseline_control_query_count": 2770,
+  "baseline_control_cost_ms": 1,
+  "candidate_green_seconds": [
+    6.585751875,
+    6.548060916
+  ],
+  "candidate_green_query_counts": [
+    1320,
+    1320
+  ],
+  "original_acknowledgement_checked": true,
+  "private_red_log_sha256": "66ee52f0093e5495ec36beddc3da2f605d008dac24b45aa8be4e7c97e7410f34",
+  "full_lifecycle_verified": false,
+  "final_ci_verified": false
+}

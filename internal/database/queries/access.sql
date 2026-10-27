@@ -5,6 +5,27 @@ WHERE m.event_id=$1 ORDER BY p.display_name,m.person_id,m.role;
 -- name: ActiveRoles :many
 SELECT role FROM event_memberships WHERE event_id=$1 AND person_id=$2 AND active ORDER BY role;
 
+-- name: ContentReaderScope :one
+SELECT p.active AS person_active,
+       ARRAY(SELECT m.role FROM event_memberships m WHERE m.event_id=sqlc.arg(event_id) AND m.person_id=p.id AND m.active ORDER BY m.role)::text[] AS roles,
+       COALESCE(c.state,'')::text AS competition_state
+FROM people p
+LEFT JOIN competition_claims c ON c.event_id=sqlc.arg(event_id) AND c.person_id=p.id
+WHERE p.id=sqlc.arg(person_id);
+
+-- name: SubmissionTeamAuthorityScope :one
+SELECT p.active AS person_active,(e.id IS NOT NULL)::boolean AS entry_exists,
+       COALESCE(e.id,'00000000-0000-0000-0000-000000000000'::uuid)::uuid AS entry_id,
+       COALESCE(e.active,false)::boolean AS entry_active,COALESCE(t.state,'')::text AS team_state,
+       ARRAY(SELECT em.role FROM event_memberships em WHERE em.event_id=sqlc.arg(event_id) AND em.person_id=p.id AND em.active ORDER BY em.role)::text[] AS roles,
+       (m.person_id IS NOT NULL)::boolean AS published_member,COALESCE(c.state,'')::text AS competition_state
+FROM people p
+LEFT JOIN competition_entries e ON e.event_id=sqlc.arg(event_id) AND e.team_id=sqlc.arg(team_id)
+LEFT JOIN hack_teams t ON t.event_id=e.event_id AND t.id=e.team_id
+LEFT JOIN hack_team_members m ON m.event_id=e.event_id AND m.team_id=e.team_id AND m.person_id=p.id AND m.snapshot='published'
+LEFT JOIN competition_claims c ON c.event_id=e.event_id AND c.person_id=p.id
+WHERE p.id=sqlc.arg(person_id);
+
 -- name: SetMembership :exec
 INSERT INTO event_memberships(event_id,person_id,role,active) VALUES ($1,$2,$3,$4)
 ON CONFLICT(event_id,person_id,role) DO UPDATE SET active=EXCLUDED.active,changed_at=now();

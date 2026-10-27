@@ -76,17 +76,15 @@ func AuthorizeModerationPanelInTransaction(
 	tx pgx.Tx,
 	actor, eventID, teamID uuid.UUID,
 ) error {
-	roles, page, err := panelActorInTransaction(ctx, tx, actor, eventID, teamID)
+	roles, assigned, err := panelActorInTransaction(ctx, tx, actor, eventID, teamID)
 	if err != nil {
 		return err
 	}
 	if slices.Contains(roles, "organiser") {
 		return nil
 	}
-	for _, a := range page.Published {
-		if a.TeamID == teamID && a.PersonID == actor {
-			return nil
-		}
+	if assigned {
+		return nil
 	}
 	return access.ErrForbidden
 }
@@ -108,28 +106,32 @@ func panelActorInTransaction(
 	ctx context.Context,
 	tx pgx.Tx,
 	actor, eventID, teamID uuid.UUID,
-) ([]string, Page, error) {
-	var empty Page
+) ([]string, bool, error) {
 	q := dbgen.New(tx)
 	row, err := q.LockEvent(ctx, eventID)
 	if err != nil {
-		return nil, empty, fmt.Errorf("lock panel authority: %w", err)
+		return nil, false, fmt.Errorf("lock panel authority: %w", err)
 	}
 	roles, _, err := access.ContentReader(ctx, q, actor, eventID)
 	if err != nil {
-		return nil, empty, fmt.Errorf("qualification panel actor: %w", err)
+		return nil, false, fmt.Errorf("qualification panel actor: %w", err)
 	}
 	if !slices.Contains(roles, "organiser") && !slices.Contains(roles, "mentor") {
-		return nil, empty, access.ErrForbidden
+		return nil, false, access.ErrForbidden
 	}
-	page, snapshot, err := load(ctx, q, row)
+	// Panel authority depends on this current team, membership/conflicts and
+	// published assignment. Full capacity/availability coverage is separately
+	// enforced by ReviewCoverageInTransaction; loading its planning snapshot here
+	// repeats unrelated work for every nested final-card/source validation.
+	current, err := q.MentorPanelTeamAuthority(
+		ctx,
+		dbgen.MentorPanelTeamAuthorityParams{EventID: row.ID, TeamID: teamID, PersonID: actor},
+	)
 	if err != nil {
-		return nil, empty, fmt.Errorf("qualification panel actor: %w", err)
+		return nil, false, fmt.Errorf("qualification panel actor: %w", err)
 	}
-	for _, team := range snapshot.Teams {
-		if team.ID == teamID && team.Published && !conflicted(snapshot.Conflicts, team, actor) {
-			return roles, page, nil
-		}
+	if current.Eligible {
+		return roles, current.Assigned, nil
 	}
-	return nil, empty, access.ErrForbidden
+	return nil, false, access.ErrForbidden
 }

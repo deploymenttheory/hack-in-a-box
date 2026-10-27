@@ -139,6 +139,44 @@ func (q *Queries) MentorDefaultCapacity(ctx context.Context, eventID uuid.UUID) 
 	return column_1, err
 }
 
+const mentorPanelTeamAuthority = `-- name: MentorPanelTeamAuthority :one
+SELECT EXISTS (
+ SELECT 1 FROM hack_teams t
+ WHERE t.event_id=$1 AND t.id=$2 AND t.state='published'
+ AND NOT EXISTS (
+  SELECT 1 FROM hack_team_members m
+  WHERE m.event_id=t.event_id AND m.team_id=t.id
+  AND (m.person_id=$3 OR EXISTS (
+   SELECT 1 FROM mentor_conflicts c
+   WHERE c.event_id=m.event_id AND c.mentor_id=$3 AND c.competitor_id=m.person_id
+  ))
+ )
+) AS eligible,
+EXISTS (
+ SELECT 1 FROM mentor_assignments a
+ WHERE a.event_id=$1 AND a.team_id=$2
+ AND a.person_id=$3 AND a.snapshot='published'
+) AS assigned
+`
+
+type MentorPanelTeamAuthorityParams struct {
+	EventID  uuid.UUID
+	TeamID   uuid.UUID
+	PersonID uuid.UUID
+}
+
+type MentorPanelTeamAuthorityRow struct {
+	Eligible bool
+	Assigned bool
+}
+
+func (q *Queries) MentorPanelTeamAuthority(ctx context.Context, arg MentorPanelTeamAuthorityParams) (MentorPanelTeamAuthorityRow, error) {
+	row := q.db.QueryRow(ctx, mentorPanelTeamAuthority, arg.EventID, arg.TeamID, arg.PersonID)
+	var i MentorPanelTeamAuthorityRow
+	err := row.Scan(&i.Eligible, &i.Assigned)
+	return i, err
+}
+
 const mentorProfiles = `-- name: MentorProfiles :many
 SELECT p.id AS person_id,p.display_name,m.active AND p.active AS active,
 COALESCE(v.skills,'{}'::text[])::text[] AS skills,COALESCE(v.availability,'[]'::jsonb)::jsonb AS availability,v.maximum_teams
