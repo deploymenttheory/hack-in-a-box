@@ -30,46 +30,47 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
-	expiry             lifecycleExpiryReceipt
-	offerCutoff        lifecycleOfferCutoffReceipt
-	attendance         lifecycleAttendanceReceipt
-	postponement       lifecyclePostponementReceipt
-	view               event.View
-	cohort             lifecycleAdmissions
-	eligibility        []lifecycleEligibilityReceipt
-	teams              teams.Page
-	challenge          content.Page
-	rubric             rubric.Configuration
-	objective          objectives.View
-	brand              templates.Branding
-	github             githubapp.Status
-	repositories       []repositories.View
-	access             []lifecycleAccessReceipt
-	liveAccess         []lifecycleAccessReceipt
-	teamNotice         lifecycleTeamNoticeReceipt
-	accessPoll         []lifecycleAccessPollReceipt
-	deliverable        uuid.UUID
-	submissions        []lifecycleSubmissionReceipt
-	work               []lifecycleWorkReceipt
-	lateWork           *lifecycleWorkReceipt
-	cutoff             []lifecycleCutoffReceipt
-	judgeRun           uuid.UUID
-	judgeFinal         *lifecycleJudgeFinalReceipt
-	resultDecision     *lifecycleResultDecisionReceipt
-	resultReleases     []lifecycleResultReleaseReceipt
-	resultPreparations []lifecycleResultPreparationReceipt
-	teamFeedback       []lifecycleTeamFeedbackReceipt
-	liveHelp           lifecycleHelpReceipt
-	clarification      lifecycleClarificationReceipt
-	practice           []lifecyclePracticeReceipt
-	review             lifecycleMentorReviewReceipt
-	postEvent          lifecyclePostEventReceipt
-	outcomes           []outcomes.View
-	showcase           lifecycleShowcaseReceipt
-	competitionBefore  map[string]lifecycleCompetitionDigest
-	archive            lifecycleArchiveReceipt
-	reviews            []lifecycleOwnedReviewReceipt
-	commonHash         string
+	retiredRepositoryVerified bool
+	expiry                    lifecycleExpiryReceipt
+	offerCutoff               lifecycleOfferCutoffReceipt
+	attendance                lifecycleAttendanceReceipt
+	postponement              lifecyclePostponementReceipt
+	view                      event.View
+	cohort                    lifecycleAdmissions
+	eligibility               []lifecycleEligibilityReceipt
+	teams                     teams.Page
+	challenge                 content.Page
+	rubric                    rubric.Configuration
+	objective                 objectives.View
+	brand                     templates.Branding
+	github                    githubapp.Status
+	repositories              []repositories.View
+	access                    []lifecycleAccessReceipt
+	liveAccess                []lifecycleAccessReceipt
+	teamNotice                lifecycleTeamNoticeReceipt
+	accessPoll                []lifecycleAccessPollReceipt
+	deliverable               uuid.UUID
+	submissions               []lifecycleSubmissionReceipt
+	work                      []lifecycleWorkReceipt
+	lateWork                  *lifecycleWorkReceipt
+	cutoff                    []lifecycleCutoffReceipt
+	judgeRun                  uuid.UUID
+	judgeFinal                *lifecycleJudgeFinalReceipt
+	resultDecision            *lifecycleResultDecisionReceipt
+	resultReleases            []lifecycleResultReleaseReceipt
+	resultPreparations        []lifecycleResultPreparationReceipt
+	teamFeedback              []lifecycleTeamFeedbackReceipt
+	liveHelp                  lifecycleHelpReceipt
+	clarification             lifecycleClarificationReceipt
+	practice                  []lifecyclePracticeReceipt
+	review                    lifecycleMentorReviewReceipt
+	postEvent                 lifecyclePostEventReceipt
+	outcomes                  []outcomes.View
+	showcase                  lifecycleShowcaseReceipt
+	competitionBefore         map[string]lifecycleCompetitionDigest
+	archive                   lifecycleArchiveReceipt
+	reviews                   []lifecycleOwnedReviewReceipt
+	commonHash                string
 }
 type lifecycleJourney struct {
 	owner      *lifecycleClient
@@ -265,6 +266,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.prepareRetainedReviews(t)
 	run.archiveCompetitionAndUpdateOutcome(t)
 	run.deliverRetainedReviews(t)
+	run.verifyRetiredRepositoriesUnscored(t)
+	run.expireRetainedOutcomes(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -337,6 +340,16 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
+		if !item.retiredRepositoryVerified || item.expiry.EventID != item.view.ID ||
+			!item.expiry.OwnerReadableBefore ||
+			!item.expiry.OwnerDeniedAt ||
+			!item.expiry.OrganiserDeniedAt ||
+			!item.expiry.NotificationDeniedAt ||
+			!item.expiry.CompetitionUnchanged {
+			t.Fatal(
+				"final receipt lacks executed retired-repository and retention-expiry assertions",
+			)
+		}
 		teams := []uuid.UUID{}
 		for _, team := range item.teams.Teams {
 			if team.State != "disbanded" {
