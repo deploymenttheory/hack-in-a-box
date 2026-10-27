@@ -40,6 +40,9 @@ test('real five-team evidence, final cards, split tie ballots, casting signoff a
   }
   await accept(page,`Actual final card ${index+1}, preserving native evidence trace`)
   await expect(page.getByRole('region',{name:'Moderated final card',exact:true})).toContainText('Version 1 · draft')
+  // Saving refreshes the independent native source reader. Capture the next
+  // review action only after that exact current evidence has finished loading.
+  await expect(source).toBeVisible();await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10)
   const confirm=page.getByRole('button',{name:'Review saved final card confirmation',exact:true});await expect(confirm).toBeFocused()
   await expect(page.getByRole('status').filter({hasText:'Original save card acknowledged for request'})).toBeVisible()
   if(index===0){await expect(source.getByText('Native independent final review evidence',{exact:true})).toHaveCount(10);await page.locator('[data-private-qualification]').screenshot({path:test.info().outputPath('current-independent-and-moderated-card.png'),animations:'disabled'})}
