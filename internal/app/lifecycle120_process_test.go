@@ -52,7 +52,9 @@ func TestLifecycleComposeProcess(t *testing.T) {
 	}()
 	ctx, stop := signal.NotifyContext(t.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if role == "provider" {
+	if role == "browser-proxy" {
+		err = runLifecycleBrowserProxy(ctx)
+	} else if role == "provider" {
 		err = runLifecycleProvider(ctx)
 	} else if role == "public" || role == "admin" || role == "worker" {
 		err = runLifecycleNativeProcess(ctx, role)

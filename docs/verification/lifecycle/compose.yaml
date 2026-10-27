@@ -106,7 +106,7 @@ services:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: worker
   styleguide:
-    image: hackbox-lifecycle:styleguide-verification
+    image: ${HACKBOX_LIFECYCLE_GUIDE_IMAGE:-hackbox-lifecycle:styleguide-verification}
     build:
       context: ../../..
       dockerfile: Dockerfile
@@ -168,6 +168,19 @@ services:
     depends_on:
       public: {condition: service_healthy}
       admin: {condition: service_healthy}
+
+  browser-proxy:
+    <<: *fixture
+    profiles: [browser]
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: browser-proxy
+    ports: ['127.0.0.1:${HACKBOX_LIFECYCLE_BROWSER_PROXY_PORT:-18088}:8080']
+    healthcheck: *healthcheck
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+      styleguide: {condition: service_healthy}
 
   journey:
     <<: *fixture
