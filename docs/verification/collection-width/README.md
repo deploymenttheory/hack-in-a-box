@@ -9,7 +9,7 @@ The native-browser regression reproduces a 400px collection inside that wide
 viewport. Before the fix it fails because the table never becomes labelled
 records. After the fix it passes with record, page-selection and sort focus
 preserved, selection retained, no horizontal page overflow, and external toolbar
-focus left alone. All56 pattern browser checks pass across both portals and
+focus left alone. All60 pattern browser checks pass across both portals and
 mobile/desktop contexts; all27 shared-pattern unit checks pass. Both portals,
 the independent guide and lint build/check successfully.
 
@@ -37,3 +37,11 @@ The interactive guide's Collection pane width control imports the production
 component. Usage, source snippet and keyboard guidance are updated together.
 No application API, current authority, private-data or save/publication contract
 changes. Full #120 and #123 release gates remain open.
+
+
+Independent review also found a valid-key focus collision (`page` and
+`sort:name`). A second real-browser regression reproduces the wrong focus
+counterpart before correction, then passes after internal page/selection/sort
+identities use a separate attribute and unambiguous tuple encoding. Existing
+owner record keys remain untouched. All60 shared-pattern browser checks pass
+with that correction; the original narrow-pane red result remains distinct.

@@ -291,3 +291,20 @@ test('narrow collection panes retain readable records and focused controls insid
  await expect(page.getByRole('status')).toHaveText('Owner sort: name descending')
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
 })
+
+
+test('responsive focus distinguishes owner record keys from sort and selection keys',async({page})=>{
+ await page.setViewportSize({width:1440,height:1000})
+ await page.goto('/?sorting&focus-keys')
+ const records=page.locator('.fleet-collection-records')
+ const row=page.getByRole('checkbox',{name:'Select Project Atlas',exact:true})
+ await row.focus()
+ await records.evaluate(element=>{element.style.width='400px'})
+ await expect(page.getByRole('list',{name:'Complete synthetic requests',exact:true})).toBeVisible()
+ await expect(row).toBeFocused()
+ const record=page.getByRole('link',{name:'Project Beacon',exact:true})
+ await record.focus()
+ await records.evaluate(element=>{element.style.width='100%'})
+ await expect(page.getByRole('table',{name:'Complete synthetic requests',exact:true})).toBeVisible()
+ await expect(record).toBeFocused()
+})
