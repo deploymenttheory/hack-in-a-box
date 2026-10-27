@@ -60,6 +60,9 @@ type lifecycleJourneyEvent struct {
 	postEvent          lifecyclePostEventReceipt
 	outcomes           []outcomes.View
 	showcase           lifecycleShowcaseReceipt
+	competitionBefore  map[string]lifecycleCompetitionDigest
+	archive            lifecycleArchiveReceipt
+	reviews            []lifecycleOwnedReviewReceipt
 	commonHash         string
 }
 type lifecycleJourney struct {
@@ -247,7 +250,13 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.publishConfirmedAwards(t)
 	run.releaseOwnTeamFeedback(t)
 	run.completeAndCollectFeedback(t)
+	for i := range run.events {
+		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(t, run.events[i].view.ID)
+	}
 	run.captureTeamOutcomesAndShowcase(t)
+	run.prepareRetainedReviews(t)
+	run.archiveCompetitionAndUpdateOutcome(t)
+	run.deliverRetainedReviews(t)
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -270,6 +279,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	type eventReceipt struct {
 		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
 		Showcase           lifecycleShowcaseReceipt            `json:"showcase"`
+		Archive            lifecycleArchiveReceipt             `json:"archive"`
+		Reviews            []lifecycleOwnedReviewReceipt       `json:"owned_reviews"`
 		ID                 uuid.UUID                           `json:"event_id"`
 		Mode               string                              `json:"mode"`
 		Stage              string                              `json:"stage"`
@@ -315,6 +326,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			eventReceipt{
 				PostEvent:          item.postEvent,
 				Showcase:           item.showcase,
+				Archive:            item.archive,
+				Reviews:            item.reviews,
 				ID:                 item.view.ID,
 				Mode:               item.rubric.Definition.Mode,
 				Stage:              item.view.Stage,

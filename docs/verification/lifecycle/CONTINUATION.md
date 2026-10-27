@@ -174,3 +174,13 @@ keeps estimates distinct from demonstrated-adoption evidence, and selects an
 actual frozen non-winning team for separate organisation-project publication,
 search, private-source denial and withdrawal. Its connected execution is pending;
 the R3 receipt above predates this extension and cannot establish its assertions.
+
+The next connected archive/follow-up extension is implemented but its execution
+is pending. It snapshots complete native submission, freeze, rubric, mentor,
+judge, decision and publication rows in a repeatable-read/read-only oracle, then
+checks unchanged hashes after native archive, an exact actor/evidence history
+entry for an authorised outcome update, and retained day-30/60/90 reminders.
+Plans are explicitly approved before archiving against a separate unchanged
+owned source; each actual queued inbox effect must reference its approved plan,
+remain private, occur at its event-local due time and appear exactly once.
+Neither a compile-only check nor a source review establishes these effects.
