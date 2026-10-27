@@ -28,6 +28,7 @@ test('rubric draft and exact approval are separate reviewed versioned commands',
   await page.getByRole('button', { name: 'Review version approval', exact: true }).click()
   await dialog(page).getByRole('button', { name: 'Approve reviewed version', exact: true }).click(); await expect(page.getByRole('status').filter({ hasText: 'Exact rubric version approved' })).toBeVisible()
   expect(state.posts).toHaveLength(2); expect(state.posts[1]).toEqual({ revision: '"1"', body: { action: 'approve', version: 1, reason: 'Approve exact saved version one' } }); expect(state.configuration.published_version).toBeNull()
+  await expect(page.getByText('Saved version 1 · Revision 2 · Approved', { exact: true })).toBeFocused()
   await page.reload(); await expect(page.getByLabel('Rubric name', { exact: true })).toHaveValue('Reviewed common event criteria'); await expect(page.getByRole('button', { name: 'Review version approval', exact: true })).toBeDisabled()
 })
 
