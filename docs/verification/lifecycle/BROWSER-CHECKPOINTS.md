@@ -82,3 +82,29 @@ the non-root native test. The bounded synthetic receipt now explicitly chmods to
 0644 inside its owner-only host directory and verifies that mode before copying.
 No session/authentication data enters that receipt. The complete native journey
 failed, and this run is not counted as passing acceptance.
+
+At clean source `d543c437`, the first full execution reached both actual Fleet
+branding saves but later failed native result preparation with503 at the
+unchanged10-second HTTP budget (whole test360.81s). Its original database,
+journal and logs were retained; that failure is not relabelled as a pass.
+
+A fresh repeat of that exact source and immutable image passed the complete
+native two-event journey in237.05s, after the same two real browser saves. The
+positive bounded receipt is `connected-browser-planning-proof.json`; private
+original evidence includes the complete native journal/database and desktop
+branding screenshots. Both writes used ordinary owner OIDC, the actual Fleet
+preview/save/reload flow and native cookies/CSRF. The Go runner independently
+required the exact expected branding and revision before continuing. There
+were zero injected sessions, fulfilled application routes or browser page errors.
+The project was completely removed and its source remained clean.
+
+The intermittent result-preparation deadline remains an unresolved performance
+observation; one successful repeat does not establish its cause or repair it.
+The exact CI lint scope (`./cmd/... ./internal/...`) reports0issues. An earlier
+broader exploratory lint also scanned node_modules and verification-only load
+tools; those unrelated findings are not treated as defects in this change.
+
+Run this bounded connected checkpoint with
+`sh scripts/verify-lifecycle-connected-browser.sh`. It is still planning-browser
+evidence plus a full native API journey, not the complete role/action/offline
+Fleet acceptance matrix. #120 stays open and PR #316 stays draft.
