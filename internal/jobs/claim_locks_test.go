@@ -142,7 +142,12 @@ func testEventCancellation(t *testing.T, recovery bool) {
 	commandCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	cancelled := make(chan error, 1)
-	go func() { cancelled <- dbgen.New(command).CancelEventOperations(commandCtx, eventID) }()
+	go func() {
+		cancelled <- dbgen.New(command).CancelEventOperations(commandCtx, dbgen.CancelEventOperationsParams{
+			EventID: eventID,
+			AtTime:  time.Now(),
+		})
+	}()
 	blocked := 0
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
