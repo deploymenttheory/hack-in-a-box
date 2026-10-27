@@ -6,10 +6,10 @@ async function prepare(page: Page) {
  const workspace = await mockWorkspace(page); workspace.events[0].stage = 'assessment'
  const briefs = judgeFixture().briefs
  for (const brief of Object.values(briefs)) brief.criteria = { ...brief.criteria, mode: 'all_teams' }
- const state = { authorised: true, writes: 0, hold: undefined as Promise<void> | undefined, ballots: { judge_run_id: runID, revision: workspace.events[0].revision, version: 1, source_binding: 'a'.repeat(64), receipt: null, ties: ['final', 'category'].map((kind, index) => ({ state: { tie: { id: (index ? 'c' : 'b').repeat(64), kind: kind as 'final' | 'category', category_id: index ? criteria.categories[0].id : null, team_ids: [teamA, teamB] }, required_judge_ids: [person.id, otherJudge], votes_received: 0, winner_id: null, blocker: 'required_judge_votes_missing' }, own_vote: null })) } satisfies components['schemas']['ResultBallotPage'] }
+ const state = { authorised: true, writes: 0, reads: 0, hold: undefined as Promise<void> | undefined, ballots: { judge_run_id: runID, revision: workspace.events[0].revision, version: 1, source_binding: 'a'.repeat(64), receipt: null, ties: ['final', 'category'].map((kind, index) => ({ state: { tie: { id: (index ? 'c' : 'b').repeat(64), kind: kind as 'final' | 'category', category_id: index ? criteria.categories[0].id : null, team_ids: [teamA, teamB] }, required_judge_ids: [person.id, otherJudge], votes_received: 0, winner_id: null, blocker: 'required_judge_votes_missing' }, own_vote: null })) } satisfies components['schemas']['ResultBallotPage'] }
  await page.route(`**/api/v1/events/${firstID}/results/ballots`, async route => {
   if (route.request().method() === 'POST') { state.writes++; return route.fulfill({ status: 408, json: { error: { code: 'unavailable', message: 'Synthetic unexpected write', request_id: 'synthetic' } } }) }
-  if (state.hold) await state.hold
+  state.reads++; if (state.hold) await state.hold
   return route.fulfill(state.authorised ? { json: state.ballots } : { status: 403, json: { error: { code: 'forbidden', message: 'Synthetic current assignment denied', request_id: 'synthetic' } } })
  })
  await page.route(`**/api/v1/events/${firstID}/judging/${runID}/teams/*`, route => route.fulfill({ json: briefs[new URL(route.request().url()).pathname.split('/').at(-1)!] }))
@@ -67,4 +67,35 @@ test('current category assignment denial clears candidates and held reviews; res
  await expect(page.getByRole('region', { name: 'Assigned tie tasks', exact: true })).toBeVisible()
  await expect(page.getByLabel('Your selected winner', { exact: true })).toHaveCount(0)
  expect(state.writes).toBe(0)
+})
+
+test('cancelling a category vote during a current read restores its opener when that read settles', async ({ page }) => {
+ const state = await prepare(page); await review(page)
+ const submit = page.getByRole('button', { name: 'Review tie vote', exact: true })
+ let release!: () => void; state.hold = new Promise<void>(resolve => { release = resolve })
+ const reads = state.reads
+ try {
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect.poll(() => state.reads).toBeGreaterThan(reads)
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Decision status', exact: true })).toBeFocused()
+  release(); await expect(submit).toBeFocused()
+  // CI's periodic read began immediately after the held read restored focus.
+  // Drive that actual second-read boundary explicitly, without a timer sleep.
+  state.hold = new Promise<void>(resolve => { release = resolve })
+  const resumedReads = state.reads
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect.poll(() => state.reads).toBeGreaterThan(resumedReads)
+  await expect(submit).toBeDisabled()
+  release(); await expect(submit).toBeEnabled(); await expect(submit).toBeFocused()
+  const destination = page.getByRole('link', { name: 'Back to judge desk', exact: true })
+  await destination.focus()
+  state.hold = new Promise<void>(resolve => { release = resolve })
+  const movedReads = state.reads
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect.poll(() => state.reads).toBeGreaterThan(movedReads)
+  await expect(submit).toBeDisabled()
+  release(); await expect(submit).toBeEnabled(); await expect(destination).toBeFocused()
+  expect(state.writes).toBe(0)
+ } finally { release() }
 })
