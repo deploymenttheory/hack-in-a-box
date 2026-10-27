@@ -322,3 +322,19 @@ not a normal production-image release or capacity proof. `complete_lifecycle`
 remains false: outstanding exception/browser/expiry/normal-image variants in the
 original twelve criteria and L01–L18 still require implementation and final
 acceptance before #316 merges or #120 closes.
+
+## Post-publication postponement continuation — not yet executed
+
+The next connected extension performs separate native HTTP postponements after
+both original common challenge releases. Each event first rejects an unapproved
+change without mutation, then records explicit approval/reason/revised dates.
+Current attendee and mentor notice projections must match the original decision
+revision while withdrawn readers remain denied. Frozen team identities, released
+challenge/rubric bytes and exact prior acknowledgements must remain intact; a
+date edit cannot reopen the completed freeze, and the other event is compared
+before/after each decision. The original live date must remain preparation, with
+the original early-live/output gates still enforced before the revised start.
+Later mentor, submission and retained-review planning uses the revised dates,
+while the receipt retains the actual original T−7 publication and original live
+start. Only compilation/the existing wire-contract test have run so far; this
+extension is not an executed acceptance claim. The full matrix remains open.

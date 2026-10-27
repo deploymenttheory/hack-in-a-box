@@ -30,6 +30,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	postponement       lifecyclePostponementReceipt
 	view               event.View
 	cohort             lifecycleAdmissions
 	eligibility        []lifecycleEligibilityReceipt
@@ -167,12 +168,17 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	for i := range run.events {
 		run.readCommonPublication(t, &run.events[i])
 	}
+	run.postponePublishedEvents(t)
 	run.prepareMentorReview(t)
 	run.planFinalMentorReview(t)
 	run.prepareRepositoryAccess(t)
 	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
 	run.rehearseJudgePractice(t)
+	// The original live date is now still preparation after explicit postponement.
+	if err := control.advance(ctx, timeline.Live); err != nil {
+		t.Fatal(err)
+	}
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
@@ -222,7 +228,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 	}
 	run.denyEarlyOutputHelp(t)
-	if err := control.advance(ctx, timeline.Live); err != nil {
+	if err := control.advance(ctx, run.timeline.Live); err != nil {
 		t.Fatal(err)
 	}
 	for i := range run.events {
@@ -253,7 +259,11 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.releaseOwnTeamFeedback(t)
 	run.completeAndCollectFeedback(t)
 	for i := range run.events {
-		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(t, run.events[i].view.ID, len(run.events[i].review.FinalHuddles))
+		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(
+			t,
+			run.events[i].view.ID,
+			len(run.events[i].review.FinalHuddles),
+		)
 	}
 	run.captureTeamOutcomesAndShowcase(t)
 	run.prepareRetainedReviews(t)
@@ -270,15 +280,25 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	if providerProof.OAuthExchangesVerified != 38 || providerProof.OAuthUserReads != 38 {
-		t.Fatal("participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications")
+		t.Fatal(
+			"participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications",
+		)
 	}
 	if providerProof.RepositoryCreates != 12 {
-		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
+		t.Fatal(
+			"actual provider did not create exactly one private repository per frozen team",
+			providerProof.RepositoryCreates,
+		)
 	}
 	if providerProof.InvitationCreates != 88 || providerProof.InvitationAcceptances != 88 {
-		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
+		t.Fatal(
+			"actual external access census did not match64 frozen competitor plus24 read-only mentor grants",
+			providerProof.InvitationCreates,
+			providerProof.InvitationAcceptances,
+		)
 	}
 	type eventReceipt struct {
+		Postponement       lifecyclePostponementReceipt        `json:"postponement"`
 		Eligibility        []lifecycleEligibilityReceipt       `json:"eligibility"`
 		PostEvent          lifecyclePostEventReceipt           `json:"post_event"`
 		Showcase           lifecycleShowcaseReceipt            `json:"showcase"`
@@ -327,6 +347,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				Postponement:       item.postponement,
 				Eligibility:        item.eligibility,
 				PostEvent:          item.postEvent,
 				Showcase:           item.showcase,
@@ -376,7 +397,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 			"explicit_retention_days": 120,
 			"retention_reason":        "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
 			"publication":             timeline.Publication,
-			"live_start":              timeline.Live,
+			"live_start":              run.timeline.Live,
 			"assertions": []string{
 				"single-connected-native-http-journey",
 				"both-judging-templates",
@@ -513,11 +534,23 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	var err error
-	item.cohort, err = admitLifecycleCohortChecking(ctx, r.owner, item.view, func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) })
+	item.cohort, err = admitLifecycleCohortChecking(
+		ctx,
+		r.owner,
+		item.view,
+		func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) },
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort, r.control, func() error { r.configureTeamNotice(t, &item); return nil })
+	item.teams, err = allocateLifecycleTeams(
+		ctx,
+		r.owner,
+		item.view.ID,
+		&item.cohort,
+		r.control,
+		func() error { r.configureTeamNotice(t, &item); return nil },
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
