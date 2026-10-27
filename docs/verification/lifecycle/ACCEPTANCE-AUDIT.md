@@ -54,3 +54,13 @@ grants, twelve live actor cases on both events and native ordered mentor
 revocation/restoration checks, then both native archives and configured120-day
 expiry. See LIVE-ROLES.md and live-role-proof.json. This does not substitute
 LIVE reads for the remaining original Fleet action-to-next-action journeys.
+
+R46 proves actual Fleet creation of both native events (EVENT-CREATION.md).
+R49 adds normal-OIDC applications, organiser facilitator review/selection,
+explicit go, owned withdrawal and FIFO acceptance, followed by the complete
+native journey and all40 required browser barriers (668.33s). See
+ADMISSION-BROWSER.md and admission-browser-proof.json for exact source
+composition and limits. R47 remains failed at archive scheduling (#335); R48
+failed a confirmation-role locator before a selection write. Later form-authoring
+and offer-policy UI increments are not established by R49. Remaining original
+criteria and complete_lifecycle=false are unchanged.
