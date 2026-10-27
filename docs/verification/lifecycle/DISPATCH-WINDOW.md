@@ -63,3 +63,13 @@ records the observed capacity, always reports its private evidence location on
 failure, and requires the actual Go receipt, intent journal and final database
 before accepting a passing case. These are host-capacity checks, not changes to
 business timing or request budgets. Fresh native execution is still pending.
+
+The next execution at `6b97635e` passed capacity/startup and created both native
+approved event contexts. The runner wrote its ready barrier, then its organiser
+poll used the ordinary content reader URL and received the correct HTTP404 for
+unreleased content. The host observed the runner's exit before starting a worker;
+no native boundary dispatch occurred. Its original ready metadata, database and
+logs remain private. The fixture now uses the explicit privileged-preview query
+for organiser-only state reads; confirmed-attendee embargo probes retain their
+ordinary URLs. Production disclosure rules are unchanged. Fresh execution is
+still required for the corrected fixture.

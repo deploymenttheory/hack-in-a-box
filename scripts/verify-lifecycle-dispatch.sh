@@ -98,7 +98,7 @@ for case_name in last-on-time first-late; do
   attempts=0
   until docker exec "$runner_name" test -s /artifacts/dispatch-ready.json >/dev/null 2>&1; do
     if [ "$(docker inspect --format '{{.State.Running}}' "$runner_name")" != true ]; then
-      printf 'Native runner stopped before its ready barrier: %s\n' "$case_name" >&2
+      printf 'Native runner exited while the host awaited its ready barrier: %s\n' "$case_name" >&2
       exit 1
     fi
     attempts=$((attempts + 1))

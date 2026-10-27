@@ -320,7 +320,7 @@ func TestLifecycleComposeDispatchWindow(t *testing.T) {
 		if err := owner.call(
 			t.Context(),
 			http.MethodGet,
-			path,
+			path+"?preview=true",
 			-1,
 			nil,
 			&page,
@@ -495,7 +495,7 @@ func waitLifecycleDispatchState(
 		if err := owner.call(
 			t.Context(),
 			http.MethodGet,
-			"/api/v1/events/"+eventID.String()+"/content/"+id.String(),
+			"/api/v1/events/"+eventID.String()+"/content/"+id.String()+"?preview=true",
 			-1,
 			nil,
 			&page,
@@ -625,7 +625,7 @@ func recoverLifecycleMissedRelease(
 	if err := owner.call(
 		t.Context(),
 		http.MethodGet,
-		path,
+		path+"?preview=true",
 		-1,
 		nil,
 		&page,

@@ -466,3 +466,10 @@ logs are retained and the isolated project was removed. Cleanup of unused
 images/cache recovered33GiB; the existing application and encrypted App setup
 were verified healthy afterward. A pre-build/post-build capacity guard now
 prevents repeating that resource failure. No native timing pass is claimed.
+
+The guarded dispatch attempt at `6b97635e` reached actual approved content and
+wrote its ready barrier, then failed because its organiser poll used an ordinary
+unreleased-reader URL (correctly404). No worker dispatch was attempted. Only the
+fixture's organiser reads now request explicit privileged preview; attendee
+embargo checks and production permissions remain unchanged. Failed original
+artifacts are retained, and a fresh run remains pending.
