@@ -172,7 +172,10 @@ Stable record, selection and sort keys restore the equivalent focused control
 when the collection changes layout. Restoration applies only when focus was
 inside that collection before the change: an editor, toolbar or external
 control keeps its focus. Local owner actions still need their existing stable
-`data-record-focus` record key. Do not duplicate hidden tables/lists or keep
+`data-record-focus` record key. Owners must resolve the current keyed action
+when returning from an inspector, because resizing can replace its original
+button. Focus returned while a measured layout change is pending follows that
+same key; focus moved to an external editor stays there. Do not duplicate hidden tables/lists or keep
 second copies of private controls solely for responsive presentation.
 
 Record headers allow their action to wrap below the title. A long action must

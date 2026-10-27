@@ -257,7 +257,7 @@ test('unchanged current-role polling preserves unsent preparation input and cont
  await expect(context).toBeFocused()
  await page.getByRole('button', { name: 'Open your preparation workspace', exact: true }).click()
  await page.getByRole('button', { name: 'Open Assigned mentor preparation', exact: true }).click()
- await expect(page.getByRole('heading', { name: 'Assigned mentor preparation', exact: true })).toBeFocused()
+ await expect(page.getByRole('region', { name: 'Personal preparation task', exact: true }).getByRole('heading', { name: 'Assigned mentor preparation', exact: true })).toBeFocused()
  await page.getByRole('textbox', { name: 'Progress reason', exact: true }).fill('Unsent reason stays local')
  const other = preparation('Unrelated mentor assignment', 'mentor'); other.definition.id = '6d411fd9-6963-496b-8324-f19213fd61ba'; f.state.otherTasks = [other]
  const before = f.calls.filter(c => c.path.endsWith('/today')).length
