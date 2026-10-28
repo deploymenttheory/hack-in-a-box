@@ -44,7 +44,7 @@ test('resolved live and final windows preserve the native live-start/cutoff boun
 test('only an exact checkpoint response settles its version/run/rubric/definition and resolved instants', () => {
   const value = source(), run = value.configuration.runs[0]
   const definition = { id: '66666666-6666-4666-8666-666666666666', name: input.name, run_id: run.id, opens_wall_time: input.opens, closes_wall_time: input.closes, dst_choice: input.dst }
-  const intent: CheckpointIntent = { command: { definition, version: 0, reason: input.reason }, run, timezone: value.event.configuration.timezone, window: { opens: '2027-06-20T09:00:00Z', closes: '2027-06-20T15:00:00Z' } }
+  const intent: CheckpointIntent = { command: { definition, version: 0, reason: input.reason }, run, criteria: value.approved!.definition, timezone: value.event.configuration.timezone, window: { opens: '2027-06-20T09:00:00Z', closes: '2027-06-20T15:00:00Z' } }
   const receipt = { definition, version: 1, purpose: 'checkpoint' as const, rubric: run.reference, criteria: value.approved!.definition, timezone: intent.timezone, opens_at: '2027-06-20T10:00:00+01:00', closes_at: '2027-06-20T16:00:00+01:00' }
   expect(matchesCheckpointResponse(receipt, intent)).toBe(true)
   expect(matchesCheckpointResponse({ ...receipt, version: 2 }, intent)).toBe(false)

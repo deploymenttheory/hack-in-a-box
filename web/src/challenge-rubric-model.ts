@@ -10,15 +10,18 @@ export type ChallengeRubricRead = { approved?: ChallengeRubricSnapshot; selected
 // Only the named public fields leave this API boundary. In particular, a private
 // configuration object must never be spread into a document or attendee preview.
 export function publicChallengeRubric(value: Configuration): ChallengeRubricSnapshot {
-  const d = value.definition
-  return { reference: { id: value.reference.id, version: value.reference.version, digest: value.reference.digest }, definition: {
+  return { reference: { id: value.reference.id, version: value.reference.version, digest: value.reference.digest }, definition: publicRubricDefinition(value.definition) }
+}
+export function publicRubricDefinition(d: components['schemas']['PublicRubricDefinition']): components['schemas']['PublicRubricDefinition'] {
+  return {
     name: d.name, mode: d.mode, required_judge_count: d.required_judge_count,
     finalist_count: d.finalist_count, reserve_count: d.reserve_count,
     categories: d.categories.map(c => ({ id: c.id, label: c.label, min_score: c.min_score, max_score: c.max_score, weight: c.weight, guidance: c.guidance, anchors: c.anchors.map(a => ({ score: a.score, description: a.description })) })),
     prizes: d.prizes.map(p => ({ id: p.id, name: p.name, description: p.description, category_id: p.category_id })),
     side_quests: d.side_quests.map(q => ({ id: q.id, title: q.title, evidence_guidance: q.evidence_guidance })),
-  } }
+  }
 }
+
 export function sameRubric(a?: RubricReference, b?: RubricReference) {
   return a && b ? rubricReferenceKey(a) === rubricReferenceKey(b) : !a && !b
 }

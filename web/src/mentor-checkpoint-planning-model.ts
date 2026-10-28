@@ -1,7 +1,7 @@
 import { api, APIError, unwrap, type EventRecord } from './api/client'
 import type { components } from './api/schema.gen'
 import type { AssessmentConfiguration } from './assessment-run-model'
-import { readChallengeRubric, sameRubric, type ChallengeRubricSnapshot } from './challenge-rubric-model'
+import { publicRubricDefinition, readChallengeRubric, sameRubric, type ChallengeRubricSnapshot } from './challenge-rubric-model'
 import { rubricReferenceKey } from './rubric-planning-model'
 
 type Schema = components['schemas']
@@ -14,7 +14,7 @@ export type MentorCheckpointPlanning = {
 }
 export type CheckpointInput = { runID: string; name: string; opens: string; closes: string; dst: '' | 'earlier' | 'later'; reason: string }
 export type ResolvedCheckpointWindow = { opens: string; closes: string }
-export type CheckpointIntent = { command: Schema['ScorecardCheckpointCommand']; run: Schema['RubricRun']; window: ResolvedCheckpointWindow; timezone: string }
+export type CheckpointIntent = { command: Schema['ScorecardCheckpointCommand']; run: Schema['RubricRun']; criteria: Schema['PublicRubricDefinition']; window: ResolvedCheckpointWindow; timezone: string }
 
 export async function loadMentorCheckpointPlanning(eventID: string, signal: AbortSignal, assertCurrent: () => void): Promise<MentorCheckpointPlanning> {
   const params = { signal, cache: 'no-store' as const, params: { path: { event_id: eventID } } }
@@ -34,6 +34,13 @@ export async function loadMentorCheckpointPlanning(eventID: string, signal: Abor
   const rubric = await readChallengeRubric(eventID, undefined, signal, assertCurrent); assertCurrent()
   // Public criteria and coordination only; no private judge guidance/cards.
   return { event, configuration: { revision: configuration.revision, reference: configuration.reference, runs: configuration.runs }, approved: rubric.approved, checkpoints }
+}
+export function mentorPlanningIdentity(source: MentorCheckpointPlanning) {
+  return JSON.stringify([source.event.id, source.event.can_edit, source.event.stage, source.event.configuration.timezone, source.event.configuration.live_start, source.event.configuration.submission_cutoff])
+}
+export class CheckpointPlanningResponseIssue extends Error {}
+export class CheckpointTimeIssue extends Error {
+  constructor(readonly field: 'opens' | 'closes') { super('This local time could not be resolved. Correct it or choose an earlier/later occurrence when the clock repeats.') }
 }
 export function mentorPlanningVersion(source: MentorCheckpointPlanning) {
   return JSON.stringify([source.event.id, source.event.can_edit, source.event.revision, source.event.stage, source.event.configuration.timezone, source.event.configuration.live_start, source.event.configuration.submission_cutoff, source.configuration, source.approved?.reference, source.checkpoints])
@@ -71,7 +78,9 @@ export function checkpointWindowProblems(event: EventRecord, purpose: MentorAsse
 }
 export async function resolveCheckpointWindow(source: MentorCheckpointPlanning, input: CheckpointInput, csrf: string, signal: AbortSignal, assertCurrent: () => void): Promise<ResolvedCheckpointWindow> {
   const resolve = async (wall: string) => {
-    const value = unwrap(await api.POST('/api/v1/time/resolve', { signal, params: { header: { 'X-CSRF-Token': csrf } }, body: { timezone: source.event.configuration.timezone, wall_time: wall.length === 16 ? wall + ':00' : wall, dst_choice: input.dst } })); assertCurrent(); return value.instant
+    try {
+      const value = unwrap(await api.POST('/api/v1/time/resolve', { signal, params: { header: { 'X-CSRF-Token': csrf } }, body: { timezone: source.event.configuration.timezone, wall_time: wall.length === 16 ? wall + ':00' : wall, dst_choice: input.dst } })); assertCurrent(); return value.instant
+    } catch (error) { assertCurrent(); if (error instanceof APIError && error.status === 400) throw new CheckpointTimeIssue(wall === input.opens ? 'opens' : 'closes'); throw error }
   }
   const opens = await resolve(input.opens), closes = await resolve(input.closes)
   return { opens, closes }
@@ -80,6 +89,7 @@ const definitionKey = (definition: Schema['ScorecardCheckpointDefinition']) => J
 export function matchesCheckpointResponse(value: Schema['ScorecardCheckpoint'], intent: CheckpointIntent) {
   return definitionKey(value.definition) === definitionKey(intent.command.definition) && value.version === intent.command.version + 1
     && value.purpose === intent.run.purpose && sameRubric(value.rubric, intent.run.reference) && value.timezone === intent.timezone
+    && JSON.stringify(publicRubricDefinition(value.criteria)) === JSON.stringify(publicRubricDefinition(intent.criteria))
     && Number.isFinite(Date.parse(value.opens_at)) && Date.parse(value.opens_at) === Date.parse(intent.window.opens)
     && Number.isFinite(Date.parse(value.closes_at)) && Date.parse(value.closes_at) === Date.parse(intent.window.closes)
 }

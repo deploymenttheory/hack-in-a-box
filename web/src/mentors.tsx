@@ -1,3 +1,4 @@
+import { MentorCheckpointPlanner } from './mentor-checkpoint-planning'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, privateKey, unwrap, type EventRecord } from './api/client'
@@ -18,8 +19,9 @@ import { Failure } from './components/states'
 type Edit = { revision: number; profile: MentorProfile } | { revision: number; assignment: true } | { revision: number; settings: true } | { revision: number; team: MentorPage['teams'][number] }
 type Review = { revision: number; input: Omit<MentorCommand, 'reason'>; reason: string; label: string; gaps: boolean; snapshot: MentorPage }
 export function MentorWorkspace({ event, onDirty }: { event: EventRecord; onDirty: (value: boolean) => void }) {
-  const identity = useIdentity()
-  return <MentorScope key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} event={event} onDirty={onDirty} />
+  const identity = useIdentity(), [plannerDirty, setPlannerDirty] = useState(false), [coverageDirty, setCoverageDirty] = useState(false)
+  useEffect(() => { onDirty(plannerDirty || coverageDirty); return () => onDirty(false) }, [plannerDirty, coverageDirty, onDirty])
+  return <>{event.can_edit && <MentorCheckpointPlanner key={`${identity.person.id}:${identity.draft_scope}:${event.id}:planner`} event={event} onDirty={setPlannerDirty} />}<MentorScope key={`${identity.person.id}:${identity.draft_scope}:${event.id}`} event={event} onDirty={setCoverageDirty} /></>
 }
 function MentorScope({ event, onDirty }: { event: EventRecord; onDirty: (value: boolean) => void }) {
   const identity = useIdentity()
