@@ -347,7 +347,10 @@ func (r *lifecycleJourney) enterLiveWithAttendanceException(t *testing.T) {
 		}
 		const reason = "Approve continuation after three actual post-freeze withdrawals; preserve the frozen pair and the team's invested work."
 		var live event.View
-		if err := r.owner.call(
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			live = r.eventDecisionInBrowser(t, item, index, "approve-attendance-live", before, nil, reason)
+			item.browserLiveException = true
+		} else if err := r.owner.call(
 			t.Context(),
 			http.MethodPost,
 			base+"/transition",

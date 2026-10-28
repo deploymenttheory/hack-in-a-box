@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -139,7 +140,10 @@ func (r *lifecycleJourney) postponePublishedEvents(t *testing.T) {
 		const reason = "Synthetic venue disruption: approve the later dates and retain the released theme and existing team work."
 		input.ApprovePostponement, input.Reason = true, reason
 		var changed event.View
-		if err := r.owner.call(
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			changed = r.eventDecisionInBrowser(t, item, index, "postpone-event", before, &next, reason)
+			item.browserPostponed = true
+		} else if err := r.owner.call(
 			t.Context(),
 			http.MethodPut,
 			base,

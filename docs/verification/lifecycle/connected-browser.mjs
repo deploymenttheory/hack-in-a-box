@@ -1,3 +1,4 @@
+import {decideEventInFleet} from './browser-event-decisions.mjs'
 import {readPublicationInFleet} from './browser-publication-reading.mjs'
 import {createObjectiveInFleet} from './browser-objective-authoring.mjs'
 import {authorChallengeInFleet} from './browser-challenge-authoring.mjs'
@@ -52,7 +53,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -201,7 +202,19 @@ try{
    readings.push(reading)
    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,content_id:reading.content_id,saved_by_ui:true})
   }
+  for(const sequence of [901,921]){
+   step=`postpone-published-event-${sequence}`
+   const phase=await readPhase(sequence,180000)
+   eventDecisions.push(await decideEventInFleet({page,expect,phase,output}))
+   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
+  }
   for(const sequence of [611,612,613,631,632,633]){step=`frozen-team-withdrawal-${sequence}`;await withdrawTeamMember(sequence)}
+  for(const sequence of [902,922]){
+   step=`approve-live-attendance-exception-${sequence}`
+   const phase=await readPhase(sequence,180000)
+   eventDecisions.push(await decideEventInFleet({page,expect,phase,output}))
+   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
+  }
  }
  if(['live-recovery','role-matrix','ui-journey'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
   step='await-live-recovery'
@@ -218,7 +231,7 @@ try{
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)

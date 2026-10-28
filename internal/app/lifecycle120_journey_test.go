@@ -31,6 +31,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	browserPostponed         bool
+	browserLiveException     bool
 	browserAcknowledgements  []uuid.UUID
 	browserObjectiveAuthored bool
 	browserHelp              *lifecycleBrowserHelpReceipt
@@ -334,7 +336,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !item.browserEventCreated || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
+			if !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
 				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
@@ -383,6 +385,9 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserPostponed     bool `json:"browser_postponed"`
+		BrowserLiveException bool `json:"browser_live_exception"`
+
 		BrowserAcknowledgements []uuid.UUID `json:"browser_acknowledgements"`
 
 		BrowserObjectiveAuthored bool `json:"browser_objective_authored"`
@@ -477,6 +482,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				BrowserPostponed:         item.browserPostponed,
+				BrowserLiveException:     item.browserLiveException,
 				BrowserAcknowledgements:  item.browserAcknowledgements,
 				BrowserObjectiveAuthored: item.browserObjectiveAuthored,
 				BrowserHelp:              item.browserHelp,

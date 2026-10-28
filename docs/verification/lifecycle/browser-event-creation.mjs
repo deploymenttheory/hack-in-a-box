@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import {join} from 'node:path'
 
-function wallTime(instant,timezone){
+export function wallTime(instant,timezone){
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(instant)).map(part=>[part.type,part.value]))
  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}${parts.second==='00'?'':':'+parts.second}`
 }
