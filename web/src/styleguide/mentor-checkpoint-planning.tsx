@@ -9,12 +9,13 @@ import { Snippet } from './snippet'
 export function MentorCheckpointPlanningExample() {
   const [source, setSource] = useState(() => mentorCheckpointGuideSource()), [input, setInput] = useState(() => emptyMentorPlannerInput(source))
   const [errors, setErrors] = useState<Record<string, string>>({}), [review, setReview] = useState<MentorPlannerReview>(), [notice, setNotice] = useState('')
-  const form = useRef<HTMLFormElement>(null), opener = useRef<HTMLElement | null>(null)
-  useLayoutEffect(() => { if (form.current && Object.keys(errors).length) focusFirstInvalid(form.current) }, [errors])
+  const form = useRef<HTMLFormElement>(null), opener = useRef<HTMLElement | null>(null), focusValidation = useRef(false)
+  useLayoutEffect(() => { if (focusValidation.current) { focusValidation.current = false; if (form.current) focusFirstInvalid(form.current) } }, [errors])
+  function showIssues(issues: Record<string, string>) { focusValidation.current = Object.keys(issues).length > 0; setErrors(issues) }
   function reset(withRun: boolean) { const next = mentorCheckpointGuideSource(withRun); setSource(next); setInput(emptyMentorPlannerInput(next)); setErrors({}); setReview(undefined); setNotice('') }
   function begin(button: HTMLElement) {
     const invalid = input.task === 'run' ? mentorRunProblems(source, input.purpose, input.rubric, input.reason) : checkpointProblems(source, input.checkpoint)
-    setErrors(invalid); if (Object.keys(invalid).length) return
+    showIssues(invalid); if (Object.keys(invalid).length) return
     opener.current = button
     if (input.task === 'run') setReview({ kind: 'run', source: structuredClone(source), input: structuredClone(input) })
     else {
@@ -23,7 +24,7 @@ export function MentorCheckpointPlanningExample() {
       // resolves event-local clocks and DST through the native time API.
       const window = { opens: new Date(input.checkpoint.opens + 'Z').toISOString(), closes: new Date(input.checkpoint.closes + 'Z').toISOString() }
       const issues = checkpointWindowProblems(source.event, run.purpose as 'checkpoint' | 'mentor_final', window)
-      setErrors(issues); if (Object.keys(issues).length) return
+      showIssues(issues); if (Object.keys(issues).length) return
       setReview({ kind: 'checkpoint', source: structuredClone(source), intent: { run, criteria: source.approved!.definition, window, timezone: 'UTC', command: { version: 0, reason: input.checkpoint.reason, definition: { id: '66666666-6666-4666-8666-666666666666', name: input.checkpoint.name, run_id: run.id, opens_wall_time: input.checkpoint.opens, closes_wall_time: input.checkpoint.closes, dst_choice: input.checkpoint.dst } } } })
     }
   }

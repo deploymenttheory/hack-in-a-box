@@ -35,6 +35,18 @@ test('creates a reviewed assessment then configures and edits its exact named ch
   await region.screenshot({ path: info.outputPath('synthetic-mentor-checkpoint-planning.png') })
   await expect(page.locator('body')).not.toContainText('PRIVATE PLANNER GUIDANCE CANARY')
 })
+test('correcting one invalid field keeps typing focus while unrelated validation errors stay visible', async ({ page }) => {
+  const state = await plannerFixture(page); await openPlanner(page)
+  const region = plannerRegion(page), run = region.getByRole('combobox', { name: 'Mentor assessment run', exact: true })
+  await region.getByRole('button', { name: 'Review checkpoint window', exact: true }).click()
+  await expect(run).toBeFocused(); await run.selectOption({ index: 1 }); await expect(run).toBeFocused()
+  const name = region.getByRole('textbox', { name: 'Checkpoint name', exact: true })
+  await name.focus(); await name.pressSequentially('A complete checkpoint correction')
+  await expect(name).toBeFocused(); await expect(name).toHaveValue('A complete checkpoint correction')
+  await expect(name).not.toHaveAttribute('aria-invalid', 'true')
+  await expect(region.getByLabel('Checkpoint opens', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+  expect(state.writes).toHaveLength(0)
+})
 test('all-team judging offers only live mentor observations while a non-organiser cannot read or configure the planner', async ({ page }) => {
   const state = await plannerFixture(page, false)
   state.configuration.definition.mode = 'all_teams'; state.source.approved!.definition.mode = 'all_teams'

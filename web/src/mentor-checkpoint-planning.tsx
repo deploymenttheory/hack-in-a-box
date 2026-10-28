@@ -34,7 +34,7 @@ function PlannerEditor({ source, parent, commands, paused, refresh, observe, ack
   const identity = useIdentity(), boundary = useEventReadBoundary(source.event.id), scope = usePrivateRequestScope(`${source.event.id}:mentor-planner-editor`, parent)
   const [input, setInput] = useState(() => emptyMentorPlannerInput(source)), [errors, setErrors] = useState<Record<string, string>>({}), [review, setReview] = useState<MentorPlannerReview>()
   const [checking, setChecking] = useState(false), [failure, setFailure] = useState<unknown>(), [preflightFailure, setPreflightFailure] = useState(false), [needsCurrent, setNeedsCurrent] = useState(false), [denial, setDenial] = useState(false), [fresh, setFresh] = useState<MentorCheckpointPlanning>()
-  const form = useRef<HTMLFormElement>(null), heading = useRef<HTMLHeadingElement>(null), opener = useRef<HTMLElement | null>(null), lock = useRef(false)
+  const form = useRef<HTMLFormElement>(null), heading = useRef<HTMLHeadingElement>(null), opener = useRef<HTMLElement | null>(null), lock = useRef(false), focusValidation = useRef(false)
   const busy = checking || commands.pending, closed = ['completed', 'archived', 'cancelled'].includes(source.event.stage), blocked = paused || busy || needsCurrent || commands.unconfirmed || closed
   const saved = source.checkpoints.items.find(value => value.definition.id === input.targetID)
   const baseline = saved ? { runID: saved.definition.run_id, name: saved.definition.name, opens: saved.definition.opens_wall_time, closes: saved.definition.closes_wall_time, dst: saved.definition.dst_choice, reason: '' } : emptyMentorPlannerInput(source).checkpoint
@@ -42,7 +42,8 @@ function PlannerEditor({ source, parent, commands, paused, refresh, observe, ack
   usePlanningDepartureBarrier(busy)
   useBlocker({ shouldBlockFn: () => commands.pending || commands.unconfirmed ? false : checking || dirty && !window.confirm('Leave these unsaved mentor planning inputs?'), enableBeforeUnload: busy || dirty || commands.unconfirmed })
   useLayoutEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
-  useLayoutEffect(() => { if (form.current && Object.keys(errors).length) focusFirstInvalid(form.current) }, [errors])
+  useLayoutEffect(() => { if (focusValidation.current) { focusValidation.current = false; if (form.current) focusFirstInvalid(form.current) } }, [errors])
+  function showIssues(issues: Record<string, string>) { focusValidation.current = Object.keys(issues).length > 0; setErrors(issues) }
   function clearDenied() { scope.invalidate(); setInput(emptyMentorPlannerInput(source)); setReview(undefined); setFresh(undefined); setDenial(true); void refresh() }
   async function current() {
     const ticket = scope.capture()
@@ -57,7 +58,7 @@ function PlannerEditor({ source, parent, commands, paused, refresh, observe, ack
     if (blocked || lock.current) return
     const invalid = input.task === 'run' ? mentorRunProblems(source, input.purpose, input.rubric, input.reason) : checkpointProblems(source, input.checkpoint)
     if (input.task === 'checkpoint' && input.targetID && !saved) invalid.target = 'Read the current saved checkpoint before editing.'
-    setErrors(invalid); if (Object.keys(invalid).length) return
+    showIssues(invalid); if (Object.keys(invalid).length) return
     lock.current = true; setChecking(true); setFailure(undefined); setPreflightFailure(false); opener.current = button
     const ticket = scope.capture()
     try {
@@ -70,11 +71,11 @@ function PlannerEditor({ source, parent, commands, paused, refresh, observe, ack
         if (!rubric.selected) throw new APIError(409, 'rubric_changed')
         const window = await resolveCheckpointWindow(source, input.checkpoint, identity.csrf_token, ticket.signal, ticket.assert); ticket.assert()
         const issues = checkpointWindowProblems(source.event, run.purpose as 'checkpoint' | 'mentor_final', window)
-        setErrors(issues); if (Object.keys(issues).length) return
+        showIssues(issues); if (Object.keys(issues).length) return
         const wall = (value: string) => value.length === 16 ? value + ':00' : value
         setReview({ kind: 'checkpoint', source: structuredClone(source), intent: { run: structuredClone(run), criteria: rubric.selected.definition, timezone: source.event.configuration.timezone, window, command: { version: saved?.version ?? 0, reason: input.checkpoint.reason.trim(), definition: { id: saved?.definition.id ?? crypto.randomUUID(), run_id: run.id, name: input.checkpoint.name.trim(), opens_wall_time: wall(input.checkpoint.opens), closes_wall_time: wall(input.checkpoint.closes), dst_choice: input.checkpoint.dst } } } })
       }
-    } catch (error) { if (ticket.current()) { if (denied(error)) clearDenied(); else if (error instanceof CheckpointTimeIssue) setErrors({ [error.field]: error.message }); else { setFailure(error); setPreflightFailure(true) } } }
+    } catch (error) { if (ticket.current()) { if (denied(error)) clearDenied(); else if (error instanceof CheckpointTimeIssue) showIssues({ [error.field]: error.message }); else { setFailure(error); setPreflightFailure(true) } } }
     finally { lock.current = false; if (ticket.current()) setChecking(false) }
   }
   async function confirm() {
