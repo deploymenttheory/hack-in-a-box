@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/judging"
@@ -40,29 +39,10 @@ func (r *lifecycleJourney) createFinalRoundInBrowser(t *testing.T, item *lifecyc
 	if err := r.owner.call(t.Context(), http.MethodGet, "/api/v1/events/"+item.view.ID.String()+"/rubric/configuration", -1, nil, &current, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
-	if current.Revision != before.Revision+1 || len(current.Runs) != len(before.Runs)+1 {
-		t.Fatal("browser round creation changed an unexpected configuration revision or run census")
+	if !lifecycleCreatedAssessmentRun(before, current, *ack.RunID, "judge_final") {
+		t.Fatal("browser round creation changed an exact source, version, retained run or new run identity")
 	}
-	for _, old := range before.Runs {
-		found := false
-		for _, run := range current.Runs {
-			if reflect.DeepEqual(run, old) {
-				found = true
-			}
-		}
-		if !found {
-			t.Fatal("browser round creation lost an existing rubric run")
-		}
-	}
-	found := false
-	for _, run := range current.Runs {
-		if run.ID == *ack.RunID {
-			found = run.Purpose == "judge_final" && run.Reference == before.Reference && run.StartedAt == nil
-		}
-	}
-	if !found {
-		t.Fatal("browser creation acknowledged a different source, purpose or started run")
-	}
+
 	item.browserFinalRoundCreated = true
 	return current
 }

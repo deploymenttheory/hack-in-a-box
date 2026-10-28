@@ -244,3 +244,18 @@ enforced, and scoped resources are zero. Only metadata is published in
 `mentor-checkpoint-browser-r70-proof.json`; no private score screenshots or
 assessment bodies. Full original120 remains incomplete, including separate
 organiser planning issue347, and draft316 stays draft.
+
+### Organiser mentor planning browser barriers (pending execution)
+
+Issue347 / draft348 adds organiser assessment creation and named checkpoint
+windows to the admin Mentors section. The native fixture now requires three
+separate production UI run creations and three checkpoint configurations before
+preparation work: live observations in both modes, plus frozen-output mentor
+qualification in its applicable mode. Normal OIDC, exact captured reviews,
+cancel-without-write/focus return, one original versioned response and reload
+are checked. Native observers independently verify new IDs, preserved earlier
+runs/windows, exact approved criteria and resolved event instants. Existing live
+and final checkpoint separation and early-write denials remain. The participant
+Mentors section remains its published-roster reader. Target276 browser barriers
+is pending execution; R70 remains accepted270-step history, not this planner's
+native acceptance. Full original120 remains incomplete.

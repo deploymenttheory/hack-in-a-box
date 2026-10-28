@@ -20,35 +20,37 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
-	MentorCard    *lifecycleBrowserMentorCardInput   `json:"mentor_card,omitempty"`
-	JudgingSetup  *lifecycleBrowserJudgingSetupInput `json:"judging_setup,omitempty"`
-	Practice      *lifecycleBrowserPracticeInput     `json:"practice,omitempty"`
-	Freeze        *lifecycleBrowserFreezeInput       `json:"freeze,omitempty"`
-	Submission    *lifecycleBrowserSubmissionInput   `json:"submission,omitempty"`
-	Ask           *lifecycleBrowserAskInput          `json:"ask,omitempty"`
-	Answer        *lifecycleBrowserAnswerInput       `json:"answer,omitempty"`
-	EventDecision *lifecycleBrowserEventDecision     `json:"event_decision,omitempty"`
-	Reading       *lifecycleBrowserReadingInput      `json:"reading,omitempty"`
-	Objective     *lifecycleBrowserObjectiveInput    `json:"objective,omitempty"`
-	Challenge     *lifecycleBrowserChallengeInput    `json:"challenge,omitempty"`
-	Rubric        *lifecycleBrowserRubricInput       `json:"rubric,omitempty"`
-	TeamChange    *lifecycleBrowserTeamChange        `json:"team_change,omitempty"`
-	Form          *lifecycleBrowserFormInput         `json:"form,omitempty"`
-	Sequence      int                                `json:"sequence"`
-	Action        string                             `json:"action"`
-	EventID       uuid.UUID                          `json:"event_id"`
-	Now           time.Time                          `json:"domain_now"`
-	Primary       string                             `json:"primary"`
-	Actor         string                             `json:"actor,omitempty"`
-	TeamID        *uuid.UUID                         `json:"team_id,omitempty"`
-	Roles         *lifecycleBrowserRolesPhase        `json:"roles,omitempty"`
-	Create        *lifecycleBrowserCreateEvent       `json:"create,omitempty"`
-	Application   *lifecycleBrowserApplication       `json:"application,omitempty"`
-	Selection     *lifecycleBrowserSelection         `json:"selection,omitempty"`
-	Response      *lifecycleBrowserAdmissionResponse `json:"response,omitempty"`
+	MentorPlanning *lifecycleBrowserMentorPlanningInput `json:"mentor_planning,omitempty"`
+	MentorCard     *lifecycleBrowserMentorCardInput     `json:"mentor_card,omitempty"`
+	JudgingSetup   *lifecycleBrowserJudgingSetupInput   `json:"judging_setup,omitempty"`
+	Practice       *lifecycleBrowserPracticeInput       `json:"practice,omitempty"`
+	Freeze         *lifecycleBrowserFreezeInput         `json:"freeze,omitempty"`
+	Submission     *lifecycleBrowserSubmissionInput     `json:"submission,omitempty"`
+	Ask            *lifecycleBrowserAskInput            `json:"ask,omitempty"`
+	Answer         *lifecycleBrowserAnswerInput         `json:"answer,omitempty"`
+	EventDecision  *lifecycleBrowserEventDecision       `json:"event_decision,omitempty"`
+	Reading        *lifecycleBrowserReadingInput        `json:"reading,omitempty"`
+	Objective      *lifecycleBrowserObjectiveInput      `json:"objective,omitempty"`
+	Challenge      *lifecycleBrowserChallengeInput      `json:"challenge,omitempty"`
+	Rubric         *lifecycleBrowserRubricInput         `json:"rubric,omitempty"`
+	TeamChange     *lifecycleBrowserTeamChange          `json:"team_change,omitempty"`
+	Form           *lifecycleBrowserFormInput           `json:"form,omitempty"`
+	Sequence       int                                  `json:"sequence"`
+	Action         string                               `json:"action"`
+	EventID        uuid.UUID                            `json:"event_id"`
+	Now            time.Time                            `json:"domain_now"`
+	Primary        string                               `json:"primary"`
+	Actor          string                               `json:"actor,omitempty"`
+	TeamID         *uuid.UUID                           `json:"team_id,omitempty"`
+	Roles          *lifecycleBrowserRolesPhase          `json:"roles,omitempty"`
+	Create         *lifecycleBrowserCreateEvent         `json:"create,omitempty"`
+	Application    *lifecycleBrowserApplication         `json:"application,omitempty"`
+	Selection      *lifecycleBrowserSelection           `json:"selection,omitempty"`
+	Response       *lifecycleBrowserAdmissionResponse   `json:"response,omitempty"`
 }
 
 type lifecycleBrowserAcknowledgement struct {
+	CheckpointID  *uuid.UUID               `json:"checkpoint_id,omitempty"`
 	CardID        *uuid.UUID               `json:"card_id,omitempty"`
 	RunID         *uuid.UUID               `json:"run_id,omitempty"`
 	QuestionID    *uuid.UUID               `json:"question_id,omitempty"`
