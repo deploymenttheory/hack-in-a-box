@@ -181,3 +181,28 @@ second copies of private controls solely for responsive presentation.
 Record headers allow their action to wrap below the title. A long action must
 not reduce a normal record name to a letter-by-letter column. Keep the shared
 spacing and title basis; do not hide names or columns to make an inspector fit.
+
+## Rubric authoring and decision review
+
+`RubricPlanningFields` provides the production model, category bounds/weights,
+anchors, declared awards, evidence-only side quests and private guidance controls.
+Use the section navigation and retain stable category/award identities. Field
+errors must name the correction; reveal their section and category before moving
+keyboard focus. Neither optional evidence nor an award creates bonus points.
+
+`RubricPlanningReview` renders a captured definition, reason, native revision and
+exact version. The owner performs a fresh event/configuration preflight before
+one save or approval command. Cancellation preserves input and returns focus to
+the actual opener. Approval is private and never releases common criteria.
+Current reads must not acknowledge uncertain requests or silently reinterpret
+started assessments. Definite event/account/role loss clears private guidance;
+uncertain reads pause decisions while local inputs retain editing focus. After
+a confirmed save, focus the next approval reason; cancellation returns to the
+actual save or approval opener. The independent guide imports these same components
+with synthetic local callbacks and no API, auth or storage dependency.
+
+The owning rubric form uses `useRubricPlanningValidation().onInvalid` and
+`validateRubricPlanningForm` before capture. A native validation pass can report
+several fields at once; one owner reveals and focuses its first correction,
+preventing later invalid sections from stealing focus. Keep entered values and
+clear attempted-validation cues once a valid decision review is captured.

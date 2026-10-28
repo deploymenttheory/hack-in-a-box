@@ -33,7 +33,7 @@ export function revealPlanningField(form: HTMLFormElement | null, name: string) 
 }
 const destinations: Record<string, {group: string; icon: IconName}> = {
  repositories:{group:'Workspaces',icon:'repository'},overview:{group:'Event',icon:'layout'},today:{group:'Event',icon:'check'},'review coverage':{group:'Event',icon:'shield'},
- setup:{group:'Plan',icon:'calendar'},rules:{group:'Plan',icon:'book'},schedule:{group:'Plan',icon:'calendar'},branding:{group:'Plan',icon:'palette'},objectives:{group:'Plan',icon:'list'},staff:{group:'Plan',icon:'user'},preparation:{group:'Plan',icon:'check'},inventory:{group:'Plan',icon:'columns'},
+ 'judging criteria':{group:'Plan',icon:'list'},setup:{group:'Plan',icon:'calendar'},rules:{group:'Plan',icon:'book'},schedule:{group:'Plan',icon:'calendar'},branding:{group:'Plan',icon:'palette'},objectives:{group:'Plan',icon:'list'},staff:{group:'Plan',icon:'user'},preparation:{group:'Plan',icon:'check'},inventory:{group:'Plan',icon:'columns'},
  attendance:{group:'Delivery',icon:'team'},operations:{group:'Delivery',icon:'check'},logistics:{group:'Delivery',icon:'shield'},
  resources:{group:'Workspaces',icon:'book'},deliverables:{group:'Workspaces',icon:'upload'},mentors:{group:'Workspaces',icon:'team'},'mc console':{group:'Workspaces',icon:'presentation'},
  forms:{group:'Workspaces',icon:'list'},campaigns:{group:'Workspaces',icon:'send'},applicants:{group:'Workspaces',icon:'user'},teams:{group:'Workspaces',icon:'team'},content:{group:'Workspaces',icon:'document'},
