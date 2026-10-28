@@ -232,3 +232,15 @@ observers separately verify the exact author/team/checkpoint/run/rubric/content
 and immutable first version, retaining the earlier twelve-card census per mode.
 No private score screenshots or assessment bodies are published. Target270
 browser barriers remains pending execution; R69 remains historical246-step proof.
+
+### R70 executed independent live mentor cards
+
+Exact source bf42c45d passed all270 browser barriers and the native journey in
+609.36 seconds. All24 current published mentor assignments submitted through
+production review/correction/confirmation controls and reloaded their own cards.
+Native observers verified complete source/content/author identity and immutable
+first versions. Both modes archived, configured120-day retention remained
+enforced, and scoped resources are zero. Only metadata is published in
+`mentor-checkpoint-browser-r70-proof.json`; no private score screenshots or
+assessment bodies. Full original120 remains incomplete, including separate
+organiser planning issue347, and draft316 stays draft.

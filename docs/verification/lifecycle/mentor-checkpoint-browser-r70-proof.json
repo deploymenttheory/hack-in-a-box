@@ -1,0 +1,326 @@
+{
+  "source_revision": "bf42c45d596254c12fb51725646a77967a36f41e",
+  "verification_image": "sha256:2aaca2aa8557abb169f7fe6bde1cb14a5e140e47a9b5bfd011fd3ef7add516e0",
+  "normal_guide_image": "sha256:d0737ed50adc7a29f63c5e7feb172b5b828dfebbf7571aad7e00a6552a05af68",
+  "normal_guide_source": "bf42c45d596254c12fb51725646a77967a36f41e",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793161961",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R70",
+  "completed_ui_barriers": 270,
+  "native_elapsed_seconds": 609.36,
+  "source_composition": {
+    "fixture_runtime_revision": "a7322b6b2b01593779392ae45a45f178558e8db4",
+    "production_web_revision": "20d3b0de10caef627f839eeef25ea182220e44ad",
+    "production_dependency_pr": 346,
+    "runtime_byte_identity_verified": true
+  },
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "live_mentor_UI_receipts": [
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "3483f09c-22d4-4192-a41d-0dbe72594704",
+      "card_id": "dfe9e429-6199-5737-bdfc-84ae5224d42b",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "3483f09c-22d4-4192-a41d-0dbe72594704",
+      "card_id": "05c1d2a6-6d56-5c74-85ec-289ea8f5a9c1",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "5b386550-dd47-43c5-a7fc-c1c982e4c89b",
+      "card_id": "224d6200-6eba-53fd-8729-4a749e905845",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "5b386550-dd47-43c5-a7fc-c1c982e4c89b",
+      "card_id": "e0e3ff82-b413-53d6-b778-84056799d3a0",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "6dc422db-6eaa-476c-809c-fb1d2eb3ff36",
+      "card_id": "b5be0604-96d9-584f-abfa-86f87417c657",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "6dc422db-6eaa-476c-809c-fb1d2eb3ff36",
+      "card_id": "1ffb6c75-8e96-5e0e-8caf-ca680f63518a",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "7d538073-cf7d-4891-93ce-a35a9de2dde7",
+      "card_id": "2b16d03b-1a18-5560-902e-692c6eecebfb",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "7d538073-cf7d-4891-93ce-a35a9de2dde7",
+      "card_id": "87a4a1de-9c0b-53e3-bbb0-e93ea788e446",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "b70061d3-dfd4-444b-8acf-cb4f97b26da8",
+      "card_id": "eb70fd6d-413a-5fd7-b998-32202209e4ae",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "b70061d3-dfd4-444b-8acf-cb4f97b26da8",
+      "card_id": "3154e070-dfbf-5207-9d22-0f8d9dac8f3c",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-a",
+      "team_id": "e86a2fa1-adae-492b-bd00-132dea1b0a32",
+      "card_id": "f21791da-5219-532b-8075-085dfd81e6e5",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "28771ba5-e033-490c-8adf-d26b75991d79",
+      "actor": "mentor-b",
+      "team_id": "e86a2fa1-adae-492b-bd00-132dea1b0a32",
+      "card_id": "aff1dc9d-1943-5138-bc45-cc88f106a0cf",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "4664f8b0-cf25-4a67-a095-f465188095e7",
+      "card_id": "07cd3eda-fa5d-54ee-bc05-16762676324b",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "4664f8b0-cf25-4a67-a095-f465188095e7",
+      "card_id": "6cdc7934-bff5-59e8-a35f-9e9636c3843f",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "52e5235c-01d2-4f75-a667-29e102d9f577",
+      "card_id": "a601b220-42dc-5eb3-aae0-8522ff4c7eec",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "52e5235c-01d2-4f75-a667-29e102d9f577",
+      "card_id": "ff6d3808-0ca9-5e99-8dec-6dcbdc563b48",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "74b40b75-a68a-495a-a96d-2fbc5aeabefe",
+      "card_id": "4b432060-4738-5322-9c05-747ff10b676c",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "74b40b75-a68a-495a-a96d-2fbc5aeabefe",
+      "card_id": "b87ba7a2-de40-5f07-90b4-a773cfe1d15f",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "c9c8d531-d0ef-4065-8751-35c543d7c8df",
+      "card_id": "ebce7b1f-b0c6-5f00-81b6-7bc9afdee7e0",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "c9c8d531-d0ef-4065-8751-35c543d7c8df",
+      "card_id": "d382a405-6ff5-5004-a8b8-aee0dc491d5f",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "fa7e9b44-5255-44fb-a1f2-45b40f601af1",
+      "card_id": "0ad08fda-1b75-5267-ae0b-4e2ac6d4a1ca",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "fa7e9b44-5255-44fb-a1f2-45b40f601af1",
+      "card_id": "843ced86-7cc2-5962-8bee-45508ed812b4",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-a",
+      "team_id": "fe2a589c-4bd9-49f3-b109-6d3938fa6790",
+      "card_id": "d41f4436-e05e-5008-87d8-4ac3284e7bdd",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    },
+    {
+      "event_id": "7054fc5e-01da-44fc-8f25-adefa1a10ad9",
+      "actor": "mentor-b",
+      "team_id": "fe2a589c-4bd9-49f3-b109-6d3938fa6790",
+      "card_id": "1f6b3ab3-e575-51d0-8778-8211a1a10fe3",
+      "version": 1,
+      "correct_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true,
+      "provisional_checkpoint": true
+    }
+  ],
+  "native_guards": [
+    "All twelve published primary/second assignments per event submit independently through production controls",
+    "Each original native card binds actor/team/checkpoint/run/rubric/version and complete captured content",
+    "Each own current read contains only its single card and independently matches immutable native first-version history",
+    "Live checkpoint has no frozen submission revision and never supplies final scores",
+    "Original final-review separation, judging, cutoff, archive and configured120-day retention assertions retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_live_mentor_cards": 12,
+      "independent_authors": 2,
+      "distinct_frozen_teams": 6
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_live_mentor_cards": 12,
+      "independent_authors": 2,
+      "distinct_frozen_teams": 6
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "1cd224a301c8c573e54a482fc0e39a8596080cb2c109afb7f99ce82df2347f5d",
+    "connected-browser-proof.json": "766fdd51c2e1fd9e887b1f1b1508a0cfb0baf176c03ac36d4a5c82fa35fb3938",
+    "native/journey-start-live.json": "7f709d1633a455210721c40dacdc839aa03a9cd360cd40833872d9d494b22c03",
+    "native-runner.log": "0be81fb06a61c944b3d3bfee91b3feaa0304a637a528a4a41009e102ffa3c1d8",
+    "final.dump": "26d0801232c109545f5967ec3cb071b18d64ee66f12d666a7a277841a3f98931"
+  },
+  "remaining": "Full original120 remains incomplete: organiser mentor planning347, remaining final-review/real judging/results/feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim."
+}
