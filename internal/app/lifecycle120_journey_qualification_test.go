@@ -1,8 +1,12 @@
 package app
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/qualification"
@@ -35,18 +39,37 @@ type lifecycleQualificationCommandReceipt struct {
 
 // Every command uses the current native revision/version once; the original
 // actor-bound acknowledgement is recovered through GET, never by replaying POST.
-func lifecycleChangeQualification(t *testing.T, client *lifecycleClient, path string, page qualification.Page, body map[string]any, receipt *lifecycleQualificationReceipt) qualification.Page {
+func (r *lifecycleJourney) changeQualification(t *testing.T, item *lifecycleJourneyEvent, client *lifecycleClient, path string, page qualification.Page, body map[string]any, receipt *lifecycleQualificationReceipt) qualification.Page {
 	t.Helper()
 	id := uuid.New()
 	body["request_id"] = id
 	body["version"] = page.Round.Version
 	body["reason"] = "Recorded synthetic qualification decision against reviewed current frozen output"
 	var next qualification.Page
-	if err := client.call(t.Context(), http.MethodPost, path, page.Revision, body, &next, http.StatusOK); err != nil {
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		next, id = r.changeQualificationInBrowser(t, item, client, page, body)
+		body["request_id"] = id
+	} else if err := client.call(t.Context(), http.MethodPost, path, page.Revision, body, &next, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
+	raw, err := json.Marshal(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var command qualification.Command
+	if err = json.Unmarshal(raw, &command); err != nil {
+		t.Fatal(err)
+	}
+	raw, err = json.Marshal(struct {
+		Command          qualification.Command
+		ExpectedRevision int64
+	}{command, page.Revision})
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(raw)
 	ack := next.Receipt
-	if ack == nil || ack.RequestID != id || ack.RunID != receipt.RunID || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || next.Round.ActorID != client.person || ack.Fingerprint == "" {
+	if ack == nil || ack.RequestID != id || ack.RunID != receipt.RunID || ack.Action != body["action"] || ack.ExpectedRevision != page.Revision || ack.ExpectedVersion != page.Round.Version || ack.Version != next.Round.Version || next.Round.ActorID != client.person || ack.Fingerprint != hex.EncodeToString(digest[:]) {
 		t.Fatal("qualification command lost exact actor/source/version acknowledgement")
 	}
 	var recovered qualification.Recovery
@@ -77,7 +100,7 @@ func (r *lifecycleJourney) qualifyFrozenFinalists(t *testing.T) {
 		if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &page, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
-		page = lifecycleChangeQualification(t, r.owner, path, page, map[string]any{"action": "configure_panel", "panel": qualification.Panel{MentorIDs: []uuid.UUID{item.cohort.staff["mentor-a"].person, item.cohort.staff["mentor-b"].person}, OrganiserID: r.owner.person}}, receipt)
+		page = r.changeQualification(t, item, r.owner, path, page, map[string]any{"action": "configure_panel", "panel": qualification.Panel{MentorIDs: []uuid.UUID{item.cohort.staff["mentor-a"].person, item.cohort.staff["mentor-b"].person}, OrganiserID: r.owner.person}}, receipt)
 		frozen := []uuid.UUID{}
 		for _, team := range page.Teams {
 			if team.Outcome == "frozen" {
@@ -107,7 +130,7 @@ func (r *lifecycleJourney) qualifyFrozenFinalists(t *testing.T) {
 			if current.Source.RepositoryDecisionID != nil {
 				body["repository_decision_id"] = *current.Source.RepositoryDecisionID
 			}
-			page = lifecycleChangeQualification(t, r.owner, path, page, body, receipt)
+			page = r.changeQualification(t, item, r.owner, path, page, body, receipt)
 			var saved *qualification.TeamStatus
 			for _, team := range page.Teams {
 				if team.TeamID == id {
@@ -122,9 +145,9 @@ func (r *lifecycleJourney) qualifyFrozenFinalists(t *testing.T) {
 			if saved.Source != nil && saved.Source.RepositoryDecisionID != nil {
 				body["repository_decision_id"] = *saved.Source.RepositoryDecisionID
 			}
-			page = lifecycleChangeQualification(t, r.owner, path, page, body, receipt)
+			page = r.changeQualification(t, item, r.owner, path, page, body, receipt)
 		}
-		page = lifecycleChangeQualification(t, r.owner, path, page, map[string]any{"action": "propose"}, receipt)
+		page = r.changeQualification(t, item, r.owner, path, page, map[string]any{"action": "propose"}, receipt)
 		if page.Round.Proposal == nil || len(page.Round.Proposal.Ties) == 0 || page.Capabilities.CanSignOff {
 			t.Fatal("equal synthetic final cards bypassed unresolved native panel votes")
 		}
@@ -169,7 +192,7 @@ func (r *lifecycleJourney) qualifyFrozenFinalists(t *testing.T) {
 				if !canVote {
 					t.Fatal("current selected qualification panel member cannot cast its own missing vote")
 				}
-				page = lifecycleChangeQualification(t, client, path, page, map[string]any{"action": "vote_tie", "tie_id": active.TieID, "seat": active.Seat, "team_id": candidate, "evidence": []scorecards.EvidenceReference{{Kind: "note", Note: "Recorded explicit preference from current reviewed final output"}}}, receipt)
+				page = r.changeQualification(t, item, client, path, page, map[string]any{"action": "vote_tie", "tie_id": active.TieID, "seat": active.Seat, "team_id": candidate, "evidence": []scorecards.EvidenceReference{{Kind: "note", Note: "Recorded explicit preference from current reviewed final output"}}}, receipt)
 			}
 			if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &page, http.StatusOK); err != nil {
 				t.Fatal(err)
@@ -183,9 +206,9 @@ func (r *lifecycleJourney) qualifyFrozenFinalists(t *testing.T) {
 			if !ready {
 				t.Fatal("complete unanimous qualification ballots did not identify one current leader")
 			}
-			page = lifecycleChangeQualification(t, r.owner, path, page, map[string]any{"action": "resolve_tie", "tie_id": active.TieID, "seat": active.Seat, "team_id": candidate, "evidence": []scorecards.EvidenceReference{{Kind: "note", Note: "Resolve the actual complete panel ballot; never choose a hidden default winner"}}}, receipt)
+			page = r.changeQualification(t, item, r.owner, path, page, map[string]any{"action": "resolve_tie", "tie_id": active.TieID, "seat": active.Seat, "team_id": candidate, "evidence": []scorecards.EvidenceReference{{Kind: "note", Note: "Resolve the actual complete panel ballot; never choose a hidden default winner"}}}, receipt)
 		}
-		page = lifecycleChangeQualification(t, r.owner, path, page, map[string]any{"action": "sign_off"}, receipt)
+		page = r.changeQualification(t, item, r.owner, path, page, map[string]any{"action": "sign_off"}, receipt)
 		if page.Round.Signoff == nil || page.Round.Signoff.ActorID != r.owner.person || page.Round.Signoff.Binding == "" || page.Round.Proposal == nil || len(page.Round.Proposal.FinalistIDs) != 3 || len(page.Round.Proposal.ReserveIDs) != 1 {
 			t.Fatal("native qualification did not retain current explicit finalist and reserve selection")
 		}

@@ -294,3 +294,15 @@ mode acquires no final mentor stage. Both modes archived, configured120-day
 retention passed and scoped resources are zero. See
 `final-reviews-browser-r72-proof.json`; no private assessment screenshot or body
 is published. Full original120 remains incomplete and draft316 stays draft.
+
+### Qualification panel journey (pending execution)
+
+The next increment requires all35 successful qualification commands through the
+production UI: intended panel, four fresh moderated final cards and separate
+confirmations, an explicit proposal, both mentors voting on eight affected
+selection seats, eight reasoned resolutions and exact final sign-off. Native
+reads independently bind actual UI request IDs, command fingerprints, original
+actor/version/history and current frozen source. The missing-vote sign-off
+negative API check remains. All-team mode acquires no qualification workflow.
+Target335 browser barriers is unverified; R72 remains accepted300-step history.
+Full original120 remains incomplete and draft316 stays draft.
