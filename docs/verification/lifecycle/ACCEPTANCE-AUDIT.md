@@ -149,3 +149,21 @@ See `clarification-browser-r64-proof.json` and the synthetic common audience
 preview `native-common-answer-correction.png`. Full original acceptance remains
 open, including submission/cutoff, assessment, feedback/outcomes/archive and
 remaining role/provider/keyboard/narrow/recovery/final audit requirements.
+
+
+R65 failed at the first private draft after156 completed UI barriers. The native
+API returned200 with exact evidence, but production `sameEvidence` depended on
+JSON object member order and falsely locked the editor with an unknown outcome.
+Separate #343 / PR #344 fixes that contract defect; focused desktop/mobile
+draft/formal cases pass RED→GREEN while all five field-value guards remain exact.
+
+R66 then passes208 UI barriers and the native journey (417.72s), including twelve
+private drafts and eight formal live submissions. Normal team-member OIDC,
+cancel-without-write/focus, exact one reviewed command and reload are observed.
+Native reads retain original actor/evidence/version/time, private owner denial,
+early submission/review rejection and both private-only teams per event. Both
+modes finish archived; exact120-day guards and scoped cleanup pass. See
+`submission-browser-r66-proof.json` for executed source/image and independently
+compared fixture32e7d3fd plus PR344 webf440a8a0 composition. Later branch/cutoff
+and fictional-practice UI extensions are not executed by R66. Full original
+acceptance remains open; organiser final-round setup gap #345 is separate.
