@@ -94,5 +94,15 @@
     "final.dump": "18ebc8e8b2df152f8643a83516056eaa60fb69d076528ea2592f95c0f7b4bea2"
   },
   "production_ui_revision": "6bb48414ad3aafea9237769aa4045f5274d95139",
-  "native_focus_handoffs_verified": true
+  "native_focus_handoffs_verified": true,
+  "matching_published_runtime_revision": "df8abdb8e95e6a16bb1eeab75dd6a87cebca4fee",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ]
 }
