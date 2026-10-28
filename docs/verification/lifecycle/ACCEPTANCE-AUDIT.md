@@ -181,3 +181,20 @@ read the exact immutable historical approval, retaining separate manual review,
 explicit approval and read-only mentor effect guards. Its native rerun is pending.
 Cutoff UI reconciliation was not reached; R67 does not prove a final journey,
 archive or retention result. See `freeze-practice-r67-failed-proof.json`.
+
+
+R68 passes all232 UI barriers and the subsequent native journey (518.80s).
+Both modes configure six branches, submit fictional practice for all three
+selected judges and explicitly reconcile three managed formal code sources,
+retaining exact original command receipts and the failed-capture/later-head/
+earlier-selected-SHA distinction. The native census remains4 frozen,2 private-only
+not-submitted and1 withdrawn per event while cutoff precedes stage advancement.
+Normal worker maintenance is deliberately observed creating unapproved current
+mentor drafts; immutable preparation approvals are independently read and exact
+new human review/approval remains required. Both modes finish archived with the
+original120-day guards; independently scoped cleanup leaves zero resources.
+See `freeze-practice-browser-r68-proof.json` for full source composition and
+private artifact hashes, and `native-reconciled-cutoff.png` for synthetic UI.
+The full original twelve criteria remain incomplete, including product gap345,
+remaining real judging/results/feedback/outcome/archive UI and full role/provider/
+keyboard/narrow/private-recovery/final acceptance audit.
