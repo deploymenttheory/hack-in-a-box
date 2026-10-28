@@ -19,7 +19,7 @@ const denied = (error: unknown) => error instanceof APIError && [401, 403, 404].
 
 export function OrganiserJudgingSetup({ event, parent }: { event: EventRecord; parent: PrivateRequestScope }) {
   const identity = useIdentity(), boundary = useEventReadBoundary(event.id)
-  const owner = `${identity.person.id}:${identity.draft_scope}:${event.id}:judging-setup`
+  const owner = `${identity.person.id}:${identity.draft_scope}:${event.id}:judging-setup:commands`
   const commands = useCommunicationCommands(owner)
   const load = useCallback((signal: AbortSignal, assert: () => void) => loadJudgingSetup(event.id, signal, assert), [event.id])
   const read = useTodayRead(owner, load, parent, judgingSetupIdentity)
