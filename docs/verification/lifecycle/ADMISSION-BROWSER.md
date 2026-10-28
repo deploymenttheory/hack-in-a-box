@@ -137,3 +137,18 @@ approved model. R55 remains the earlier baseline; R56 passed the positive
 native path before final validation-focus corrections, which R57 includes.
 Challenge binding/authoring remains native API fixture work under #341.
 Full original #120 remains incomplete.
+
+R58 passes150 UI barriers and the subsequent native journey (418.75s). Both
+events now create their common challenge from the actual template, explicitly
+select the approved rubric, save, mark ready for review and approve through
+production controls. The native observer independently reads each exact
+resource, full text, reference, audience, acknowledgement, common schedule and
+draft/review/approved revision. Existing worker publication, assessment, archive
+and retention guards pass afterward. No application responses or sessions are
+injected; scoped cleanup leaves zero resources.
+[challenge-browser-r58-proof.json](challenge-browser-r58-proof.json) pins source,
+images, UI identity and private artifact hashes;
+[native-challenge-approved.png](native-challenge-approved.png) shows synthetic
+normal-UI approval. This closes the bounded native gate for #341, not original
+full #120. Withdrawals/hard freeze and later assessment/feedback/archive actions
+still require their full normal-UI extension and original final acceptance audit.
