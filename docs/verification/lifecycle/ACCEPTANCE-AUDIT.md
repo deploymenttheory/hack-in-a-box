@@ -209,3 +209,14 @@ runs, unstarted assessment state, original assignment receipts and fingerprints,
 and the existing full six-team/three-judge census. The intended browser barrier
 count is 246. No native acceptance is claimed until this exact composition runs;
 R68 remains historical 232-barrier evidence and full #120 remains incomplete.
+
+### R69 executed final judging setup
+
+The exact composed source b8b88add passed all246 browser barriers and the native
+journey in548.23 seconds. Two production UI final-round creations and twelve
+named team assignments retain exact native approved sources, immutable original
+receipts and command fingerprints. Both modes archived, configured120-day
+retention remained enforced, and scoped containers/volumes/networks are zero.
+See `judging-setup-browser-r69-proof.json` and synthetic-only
+`native-final-judging-setup.png`. Product dependency is separate PR346; full
+original120 remains incomplete and draft316 remains draft.
