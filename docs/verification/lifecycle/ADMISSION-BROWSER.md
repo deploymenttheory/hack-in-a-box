@@ -185,3 +185,17 @@ Both modes archive with exact retention guards; scoped cleanup is zero. See
 [synthetic planning screenshot](native-objective-planning.png). R60 remains a
 failed pre-save attempt. Participant acknowledgement/rubric reading is a later
 extension and is not established by this run. Full original #120 remains open.
+
+R62 passes170 UI barriers and the native journey (418.01s). Two confirmed
+participants per event use actual released-resource controls to review, cancel
+and confirm their own exact-version acknowledgement, then verify it after reload.
+They also open the published common rubric and see categories/ranges/weights,
+anchors and declared prizes without private guidance or undisclosed planning.
+Native own-reader GETs independently verify exact acknowledgement and immutable
+released contents. Both modes archive and pass exact retention guards; scoped
+cleanup is zero.
+[reading-browser-r62-proof.json](reading-browser-r62-proof.json) includes the
+rebased runtime/controller byte comparison and private artifact hashes; the
+[synthetic participant screenshot](native-published-rubric-reading.png) shows
+published criteria. Postponement/attendance exception is a later extension;
+full original #120 remains incomplete.

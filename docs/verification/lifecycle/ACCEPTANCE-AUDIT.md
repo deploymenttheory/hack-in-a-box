@@ -15,7 +15,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | R59 completes the bounded withdrawal/freeze action sequence; remaining role, UI boundary and full acceptance variants remain |
 | Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | Complete browser publication/exception paths |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
-| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | R61 verifies objective setup; objective disclosure, document acknowledgements, clarification/correction and remaining full Fleet sequence remain |
+| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | R61 objective setup and R62 common-rubric visibility/exact document acknowledgements pass; objective disclosure, clarification/correction and remaining full Fleet sequence remain |
 | Fictional practice, real judging, reviewed nonwinner showcase, owned30/60/90 reviews | R21 real independent cards/majority decisions, six outcomes/event, reviewed nonwinner, retained native queued reviews | Full browser sequence and current-role/provider variants |
 | Archive freezes competition and permits only approved audited follow-up | R21 full competition hash comparison, reviewed outcomes and exact queued reviews | Revocation/provider variants and final archive/export review |
 | Completed Fleet screens/guide with full journeys | Existing component/route/native browser proofs and separate normal-image guide | Full integrated keyboard/narrow/offline/private-recovery journeys and provenance index |
@@ -116,3 +116,12 @@ guards; scoped cleanup is zero. See `objective-browser-r61-proof.json`.
 This supersedes the earlier pending-objective observation. The published
 participant acknowledgement/common-rubric-reading extension still requires its
 own connected run; original full acceptance remains incomplete.
+
+R62 verifies four actual confirmed-participant reading acknowledgements and
+public common-rubric visibility across both events: all170 UI barriers and the
+native journey pass418.01s. Cancellation/focus, one exact-version command, reload
+persistence, immutable native document and private-canary absence are checked.
+Both archives and exact retention guards pass; scoped cleanup is zero. See
+`reading-browser-r62-proof.json`; runtime and all browser-controller source
+bytes match a pinned rebased draft revision. This supersedes the prior pending
+reading observation, while exception and remaining full journeys stay open.
