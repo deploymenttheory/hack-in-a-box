@@ -70,5 +70,16 @@
     "native-teams-347.png": "e7804a14a7c73601048c423bd89cd0df1d1a97acf121d44e146fd939cfe718b2",
     "native-teams-447.png": "abb97d8a811293f658fbec184c17ffd5f5fa4268269ff590b5caeb5fd7044aad",
     "final.dump": "787b1b13c6ee7ccefbadf6458f592029ad9ccad68b4e17cbf4260fcc073c1444"
-  }
+  },
+  "matching_published_runtime_revision": "b99ee2896a1d8ace5a7969e52c8353b3347f85ed",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "merged_production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072"
 }

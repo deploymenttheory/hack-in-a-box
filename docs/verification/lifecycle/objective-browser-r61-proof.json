@@ -78,5 +78,16 @@
     "native-objective-701.png": "903c3bc0a973488d5403d69348197af266d9df95b5ef27004b99047084fe4572",
     "native-objective-721.png": "0e717b03789d77d9a6ecd7d70c91d1eaa32d79b6ce59f45164abc4d314c14185",
     "final.dump": "e203f2c85ae6849a5900b4d0095e2071e65172beb10fb926b5e5aa24099b073c"
-  }
+  },
+  "matching_published_runtime_revision": "c1ae763cff7c082c13569f7cbd9a28267b8717f8",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "merged_production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072"
 }
