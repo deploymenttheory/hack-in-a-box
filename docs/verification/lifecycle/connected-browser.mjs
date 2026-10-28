@@ -1,3 +1,4 @@
+import {submitTeamEvidenceInFleet} from './browser-team-submissions.mjs'
 import {askClarificationInFleet,answerClarificationInFleet} from './browser-clarification-authoring.mjs'
 import {decideEventInFleet} from './browser-event-decisions.mjs'
 import {readPublicationInFleet} from './browser-publication-reading.mjs'
@@ -54,7 +55,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[],submissions=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -210,6 +211,13 @@ try{
    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
   }
   for(const sequence of [611,612,613,631,632,633]){step=`frozen-team-withdrawal-${sequence}`;await withdrawTeamMember(sequence)}
+  for(const base of [1101,1121])for(let offset=0;offset<6;offset++){
+   const sequence=base+offset
+   step=`private-team-draft-${sequence}`
+   const phase=await readPhase(sequence,180000)
+   submissions.push(await submitTeamEvidenceInFleet({browser,expect,phase,output,errors}))
+   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
+  }
   for(const sequence of [902,922]){
    step=`approve-live-attendance-exception-${sequence}`
    const phase=await readPhase(sequence,180000)
@@ -238,11 +246,20 @@ try{
    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,question_id:result.question_id,command_id:result.command_id,saved_by_ui:true})
   }
  }
+ if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='ui-journey'){
+  for(const base of [1201,1221])for(let offset=0;offset<4;offset++){
+   const sequence=base+offset
+   step=`formal-team-submission-${sequence}`
+   const phase=await readPhase(sequence,180000)
+   submissions.push(await submitTeamEvidenceInFleet({browser,expect,phase,output,errors}))
+   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
+  }
+ }
  step='native-journey-completion'
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,team_submissions:submissions,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)
