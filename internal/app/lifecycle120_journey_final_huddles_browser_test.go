@@ -26,11 +26,12 @@ type lifecycleBrowserFinalHuddleInput struct {
 	FrozenRevision *int64                     `json:"frozen_revision"`
 }
 type lifecycleFinalHuddleActionReceipt struct {
-	TeamID   uuid.UUID `json:"team_id"`
-	HuddleID uuid.UUID `json:"huddle_id"`
-	ActorID  uuid.UUID `json:"actor_id"`
-	Action   string    `json:"action"`
-	Version  int64     `json:"version"`
+	TeamID      uuid.UUID `json:"team_id"`
+	HuddleID    uuid.UUID `json:"huddle_id"`
+	ActorID     uuid.UUID `json:"actor_id"`
+	ModeratorID uuid.UUID `json:"moderator_id"`
+	Action      string    `json:"action"`
+	Version     int64     `json:"version"`
 }
 
 func (r *lifecycleJourney) configureFinalHuddleInBrowser(t *testing.T, item *lifecycleJourneyEvent, teamIndex int, teamID uuid.UUID, revision int64, definition moderation.Definition, reason string, cards []scorecards.CardReference) moderation.Huddle {
@@ -60,7 +61,7 @@ func (r *lifecycleJourney) configureFinalHuddleInBrowser(t *testing.T, item *lif
 	if len(expected) != 0 {
 		t.Fatal("huddle configuration omitted an intended panel member")
 	}
-	item.browserFinalHuddleActions = append(item.browserFinalHuddleActions, lifecycleFinalHuddleActionReceipt{teamID, huddle.Definition.ID, r.owner.person, "configure", huddle.Version})
+	item.browserFinalHuddleActions = append(item.browserFinalHuddleActions, lifecycleFinalHuddleActionReceipt{TeamID: teamID, HuddleID: huddle.Definition.ID, ActorID: r.owner.person, ModeratorID: huddle.Definition.ModeratorID, Action: "configure", Version: huddle.Version})
 	return huddle
 }
 
@@ -115,7 +116,7 @@ func (r *lifecycleJourney) decideFinalHuddleInBrowser(t *testing.T, item *lifecy
 	default:
 		t.Fatal("unexpected final huddle browser action")
 	}
-	item.browserFinalHuddleActions = append(item.browserFinalHuddleActions, lifecycleFinalHuddleActionReceipt{before.TeamID, huddle.Definition.ID, client.person, action, huddle.Version})
+	item.browserFinalHuddleActions = append(item.browserFinalHuddleActions, lifecycleFinalHuddleActionReceipt{TeamID: before.TeamID, HuddleID: huddle.Definition.ID, ActorID: client.person, ModeratorID: huddle.Definition.ModeratorID, Action: action, Version: huddle.Version})
 	return huddle
 }
 
@@ -149,14 +150,17 @@ func lifecycleBrowserFinalHuddlesComplete(item lifecycleJourneyEvent) bool {
 		return false
 	}
 	for index, huddle := range item.review.FinalHuddles {
+		moderator := item.browserFinalHuddleActions[index*4].ModeratorID
+		if moderator == uuid.Nil {
+			return false
+		}
 		for offset, action := range []string{"configure", "complete_second_review", "open", "sign_off"} {
 			receipt := item.browserFinalHuddleActions[index*4+offset]
-			actor := item.view.OwnerID
+			actor := moderator
 			if offset == 1 {
-				id := item.cohort.staff["mentor-b"].person
-				actor = &id
+				actor = item.cohort.staff["mentor-b"].person
 			}
-			if actor == nil || receipt.ActorID != *actor || receipt.TeamID != huddle.TeamID || receipt.HuddleID != huddle.ID || receipt.Action != action || receipt.Version != int64(offset+1) {
+			if receipt.ModeratorID != moderator || receipt.ActorID != actor || receipt.TeamID != huddle.TeamID || receipt.HuddleID != huddle.ID || receipt.Action != action || receipt.Version != int64(offset+1) {
 				return false
 			}
 		}
