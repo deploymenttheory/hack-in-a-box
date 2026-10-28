@@ -37,6 +37,7 @@ type lifecycleJourneyEvent struct {
 
 	browserApplications        []lifecycleBrowserApplicationReceipt
 	browserSelections          []lifecycleBrowserSelectionReceipt
+	browserChallengeApproved   bool
 	browserRubricApproved      bool
 	browserTeamCommands        []string
 	browserPublishedForms      []string
@@ -329,7 +330,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		for _, item := range run.events {
 			if !item.browserEventCreated || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
-				!item.browserRubricApproved ||
+				!item.browserRubricApproved || !item.browserChallengeApproved ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
 				len(item.browserApplications) != 4 ||
 				len(item.browserSelections) != 2 ||
@@ -380,6 +381,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		FailedMessage              lifecycleFailedMessageReceipt        `json:"failed_message"`
 		BrowserApplications        []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
 		BrowserSelections          []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserChallengeApproved   bool                                 `json:"browser_challenge_approved"`
 		BrowserRubricApproved      bool                                 `json:"browser_rubric_approved"`
 		BrowserTeamCommands        []string                             `json:"browser_team_commands,omitempty"`
 		BrowserPublishedForms      []string                             `json:"browser_published_forms,omitempty"`
@@ -467,6 +469,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				BrowserEventCreated:        item.browserEventCreated,
 				BrowserPublishedForms:      item.browserPublishedForms,
 				BrowserTeamCommands:        item.browserTeamCommands,
+				BrowserChallengeApproved:   item.browserChallengeApproved,
 				BrowserRubricApproved:      item.browserRubricApproved,
 				BrowserAdmissionDecisions:  item.browserAdmissionDecisions,
 				BrowserOfferPolicyApproved: item.browserOfferPolicyApproved,
@@ -708,7 +711,7 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	r.waitTeamNotice(t, &item)
-	item.challenge, item.rubric, err = installLifecycleChallengeWithConfiguration(ctx, r.owner, item.view.ID, mode, r.browserRubricConfiguration(t, &item, index))
+	item.challenge, item.rubric, err = installLifecycleChallengeWithActions(ctx, r.owner, item.view.ID, mode, r.browserRubricConfiguration(t, &item, index), r.browserChallengeAuthoring(t, &item, index))
 	if err != nil {
 		t.Fatal(err)
 	}

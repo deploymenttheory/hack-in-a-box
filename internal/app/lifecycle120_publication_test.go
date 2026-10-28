@@ -27,6 +27,10 @@ func installLifecycleChallenge(ctx context.Context, owner *lifecycleClient, even
 }
 
 func installLifecycleChallengeWithConfiguration(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, mode string, configure func(rubric.Definition) (rubric.Configuration, error)) (content.Page, rubric.Configuration, error) {
+	return installLifecycleChallengeWithActions(ctx, owner, eventID, mode, configure, nil)
+}
+
+func installLifecycleChallengeWithActions(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, mode string, configure func(rubric.Definition) (rubric.Configuration, error), author func(content.Input) (content.Page, error)) (content.Page, rubric.Configuration, error) {
 	base := "/api/v1/events/" + eventID.String()
 	definition := rubric.Default(mode, eventID)
 	definition.RequiredJudgeCount = 3
@@ -65,6 +69,10 @@ func installLifecycleChallengeWithConfiguration(ctx context.Context, owner *life
 		Audience:    access.ContentAudience{Confirmed: true, Roles: []string{}, Teams: []uuid.UUID{}},
 		Attachments: []uuid.UUID{}, Rubric: &approved.Reference, RequireAcknowledgement: true,
 	}}
+	if author != nil {
+		page, err := author(input)
+		return page, approved, err
+	}
 	var page content.Page
 	path := base + "/content/" + uuid.NewString()
 	if err := owner.call(ctx, http.MethodPut, path, 0, input, &page, http.StatusOK); err != nil {

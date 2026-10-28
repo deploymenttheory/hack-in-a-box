@@ -1,3 +1,4 @@
+import {authorChallengeInFleet} from './browser-challenge-authoring.mjs'
 import {configureRubricInFleet} from './browser-rubric-planning.mjs'
 // Host browser actions on the very same events as TestLifecycleComposeJourney.
 // The controller supplies no sessions, application responses or native writes.
@@ -49,7 +50,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -161,6 +162,13 @@ try{
     rubrics.push(await configureRubricInFleet({page,expect,phase,output}))
     await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
    }
+   for(const challengeSequence of [503,504,505].map(n=>n+(sequence-1)*20)){
+    step=`challenge-${challengeSequence}`
+    const phase=await readPhase(challengeSequence,180000)
+    const authored=await authorChallengeInFleet({page,expect,phase,output})
+    challenges.push(authored)
+    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,content_id:authored.content_id,saved_by_ui:true})
+   }
   }
  }
  if(['live-recovery','role-matrix','ui-journey'].includes(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES)){
@@ -178,7 +186,7 @@ try{
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,rubric_configuration:rubrics,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)
