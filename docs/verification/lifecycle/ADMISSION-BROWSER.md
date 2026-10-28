@@ -115,3 +115,12 @@ exact-version approval for each event, then independently reads the complete
 native definition, generated award identities, public digest and unchanged
 approved reference consumed by challenge authoring. This extension compiles;
 its connected run with draft340 is pending and is not acceptance evidence yet.
+
+R55 passes144 UI barriers and the subsequent native journey (423.11s),
+including actual rubric draft save and exact-version approval for both modes.
+Native reads verify the complete definition, unique UI-generated award IDs,
+public digest, versions and exact reference consumed by the challenge. All
+isolated resources were removed. rubric-browser-r55-proof.json retains source
+and artifact hashes. This run uses earlier UIcab1debc; final keyboard
+corrections require R56 before340 is ready. Content binding/authoring remains
+an API fixture step and is now tracked separately in341. Full120 remains open.
