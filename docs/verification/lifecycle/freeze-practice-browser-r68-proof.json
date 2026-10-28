@@ -348,5 +348,16 @@
     "native-runner.log": "1f6bd7194a07be593879357a30c3f4c5575146ea44c999d13bb03b8b8857fdcc",
     "final.dump": "b2aee01ebb2f9cb0aeb7f28dd9ca5856f92c1112202fb6ca1b2cd8eef6f8b636",
     "native-freeze-1401.png": "05158034aafb4aa1fc62d83c7f6be04bba0ff34329c3470360932dbcc8833b96"
-  }
+  },
+  "matching_published_runtime_revision": "7c79487a7a619277aad7083cb4943e2cc770c44e",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "production_dependency_344_merged_main": "8d05ffff9d99b155da4dddc24516a7b5769d5128"
 }
