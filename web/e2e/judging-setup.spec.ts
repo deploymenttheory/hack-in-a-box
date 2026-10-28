@@ -59,7 +59,7 @@ async function chooseJudges(page: Page, count = 3) {
   for (const name of ['Morgan', 'Sam', 'Alex'].slice(0, count)) await section.getByRole('checkbox', { name, exact: true }).check()
   await section.getByRole('textbox', { name: 'Assignment reason', exact: true }).fill('Reviewed independent judges for Aurora')
 }
-test('creates one exact approved final round, reviews named assignments and reloads native coverage', async ({ page }) => {
+test('creates one exact approved final round, reviews named assignments and reloads native coverage', async ({ page }, info) => {
   const state = await setup(page), section = setupRegion(page)
   await section.getByRole('button', { name: 'Review final round creation', exact: true }).click()
   await expect(section.getByRole('combobox', { name: 'Approved rubric version', exact: true })).toBeFocused()
@@ -81,6 +81,7 @@ test('creates one exact approved final round, reviews named assignments and relo
   await assignment.getByRole('button', { name: 'Save reviewed judge assignment', exact: true }).click()
   await expect(section.getByRole('status', { name: 'Last acknowledged setup change', exact: true })).toContainText('assignment was acknowledged')
   expect(state.writes).toHaveLength(2); expect(state.writes[1].revision).toBe('"0"'); expect(state.source.run!.started_at).toBeNull()
+  await section.screenshot({ path: info.outputPath('synthetic-final-judging-setup.png') })
   await page.reload(); await expect(section.getByRole('region', { name: 'Current final judge assignments', exact: true })).toContainText('Morgan, Sam, Alex')
   expect(state.writes).toHaveLength(2)
 })
