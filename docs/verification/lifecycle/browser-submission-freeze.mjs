@@ -6,7 +6,7 @@ export async function reviewSubmissionFreezeInFleet({page,expect,phase,output}){
  assert.equal(phase.action,`freeze-${command.action}`)
  assert.ok(['configure','reconcile'].includes(command.action))
  await page.clock.setFixedTime(new Date(phase.domain_now))
- await page.goto(`http://admin.localhost:8081/events/${phase.event_id}/teams/${input.team_id}/build`)
+ await page.goto(`http://admin.localhost:8080/events/${phase.event_id}/teams/${input.team_id}/build`)
  await expect(page.getByRole('heading',{name:'Submitted build',exact:true})).toBeVisible()
  const workspace=page.getByRole('region',{name:'Submission code workspace',exact:true})
  const editor=workspace.getByRole('region',{name:'Submission code controls',exact:true})
