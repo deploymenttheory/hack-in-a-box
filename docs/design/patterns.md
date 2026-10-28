@@ -206,3 +206,20 @@ The owning rubric form uses `useRubricPlanningValidation().onInvalid` and
 several fields at once; one owner reveals and focuses its first correction,
 preventing later invalid sections from stealing focus. Keep entered values and
 clear attempted-validation cues once a valid decision review is captured.
+
+### Exact challenge rubric selection
+
+Use `ChallengeRubricChoice` and `PublicChallengeRubric` to show the retained
+selection alongside the current approved snapshot. Include public criteria,
+bounds, weights and anchors. The independent guide contains a local example
+with newer-approval and pending-read controls. A newer approval must not mutate
+the local document; a deliberate choice stores only ID, version and digest.
+Keep private judge guidance outside this projection and attendee previews.
+
+Reads pause decisions while local content and keyboard position remain intact;
+only read-paused, otherwise available controls remain focusable when disabled.
+Actual pending or unknown writes disable choices. Definite authority loss clears
+the private editor. Fresh owner preflights precede versioned writes; a failed
+read is not an unknown mutation. Save an unbound draft if needed, but require the
+current exact approved reference for review and approval. Cancellation remains
+independent of rubric availability. Keep native publication and run safeguards.

@@ -23,6 +23,7 @@ export class APIError extends Error {
       registration_closed: 'New applications are closed. Your existing status remains available.',
       registration_exists: 'You already have an active application of this type. Your status is shown below.',
       capacity_unavailable: 'All attendee places are currently held. No place was allocated.',
+      rubric_changed: 'Challenge criteria have changed. Check the current criteria, then explicitly choose and save the approved version before review or approval.',
       form_invalid: 'Resolve the form fields before continuing.',
       event_blocked: 'Resolve the event blockers before continuing.',
     }
