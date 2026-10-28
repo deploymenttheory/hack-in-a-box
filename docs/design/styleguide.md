@@ -514,3 +514,20 @@ Compare all contracted evidence fields by value, independently of JSON object
 member order and evidence collection order. Preserve exact deliverable identity,
 kind, label, URL and nullable file identity. A changed original response remains
 unconfirmed; a current read never acknowledges an earlier unknown write.
+
+### Final judging setup
+
+The **Plan final judging** task-pattern example uses production
+`JudgingSetupFields`, `JudgingSetupCurrent` and `JudgingSetupDecision` with a local
+synthetic owner. Select an exact approved rubric, then explicitly review named
+judges for a frozen team. Partial coverage is visible in text and requires an
+explicit acknowledgement. First-invalid focus, named controls and review-cancel
+focus are part of the contract. The example has no API, session, private storage,
+assignment authority or native receipt.
+
+The production owner rechecks current authority and the captured source tuple
+before sending. Current reads cannot acknowledge unknown creation or assignment
+writes. Only an exact actor/request/run/team/version/fingerprint assignment
+receipt can settle an original assignment; choosing a reviewed current base
+retains the earlier unknown metadata and never replays it. Native scoring owns
+assessment start, eligibility, cutoff and frozen-code gates.

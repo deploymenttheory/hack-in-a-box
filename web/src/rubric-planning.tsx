@@ -7,7 +7,7 @@ import { usePrivateRequestScope } from './private-request-scope'
 import { useTodayRead } from './today-read'
 import { useAdmissionCommand, AdmissionFeedback } from './registration-command'
 import { CollectionHeading } from './components/patterns'
-import { Button } from './components/ui/button'
+import { ActionLink, Button } from './components/ui/button'
 import { Field, Textarea } from './components/ui/fields'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { Failure, Loading } from './components/states'
@@ -30,6 +30,7 @@ function RubricLifetime({ event, onDirty }: { event: EventRecord; onDirty: (dirt
   if (!read.data) return read.error ? <Failure error={read.error} retry={() => void read.refresh()} /> : <Loading />
   return <section className="fleet-print-excluded"><CollectionHeading title="Judging criteria" scope={{ event: event.name, entity: 'Private rubric planning' }} description="Edit the common criteria, review a private draft, then approve its exact version before configuring challenge publication." />
     {!!read.error && <Failure error={read.error} retry={() => void read.refresh()} />}
+    <ActionLink icon="user" href={`/events/${event.id}/judging`}>Plan final judging round</ActionLink>
     <RubricEditor event={event} initial={read.data} observed={read.data} paused={!event.can_edit || !!boundary?.paused || read.pending || !!read.error} parent={read.authority} onDirty={onDirty} deny={error => { owner.invalidate(); setDenial(error) }} />
   </section>
 }

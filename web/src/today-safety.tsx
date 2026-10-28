@@ -4,13 +4,13 @@ import { CommunicationCommandHistory, useCommunicationCommandNamespace } from '.
 import { useIdentity } from './session'
 import { usePlanningDepartureBarrier } from './planning-operations'
 
-const confirmDeparture = () => window.confirm('Leave this workspace with an earlier preparation, evidence, reading or session outcome still unconfirmed? The original outcome remains unconfirmed; no request is replayed.')
+const confirmDeparture = () => window.confirm('Leave this workspace with an earlier preparation, evidence, reading, judging setup or session outcome still unconfirmed? The original outcome remains unconfirmed; no request is replayed.')
 
 // This safe observer sits above capability-keyed planning/private task owners.
 // It owns no task payload, replay, current-state receipt or authority decision.
 export function TodayActionSafety({ eventID, children }: { eventID: string; children: ReactNode }) {
   const identity = useIdentity(), prefix = `${identity.person.id}:${identity.draft_scope}:${eventID}`
-  const preparation = useCommunicationCommandNamespace(`${prefix}:preparation`), acknowledgements = useCommunicationCommandNamespace(`${prefix}:resource-acknowledgement`), sessions = useCommunicationCommandNamespace(`${prefix}:session-bookings`), code = useCommunicationCommandNamespace(`${prefix}:submission-freeze`), evidence = useCommunicationCommandNamespace(`${prefix}:team-deliverables`), attempts = [...preparation, ...acknowledgements, ...sessions, ...code, ...evidence]
+  const preparation = useCommunicationCommandNamespace(`${prefix}:preparation`), acknowledgements = useCommunicationCommandNamespace(`${prefix}:resource-acknowledgement`), sessions = useCommunicationCommandNamespace(`${prefix}:session-bookings`), code = useCommunicationCommandNamespace(`${prefix}:submission-freeze`), evidence = useCommunicationCommandNamespace(`${prefix}:team-deliverables`), judgingSetup = useCommunicationCommandNamespace(`${prefix}:judging-setup`), attempts = [...preparation, ...acknowledgements, ...sessions, ...code, ...evidence, ...judgingSetup]
   const pending = attempts.some(attempt => attempt.state === 'pending'), unknown = attempts.some(attempt => attempt.blocks && attempt.state === 'unknown')
   usePlanningDepartureBarrier(pending)
   useBlocker({ shouldBlockFn: () => pending || unknown && !confirmDeparture(), enableBeforeUnload: attempts.length > 0 })
