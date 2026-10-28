@@ -500,3 +500,17 @@ never gain a confirmation or replay through focus restoration.
 The Final ballot example uses this production helper in an independent synthetic
 preview that simulates two background reads after cancellation. Timers model
 only local guide presentation; they perform no authentication, API call or write.
+
+### Team evidence acknowledgement
+
+The task-pattern examples include **Compare reviewed evidence by value**, using
+production `sameEvidence` with the generated native DTO field order. Its named
+buttons retain keyboard focus and announce matching or changed fields through
+textual status. The usage snippet explains the separate authority, resource and
+revision checks owned by the real operation. No application request or receipt
+is created by the guide.
+
+Compare all contracted evidence fields by value, independently of JSON object
+member order and evidence collection order. Preserve exact deliverable identity,
+kind, label, URL and nullable file identity. A changed original response remains
+unconfirmed; a current read never acknowledges an earlier unknown write.

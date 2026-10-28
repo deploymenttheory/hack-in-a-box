@@ -17,6 +17,8 @@ export function missingRequirements(definitions: Definition[], items: Evidence[]
 }
 
 export function sameEvidence(a: Evidence[], b: Evidence[]) {
-  const ordered = (items: Evidence[]) => [...items].sort((x, y) => x.deliverable_id.localeCompare(y.deliverable_id))
+  const ordered = (items: Evidence[]) => [...items]
+    .sort((x, y) => x.deliverable_id.localeCompare(y.deliverable_id))
+    .map(item => ({ deliverable_id: item.deliverable_id, kind: item.kind, label: item.label, url: item.url, file_id: item.file_id }))
   return JSON.stringify(ordered(a)) === JSON.stringify(ordered(b))
 }

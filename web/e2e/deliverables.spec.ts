@@ -320,3 +320,29 @@ for (const pending of [false, true]) test(`losing private-draft authority scrubs
   await expect(page.getByLabel('Evidence type for Repository', { exact: true })).toBeEnabled()
   expect(state.value.can_submit).toBe(true)
 })
+
+for (const formal of [false, true]) test(`native DTO field order acknowledges ${formal ? 'formal submission' : 'private draft'}`, async ({ page }) => {
+  const state = await setup(page, { live: formal })
+  const path = `/api/v1/events/${firstID}/teams/${teamID}/submission${formal ? '' : '/draft'}`
+  await page.route(`**${path}`, async route => {
+    if (route.request().method() !== 'PUT') return route.fallback()
+    const body = route.request().postDataJSON()
+    // Generated Go SubmissionEvidence serialises file_id before kind. JSON
+    // object member ordering must not change acknowledgement of exact evidence.
+    const evidence = body.evidence.map((item: components['schemas']['SubmissionEvidence']) => ({ deliverable_id: item.deliverable_id, file_id: item.file_id, kind: item.kind, label: item.label, url: item.url }))
+    state.writes.push({ path, body, revision: route.request().headers()['if-match'] })
+    if (!formal) { Object.assign(state.draft, { revision: 1, evidence, updated_at: state.value.live_start }); return route.fulfill({ json: state.draft }) }
+    state.value.revision = 1
+    state.value.final = { revision: 1, actor_id: person.id, submitted_at: state.value.live_start, late: false, reason: '', review_status: 'pending', definitions: state.value.definitions, evidence }
+    return route.fulfill({ json: state.value })
+  })
+  await fillRepository(page)
+  await page.getByRole('button', { name: formal ? 'Submit formal version' : 'Save private draft', exact: true }).click()
+  await page.getByRole('button', { name: formal ? 'Confirm formal submission' : 'Confirm private draft', exact: true }).click()
+  await expect(page.getByText(formal ? 'Formal version 1 submitted. Completion review is pending.' : 'Private draft saved. No formal submission was accepted or reviewed.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Outcome unknown', exact: true })).toHaveCount(0)
+  expect(state.writes).toHaveLength(1)
+  await page.reload(); await openEventSection(page, 'Deliverables')
+  await expect(page.getByLabel('Reference URL for Repository', { exact: true })).toHaveValue('https://example.test/aurora')
+  expect(state.writes).toHaveLength(1)
+})
