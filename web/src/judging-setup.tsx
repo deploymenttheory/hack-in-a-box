@@ -11,7 +11,7 @@ import { ActionLink, Button } from './components/ui/button'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { focusFirstInvalid } from './components/ui/fields'
 import { Failure, Loading } from './components/states'
-import { assignmentFingerprint, assignmentProblems, roundCreationProblems, JudgingSetupReceiptIssue, createdFinalRound, judgingSetupIdentity, judgingSetupVersion, loadJudgingSetup, matchesAssignmentReceipt, type AssignmentIntent, type JudgeAssignmentCommand, type JudgingSetup } from './judging-setup-model'
+import { judgingSetupFingerprint, assignmentProblems, deliberationProblems, roundCreationProblems, JudgingSetupReceiptIssue, createdFinalRound, judgingSetupIdentity, judgingSetupVersion, loadJudgingSetup, matchesJudgingSetupReceipt, type JudgingSetupIntent, type JudgeSetupCommand, type JudgingSetup } from './judging-setup-model'
 import { emptyJudgingSetupInput, JudgingSetupCurrent, JudgingSetupDecision, JudgingSetupFields, type JudgingSetupReview } from './judging-setup-view'
 
 type Commands = ReturnType<typeof useCommunicationCommands>
@@ -58,10 +58,10 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
   }
   function begin(button: HTMLElement) {
     if (blocked || lock.current) return
-    const invalid = source.run ? assignmentProblems(source, input.teamID, input.judgeIDs, input.reason, input.acknowledgeGap) : roundCreationProblems(source, input.rubric, input.reason)
+    const invalid = source.run && input.operation === 'open_deliberation' ? deliberationProblems(source, input.reason) : source.run ? assignmentProblems(source, input.teamID, input.judgeIDs, input.reason, input.acknowledgeGap) : roundCreationProblems(source, input.rubric, input.reason)
     setErrors(invalid); if (Object.keys(invalid).length) return
     opener.current = button; setFailure(undefined); setFailureStage(undefined)
-    setReview({ kind: source.run ? 'assign' : 'create', source: structuredClone(source), input: structuredClone(input) })
+    setReview({ kind: source.run ? input.operation : 'create', source: structuredClone(source), input: structuredClone(input) })
   }
   async function confirm() {
     if (!review || blocked || lock.current) return
@@ -71,21 +71,21 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
       const latest = await current(); ticket.assert()
       if (judgingSetupVersion(latest) !== judgingSetupVersion(captured.source)) { setNeedsCurrent(true); throw new APIError(409, 'revision_conflict') }
       const revision = captured.kind === 'create' ? captured.source.configuration.revision : captured.source.round!.revision
-      const body: JudgeAssignmentCommand | undefined = captured.kind === 'assign' ? { request_id: crypto.randomUUID(), action: 'assign', team_id: captured.input.teamID, judge_ids: [...captured.input.judgeIDs], reason: captured.input.reason.trim() } : undefined
-      const fingerprint = body ? await assignmentFingerprint(captured.source.run!.id, revision, body) : undefined
+      const body: JudgeSetupCommand | undefined = captured.kind === 'open_deliberation' ? { request_id: crypto.randomUUID(), action: 'open_deliberation', reason: captured.input.reason.trim() } : captured.kind === 'assign' ? { request_id: crypto.randomUUID(), action: 'assign', team_id: captured.input.teamID, judge_ids: [...captured.input.judgeIDs], reason: captured.input.reason.trim() } : undefined
+      const fingerprint = body ? await judgingSetupFingerprint(captured.source.run!.id, revision, body) : undefined
       ticket.assert()
-      attemptID = commands.begin({ operation: captured.kind === 'create' ? 'Create final judging round' : 'Assign final judges', revision, command: { action: captured.kind === 'create' ? 'create_run' : 'assign', intentID: crypto.randomUUID(), requestID: body?.request_id, resourceID: captured.source.run?.id ?? captured.source.configuration.reference.id, subjectID: body?.team_id, intentFingerprint: fingerprint } })
+      attemptID = commands.begin({ operation: captured.kind === 'create' ? 'Create final judging round' : captured.kind === 'open_deliberation' ? 'Open final deliberation' : 'Assign final judges', revision, command: { action: captured.kind === 'create' ? 'create_run' : captured.kind, intentID: crypto.randomUUID(), requestID: body?.request_id, resourceID: captured.source.run?.id ?? captured.source.configuration.reference.id, subjectID: body?.team_id, intentFingerprint: fingerprint } })
       if (captured.kind === 'create') {
         const result = unwrap(await api.POST('/api/v1/events/{event_id}/rubric/configuration', { params: { path: { event_id: source.event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${revision}"` } }, body: { action: 'create_run', purpose: 'judge_final', version: captured.source.approved!.reference.version, reason: captured.input.reason.trim() } }))
         if (!createdFinalRound(captured.source, result, captured.source.approved!.reference)) throw new JudgingSetupReceiptIssue('The original response did not acknowledge the exact reviewed final round.')
       } else {
         const receipt = unwrap(await api.POST('/api/v1/events/{event_id}/judging/{run_id}', { params: { path: { event_id: source.event.id, run_id: captured.source.run!.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${revision}"` } }, body: body! }))
-        const intent: AssignmentIntent = { requestID: body!.request_id, runID: captured.source.run!.id, teamID: body!.team_id, revision, fingerprint: fingerprint! }
-        if (!matchesAssignmentReceipt(receipt, intent, identity.person.id)) throw new JudgingSetupReceiptIssue('The original response did not match the reviewed assignment request.')
+        const intent: JudgingSetupIntent = { requestID: body!.request_id, runID: captured.source.run!.id, teamID: body!.team_id ?? '00000000-0000-0000-0000-000000000000', action: body!.action, revision, fingerprint: fingerprint! }
+        if (!matchesJudgingSetupReceipt(receipt, intent, identity.person.id)) throw new JudgingSetupReceiptIssue('The original response did not match the exact reviewed judging request.')
       }
       commands.complete(attemptID); ticket.assert()
       setInput(emptyJudgingSetupInput()); setReview(undefined)
-      acknowledged(captured.kind === 'create' ? 'Final round created from the reviewed rubric. Next: assign judges to each frozen team.' : 'The reviewed judge assignment was acknowledged. Review current coverage, then choose another team if needed.')
+      acknowledged(captured.kind === 'create' ? 'Final round created from the reviewed rubric. Next: assign judges to each frozen team.' : captured.kind === 'open_deliberation' ? 'The original opening of deliberation was acknowledged. Intended judges can read submitted peer cards; result publication remains separate.' : 'The reviewed judge assignment was acknowledged. Review current coverage, then choose another team if needed.')
       await refresh()
     } catch (error) {
       if (attemptID) {
@@ -106,13 +106,14 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
   }
   async function recover(attempt: Commands['attempts'][number]) {
     const metadata = attempt.command
-    if (busy || lock.current || metadata.action !== 'assign' || !metadata.requestID || !metadata.resourceID || !metadata.subjectID || !metadata.intentFingerprint) return
+    if (busy || lock.current || !['assign', 'open_deliberation'].includes(metadata.action) || !metadata.requestID || !metadata.resourceID || metadata.action === 'assign' && !metadata.subjectID || !metadata.intentFingerprint) return
     lock.current = true; setChecking(true); const ticket = scope.capture(); setFailure(undefined)
+    const noun = metadata.action === 'assign' ? 'assignment' : 'deliberation'
     try {
       const result = unwrap(await api.GET('/api/v1/events/{event_id}/judging-receipts/{request_id}', { signal: ticket.signal, cache: 'no-store', params: { path: { event_id: source.event.id, request_id: metadata.requestID } } }))
       ticket.assert()
-      if (!result.receipt || !matchesAssignmentReceipt(result.receipt, { requestID: metadata.requestID, runID: metadata.resourceID, teamID: metadata.subjectID, revision: attempt.revision, fingerprint: metadata.intentFingerprint }, identity.person.id)) throw new JudgingSetupReceiptIssue('No matching original assignment acknowledgement is available. Its outcome remains unknown.')
-      commands.complete(attempt.id); acknowledged('The exact original assignment acknowledgement was recovered. No write was replayed.'); await refresh()
+      if (!result.receipt || !matchesJudgingSetupReceipt(result.receipt, { requestID: metadata.requestID, runID: metadata.resourceID, teamID: metadata.action === 'open_deliberation' ? '00000000-0000-0000-0000-000000000000' : metadata.subjectID!, action: metadata.action as 'assign' | 'open_deliberation', revision: attempt.revision, fingerprint: metadata.intentFingerprint }, identity.person.id)) throw new JudgingSetupReceiptIssue(`No matching original ${noun} acknowledgement is available. Its outcome remains unknown.`)
+      commands.complete(attempt.id); acknowledged(`The exact original ${noun} acknowledgement was recovered. No write was replayed.`); await refresh()
     } catch (error) { if (ticket.current()) { if (denied(error)) clearDenied(); else setFailure(error) } }
     finally { lock.current = false; if (ticket.current()) setChecking(false) }
   }
@@ -139,7 +140,7 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
     {needsCurrent && <p role="status">The starting point changed. Read current judging setup, then review your retained inputs again.</p>}
     {!closed && <div hidden={!!review || !!fresh}><JudgingSetupFields source={source} input={input} change={setInput} errors={errors} disabled={blocked} review={begin} form={form} /></div>}
     {!!failure && !review && (failure instanceof JudgingSetupReceiptIssue ? <p role="alert">{failure.message}</p> : <Failure error={failure} />)}
-    {commands.unconfirmed && <><p role="status">The original change outcome is unknown. A current read does not confirm it, and no write is replayed automatically.</p>{commands.attempts.filter(attempt => attempt.state === 'unknown' && attempt.command.action === 'assign').map(attempt => <Button key={attempt.id} icon="refresh" variant="outline" disabled={busy} onClick={() => void recover(attempt)}>Read original assignment acknowledgement</Button>)}<Button icon="next" variant="outline" disabled={busy} onClick={event => { opener.current = event.currentTarget; void reviewFresh() }}>Review current setup as a new starting point</Button></>}
+    {commands.unconfirmed && <><p role="status">The original change outcome is unknown. A current read does not confirm it, and no write is replayed automatically.</p>{commands.attempts.filter(attempt => attempt.state === 'unknown' && ['assign', 'open_deliberation'].includes(attempt.command.action)).map(attempt => <Button key={attempt.id} icon="refresh" variant="outline" disabled={busy} onClick={() => void recover(attempt)}>{attempt.command.action === 'open_deliberation' ? 'Read original deliberation acknowledgement' : 'Read original assignment acknowledgement'}</Button>)}<Button icon="next" variant="outline" disabled={busy} onClick={event => { opener.current = event.currentTarget; void reviewFresh() }}>Review current setup as a new starting point</Button></>}
     {review && <JudgingSetupDecision value={review} pending={busy} disabled={paused || commands.unconfirmed || needsCurrent} confirm={() => void confirm()} cancel={() => setReview(undefined)} returnFocus={() => opener.current?.isConnected && !opener.current.matches(':disabled') ? opener.current : heading.current} error={failureStage === 'before' ? 'Current setup could not be confirmed. Nothing was sent. Read current facts or retry this review.' : undefined} />}
     {fresh && <ConfirmationDialog open title="Review current judging starting point" description="Discard unsent fields and use this current setup for another deliberate review. Earlier unknown requests remain unknown; nothing is replayed." confirmLabel="Use reviewed current setup" pending={busy} disabled={paused} onConfirm={() => void acceptFresh()} onOpenChange={open => { if (!open) setFresh(undefined) }} finalFocus={() => opener.current?.isConnected && !opener.current.matches(':disabled') ? opener.current : heading.current} printExcluded><p>{fresh.event.name} · Rubric revision {fresh.configuration.revision} · {fresh.run ? `Final round rubric version ${fresh.run.reference.version}` : 'No current final round'}</p><JudgingSetupCurrent source={fresh} />{!!failure && <Failure error={failure} />}</ConfirmationDialog>}
   </>

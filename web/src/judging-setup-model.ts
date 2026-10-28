@@ -16,8 +16,10 @@ export type JudgingSetup = {
   round?: Schema['JudgeRound']
 }
 export type JudgeAssignmentCommand = Schema['JudgeRoundCommand'] & { action: 'assign'; team_id: string; judge_ids: string[] }
+export type JudgeDeliberationCommand = Schema['JudgeRoundCommand'] & { action: 'open_deliberation' }
+export type JudgeSetupCommand = JudgeAssignmentCommand | JudgeDeliberationCommand
 export class JudgingSetupReceiptIssue extends Error {}
-export type AssignmentIntent = { requestID: string; runID: string; teamID: string; revision: number; fingerprint: string }
+export type JudgingSetupIntent = { requestID: string; runID: string; teamID: string; revision: number; fingerprint: string; action?: 'assign' | 'open_deliberation' }
 
 export async function loadJudgingSetup(eventID: string, signal: AbortSignal, assertCurrent: () => void): Promise<JudgingSetup> {
   const params = { signal, cache: 'no-store' as const, params: { path: { event_id: eventID } } }
@@ -50,7 +52,7 @@ export function publishedJudgingTeams(source: JudgingSetup) {
 }
 export function judgingSetupIdentity(source: JudgingSetup) {
   return JSON.stringify([source.event.id, source.event.can_edit, source.teams.can_manage, source.event.stage,
-    source.approved?.reference, source.run?.id, source.run?.reference,
+    source.approved?.reference, source.run?.id, source.run?.reference, source.round?.deliberation,
     publishedJudgingTeams(source).map(team => [team.id, team.name]), currentJudges(source).map(judge => [judge.person_id, judge.display_name])])
 }
 export function judgingSetupVersion(source: JudgingSetup) {
@@ -76,21 +78,31 @@ export function assignmentProblems(source: JudgingSetup, teamID: string, judges:
   else if (new TextEncoder().encode(reason.trim()).length > 4000) errors.reason = 'Keep the reason within 4,000 UTF-8 bytes.'
   return errors
 }
+export function deliberationProblems(source: JudgingSetup, reason: string) {
+  const errors: Record<string, string> = {}
+  if (!source.run || !source.round) errors.operation = 'Create the final round first.'
+  else if (source.event.stage !== 'assessment') errors.operation = 'Deliberation opens during final assessment.'
+  else if (source.round.deliberation) errors.operation = 'Deliberation is already open for this round.'
+  if (!reason.trim()) errors.reason = 'Enter the reason for opening deliberation.'
+  else if (new TextEncoder().encode(reason.trim()).length > 4000) errors.reason = 'Keep the reason within 4,000 UTF-8 bytes.'
+  return errors
+}
+
 export function createdFinalRound(before: JudgingSetup, after: Schema['RubricConfiguration'], chosen: Schema['RubricReference']) {
   return createdAssessmentRun(before.configuration, after, chosen, 'judge_final')
 }
 
-export async function assignmentFingerprint(runID: string, revision: number, body: JudgeAssignmentCommand) {
+export async function judgingSetupFingerprint(runID: string, revision: number, body: JudgeSetupCommand) {
   const nil = '00000000-0000-0000-0000-000000000000'
   // Exact Go RoundCommand layout, including defaults and HTML/Unicode escaping.
-  const command = { request_id: body.request_id, action: body.action, team_id: body.team_id, judge_ids: body.judge_ids,
+  const command = { request_id: body.request_id, action: body.action, team_id: body.team_id ?? nil, judge_ids: body.judge_ids ?? null,
     judge_id: body.judge_id ?? nil, competitor_id: body.competitor_id ?? nil, conflict_kind: body.conflict_kind ?? '', enabled: body.enabled ?? false, reason: body.reason }
   const value = JSON.stringify({ Run: runID, Version: revision, Command: command }).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
-export function matchesAssignmentReceipt(receipt: Schema['JudgeReceipt'], intent: AssignmentIntent, actorID: string) {
+export function matchesJudgingSetupReceipt(receipt: Schema['JudgeReceipt'], intent: JudgingSetupIntent, actorID: string) {
   return receipt.request_id === intent.requestID && receipt.actor_id === actorID && receipt.run_id === intent.runID
-    && receipt.team_id === intent.teamID && receipt.action === 'assign' && receipt.revision === intent.revision + 1
+    && receipt.team_id === intent.teamID && receipt.action === (intent.action ?? 'assign') && receipt.revision === intent.revision + 1
     && receipt.state === 'recorded' && receipt.fingerprint === intent.fingerprint
 }
