@@ -1,3 +1,4 @@
+import { createdAssessmentRun } from './assessment-run-model'
 import { api, APIError, unwrap, type EventRecord } from './api/client'
 import type { components } from './api/schema.gen'
 import { readChallengeRubric, sameRubric, type ChallengeRubricSnapshot } from './challenge-rubric-model'
@@ -75,14 +76,8 @@ export function assignmentProblems(source: JudgingSetup, teamID: string, judges:
   else if (new TextEncoder().encode(reason.trim()).length > 4000) errors.reason = 'Keep the reason within 4,000 UTF-8 bytes.'
   return errors
 }
-const runKey = (run: Schema['RubricRun']) => JSON.stringify([run.id, rubricReferenceKey(run.reference), run.purpose, run.started_at, run.previous_id])
 export function createdFinalRound(before: JudgingSetup, after: Schema['RubricConfiguration'], chosen: Schema['RubricReference']) {
-  const original = before.configuration.runs
-  const added = after.runs.filter(run => !original.some(old => old.id === run.id))
-  return after.revision === before.configuration.revision + 1 && rubricReferenceKey(after.reference) === rubricReferenceKey(before.configuration.reference)
-    && after.runs.length === original.length + 1 && original.every(old => after.runs.some(run => runKey(run) === runKey(old)))
-    && added.length === 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(added[0].id) && added[0].purpose === 'judge_final' && added[0].started_at === null && added[0].previous_id === null
-    && sameRubric(added[0].reference, chosen) ? added[0] : undefined
+  return createdAssessmentRun(before.configuration, after, chosen, 'judge_final')
 }
 
 export async function assignmentFingerprint(runID: string, revision: number, body: JudgeAssignmentCommand) {
