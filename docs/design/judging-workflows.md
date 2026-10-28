@@ -68,3 +68,23 @@ own unsent/preflight work and internal build movement, without a second prompt
 for the same sent command. Matching original acknowledgements can settle this
 metadata after private access is lost; current GETs cannot. HTTP408 remains an
 uncertain sent outcome for final scoring, practice and reasoned reopening.
+
+## Organiser opens deliberation
+
+In the admin judging workspace, Final judging setup offers a separate
+**Open final deliberation** task. The organiser enters a reason and reviews the
+captured final run, public rubric version, round revision, event revision and
+named assignment coverage before a single versioned `open_deliberation` command.
+The server’s completion check remains authoritative: incomplete required judge
+submissions reject the command. Assignment counts do not imply completed scoring.
+Opening deliberately permits submitted peer-card reading for the intended judges;
+it grants no organiser score access and does not announce results or awards.
+
+The existing setup owner rechecks current authority and source before the write,
+then matches the exact original actor/request/run/action/revision/fingerprint
+receipt. A missing response is unknown even if a later read observes open
+state. Original acknowledgement lookup is read-only and never replays the body.
+Private reasons/reviews are disposable; only safe original request metadata
+survives a changed or denied task. A reviewed new starting point discards unsent
+fields without settling earlier unknown requests. The independent guide uses
+production fields and review with local synthetic callbacks and no transport.

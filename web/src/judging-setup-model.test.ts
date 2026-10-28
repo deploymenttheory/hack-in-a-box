@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { api } from './api/client'
-import { assignmentFingerprint, assignmentProblems, createdFinalRound, currentJudges, loadJudgingSetup, matchesAssignmentReceipt, roundCreationProblems, type JudgeAssignmentCommand } from './judging-setup-model'
+import { judgingSetupFingerprint, assignmentProblems, deliberationProblems, createdFinalRound, currentJudges, loadJudgingSetup, matchesJudgingSetupReceipt, roundCreationProblems, type JudgeAssignmentCommand, type JudgeDeliberationCommand } from './judging-setup-model'
 import { judgingSetupGuideSource } from './styleguide/judging-setup-fixture'
 import { rubricGuideConfiguration } from './styleguide/rubric-fixture'
 import { rubricReferenceKey } from './rubric-planning-model'
@@ -11,15 +11,15 @@ afterEach(() => vi.restoreAllMocks())
 
 test('assignment digest matches the actual Go RoundCommand vector including default UUIDs and escaping', async () => {
   // Generated independently using json.Marshal of the real Go RoundCommand type.
-  expect(await assignmentFingerprint(runID, 7, body)).toBe('68eb6f7ed0386b6669f98b66a7ffda35ce11a0291f4458ff69f39210e7281c57')
-  expect(await assignmentFingerprint(runID, 8, body)).not.toBe(await assignmentFingerprint(runID, 7, body))
+  expect(await judgingSetupFingerprint(runID, 7, body)).toBe('68eb6f7ed0386b6669f98b66a7ffda35ce11a0291f4458ff69f39210e7281c57')
+  expect(await judgingSetupFingerprint(runID, 8, body)).not.toBe(await judgingSetupFingerprint(runID, 7, body))
 })
 test('only the exact original actor/request/run/team/version/fingerprint assignment receipt settles an outcome', () => {
   const intent = { requestID: body.request_id, runID, teamID: body.team_id, revision: 7, fingerprint: 'a'.repeat(64) }
   const receipt = { request_id: body.request_id, actor_id: 'actor', run_id: runID, team_id: body.team_id, action: 'assign', revision: 8, state: 'recorded', fingerprint: intent.fingerprint }
-  expect(matchesAssignmentReceipt(receipt, intent, 'actor')).toBe(true)
-  for (const key of ['request_id', 'actor_id', 'run_id', 'team_id', 'action', 'state', 'fingerprint'] as const) expect(matchesAssignmentReceipt({ ...receipt, [key]: 'wrong' }, intent, 'actor')).toBe(false)
-  expect(matchesAssignmentReceipt({ ...receipt, revision: 9 }, intent, 'actor')).toBe(false)
+  expect(matchesJudgingSetupReceipt(receipt, intent, 'actor')).toBe(true)
+  for (const key of ['request_id', 'actor_id', 'run_id', 'team_id', 'action', 'state', 'fingerprint'] as const) expect(matchesJudgingSetupReceipt({ ...receipt, [key]: 'wrong' }, intent, 'actor')).toBe(false)
+  expect(matchesJudgingSetupReceipt({ ...receipt, revision: 9 }, intent, 'actor')).toBe(false)
 })
 test('creation needs explicit exact approved selection and a bounded reason, never an inferred or duplicate round', () => {
   const source = judgingSetupGuideSource(), chosen = rubricReferenceKey(source.approved!.reference)
@@ -63,4 +63,26 @@ test('source loader returns coordination/public criteria without private judge g
   expect(loaded.approved?.reference).toEqual(source.approved!.reference)
   authorised = false
   await expect(loadJudgingSetup(source.event.id, new AbortController().signal, () => {})).rejects.toMatchObject({ status: 403 })
+})
+
+
+test('deliberation digest matches real Go RoundCommand defaults and cannot match assignment receipts', async () => {
+  const command: JudgeDeliberationCommand = { request_id: body.request_id, action: 'open_deliberation', reason: 'Review <final> submissions & exact source \u2028' }
+  const fingerprint = await judgingSetupFingerprint(runID, 7, command)
+  expect(fingerprint).toBe('1073cb2d5deb6ed5d7984e9503bfa2f05b973d37fe9d7692823946127f05d7a1')
+  const intent = { requestID: command.request_id, runID, teamID: '00000000-0000-0000-0000-000000000000', revision: 7, fingerprint, action: 'open_deliberation' as const }
+  const receipt = { request_id: command.request_id, actor_id: 'actor', run_id: runID, team_id: intent.teamID, action: 'open_deliberation', revision: 8, state: 'recorded', fingerprint }
+  expect(matchesJudgingSetupReceipt(receipt, intent, 'actor')).toBe(true)
+  for (const key of ['request_id', 'actor_id', 'run_id', 'team_id', 'action', 'state', 'fingerprint'] as const) expect(matchesJudgingSetupReceipt({ ...receipt, [key]: 'wrong' }, intent, 'actor')).toBe(false)
+  expect(matchesJudgingSetupReceipt({ ...receipt, revision: 9 }, intent, 'actor')).toBe(false)
+})
+test('deliberation requires assessment and an unopened round; coverage never establishes completion', () => {
+  const source = judgingSetupGuideSource(true)
+  expect(deliberationProblems(source, 'Reviewed final cards')).toHaveProperty('operation')
+  source.event.stage = 'assessment'
+  expect(deliberationProblems(source, 'Reviewed final cards')).toEqual({})
+  expect(deliberationProblems(source, '')).toHaveProperty('reason')
+  expect(deliberationProblems(source, '界'.repeat(1334))).toHaveProperty('reason')
+  source.round!.deliberation = true
+  expect(deliberationProblems(source, 'Open again')).toHaveProperty('operation')
 })

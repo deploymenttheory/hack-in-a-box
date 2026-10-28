@@ -6,9 +6,9 @@ import { CollectionRecords } from './components/patterns'
 import { currentJudges, publishedJudgingTeams, type JudgingSetup } from './judging-setup-model'
 import { rubricReferenceKey } from './rubric-planning-model'
 
-export type JudgingSetupInput = { rubric: string; teamID: string; judgeIDs: string[]; reason: string; acknowledgeGap: boolean }
-export const emptyJudgingSetupInput = (): JudgingSetupInput => ({ rubric: '', teamID: '', judgeIDs: [], reason: '', acknowledgeGap: false })
-export type JudgingSetupReview = { kind: 'create' | 'assign'; source: JudgingSetup; input: JudgingSetupInput }
+export type JudgingSetupInput = { rubric: string; teamID: string; judgeIDs: string[]; reason: string; acknowledgeGap: boolean; operation: 'assign' | 'open_deliberation' }
+export const emptyJudgingSetupInput = (): JudgingSetupInput => ({ rubric: '', teamID: '', judgeIDs: [], reason: '', acknowledgeGap: false, operation: 'assign' })
+export type JudgingSetupReview = { kind: 'create' | 'assign' | 'open_deliberation'; source: JudgingSetup; input: JudgingSetupInput }
 
 function JudgingChoice({ label, checked, change, disabled, error }: { label: string; checked: boolean; change: (checked: boolean) => void; disabled?: boolean; error?: string }) {
   const id = useId(), errorID = `${id}-error`
@@ -19,10 +19,12 @@ export function JudgingSetupFields({ source, input, change, errors, disabled, re
   review: (button: HTMLElement) => void; form: RefObject<HTMLFormElement | null>
 }) {
   const judges = currentJudges(source), teams = publishedJudgingTeams(source), required = source.round?.required_judges ?? source.approved?.definition.required_judge_count ?? 0
+  const deliberation = input.operation === 'open_deliberation'
   const missing = Math.max(0, required - input.judgeIDs.length), retained = input.judgeIDs.filter(id => !judges.some(judge => judge.person_id === id))
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const button = (event.nativeEvent as SubmitEvent).submitter; if (button instanceof HTMLElement) review(button) }
   return <form ref={form} noValidate className="grid gap-5 py-5" onSubmit={submit}>
-    {!source.run ? <>
+    {source.run && <Field label="Judging task" error={errors.operation}><Select value={input.operation} disabled={disabled} onChange={event => change({ ...input, operation: event.target.value as JudgingSetupInput['operation'] })}><option value="assign">Assign judges to a team</option><option value="open_deliberation">Open final deliberation</option></Select></Field>}
+    {source.run && deliberation ? <><h3 className="text-base font-semibold">Open final deliberation</h3><p>Round {source.run.id} · Rubric version {source.run.reference.version} · Round revision {source.round?.revision}.</p><p>{required} independent judges are required per eligible frozen final. All required submitted cards, eligible frozen evidence, assignments and current permissions are checked by the server at confirmation. Coverage alone does not prove that scoring is complete.</p><p>Opening allows the intended judges to read submitted peer cards. This does not publish awards or reveal scores to organiser coordination.</p>{source.round?.deliberation && <p role="status">Deliberation is already open for this round.</p>}</> : !source.run ? <>
       <h3 className="text-base font-semibold">Create the final judging round</h3>
       <p>Select the approved criteria for independent final judging. This plans a round; it does not open scoring or publish results.</p>
       <Field label="Approved rubric version" error={errors.rubric}><Select value={input.rubric} disabled={disabled} onChange={event => change({ ...input, rubric: event.target.value })}>
@@ -35,14 +37,14 @@ export function JudgingSetupFields({ source, input, change, errors, disabled, re
       <p>Final round · Rubric version {source.run.reference.version} · {required} required judges per team. Assignments do not grant early access to competition evidence.</p>
       <Field label="Team to assign" error={errors.team}><Select value={input.teamID} disabled={disabled} onChange={event => {
         const teamID = event.target.value, assignment = source.round?.assignments.find(value => value.team_id === teamID)
-        change({ ...input, teamID, judgeIDs: assignment?.judge_ids ?? [], reason: '', acknowledgeGap: false })
+        change({ ...input, teamID, judgeIDs: assignment?.judge_ids ?? [], reason: '', acknowledgeGap: false, operation: 'assign' })
       }}><option value="">Choose a frozen team</option>{teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</Select></Field>
       {!teams.length && <p>No frozen published teams are available yet.</p>}
       {!input.teamID ? <p className="text-sm text-muted-foreground">Choose a team to review its current judges and coverage.</p> : <>
         <fieldset disabled={disabled} className="grid gap-3 border-0 p-0 m-0">
           <legend className="mb-3 text-sm font-semibold">Current judges</legend>
-          {judges.map((judge, index) => <JudgingChoice key={judge.person_id} label={judge.display_name} checked={input.judgeIDs.includes(judge.person_id)} error={index === 0 && !retained.length ? errors.judges : undefined} change={checked => change({ ...input, judgeIDs: checked ? [...input.judgeIDs, judge.person_id] : input.judgeIDs.filter(id => id !== judge.person_id), acknowledgeGap: false })} />)}
-          {retained.map((id, index) => <JudgingChoice key={id} label={`${source.staff.items.find(person => person.person_id === id)?.display_name ?? 'Former judge'} (inactive; uncheck to remove)`} checked error={index === 0 ? errors.judges : undefined} change={() => change({ ...input, judgeIDs: input.judgeIDs.filter(value => value !== id), acknowledgeGap: false })} />)}
+          {judges.map((judge, index) => <JudgingChoice key={judge.person_id} label={judge.display_name} checked={input.judgeIDs.includes(judge.person_id)} error={index === 0 && !retained.length ? errors.judges : undefined} change={checked => change({ ...input, judgeIDs: checked ? [...input.judgeIDs, judge.person_id] : input.judgeIDs.filter(id => id !== judge.person_id), acknowledgeGap: false, operation: 'assign' })} />)}
+          {retained.map((id, index) => <JudgingChoice key={id} label={`${source.staff.items.find(person => person.person_id === id)?.display_name ?? 'Former judge'} (inactive; uncheck to remove)`} checked error={index === 0 ? errors.judges : undefined} change={() => change({ ...input, judgeIDs: input.judgeIDs.filter(value => value !== id), acknowledgeGap: false, operation: 'assign' })} />)}
           {!judges.length && <p>No current judge roles are available. Review staff assignments first.</p>}
         </fieldset>
         <p role="status" aria-label="Selected judge coverage">{input.judgeIDs.length} selected · {required} required{missing ? ` · ${missing} unfilled` : ''}. Current roles and conflicts are checked at confirmation.</p>
@@ -50,8 +52,8 @@ export function JudgingSetupFields({ source, input, change, errors, disabled, re
         <p className="text-sm text-muted-foreground">Changing an existing assignment replaces that team’s judge cohort and can invalidate pending result approvals. Other teams retain their assignments.</p>
       </>}
     </>}
-    {(!source.run || !!input.teamID) && <Field label={source.run ? 'Assignment reason' : 'Round creation reason'} error={errors.reason}><Textarea required maxLength={source.run ? 4000 : 2000} value={input.reason} disabled={disabled} onChange={event => change({ ...input, reason: event.target.value })} /></Field>}
-    <div className="fleet-pattern-actions"><Button type="submit" icon={source.run ? 'user' : 'add'} disabled={disabled || (!source.run && !source.approved)}>{source.run ? 'Review judge assignment' : 'Review final round creation'}</Button></div>
+    {(!source.run || deliberation || !!input.teamID) && <Field label={deliberation ? 'Deliberation reason' : source.run ? 'Assignment reason' : 'Round creation reason'} error={errors.reason}><Textarea required maxLength={source.run ? 4000 : 2000} value={input.reason} disabled={disabled} onChange={event => change({ ...input, reason: event.target.value })} /></Field>}
+    <div className="fleet-pattern-actions"><Button type="submit" icon={deliberation ? 'team' : source.run ? 'user' : 'add'} disabled={disabled || (!source.run && !source.approved)}>{deliberation ? 'Review opening deliberation' : source.run ? 'Review judge assignment' : 'Review final round creation'}</Button></div>
   </form>
 }
 export function JudgingSetupCurrent({ source }: { source: JudgingSetup }) {
@@ -66,9 +68,9 @@ export function JudgingSetupDecision({ value, pending, disabled, confirm, cancel
   value: JudgingSetupReview; pending: boolean; disabled: boolean; confirm: () => void; cancel: () => void; returnFocus: () => HTMLElement | null; error?: string
 }) {
   const { source, input } = value, team = source.teams.teams.find(team => team.id === input.teamID)
-  return <ConfirmationDialog open title={value.kind === 'create' ? 'Create final judging round' : 'Review final judge assignment'} description="Confirm these captured criteria and named assignments. Current authority and source are checked again before any change." confirmLabel={value.kind === 'create' ? 'Create reviewed final round' : 'Save reviewed judge assignment'} pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded>
+  return <ConfirmationDialog open title={value.kind === 'create' ? 'Create final judging round' : value.kind === 'open_deliberation' ? 'Review final deliberation' : 'Review final judge assignment'} description="Confirm these captured criteria and named assignments. Current authority and source are checked again before any change." confirmLabel={value.kind === 'create' ? 'Create reviewed final round' : value.kind === 'open_deliberation' ? 'Open reviewed deliberation' : 'Save reviewed judge assignment'} pending={pending} disabled={disabled} onConfirm={confirm} onOpenChange={open => { if (!open) cancel() }} finalFocus={returnFocus} printExcluded>
     <p>{source.event.name} · {value.kind === 'create' ? `Rubric revision ${source.configuration.revision}` : `Round revision ${source.round?.revision}`}</p>
-    {value.kind === 'create' ? <p>{source.approved?.definition.name} · Approved version {source.approved?.reference.version}. Practice and final scores stay separate.</p> : <><p>Team: {team?.name} · Rubric version {source.run?.reference.version}</p><ul>{input.judgeIDs.map(id => <li key={id}>{source.staff.items.find(person => person.person_id === id)?.display_name ?? 'Former judge'}</li>)}</ul><p>{input.judgeIDs.length} selected · {source.round?.required_judges} required{input.acknowledgeGap && ' · Unfilled places explicitly acknowledged'}. This replaces only the selected team’s assignments.</p></>}
+    {value.kind === 'create' ? <p>{source.approved?.definition.name} · Approved version {source.approved?.reference.version}. Practice and final scores stay separate.</p> : value.kind === 'open_deliberation' ? <><p>Round {source.run?.id} · Rubric version {source.run?.reference.version} · Event revision {source.event.revision}.</p><p>{source.round?.required_judges} required independent judges per eligible frozen final. The server must confirm all required submissions before opening submitted peer cards to intended judges.</p><JudgingSetupCurrent source={source} /><p>This does not publish results or grant organiser access to private scores.</p></> : <><p>Team: {team?.name} · Rubric version {source.run?.reference.version}</p><ul>{input.judgeIDs.map(id => <li key={id}>{source.staff.items.find(person => person.person_id === id)?.display_name ?? 'Former judge'}</li>)}</ul><p>{input.judgeIDs.length} selected · {source.round?.required_judges} required{input.acknowledgeGap && ' · Unfilled places explicitly acknowledged'}. This replaces only the selected team’s assignments.</p></>}
     <p>{input.reason.trim()}</p>{error && <p role="alert">{error}</p>}
   </ConfirmationDialog>
 }

@@ -532,6 +532,24 @@ receipt can settle an original assignment; choosing a reviewed current base
 retains the earlier unknown metadata and never replays it. Native scoring owns
 assessment start, eligibility, cutoff and frozen-code gates.
 
+The same production fields offer a distinct **Open final deliberation** task.
+Choose the synthetic final-assessment scenario to review its explicit reason,
+exact round/rubric/revision and current coverage. Coverage is coordination
+metadata, not evidence that required scoring is complete. The native server
+checks every required independent submission and eligible frozen final before
+opening peer-card disclosure for intended judges; organiser coordination still
+has no independent score access. Result publication remains separate.
+
+Keep invalid review actionable and focus the first invalid control. Cancel
+returns to the mounted initiating button; pending confirmation locks dismissal.
+Retain unsent input on a temporary preflight failure; current authority or source
+loss disposes the private review. Unknown opening requests retain only safe
+actor/session/event/run/action/revision/UUID/fingerprint metadata. A current
+`deliberation: true` observation cannot acknowledge an earlier request: use the
+native original receipt reader, never automatic replay. A deliberate current
+starting point leaves earlier requests unknown. Use the shared fields/review
+and the guide snippet; do not invent a second confirmation presentation.
+
 ### Mentor assessment and checkpoint planning
 
 The independent **Plan mentor checkpoints** example imports production

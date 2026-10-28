@@ -2,16 +2,16 @@ import { test, expect, type Page } from '@playwright/test'
 import { mockWorkspace, firstID, person } from './fixtures'
 import { judgingSetupGuideSource } from '../src/styleguide/judging-setup-fixture'
 import { rubricGuideConfiguration } from '../src/styleguide/rubric-fixture'
-import { assignmentFingerprint, type JudgeAssignmentCommand } from '../src/judging-setup-model'
+import { judgingSetupFingerprint, type JudgeSetupCommand } from '../src/judging-setup-model'
 import type { components } from '../src/api/schema.gen'
 
-async function setup(page: Page, existing = false) {
+async function setup(page: Page, existing = false, assessment = false) {
   const workspace = await mockWorkspace(page), source = judgingSetupGuideSource(existing), event = workspace.events[0]
-  event.stage = 'preparation'; event.can_present = false; event.published_at = source.event.published_at; event.confirmed_attendees = 30
+  event.stage = assessment ? 'assessment' : 'preparation'; event.can_present = false; event.published_at = source.event.published_at; event.confirmed_attendees = 30
   source.event = event
   const configuration = { ...rubricGuideConfiguration(), ...source.configuration, approved: true }
   const writes: { path: string; body: Record<string, unknown>; revision: string | undefined }[] = [], reads: string[] = [], receipts = new Map<string, components['schemas']['JudgeReceipt']>()
-  const state = { source, configuration, writes, reads, receipts, loseNext: false, badReceipt: false, deny: false, failRead: false, readBarrier: undefined as Promise<void> | undefined, responseBarrier: undefined as Promise<void> | undefined }
+  const state = { source, configuration, writes, reads, receipts, loseNext: false, badReceipt: false, deny: false, failRead: false, readBarrier: undefined as Promise<void> | undefined, submissionsComplete: false, responseBarrier: undefined as Promise<void> | undefined }
   await page.route(`**/api/v1/events/${firstID}/**`, async route => {
     const request = route.request(), path = new URL(request.url()).pathname
     const reject = (status: number) => route.fulfill({ status, json: { error: { code: status === 403 ? 'forbidden' : status === 409 ? 'revision_conflict' : 'unavailable', message: 'Synthetic current setup rejection', request_id: 'synthetic' } } })
@@ -35,12 +35,14 @@ async function setup(page: Page, existing = false) {
     if (source.run && path.endsWith(`/judging/${source.run.id}`)) {
       if (state.deny) return reject(403)
       if (request.method() === 'GET') { reads.push(path); if (state.failRead) return reject(503); return route.fulfill({ json: source.round }) }
-      const body = request.postDataJSON() as JudgeAssignmentCommand; writes.push({ path, body, revision: request.headers()['if-match'] })
+      const body = request.postDataJSON() as JudgeSetupCommand; writes.push({ path, body, revision: request.headers()['if-match'] })
       if (request.headers()['if-match'] !== `"${source.round!.revision}"`) return reject(409)
+      if (body.action === 'open_deliberation' && (!state.submissionsComplete || source.round!.deliberation || event.stage !== 'assessment')) return reject(409)
       const revision = source.round!.revision
       source.round!.revision++
-      source.round!.assignments = source.round!.assignments.filter(item => item.team_id !== body.team_id).concat({ team_id: body.team_id, judge_ids: body.judge_ids, missing: Math.max(0, 3 - body.judge_ids.length) })
-      const receipt = { request_id: body.request_id, actor_id: person.id, run_id: source.run.id, team_id: body.team_id, action: 'assign', revision: revision + 1, state: 'recorded', fingerprint: await assignmentFingerprint(source.run.id, revision, body) }
+      if (body.action === 'assign') source.round!.assignments = source.round!.assignments.filter(item => item.team_id !== body.team_id).concat({ team_id: body.team_id, judge_ids: body.judge_ids, missing: Math.max(0, 3 - body.judge_ids.length) })
+      else source.round!.deliberation = true
+      const receipt = { request_id: body.request_id, actor_id: person.id, run_id: source.run.id, team_id: body.team_id ?? '00000000-0000-0000-0000-000000000000', action: body.action, revision: revision + 1, state: 'recorded', fingerprint: await judgingSetupFingerprint(source.run.id, revision, body) }
       receipts.set(body.request_id, receipt)
       if (state.responseBarrier) await state.responseBarrier
       if (state.loseNext) { state.loseNext = false; return route.abort('failed') }
@@ -199,4 +201,88 @@ test('safe pending and unknown setup metadata survives private authority teardow
   await expect(history).toContainText('Original outcome remains unconfirmed')
   await expect(page.locator('body')).not.toContainText('Reviewed independent judges for Aurora')
   expect(state.writes).toHaveLength(1)
+})
+
+async function prepareDeliberation(page: Page, reason = 'All required independent final reviews are complete') {
+  const section = setupRegion(page)
+  await section.getByRole('combobox', { name: 'Judging task', exact: true }).selectOption('open_deliberation')
+  await section.getByRole('textbox', { name: 'Deliberation reason', exact: true }).fill(reason)
+  const opener = section.getByRole('button', { name: 'Review opening deliberation', exact: true })
+  await opener.focus(); await opener.press('Enter')
+  return { section, opener, review: page.getByRole('alertdialog', { name: 'Review final deliberation', exact: true }) }
+}
+test('reviews exact deliberation with reason and keyboard correction; opens once and reloads without scores', async ({ page }) => {
+  const state = await setup(page, true, true); state.submissionsComplete = true
+  const section = setupRegion(page)
+  await section.getByRole('combobox', { name: 'Judging task', exact: true }).selectOption('open_deliberation')
+  const opener = section.getByRole('button', { name: 'Review opening deliberation', exact: true })
+  await opener.click(); await expect(section.getByRole('textbox', { name: 'Deliberation reason', exact: true })).toBeFocused()
+  const task = await prepareDeliberation(page)
+  await expect(task.review).toContainText(state.source.run!.id); await expect(task.review).toContainText('Round revision 0')
+  await expect(task.review).toContainText('3 required independent judges')
+  expect(state.writes).toHaveLength(0)
+  await task.review.getByRole('button', { name: 'Cancel', exact: true }).click(); await expect(task.opener).toBeFocused()
+  await task.opener.press('Enter'); await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(section.getByRole('status', { name: 'Last acknowledged setup change', exact: true })).toContainText('original opening of deliberation was acknowledged')
+  expect(state.writes).toHaveLength(1); expect(state.writes[0].revision).toBe('"0"')
+  expect(state.writes[0].body).toEqual({ request_id: expect.any(String), action: 'open_deliberation', reason: 'All required independent final reviews are complete' })
+  expect(state.source.round!.deliberation).toBe(true)
+  await page.reload(); await section.getByRole('combobox', { name: 'Judging task', exact: true }).selectOption('open_deliberation')
+  await expect(section).toContainText('Deliberation is already open for this round')
+  await expect(page.getByRole('region', { name: 'Independent final scoring', exact: true })).toHaveCount(0)
+  expect(state.writes).toHaveLength(1)
+})
+test('native missing-third-judge rejection does not open deliberation or acknowledge success', async ({ page }) => {
+  const state = await setup(page, true, true), task = await prepareDeliberation(page)
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(task.section).toContainText('starting point changed')
+  expect(state.writes).toHaveLength(1); expect(state.source.round!.deliberation).toBe(false); expect(state.source.round!.revision).toBe(0)
+  await expect(task.section.getByRole('status', { name: 'Last acknowledged setup change', exact: true })).not.toContainText('acknowledged')
+  await expect(task.section.getByRole('textbox', { name: 'Deliberation reason', exact: true })).toHaveValue('All required independent final reviews are complete')
+})
+test('lost deliberation acknowledgement remains unknown after open is observed and original recovery never replays', async ({ page }) => {
+  const state = await setup(page, true, true); state.submissionsComplete = true; state.loseNext = true
+  const task = await prepareDeliberation(page)
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(task.section).toContainText('original change outcome is unknown')
+  await task.section.getByRole('button', { name: 'Read current judging setup', exact: true }).click()
+  await expect(task.section).toContainText('original change outcome is unknown'); expect(state.source.round!.deliberation).toBe(true)
+  const original = [...state.receipts.values()][0]
+  state.receipts.set(original.request_id, { ...original, fingerprint: 'b'.repeat(64) })
+  await task.section.getByRole('button', { name: 'Read original deliberation acknowledgement', exact: true }).click()
+  await expect(task.section).toContainText('No matching original deliberation acknowledgement is available')
+  state.receipts.set(original.request_id, original)
+  await task.section.getByRole('button', { name: 'Read original deliberation acknowledgement', exact: true }).click()
+  await expect(task.section.getByRole('status', { name: 'Last acknowledged setup change', exact: true })).toContainText('exact original deliberation acknowledgement was recovered')
+  expect(state.writes).toHaveLength(1)
+})
+test('transient deliberation preflight retains reason; stale round blocks the write until deliberate current reading', async ({ page }) => {
+  const state = await setup(page, true, true), task = await prepareDeliberation(page)
+  state.failRead = true
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(task.review).toContainText('Nothing was sent'); expect(state.writes).toHaveLength(0)
+  state.failRead = false; state.source.round!.revision++
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true })).toBeDisabled()
+  expect(state.writes).toHaveLength(0)
+})
+test('definite organiser denial clears the deliberation reason and held review without writing', async ({ page }) => {
+  const state = await setup(page, true, true), task = await prepareDeliberation(page, 'Private unsent deliberation reason')
+  state.deny = true
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click()
+  await expect(task.review).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Deliberation reason', exact: true })).toHaveCount(0)
+  await expect(page.locator('body')).not.toContainText('Private unsent deliberation reason'); expect(state.writes).toHaveLength(0)
+})
+test('pending deliberation locks dismissal and confirmation without duplicating its request', async ({ page }) => {
+  const state = await setup(page, true, true); state.submissionsComplete = true
+  let release!: () => void
+  state.responseBarrier = new Promise<void>(resolve => { release = resolve })
+  const task = await prepareDeliberation(page)
+  const sent = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname.includes('/judging/'))
+  await task.review.getByRole('button', { name: 'Open reviewed deliberation', exact: true }).click(); await sent
+  await expect(task.review.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled()
+  await task.review.press('Escape'); await expect(task.review).toBeVisible(); expect(state.writes).toHaveLength(1)
+  release(); state.responseBarrier = undefined
+  await expect(task.review).toHaveCount(0); expect(state.writes).toHaveLength(1)
 })
