@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
 
@@ -23,9 +24,40 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 			if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &before, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			if before.Plan == nil || before.Plan.ID != original.PlanID || before.Plan.Fingerprint != original.Fingerprint || !before.CanManage || !before.GrantsOpen {
-				t.Fatal("live source lost its original historical approval")
+			// Maintenance can legitimately replace the latest projection with an
+			// unapproved live-coverage draft. Wait for that normal worker effect
+			// deliberately; history is proved by its own immutable receipt.
+			deadline := time.Now().Add(45 * time.Second)
+			for before.Plan != nil && before.Plan.ID == original.PlanID && time.Now().Before(deadline) {
+				select {
+				case <-t.Context().Done():
+					t.Fatal(t.Context().Err())
+				case <-time.After(100 * time.Millisecond):
+				}
+				if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &before, http.StatusOK); err != nil {
+					t.Fatal(err)
+				}
 			}
+			if before.Plan == nil || before.Plan.ID == original.PlanID || before.Plan.Version <= original.PlanVersion || before.Plan.ApprovedAt != nil || before.Plan.ApprovedBy != nil || !before.CanManage || !before.GrantsOpen {
+				t.Fatal("normal live roster maintenance did not retain a separate unapproved current plan")
+			}
+			verifyLifecycleLiveMentorPlan(t, item, *before.Plan, original.Accepted)
+			var historical repositoryaccess.Receipt
+			if err := r.owner.call(t.Context(), http.MethodGet, path+"/receipts/"+original.PlanID.String()+"?action=approve", -1, nil, &historical, http.StatusOK); err != nil {
+				t.Fatal(err)
+			}
+			old := historical.Plan
+			if historical.Action != "approve" || historical.ActorID == nil || *historical.ActorID != original.ApproverID || historical.CommandFingerprint == nil || *historical.CommandFingerprint == "" || old == nil || old.ID != original.PlanID || old.Version != original.PlanVersion || old.Fingerprint != original.Fingerprint || old.EventID != original.EventID || old.TeamID != original.TeamID || old.RepositoryID != original.RepositoryID || old.ApprovedBy == nil || *old.ApprovedBy != original.ApproverID || old.ApprovedAt == nil || len(old.Members) != original.Accepted {
+				t.Fatal("immutable preparation approval lost its original actor, source, version or roster")
+			}
+			var historicalActions []uuid.UUID
+			for _, action := range old.Actions {
+				historicalActions = append(historicalActions, action.ID)
+			}
+			if !reflect.DeepEqual(historicalActions, original.ActionIDs) {
+				t.Fatal("historical preparation approval changed its exact original action identities")
+			}
+
 			id := uuid.New()
 			var reviewed repositoryaccess.Result
 			if err := r.owner.call(t.Context(), http.MethodPost, path, before.Revision, map[string]any{"action": "review", "plan_id": id, "reason": "Review newly active published mentor coverage; preserve earlier competitor grants"}, &reviewed, http.StatusOK); err != nil {
@@ -35,16 +67,9 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 			if plan == nil || plan.ID != id || plan.ID == original.PlanID || plan.ApprovedAt != nil || len(plan.Flags) != 0 || len(plan.Actions) != 2 || len(plan.Members) != original.Accepted+2 {
 				t.Fatal("live source did not isolate two new current mentor effects")
 			}
-			mentors := map[uuid.UUID]bool{item.cohort.staff["mentor-a"].person: true, item.cohort.staff["mentor-b"].person: true}
-			for _, action := range plan.Actions {
-				member := action.Member
-				if action.Kind != "invite" || !mentors[member.PersonID] || member.Role != "mentor" || member.Permission != "pull" || member.CoverageStart == nil || member.CoverageEnd == nil || !member.CoverageStart.Equal(item.view.Configuration.LiveStart) || !member.CoverageEnd.Equal(item.view.Configuration.LiveEnd) {
-					t.Fatal("live review expanded beyond exact current read-only mentor coverage")
-				}
-				delete(mentors, member.PersonID)
-			}
-			if len(mentors) != 0 {
-				t.Fatal("live review omitted a selected mentor")
+			verifyLifecycleLiveMentorPlan(t, item, *plan, original.Accepted)
+			if plan.ID == before.Plan.ID || plan.Fingerprint != before.Plan.Fingerprint || !reflect.DeepEqual(plan.Members, before.Plan.Members) {
+				t.Fatal("deliberate live review did not preserve the exact unapproved current roster under its distinct reviewed identity")
 			}
 			var approved repositoryaccess.Result
 			if err := r.owner.call(t.Context(), http.MethodPost, path, reviewed.Current.Revision, map[string]any{"action": "approve", "plan_id": plan.ID, "plan_version": plan.Version, "reason": "Explicitly approve only two newly active read-only mentor invitations"}, &approved, http.StatusOK); err != nil {
@@ -214,5 +239,26 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 	r.livePollAt = r.timeline.Live.Add(time.Minute)
 	if err := r.control.advance(t.Context(), r.livePollAt); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Automatic roster maintenance never approves additional external access. Both
+// the worker draft and the deliberate human review must contain exactly these
+// two new current read-only mentor effects, retaining all accepted competitors.
+func verifyLifecycleLiveMentorPlan(t *testing.T, item *lifecycleJourneyEvent, plan repositoryaccess.Plan, accepted int) {
+	t.Helper()
+	if plan.ApprovedAt != nil || plan.ApprovedBy != nil || len(plan.Flags) != 0 || len(plan.Actions) != 2 || len(plan.Members) != accepted+2 {
+		t.Fatal("live plan inferred approval or changed current mentor/competitor census")
+	}
+	mentors := map[uuid.UUID]bool{item.cohort.staff["mentor-a"].person: true, item.cohort.staff["mentor-b"].person: true}
+	for _, action := range plan.Actions {
+		member := action.Member
+		if action.Kind != "invite" || !mentors[member.PersonID] || member.Role != "mentor" || member.Permission != "pull" || member.CoverageStart == nil || member.CoverageEnd == nil || !member.CoverageStart.Equal(item.view.Configuration.LiveStart) || !member.CoverageEnd.Equal(item.view.Configuration.LiveEnd) {
+			t.Fatal("live review expanded beyond exact current read-only mentor coverage")
+		}
+		delete(mentors, member.PersonID)
+	}
+	if len(mentors) != 0 {
+		t.Fatal("live review omitted a selected mentor")
 	}
 }
