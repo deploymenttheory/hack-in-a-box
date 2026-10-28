@@ -31,6 +31,7 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	browserAcknowledgements  []uuid.UUID
 	browserObjectiveAuthored bool
 	browserHelp              *lifecycleBrowserHelpReceipt
 
@@ -208,7 +209,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := range run.events {
-		run.readCommonPublication(t, &run.events[i])
+		run.readCommonPublication(t, &run.events[i], i)
 	}
 	run.postponePublishedEvents(t)
 	run.depleteFrozenTeams(t)
@@ -333,7 +334,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !item.browserEventCreated || !item.browserObjectiveAuthored || !item.browserRegistrationOpened ||
+			if !item.browserEventCreated || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
 				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
@@ -382,6 +383,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserAcknowledgements []uuid.UUID `json:"browser_acknowledgements"`
+
 		BrowserObjectiveAuthored bool `json:"browser_objective_authored"`
 
 		BrowserHelp              *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
@@ -474,6 +477,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				BrowserAcknowledgements:  item.browserAcknowledgements,
 				BrowserObjectiveAuthored: item.browserObjectiveAuthored,
 				BrowserHelp:              item.browserHelp,
 				FailedMessage:            item.failedMessage,
@@ -754,7 +758,7 @@ func (r *lifecycleJourney) prepareEvent(
 	return item
 }
 
-func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJourneyEvent) {
+func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJourneyEvent, eventIndex int) {
 	t.Helper()
 	ctx := t.Context()
 	base := "/api/v1/events/" + item.view.ID.String()
@@ -784,7 +788,7 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 		)
 	}
 	var common json.RawMessage
-	for _, reader := range []*lifecycleClient{item.cohort.clients[3], item.cohort.clients[5]} {
+	for readerIndex, reader := range []*lifecycleClient{item.cohort.clients[3], item.cohort.clients[5]} {
 		var raw json.RawMessage
 		if err := reader.call(
 			ctx,
@@ -826,19 +830,19 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 			t.Fatal("native challenge lost exact released version")
 		}
 		var ack content.Page
-		if err := reader.call(
-			ctx,
-			http.MethodPost,
-			path+"/acknowledgements",
-			*released.ReleasedVersion,
-			nil,
-			&ack,
-			http.StatusOK,
-		); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			r.acknowledgePublicationInBrowser(t, item, eventIndex, readerIndex, reader, released, page)
+			if err := reader.call(ctx, http.MethodGet, path, -1, nil, &ack, http.StatusOK); err != nil {
+				t.Fatal(err)
+			}
+		} else if err := reader.call(ctx, http.MethodPost, path+"/acknowledgements", *released.ReleasedVersion, nil, &ack, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
-		if ack.AcknowledgedAt == nil {
-			t.Fatal("exact version acknowledgement not retained")
+		if ack.AcknowledgedAt == nil || ack.ID != released.ID || ack.Version != released.Version || !reflect.DeepEqual(ack.Document, released.Document) {
+			t.Fatal("exact version acknowledgement not retained or released contents changed")
+		}
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			item.browserAcknowledgements = append(item.browserAcknowledgements, reader.person)
 		}
 		var branded templates.BrandView
 		if err := reader.call(
