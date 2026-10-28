@@ -118,5 +118,16 @@
     "final.dump": "aea1da737cadecfda3bcdc16fe936cc108f1d2c0437dfaaa9b7731a09fd173bd",
     "native-mentor-checkpoint-planning.png": "541e9c2e704eaacb23e555c1effd60eb28f00c9964101794632796ada487071d"
   },
-  "remaining": "Full original120 remains incomplete: remaining mentor final reviews/huddles/qualification, actual judging/results, feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim."
+  "remaining": "Full original120 remains incomplete: remaining mentor final reviews/huddles/qualification, actual judging/results, feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim.",
+  "matching_published_runtime_revision": "de73aba8b22b21e274c74e452e06f1fa0b6c489a",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "production_dependency_348_merged_main": "d0e408c6327fc9d5ef069043391289bd85dc5c8c"
 }
