@@ -124,3 +124,16 @@ isolated resources were removed. rubric-browser-r55-proof.json retains source
 and artifact hashes. This run uses earlier UIcab1debc; final keyboard
 corrections require R56 before340 is ready. Content binding/authoring remains
 an API fixture step and is now tracked separately in341. Full120 remains open.
+
+R57 passes all144 UI barriers and the subsequent native journey (457.08s)
+on final rubric UI `6bb48414`, including real save-to-reason and
+approval-to-version keyboard handoffs. Both event modes reach archived with
+the exact UI-approved rubric; independent expiry guards pass and scoped Docker
+containers, volumes and networks are zero after cleanup.
+[rubric-browser-r57-proof.json](rubric-browser-r57-proof.json) retains exact
+source, image and private artifact hashes;
+[native-rubric-approved.png](native-rubric-approved.png) shows the synthetic
+approved model. R55 remains the earlier baseline; R56 passed the positive
+native path before final validation-focus corrections, which R57 includes.
+Challenge binding/authoring remains native API fixture work under #341.
+Full original #120 remains incomplete.

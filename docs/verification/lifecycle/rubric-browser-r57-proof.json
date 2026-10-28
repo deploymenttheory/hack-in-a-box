@@ -1,0 +1,98 @@
+{
+  "source_revision": "6f042d8cef648f70453e7b8aceb039887b8889ad",
+  "verification_image": "sha256:b6aa819fd81e252739b57993fa9ccd4889c65d24782a0241828abc2cec98f1ab",
+  "normal_guide_image": "sha256:75e9cc30911cdfc1ef8ce1865580221e6de4880ae87b024b20fa26430fc5ba0f",
+  "normal_guide_source": "6f042d8cef648f70453e7b8aceb039887b8889ad",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793146937",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R57",
+  "native_elapsed_seconds": 457.08,
+  "completed_ui_barriers": 144,
+  "rubric_UI_decisions": [
+    {
+      "event_id": "5d97c27f-3c2f-4a4b-924b-3bdad00a9b16",
+      "action": "save-rubric",
+      "mode": "all_teams",
+      "version": 1,
+      "revision": 1,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5d97c27f-3c2f-4a4b-924b-3bdad00a9b16",
+      "action": "approve-rubric",
+      "mode": "all_teams",
+      "version": 1,
+      "revision": 2,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "3d4b4322-7b01-461a-a34b-6152bacba427",
+      "action": "save-rubric",
+      "mode": "mentor_qualification",
+      "version": 1,
+      "revision": 1,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "3d4b4322-7b01-461a-a34b-6152bacba427",
+      "action": "approve-rubric",
+      "mode": "mentor_qualification",
+      "version": 1,
+      "revision": 2,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_rubric_verification": [
+    "complete authored definition including private guidance",
+    "unique award identities minted by UI",
+    "revision1/version1 after save",
+    "public digest equals independently observed snapshot",
+    "revision2/same reference and definition after approval",
+    "no early publication or assessment run",
+    "event stage, configuration and admission census unchanged",
+    "approved reference consumed by the common challenge"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "rubric_approved_through_UI": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "rubric_approved_through_UI": true
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Full original #120 remains incomplete. Challenge rubric binding and UI authoring are tracked in #341; this proof does not claim complete browser lifecycle or release readiness.",
+  "private_artifact_sha256": {
+    "source.json": "aee075b8b67d86bd02c1619f98c884d4b54f873b398f347ccba326014a0ec541",
+    "connected-browser-proof.json": "9b1ac3abbb44d686c903f60602bda4250d5378c90ffbaa406833b8cf6a00b857",
+    "native/journey-start-live.json": "2c751195786f9c129f1224a992d4a814e18d876e4c6012506540dfd39a4df138",
+    "native-runner.log": "a82dda5fcf065ff1a547524d513c86f0d57f2a32bff724ca14399cf7514d4ebe",
+    "native-rubric-approved-502.png": "c0023e4402eb00e3c406eb0c5eb188da2f6f3ce833e8012db9a4436b87aec1e0",
+    "final.dump": "18ebc8e8b2df152f8643a83516056eaa60fb69d076528ea2592f95c0f7b4bea2"
+  },
+  "production_ui_revision": "6bb48414ad3aafea9237769aa4045f5274d95139",
+  "native_focus_handoffs_verified": true
+}
