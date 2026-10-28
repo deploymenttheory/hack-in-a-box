@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -220,7 +221,10 @@ func (r *lifecycleJourney) captureAndReconcileCutoff(t *testing.T) {
 				command := lifecycleCutoffReviewCommand(page, work)
 				path := fmt.Sprintf("/api/v1/events/%s/teams/%s/submission-freeze", item.view.ID, team.ID)
 				var acknowledged submissionfreeze.Receipt
-				if err := r.owner.call(ctx, http.MethodPost, path, page.Revision, command, &acknowledged, http.StatusOK); err != nil {
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					acknowledged = r.changeFreezeInBrowser(t, item, index, team.ID, page, command)
+					command.RequestID = acknowledged.RequestID
+				} else if err := r.owner.call(ctx, http.MethodPost, path, page.Revision, command, &acknowledged, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
 				if acknowledged.Decision == nil || acknowledged.Decision.SourceID != source.ID || acknowledged.Decision.SHA != work.SHA || acknowledged.Decision.ActorID != r.owner.person {

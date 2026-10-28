@@ -31,6 +31,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
+	browserBranchTeams          []uuid.UUID
+	browserReconciledTeams      []uuid.UUID
 	browserDraftTeams           []uuid.UUID
 	browserFormalTeams          []uuid.UUID
 	browserClarificationActions []string
@@ -340,7 +342,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !lifecycleBrowserSubmissionsComplete(item) || !lifecycleBrowserClarificationComplete(item.browserClarificationActions) || !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
+			if !lifecycleBrowserFreezeComplete(item) || !lifecycleBrowserSubmissionsComplete(item) || !lifecycleBrowserClarificationComplete(item.browserClarificationActions) || !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
 				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
@@ -389,6 +391,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserBranchTeams          []uuid.UUID `json:"browser_branch_teams"`
+		BrowserReconciledTeams      []uuid.UUID `json:"browser_reconciled_teams"`
 		BrowserDraftTeams           []uuid.UUID `json:"browser_draft_teams"`
 		BrowserFormalTeams          []uuid.UUID `json:"browser_formal_teams"`
 		BrowserClarificationActions []string    `json:"browser_clarification_actions"`
@@ -490,6 +494,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				BrowserBranchTeams:          item.browserBranchTeams,
+				BrowserReconciledTeams:      item.browserReconciledTeams,
 				BrowserDraftTeams:           item.browserDraftTeams,
 				BrowserFormalTeams:          item.browserFormalTeams,
 				BrowserClarificationActions: item.browserClarificationActions,
