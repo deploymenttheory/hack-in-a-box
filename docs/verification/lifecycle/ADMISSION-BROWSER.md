@@ -152,3 +152,16 @@ images, UI identity and private artifact hashes;
 normal-UI approval. This closes the bounded native gate for #341, not original
 full #120. Withdrawals/hard freeze and later assessment/feedback/archive actions
 still require their full normal-UI extension and original final acceptance audit.
+
+R59 passes164 UI barriers and the subsequent native journey (417.17s). Actual
+participant controls withdraw three competitors before freeze and three after
+freeze in each event; both organisers review and confirm the hard freeze.
+Native reads retain exact participant/revision/census and roster checks, the
+reassigned pre-freeze pair, smaller-team continuation after freeze and denied
+late moves/backfill. Both modes archive with exact retention guards; scoped
+cleanup is zero.
+[team-boundary-browser-r59-proof.json](team-boundary-browser-r59-proof.json)
+retains source/images and private hashes;
+[native-team-freeze.png](native-team-freeze.png) shows the synthetic frozen
+allocation and unused retired team. Objective authoring is the next published
+extension and is not established by this run. Full original #120 remains open.

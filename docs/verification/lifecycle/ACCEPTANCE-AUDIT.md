@@ -11,8 +11,8 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff; CONNECTED-MESSAGE.md adds same-event queued permanent SMTP failure with immutable history and denied retry | R39 adds actual same-event browser offline/accepted-response-loss recovery with one PUT and independent native verification; remaining integrated provider/role variants |
 | Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes; LIVE-ROLES.md adds twelve live actor cases on both events and audited mentor revoke/restore with peer isolation | Remaining other-stage/current-resource role cases, full action journeys and archive/export inspection |
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
-| Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; R54 adds92 reviewed team commands with exact native revisions, target-five initial publication and corrected preferred-size publication | Depletion withdrawals and later hard-freeze UI remain native API steps; full integrated browser coverage remains |
-| Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | Complete withdrawal/freeze and remaining before/after-freeze browser cases |
+| Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; R54 adds92 reviewed team commands with exact native revisions, target-five initial publication and corrected preferred-size publication | R59 adds actual before/after-freeze withdrawals and reviewed hard freeze; remaining full integrated role/UI variants remain |
+| Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | R59 completes the bounded withdrawal/freeze action sequence; remaining role, UI boundary and full acceptance variants remain |
 | Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | Complete browser publication/exception paths |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
 | Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | Objective setup, document acknowledgements, clarification/correction and remaining full Fleet sequence |
@@ -95,3 +95,13 @@ removed after both runs. These supersede the historical missing-rubric-screen
 observation above for that bounded portion. The newly added before/after-freeze
 withdrawal and hard-freeze UI extension is not established by R58; its connected
 execution is pending. Full original twelve-criterion acceptance remains open.
+
+R59 then verifies twelve actual UI withdrawals and two reviewed hard freezes:
+all164 UI barriers and the native journey pass417.17s. Native participant,
+revision, census and roster checks preserve pre-freeze reassignment and the
+post-freeze smaller team, with denied late moves/backfill. Both events archive
+and pass exact retention guards; scoped cleanup is zero. The proof is
+`team-boundary-browser-r59-proof.json`. This supersedes the preceding pending
+withdrawal/freeze observation for that bounded sequence. Objective authoring is
+now a reviewed, compiled extension awaiting its own connected execution; later
+UI journeys and original full acceptance remain unproven.
