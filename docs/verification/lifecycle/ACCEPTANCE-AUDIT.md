@@ -167,3 +167,17 @@ modes finish archived; exact120-day guards and scoped cleanup pass. See
 compared fixture32e7d3fd plus PR344 webf440a8a0 composition. Later branch/cutoff
 and fictional-practice UI extensions are not executed by R66. Full original
 acceptance remains open; organiser final-round setup gap #345 is separate.
+
+
+R67 is failed evidence:188/232 browser barriers complete, including twelve
+branch configurations and six fictional judge practice submissions, before the
+native live-mentor-access helper incorrectly requires latest plan==historical
+preparation approval. Normal worker maintenance had created newer unapproved
+live-coverage drafts. Restoring the failed synthetic snapshot reproduces that
+legacy assertion RED for all12 teams in under1s, while exact original approval
+identities/versions/fingerprints/approvers/member census remain intact for all12.
+`8aa59b7f` corrects the fixture to wait for the real worker draft and independently
+read the exact immutable historical approval, retaining separate manual review,
+explicit approval and read-only mentor effect guards. Its native rerun is pending.
+Cutoff UI reconciliation was not reached; R67 does not prove a final journey,
+archive or retention result. See `freeze-practice-r67-failed-proof.json`.
