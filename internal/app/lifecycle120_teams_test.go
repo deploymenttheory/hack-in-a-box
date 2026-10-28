@@ -46,6 +46,11 @@ func allocateLifecycleTeamsWithInitialPublication(
 		initialPublication, reviewPublication, nil)
 }
 
+type lifecycleTeamActions struct {
+	Command  func(teams.Command) (teams.Page, error)
+	Withdraw func(int, registration.View) (registration.View, error)
+}
+
 // Successful commands can be owned by the real browser. Rejected commands still
 // exercise the native API and prove that its publication/freeze guards hold.
 func allocateLifecycleTeamsWithActions(
@@ -56,11 +61,11 @@ func allocateLifecycleTeamsWithActions(
 	control *lifecycleControl,
 	initialPublication func(teams.Page) error,
 	reviewPublication func() error,
-	browserCommand func(teams.Command) (teams.Page, error),
+	browser *lifecycleTeamActions,
 ) (teams.Page, error) {
 	command := func(input teams.Command, want int) (teams.Page, error) {
-		if browserCommand != nil && want == http.StatusOK {
-			return browserCommand(input)
+		if browser != nil && browser.Command != nil && want == http.StatusOK {
+			return browser.Command(input)
 		}
 		return lifecycleTeamCommand(ctx, owner, eventID, input, want)
 	}
@@ -165,15 +170,15 @@ func allocateLifecycleTeamsWithActions(
 	for _, index := range roster[:3] {
 		applied := cohort.registrations[index]
 		var withdrawn registration.View
-		if err := cohort.clients[index].call(
-			ctx,
-			http.MethodPost,
-			base+"/registrations/"+applied.ID.String()+"/respond",
-			applied.Revision,
-			map[string]string{"action": "withdraw"},
-			&withdrawn,
-			http.StatusOK,
-		); err != nil {
+		var err error
+		if browser != nil && browser.Withdraw != nil {
+			withdrawn, err = browser.Withdraw(index, applied)
+		} else {
+			err = cohort.clients[index].call(ctx, http.MethodPost,
+				base+"/registrations/"+applied.ID.String()+"/respond", applied.Revision,
+				map[string]string{"action": "withdraw"}, &withdrawn, http.StatusOK)
+		}
+		if err != nil {
 			return page, err
 		}
 		if withdrawn.State != "withdrawn" {

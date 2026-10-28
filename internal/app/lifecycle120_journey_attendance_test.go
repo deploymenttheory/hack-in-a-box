@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 
@@ -94,7 +96,12 @@ func (r *lifecycleJourney) depleteFrozenTeams(t *testing.T) {
 				}
 				found = true
 				var withdrawn registration.View
-				if err := r.participant(t, member.ID).
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					withdrawn = r.respondToAdmissionInBrowser(t, item, r.participant(t, member.ID),
+						611+index*20+len(item.browserFrozenWithdrawals),
+						lifecycleBrowserAdmissionResponse{Actor: fmt.Sprintf("attendee-%02d", i+1), Application: applied, Action: "withdraw"})
+					item.browserFrozenWithdrawals = append(item.browserFrozenWithdrawals, withdrawn.PersonID)
+				} else if err := r.participant(t, member.ID).
 					call(t.Context(), http.MethodPost, base+"/registrations/"+applied.ID.String()+"/respond", applied.Revision, map[string]string{"action": "withdraw"}, &withdrawn, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}

@@ -149,7 +149,7 @@ func (r *lifecycleJourney) browserAdmissionActions(
 			if action == "accept" {
 				sequence++
 			}
-			return r.respondToAdmissionInBrowser(
+			responded := r.respondToAdmissionInBrowser(
 				t,
 				item,
 				actor,
@@ -157,7 +157,9 @@ func (r *lifecycleJourney) browserAdmissionActions(
 				lifecycleBrowserAdmissionResponse{
 					Actor: alias, Application: application, Action: action,
 				},
-			), nil
+			)
+			item.browserAdmissionDecisions = append(item.browserAdmissionDecisions, action)
+			return responded, nil
 		},
 		Open: func() (event.View, error) {
 			before := r.readRoleEvent(t, item)

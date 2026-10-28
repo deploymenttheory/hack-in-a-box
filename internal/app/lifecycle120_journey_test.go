@@ -35,10 +35,14 @@ type lifecycleJourneyEvent struct {
 
 	failedMessage lifecycleFailedMessageReceipt
 
-	browserApplications        []lifecycleBrowserApplicationReceipt
-	browserSelections          []lifecycleBrowserSelectionReceipt
-	browserChallengeApproved   bool
-	browserRubricApproved      bool
+	browserApplications      []lifecycleBrowserApplicationReceipt
+	browserSelections        []lifecycleBrowserSelectionReceipt
+	browserChallengeApproved bool
+	browserRubricApproved    bool
+
+	browserAllocationWithdrawals []uuid.UUID
+	browserFrozenWithdrawals     []uuid.UUID
+
 	browserTeamCommands        []string
 	browserPublishedForms      []string
 	browserAdmissionDecisions  []string
@@ -330,7 +334,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		for _, item := range run.events {
 			if !item.browserEventCreated || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
-				!item.browserRubricApproved || !item.browserChallengeApproved ||
+				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
 				len(item.browserApplications) != 4 ||
 				len(item.browserSelections) != 2 ||
@@ -377,19 +381,23 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
-		BrowserHelp                *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
-		FailedMessage              lifecycleFailedMessageReceipt        `json:"failed_message"`
-		BrowserApplications        []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
-		BrowserSelections          []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
-		BrowserChallengeApproved   bool                                 `json:"browser_challenge_approved"`
-		BrowserRubricApproved      bool                                 `json:"browser_rubric_approved"`
-		BrowserTeamCommands        []string                             `json:"browser_team_commands,omitempty"`
-		BrowserPublishedForms      []string                             `json:"browser_published_forms,omitempty"`
-		BrowserAdmissionDecisions  []string                             `json:"browser_admission_decisions,omitempty"`
-		BrowserOfferPolicyApproved bool                                 `json:"browser_offer_policy_approved"`
-		BrowserRegistrationOpened  bool                                 `json:"browser_registration_opened"`
-		BrowserEventCreated        bool                                 `json:"browser_event_created"`
-		BrowserBrandVerified       bool                                 `json:"browser_brand_verified"`
+		BrowserHelp              *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
+		FailedMessage            lifecycleFailedMessageReceipt        `json:"failed_message"`
+		BrowserApplications      []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
+		BrowserSelections        []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserChallengeApproved bool                                 `json:"browser_challenge_approved"`
+		BrowserRubricApproved    bool                                 `json:"browser_rubric_approved"`
+
+		BrowserAllocationWithdrawals []uuid.UUID `json:"browser_allocation_withdrawals"`
+		BrowserFrozenWithdrawals     []uuid.UUID `json:"browser_frozen_withdrawals"`
+
+		BrowserTeamCommands        []string `json:"browser_team_commands,omitempty"`
+		BrowserPublishedForms      []string `json:"browser_published_forms,omitempty"`
+		BrowserAdmissionDecisions  []string `json:"browser_admission_decisions,omitempty"`
+		BrowserOfferPolicyApproved bool     `json:"browser_offer_policy_approved"`
+		BrowserRegistrationOpened  bool     `json:"browser_registration_opened"`
+		BrowserEventCreated        bool     `json:"browser_event_created"`
+		BrowserBrandVerified       bool     `json:"browser_brand_verified"`
 
 		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
 		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
@@ -463,11 +471,15 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				BrowserHelp:                item.browserHelp,
-				FailedMessage:              item.failedMessage,
-				BrowserBrandVerified:       item.browserBrandVerified,
-				BrowserEventCreated:        item.browserEventCreated,
-				BrowserPublishedForms:      item.browserPublishedForms,
+				BrowserHelp:           item.browserHelp,
+				FailedMessage:         item.failedMessage,
+				BrowserBrandVerified:  item.browserBrandVerified,
+				BrowserEventCreated:   item.browserEventCreated,
+				BrowserPublishedForms: item.browserPublishedForms,
+
+				BrowserAllocationWithdrawals: item.browserAllocationWithdrawals,
+				BrowserFrozenWithdrawals:     item.browserFrozenWithdrawals,
+
 				BrowserTeamCommands:        item.browserTeamCommands,
 				BrowserChallengeApproved:   item.browserChallengeApproved,
 				BrowserRubricApproved:      item.browserRubricApproved,
@@ -705,7 +717,7 @@ func (r *lifecycleJourney) prepareEvent(
 		r.control,
 		func(page teams.Page) error { r.provisionInitialRepositories(t, &item, page); return nil },
 		func() error { r.configureTeamNotice(t, &item); return nil },
-		r.browserTeamActions(t, &item, index),
+		r.browserAllocationActions(t, &item, index),
 	)
 	if err != nil {
 		t.Fatal(err)

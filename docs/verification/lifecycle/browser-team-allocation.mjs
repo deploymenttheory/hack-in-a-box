@@ -38,18 +38,19 @@ export async function changeTeamInFleet({page,expect,phase,output}){
     confirm=page.getByRole('button',{name:'Confirm team change',exact:true})
     break
    case 'publish':
+   case 'freeze':
     await page.getByRole('button',{name:'Review allocation',exact:true}).click()
     await page.getByLabel('Allocation decision reason',{exact:true}).fill(command.reason)
-    await page.getByRole('button',{name:'Review publication',exact:true}).click()
+    await page.getByRole('button',{name:command.action==='freeze'?'Review publication and freeze':'Review publication',exact:true}).click()
     const preview=page.getByRole('region',{name:'Publication preview',exact:true})
     await expect(preview).toBeVisible()
     await expect(preview.getByRole('heading',{name:`Publication preview · revision ${input.revision}`,exact:true})).toBeVisible()
     await expect(preview).toContainText(command.reason)
-    confirm=preview.getByRole('button',{name:'Publish assignments',exact:true})
+    confirm=preview.getByRole('button',{name:command.action==='freeze'?'Publish and freeze teams':'Publish assignments',exact:true})
     break
    default:throw new Error('Unsupported reviewed team command')
   }
-  if(command.action!=='publish'){
+  if(!['publish','freeze'].includes(command.action)){
    const review=page.getByRole('region',{name:'Review team change',exact:true})
    await expect(review.getByRole('heading',{name:'Review team change',exact:true})).toBeFocused()
    await expect(review).toContainText(`reviewed revision ${input.revision}`)
@@ -78,7 +79,7 @@ export async function changeTeamInFleet({page,expect,phase,output}){
   await expect(confirm).toHaveCount(0)
   await page.reload()
   await expect(page.getByRole('heading',{name:'Team allocation',exact:true})).toBeVisible()
-  if(command.action==='publish')await page.screenshot({path:join(output,`native-teams-${phase.sequence}.png`),fullPage:true})
+  if(['publish','freeze'].includes(command.action))await page.screenshot({path:join(output,`native-teams-${phase.sequence}.png`),fullPage:true})
   assert.equal(writes.length,1)
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
   return {event_id:phase.event_id,sequence:phase.sequence,action:command.action,review_without_write:true,one_confirmed_command:true,reloaded:true}

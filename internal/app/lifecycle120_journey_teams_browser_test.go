@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
+	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 	"github.com/google/uuid"
 )
@@ -18,6 +19,23 @@ type lifecycleBrowserTeamChange struct {
 	Command    teams.Command `json:"command"`
 	Revision   int64         `json:"revision"`
 	Last       bool          `json:"last"`
+}
+
+func (r *lifecycleJourney) browserAllocationActions(t *testing.T, item *lifecycleJourneyEvent, index int) *lifecycleTeamActions {
+	t.Helper()
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") != "ui-journey" {
+		return nil
+	}
+	return &lifecycleTeamActions{
+		Command: r.browserTeamActions(t, item, index),
+		Withdraw: func(personIndex int, applied registration.View) (registration.View, error) {
+			current := r.respondToAdmissionInBrowser(t, item, item.cohort.clients[personIndex],
+				601+index*20+len(item.browserAllocationWithdrawals),
+				lifecycleBrowserAdmissionResponse{Actor: fmt.Sprintf("attendee-%02d", personIndex+1), Application: applied, Action: "withdraw"})
+			item.browserAllocationWithdrawals = append(item.browserAllocationWithdrawals, current.PersonID)
+			return current, nil
+		},
+	}
 }
 
 func (r *lifecycleJourney) browserTeamActions(
@@ -80,7 +98,7 @@ func (r *lifecycleJourney) browserTeamActions(
 		eventBefore.Blockers = eventAfter.Blockers
 		if after.Revision != before.Revision+1 || !reflect.DeepEqual(eventBefore, eventAfter) ||
 			!reflect.DeepEqual(before.People, after.People) ||
-			!reflect.DeepEqual(before.Requests, after.Requests) || before.Frozen != after.Frozen {
+			!reflect.DeepEqual(before.Requests, after.Requests) || command.Action != "freeze" && before.Frozen != after.Frozen {
 			return after, fmt.Errorf("UI team change altered unrelated native event or admission state")
 		}
 		if err := verifyLifecycleBrowserTeamChange(before, after, command); err != nil {
@@ -153,6 +171,13 @@ func verifyLifecycleBrowserTeamChange(before, after teams.Page, command teams.Co
 			if team.ID != command.TeamID && !wasSource && !reflect.DeepEqual(old, team) {
 				return fmt.Errorf("UI move altered an unrelated team")
 			}
+		case "freeze":
+			if old.State == "published" {
+				old.Frozen = true
+			}
+			if !after.Frozen || !reflect.DeepEqual(old, team) {
+				return fmt.Errorf("UI freeze changed more than the exact published team freeze state")
+			}
 		case "publish":
 			if len(team.Draft) == 0 {
 				if team.State != "disbanded" || len(team.Published) != 0 {
@@ -178,5 +203,5 @@ func lifecycleBrowserTeamCommandsComplete(commands []string) bool {
 	for _, command := range commands {
 		counts[command]++
 	}
-	return reflect.DeepEqual(counts, map[string]int{"create": 7, "move": 30, "unlock": 7, "publish": 2})
+	return reflect.DeepEqual(counts, map[string]int{"create": 7, "move": 30, "unlock": 7, "publish": 2, "freeze": 1})
 }

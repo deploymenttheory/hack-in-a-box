@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -120,7 +121,13 @@ func (r *lifecycleJourney) expireSurvivingOffers(t *testing.T) {
 		item.offerCutoff.LateResponseState, item.offerCutoff.LateOfferState = result.State, result.Offer.State
 		item.offerCutoff.LateResponseRevision, item.offerCutoff.LateHTTPStatus = result.Revision, http.StatusOK
 		item.offerCutoff.PublishedTeamsUnchanged = true
-		frozen, err := lifecycleTeamCommand(t.Context(), r.owner, item.view.ID, teams.Command{Action: "freeze"}, http.StatusOK)
+		var frozen teams.Page
+		var err error
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			frozen, err = r.browserTeamActions(t, item, index)(teams.Command{Action: "freeze"})
+		} else {
+			frozen, err = lifecycleTeamCommand(t.Context(), r.owner, item.view.ID, teams.Command{Action: "freeze"}, http.StatusOK)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}

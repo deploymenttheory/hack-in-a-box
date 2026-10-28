@@ -79,6 +79,5 @@ func (r *lifecycleJourney) respondToAdmissionInBrowser(
 			"UI withdrawal or acceptance changed the go decision, configuration or wrong confirmed census",
 		)
 	}
-	item.browserAdmissionDecisions = append(item.browserAdmissionDecisions, input.Action)
 	return current
 }
