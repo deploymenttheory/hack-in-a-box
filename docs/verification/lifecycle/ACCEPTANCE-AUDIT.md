@@ -319,3 +319,12 @@ no qualification workflow. Both events archived, configured120-day retention
 passed and scoped resources are zero. See `qualification-browser-r73-proof.json`;
 no assessment bodies or private screenshots are published. Full original120
 remains incomplete and draft316 stays draft.
+
+### Qualification history parameter correction (next native run pending)
+
+R73 read the latest authorised retained round and matched its entire snapshot
+to the exact immediate post-write round; this proves the recorded immutable
+actor/action/version without exercising history pagination. The fixture now
+uses the endpoint’s actual `before` parameter to target that exclusive version
+explicitly. R73 keeps its original source and evidence; the corrected query will
+be exercised by the next integrated rehearsal. No earlier proof is relabelled.

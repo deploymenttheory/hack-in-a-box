@@ -61,7 +61,7 @@ func (r *lifecycleJourney) changeQualificationInBrowser(t *testing.T, item *life
 		t.Fatal("qualification UI changed its captured native actor/action/source/version")
 	}
 	var history qualification.History
-	if err = client.call(t.Context(), http.MethodGet, fmt.Sprintf("%s/history?cursor=%d&limit=1", path, next.Round.Version+1), -1, nil, &history, http.StatusOK); err != nil {
+	if err = client.call(t.Context(), http.MethodGet, fmt.Sprintf("%s/history?before=%d&limit=1", path, next.Round.Version+1), -1, nil, &history, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
 	if len(history.Items) != 1 || !reflect.DeepEqual(history.Items[0].Snapshot, next.Round) {
