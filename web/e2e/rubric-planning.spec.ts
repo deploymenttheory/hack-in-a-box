@@ -157,7 +157,7 @@ test('regular portal cannot discover private rubric choices through a copied con
   test.skip(info.project.metadata.portal !== 'regular', 'Regular portal boundary')
   const state = await rubricPlanningFixture(page)
   await page.goto(`/events/${firstID}?section=content`)
-  await expect(page.getByRole('heading', { name: 'Event workspace', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: state.event.name, exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Challenge judging criteria', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Save new draft', exact: true })).toHaveCount(0)
   expect(state.reads).toBe(0); expect(state.posts).toHaveLength(0)
