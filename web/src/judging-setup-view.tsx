@@ -12,7 +12,7 @@ export type JudgingSetupReview = { kind: 'create' | 'assign'; source: JudgingSet
 
 function JudgingChoice({ label, checked, change, disabled, error }: { label: string; checked: boolean; change: (checked: boolean) => void; disabled?: boolean; error?: string }) {
   const id = useId(), errorID = `${id}-error`
-  return <div><Label htmlFor={id} className="flex items-start gap-3"><Checkbox id={id} className="mt-0.5 shrink-0" checked={checked} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? errorID : undefined} onChange={event => change(event.target.checked)} /><span>{label}</span></Label>{error && <FieldError id={errorID} role="alert">{error}</FieldError>}</div>
+  return <div><Label htmlFor={id} className="flex items-start gap-3"><Checkbox id={id} className="mt-0.5 shrink-0" checked={checked} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? errorID : undefined} onChange={event => change(event.target.checked)} /><span>{label}</span></Label>{error && <FieldError id={errorID}>{error}</FieldError>}</div>
 }
 export function JudgingSetupFields({ source, input, change, errors, disabled, review, form }: {
   source: JudgingSetup; input: JudgingSetupInput; change: (input: JudgingSetupInput) => void; errors: Record<string, string>; disabled: boolean
