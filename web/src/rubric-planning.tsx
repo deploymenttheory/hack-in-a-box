@@ -11,7 +11,7 @@ import { Button } from './components/ui/button'
 import { Field, Textarea } from './components/ui/fields'
 import { ConfirmationDialog } from './components/ui/dialog'
 import { Failure, Loading } from './components/states'
-import { RubricPlanningFields, validateRubricPlanningForm, revealRubricInvalidField, type RubricConfiguration, type RubricDefinition } from './rubric-planning-fields'
+import { RubricPlanningFields, validateRubricPlanningForm, useRubricPlanningValidation, type RubricConfiguration, type RubricDefinition } from './rubric-planning-fields'
 import { RubricPlanningReview } from './rubric-planning-review'
 import { rubricDefinitionKey, rubricReferenceKey } from './rubric-planning-model'
 import { usePlanningDepartureBarrier } from './planning-operations'
@@ -41,7 +41,7 @@ function RubricEditor({ event, initial, observed, paused, parent, onDirty, deny 
   const [saved, setSaved] = useState(initial), [definition, setDefinition] = useState(() => structuredClone(initial.definition))
   const [reason, setReason] = useState(''), [review, setReview] = useState<Decision>(), [notice, setNotice] = useState('')
   const [checking, setChecking] = useState(false), [preflightError, setPreflightError] = useState<unknown>(), [needsCurrent, setNeedsCurrent] = useState(false)
-  const preflightLock = useRef(false)
+  const preflightLock = useRef(false), validation = useRubricPlanningValidation()
   const form = useRef<HTMLFormElement>(null), saveButton = useRef<HTMLButtonElement>(null), approveButton = useRef<HTMLButtonElement>(null)
   const reasonField = useRef<HTMLTextAreaElement>(null), versionStatus = useRef<HTMLParagraphElement>(null), returnFocus = useRef<HTMLElement | null>(null)
   const dirty = rubricDefinitionKey(definition) !== rubricDefinitionKey(saved.definition), fieldsDisabled = command.blocked || checking, blocked = paused || fieldsDisabled
@@ -73,6 +73,7 @@ function RubricEditor({ event, initial, observed, paused, parent, onDirty, deny 
   }
   function begin(action: Decision['action']) {
     if (blocked || drifted || needsCurrent || !validateRubricPlanningForm(form.current)) return
+    validation.reset()
     returnFocus.current = action === 'save' ? saveButton.current : approveButton.current
     setReview({ action, configuration: structuredClone(saved), definition: structuredClone(action === 'save' ? definition : saved.definition), reason: reason.trim() })
   }
@@ -100,9 +101,9 @@ function RubricEditor({ event, initial, observed, paused, parent, onDirty, deny 
   return <><p ref={versionStatus} tabIndex={-1}>Saved version {saved.reference.version || 'not created'} · Revision {saved.revision} · {saved.approved ? 'Approved' : 'Not approved'}{saved.published_version !== null && ` · Published version ${saved.published_version}`}</p>
     {saved.runs.some(run => !!run.started_at) && <p role="status">Assessment has started. Existing runs retain their exact version. New criteria cannot silently reweight submitted scores; run restart and publication safeguards remain enforced by the server.</p>}
     {(drifted || needsCurrent) && <div role="status"><h3>Current version needed</h3><p>A newer rubric revision is available. Read and review it before another decision.</p><Button icon="refresh" variant="outline" disabled={command.pending} onClick={() => void command.readCurrent(readCurrent)}>Read current rubric version</Button></div>}
-    <form ref={form} onSubmit={event => { event.preventDefault(); begin('save') }} onInvalidCapture={event => revealRubricInvalidField(event.target as HTMLElement)}>
+    <form ref={form} onSubmit={event => { event.preventDefault(); begin('save') }} onInvalidCapture={validation.onInvalid}>
       <RubricPlanningFields value={definition} change={setDefinition} disabled={fieldsDisabled} />
-      <div className="grid gap-4 border-t border-border py-5"><Field label="Rubric decision reason" error={reason && !reason.trim() ? 'Enter a decision reason.' : undefined} description="Recorded with the reviewed save or approval."><Textarea ref={reasonField} value={reason} required maxLength={2000} disabled={fieldsDisabled} onChange={event => setReason(event.target.value)} /></Field><div className="fleet-pattern-actions"><Button ref={saveButton} focusableWhenDisabled={paused && !fieldsDisabled && saveReady} type="submit" icon="next" disabled={blocked || !saveReady}>Review draft save</Button><Button ref={approveButton} focusableWhenDisabled={paused && !fieldsDisabled && approvalReady} type="button" icon="shield" variant="outline" disabled={blocked || !approvalReady} onClick={() => begin('approve')}>Review version approval</Button></div></div>
+      <div className="grid gap-4 border-t border-border py-5"><Field label="Rubric decision reason" error={(validation.attempted || !!reason) && !reason.trim() ? 'Enter a decision reason.' : undefined} description="Recorded with the reviewed save or approval."><Textarea ref={reasonField} value={reason} required maxLength={2000} disabled={fieldsDisabled} onChange={event => setReason(event.target.value)} /></Field><div className="fleet-pattern-actions"><Button ref={saveButton} focusableWhenDisabled={paused && !fieldsDisabled && saveReady} type="submit" icon="next" disabled={blocked || !saveReady}>Review draft save</Button><Button ref={approveButton} focusableWhenDisabled={paused && !fieldsDisabled && approvalReady} type="button" icon="shield" variant="outline" disabled={blocked || !approvalReady} onClick={() => begin('approve')}>Review version approval</Button></div></div>
     </form>
     <AdmissionFeedback command={command} read={readCurrent} />{notice && <p role="status">{notice}</p>}
     <ConfirmationDialog open={!!review} title={review?.action === 'approve' ? 'Approve exact rubric version' : 'Review private rubric draft'} description="Review the captured criteria and reason. This decision does not publish the challenge or start scoring." confirmLabel={review?.action === 'approve' ? 'Approve reviewed version' : 'Save reviewed draft'} pending={command.pending || checking} disabled={paused || command.blocked || needsCurrent} finalFocus={() => returnFocus.current?.isConnected && !returnFocus.current.matches(':disabled') ? returnFocus.current : versionStatus.current} onOpenChange={open => { if (!open) setReview(undefined) }} onConfirm={() => void confirm()} printExcluded>{!!preflightError && <Failure error={preflightError} />}{review && <RubricPlanningReview definition={review.definition} revision={review.configuration.revision} version={review.configuration.reference.version} reason={review.reason} action={review.action} />}</ConfirmationDialog>

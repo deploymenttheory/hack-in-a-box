@@ -200,3 +200,9 @@ uncertain reads pause decisions while local inputs retain editing focus. After
 a confirmed save, focus the next approval reason; cancellation returns to the
 actual save or approval opener. The independent guide imports these same components
 with synthetic local callbacks and no API, auth or storage dependency.
+
+The owning rubric form uses `useRubricPlanningValidation().onInvalid` and
+`validateRubricPlanningForm` before capture. A native validation pass can report
+several fields at once; one owner reveals and focuses its first correction,
+preventing later invalid sections from stealing focus. Keep entered values and
+clear attempted-validation cues once a valid decision review is captured.

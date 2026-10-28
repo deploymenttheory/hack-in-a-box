@@ -14,6 +14,7 @@ test('rubric draft and exact approval are separate reviewed versioned commands',
   await page.getByLabel('Judging mode', { exact: true }).selectOption('mentor_qualification')
   await page.getByRole('spinbutton', { name: 'Finalist count', exact: true }).fill('4')
   await page.getByRole('spinbutton', { name: 'Reserve count', exact: true }).fill('2')
+  await page.getByRole('button', { name: 'Review draft save', exact: true }).press('Enter'); await expect(page.getByLabel('Rubric decision reason', { exact: true })).toBeFocused(); await expect(page.getByText('Enter a decision reason.', { exact: true })).toBeVisible(); expect(state.posts).toHaveLength(0)
   await page.getByLabel('Rubric decision reason', { exact: true }).fill('Common criteria independently reviewed')
   await page.getByRole('button', { name: 'Review draft save', exact: true }).press('Enter')
   await expect(dialog(page)).toContainText('Starting revision 0 · Version 0'); await expect(dialog(page)).toContainText('Finalists 4 · Reserves 2'); expect(state.posts).toHaveLength(0)
@@ -28,7 +29,7 @@ test('rubric draft and exact approval are separate reviewed versioned commands',
   await page.getByRole('button', { name: 'Review version approval', exact: true }).click()
   await dialog(page).getByRole('button', { name: 'Approve reviewed version', exact: true }).click(); await expect(page.getByRole('status').filter({ hasText: 'Exact rubric version approved' })).toBeVisible()
   expect(state.posts).toHaveLength(2); expect(state.posts[1]).toEqual({ revision: '"1"', body: { action: 'approve', version: 1, reason: 'Approve exact saved version one' } }); expect(state.configuration.published_version).toBeNull()
-  await expect(page.getByText('Saved version 1 · Revision 2 · Approved', { exact: true })).toBeFocused()
+  await expect(page.getByText('Saved version 1 · Revision 2 · Approved', { exact: true })).toBeFocused(); await expect(page.getByText('Enter a decision reason.', { exact: true })).toHaveCount(0)
   await page.reload(); await expect(page.getByLabel('Rubric name', { exact: true })).toHaveValue('Reviewed common event criteria'); await expect(page.getByRole('button', { name: 'Review version approval', exact: true })).toBeDisabled()
 })
 
@@ -44,6 +45,20 @@ test('rubric validation reveals the invalid category and retains entered bounds 
   await page.getByRole('button', { name: 'Review draft save', exact: true }).click()
   await expect(page.getByLabel('Maximum score for category 1', { exact: true })).toBeFocused(); await expect(page.getByLabel('Maximum score for category 1', { exact: true })).toHaveAttribute('aria-invalid', 'true')
   await expect(page.getByLabel('Public evidence guidance for category 1', { exact: true })).toHaveValue('Retained local evidence guidance'); expect(state.posts).toHaveLength(0)
+})
+
+test('several invalid rubric sections select the first correction without later errors stealing focus', async ({ page }, info) => {
+  test.skip(info.project.metadata.portal !== 'administrator', 'Administrator editor')
+  const state = await rubricPlanningFixture(page); await open(page)
+  await page.getByLabel('Rubric name', { exact: true }).fill('')
+  const sections = page.getByRole('navigation', { name: 'Rubric definition sections', exact: true })
+  await sections.getByRole('button', { name: 'Categories', exact: true }).click(); await page.getByText('Demo', { exact: true }).click(); await page.getByLabel('Maximum score for category 1', { exact: true }).fill('0')
+  await sections.getByRole('button', { name: 'Private guidance', exact: true }).click(); await page.getByLabel('Private judge guidance', { exact: true }).fill('Retain unsent guidance across validation')
+  await page.getByLabel('Rubric decision reason', { exact: true }).fill('Several corrections are required')
+  await page.getByRole('button', { name: 'Review draft save', exact: true }).click()
+  await expect(page.getByLabel('Rubric name', { exact: true })).toBeFocused(); await expect(sections.getByRole('button', { name: 'Model', exact: true })).toHaveAttribute('aria-current', 'step')
+  await expect(dialog(page)).toHaveCount(0); expect(state.posts).toHaveLength(0)
+  await sections.getByRole('button', { name: 'Private guidance', exact: true }).click(); await expect(page.getByLabel('Private judge guidance', { exact: true })).toHaveValue('Retain unsent guidance across validation')
 })
 
 test('a changed rubric revision cannot submit its old review; explicit current read retains local input', async ({ page }, info) => {

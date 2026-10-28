@@ -1,25 +1,37 @@
-import { useId, useRef, type ReactNode } from 'react'
+import { useId, useRef, useState, type InvalidEvent, type ReactNode } from 'react'
 import type { components } from './api/schema.gen'
 import { Button } from './components/ui/button'
 import { Field, Input, Select, Textarea } from './components/ui/fields'
 import { Icon } from './components/ui/icon'
-import { PlanningEditorSections, PlanningStep } from './planning-layout'
+import { PlanningEditorSections, PlanningStep, revealPlanningField } from './planning-layout'
 
 export type RubricDefinition = components['schemas']['PrivateRubricDefinition']
 export type RubricConfiguration = components['schemas']['RubricConfiguration']
 type Category = RubricDefinition['categories'][number]
 
-export function revealRubricInvalidField(field: HTMLElement) {
-  const details = field.closest('details')
-  if (details) details.open = true
-  requestAnimationFrame(() => field.focus())
+export function useRubricPlanningValidation() {
+  const pending = useRef(false), [attempted, setAttempted] = useState(false)
+  function onInvalid(event: InvalidEvent<HTMLFormElement>) {
+    // A native validation pass emits an event for every invalid field. One
+    // owner chooses its first correction; later fields cannot steal its panel
+    // or focus, and the browser must not also focus a still-hidden control.
+    event.preventDefault(); event.stopPropagation(); setAttempted(true)
+    if (pending.current) return
+    const form = event.currentTarget
+    const field = [...form.querySelectorAll<HTMLElement>('input, select, textarea')].find(control => !control.matches(':disabled') && control.matches('[aria-invalid="true"], :invalid'))
+    if (!field) return
+    pending.current = true
+    const details = field.closest('details'); if (details) details.open = true
+    revealPlanningField(form, field.id)
+    requestAnimationFrame(() => { pending.current = false })
+  }
+  return { onInvalid, attempted, reset: () => setAttempted(false) }
 }
 export function validateRubricPlanningForm(form: HTMLFormElement | null) {
   if (!form?.reportValidity()) return false
   const invalid = form.querySelector<HTMLElement>('[aria-invalid="true"]')
   if (!invalid) return true
   invalid.dispatchEvent(new Event('invalid', { bubbles: false, cancelable: true }))
-  revealRubricInvalidField(invalid)
   return false
 }
 
