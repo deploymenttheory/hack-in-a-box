@@ -220,3 +220,15 @@ retention remained enforced, and scoped containers/volumes/networks are zero.
 See `judging-setup-browser-r69-proof.json` and synthetic-only
 `native-final-judging-setup.png`. Product dependency is separate PR346; full
 original120 remains incomplete and draft316 remains draft.
+
+### Live mentor cards browser barriers (pending execution)
+
+The next extension requires every published primary/second mentor assignment to
+submit its independent provisional live checkpoint through production controls:
+twelve cards per event, twenty-four total, after the existing common clarification
+journey. Normal OIDC, captured source review, correction without a write, keyboard
+focus return, a single versioned confirmation and reload are checked. Native
+observers separately verify the exact author/team/checkpoint/run/rubric/content
+and immutable first version, retaining the earlier twelve-card census per mode.
+No private score screenshots or assessment bodies are published. Target270
+browser barriers remains pending execution; R69 remains historical246-step proof.
