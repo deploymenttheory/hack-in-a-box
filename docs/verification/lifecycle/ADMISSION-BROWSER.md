@@ -174,3 +174,14 @@ that exact accessible role/name, retaining exact matching and the same user
 control. The failed source and private evidence remain retained; it is not
 objective acceptance. All scoped resources were removed. A corrected full
 connected run is required.
+
+R61 corrects that fixture locator and passes166 UI barriers and the native
+journey (418.09s). Both objectives are authored by real controls with UI-generated
+objective/measure identities, current owner, theme sensitivity, estimated
+baseline, target, unit and evidence instructions. Native reads compare the full
+definition, actor/reason and version and verify unchanged event/publication gates.
+Both modes archive with exact retention guards; scoped cleanup is zero. See
+[objective-browser-r61-proof.json](objective-browser-r61-proof.json) and the
+[synthetic planning screenshot](native-objective-planning.png). R60 remains a
+failed pre-save attempt. Participant acknowledgement/rubric reading is a later
+extension and is not established by this run. Full original #120 remains open.
