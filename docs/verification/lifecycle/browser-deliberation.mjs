@@ -44,6 +44,8 @@ export async function openDeliberationInFleet({page,expect,phase,output}){
    await expect(task.getByRole('status',{name:'Last acknowledged setup change',exact:true})).not.toContainText('was acknowledged')
    await task.getByRole('button',{name:'Read current judging setup',exact:true}).click()
    await expect(task.getByRole('textbox',{name:'Deliberation reason',exact:true})).toHaveValue(input.reason)
+   // End this rejected local task deliberately before the next normal navigation.
+   await task.getByRole('textbox',{name:'Deliberation reason',exact:true}).fill('')
   }
   await expect(page.getByRole('region',{name:'Independent final scoring',exact:true})).toHaveCount(0)
   assert.equal(writes.length,1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
