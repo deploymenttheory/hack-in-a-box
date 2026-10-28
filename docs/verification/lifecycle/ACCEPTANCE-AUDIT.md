@@ -198,3 +198,14 @@ private artifact hashes, and `native-reconciled-cutoff.png` for synthetic UI.
 The full original twelve criteria remain incomplete, including product gap345,
 remaining real judging/results/feedback/outcome/archive UI and full role/provider/
 keyboard/narrow/private-recovery/final acceptance audit.
+
+### Final judging setup browser barriers (pending execution)
+
+Issue #345 / draft PR #346 adds production organiser controls for final-round
+creation and named team assignments. The fixture now requires two UI creations
+and twelve reviewed UI assignments before the existing six fictional practice
+submissions. Native reads separately verify exact approved sources, retained
+runs, unstarted assessment state, original assignment receipts and fingerprints,
+and the existing full six-team/three-judge census. The intended browser barrier
+count is 246. No native acceptance is claimed until this exact composition runs;
+R68 remains historical 232-barrier evidence and full #120 remains incomplete.

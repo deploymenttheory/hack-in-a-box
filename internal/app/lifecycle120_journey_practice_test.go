@@ -42,7 +42,9 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			t.Fatal(err)
 		}
 		var created rubric.Configuration
-		if err := r.owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "judge_final", "reason": "Plan an independent final round; practice never scores this run"}, &created, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			created = r.createFinalRoundInBrowser(t, item, index, configured)
+		} else if err := r.owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "judge_final", "reason": "Plan an independent final round; practice never scores this run"}, &created, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		for _, run := range created.Runs {
@@ -82,7 +84,9 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			}
 			currentTeams = append(currentTeams, team.ID)
 			var assigned judging.Receipt
-			if err := r.owner.call(ctx, http.MethodPost, path, round.Revision, map[string]any{"request_id": uuid.New(), "action": "assign", "team_id": team.ID, "judge_ids": judgeIDs, "reason": "Three independently selected current judges, never mentor votes"}, &assigned, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				assigned = r.assignFinalJudgesInBrowser(t, item, index, len(currentTeams)-1, team.ID, team.Name, round, judges)
+			} else if err := r.owner.call(ctx, http.MethodPost, path, round.Revision, map[string]any{"request_id": uuid.New(), "action": "assign", "team_id": team.ID, "judge_ids": judgeIDs, "reason": "Three independently selected current judges, never mentor votes"}, &assigned, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if assigned.RunID != item.judgeRun || assigned.TeamID != team.ID || assigned.ActorID != r.owner.person {
