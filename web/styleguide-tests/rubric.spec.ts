@@ -25,3 +25,23 @@ test('rubric guide reveals an invalid category and never reviews duplicate ancho
   await expect(example.getByLabel('Anchor 1 score for category 1', { exact: true })).toBeFocused(); await expect(anchor).toHaveAttribute('aria-invalid', 'true')
   await expect(page.getByRole('alertdialog', { name: 'Review synthetic rubric', exact: true })).toHaveCount(0)
 })
+
+test('challenge rubric guide keeps an exact choice on a newer approval and preserves focus while reads pause', async ({ page }) => {
+  const calls: string[] = []
+  page.on('request', request => { if (/^\/(api|auth)\//.test(new URL(request.url()).pathname)) calls.push(request.url()) })
+  await page.goto('/patterns.html')
+  const example = page.getByRole('region', { name: 'Challenge rubric binding example', exact: true })
+  await example.getByRole('button', { name: 'Use approved version 1', exact: true }).click()
+  await expect(example).toContainText('Selected version 1 is currently approved.')
+  const advance = example.getByRole('button', { name: 'Simulate a newer approval', exact: true })
+  await advance.press('Enter'); await expect(advance).toBeFocused()
+  await expect(example).toContainText('Selected version 1 is retained.')
+  const choice = example.getByRole('button', { name: 'Use approved version 2', exact: true })
+  await choice.focus(); await page.getByRole('button', { name: 'Pause criteria reads', exact: true }).click()
+  await choice.focus(); await expect(choice).toBeFocused(); await expect(choice).toBeDisabled()
+  await choice.press('Enter'); await expect(example).toContainText('Selected version 1 is retained.')
+  await example.getByRole('button', { name: 'Restore criteria reads', exact: true }).click()
+  await choice.press('Enter'); await expect(example).toContainText('Selected version 2 is currently approved.')
+  expect(calls).toEqual([])
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+})

@@ -1,3 +1,4 @@
+import { rubricGuideConfiguration } from '../src/styleguide/rubric-fixture'
 import { uploadedFile } from './file-fixtures'
 import { openEventSection } from './event-navigation-fixture'
 import { test, expect, type Page } from '@playwright/test'
@@ -10,10 +11,12 @@ type Document = components['schemas']['ContentDocument']
 const pageID = '5883f880-1c49-4d89-b498-005df3f30986', challengeID = 'ddcc2a2d-aa18-49f5-a5a3-233f8fdd1ed0', teamID = '164a3cd9-7b9e-45da-b6c7-1b797f11f70c', fileID = 'e7c04139-482e-4b02-bbb2-2674f6acfbbe'
 function contentDocument(title = 'Team handbook'): Document { return { title, require_acknowledgement: false, markdown: '# Welcome\n\nBuild together.\n\n[Guide](https://example.test/guide)', audience: { confirmed: true, roles: [], teams: [] }, attachments: [], scheduled_at: null } }
 function item(id = pageID): Content { return { id, kind: 'page', revision: 3, version: 1, state: 'approved', document: contentDocument(), released_version: null, released_at: null, attachment_details: [], acknowledged_at: null, can_manage: true, message: '' } }
-async function setup(page: Page) {
+async function setup(page: Page, unbound = false) {
   const workspace = await mockWorkspace(page), event = workspace.events[0]
   event.stage = 'preparation'; event.confirmed_attendees = 32
-  const items = [item(), { ...item(challengeID), kind: 'challenge' as const, state: 'draft' as const, revision: 1, document: { ...contentDocument('Common challenge'), scheduled_at: event.challenge_publication } }]
+  const approved = rubricGuideConfiguration(); approved.reference = { ...approved.reference, version: 1, digest: 'a'.repeat(64) }; approved.approved = true
+  const rubric = { latest: approved, versions: new Map([[1, structuredClone(approved)]]), history: [] as components['schemas']['RubricChange'][], readStatus: 200, held: undefined as Promise<void> | undefined, started: undefined as (() => void) | undefined }
+  const items = [item(), { ...item(challengeID), kind: 'challenge' as const, state: 'draft' as const, revision: 1, document: { ...contentDocument('Common challenge'), rubric: unbound ? undefined : { ...approved.reference }, scheduled_at: event.challenge_publication } }]
   const versions = new Map(items.map(i => [`${i.id}:1`, structuredClone(i)])), writes: { method: string; path: string; body: unknown; revision?: string }[] = []
   const blockers: components['schemas']['Blocker'][] = [{ field: 'team_freeze', code: 'teams_unready', message: 'Freeze every confirmed team before publication.' }]
   let denied = false, missingFile = false
@@ -30,6 +33,13 @@ async function setup(page: Page) {
       return route.fulfill({ status: 201, json: uploadedFile(fileID, body) })
     }
     if (path.endsWith(`/files/${fileID}`)) return route.fulfill({ contentType: 'text/plain', body: 'Synthetic attachment' })
+    if (path.endsWith('/rubric/configuration')) {
+      if (r.method() !== 'GET') throw new Error('Challenge selection must never change a rubric')
+      rubric.started?.(); if (rubric.held) await rubric.held
+      if (rubric.readStatus !== 200) return fail(rubric.readStatus, 'unavailable')
+      return route.fulfill({ json: query.has('version') ? rubric.versions.get(Number(query.get('version'))) : rubric.latest })
+    }
+    if (path.endsWith('/rubric/history')) return route.fulfill({ json: { items: rubric.history, next_cursor: null } })
     if (!path.includes('/content')) return route.fallback()
     if (path.endsWith('/content')) return route.fulfill({ json: { items, next_cursor: null } })
     const id = path.split('/content/')[1]?.split('/')[0]
@@ -56,7 +66,7 @@ async function setup(page: Page) {
   })
   await page.goto(`/events/${firstID}`); await openEventSection(page, 'Content')
   await expect(page.getByRole('heading', { name: 'Content', exact: true })).toBeVisible()
-  return { items, writes, versions, workspace, blockers, deny: () => { denied = true }, missingFile: () => { missingFile = true } }
+  return { items, writes, versions, workspace, blockers, rubric, deny: () => { denied = true }, missingFile: () => { missingFile = true } }
 }
 async function contentSection(page: Page, name: string) { await page.getByRole('navigation', { name: 'Content editor sections' }).getByRole('button', { name, exact: true }).click() }
 const editor = (page: Page) => page.getByRole('form', { name: 'Content editor' })
@@ -142,6 +152,7 @@ test('challenge controls show common timing and readiness without a manual bypas
   await page.getByRole('button', { name: 'Mark ready for review' }).click()
   await page.getByRole('button', { name: 'Approve version 1' }).click()
   await expect(page.getByRole('button', { name: 'Release approved version' })).toHaveCount(0)
+  await expect(page.getByRole('status').filter({ hasText: 'Version approved.' })).toBeVisible()
   expect(state.items.find(p => p.id === challengeID)?.state).toBe('approved')
   await page.getByRole('button', { name: 'Cancel pending release' }).click()
   await expect(page.getByText('Pending release cancelled.', { exact: false })).toBeVisible()
@@ -265,4 +276,79 @@ test('closing a new template restores the actual template action for keyboard us
   page.once('dialog', dialog => dialog.accept())
   await page.getByRole('button', { name: 'Close editor', exact: true }).focus(); await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: 'Start from template', exact: true })).toBeFocused()
+})
+
+
+test('challenge saves only a deliberately selected approved reference and shows public criteria', async ({ page }) => {
+  const state = await setup(page, true)
+  await page.getByRole('button', { name: 'Edit Common challenge', exact: true }).click()
+  await contentSection(page, 'Judging criteria')
+  const binding = page.getByRole('region', { name: 'Challenge judging criteria', exact: true })
+  await expect(binding).toContainText('No rubric selected.')
+  await expect(page.getByRole('button', { name: 'Mark ready for review', exact: true })).toBeDisabled()
+  await binding.getByRole('button', { name: 'Use approved version 1', exact: true }).click()
+  expect(state.writes).toHaveLength(0)
+  await binding.getByRole('group', { name: 'Selected rubric snapshot', exact: true }).locator('summary').click()
+  await expect(binding).toContainText('Score bounds'); await expect(binding).toContainText('Weight')
+  await expect(binding).not.toContainText(state.rubric.latest.definition.private_judge_guidance)
+  await page.getByRole('button', { name: 'Save new draft', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Draft version 2 saved.' })).toBeVisible()
+  expect((state.writes[0].body as { document: Document }).document.rubric).toEqual(state.rubric.latest.reference)
+  expect(JSON.stringify(state.writes)).not.toContain('private_judge_guidance')
+  await page.getByRole('button', { name: 'Mark ready for review', exact: true }).click()
+  await page.getByRole('button', { name: 'Approve version 2', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Version approved.' })).toBeVisible()
+  expect(state.writes).toHaveLength(3)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+})
+
+test('newer approval retains the selected version and a stale preflight sends no content action', async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Edit Common challenge', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Mark ready for review', exact: true })).toBeEnabled()
+  const prior = structuredClone(state.rubric.latest)
+  state.rubric.latest = { ...prior, revision: 4, reference: { ...prior.reference, version: 2, digest: 'b'.repeat(64) } }
+  state.rubric.versions.set(2, structuredClone(state.rubric.latest))
+  state.rubric.versions.get(1)!.approved = false
+  await page.getByRole('button', { name: 'Mark ready for review', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Something needs attention', exact: true })).toBeVisible()
+  expect(state.writes).toHaveLength(0)
+  await contentSection(page, 'Judging criteria')
+  await expect(page.getByRole('region', { name: 'Challenge judging criteria', exact: true })).toContainText('Selected version 1 is retained.')
+  await expect(page.getByRole('button', { name: 'Use approved version 2', exact: true })).toBeEnabled()
+  expect(state.items.find(p => p.id === challengeID)!.document.rubric).toEqual(prior.reference)
+  await expect(page.getByText('Release action outcome is unconfirmed.', { exact: false })).toHaveCount(0)
+})
+
+test('pending criteria reads keep content focus and an uncertain read never invents an unknown write', async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Edit Common challenge', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Mark ready for review', exact: true })).toBeEnabled()
+  const markdown = page.getByLabel('Markdown', { exact: true }); await markdown.fill('Unsent challenge content')
+  let release!: () => void, started!: () => void
+  state.rubric.held = new Promise<void>(r => { release = r })
+  const reading = new Promise<void>(r => { started = r }); state.rubric.started = started
+  await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await reading
+  await markdown.focus(); await expect(markdown).toBeFocused(); await expect(markdown).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Save new draft', exact: true })).toBeDisabled()
+  release(); state.rubric.held = undefined; state.rubric.started = undefined
+  await expect(page.getByRole('button', { name: 'Save new draft', exact: true })).toBeEnabled()
+  state.rubric.readStatus = 503
+  await page.getByRole('button', { name: 'Save new draft', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Something needs attention', exact: true }).first()).toBeVisible()
+  expect(state.writes).toHaveLength(0)
+  await expect(markdown).toHaveValue('Unsent challenge content')
+  await expect(page.getByText('Write outcome is unconfirmed.', { exact: false })).toHaveCount(0)
+})
+
+test('definite criteria denial clears the private challenge editor without a content write', async ({ page }) => {
+  const state = await setup(page)
+  await page.getByRole('button', { name: 'Edit Common challenge', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Mark ready for review', exact: true })).toBeEnabled()
+  await page.getByLabel('Markdown', { exact: true }).fill('PRIVATE UNPUBLISHED CHALLENGE')
+  state.rubric.readStatus = 403
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByRole('form', { name: 'Content editor', exact: true })).toHaveCount(0)
+  await expect(page.getByText('PRIVATE UNPUBLISHED CHALLENGE', { exact: true })).toHaveCount(0)
+  expect(state.writes).toHaveLength(0)
 })
