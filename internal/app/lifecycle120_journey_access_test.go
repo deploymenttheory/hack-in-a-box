@@ -46,7 +46,11 @@ func (r *lifecycleJourney) prepareRepositoryAccess(t *testing.T) {
 			if team.State == "disbanded" {
 				continue
 			}
-			if len(team.Published) < 4 || len(team.Published) > 6 {
+			if team.ID == item.attendance.TeamID {
+				if !team.Frozen || len(team.Published) != 2 || len(item.attendance.Withdrawn) != 3 {
+					t.Fatal("repository access lacks the exact acknowledged post-freeze pair")
+				}
+			} else if len(team.Published) < 4 || len(team.Published) > 6 {
 				t.Fatal("native frozen team violates the admitted target-five cohort")
 			}
 			path := fmt.Sprintf("/api/v1/events/%s/repositories/%s/access", item.view.ID, team.ID)

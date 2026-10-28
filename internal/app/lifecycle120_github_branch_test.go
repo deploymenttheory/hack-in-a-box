@@ -37,7 +37,7 @@ func lifecycleExternalBrowser(t *testing.T, actor string) *http.Client {
 		t.Fatal(err)
 	}
 	browser := &http.Client{Jar: jar, Transport: http.DefaultTransport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	oauth := oauth2.Config{ClientID: "lifecycle-github", ClientSecret: "synthetic-github-secret", RedirectURL: "http://public:8080/auth/github/callback", Endpoint: oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize", TokenURL: "https://github.com/login/oauth/access_token", AuthStyle: oauth2.AuthStyleInParams}}
+	oauth := oauth2.Config{ClientID: "lifecycle-github", ClientSecret: "synthetic-github-secret", RedirectURL: "http://public.localhost:8080/auth/github/callback", Endpoint: oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize", TokenURL: "https://github.com/login/oauth/access_token", AuthStyle: oauth2.AuthStyleInParams}}
 	verifier := oauth2.GenerateVerifier()
 	authorize, _ := url.Parse(oauth.AuthCodeURL("synthetic-access-state-at-least-thirty-two-bytes", oauth2.S256ChallengeOption(verifier)))
 	query := authorize.Query()

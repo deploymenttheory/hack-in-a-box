@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 
@@ -17,7 +18,9 @@ import (
 	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/githubapp"
 	"github.com/deploymenttheory/hack-in-a-box/internal/objectives"
+	"github.com/deploymenttheory/hack-in-a-box/internal/outcomes"
 	"github.com/deploymenttheory/hack-in-a-box/internal/privacy"
+	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/repositories"
 	"github.com/deploymenttheory/hack-in-a-box/internal/rubric"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
@@ -28,35 +31,87 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
-	view               event.View
-	cohort             lifecycleAdmissions
-	teams              teams.Page
-	challenge          content.Page
-	rubric             rubric.Configuration
-	objective          objectives.View
-	brand              templates.Branding
-	github             githubapp.Status
-	repositories       []repositories.View
-	access             []lifecycleAccessReceipt
-	liveAccess         []lifecycleAccessReceipt
-	teamNotice         lifecycleTeamNoticeReceipt
-	accessPoll         []lifecycleAccessPollReceipt
-	deliverable        uuid.UUID
-	submissions        []lifecycleSubmissionReceipt
-	work               []lifecycleWorkReceipt
-	lateWork           *lifecycleWorkReceipt
-	cutoff             []lifecycleCutoffReceipt
-	judgeRun           uuid.UUID
-	judgeFinal         *lifecycleJudgeFinalReceipt
-	resultDecision     *lifecycleResultDecisionReceipt
-	resultReleases     []lifecycleResultReleaseReceipt
-	resultPreparations []lifecycleResultPreparationReceipt
-	teamFeedback       []lifecycleTeamFeedbackReceipt
-	liveHelp           lifecycleHelpReceipt
-	clarification      lifecycleClarificationReceipt
-	practice           []lifecyclePracticeReceipt
-	review             lifecycleMentorReviewReceipt
-	commonHash         string
+	browserFinalHuddleActions   []lifecycleFinalHuddleActionReceipt
+	browserQualification        []lifecycleQualificationCommandReceipt
+	browserDeliberation         []lifecycleDeliberationBrowserReceipt
+	browserFinalMentorCards     []lifecycleMentorCardReceipt
+	browserMentorPlanning       []lifecycleMentorPlanningReceipt
+	browserLiveMentorCards      []lifecycleMentorCardReceipt
+	browserFinalRoundCreated    bool
+	browserAssignedTeams        []uuid.UUID
+	browserPracticeJudges       []uuid.UUID
+	browserBranchTeams          []uuid.UUID
+	browserReconciledTeams      []uuid.UUID
+	browserDraftTeams           []uuid.UUID
+	browserFormalTeams          []uuid.UUID
+	browserClarificationActions []string
+
+	browserPostponed         bool
+	browserLiveException     bool
+	browserAcknowledgements  []uuid.UUID
+	browserObjectiveAuthored bool
+	browserHelp              *lifecycleBrowserHelpReceipt
+
+	failedMessage lifecycleFailedMessageReceipt
+
+	browserApplications      []lifecycleBrowserApplicationReceipt
+	browserSelections        []lifecycleBrowserSelectionReceipt
+	browserChallengeApproved bool
+	browserRubricApproved    bool
+
+	browserAllocationWithdrawals []uuid.UUID
+	browserFrozenWithdrawals     []uuid.UUID
+
+	browserTeamCommands        []string
+	browserPublishedForms      []string
+	browserAdmissionDecisions  []string
+	browserOfferPolicyApproved bool
+	browserRegistrationOpened  bool
+	browserEventCreated        bool
+	browserBrandVerified       bool
+
+	retentionBoundary         *lifecycleReviewBoundaryReceipt
+	retiredRepositoryVerified bool
+	expiry                    lifecycleExpiryReceipt
+	offerCutoff               lifecycleOfferCutoffReceipt
+	attendance                lifecycleAttendanceReceipt
+	postponement              lifecyclePostponementReceipt
+	view                      event.View
+	cohort                    lifecycleAdmissions
+	eligibility               []lifecycleEligibilityReceipt
+	teams                     teams.Page
+	challenge                 content.Page
+	rubric                    rubric.Configuration
+	objective                 objectives.View
+	brand                     templates.Branding
+	github                    githubapp.Status
+	repositories              []repositories.View
+	access                    []lifecycleAccessReceipt
+	liveAccess                []lifecycleAccessReceipt
+	teamNotice                lifecycleTeamNoticeReceipt
+	accessPoll                []lifecycleAccessPollReceipt
+	deliverable               uuid.UUID
+	submissions               []lifecycleSubmissionReceipt
+	work                      []lifecycleWorkReceipt
+	lateWork                  *lifecycleWorkReceipt
+	cutoff                    []lifecycleCutoffReceipt
+	judgeRun                  uuid.UUID
+	judgeFinal                *lifecycleJudgeFinalReceipt
+	resultDecision            *lifecycleResultDecisionReceipt
+	resultReleases            []lifecycleResultReleaseReceipt
+	resultPreparations        []lifecycleResultPreparationReceipt
+	teamFeedback              []lifecycleTeamFeedbackReceipt
+	liveHelp                  lifecycleHelpReceipt
+	clarification             lifecycleClarificationReceipt
+	practice                  []lifecyclePracticeReceipt
+	review                    lifecycleMentorReviewReceipt
+	postEvent                 lifecyclePostEventReceipt
+	outcomes                  []outcomes.View
+	showcase                  lifecycleShowcaseReceipt
+	competitionBefore         map[string]lifecycleCompetitionDigest
+	archive                   lifecycleArchiveReceipt
+	reviews                   []lifecycleOwnedReviewReceipt
+	commonHash                string
 }
 type lifecycleJourney struct {
 	owner      *lifecycleClient
@@ -64,6 +119,7 @@ type lifecycleJourney struct {
 	timeline   lifecycleTimeline
 	events     []lifecycleJourneyEvent
 	livePollAt time.Time
+	liveRoles  *lifecycleBrowserRoleReceipt
 }
 
 func TestLifecycleComposeJourney(t *testing.T) {
@@ -80,7 +136,12 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	owner, err := signInLifecycle(ctx, "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(
+		ctx,
+		"http://admin.localhost:8080",
+		"http://provider.localhost:8080",
+		"owner",
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,9 +189,18 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 		run.events = append(run.events, item)
 	}
+	if lifecycleBrowserRequired(t) {
+		for _, item := range run.events {
+			if !item.browserBrandVerified {
+				t.Fatal("required same-event browser branding verification was not executed")
+			}
+		}
+	}
+	run.rehearseFailedMessages(t)
 	run.linkGitHubParticipants(t)
-	// Published frozen team identities already exist; prepare their private
-	// repositories before any common theme disclosure or live transition.
+	// Let the genuine remaining offer expire at admission cutoff, then freeze
+	// the published teams before repository setup or common theme disclosure.
+	run.expireSurvivingOffers(t)
 	run.provisionRepositories(t)
 	if err := control.advance(ctx, timeline.Publication.Add(-time.Second)); err != nil {
 		t.Fatal(err)
@@ -156,14 +226,20 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := range run.events {
-		run.readCommonPublication(t, &run.events[i])
+		run.readCommonPublication(t, &run.events[i], i)
 	}
+	run.postponePublishedEvents(t)
+	run.depleteFrozenTeams(t)
 	run.prepareMentorReview(t)
 	run.planFinalMentorReview(t)
 	run.prepareRepositoryAccess(t)
 	run.buildDuringPreparation(t)
 	run.preparePrivateDrafts(t)
 	run.rehearseJudgePractice(t)
+	// The original live date is now still preparation after explicit postponement.
+	if err := control.advance(ctx, timeline.Live); err != nil {
+		t.Fatal(err)
+	}
 	// Formal live entry remains guarded through the entire published preparation
 	// week. A failed transition must not mutate event state or revision.
 	for i := range run.events {
@@ -213,27 +289,21 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		}
 	}
 	run.denyEarlyOutputHelp(t)
-	if err := control.advance(ctx, timeline.Live); err != nil {
+	if err := control.advance(ctx, run.timeline.Live); err != nil {
 		t.Fatal(err)
 	}
-	for i := range run.events {
-		item := &run.events[i]
-		item.view, err = lifecycleTransition(ctx, owner, item.view.ID, "live", http.StatusOK)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if item.view.Stage != "live" || item.view.ConfirmedAttendees != 32 {
-			t.Fatal("native connected journey did not reach live with its real confirmed census")
-		}
-	}
+	run.enterLiveWithAttendanceException(t)
 	run.prepareLiveMentorAccess(t)
 	run.waitCurrentAccessPoll(t)
 	run.closeJudgePracticeAtLive(t)
 	run.raceLiveHelp(t)
+	run.recoverLiveHelpInBrowser(t)
+	run.checkLiveRolesInBrowser(t)
 	run.publishCommonClarifications(t)
 	run.recordLiveMentorCheckpoints(t)
 	run.submitLiveEvidence(t)
 	run.captureAndReconcileCutoff(t)
+	run.advanceReconciledAssessment(t)
 	run.reviewFrozenMentorEvidence(t)
 	run.qualifyFrozenFinalists(t)
 	run.publishSignedFinalists(t)
@@ -241,6 +311,66 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	run.decideJudgeResults(t)
 	run.publishConfirmedAwards(t)
 	run.releaseOwnTeamFeedback(t)
+	run.completeAndCollectFeedback(t)
+	for i := range run.events {
+		run.events[i].competitionBefore = lifecycleCompetitionSnapshot(
+			t,
+			run.events[i].view.ID,
+			len(run.events[i].review.FinalHuddles),
+		)
+	}
+	run.captureTeamOutcomesAndShowcase(t)
+	run.prepareRetainedReviews(t)
+	run.archiveCompetitionAndUpdateOutcome(t)
+	run.deliverRetainedReviews(t)
+	run.verifyRetiredRepositoriesUnscored(t)
+	run.expireRetainedOutcomes(t)
+	if mode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); mode == "live-recovery" ||
+		mode == "role-matrix" || mode == "ui-journey" {
+		proof := run.events[0].browserHelp
+		if proof == nil || !proof.NativeResolved || !proof.OtherTeamDenied ||
+			!proof.NativeQueueExact ||
+			proof.PutAttempts != 1 {
+			t.Fatal("required browser recovery was not actually verified")
+		}
+	}
+	if mode := os.Getenv(
+		"HACKBOX_LIFECYCLE_BROWSER_PHASES",
+	); mode == "role-matrix" ||
+		mode == "ui-journey" {
+		proof := run.liveRoles
+		if proof == nil || proof.UIStaffGrants != 6 || len(proof.Cases) != 12 ||
+			proof.NativeEventChecks != 24 ||
+			!proof.MentorRevocationCleared ||
+			!proof.OtherEventRetained ||
+			!proof.NativeRevocationAndRestoreAudited {
+			t.Fatal("required live browser role matrix was not independently verified")
+		}
+	}
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		for _, item := range run.events {
+			if !lifecycleBrowserDeliberationComplete(item) || !lifecycleBrowserQualificationComplete(item) || !lifecycleBrowserFinalHuddlesComplete(item) || !lifecycleBrowserFinalMentorCardsComplete(item) || !lifecycleBrowserMentorPlanningComplete(item) || !lifecycleBrowserMentorCheckpointsComplete(item) || !lifecycleBrowserJudgingSetupComplete(item) || !lifecycleBrowserPracticeComplete(item) || !lifecycleBrowserFreezeComplete(item) || !lifecycleBrowserSubmissionsComplete(item) || !lifecycleBrowserClarificationComplete(item.browserClarificationActions) || !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
+				!item.browserOfferPolicyApproved ||
+				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
+				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
+				len(item.browserApplications) != 4 ||
+				len(item.browserSelections) != 2 ||
+				!reflect.DeepEqual(
+					item.browserAdmissionDecisions,
+					[]string{"competition-go", "withdraw", "accept"},
+				) ||
+				!reflect.DeepEqual(
+					item.browserPublishedForms,
+					[]string{"attendee", "mentor", "judge"},
+				) {
+				t.Fatal(
+					"required Fleet event creation, form publication or admission journey is incomplete",
+				)
+			}
+		}
+	}
 	var providerProof lifecycleGitHubProof
 	if err := control.call(ctx, http.MethodGet, "/github/proof", nil, &providerProof); err != nil {
 		t.Fatal(err)
@@ -252,49 +382,127 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	if providerProof.OAuthExchangesVerified != 38 || providerProof.OAuthUserReads != 38 {
-		t.Fatal("participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications")
+		t.Fatal(
+			"participant linking did not retain exactly36 participant plus2 selected mentor PKCE/user verifications",
+		)
 	}
-	if providerProof.RepositoryCreates != 12 {
-		t.Fatal("actual provider did not create exactly one private repository per frozen team", providerProof.RepositoryCreates)
+	if providerProof.RepositoryCreates != 14 {
+		t.Fatal(
+			"actual provider did not retain exactly fourteen original team repositories including two retired mappings",
+			providerProof.RepositoryCreates,
+		)
 	}
-	if providerProof.InvitationCreates != 88 || providerProof.InvitationAcceptances != 88 {
-		t.Fatal("actual external access census did not match64 frozen competitor plus24 read-only mentor grants", providerProof.InvitationCreates, providerProof.InvitationAcceptances)
+	if providerProof.InvitationCreates != 82 || providerProof.InvitationAcceptances != 82 {
+		t.Fatal(
+			"actual external access census did not match58 surviving frozen competitor plus24 read-only mentor grants",
+			providerProof.InvitationCreates,
+			providerProof.InvitationAcceptances,
+		)
 	}
 	type eventReceipt struct {
-		ID                 uuid.UUID                           `json:"event_id"`
-		Mode               string                              `json:"mode"`
-		Stage              string                              `json:"stage"`
-		Objective          objectives.Reference                `json:"objective"`
-		Primary            string                              `json:"primary"`
-		TeamIDs            []uuid.UUID                         `json:"team_ids"`
-		Confirmed          int64                               `json:"confirmed"`
-		Census             map[string]int64                    `json:"admission_census"`
-		Challenge          uuid.UUID                           `json:"challenge_id"`
-		Rubric             rubric.Reference                    `json:"rubric"`
-		CommonHash         string                              `json:"common_sha256"`
-		PublishedAt        *time.Time                          `json:"published_at"`
-		Repositories       []repositories.View                 `json:"repositories"`
-		Access             []lifecycleAccessReceipt            `json:"repository_access"`
-		LiveAccess         []lifecycleAccessReceipt            `json:"live_mentor_repository_access"`
-		TeamNotice         lifecycleTeamNoticeReceipt          `json:"team_notice"`
-		AccessPoll         []lifecycleAccessPollReceipt        `json:"access_poll"`
-		Submissions        []lifecycleSubmissionReceipt        `json:"submissions"`
-		Work               []lifecycleWorkReceipt              `json:"preparation_work"`
-		LateWork           *lifecycleWorkReceipt               `json:"late_work,omitempty"`
-		Cutoff             []lifecycleCutoffReceipt            `json:"cutoff_sources"`
-		JudgeRun           uuid.UUID                           `json:"planned_judge_run_id"`
-		Practice           []lifecyclePracticeReceipt          `json:"fictional_judge_practice"`
-		JudgeFinal         *lifecycleJudgeFinalReceipt         `json:"independent_judge_final,omitempty"`
-		ResultDecision     *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
-		ResultReleases     []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
-		ResultPreparations []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
-		TeamFeedback       []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
-		LiveHelp           lifecycleHelpReceipt                `json:"live_help"`
-		Clarification      lifecycleClarificationReceipt       `json:"common_clarification"`
-		Review             lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
+		BrowserDeliberation         []lifecycleDeliberationBrowserReceipt  `json:"browser_deliberation"`
+		BrowserQualification        []lifecycleQualificationCommandReceipt `json:"browser_qualification"`
+		BrowserFinalHuddleActions   []lifecycleFinalHuddleActionReceipt    `json:"browser_final_huddle_actions"`
+		BrowserFinalMentorCards     []lifecycleMentorCardReceipt           `json:"browser_final_mentor_cards"`
+		BrowserMentorPlanning       []lifecycleMentorPlanningReceipt       `json:"browser_mentor_planning"`
+		BrowserLiveMentorCards      []lifecycleMentorCardReceipt           `json:"browser_live_mentor_cards"`
+		BrowserFinalRoundCreated    bool                                   `json:"browser_final_round_created"`
+		BrowserAssignedTeams        []uuid.UUID                            `json:"browser_assigned_teams"`
+		BrowserPracticeJudges       []uuid.UUID                            `json:"browser_practice_judges"`
+		BrowserBranchTeams          []uuid.UUID                            `json:"browser_branch_teams"`
+		BrowserReconciledTeams      []uuid.UUID                            `json:"browser_reconciled_teams"`
+		BrowserDraftTeams           []uuid.UUID                            `json:"browser_draft_teams"`
+		BrowserFormalTeams          []uuid.UUID                            `json:"browser_formal_teams"`
+		BrowserClarificationActions []string                               `json:"browser_clarification_actions"`
+
+		BrowserPostponed     bool `json:"browser_postponed"`
+		BrowserLiveException bool `json:"browser_live_exception"`
+
+		BrowserAcknowledgements []uuid.UUID `json:"browser_acknowledgements"`
+
+		BrowserObjectiveAuthored bool `json:"browser_objective_authored"`
+
+		BrowserHelp              *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
+		FailedMessage            lifecycleFailedMessageReceipt        `json:"failed_message"`
+		BrowserApplications      []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
+		BrowserSelections        []lifecycleBrowserSelectionReceipt   `json:"browser_selections,omitempty"`
+		BrowserChallengeApproved bool                                 `json:"browser_challenge_approved"`
+		BrowserRubricApproved    bool                                 `json:"browser_rubric_approved"`
+
+		BrowserAllocationWithdrawals []uuid.UUID `json:"browser_allocation_withdrawals"`
+		BrowserFrozenWithdrawals     []uuid.UUID `json:"browser_frozen_withdrawals"`
+
+		BrowserTeamCommands        []string `json:"browser_team_commands,omitempty"`
+		BrowserPublishedForms      []string `json:"browser_published_forms,omitempty"`
+		BrowserAdmissionDecisions  []string `json:"browser_admission_decisions,omitempty"`
+		BrowserOfferPolicyApproved bool     `json:"browser_offer_policy_approved"`
+		BrowserRegistrationOpened  bool     `json:"browser_registration_opened"`
+		BrowserEventCreated        bool     `json:"browser_event_created"`
+		BrowserBrandVerified       bool     `json:"browser_brand_verified"`
+
+		RetentionBoundary         *lifecycleReviewBoundaryReceipt     `json:"retention_boundary,omitempty"`
+		RetiredRepositoryVerified bool                                `json:"retired_repository_verified"`
+		Expiry                    lifecycleExpiryReceipt              `json:"retention_expiry"`
+		OfferCutoff               lifecycleOfferCutoffReceipt         `json:"surviving_offer_cutoff"`
+		Attendance                lifecycleAttendanceReceipt          `json:"attendance_exception"`
+		Postponement              lifecyclePostponementReceipt        `json:"postponement"`
+		Eligibility               []lifecycleEligibilityReceipt       `json:"eligibility"`
+		PostEvent                 lifecyclePostEventReceipt           `json:"post_event"`
+		Showcase                  lifecycleShowcaseReceipt            `json:"showcase"`
+		Archive                   lifecycleArchiveReceipt             `json:"archive"`
+		Reviews                   []lifecycleOwnedReviewReceipt       `json:"owned_reviews"`
+		ID                        uuid.UUID                           `json:"event_id"`
+		Mode                      string                              `json:"mode"`
+		Stage                     string                              `json:"stage"`
+		Objective                 objectives.Reference                `json:"objective"`
+		Primary                   string                              `json:"primary"`
+		TeamIDs                   []uuid.UUID                         `json:"team_ids"`
+		Confirmed                 int64                               `json:"confirmed"`
+		Census                    map[string]int64                    `json:"admission_census"`
+		Challenge                 uuid.UUID                           `json:"challenge_id"`
+		Rubric                    rubric.Reference                    `json:"rubric"`
+		CommonHash                string                              `json:"common_sha256"`
+		PublishedAt               *time.Time                          `json:"published_at"`
+		Repositories              []repositories.View                 `json:"repositories"`
+		Access                    []lifecycleAccessReceipt            `json:"repository_access"`
+		LiveAccess                []lifecycleAccessReceipt            `json:"live_mentor_repository_access"`
+		TeamNotice                lifecycleTeamNoticeReceipt          `json:"team_notice"`
+		AccessPoll                []lifecycleAccessPollReceipt        `json:"access_poll"`
+		Submissions               []lifecycleSubmissionReceipt        `json:"submissions"`
+		Work                      []lifecycleWorkReceipt              `json:"preparation_work"`
+		LateWork                  *lifecycleWorkReceipt               `json:"late_work,omitempty"`
+		Cutoff                    []lifecycleCutoffReceipt            `json:"cutoff_sources"`
+		JudgeRun                  uuid.UUID                           `json:"planned_judge_run_id"`
+		Practice                  []lifecyclePracticeReceipt          `json:"fictional_judge_practice"`
+		JudgeFinal                *lifecycleJudgeFinalReceipt         `json:"independent_judge_final,omitempty"`
+		ResultDecision            *lifecycleResultDecisionReceipt     `json:"result_decision,omitempty"`
+		ResultReleases            []lifecycleResultReleaseReceipt     `json:"result_releases,omitempty"`
+		ResultPreparations        []lifecycleResultPreparationReceipt `json:"result_preparations,omitempty"`
+		TeamFeedback              []lifecycleTeamFeedbackReceipt      `json:"team_feedback,omitempty"`
+		LiveHelp                  lifecycleHelpReceipt                `json:"live_help"`
+		Clarification             lifecycleClarificationReceipt       `json:"common_clarification"`
+		Review                    lifecycleMentorReviewReceipt        `json:"mentor_live_checkpoint"`
 	}
 	items := []eventReceipt{}
 	for _, item := range run.events {
+		if lifecycleRetentionDays(t) == 90 &&
+			(len(item.reviews) != 2 || item.retentionBoundary == nil || !item.retentionBoundary.ApprovalRejected || item.retentionBoundary.Days != 90) {
+			t.Fatal("default90 receipt lacks the actual rejected boundary approval")
+		}
+		if item.failedMessage.EventID != item.view.ID || item.failedMessage.State != "permanent" ||
+			!item.failedMessage.RetryDenied || !item.failedMessage.HistoryIntact || !item.failedMessage.NoAcceptedData {
+			t.Fatal("required same-event failed-message phase was not verified")
+		}
+		if !item.retiredRepositoryVerified || item.expiry.EventID != item.view.ID ||
+			!item.expiry.OwnerReadableBefore ||
+			!item.expiry.OwnerDeniedAt ||
+			!item.expiry.OrganiserDeniedAt ||
+			!item.expiry.NotificationDeniedAt ||
+			!item.expiry.CompetitionUnchanged {
+			t.Fatal(
+				"final receipt lacks executed retired-repository and retention-expiry assertions",
+			)
+		}
 		teams := []uuid.UUID{}
 		for _, team := range item.teams.Teams {
 			if team.State != "disbanded" {
@@ -304,51 +512,99 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				ID:                 item.view.ID,
-				Mode:               item.rubric.Definition.Mode,
-				Stage:              item.view.Stage,
-				Objective:          item.objective.Reference,
-				Primary:            item.brand.Primary,
-				TeamIDs:            teams,
-				Confirmed:          item.view.ConfirmedAttendees,
-				Census:             item.cohort.census,
-				Challenge:          item.challenge.ID,
-				Rubric:             item.rubric.Reference,
-				CommonHash:         item.commonHash,
-				PublishedAt:        item.view.PublishedAt,
-				Repositories:       item.repositories,
-				Access:             item.access,
-				LiveAccess:         item.liveAccess,
-				TeamNotice:         item.teamNotice,
-				AccessPoll:         item.accessPoll,
-				Submissions:        item.submissions,
-				Work:               item.work,
-				LateWork:           item.lateWork,
-				Cutoff:             item.cutoff,
-				JudgeRun:           item.judgeRun,
-				Practice:           item.practice,
-				JudgeFinal:         item.judgeFinal,
-				ResultDecision:     item.resultDecision,
-				ResultReleases:     item.resultReleases,
-				ResultPreparations: item.resultPreparations,
-				TeamFeedback:       item.teamFeedback,
-				LiveHelp:           item.liveHelp,
-				Clarification:      item.clarification,
-				Review:             item.review,
+				BrowserDeliberation:         item.browserDeliberation,
+				BrowserQualification:        item.browserQualification,
+				BrowserFinalHuddleActions:   item.browserFinalHuddleActions,
+				BrowserFinalMentorCards:     item.browserFinalMentorCards,
+				BrowserMentorPlanning:       item.browserMentorPlanning,
+				BrowserLiveMentorCards:      item.browserLiveMentorCards,
+				BrowserFinalRoundCreated:    item.browserFinalRoundCreated,
+				BrowserAssignedTeams:        item.browserAssignedTeams,
+				BrowserPracticeJudges:       item.browserPracticeJudges,
+				BrowserBranchTeams:          item.browserBranchTeams,
+				BrowserReconciledTeams:      item.browserReconciledTeams,
+				BrowserDraftTeams:           item.browserDraftTeams,
+				BrowserFormalTeams:          item.browserFormalTeams,
+				BrowserClarificationActions: item.browserClarificationActions,
+
+				BrowserPostponed:         item.browserPostponed,
+				BrowserLiveException:     item.browserLiveException,
+				BrowserAcknowledgements:  item.browserAcknowledgements,
+				BrowserObjectiveAuthored: item.browserObjectiveAuthored,
+				BrowserHelp:              item.browserHelp,
+				FailedMessage:            item.failedMessage,
+				BrowserBrandVerified:     item.browserBrandVerified,
+				BrowserEventCreated:      item.browserEventCreated,
+				BrowserPublishedForms:    item.browserPublishedForms,
+
+				BrowserAllocationWithdrawals: item.browserAllocationWithdrawals,
+				BrowserFrozenWithdrawals:     item.browserFrozenWithdrawals,
+
+				BrowserTeamCommands:        item.browserTeamCommands,
+				BrowserChallengeApproved:   item.browserChallengeApproved,
+				BrowserRubricApproved:      item.browserRubricApproved,
+				BrowserAdmissionDecisions:  item.browserAdmissionDecisions,
+				BrowserOfferPolicyApproved: item.browserOfferPolicyApproved,
+				BrowserRegistrationOpened:  item.browserRegistrationOpened,
+				BrowserApplications:        item.browserApplications,
+				BrowserSelections:          item.browserSelections,
+				RetentionBoundary:          item.retentionBoundary,
+				RetiredRepositoryVerified:  item.retiredRepositoryVerified,
+				Expiry:                     item.expiry,
+				OfferCutoff:                item.offerCutoff,
+				Attendance:                 item.attendance,
+				Postponement:               item.postponement,
+				Eligibility:                item.eligibility,
+				PostEvent:                  item.postEvent,
+				Showcase:                   item.showcase,
+				Archive:                    item.archive,
+				Reviews:                    item.reviews,
+				ID:                         item.view.ID,
+				Mode:                       item.rubric.Definition.Mode,
+				Stage:                      item.view.Stage,
+				Objective:                  item.objective.Reference,
+				Primary:                    item.brand.Primary,
+				TeamIDs:                    teams,
+				Confirmed:                  item.view.ConfirmedAttendees,
+				Census:                     item.cohort.census,
+				Challenge:                  item.challenge.ID,
+				Rubric:                     item.rubric.Reference,
+				CommonHash:                 item.commonHash,
+				PublishedAt:                item.view.PublishedAt,
+				Repositories:               item.repositories,
+				Access:                     item.access,
+				LiveAccess:                 item.liveAccess,
+				TeamNotice:                 item.teamNotice,
+				AccessPoll:                 item.accessPoll,
+				Submissions:                item.submissions,
+				Work:                       item.work,
+				LateWork:                   item.lateWork,
+				Cutoff:                     item.cutoff,
+				JudgeRun:                   item.judgeRun,
+				Practice:                   item.practice,
+				JudgeFinal:                 item.judgeFinal,
+				ResultDecision:             item.resultDecision,
+				ResultReleases:             item.resultReleases,
+				ResultPreparations:         item.resultPreparations,
+				TeamFeedback:               item.teamFeedback,
+				LiveHelp:                   item.liveHelp,
+				Clarification:              item.clarification,
+				Review:                     item.review,
 			},
 		)
 	}
 	receipt, err := json.MarshalIndent(
 		map[string]any{
-			"checkpoint":              "connected-two-event-through-cutoff-partial",
-			"complete_lifecycle":      false,
-			"github_transport_proof":  providerProof,
-			"events":                  items,
-			"overlapping_oidc_people": len(run.events[0].cohort.clients),
-			"explicit_retention_days": 120,
-			"retention_reason":        "Synthetic owned day-90 review plus thirty-day response window; production default remains ninety",
-			"publication":             timeline.Publication,
-			"live_start":              timeline.Live,
+			"checkpoint":                             "connected-two-event-through-cutoff-partial",
+			"complete_lifecycle":                     false,
+			"github_transport_proof":                 providerProof,
+			"events":                                 items,
+			"overlapping_oidc_people":                len(run.events[0].cohort.clients),
+			"retention_days":                         lifecycleRetentionDays(t),
+			"retention_policy_explicitly_configured": lifecycleRetentionDays(t) == 120,
+			"retention_reason":                       "Configured120 exercises retained day90 plus response window; default90 preserves the native default and rejects the exclusive boundary",
+			"publication":                            timeline.Publication,
+			"live_start":                             run.timeline.Live,
 			"assertions": []string{
 				"single-connected-native-http-journey",
 				"both-judging-templates",
@@ -370,6 +626,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 				"reviewed-current-team-source-notification-and-obsolete-zero-effect",
 				"actual-native-queued-access-poll-current-live-source",
 			},
+			"live_role_matrix": run.liveRoles,
 			"remaining_matrix": "L01-L18 still require complete final integrated business/provider/browser variants",
 		},
 		"",
@@ -395,15 +652,10 @@ func (r *lifecycleJourney) prepareEvent(
 	t.Helper()
 	ctx := t.Context()
 	item := lifecycleJourneyEvent{}
-	if err := r.owner.call(
-		ctx,
-		http.MethodPost,
-		"/api/v1/events",
-		-1,
-		lifecycleEventInput("Journey "+mode, r.timeline),
-		&item.view,
-		http.StatusOK,
-	); err != nil {
+	input := lifecycleEventInput("Journey "+mode, r.timeline)
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		r.createEventInBrowser(t, &item, input, index)
+	} else if err := r.owner.call(ctx, http.MethodPost, "/api/v1/events", -1, input, &item.view, http.StatusOK); err != nil {
 		t.Fatal(err)
 	}
 	base := "/api/v1/events/" + item.view.ID.String()
@@ -411,17 +663,21 @@ func (r *lifecycleJourney) prepareEvent(
 	brand.Assets = []templates.Asset{}
 	brand.Primary = []string{"#164e63", "#5b21b6"}[index]
 	item.brand = brand
-	var branded templates.BrandView
-	if err := r.owner.call(
-		ctx,
-		http.MethodPut,
-		base+"/branding",
-		item.view.Revision,
-		brand,
-		&branded,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
+	if lifecycleBrowserRequired(t) {
+		r.saveBrandInBrowser(t, &item, index+1)
+	} else {
+		var branded templates.BrandView
+		if err := r.owner.call(
+			ctx,
+			http.MethodPut,
+			base+"/branding",
+			item.view.Revision,
+			brand,
+			&branded,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
 	}
 	target := "5"
 	definition := objectives.Definition{
@@ -441,7 +697,9 @@ func (r *lifecycleJourney) prepareEvent(
 			},
 		},
 	}
-	if err := r.owner.call(
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		r.createObjectiveInBrowser(t, &item, index, definition)
+	} else if err := r.owner.call(
 		ctx,
 		http.MethodPut,
 		base+"/objectives/"+uuid.NewString(),
@@ -473,33 +731,69 @@ func (r *lifecycleJourney) prepareEvent(
 		t.Fatal(err)
 	}
 	var policy privacy.Settings
-	if err := r.owner.call(
-		ctx,
-		http.MethodPut,
-		base+"/privacy",
-		item.view.Revision,
-		privacy.Settings{RetentionDays: 120, DraftDays: 7},
-		&policy,
-		http.StatusOK,
-	); err != nil {
-		t.Fatal(err)
+	if lifecycleRetentionDays(t) == 120 {
+		if err := r.owner.call(
+			ctx,
+			http.MethodPut,
+			base+"/privacy",
+			item.view.Revision,
+			privacy.Settings{RetentionDays: 120, DraftDays: 7},
+			&policy,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		if err := r.owner.call(
+			ctx,
+			http.MethodGet,
+			base+"/privacy",
+			-1,
+			nil,
+			&policy,
+			http.StatusOK,
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if policy.RetentionDays != lifecycleRetentionDays(t) {
+		t.Fatal("native event policy differs from the selected retention case")
 	}
 	var err error
-	item.cohort, err = admitLifecycleCohort(ctx, r.owner, item.view)
+	item.cohort, err = admitLifecycleCohortWithActions(
+		ctx,
+		r.owner,
+		item.view,
+		37,
+		func(form registration.FormView) { r.proveLastingEligibility(t, &item, form, index == 1) },
+		r.browserAdmissionActions(t, &item, index),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	item.teams, err = allocateLifecycleTeams(ctx, r.owner, item.view.ID, &item.cohort, r.control, func() error { r.configureTeamNotice(t, &item); return nil })
+	item.teams, err = allocateLifecycleTeamsWithActions(
+		ctx,
+		r.owner,
+		item.view.ID,
+		&item.cohort,
+		r.control,
+		func(page teams.Page) error { r.provisionInitialRepositories(t, &item, page); return nil },
+		func() error { r.configureTeamNotice(t, &item); return nil },
+		r.browserAllocationActions(t, &item, index),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	r.waitTeamNotice(t, &item)
-	item.challenge, item.rubric, err = installLifecycleChallenge(ctx, r.owner, item.view.ID, mode)
+	item.challenge, item.rubric, err = installLifecycleChallengeWithActions(ctx, r.owner, item.view.ID, mode, r.browserRubricConfiguration(t, &item, index), r.browserChallengeAuthoring(t, &item, index))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.rubric.Definition.Mode != mode || !item.teams.Frozen {
-		t.Fatal("native event did not retain its distinct rubric mode/frozen teams")
+	if item.rubric.Definition.Mode != mode ||
+		item.teams.Frozen != (item.cohort.reserveID == uuid.Nil) {
+		t.Fatal(
+			"native event did not retain its distinct rubric and expected pending-offer freeze phase",
+		)
 	}
 	if err := r.owner.call(
 		ctx,
@@ -512,12 +806,11 @@ func (r *lifecycleJourney) prepareEvent(
 	); err != nil {
 		t.Fatal(err)
 	}
-	r.configureGitHubApp(t, &item)
 	r.configureDeliverables(t, &item)
 	return item
 }
 
-func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJourneyEvent) {
+func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJourneyEvent, eventIndex int) {
 	t.Helper()
 	ctx := t.Context()
 	base := "/api/v1/events/" + item.view.ID.String()
@@ -547,7 +840,7 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 		)
 	}
 	var common json.RawMessage
-	for _, reader := range []*lifecycleClient{item.cohort.clients[3], item.cohort.clients[5]} {
+	for readerIndex, reader := range []*lifecycleClient{item.cohort.clients[3], item.cohort.clients[5]} {
 		var raw json.RawMessage
 		if err := reader.call(
 			ctx,
@@ -589,19 +882,19 @@ func (r *lifecycleJourney) readCommonPublication(t *testing.T, item *lifecycleJo
 			t.Fatal("native challenge lost exact released version")
 		}
 		var ack content.Page
-		if err := reader.call(
-			ctx,
-			http.MethodPost,
-			path+"/acknowledgements",
-			*released.ReleasedVersion,
-			nil,
-			&ack,
-			http.StatusOK,
-		); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			r.acknowledgePublicationInBrowser(t, item, eventIndex, readerIndex, reader, released, page)
+			if err := reader.call(ctx, http.MethodGet, path, -1, nil, &ack, http.StatusOK); err != nil {
+				t.Fatal(err)
+			}
+		} else if err := reader.call(ctx, http.MethodPost, path+"/acknowledgements", *released.ReleasedVersion, nil, &ack, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
-		if ack.AcknowledgedAt == nil {
-			t.Fatal("exact version acknowledgement not retained")
+		if ack.AcknowledgedAt == nil || ack.ID != released.ID || ack.Version != released.Version || !reflect.DeepEqual(ack.Document, released.Document) {
+			t.Fatal("exact version acknowledgement not retained or released contents changed")
+		}
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			item.browserAcknowledgements = append(item.browserAcknowledgements, reader.person)
 		}
 		var branded templates.BrandView
 		if err := reader.call(

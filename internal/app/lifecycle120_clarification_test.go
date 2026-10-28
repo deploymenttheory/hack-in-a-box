@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -75,7 +76,9 @@ func (r *lifecycleJourney) publishCommonClarifications(t *testing.T) {
 		proof.QuestionCommandID = uuid.New()
 		questionInput := lifecyclePrivateQuestion(proof.TeamID, proof.QuestionCommandID)
 		var question clarification.Question
-		if err := own.call(t.Context(), http.MethodPost, base+"/questions", -1, questionInput, &question, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			question = r.askClarificationInBrowser(t, item, index, own, questionInput)
+		} else if err := own.call(t.Context(), http.MethodPost, base+"/questions", -1, questionInput, &question, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		if question.ID == uuid.Nil || question.TeamID != proof.TeamID || question.AuthorID != own.person || question.Revision != 1 || question.Body != questionInput.Body || question.Source.ChallengeID != item.challenge.ID || question.Source.ChallengeVersion != item.challenge.Version || question.Source.Rubric != item.rubric.Reference {
@@ -103,7 +106,9 @@ func (r *lifecycleJourney) publishCommonClarifications(t *testing.T) {
 				}
 			}
 			document := lifecycleCommonAnswer(version == 2)
-			if err := r.owner.call(t.Context(), http.MethodPut, questionPath+"/answer", draft.Revision, document, &draft, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				draft = r.answerClarificationInBrowser(t, item, index, version, "save", question, draft, document)
+			} else if err := r.owner.call(t.Context(), http.MethodPut, questionPath+"/answer", draft.Revision, document, &draft, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if draft.ID == uuid.Nil || draft.QuestionID != question.ID || draft.Version != version || draft.Approved || draft.Published || draft.Source != proof.Source || draft.Document != document {
@@ -146,7 +151,9 @@ func (r *lifecycleJourney) publishCommonClarifications(t *testing.T) {
 				}
 			}
 			for _, action := range []string{"approve", "publish"} {
-				if err := r.owner.call(t.Context(), http.MethodPost, publicPath+"/actions", draft.Revision, clarification.AnswerCommand{Action: action, Version: version}, &draft, http.StatusOK); err != nil {
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					draft = r.answerClarificationInBrowser(t, item, index, version, action, question, draft, document)
+				} else if err := r.owner.call(t.Context(), http.MethodPost, publicPath+"/actions", draft.Revision, clarification.AnswerCommand{Action: action, Version: version}, &draft, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
 				if draft.Version != version || !draft.Approved || (action == "publish" && !draft.Published) {
@@ -222,8 +229,8 @@ func (r *lifecycleJourney) publishCommonClarifications(t *testing.T) {
 				receipt.NotificationIDs = append(receipt.NotificationIDs, added[0])
 				receipt.RecipientIDs = append(receipt.RecipientIDs, client.person)
 			}
-			if len(receipt.RecipientIDs) != 32 {
-				t.Fatal("common answer did not retain exactly32 actual confirmed recipients")
+			if len(receipt.RecipientIDs) != 29 {
+				t.Fatal("common answer did not retain exactly29 current confirmed recipients after post-freeze withdrawals")
 			}
 			proof.Versions = append(proof.Versions, receipt)
 			r.persistWorkProgress(t)

@@ -1,0 +1,130 @@
+{
+  "source_revision": "613d8bc9ddeb1d24490355bd87f1124e8ac5d4af",
+  "verification_image": "sha256:1a583920fa8da9f4cfee93be506c14dbc1e448e73d86b44954b23e6b5cb11762",
+  "normal_guide_image": "sha256:2f49830c645d0613f32a395286b944a3cb49f0932451bfc8c4c4d9608235acf7",
+  "normal_guide_source": "613d8bc9ddeb1d24490355bd87f1124e8ac5d4af",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793151819",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R63",
+  "native_elapsed_seconds": 418.22,
+  "completed_ui_barriers": 174,
+  "production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072",
+  "matching_published_runtime_revision": "2610ce9865a00c4d1a00050531d7aa9ff3f49268",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "event_UI_decisions": [
+    {
+      "event_id": "1787738f-94dc-4a2c-b359-06bae9c53414",
+      "action": "postpone-event",
+      "revision": 141,
+      "stage": "preparation",
+      "confirmed_attendees": 32,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "d1df25a3-33a9-4cd6-a594-bed30419d56b",
+      "action": "postpone-event",
+      "revision": 145,
+      "stage": "preparation",
+      "confirmed_attendees": 32,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "1787738f-94dc-4a2c-b359-06bae9c53414",
+      "action": "approve-attendance-live",
+      "revision": 163,
+      "stage": "live",
+      "confirmed_attendees": 29,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "d1df25a3-33a9-4cd6-a594-bed30419d56b",
+      "action": "approve-attendance-live",
+      "revision": 169,
+      "stage": "live",
+      "confirmed_attendees": 29,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_event_decision_verification": [
+    "exact revised event-local live and cutoff dates",
+    "explicit postponement approval and exact reason/actor/revision audit",
+    "original publication, frozen teams and common contents retained",
+    "correct current notice audience; other event unchanged",
+    "unapproved and frozen-deadline changes denied without mutation",
+    "below-minimum current census29 against configured floor30",
+    "explicit reasoned live exception; empty/unwaived attempts denied",
+    "original later assessment/archive and exact retention guards retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "postponed_through_UI": true,
+      "live_exception_through_UI": true,
+      "postponement_guards": {
+        "unapproved_change_denied": true,
+        "frozen_deadline_change_denied": true,
+        "other_event_unchanged": true,
+        "frozen_teams_preserved": true,
+        "common_content_preserved": true,
+        "current_notice_audience_verified": true
+      },
+      "postponement_reason_sha256": "3e8a25d080922edb0dafc2624d9ba2406859dbebd06d95db7e204accb8c1bff8",
+      "attendance_exception_reason_sha256": "5a6cffb85e6fc6246ad07b556c6c41de4d6bb2f7701535cccdf0abf6640d9ba5"
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "postponed_through_UI": true,
+      "live_exception_through_UI": true,
+      "postponement_guards": {
+        "unapproved_change_denied": true,
+        "frozen_deadline_change_denied": true,
+        "other_event_unchanged": true,
+        "frozen_teams_preserved": true,
+        "common_content_preserved": true,
+        "current_notice_audience_verified": true
+      },
+      "postponement_reason_sha256": "3e8a25d080922edb0dafc2624d9ba2406859dbebd06d95db7e204accb8c1bff8",
+      "attendance_exception_reason_sha256": "5a6cffb85e6fc6246ad07b556c6c41de4d6bb2f7701535cccdf0abf6640d9ba5"
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Original full #120 remains incomplete. Clarification/correction, assessment/feedback/archive and remaining role/provider/full acceptance requirements stay open. No full lifecycle or release readiness claim.",
+  "private_artifact_sha256": {
+    "source.json": "256679c5b9b28bd8f5371d98ee469510adec04839a54dc6481118ee17be727d8",
+    "connected-browser-proof.json": "33312956f94e79f4ed7d8b92f54615e665b37361a24f90c323fe0871165126ee",
+    "native/journey-start-live.json": "4384b7ef0466a5cf48b1e29b7d1a4fb845e5272e884f2b4ca93ed80b638ef7c5",
+    "native-runner.log": "6f5e2b8ca5e7fa13dfc369931a01fc86c0069706e2c3aca09340dfd0e1b18992",
+    "native-event-decision-901.png": "50963d3f6f65005c9127a6174315c447b890f0718b28b81bbe8ffec90933d978",
+    "native-event-decision-902.png": "4f245d39a8c2bb0c81c2140290fbf33edf1d9685733b5a37c224492e9a5559de",
+    "final.dump": "b5e2e89420441b9d6ea3faf47a6f6f8d07590c6a9fa31c09153fc9827485f2e0"
+  }
+}

@@ -112,3 +112,528 @@ queued workers/PostgreSQL. SQL is a read-only evidence oracle, not a way to seed
 registration, admission, freeze, challenge, rubric, scores or successful effects.
 The verification entrypoint remains distinct from the production image. Neither
 the continuation Draft nor a green CI run alone completes these acceptance rows.
+
+## Full acceptance completion branch — work in progress
+
+The current completion branch continues the same two native event/actor
+lifetimes into organiser completion, reviewed consented recording publication,
+revocation/reconsent with a new review, configurable published surveys, actual
+private responses and exact duplicate-response acknowledgement. The full
+original acceptance matrix remains unchanged. Showcase, retained follow-up,
+archive/immutability, remaining exception variants and final browser/runtime
+proof still require implementation and execution before this deliverable merges.
+
+The first extended isolated image
+`sha256:49a73b5dcadad419ae94f347ba37c947ff317d1369bdfa5ed10ec71f57659b14`
+ran from an uncommitted extension of `1d283469` and failed after **335.17s**:
+its new driver attempted `live` → `completed`, and the native transition returned
+a definite HTTP 409. Before that rejection, both events completed the existing
+award-publication and private team-feedback phases. No full acceptance or new
+post-event pass is claimed. Its private artifacts and source hashes were retained;
+all owned containers, volumes and its internal network were removed afterward.
+
+The corrected driver explicitly advances to assessment after actual cutoff
+settlement/reconciliation, preserving the demonstration that cutoff runs while
+the event is still live. Completion follows the independent review/results work.
+This corrects fixture chronology; no production gate, API or time policy changed.
+
+The corrected frozen `8ebe509a` image
+`sha256:88b39fe88f663414572b9e38f38ba1eb94140dea8772dab4a3b00dcfc17f9412`
+passed the native assessment transition and reached post-event completion, then
+failed after **322.51s** when the new media driver used POST instead of the
+contract's PUT. The native API returned a definite HTTP 405. This was a driver
+protocol error, not a product defect or passing post-event evidence. The next
+source uses the declared PUT operation and explicitly authors a replacement media
+draft before reviewing after reconsent; revocation retires the old publication.
+
+## PR #316 connected completion, media and survey evidence
+
+Frozen clean source `b47c8c1cad5afe7b697a0fd2d85bb9fe18a122fb` passed
+`TestLifecycleComposeJourney` in 365.86 seconds with exit 0 in isolated Compose
+project `hackbox-lifecycle120-completion-r3`. Both normal authenticated event
+lifetimes reached assessment after cutoff reconciliation, then completion after
+result publication and private team feedback. Each event exercised reviewed media
+publication, immediate consent-revocation denial, reconsent without resurrection,
+and a new explicit draft/review/release. Each published survey received six actual
+current participant responses, retained the original duplicate-intent response,
+and denied peer responses and cross-event configuration reads.
+
+The positive-projection receipt is `completion-media-survey-proof.json`. Its
+source and image identify the actual execution before the later rebase onto
+`64c37bde`; that rebase is not a rerun. Full private artifacts remain local.
+All owned R3 containers, network and disposable volumes were removed after
+retaining artifacts. Earlier R1/R2 driver failures remain failures.
+
+`complete_lifecycle=false` remains explicit. This checkpoint does not establish
+survey notification delivery/reporting, non-winning showcase, retained reviews,
+archive immutability, remaining exceptions or final browser/runtime acceptance.
+No original acceptance checkbox is closed by this checkpoint.
+
+The next driver extension creates one owned native outcome per published team,
+keeps estimates distinct from demonstrated-adoption evidence, and selects an
+actual frozen non-winning team for separate organisation-project publication,
+search, private-source denial and withdrawal. Its connected execution is pending;
+the R3 receipt above predates this extension and cannot establish its assertions.
+
+The next connected archive/follow-up extension is implemented but its execution
+is pending. It snapshots complete native submission, freeze, rubric, mentor,
+judge, decision and publication rows in a repeatable-read/read-only oracle, then
+checks unchanged hashes after native archive, an exact actor/evidence history
+entry for an authorised outcome update, and retained day-30/60/90 reminders.
+Plans are explicitly approved before archiving against a separate unchanged
+owned source; each actual queued inbox effect must reference its approved plan,
+remain private, occur at its event-local due time and appear exactly once.
+Neither a compile-only check nor a source review establishes these effects.
+
+### R4 failed before new outcomes assertions
+
+Frozen source `3f2f81ad` failed in 266.23 seconds during the pre-existing
+team-feedback phase: normal POST returned HTTP503 at the server's 10,001ms
+timeout boundary. The source-attributed failure is
+`evidence/journey-feedback-timeout-red.json`. No outcomes/showcase assertion was
+reached, so none is promoted to a pass. Read-only post-failure inspection found
+no active database transaction, exactly the six acknowledged report versions
+(two reports at versions4 and2) in the first event, and no report versions in
+the second. The command was not replayed. This does not establish the timeout's
+cause or constitute a deterministic regression/fix. Protected raw artifacts and
+a private database dump were retained; all owned R4 runtime resources were
+removed. The independently frozen R5 source `842a4cb1` starts fresh synthetic
+identities/database and includes the later archive/retained-review extension.
+
+### R5 diagnostic boundary and disk recovery
+
+Frozen source `842a4cb1` failed after246.09s with POST503 during fresh independent
+judge scoring (exact source line248), before feedback/outcomes/archive. Both event report censuses were empty
+at that terminal boundary. No failed command was replayed. The protected
+original database dump was taken before any subsequent diagnostic writes.
+
+The explicitly gated retained-fixture probe signs in normally and records each
+new synthetic intent before sending it. A short current-source/denied-source/new
+draft probe passed8.29s. A separate six-writer probe failed4.29s with HTTP500;
+PostgreSQL explicitly reported no free disk space, and a read-only census
+confirmed none of those six intents created a version. After unused Docker
+build-cache cleanup, the VM had13GB free and all application containers remained
+healthy. Six fresh diagnostic draft identities then passed6.73s, each with an
+original acknowledgement (individual writes1.125–4.507s). These private
+uncommitted diagnostic-image results establish recovery from the disk-full500
+condition, not a reproduction or fix of the earlier503 timeout. They do not
+establish complete lifecycle acceptance or apply to a later committed image.
+
+`lifecycle120_feedback_probe_test.go` is a diagnostic entrypoint only: an explicit
+isolated flag, target event/teams and probe action are mandatory. Its save probes
+create disposable private drafts with fresh command identities; they must never
+be used to retry an unresolved original intent. The original failed fixture was
+retained privately, diagnostic effects recorded separately, and all owned R5
+resources removed. R6 uses the exact unchanged `842a4cb1` image in fresh volumes
+after disk recovery; its result is pending.
+
+### R6 timeout attribution and ongoing #319 investigation
+
+The exact unchanged `842a4cb1` image failed R6 after274.15s during result
+decisions (source line249), with HTTP503 at10,000ms and8.3GB free. This rules out
+using the adjacent disk-full500 as an explanation for every timeout. The private
+read-only observer retained55 samples: transaction/tuple waits included a worker
+session blocked by an API-held transaction for over8s. The API blocker's later
+absence does not identify why it held its transaction. A protected dump and raw
+artifacts were retained; the R6 stack remains available for scoped reproduction.
+The causal timeout fix is tracked separately in #319. No original command was
+replayed, no production behavior changed and no request/test timeout increased.
+The earlier R5 phase label was incorrect and is corrected above from its exact
+frozen source; its failure is not a media/survey/outcome/archival verdict.
+
+The next connected driver now includes actual organiser/early-theme grant and
+revocation before registration: both active and revoked grants must cause the
+specific lifetime-exclusion error, with no rejected-registration mutation.
+The same people must first be admitted and explicitly withdraw in the other
+event before its own grant, proving event scope rather than global exclusion.
+This new native execution is pending. The existing standalone admission
+entrypoint remains unchanged through an optional connected-scenario hook.
+
+The journey now journals positive-projection mutation metadata before the wire
+attempt, including original caller UUIDs, actor, target path and expected
+revision. Its private file excludes payloads, query strings, credentials, CSRF
+and cookies. An unwritable journal prevents the request from being sent. The
+privacy and pre-wire failure tests plus existing exact-header and accepted-reply
+loss/no-replay controls pass with race detection (1.579s); this is HTTP/helper
+evidence, not a complete lifecycle or a fix for #319.
+
+## Fixed-timeout private integration R7 — oracle correction
+
+Private clean integration `377c27570eb52d4d686a82aa8f4e7e76ba7145ed` combined
+PR #316 source `74080be3` with PR #320 source `41ce5ff1` on main `d048b465`.
+Verification image `sha256:0c6521bea636e20c06c2e66a9f1522c2b31415ffe73767364c504fbbeedb93b0`
+ran the original connected journey once on fresh isolated PostgreSQL. It failed
+after **209.29s**, after both events reached completion, at the newly reached
+read-only competition oracle. Earlier independent scoring, result decisions,
+team feedback, media and survey phases passed in this run; this is not a complete
+lifecycle pass or a unique proof of every historical timeout's cause.
+
+The oracle incorrectly required nonempty final mentor sign-offs in all-team
+judging, which deliberately has no final mentor run. A read-only census of the
+preserved original database found zero final runs/sign-offs for all-team mode
+and one final run/four actual sign-offs for mentor qualification. All other
+required competition tables were nonempty in both events. The corrected oracle
+requires the exact count of already acknowledged final huddles (zero versus
+four), retaining a hash even for the empty set. Missing qualification sign-offs
+remain a failure. No production gate or data was changed; the corrected fresh
+whole journey remains pending.
+
+## Current-dependency integration R8 — evidence wire correction
+
+Private clean integration `1f2671bc` on main `3a72453a` used image
+`sha256:f7e74709ef04233e4d6f587241237f14f90f03d1060effade238ec0a3f01df4d`.
+Its fresh original journey failed after **176.41s**, with both events completed
+and the corrected exact sign-off census passing. The first team's native
+outcome propose/moderate/assign/progress commands were acknowledged as versions
+1–4. The following estimate-evidence request received a definite HTTP 400; the
+original database and intent metadata were preserved without replay.
+
+The actual domain evidence DTO emitted `measures:null`, but the independent
+OpenAPI contract requires an array. A fast test against that schema reproduced
+the exact rejection for estimate, self-report and demonstrated-adoption inputs
+before the correction. The journey's shared evidence constructor now supplies
+an explicit empty array for all three cases, including its later archived
+self-report. No production API, validation or evidence policy changed. The new
+original whole journey remains pending; R8 is a failure, not complete acceptance.
+
+## Passing connected outcomes, archive and owned reviews — R9
+
+Clean private integration `a8ce5a8851a0af5ffd84d5bfed98c6a59cfa2e48`
+(on main `3a72453a`, PR #316 drivers plus PR #320 correction) used verification
+image `sha256:fe04ec6c8738bc7d2ba37b97dceec0ea122f5fe04eb54f92c6dfd7d03fa327aa`.
+The fresh original `TestLifecycleComposeJourney` **passed in 270.63s**, exit 0.
+Both event lifetimes reached archived through all preceding native scoring,
+results, feedback, media and surveys. Each event recorded six team outcomes,
+distinct estimates and demonstrated-adoption evidence, reviewed/discovered/
+withdrawn a real frozen non-winner showcase, retained three explicitly approved
+owner plans, and observed their actual queued day-30/60/90 inbox notifications.
+Organiser versus attendee archive projections and the authorised audited
+post-archive outcome update passed; all competition hashes remained unchanged.
+The exact mentor sign-off census is zero for all-team mode and four for mentor
+qualification. Actual role grant/revocation preserved local disqualification
+while other-event history remained independent.
+
+The [bounded receipt](outcomes-archive-review-proof.json) publishes only synthetic
+IDs, counts, timestamps, capability assertions and immutable hashes. The private
+original intent journal, full checkpoint, logs and final database are retained.
+Failed R7/R8 executions remain failures and are not overwritten by this pass.
+This is the connected verification image with controlled domain eligibility,
+not a normal production-image release or capacity proof. `complete_lifecycle`
+remains false: outstanding exception/browser/expiry/normal-image variants in the
+original twelve criteria and L01–L18 still require implementation and final
+acceptance before #316 merges or #120 closes.
+
+## Post-publication postponement continuation — not yet executed
+
+The next connected extension performs separate native HTTP postponements after
+both original common challenge releases. Each event first rejects an unapproved
+change without mutation, then records explicit approval/reason/revised dates.
+Current attendee and mentor notice projections must match the original decision
+revision while withdrawn readers remain denied. Frozen team identities, released
+challenge/rubric bytes and exact prior acknowledgements must remain intact; a
+date edit cannot reopen the completed freeze, and the other event is compared
+before/after each decision. The original live date must remain preparation, with
+the original early-live/output gates still enforced before the revised start.
+Later mentor, submission and retained-review planning uses the revised dates,
+while the receipt retains the actual original T−7 publication and original live
+start. Only compilation/the existing wire-contract test have run so far; this
+extension is not an executed acceptance claim. The full matrix remains open.
+
+## Passing connected post-publication postponement — R10
+
+The full original journey **passed 216.10s**, exit 0, on clean private integration
+`78c21ee966793a63ebdbd88f66a0669ca9ba9968`, main `33f8d29a`, verification image
+`sha256:16d47a8e4d91db1ea2d305a6d94fe23f1a39570358a678a34b9e4c565c3bf5b7`.
+Both separately approved native postponements retained the original release,
+exact challenge/rubric bytes, acknowledgements and frozen team identities.
+Unapproved changes and attempted reopening of the frozen deadline failed
+without mutation. Actual current attendee/mentor notice reads matched the
+actor/reason/revision decisions; withdrawn readers were denied. Each event was
+unchanged by the other's decision. The original live date remained blocked;
+revised mentor/scoring/cutoff/completion/30–60–90 follow-up all passed with
+unchanged competition hashes. See [bounded proof](postponement-proof.json).
+
+Revised-date notices are actual native reads; external notice delivery is not
+claimed. Private original checkpoints, intent identities and final database
+remain retained. Remaining withdrawal, surviving-offer/cutoff, missed-release,
+browser/role/expiry and normal-image variants still keep #120 and its entire
+L01–L18 matrix open. The earlier not-yet-executed section records implementation
+provenance, not a different scope or a claim that this complete matrix passed.
+
+## Post-freeze pair and attendance-exception extension — not yet executed
+
+The next same-event extension withdraws three actual confirmed people from a
+frozen team of five after publication, retaining the remaining pair, team ID
+and provisioned private repository. It rejects a survivor move and a new
+post-cutoff application. Both native event censuses must fall from32 to29 while
+remaining in preparation; the original configured minimum remains30. At the
+revised live start, a missing exception and an empty reason must each fail
+without mutation. Only an explicit reasoned exception may enter live, with its
+exact actor/revision decision and independent other-event comparison. Original
+pre-freeze target-five/four-to-six checks remain unchanged; the smaller access
+plan is accepted only for this recorded frozen pair. The independent provider
+census now expects58 actual surviving competitors plus24 mentors, and common
+answers must reach29 current recipients per event; historical pre-withdrawal
+notices retain their32-person receipts. Compilation passed; a fresh whole run
+is still required before any new acceptance claim.
+
+## Passing connected frozen-pair and attendance exception — R11
+
+The full original journey **passed210.62s**, exit0, on clean private integration
+`2d23165e2081f2bedcf6142653186c211464a022` on main`975fa1aa`, verification image
+`sha256:9b53eaa155d3a5d551af002498ba41ae35c05aac12847897f554fb3b2e238c54`.
+In each event, three actual post-freeze registration withdrawals left the
+original frozen pair and private repository intact, with no reassignment or
+post-cutoff new admission. Confirmed attendance fell32→29 against the unchanged
+minimum30 after the original explicit go and common publication. Unwaived live
+entry and an empty exception reason were denied without mutation; each approved
+live exception retained its exact actor/reason/revision decision and left the
+other event unchanged. Native scoring, outcomes, archive and actual queued
+30/60/90-day reviews then passed with unchanged competition hashes.
+
+The independent provider census was58 surviving competitors plus24 selected
+mentors, and each common-answer version reached29 current confirmed recipients;
+pre-withdrawal roster notices retained their original32-person receipts. No
+benchmark target or go floor was lowered. [Bounded proof](frozen-pair-attendance-proof.json)
+retains each pair's actual cutoff outcome rather than inventing a score or
+automatic success. Full private receipts, original intents and final database
+remain local. Surviving-offer, missed-release, retired-repository, complete UI/
+role/expiry and normal-image variants still keep #120 and L01–L18 incomplete.
+
+## Surviving FIFO offer at the actual admission cutoff — not yet executed
+
+The connected driver now applies one extra actual FIFO reserve before go,
+keeping the original35 capacity,30 minimum and two-working-day offer policy.
+Pre-freeze remediation occurs within the final day before the real cutoff,
+so the reserve's native working-day expiry is capped by that cutoff rather
+than by an artificially extended policy. Team freeze is deliberately deferred:
+freezing earlier would itself close admission and would not prove cutoff
+expiry. Both concurrent reserves must still have their original pending offer
+one second before cutoff. A single accept command at the exact cutoff must
+return the real declined/expired outcome without adding a confirmed competitor
+or changing the published32-person roster. The response contract may return
+HTTP200 for that reconciled expired state; it is never counted as acceptance.
+Only then does the owner freeze actual published assignments before repository
+setup and T−7 common disclosure, with the existing frozen-move denial repeated.
+
+The extra reserve never confirms or receives a repository grant and remains
+unlinked; the strict36-person-plus2-mentor GitHub fixture and actual38 OAuth
+exchanges remain unchanged. Standalone admission checkpoints retain36 people;
+the full journey explicitly records37 overlapping applicants. Compilation and
+the existing outcome wire check passed. No whole-run evidence for this new
+case is claimed yet; all remaining original acceptance stays open.
+
+## Passing connected surviving-offer cutoff — R12
+
+The full original journey **passed252.90s**, exit0, on clean private integration
+`1ff9d58808c7a703ab9ff67880c14882c541e202`, main`975fa1aa`, verification image
+`sha256:13e8c95493da0c3d211c628256a438e9f81a59b30d63ed6663cfd95028b72ff0`.
+Each event had37 overlapping native applicants: the original FIFO offer was
+accepted, while a separate reserve's later offer remained pending one second
+before the genuine admission cutoff under the unchanged two-working-day policy.
+Its single late acceptance command returned HTTP200 with actual declined/expired
+state and the original offer identity, never a confirmation. The32-person
+published roster stayed unchanged, and the owner froze it only after cutoff,
+before repository provisioning and the actual T−7 common release. Both events
+then repeated the verified postponement, post-freeze pair/29-person attendance
+exception, scoring, outcomes, archive and real30/60/90-day queue effects with
+unchanged competition hashes. See [bounded proof](offer-cutoff-proof.json).
+
+No offer window or benchmark target was widened. The unconfirmed reserve did
+not receive a GitHub link/grant; the strict36-participant-plus2-mentor OAuth
+transport still observed exactly38 verifications. Raw receipts, original intent
+metadata and final database remain private. Missing dispatch-window, retired
+repository, full Fleet/browser/role/expiry and normal-image cases still keep
+the complete original matrix and #120 open.
+
+## Exact dispatch window and missed-release recovery — not yet executed
+
+A separate fresh native Compose lane now exercises both judging modes at the
+inclusive60-second boundary and one PostgreSQL microsecond beyond it. The host
+keeps the worker absent until the private ready barrier and then starts the
+actual normal worker composition; no handler call or SQL due-time rewrite
+stands in for dispatch. The late case requires an unreleased/missed source,
+current route/rubric/search denial, rejected manual live entry and rejected
+past-schedule reapproval. Native postponement and a new reviewed version must
+restore the full future T−7 schedule while keeping frozen teams and original
+missed history. [The clean command](DISPATCH-WINDOW.md) captures private native
+artifacts and verifies scoped cleanup. Compilation/calendar checks passed;
+actual execution remains pending, and no complete acceptance claim is made.
+
+The first dispatch-lane execution at `ad075846` failed before the native runner:
+Docker VM disk exhaustion prevented PostgreSQL `initdb`. Its failed startup
+logs are retained and the isolated project was removed. Cleanup of unused
+images/cache recovered33GiB; the existing application and encrypted App setup
+were verified healthy afterward. A pre-build/post-build capacity guard now
+prevents repeating that resource failure. No native timing pass is claimed.
+
+The guarded dispatch attempt at `6b97635e` reached actual approved content and
+wrote its ready barrier, then failed because its organiser poll used an ordinary
+unreleased-reader URL (correctly404). No worker dispatch was attempted. Only the
+fixture's organiser reads now request explicit privileged preview; attendee
+embargo checks and production permissions remain unchanged. Failed original
+artifacts are retained, and a fresh run remains pending.
+
+## Passing native dispatch boundary/recovery — R15
+
+Corrected clean source `db8f2343c433a68332a68b2d49150f8f2b01a0f8`, image
+`sha256:9adf7dfe67cb381e7bb6d638400be6fa81667006fa0ffb94932d30cca1d4621b`,
+passed both native cases (5.09s and8.62s, exit0 each), both judging modes.
+Exact+60seconds released; +60seconds+1microsecond stayed missed and embargoed,
+rejected manual-live/past reapproval, then recovered through actual postponed
+T−7 and a new reviewed version with unchanged frozen teams/history. The actual
+worker started only after the host ready barrier. Private original journals,
+logs/databases and scoped cleanup were checked. See
+[bounded proof](dispatch-window-proof.json) and [details](DISPATCH-WINDOW.md).
+Earlier failed startup/preview attempts remain failures, not replaced verdicts.
+The remaining original retired-repository, Fleet/browser/role/expiry/provider
+and normal-image matrix remains open; `complete_lifecycle` stays false.
+
+## Already-provisioned retired-repository extension — implementation pending execution
+
+The connected journey now queues and observes all seven original published
+team repositories before its actual under-three withdrawal/reassignment. Each
+event must retain the original discarded mapping as ready/unused through
+requeue, cutoff, real judging and archive; it must have a withdrawn final source,
+no selected SHA or decision, no eligible judge entry or team outcome, and no
+current participant repository exposure. Exactly fourteen provider creates
+are required; the existing twelve surviving-team access plans and82 accepted
+competitor/mentor invitations remain unchanged.
+
+`scripts/verify-lifecycle-journey.sh` adds a clean-source, capacity-guarded native
+runner with original private journal/database capture and scoped cleanup. This
+extension compiles but no full-run verdict is claimed until it executes.
+
+## Passing connected original-repository retirement — R16
+
+The full connected native API journey passed247.63s, actual exit0, clean source
+`d3375144fef1932817aefc652863d804cc366792`, verification image
+`sha256:19c00441e691380fadffab00d98b7d74cc118a5b82159e70f98beeb721e6e31d`.
+Both event modes provisioned all seven original published-team repositories
+before the real under-three remediation. Each retained exactly one discarded
+original repository as ready/unused through subsequent queueing and archive.
+Its native cutoff outcome was withdrawn without a selected SHA/decision; it
+never entered real judging, outcomes or any current participant repository list.
+The actual provider observed fourteen creates while the unchanged58 surviving
+competitor plus24 mentor invitations all completed (82).
+
+Original journals, runner logs and final database are hashed in the
+[bounded receipt](retired-repository-proof.json). Scoped cleanup removed all
+generated containers/volumes/networks. This repeats the complete native journey
+through archive and all retained30/60/90-day effects; full Fleet/browser/role/
+expiry/provider/normal-image acceptance remains open.
+
+## Configured retention expiry — implementation awaiting native execution
+
+The connected journey now advances from the actual archived completion anchor
+to one second before and exactly at its explicit120-day deadline. Original
+outcome owners must read before expiry; at equality both owner and organiser
+lose outcome/history reads, and the original delivered day90 notification is
+unreadable. Full competition hashes must remain unchanged. Equal deadlines
+are grouped to preserve monotonic domain time. The default90 component proof
+remains separate; this new API case has no passing verdict yet.
+
+## R17 did not reach expiry — independent feedback report timeout
+
+The next full native run at clean `cdc6c5f3` failed240.96s before the new
+expiry helper. After actual finalist/award releases, a feedback-report POST
+at expected revision3 returned503 after10010ms under the unchanged API budget.
+No automatic write retry was made. The original intent identity, private logs,
+final database/source/image receipt and scoped cleanup remain retained. #325
+tracks this intermittent native timeout separately. R16 remains the passing
+original-repository journey; R17 is a failure and proves none of the newly
+unreached expiry assertions.
+
+## R19 aborted before acceptance
+
+An edit applied the journey calls/final guard but stopped before setting the
+retired-repository execution sentinel. The host stopped only that known-incomplete
+synthetic runner (exit143), preserved its original partial logs/database and
+removed its generated resources. This is an aborted fixture repair, not a
+business/test pass. The sentinel is now set only after the actual final mapping,
+cutoff, judging, outcome and current-participant checks all succeed; a fresh
+complete run is still required.
+
+## R20 reached the real helper, then hit the fixture clock horizon
+
+Clean `c3558cca` ran243.15s and completed the explicit final retired-repository
+helper, including current participant lists, exact retained mapping, cutoff,
+judge exclusion and no outcome. The newly invoked expiry helper then received
+control500: the private fixture capped time at original day90+1, while the
+explicit120-day policy after postponement expires at original day121. No expiry
+assertion passed. Original partial logs/database were retained and generated
+resources removed.
+
+The synthetic clock ceiling now reaches that explicit deadline, retaining its
+monotonic and bounded rules. Production scheduling, retention, authentication,
+queue leases and HTTP/request budgets are unchanged. Fresh execution is required
+for the complete corrected repository+expiry case.
+
+## Passing executed repository and configured-expiry guards — R21
+
+The corrected full native journey passed211.23s, exit0, clean source
+`92f988ae6248a23ac867f1a2322cf6f4e314121b`, verification image
+`sha256:ed7590e11df2accd9e85c25d507c76f65a77dee7285597503f97dddf3bd58314`.
+Both final helpers are unconditional calls, and receipt construction requires
+actual successful repository/expiry sentinels. Both events completed all final
+retained-unused mapping, withdrawn-cutoff/no SHA, judge/outcome exclusion and
+current-participant repository-list assertions. All original30/60/90 reviews
+delivered through actual native queues.
+
+Both native completion anchors were2026-03-31T16:00Z. Under the explicit120-day
+policy, owners read one second before2026-07-29T16:00Z; at equality both owner
+and organiser outcome/history reads and the actual last review notification
+were denied. Full competition hashes stayed unchanged. See the actual nonzero
+[bounded expiry receipt](configured-retention-expiry-proof.json). Original
+journals, logs/databases and scoped cleanup are retained.
+
+This supersedes only the unsupported helper-only flags from R16/R18; their
+actual previously executed native actions retain their original scope. It does
+not turn R19/R20 into passes or prove the default90/browser/provider matrix.
+
+## Default90 first execution — R22 API-read fixture correction
+
+At clean `61ab0358`, the full native run reached the actual day90 approval
+and correctly rejected it with400 under the unchanged default policy. The
+fixture then attempted an unsupported GET on the PUT-only individual review
+route and received405, failing166.89s before retained delivery/expiry. This is
+a failed fixture attempt, not a passing default-policy lifecycle. Original
+journal/database/logs are retained and generated resources were removed.
+
+The unchanged-state check now reads the actual supported review collection,
+requires exactly the three original plans, selects the exact rejected ID and
+compares the native draft/version/command projection. No application endpoint
+or approval/retention rule changed. Fresh execution remains required.
+
+## Passing full native default90 retention — R23
+
+Clean `922ad7b250bbfcc90ab974d7611c018b70701596`, verification image
+`sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8`,
+passed199.11s, exit0, through both actual event modes and final guards. The
+original intent journal contains zero privacy-policy writes; both events retain
+the untouched native90-day policy. Actual day90 approval is rejected400, and
+the supported native review collection retains the same original version1 draft.
+Only the actual approved30/60-day plans deliver their native notifications.
+
+Both events completed2026-03-31T16:00Z and expired2026-06-29T16:00Z. Owners read
+one second before; equality denies owner/organiser outcome/history and the last
+approved notification. Executed retired-repository/current-list assertions and
+full competition hashes remain valid. See [bounded receipt](default-retention-expiry-proof.json).
+Original logs/journal/database and scoped cleanup are retained. Full Fleet/
+browser/current-role/provider acceptance stays open. The complementary120-day
+case is being repeated on this same source/image; no new verdict is inferred.
+
+## Passing both policies on the same native driver/image — R24
+
+The complementary configured120 case passed260.15s at the same clean
+`922ad7b250bbfcc90ab974d7611c018b70701596` and image
+`sha256:ae2aeb1079d93db8c00265adc3c4fd7f90c9032bca1bba69cd78c0a1b31c42c8`
+as passing default90 R23 (199.11s). The original journal contains exactly two
+privacy PUTs for120, compared with zero for the untouched90 case. Both modes
+retain actual retired-repository/current-list guards and immutable competition
+hashes at exact expiry. Configured120 delivers30/60/90; default90 delivers30/60
+and rejects unchanged day90 draft approval at its exclusive boundary.
+See [combined actual receipts](retention-cases-proof.json). All generated
+resources were cleaned; private originals remain retained. The complete Fleet/
+browser/offline/current-role/provider matrix and full release acceptance remain
+open. No failed earlier attempt is relabelled as passing.

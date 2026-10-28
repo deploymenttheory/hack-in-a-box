@@ -1,0 +1,75 @@
+{
+  "source_revision": "e2bc2a8573705880a970a2995cf1319695286551",
+  "verification_image": "sha256:439cf8ce7bf94dd7c4ee190e3750a2727458935cedbfd6391ba49d7324242f4a",
+  "normal_guide_image": "sha256:953afdd0f0370d5a205a5a751c119ec6280a4b41ce271f3fee6e97640639fbce",
+  "normal_guide_source": "ae70a551b551afc1145050c5586a1de5115c8d41",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793142589",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R54",
+  "matching_reviewed_web_revision": "73db4f7add77e03c87c6a2cca7377c37525361fd",
+  "fixture_revision_before_UI_integration": "3b8406ab98b3cf92731c4f7409b823c4d6b4fa2c",
+  "native_elapsed_seconds": 427.75,
+  "completed_ui_barriers": 140,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "team_commands_per_event": {
+    "create": 7,
+    "move": 30,
+    "unlock": 7,
+    "publish": 2
+  },
+  "independent_native_checks": [
+    "expected revision increment",
+    "unchanged event stage/configuration and admission census",
+    "exact created captain and draft membership",
+    "single destination placement; other members retained",
+    "published snapshots unchanged during draft edits",
+    "only reviewed allocation lock changed",
+    "publication matches draft and retires empty team"
+  ],
+  "visible_review_checks": [
+    "captured revision",
+    "recorded reason",
+    "current native team/person names",
+    "keyboard focus on decision heading",
+    "no POST before confirmation",
+    "one versioned command after confirmation",
+    "reload after acknowledged command"
+  ],
+  "retained_native_guards": [
+    "initial teams of five",
+    "under-three publication rejected without mutation",
+    "remaining pair reassigned before freeze",
+    "six continuing teams of preferred four-to-six at corrected publication",
+    "post-freeze move rejected without mutation"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived"
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived"
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Complete original120 matrix: depletion withdrawals and later hard-freeze UI are still native API steps; rubric/content authoring and release, assessment, feedback/archive UI plus remaining role/stage/provider variants and full acceptance audit remain. Rubric-authoring UI gap tracked separately in339.",
+  "private_artifact_sha256": {
+    "source.json": "8e1f11995244daa639f58aa04bc9a91a637bb18b11af7e68ede07bca8fd3042f",
+    "connected-browser-proof.json": "27a11a399b775fe6ab09fbeb5c189cd7a0813885eb4f7eb6004b8be6e27934e8",
+    "native/journey-start-live.json": "3aa36b1a4fd499f1ae04d90ddceaeb0256602c05781cbcf75fdad98e1c10ab7c",
+    "native-runner.log": "86b5abb6e3d6607d6c05adb69df45e2316d544e2788cc8297a668e39ce6dde72",
+    "native-teams-346.png": "c6d00aef311f92dd5c9acdfebb88c08f26e5b2ef6117d6c2eb8eef593d57577a",
+    "final.dump": "e6b2feeea75ab7cf3c0304d2f1ddcc8925629e01cd87f43f9626c4b8326dacd4"
+  }
+}

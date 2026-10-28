@@ -1,0 +1,46 @@
+{
+  "source_revision": "b47c8c1cad5afe7b697a0fd2d85bb9fe18a122fb",
+  "image": "sha256:1d230853f3465964a50e32c785e2d70bdd42ff9111a6ec5fe409ab1973335d83",
+  "exit_code": 0,
+  "duration_seconds": 365.86,
+  "complete_lifecycle": false,
+  "raw_receipt_sha256": "6c0be89e96c94e7b6b7fccf202a12603bda936bfaab113c67944017bf964afa3",
+  "events": [
+    {
+      "event_id": "27a7cf41-d814-43ba-b65f-8bc49d9a1608",
+      "mode": "all_teams",
+      "stage": "completed",
+      "post_event": {
+        "media_id": "7a5a53aa-8927-40a5-ab7b-f38634ff796a",
+        "media_version": 6,
+        "reviewed_release": true,
+        "revoked_consent_denied": true,
+        "reconsent_requires_review": true,
+        "survey_id": "3d82af7a-8b92-4252-a5cb-5eca229d6d63",
+        "survey_version": 1,
+        "responses": 6,
+        "duplicate_response_acknowledged": true,
+        "peer_responses_denied": true,
+        "cross_event_denied": true
+      }
+    },
+    {
+      "event_id": "c144d545-a146-4424-ad40-efc8db0c0c74",
+      "mode": "mentor_qualification",
+      "stage": "completed",
+      "post_event": {
+        "media_id": "2989a789-11a6-4207-a133-94b898a26d43",
+        "media_version": 6,
+        "reviewed_release": true,
+        "revoked_consent_denied": true,
+        "reconsent_requires_review": true,
+        "survey_id": "92d18c1c-cfed-48df-a431-dc347e3360fa",
+        "survey_version": 1,
+        "responses": 6,
+        "duplicate_response_acknowledged": true,
+        "peer_responses_denied": true,
+        "cross_event_denied": true
+      }
+    }
+  ]
+}

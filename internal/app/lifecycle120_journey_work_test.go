@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/submissionfreeze"
 	"github.com/google/uuid"
 )
 
@@ -84,10 +86,7 @@ func (r *lifecycleJourney) buildDuringPreparation(t *testing.T) {
 			}
 			item.work = append(item.work, work)
 			path := fmt.Sprintf("/api/v1/events/%s/teams/%s/submission-freeze", item.view.ID, team.ID)
-			var before struct {
-				Revision     int64 `json:"revision"`
-				CanConfigure bool  `json:"can_configure"`
-			}
+			var before submissionfreeze.Page
 			if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &before, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
@@ -98,7 +97,10 @@ func (r *lifecycleJourney) buildDuringPreparation(t *testing.T) {
 				Branch string `json:"branch"`
 				Action string `json:"action"`
 			}
-			if err := r.owner.call(t.Context(), http.MethodPost, path, before.Revision, map[string]any{"request_id": uuid.New(), "action": "configure", "branch": "main", "reason": "Review managed repository main branch before formal output cutoff"}, &configured, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				receipt := r.changeFreezeInBrowser(t, item, index, team.ID, before, submissionfreeze.Command{Action: "configure", Branch: "main"})
+				configured.Branch, configured.Action = receipt.Branch, receipt.Action
+			} else if err := r.owner.call(t.Context(), http.MethodPost, path, before.Revision, map[string]any{"request_id": uuid.New(), "action": "configure", "branch": "main", "reason": "Review managed repository main branch before formal output cutoff"}, &configured, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if configured.Branch != "main" || configured.Action != "configure" {

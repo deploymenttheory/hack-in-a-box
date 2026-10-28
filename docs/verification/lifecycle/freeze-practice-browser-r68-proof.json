@@ -1,0 +1,363 @@
+{
+  "source_revision": "1f0b8961ae9e53b67f9a770a8b5efc4c23516e59",
+  "verification_image": "sha256:59726cdbfc8f47b31fa9a18868102bcf1c455d19ce2f52d0121ef3e2b38161a8",
+  "normal_guide_image": "sha256:c97b6ab24d4a51ea0c14c8ff96e1f91edaeb02031392d9ff6783455bc82903b2",
+  "normal_guide_source": "1f0b8961ae9e53b67f9a770a8b5efc4c23516e59",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793156485",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R68",
+  "completed_ui_barriers": 232,
+  "native_elapsed_seconds": 518.8,
+  "source_composition": {
+    "fixture_runtime_revision": "da1dd250d35d112cecbf6f2200ebac68f3bad944",
+    "fixture_runtime_paths": [
+      "cmd",
+      "internal",
+      "scripts",
+      "Dockerfile",
+      "compose.yaml",
+      "docs/verification/lifecycle/*.mjs"
+    ],
+    "production_web_revision": "f440a8a0ef5b13394baf9b4b32023342bc38b278",
+    "production_dependency_pr": 344,
+    "runtime_byte_identity_verified": true
+  },
+  "branch_and_cutoff_UI_receipts": [
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "4b2fd774-de37-4078-bf22-0c2678995894",
+      "command_id": "a288319d-17ed-4bdc-8076-027044b5d2d3",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "94feaf14-c9ca-412a-b173-62bbe0d419ba",
+      "command_id": "83eda8cc-a1f9-470a-b820-57a6a9d88668",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "db99de68-6eb7-4820-ba42-2802bbe9d2f7",
+      "command_id": "15c83fcb-7d3e-41b2-8e45-3cee88a8a0fc",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "a437cb4a-0e0f-4202-8e1d-945d0ea8ceea",
+      "command_id": "e5b76f80-b9ee-445a-bdf4-0ed4bb7a60d8",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "0f5ee110-6543-47b2-a60c-24c790976236",
+      "command_id": "03401385-e34d-4bee-94cd-5f3811516726",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "46b56aad-45c8-4865-b585-a3cb7c717680",
+      "command_id": "8bd20da7-d00d-4b3c-998f-65a7df670d99",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "ec218a3c-41f9-4962-b0d9-c8a1e77c96e8",
+      "command_id": "b342b76f-f133-41a5-839b-6275d7492825",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "b57ba616-8c55-474d-bfaa-80ac2e78b825",
+      "command_id": "7fe03a9a-15b0-416c-b6be-112ee5df17ce",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "11ed3c85-4c78-4eeb-beff-097d51035e85",
+      "command_id": "58637323-de1c-48f3-a0e2-09d5d9529e3f",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "82f6d4fd-f561-4c25-b176-5e71699100ab",
+      "command_id": "0c0bff21-29f5-44ad-8318-bcd327672e4d",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "5afcd13b-f0ab-481f-9b22-1539a1c4f3cc",
+      "command_id": "d45f474c-9554-45a5-9a05-6716e292386e",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "03ade7cf-b899-41ed-ad17-ba4c3f7878c8",
+      "command_id": "33ae59b6-ec09-4674-a106-728242f09955",
+      "action": "configure",
+      "revision": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "4b2fd774-de37-4078-bf22-0c2678995894",
+      "command_id": "4db2963f-8ee9-49d1-b604-dc7409a5a1c2",
+      "action": "reconcile",
+      "revision": 5,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "6800ce2a-52d7-4c27-9ef7-78523a3bc03e",
+      "selected_sha": "8a73617fb3d004db801583371ad0ae3950d99741"
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "db99de68-6eb7-4820-ba42-2802bbe9d2f7",
+      "command_id": "9b58dd52-524a-4a16-9876-9ac0a139613a",
+      "action": "reconcile",
+      "revision": 4,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "fb3d24f7-b9e3-4654-8ba0-935bb45be63b",
+      "selected_sha": "429d1cb11a9a9c1d74b486ef4f642a7332d9196a"
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "team_id": "a437cb4a-0e0f-4202-8e1d-945d0ea8ceea",
+      "command_id": "c7b5df86-a628-4121-926d-d6322a74f437",
+      "action": "reconcile",
+      "revision": 4,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "168d915c-7697-4c04-ac49-368c2be28249",
+      "selected_sha": "c52a80dca045cda960a34e42c4be17c3aa3c03f2"
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "ec218a3c-41f9-4962-b0d9-c8a1e77c96e8",
+      "command_id": "f6518e26-de33-4019-b8cb-ad0e9883ed34",
+      "action": "reconcile",
+      "revision": 4,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "6a11cbea-57c4-4c8d-a46c-1df23a92dbcc",
+      "selected_sha": "b7371890a90c799070525d822eb976a80a998d19"
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "11ed3c85-4c78-4eeb-beff-097d51035e85",
+      "command_id": "5b77d538-68df-480e-bd95-49b0bf0e1c07",
+      "action": "reconcile",
+      "revision": 4,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "9b4bded9-22fb-42f4-b47f-a9dc5de516a7",
+      "selected_sha": "0752f590c8c0d0c4647edeb49ef9f1ee74d7a4e1"
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "team_id": "82f6d4fd-f561-4c25-b176-5e71699100ab",
+      "command_id": "442dc4e5-8fed-458e-a4f2-98e3b5bca9f3",
+      "action": "reconcile",
+      "revision": 4,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "source_id": "8a58f4f2-0efc-4628-96b4-91877fdbc49b",
+      "selected_sha": "256f84ff28e06e3c718881d81b9f93ffa7809d88"
+    }
+  ],
+  "fictional_practice_UI_receipts": [
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "actor": "judge-a",
+      "fictional_entry_id": "e227cb6e-6899-5c51-93ab-1a06bc0fa6f9",
+      "command_id": "3d5ad1c8-7434-4042-9406-b89a9e165de4",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "actor": "judge-b",
+      "fictional_entry_id": "e227cb6e-6899-5c51-93ab-1a06bc0fa6f9",
+      "command_id": "665e2aae-7373-459e-a937-eccd95270f7c",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    },
+    {
+      "event_id": "2cdfd42c-1af6-4b06-bd2f-e4c5012e2679",
+      "actor": "judge-c",
+      "fictional_entry_id": "e227cb6e-6899-5c51-93ab-1a06bc0fa6f9",
+      "command_id": "afeaf060-4700-43f5-8ccc-6f35a122e6cb",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "actor": "judge-a",
+      "fictional_entry_id": "c06443c7-7932-5a6e-9b1c-d138799ac0b5",
+      "command_id": "a0fe40a4-02f7-460b-8387-5a61ef3dc024",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "actor": "judge-b",
+      "fictional_entry_id": "c06443c7-7932-5a6e-9b1c-d138799ac0b5",
+      "command_id": "816f67a1-ba85-49d0-9224-8ff4d3f5ddac",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    },
+    {
+      "event_id": "cbc55fff-f08e-4c8a-ac04-cf3ba3708562",
+      "actor": "judge-c",
+      "fictional_entry_id": "c06443c7-7932-5a6e-9b1c-d138799ac0b5",
+      "command_id": "282fae9e-2ce9-41f7-88c6-b5f2c6fd81ea",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "competition_namespace_absent": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_guards": [
+    "exact original UI-generated request identity and immutable command acknowledgement",
+    "configured branch, expected revision and reload",
+    "failed queued capture retained without implicit SHA decision",
+    "post-cutoff current head differs from selected earlier preparation work",
+    "late formal replacement denied while event stage remains live",
+    "exact native source/submission revision/actor/reason/external evidence and current binding",
+    "fictional practice scores never start or score real round; real entry/card denied; closed at live",
+    "normal minute worker creates distinct unapproved current mentor plan",
+    "immutable original preparation approval independently read by exact identity/version/fingerprint/actor/action IDs",
+    "separate deliberate current mentor review and explicit approval before normal queued external effects",
+    "both final native assessment/archive journeys and configured120-day expiry retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "branch_teams": 6,
+      "reconciled_teams": 3,
+      "practice_judges": 3,
+      "cutoff_census": {
+        "frozen": 4,
+        "not_submitted": 2,
+        "withdrawn": 1
+      },
+      "early_real_entry_and_card_denied": true,
+      "practice_closed_at_live": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "branch_teams": 6,
+      "reconciled_teams": 3,
+      "practice_judges": 3,
+      "cutoff_census": {
+        "frozen": 4,
+        "not_submitted": 2,
+        "withdrawn": 1
+      },
+      "early_real_entry_and_card_denied": true,
+      "practice_closed_at_live": true
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "failed_predecessor": "R67 retained separately in freeze-practice-r67-failed-proof.json; its188 barriers did not prove cutoff or final acceptance.",
+  "remaining": "Full original120 remains incomplete: organiser round creation/assignments345, remaining mentor/real judging/results/feedback/outcomes/archive UI and full role/provider/keyboard/narrow/private recovery/final audit. No release readiness claim.",
+  "private_artifact_sha256": {
+    "source.json": "f0ec7d059c0207256acd3837f914b1fc09986092a753bf01314c8c52198d6fb0",
+    "connected-browser-proof.json": "60d73eae96f3b67a80b5a5bc7e23323fee862cc6c2fe7ab366403d43f5b02d2c",
+    "native/journey-start-live.json": "6fe308f4fdcc929fa35f7c528164a1dd7f7cd8735da3a9b5a01beaaf85a3f1cd",
+    "native-runner.log": "1f6bd7194a07be593879357a30c3f4c5575146ea44c999d13bb03b8b8857fdcc",
+    "final.dump": "b2aee01ebb2f9cb0aeb7f28dd9ca5856f92c1112202fb6ca1b2cd8eef6f8b636",
+    "native-freeze-1401.png": "05158034aafb4aa1fc62d83c7f6be04bba0ff34329c3470360932dbcc8833b96"
+  },
+  "matching_published_runtime_revision": "7c79487a7a619277aad7083cb4943e2cc770c44e",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "production_dependency_344_merged_main": "8d05ffff9d99b155da4dddc24516a7b5769d5128"
+}

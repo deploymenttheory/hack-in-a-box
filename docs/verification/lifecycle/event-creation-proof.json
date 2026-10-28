@@ -1,0 +1,72 @@
+{
+  "source_revision": "3dd4fdc35d2f889cf81b80e80fd1408a2dda0ec3",
+  "verification_image": "sha256:98a6ee63701132e4710e7cacfb5648b2d986246fd1a9cea6eabae04b3af1e7fb",
+  "normal_guide_image": "sha256:1c91e28aa7c61ffff71ff0f205915b778f97469c9209e976b8d663f9126a4d1b",
+  "normal_guide_source": "ee687d32d6e4fe61802ee83d5c70c5fa11d9c5eb",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793128972",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "kind": "same-event-native-ui-event-creation",
+  "native_seconds": 269.17,
+  "normal_oidc": true,
+  "fulfilled_application_routes": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "creation": [
+    {
+      "preview_without_write": true,
+      "review_without_write": true,
+      "event_post_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "preview_without_write": true,
+      "review_without_write": true,
+      "event_post_attempts": 1,
+      "persisted_after_reload": true
+    }
+  ],
+  "events": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_event_created": true,
+      "browser_brand_verified": true,
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_event_created": true,
+      "browser_brand_verified": true,
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    }
+  ],
+  "live_roles": {
+    "stage": "live",
+    "ui_staff_grants": 6,
+    "native_event_checks": 24,
+    "mentor_revocation_cleared": true,
+    "other_event_retained": true,
+    "native_revocation_and_restore_audited": true
+  },
+  "scoped_cleanup_remaining": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  }
+}

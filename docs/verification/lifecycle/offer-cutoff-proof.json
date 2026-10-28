@@ -1,0 +1,88 @@
+{
+  "project": "hackbox-lifecycle120-offer-cutoff-r12",
+  "runner": "hackbox-lifecycle120-offer-cutoff-r12-journey",
+  "source_revision": "1ff9d58808c7a703ab9ff67880c14882c541e202",
+  "source_worktree_clean_at_build": true,
+  "image": "sha256:13e8c95493da0c3d211c628256a438e9f81a59b30d63ed6663cfd95028b72ff0",
+  "main_base": "975fa1aa6ff71af7479437a24ffc402ae07de804",
+  "verification_image_only": true,
+  "complete_lifecycle": false,
+  "private_integration_of_prs": [
+    316,
+    320
+  ],
+  "additional_variants": [
+    "37th applicant genuine FIFO offer",
+    "two-working-day policy retained",
+    "offer remains pending one second before actual cutoff",
+    "late expired offer cannot confirm",
+    "freeze after cutoff before theme disclosure",
+    "post-freeze surviving pair and attendance exception",
+    "approved post-publication postponement"
+  ],
+  "result": "PASS",
+  "duration_seconds": 252.9,
+  "overlapping_oidc_applicants": 37,
+  "github_oauth_verifications": 38,
+  "github_reserve_linked": false,
+  "events": [
+    {
+      "event_id": "2c3cec74-7300-4e45-a723-455f92328e19",
+      "mode": "all_teams",
+      "stage": "archived",
+      "surviving_offer_cutoff": {
+        "registration_id": "df48ed3f-9061-46ba-a95c-20106a5e6c15",
+        "person_id": "3e4128af-c1c1-4960-b543-d317c8ecdcdb",
+        "original_offer_id": "6b0ae326-89e0-43b1-96ea-fcd56c9e0eb6",
+        "expires_at": "2026-03-23T07:00:00Z",
+        "observed_one_second_before_cutoff": "2026-03-23T06:59:59Z",
+        "working_days": 2,
+        "confirmed_before": 32,
+        "confirmed_after": 32,
+        "late_response_state": "declined",
+        "late_offer_state": "expired",
+        "late_response_revision": 3,
+        "late_http_status": 200,
+        "published_teams_unchanged": true,
+        "frozen_after_real_admission_cutoff": true
+      },
+      "post_freeze_confirmed": 29,
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    },
+    {
+      "event_id": "f3c4e487-05fe-4e88-9fd5-24b7dbcae33b",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "surviving_offer_cutoff": {
+        "registration_id": "d4727c9e-6001-4c28-9500-65476a2ee684",
+        "person_id": "3e4128af-c1c1-4960-b543-d317c8ecdcdb",
+        "original_offer_id": "a72542da-3d79-40a5-b525-253a60bb7ed1",
+        "expires_at": "2026-03-23T07:00:00Z",
+        "observed_one_second_before_cutoff": "2026-03-23T06:59:59Z",
+        "working_days": 2,
+        "confirmed_before": 32,
+        "confirmed_after": 32,
+        "late_response_state": "declined",
+        "late_offer_state": "expired",
+        "late_response_revision": 3,
+        "late_http_status": 200,
+        "published_teams_unchanged": true,
+        "frozen_after_real_admission_cutoff": true
+      },
+      "post_freeze_confirmed": 29,
+      "competition_unchanged": true,
+      "retained_review_days": [
+        30,
+        60,
+        90
+      ]
+    }
+  ],
+  "private_checkpoint_sha256": "8350e28b494919de5011e102d98b44bc767dd61b6a33ca8ac1279c0f90e5a12f",
+  "remaining_acceptance": "Original twelve criteria and L01-L18 remain open for outstanding missed-release/retired-repository/full-browser/expiry/normal-image variants."
+}

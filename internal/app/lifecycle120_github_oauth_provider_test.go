@@ -41,7 +41,7 @@ func (g *lifecycleGitHub) oauthHTTP(w http.ResponseWriter, r *http.Request) bool
 		q := r.URL.Query()
 		actor, valid := g.actors[q.Get("actor")]
 		redirect := q.Get("redirect_uri")
-		allowed := redirect == "http://public:8080/auth/github/callback" || redirect == "http://admin:8080/auth/github/callback"
+		allowed := redirect == "http://public.localhost:8080/auth/github/callback" || redirect == "http://admin.localhost:8080/auth/github/callback"
 		challenge := q.Get("code_challenge")
 		decoded, err := base64.RawURLEncoding.DecodeString(challenge)
 		if r.Method != http.MethodGet || !valid || !allowed || q.Get("client_id") != "lifecycle-github" || q.Get("response_type") != "code" || len(q.Get("state")) < 32 || len(q.Get("state")) > 256 || q.Get("code_challenge_method") != "S256" || err != nil || len(decoded) != 32 {

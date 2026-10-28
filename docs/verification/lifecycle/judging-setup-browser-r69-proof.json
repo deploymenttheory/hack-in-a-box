@@ -1,0 +1,176 @@
+{
+  "source_revision": "b8b88addb5715dce72c53d4bea1fce6251e374a7",
+  "verification_image": "sha256:60c6e3a86dff22fc8e6d69e68da607257bf27d3e5fd50d9795f97f52c060fbfa",
+  "normal_guide_image": "sha256:b84601a80526620c41b19dd7dc349c636334c6d16c677e0564039551f8147166",
+  "normal_guide_source": "b8b88addb5715dce72c53d4bea1fce6251e374a7",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793160988",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R69",
+  "completed_ui_barriers": 246,
+  "native_elapsed_seconds": 548.23,
+  "source_composition": {
+    "fixture_runtime_revision": "651b1f70f6dcdf4ddc2f43167295e278637fb80e",
+    "production_web_revision": "20d3b0de10caef627f839eeef25ea182220e44ad",
+    "production_dependency_pr": 346,
+    "runtime_byte_identity_verified": true
+  },
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "judging_setup_UI_receipts": [
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "create-final-round",
+      "run_id": "29ce4351-191d-4276-ab0f-84b376295323",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "05758a46-c0f1-494d-82f1-fa768b7d038f",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "88948277-9694-425b-91d0-7c6ca4e71b69",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "a61a391e-3d18-4e34-a166-b9806f0ed9e1",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "f6417383-079d-4e77-a570-57ee5af35421",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "668c2ed1-595b-442b-b4dc-58adc6de5707",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "5b932b87-87e2-4ec6-b1b0-e20ee4c7d625",
+      "action": "assign-final-judges",
+      "command_id": "e28e9be9-531a-4466-aff1-8088fd312f42",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "create-final-round",
+      "run_id": "1b49ad2d-6bf3-4fb1-9c26-9889d8aafc71",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "60d4207a-f353-4e76-98e8-130ce015f1c4",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "a02970cd-60eb-4f77-9321-81f822832688",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "c08308f3-6734-4b38-8a31-e4fa543613d5",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "8ba35415-b79c-46e6-a42f-a1c28b33934f",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "75809141-e196-4751-9774-12d3a5cf851e",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "984909ec-4ced-405c-821a-545eba927ef0",
+      "action": "assign-final-judges",
+      "command_id": "b6c1cd80-75ff-4f94-b0a0-f3efb665e1d4",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    }
+  ],
+  "native_guards": [
+    "Exact approved rubric revision/reference; one new unstarted final run; all earlier runs retained",
+    "Current named judge identities independently read from native staff",
+    "Original actor/request/run/team/action/revision/state and native Go command SHA256 fingerprint independently checked",
+    "Six frozen teams and three required current judges per team in each mode",
+    "Practice remains fictional; real evidence/card denied before live; practice closes at live",
+    "All original cutoff, privacy, assessment, archive and configured120-day retention assertions retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_final_round_created": true,
+      "browser_assignment_count": 6,
+      "practice_judges": 3
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_final_round_created": true,
+      "browser_assignment_count": 6,
+      "practice_judges": 3
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "267930058610af047d9895f07af77761573303090eca0056018f6b395dade9b7",
+    "connected-browser-proof.json": "69a057fecd1b93dfbc98ca43b39cf87f5dce35f22f6c99b36d855386c4f402d0",
+    "native/journey-start-live.json": "e739a92e96a85b0844309008b78ce7f7b61a491d9192bc7c3fe5444abc7c8dbe",
+    "native-runner.log": "3351d8e69314fc328da2c3efd21a549899146bc5403cdf3ae68f4bd68c33a6db",
+    "final.dump": "ba05a1330c733cd5fbd65ece67496a51bc0cdeda7b28b3cddaacfa4f7b0bdcca",
+    "native-final-judging-setup.png": "485bd67a26a874fe84ae6c6b992ceed1352913a94d0224685ceaaa72386bef8a"
+  },
+  "remaining": "Full original120 remains incomplete: remaining mentor/real judging/results/feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim."
+}

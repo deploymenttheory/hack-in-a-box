@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -77,7 +78,9 @@ func (r *lifecycleJourney) prepareMentorReview(t *testing.T) {
 		if err := r.owner.call(t.Context(), http.MethodGet, base+"/rubric/configuration", -1, nil, &configured, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
-		if err := r.owner.call(t.Context(), http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "checkpoint", "reason": "Independent live observation, never final score carry"}, &configured, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			configured = r.createMentorRunInBrowser(t, item, 1901+index*20, "checkpoint", "Independent live observation, never final score carry", configured)
+		} else if err := r.owner.call(t.Context(), http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "checkpoint", "reason": "Independent live observation, never final score carry"}, &configured, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		runID := uuid.Nil
@@ -101,7 +104,9 @@ func (r *lifecycleJourney) prepareMentorReview(t *testing.T) {
 			t.Fatal(err)
 		}
 		command := scorecards.CheckpointCommand{Definition: scorecards.CheckpointDefinition{ID: uuid.New(), Name: "Independent live synthetic observation", RunID: runID, OpensWallTime: window.Start.In(zone).Format("2006-01-02T15:04:05"), ClosesWallTime: item.view.Configuration.SubmissionCutoff.In(zone).Format("2006-01-02T15:04:05")}, Reason: "Configured before live; excluded from final judge totals"}
-		if err := r.owner.call(t.Context(), http.MethodPost, base+"/scorecard-checkpoints", checkpoints.Revision, command, &item.review.Checkpoint, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			item.review.Checkpoint = r.configureMentorCheckpointInBrowser(t, item, 1902+index*20, "checkpoint", checkpoints, command)
+		} else if err := r.owner.call(t.Context(), http.MethodPost, base+"/scorecard-checkpoints", checkpoints.Revision, command, &item.review.Checkpoint, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		if item.review.Checkpoint.Purpose != "checkpoint" || item.review.Checkpoint.Rubric != item.rubric.Reference {
@@ -125,7 +130,7 @@ func (r *lifecycleJourney) recordLiveMentorCheckpoints(t *testing.T) {
 	t.Helper()
 	for index := range r.events {
 		item := &r.events[index]
-		for _, assignment := range item.review.Assignments {
+		for assignmentIndex, assignment := range item.review.Assignments {
 			actor := "mentor-a"
 			if assignment.Slot == "second" {
 				actor = "mentor-b"
@@ -146,7 +151,9 @@ func (r *lifecycleJourney) recordLiveMentorCheckpoints(t *testing.T) {
 			}
 			command := scorecards.CardCommand{Action: "submit", CheckpointID: item.review.Checkpoint.Definition.ID, CheckpointVersion: item.review.Checkpoint.Version, Scores: scores}
 			var card scorecards.Card
-			if err := client.call(t.Context(), http.MethodPost, path, page.Revision, command, &card, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				card = r.submitMentorCheckpointInBrowser(t, item, index, assignmentIndex, actor, client, assignment.TeamID, page, command)
+			} else if err := client.call(t.Context(), http.MethodPost, path, page.Revision, command, &card, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if card.AuthorID != client.person || card.TeamID != assignment.TeamID || card.Purpose != "checkpoint" || card.RunID != item.review.Checkpoint.Definition.RunID || card.State != "submitted" || card.SubmissionRevision != nil {

@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -85,7 +86,12 @@ func (r *lifecycleJourney) preparePrivateDrafts(t *testing.T) {
 				t.Fatal("preweek submission capabilities or published requirements changed")
 			}
 			var draft submissions.Draft
-			if err := member.call(ctx, http.MethodPut, path+"/draft", 0, map[string]any{"evidence": evidence}, &draft, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				r.submitEvidenceInBrowser(t, item, index, len(item.submissions), member, "draft", team.ID, evidence, 0)
+				if err := member.call(ctx, http.MethodGet, path+"/draft", -1, nil, &draft, http.StatusOK); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := member.call(ctx, http.MethodPut, path+"/draft", 0, map[string]any{"evidence": evidence}, &draft, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if draft.Revision != 1 || draft.UpdatedAt == nil || !draft.UpdatedAt.Equal(r.timeline.Publication) || !reflect.DeepEqual(draft.Evidence, evidence) {
@@ -188,7 +194,12 @@ func (r *lifecycleJourney) submitLiveEvidence(t *testing.T) {
 			if !before.CanSubmit || before.Final != nil {
 				t.Fatal("actual live submission gate did not open cleanly")
 			}
-			if err := member.call(ctx, http.MethodPut, path, before.Revision, submissions.Command{Evidence: receipt.evidence}, &next, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				r.submitEvidenceInBrowser(t, item, index, i, member, "formal", receipt.TeamID, receipt.evidence, before.Revision)
+				if err := member.call(ctx, http.MethodGet, path, -1, nil, &next, http.StatusOK); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := member.call(ctx, http.MethodPut, path, before.Revision, submissions.Command{Evidence: receipt.evidence}, &next, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if next.Final == nil || next.Final.Revision != 1 || next.Final.Late || next.Final.ActorID != member.person || !next.Final.SubmittedAt.Equal(submittedAt) || !reflect.DeepEqual(next.Final.Evidence, receipt.evidence) {

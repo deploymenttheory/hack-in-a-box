@@ -1,0 +1,93 @@
+{
+  "source_revision": "c30288c6681cc3bd97fbf10fa387295d35f4eb9f",
+  "verification_image": "sha256:17b25e97869657166b72936836fd9f22537ce2a0127d3971311a04194c99faa2",
+  "normal_guide_image": "sha256:e8698ea61f3957ed7e05e7e7e8523c758d8d5908d5b25f1df6ac2e6975357a72",
+  "normal_guide_source": "c30288c6681cc3bd97fbf10fa387295d35f4eb9f",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793150765",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R61",
+  "native_elapsed_seconds": 418.09,
+  "completed_ui_barriers": 166,
+  "production_ui_revision": "c2e2eab389198c356fb0024c4e365af8c1d53d8a",
+  "full_web_source_matches_production_revision": true,
+  "objective_UI_decisions": [
+    {
+      "event_id": "3b973864-a9a1-4407-bda5-2f0461802612",
+      "objective_id": "82e4ec3d-88ab-4c98-a830-0a78e6c7222a",
+      "version": 1,
+      "measure_count": 1,
+      "baseline_basis": "estimate",
+      "editing_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "97d48571-7e90-47fe-9fcc-80629afbc4c4",
+      "objective_id": "6a267912-d8eb-4528-b4e4-0b0cbc493be0",
+      "version": 1,
+      "measure_count": 1,
+      "baseline_basis": "estimate",
+      "editing_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_objective_verification": [
+    "UI-generated objective and unique measure identities",
+    "exact current owner and actor",
+    "complete theme-sensitive planning description",
+    "estimate baseline, target, unit, method, evidence source and review horizon",
+    "version1/currentversion1 and exact reason",
+    "one native planning definition; no duplicates",
+    "unchanged event, census, configuration and publication gates",
+    "original later estimated-versus-evidenced outcome guards retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "objective_authored_through_UI": true,
+      "objective_version": 1
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "objective_authored_through_UI": true,
+      "objective_version": 1
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "preceding_failed_run": "R60 failed before first objective save because exact raw label text included select options; actual exact accessible combobox name is Baseline basis. Focused desktop/mobile RED2 then GREEN2; R61 corrects the fixture, preserving exact-name selection/value assertions. No product UI change.",
+  "remaining": "Original full #120 remains incomplete. The participant acknowledgement/public-rubric UI extension is reviewed and published but not established by R61. Remaining exception, clarification, assessment/feedback/archive and role/provider/full acceptance requirements stay open.",
+  "private_artifact_sha256": {
+    "source.json": "ab4028b30f75b3ccec7b2a509e9deac039bd55e56cc8b9a820ba06673cb20dfc",
+    "connected-browser-proof.json": "d98d1531ca66a2b40c2c17664bb50c04b9e347321d7660b8d2c8b51a4e7ca315",
+    "native/journey-start-live.json": "e195d137b232685eaabc211f38f754b4334a478eb54b4b2ae9816a73defe12eb",
+    "native-runner.log": "6dd1c6bcbfb5865be2c77e9f56764397a8d2bf8758f5f4f2ba68526c5c7c6c8c",
+    "native-objective-701.png": "903c3bc0a973488d5403d69348197af266d9df95b5ef27004b99047084fe4572",
+    "native-objective-721.png": "0e717b03789d77d9a6ecd7d70c91d1eaa32d79b6ce59f45164abc4d314c14185",
+    "final.dump": "e203f2c85ae6849a5900b4d0095e2071e65172beb10fb926b5e5aa24099b073c"
+  },
+  "matching_published_runtime_revision": "c1ae763cff7c082c13569f7cbd9a28267b8717f8",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "merged_production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072"
+}

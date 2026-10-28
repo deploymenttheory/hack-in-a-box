@@ -1,0 +1,302 @@
+{
+  "project": "hackbox-lifecycle120-completion-r9",
+  "runner": "hackbox-lifecycle120-completion-r9-journey",
+  "image": "sha256:fe04ec6c8738bc7d2ba37b97dceec0ea122f5fe04eb54f92c6dfd7d03fa327aa",
+  "source_revision": "a8ce5a8851a0af5ffd84d5bfed98c6a59cfa2e48",
+  "source_worktree_clean_at_build": true,
+  "complete_lifecycle": false,
+  "private_integration_of_prs": [
+    316,
+    320
+  ],
+  "main_base": "3a72453a12131a3c92f9fe3ea0f36f666142968b",
+  "result": "PASS",
+  "duration_seconds": 270.63,
+  "verification_image_only": true,
+  "clock_model": "Monotonic controlled domain eligibility; actual PostgreSQL, HTTP, River leases and worker scheduling. Not a normal-image capacity/release rehearsal.",
+  "explicit_retention_days": 120,
+  "events": [
+    {
+      "event_id": "30cf9e2a-7e35-4f52-9aba-48528ea2355c",
+      "mode": "all_teams",
+      "stage": "archived",
+      "post_event": {
+        "media_id": "bb119f77-a22e-4d15-b911-ec5f549870d9",
+        "media_version": 6,
+        "reviewed_release": true,
+        "revoked_consent_denied": true,
+        "reconsent_requires_review": true,
+        "survey_id": "7d2e5612-e443-424c-981b-95413d13fe2e",
+        "survey_version": 1,
+        "responses": 6,
+        "duplicate_response_acknowledged": true,
+        "peer_responses_denied": true,
+        "cross_event_denied": true
+      },
+      "showcase": {
+        "team_outcomes": 6,
+        "non_winning_team_id": "dcd08ed6-a129-44d9-ae8c-30fcefdd55ed",
+        "project_id": "f1c57e3f-d1fb-4766-916d-47653ba9d26f",
+        "publication_version": 3,
+        "search_found": true,
+        "private_source_denied": true,
+        "withdrawn_denied": true
+      },
+      "archive": {
+        "competition": {
+          "judge_cards": {
+            "rows": 12,
+            "sha256": "3474a3eddd2e0c72025a1462c845f80c715ca448a81746d02def19df0823bb9c"
+          },
+          "judge_history": {
+            "rows": 22,
+            "sha256": "b52eff0a95eda12da44909c0a752f7f85018a654d7ad00373b3e2b22e16cee41"
+          },
+          "judge_result_approvals": {
+            "rows": 1,
+            "sha256": "f6eb987f57b77505f9523f5875a026d3024213b7f24a7416ebc809cf7f2d1ec2"
+          },
+          "mentor_scorecard_signoffs": {
+            "rows": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "mentor_scorecard_versions": {
+            "rows": 12,
+            "sha256": "c096e9df3bcdb28082e627d135e3b3de445c1a59246684fd07eb122007a46cbd"
+          },
+          "result_publications": {
+            "rows": 1,
+            "sha256": "fafa8bcf9f57fd2b2094d1b53e270fbc99d8e77abfd368ebac11cd76ff8a919b"
+          },
+          "result_versions": {
+            "rows": 22,
+            "sha256": "c7c86d07a3d28bcedaf93f5b9be887fd3606d547feac5386c9b8a6a199865afe"
+          },
+          "rubric_approvals": {
+            "rows": 1,
+            "sha256": "16d59d830266d4c1a0d80a593546f468dc49d45b66e36ff3350b031d7e5a7c5e"
+          },
+          "rubric_publications": {
+            "rows": 1,
+            "sha256": "530a8d7e70530e020c42f24506d780403496b2b32c690dda0a5f1818ee3cb45a"
+          },
+          "rubric_versions": {
+            "rows": 1,
+            "sha256": "3692a22863a66db96dcdf4378befccaa9042da22ef6b974ae153810b7eae5ce1"
+          },
+          "submission_freeze_decisions": {
+            "rows": 3,
+            "sha256": "83a0252ab49135a64cd3f18676c628ae991d9ce61cda58f0a41b1d27d95f284b"
+          },
+          "submission_freeze_sources": {
+            "rows": 7,
+            "sha256": "760b7d9a2ac1cf51cc4980b04ea8e56cd93d6122654d5700bda0709db7eecec6"
+          },
+          "submission_revisions": {
+            "rows": 4,
+            "sha256": "46deb57edc3b7bf3f2d23adede62e7809421901d415a9bc2f513dc0b8bc2ed34"
+          },
+          "submission_states": {
+            "rows": 7,
+            "sha256": "e24c63bd55c7b83f31fdad77e71b1ce4c0794c7e76aa91abacfc479e960a3e8c"
+          }
+        },
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "audited_outcome_version": 7,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "owned_reviews": [
+        {
+          "outcome_id": "8e7ae05d-9757-4274-9987-762b1dc6ae9d",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "2ef3ed04-79fe-43ff-bd08-a6c694c52c2f",
+          "days": 30,
+          "plan_version": 2,
+          "due_at": "2026-04-29T16:00:00Z",
+          "notification_id": "01a17c8c-02e0-75c4-aafa-28220b346bc5"
+        },
+        {
+          "outcome_id": "8e7ae05d-9757-4274-9987-762b1dc6ae9d",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "6c1928a2-38d0-4308-8296-32219ea4de62",
+          "days": 60,
+          "plan_version": 2,
+          "due_at": "2026-05-29T16:00:00Z",
+          "notification_id": "01a17c8c-7ba1-7dc1-8500-3d498ab430db"
+        },
+        {
+          "outcome_id": "8e7ae05d-9757-4274-9987-762b1dc6ae9d",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "2e123a22-c434-47a3-b167-4230f1178bb2",
+          "days": 90,
+          "plan_version": 2,
+          "due_at": "2026-06-28T16:00:00Z",
+          "notification_id": "01a17c8c-f2aa-71bd-9762-de0c52e43214"
+        }
+      ],
+      "eligibility": [
+        {
+          "person_id": "07e74e4f-7b15-46f9-928f-c52a62ea396d",
+          "role": "organiser",
+          "grant_revoked": true,
+          "active_grant_competition_denied": true,
+          "revoked_grant_competition_denied": true,
+          "other_event_history_did_not_exclude": false
+        },
+        {
+          "person_id": "290441a9-6755-4c69-9260-6466a51c277f",
+          "role": "early_brief_access",
+          "grant_revoked": true,
+          "active_grant_competition_denied": true,
+          "revoked_grant_competition_denied": true,
+          "other_event_history_did_not_exclude": false
+        }
+      ]
+    },
+    {
+      "event_id": "9f91098a-fbe5-4c82-ad89-e0bdee38d249",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "post_event": {
+        "media_id": "c26bb9f1-8278-46c7-8bf0-126fc4d23493",
+        "media_version": 6,
+        "reviewed_release": true,
+        "revoked_consent_denied": true,
+        "reconsent_requires_review": true,
+        "survey_id": "3e9193e3-c47e-45b3-a2a6-a26ada91508b",
+        "survey_version": 1,
+        "responses": 6,
+        "duplicate_response_acknowledged": true,
+        "peer_responses_denied": true,
+        "cross_event_denied": true
+      },
+      "showcase": {
+        "team_outcomes": 6,
+        "non_winning_team_id": "f2b9ef21-27fe-44e8-9821-dcbc63d971fe",
+        "project_id": "f75d8ab8-da28-4c8d-9fd5-36544002d13e",
+        "publication_version": 3,
+        "search_found": true,
+        "private_source_denied": true,
+        "withdrawn_denied": true
+      },
+      "archive": {
+        "competition": {
+          "judge_cards": {
+            "rows": 9,
+            "sha256": "171480cb9f54a872a8196e754830eec595ec8180a61d26fa88f265f03a3a052f"
+          },
+          "judge_history": {
+            "rows": 19,
+            "sha256": "5f41d234d038c8267d8744bdc3057d541bc41b9002180674d45d71a45a65c8c5"
+          },
+          "judge_result_approvals": {
+            "rows": 1,
+            "sha256": "88e33c465090d29f0325939c8adb8613f89267749581e9e671f6972ef8997d74"
+          },
+          "mentor_scorecard_signoffs": {
+            "rows": 4,
+            "sha256": "759bb2e7b3868bb1efa7839f428c6432166196cddd8b2d6bddd2b8e9c9431d31"
+          },
+          "mentor_scorecard_versions": {
+            "rows": 20,
+            "sha256": "3b418e662cb9f906828a0926ddaba9bc8be0466c31cdeb246ae4ad3b28e81157"
+          },
+          "result_publications": {
+            "rows": 2,
+            "sha256": "026ef3c333cf4dde859d0798acc1f83bbd0db3d17d206eae92cb679254069e22"
+          },
+          "result_versions": {
+            "rows": 9,
+            "sha256": "d1631e05ee9ba0944993da344411e19b5122b243e27f1d147e0e55aebdfac4c0"
+          },
+          "rubric_approvals": {
+            "rows": 1,
+            "sha256": "ad98f97f2d82eadb1a3feb43f79cec85fb74e6628c7192458f75a502ee251f89"
+          },
+          "rubric_publications": {
+            "rows": 1,
+            "sha256": "74ed55e939e99fbf1df414b4185fdca9f23124b88c613ca93efaf3fe32bba880"
+          },
+          "rubric_versions": {
+            "rows": 1,
+            "sha256": "2c2b7d14339f3d7e6cd4e9dec901b07bbac4cdc8d7d2c4a09524b6bc2d80edca"
+          },
+          "submission_freeze_decisions": {
+            "rows": 3,
+            "sha256": "759fcb4471870c537b82993038831582ef4aa446bc2b666e13c0e9d6f2919969"
+          },
+          "submission_freeze_sources": {
+            "rows": 7,
+            "sha256": "2dd945ee19251f930b8affa755e03bc3809ae1b77b063075cad7eaf357c8220c"
+          },
+          "submission_revisions": {
+            "rows": 4,
+            "sha256": "69772550459e778d97ead6875345a3f7647785a63e442c916e3389318660da01"
+          },
+          "submission_states": {
+            "rows": 7,
+            "sha256": "268ba1fa2ea14f8b21d4c432cc63f65f84717b1b43ab3f9919c1ac438f6f430e"
+          }
+        },
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "audited_outcome_version": 7,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "owned_reviews": [
+        {
+          "outcome_id": "1c280bd5-3f27-4f6c-8d3a-fa0bfa354b91",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "9fd43a4d-43f1-4e4f-a29f-060e680b36cb",
+          "days": 30,
+          "plan_version": 2,
+          "due_at": "2026-04-29T16:00:00Z",
+          "notification_id": "01a17c8c-02d5-7636-89ec-96f959570ab3"
+        },
+        {
+          "outcome_id": "1c280bd5-3f27-4f6c-8d3a-fa0bfa354b91",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "4d6192fd-6ae5-422e-8a02-6313dc56a848",
+          "days": 60,
+          "plan_version": 2,
+          "due_at": "2026-05-29T16:00:00Z",
+          "notification_id": "01a17c8c-7b94-7179-8962-ead226134cfc"
+        },
+        {
+          "outcome_id": "1c280bd5-3f27-4f6c-8d3a-fa0bfa354b91",
+          "owner_id": "2ae82442-a898-4e53-8cea-9d7954fb2722",
+          "review_id": "7e36c3e1-0c16-4af0-b13e-6ae760be7a27",
+          "days": 90,
+          "plan_version": 2,
+          "due_at": "2026-06-28T16:00:00Z",
+          "notification_id": "01a17c8c-f26a-7e6d-a9a3-5d447cfb8666"
+        }
+      ],
+      "eligibility": [
+        {
+          "person_id": "07e74e4f-7b15-46f9-928f-c52a62ea396d",
+          "role": "organiser",
+          "grant_revoked": true,
+          "active_grant_competition_denied": true,
+          "revoked_grant_competition_denied": true,
+          "other_event_history_did_not_exclude": true
+        },
+        {
+          "person_id": "290441a9-6755-4c69-9260-6466a51c277f",
+          "role": "early_brief_access",
+          "grant_revoked": true,
+          "active_grant_competition_denied": true,
+          "revoked_grant_competition_denied": true,
+          "other_event_history_did_not_exclude": true
+        }
+      ]
+    }
+  ],
+  "private_artifact_sha256": {
+    "journey-start-live.json": "ad221fb34f5e08f7354930c8b5abd93549206d46c699d3ad6286890929dc33cf",
+    "intent-journal.jsonl": "75062cdbef65e63e9a0c86b0d9d1dd6794f132643aaea3e437534eb582035dcf",
+    "lifecycle-r9-final.dump": "09e56fd6fced6fa72c9a7b581019dc020fec20cceb18df0ad48bfe41e657c773"
+  },
+  "remaining_acceptance": "Original #120 twelve criteria and L01-L18 matrix remain open for missing business/provider/browser/normal-image variants; this run does not close #120."
+}

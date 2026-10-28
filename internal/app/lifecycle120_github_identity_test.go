@@ -14,7 +14,7 @@ import (
 // state/session/encryption ownership is a separate connected HTTP checkpoint.
 func TestLifecycleSyntheticGitHubOAuthPKCEContract(t *testing.T) {
 	_, _, _, _ = lifecycleGitHubRESTFixture(t)
-	configuration := oauth2.Config{ClientID: "lifecycle-github", ClientSecret: "synthetic-github-secret", RedirectURL: "http://public:8080/auth/github/callback", Endpoint: oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize", TokenURL: "https://github.com/login/oauth/access_token", AuthStyle: oauth2.AuthStyleInParams}}
+	configuration := oauth2.Config{ClientID: "lifecycle-github", ClientSecret: "synthetic-github-secret", RedirectURL: "http://public.localhost:8080/auth/github/callback", Endpoint: oauth2.Endpoint{AuthURL: "https://github.com/login/oauth/authorize", TokenURL: "https://github.com/login/oauth/access_token", AuthStyle: oauth2.AuthStyleInParams}}
 	browser := &http.Client{Transport: http.DefaultTransport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	authorize := func(verifier string) string {
 		t.Helper()

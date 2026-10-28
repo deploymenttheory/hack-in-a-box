@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    "normal-api-commands",
+    "configured-native-oidc",
+    "independent-portal-sessions",
+    "actual-go-preview-and-create",
+    "normal-public-projection",
+    "independent-167-hour-london-dst-example"
+  ],
+  "calendar_interval_hours": 167,
+  "checkpoint": "normal-image-calendar-api-only",
+  "complete_lifecycle": false,
+  "configured_domain_clock": false,
+  "event_id": "182d600f-07a1-403e-82ad-3ebe36f06cd2",
+  "expected_publication": "2027-03-22T09:00:00Z",
+  "live_start": "2027-03-29T08:00:00Z",
+  "publication": "2027-03-22T09:00:00Z",
+  "timezone": "Europe/London",
+  "normal_source_revision": "fce58e3ee9050fe95ca81f08b403162b95758515",
+  "runner_source_revision": "d3375144fef1932817aefc652863d804cc366792",
+  "normal_public_image": "sha256:058bfecce99f9956cd07db7cca5659b27c88a0aae806ae53d617b01fe204a0c0",
+  "normal_admin_image": "sha256:fd19b179f58360eac2b5934b370b851f4db09388495843d57156fcd68b724455",
+  "verification_runner_image": "sha256:19c00441e691380fadffab00d98b7d74cc118a5b82159e70f98beeb721e6e31d",
+  "actual_runner_exit_code": 0,
+  "elapsed_seconds": 0.03,
+  "full_browser_journey": false,
+  "runner_log_sha256": "1245982e18fbd66fa0052f1050bbe86dddeef8c1894a3e61f7a07ed8da82ea58"
+}

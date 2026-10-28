@@ -1,0 +1,76 @@
+{
+  "source_revision": "3671d66f47eab4fd229039f867582baaf414fe0e",
+  "verification_image": "sha256:ca650eca08724093580c04827b889a6d372b2d8f69ade97fd112fccd9620a781",
+  "normal_guide_image": "sha256:9be7bf28b2fe12f8537e27940b96a252badaf75d188f62578130a26b3e9d3160",
+  "normal_guide_source": "b0df8fdabcc4837b14b270e73342b6acb97c6537",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793120506",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "live-recovery",
+  "kind": "same-event-native-browser-live-help-recovery",
+  "native_seconds": 282.15,
+  "normal_oidc": true,
+  "fulfilled_application_routes": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "production_runtime_matches_pr332": "456f308aa8001b922c89d3d58541470a376639e8",
+  "events": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_brand_verified": true,
+      "retired_repository_verified": true,
+      "help_recovery": {
+        "accepted_response_dropped": true,
+        "offline_observed": true,
+        "put_attempts": 1,
+        "native_resolved": true,
+        "other_team_denied": true,
+        "native_queue_exact": true
+      },
+      "archive": {
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_brand_verified": true,
+      "retired_repository_verified": true,
+      "help_recovery": {},
+      "archive": {
+        "organiser_summary_available": true,
+        "participant_summary_restricted": true,
+        "competition_unchanged_after_archive_and_followup": true
+      },
+      "expiry": {
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    }
+  ],
+  "scoped_cleanup_remaining": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining_acceptance": [
+    "full Fleet action-to-next-action journeys",
+    "full role matrix",
+    "remaining provider/live sandbox prerequisites",
+    "final audit reconciliation"
+  ]
+}

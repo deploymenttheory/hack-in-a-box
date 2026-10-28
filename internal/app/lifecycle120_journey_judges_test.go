@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 
@@ -143,7 +144,9 @@ func (r *lifecycleJourney) scoreIndependentJudgeFinals(t *testing.T) {
 				if before.RequiredJudges != 3 || before.Deliberation {
 					t.Fatal("native round lost all-required-three-judge gate")
 				}
-				if err := r.owner.call(t.Context(), http.MethodPost, path, before.Revision, map[string]any{"request_id": uuid.New(), "action": "open_deliberation", "reason": "Negative proof: third required judge has not submitted"}, nil, http.StatusConflict); err != nil {
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					r.deliberateInBrowser(t, item, index, before, "Negative proof: third required judge has not submitted", http.StatusConflict)
+				} else if err := r.owner.call(t.Context(), http.MethodPost, path, before.Revision, map[string]any{"request_id": uuid.New(), "action": "open_deliberation", "reason": "Negative proof: third required judge has not submitted"}, nil, http.StatusConflict); err != nil {
 					t.Fatal(err)
 				}
 				if err := r.owner.call(t.Context(), http.MethodGet, path, -1, nil, &after, http.StatusOK); err != nil {
@@ -161,7 +164,10 @@ func (r *lifecycleJourney) scoreIndependentJudgeFinals(t *testing.T) {
 		}
 		var opened judging.Receipt
 		id := uuid.New()
-		if err := r.owner.call(t.Context(), http.MethodPost, path, round.Revision, map[string]any{"request_id": id, "action": "open_deliberation", "reason": "All three fresh required judge cards complete for every eligible final"}, &opened, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			opened = r.deliberateInBrowser(t, item, index, round, "All three fresh required judge cards complete for every eligible final", http.StatusOK)
+			id = opened.RequestID
+		} else if err := r.owner.call(t.Context(), http.MethodPost, path, round.Revision, map[string]any{"request_id": id, "action": "open_deliberation", "reason": "All three fresh required judge cards complete for every eligible final"}, &opened, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		if opened.RequestID != id || opened.ActorID != r.owner.person || opened.RunID != item.judgeRun || opened.Action != "open_deliberation" {

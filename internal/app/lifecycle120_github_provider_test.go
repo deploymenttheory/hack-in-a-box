@@ -179,7 +179,7 @@ func (g *lifecycleGitHub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		// The synthetic App has a separately configured fixed admin callback, just
 		// as a real App installation does. The native owner verifies one-use state.
-		target := "http://admin:8080/auth/github-app/callback?installation_id=7&state=" + url.QueryEscape(
+		target := "http://admin.localhost:8080/auth/github-app/callback?installation_id=7&state=" + url.QueryEscape(
 			state,
 		)
 		http.Redirect(w, r, target, http.StatusFound)

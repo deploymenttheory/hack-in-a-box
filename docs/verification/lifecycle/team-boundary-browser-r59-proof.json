@@ -1,0 +1,85 @@
+{
+  "source_revision": "bc42c807c3d8948530986564cb368340ba7d7ae0",
+  "verification_image": "sha256:2239683c915c55c31ce8515e9bdab50fef279a8c4132c2ab409de22767494782",
+  "normal_guide_image": "sha256:99bfa83ab848180733eb9235c0ada0e1b63e255820ecc66476630f45cc4ecf1b",
+  "normal_guide_source": "bc42c807c3d8948530986564cb368340ba7d7ae0",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793149934",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R59",
+  "native_elapsed_seconds": 417.17,
+  "completed_ui_barriers": 164,
+  "production_ui_revision": "c2e2eab389198c356fb0024c4e365af8c1d53d8a",
+  "full_web_source_matches_production_revision": true,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "withdrawals_through_UI": 12,
+  "reviewed_hard_freezes_through_UI": 2,
+  "team_commands_per_event": {
+    "create": 7,
+    "move": 30,
+    "unlock": 7,
+    "publish": 2,
+    "freeze": 1
+  },
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "before_freeze_UI_withdrawals": 3,
+      "after_freeze_UI_withdrawals": 3,
+      "UI_team_commands": 47,
+      "frozen_after_admission_cutoff": true,
+      "confirmed_before_frozen_depletion": 32,
+      "confirmed_after_frozen_depletion": 29,
+      "configured_minimum": 30,
+      "post_freeze_move_denied": true,
+      "post_cutoff_backfill_denied": true,
+      "unwaived_live_denied": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "before_freeze_UI_withdrawals": 3,
+      "after_freeze_UI_withdrawals": 3,
+      "UI_team_commands": 47,
+      "frozen_after_admission_cutoff": true,
+      "confirmed_before_frozen_depletion": 32,
+      "confirmed_after_frozen_depletion": 29,
+      "configured_minimum": 30,
+      "post_freeze_move_denied": true,
+      "post_cutoff_backfill_denied": true,
+      "unwaived_live_denied": true
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Original full #120 remains incomplete. Objective UI extension has been published but is not established by this run. Later assessment/feedback/archive actions, other UI paths and original final role/provider/acceptance audit remain required.",
+  "private_artifact_sha256": {
+    "source.json": "cf8fc185b51347233f1cbfbfcb799e03317750a847bcb0466f784b16c2ee7801",
+    "connected-browser-proof.json": "d13766f77919c558794b1e6bab21e0deb3780ee5366f72c985f1ae3296dcfbe4",
+    "native/journey-start-live.json": "46af65bfb6028c9458e7b5f87e54db8a26d11ca901592406d1a2d59e3a6fce72",
+    "native-runner.log": "319358699f8457c7ccb30524fd02c9eedea158e0473310f31c3de2faf5882eb2",
+    "native-teams-347.png": "e7804a14a7c73601048c423bd89cd0df1d1a97acf121d44e146fd939cfe718b2",
+    "native-teams-447.png": "abb97d8a811293f658fbec184c17ffd5f5fa4268269ff590b5caeb5fd7044aad",
+    "final.dump": "787b1b13c6ee7ccefbadf6458f592029ad9ccad68b4e17cbf4260fcc073c1444"
+  },
+  "matching_published_runtime_revision": "b99ee2896a1d8ace5a7969e52c8353b3347f85ed",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "merged_production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072"
+}

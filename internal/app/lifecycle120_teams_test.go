@@ -5,14 +5,70 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/deploymenttheory/hack-in-a-box/internal/event"
 	"github.com/deploymenttheory/hack-in-a-box/internal/registration"
 	"github.com/deploymenttheory/hack-in-a-box/internal/teams"
 )
 
-func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, cohort *lifecycleAdmissions, control *lifecycleControl, reviewPublication func() error) (teams.Page, error) {
+func allocateLifecycleTeams(
+	ctx context.Context,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	cohort *lifecycleAdmissions,
+	control *lifecycleControl,
+	reviewPublication func() error,
+) (teams.Page, error) {
+	return allocateLifecycleTeamsWithInitialPublication(
+		ctx,
+		owner,
+		eventID,
+		cohort,
+		control,
+		nil,
+		reviewPublication,
+	)
+}
+
+func allocateLifecycleTeamsWithInitialPublication(
+	ctx context.Context,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	cohort *lifecycleAdmissions,
+	control *lifecycleControl,
+	initialPublication func(teams.Page) error,
+	reviewPublication func() error,
+) (teams.Page, error) {
+	return allocateLifecycleTeamsWithActions(ctx, owner, eventID, cohort, control,
+		initialPublication, reviewPublication, nil)
+}
+
+type lifecycleTeamActions struct {
+	Command  func(teams.Command) (teams.Page, error)
+	Withdraw func(int, registration.View) (registration.View, error)
+}
+
+// Successful commands can be owned by the real browser. Rejected commands still
+// exercise the native API and prove that its publication/freeze guards hold.
+func allocateLifecycleTeamsWithActions(
+	ctx context.Context,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	cohort *lifecycleAdmissions,
+	control *lifecycleControl,
+	initialPublication func(teams.Page) error,
+	reviewPublication func() error,
+	browser *lifecycleTeamActions,
+) (teams.Page, error) {
+	command := func(input teams.Command, want int) (teams.Page, error) {
+		if browser != nil && browser.Command != nil && want == http.StatusOK {
+			return browser.Command(input)
+		}
+		return lifecycleTeamCommand(ctx, owner, eventID, input, want)
+	}
 	base := "/api/v1/events/" + eventID.String()
 	var roster []int
 	for i, applied := range cohort.registrations {
@@ -21,14 +77,23 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 		}
 	}
 	if len(roster) != 35 {
-		return teams.Page{}, fmt.Errorf("target-five allocation requires the actual confirmed cohort")
+		return teams.Page{}, fmt.Errorf(
+			"target-five allocation requires the actual confirmed cohort",
+		)
 	}
 	var page teams.Page
 	var groups []uuid.UUID
 	for start := 0; start < len(roster); start += 5 {
 		captain := cohort.clients[roster[start]].person
 		var err error
-		page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "create", PersonID: captain, Name: fmt.Sprintf("Synthetic cohort %d", start/5+1)}, http.StatusOK)
+		page, err = command(
+			teams.Command{
+				Action:   "create",
+				PersonID: captain,
+				Name:     fmt.Sprintf("Synthetic cohort %d", start/5+1),
+			},
+			http.StatusOK,
+		)
 		if err != nil {
 			return page, err
 		}
@@ -43,14 +108,20 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 		}
 		groups = append(groups, id)
 		for _, index := range roster[start+1 : start+5] {
-			page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "move", TeamID: id, PersonID: cohort.clients[index].person}, http.StatusOK)
+			page, err = command(
+				teams.Command{Action: "move", TeamID: id, PersonID: cohort.clients[index].person},
+				http.StatusOK,
+			)
 			if err != nil {
 				return page, err
 			}
 		}
 	}
 	var err error
-	page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "publish"}, http.StatusOK)
+	page, err = command(
+		teams.Command{Action: "publish"},
+		http.StatusOK,
+	)
 	if err != nil {
 		return page, err
 	}
@@ -59,13 +130,55 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 			return page, fmt.Errorf("reviewed initial allocation did not publish teams of five")
 		}
 	}
+	if initialPublication != nil {
+		if err := initialPublication(page); err != nil {
+			return page, err
+		}
+	}
+	// The extra reserve's offer is issued within its normal two-working-day
+	// policy before the real cutoff; neither policy nor deadline is stretched.
+	if cohort.reserveID != uuid.Nil {
+		var current event.View
+		if err := owner.call(
+			ctx,
+			http.MethodGet,
+			base,
+			-1,
+			nil,
+			&current,
+			http.StatusOK,
+		); err != nil {
+			return page, err
+		}
+		var phase struct {
+			Now time.Time `json:"now"`
+		}
+		if err := control.call(ctx, http.MethodGet, "/clock", nil, &phase); err != nil {
+			return page, err
+		}
+		target := current.Configuration.AdmissionCutoff.Add(-24 * time.Hour)
+		if phase.Now.Before(target) {
+			if err := control.advance(ctx, target); err != nil {
+				return page, err
+			}
+		} else if !phase.Now.Before(current.Configuration.AdmissionCutoff) {
+			return page, fmt.Errorf("reserve offer cannot be created after the admission cutoff")
+		}
+	}
 	// Withdraw the captain and two members through the registration owner. The
 	// remaining pair must be deliberately reassigned before the hard freeze.
 	for _, index := range roster[:3] {
 		applied := cohort.registrations[index]
 		var withdrawn registration.View
-		if err := cohort.clients[index].call(ctx, http.MethodPost, base+"/registrations/"+applied.ID.String()+"/respond", applied.Revision,
-			map[string]string{"action": "withdraw"}, &withdrawn, http.StatusOK); err != nil {
+		var err error
+		if browser != nil && browser.Withdraw != nil {
+			withdrawn, err = browser.Withdraw(index, applied)
+		} else {
+			err = cohort.clients[index].call(ctx, http.MethodPost,
+				base+"/registrations/"+applied.ID.String()+"/respond", applied.Revision,
+				map[string]string{"action": "withdraw"}, &withdrawn, http.StatusOK)
+		}
+		if err != nil {
 			return page, err
 		}
 		if withdrawn.State != "withdrawn" {
@@ -73,7 +186,15 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 		}
 		cohort.registrations[index] = withdrawn
 	}
-	if err := owner.call(ctx, http.MethodGet, base+"/teams", -1, nil, &page, http.StatusOK); err != nil {
+	if err := owner.call(
+		ctx,
+		http.MethodGet,
+		base+"/teams",
+		-1,
+		nil,
+		&page,
+		http.StatusOK,
+	); err != nil {
 		return page, err
 	}
 	var depleted *teams.Team
@@ -85,17 +206,30 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 	if depleted == nil || len(depleted.Draft) != 2 || len(depleted.Published) != 2 {
 		return page, fmt.Errorf("native withdrawal did not leave the actual remaining pair")
 	}
-	if _, err := lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "publish"}, http.StatusConflict); err != nil {
+	if _, err := command(
+		teams.Command{Action: "publish"},
+		http.StatusConflict,
+	); err != nil {
 		return page, err
 	}
 	for _, id := range groups {
-		page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "unlock", TeamID: id}, http.StatusOK)
+		page, err = command(
+			teams.Command{Action: "unlock", TeamID: id},
+			http.StatusOK,
+		)
 		if err != nil {
 			return page, err
 		}
 	}
 	for i, index := range roster[3:5] {
-		page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "move", TeamID: groups[i+1], PersonID: cohort.clients[index].person}, http.StatusOK)
+		page, err = command(
+			teams.Command{
+				Action:   "move",
+				TeamID:   groups[i+1],
+				PersonID: cohort.clients[index].person,
+			},
+			http.StatusOK,
+		)
 		if err != nil {
 			return page, err
 		}
@@ -119,7 +253,10 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 			return page, err
 		}
 	}
-	page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "publish"}, http.StatusOK)
+	page, err = command(
+		teams.Command{Action: "publish"},
+		http.StatusOK,
+	)
 	if err != nil {
 		return page, err
 	}
@@ -138,9 +275,19 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 		}
 	}
 	if active != 6 || assigned != 32 || !disbanded {
-		return page, fmt.Errorf("remaining pair was not reassigned into the actual confirmed cohort")
+		return page, fmt.Errorf(
+			"remaining pair was not reassigned into the actual confirmed cohort",
+		)
 	}
-	page, err = lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "freeze"}, http.StatusOK)
+	if cohort.reserveID != uuid.Nil {
+		// A pending offer must reach the real admission cutoff before this
+		// deliberate freeze; freezing earlier would expire it for another reason.
+		return page, nil
+	}
+	page, err = command(
+		teams.Command{Action: "freeze"},
+		http.StatusOK,
+	)
 	if err != nil {
 		return page, err
 	}
@@ -152,13 +299,26 @@ func allocateLifecycleTeams(ctx context.Context, owner *lifecycleClient, eventID
 			return page, fmt.Errorf("native freeze left an active team mutable")
 		}
 	}
-	if _, err := lifecycleTeamCommand(ctx, owner, eventID, teams.Command{Action: "move", TeamID: groups[2], PersonID: cohort.clients[roster[3]].person}, http.StatusConflict); err != nil {
+	if _, err := command(
+		teams.Command{
+			Action:   "move",
+			TeamID:   groups[2],
+			PersonID: cohort.clients[roster[3]].person,
+		},
+		http.StatusConflict,
+	); err != nil {
 		return page, err
 	}
 	return page, nil
 }
 
-func lifecycleTeamCommand(ctx context.Context, owner *lifecycleClient, eventID uuid.UUID, command teams.Command, want int) (teams.Page, error) {
+func lifecycleTeamCommand(
+	ctx context.Context,
+	owner *lifecycleClient,
+	eventID uuid.UUID,
+	command teams.Command,
+	want int,
+) (teams.Page, error) {
 	path := "/api/v1/events/" + eventID.String() + "/teams"
 	var current teams.Page
 	if err := owner.call(ctx, http.MethodGet, path, -1, nil, &current, http.StatusOK); err != nil {
@@ -172,7 +332,15 @@ func lifecycleTeamCommand(ctx context.Context, owner *lifecycleClient, eventID u
 				Code string `json:"code"`
 			} `json:"error"`
 		}
-		if err := owner.call(ctx, http.MethodPost, path, current.Revision, command, &rejected, want); err != nil {
+		if err := owner.call(
+			ctx,
+			http.MethodPost,
+			path,
+			current.Revision,
+			command,
+			&rejected,
+			want,
+		); err != nil {
 			return next, err
 		}
 		code := "teams_unready"
@@ -180,7 +348,11 @@ func lifecycleTeamCommand(ctx context.Context, owner *lifecycleClient, eventID u
 			code = "teams_frozen"
 		}
 		if rejected.Error.Code != code {
-			return next, fmt.Errorf("native team rejection was %s, expected %s", rejected.Error.Code, code)
+			return next, fmt.Errorf(
+				"native team rejection was %s, expected %s",
+				rejected.Error.Code,
+				code,
+			)
 		}
 		if err := owner.call(ctx, http.MethodGet, path, -1, nil, &next, http.StatusOK); err != nil {
 			return next, err

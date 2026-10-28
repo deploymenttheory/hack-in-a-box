@@ -1,0 +1,117 @@
+{
+  "source_revision": "df58d9cd439ba2175af44483b79e2e051c7fc74c",
+  "verification_image": "sha256:7e49542dd9ce292406d06dfa989cd0042e18917bf8b044b44fea4d01739b00c1",
+  "normal_guide_image": "sha256:bc25f80df093e16b0472c1ce8a9e1f3788d2bd326943b6200c8f562f4db3c26b",
+  "normal_guide_source": "df58d9cd439ba2175af44483b79e2e051c7fc74c",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793151248",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R62",
+  "native_elapsed_seconds": 418.01,
+  "completed_ui_barriers": 170,
+  "production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072",
+  "matching_published_runtime_revision": "a14408f068bf0ba293781bfef98c02ae7632d907",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "reading_UI_decisions": [
+    {
+      "event_id": "1be8adde-236e-4d2e-9912-eb50306e26e2",
+      "content_id": "ce39f48d-1aae-45fc-92d3-0670ec759abc",
+      "actor": "attendee-04",
+      "version": 1,
+      "rubric_version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "public_criteria_visible": true,
+      "private_guidance_and_objective_absent": true
+    },
+    {
+      "event_id": "1be8adde-236e-4d2e-9912-eb50306e26e2",
+      "content_id": "ce39f48d-1aae-45fc-92d3-0670ec759abc",
+      "actor": "attendee-06",
+      "version": 1,
+      "rubric_version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "public_criteria_visible": true,
+      "private_guidance_and_objective_absent": true
+    },
+    {
+      "event_id": "b01ff12a-3e49-4bc9-9e03-2519a0da3df9",
+      "content_id": "666d2110-8ba2-4d18-b853-8edcfef4405c",
+      "actor": "attendee-04",
+      "version": 1,
+      "rubric_version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "public_criteria_visible": true,
+      "private_guidance_and_objective_absent": true
+    },
+    {
+      "event_id": "b01ff12a-3e49-4bc9-9e03-2519a0da3df9",
+      "content_id": "666d2110-8ba2-4d18-b853-8edcfef4405c",
+      "actor": "attendee-06",
+      "version": 1,
+      "rubric_version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "public_criteria_visible": true,
+      "private_guidance_and_objective_absent": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_reading_verification": [
+    "own normal-OIDC participant acknowledgement",
+    "cancelled review creates no acknowledgement and restores opener focus",
+    "one exact-version acknowledgement POST after confirmation",
+    "persisted exact-version acknowledgement after reload",
+    "native own-reader GET confirms exact document/version and immutable contents",
+    "published rubric categories, ranges, weights, anchors and declared prizes visible",
+    "private judge guidance and undisclosed objective absent from participant UI"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "UI_acknowledging_readers": 2,
+      "common_public_response_sha256": "7fa38532732bcb7a5f26060167136638c1fb5349f9b9450437b901a1d072ca1f"
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "UI_acknowledging_readers": 2,
+      "common_public_response_sha256": "b822c7c28eee206a316eb49bc59e2d76b2b6477644668a3f73fdc63a1f74eda9"
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Original full #120 remains incomplete. The postponement/attendance-exception UI extension is reviewed and published but not established by R62. Clarification, assessment/feedback/archive and remaining role/provider/full acceptance requirements remain open.",
+  "private_artifact_sha256": {
+    "source.json": "936705a9e13f245a15283a6598b76231e5421fe9b117b3f64d11c5ff93a55817",
+    "connected-browser-proof.json": "cb97ddf41fbe83a024497cb7ce8b09aa5743c8203d85fb1edd8f5fb903372f1e",
+    "native/journey-start-live.json": "57925957ad58d650d99f411e0ea7261569232a5e194e37e617b51ba0168f57d0",
+    "native-runner.log": "b48bd991fd74f430f8d9d1be6d2067d02afd28571187ff8f446dd3b485bd864e",
+    "native-published-reading-801.png": "1c2436ba2504a45765415715abffdc842d771f84da5df4b50994b5106580df1f",
+    "native-published-reading-821.png": "1974dee8ed98ca55459756eeacd6002f1db94a12657f8a67ab1597ceed644472",
+    "final.dump": "eb11b1f78a07528a3c2b5a975761896938a24ee624497432dd0737b1414fecd9"
+  }
+}

@@ -21,6 +21,11 @@ func (r *lifecycleJourney) linkGitHubParticipants(t *testing.T) {
 	}
 	identities := []identity{}
 	for index, client := range r.events[0].cohort.clients {
+		// The extra reserve never confirms or receives a repository grant. Keep
+		// the strict36-person GitHub fixture unchanged and do not link that user.
+		if client.person == r.events[0].cohort.reservePerson {
+			continue
+		}
 		identities = append(identities, identity{client: client, other: r.events[1].cohort.clients[index], subject: fmt.Sprintf("attendee-%02d", index+1), numericID: int64(5001 + index)})
 	}
 	for index, actor := range []string{"mentor-a", "mentor-b"} {

@@ -1,0 +1,182 @@
+{
+  "source_revision": "d7ee6f89612105b8bff434f8f15197146ccdc022",
+  "verification_image": "sha256:36a9c656b6e3933fd2ae54f9019324e27c5908aaa67beeabae781235e2a38c2e",
+  "normal_guide_image": "sha256:1c91e28aa7c61ffff71ff0f205915b778f97469c9209e976b8d663f9126a4d1b",
+  "normal_guide_source": "ee687d32d6e4fe61802ee83d5c70c5fa11d9c5eb",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793138661",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R50",
+  "matching_published_runtime_revision": "7b00637948731b24ff29050630e4c0bbceb436f2",
+  "native_elapsed_seconds": 441.15,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "completed_ui_barriers": 48,
+  "form_publications": [
+    {
+      "form_id": "a85b45c5-ccd3-4f60-b8f4-1ba97047e5a5",
+      "audience": "attendee",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "form_id": "08fb8841-d958-4634-b501-ccd443c3fe47",
+      "audience": "mentor",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "form_id": "37398eed-0ccd-4f4f-9677-dcdc2aa65c2e",
+      "audience": "judge",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "form_id": "eefb3f7b-fe4d-4b40-a10c-dc856dff779d",
+      "audience": "attendee",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "form_id": "6d6464dd-2665-444a-8a55-13b2f9c2b2c2",
+      "audience": "mentor",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "form_id": "b7741fb3-537a-434f-a99f-a3d47f3021cb",
+      "audience": "judge",
+      "version": 1,
+      "published_version": 1,
+      "preview_without_write": true,
+      "save_attempts": 1,
+      "publish_attempts": 1,
+      "persisted_after_reload": true
+    }
+  ],
+  "offer_policies": [
+    {
+      "event_id": "8e736f1f-f51d-4094-ac25-f830bd4263ac",
+      "automated": true,
+      "working_days": 2,
+      "revision": 1,
+      "review_without_write": true,
+      "put_attempts": 1,
+      "persisted_after_reload": true
+    },
+    {
+      "event_id": "4ca42a67-4147-4747-94ef-072ec1ae0577",
+      "automated": true,
+      "working_days": 2,
+      "revision": 1,
+      "review_without_write": true,
+      "put_attempts": 1,
+      "persisted_after_reload": true
+    }
+  ],
+  "events": [
+    {
+      "mode": "all_teams",
+      "final_stage": "archived",
+      "published_form_audiences": [
+        "attendee",
+        "mentor",
+        "judge"
+      ],
+      "reviewed_offer_policy_verified": true,
+      "applications_verified": 4,
+      "facilitator_selections_verified": 2,
+      "admission_decisions": [
+        "competition-go",
+        "withdraw",
+        "accept"
+      ],
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34,
+        "reserve_waitlist_position": 2
+      },
+      "queued_owned_review_days": [
+        30,
+        60,
+        90
+      ],
+      "exact_retention_expiry_verified": true,
+      "competition_unchanged_after_archive_and_followup": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "final_stage": "archived",
+      "published_form_audiences": [
+        "attendee",
+        "mentor",
+        "judge"
+      ],
+      "reviewed_offer_policy_verified": true,
+      "applications_verified": 4,
+      "facilitator_selections_verified": 2,
+      "admission_decisions": [
+        "competition-go",
+        "withdraw",
+        "accept"
+      ],
+      "admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34,
+        "reserve_waitlist_position": 2
+      },
+      "queued_owned_review_days": [
+        30,
+        60,
+        90
+      ],
+      "exact_retention_expiry_verified": true,
+      "competition_unchanged_after_archive_and_followup": true
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "f26b57901b627f259ddeb9bbbb859597ce3eb2926d8dcbd544b6ade61ab0f83a",
+    "connected-browser-proof.json": "31edf24eef594998bf9ec67d80ef463cbfdc50394852fb66faf493ea0173cc58",
+    "native/journey-start-live.json": "9efd1ac1437c429a4b3b4f324c3b1defc6077d5c6434f68510279d14530e6481",
+    "native-runner.log": "20b33172750a681be8f8f6396c452252676de9593e66625e2448ae2c458e9de1",
+    "final.dump": "f05ccc83d6bceb73c3522bef129c36d042f4fadb8734b120a35060592b861f5c"
+  },
+  "remaining": "Team/content/publication, assessment, feedback/archive UI journeys, remaining role/stage/provider cases and complete original acceptance audit remain open. UI collection readability incident337 is separate."
+}

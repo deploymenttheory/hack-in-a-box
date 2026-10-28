@@ -1,0 +1,53 @@
+{
+  "source_revision": "296f43359126a4c3caa19bcc9290bf4e79fbffde",
+  "verification_image": "sha256:87d43ed052571d263131ef04766ca439861acc6389ed875503d52f456228137b",
+  "normal_guide_image": "sha256:afb35ee20c982665ec6a528c0bf8f026272fed494cff0595dd80d27fa1559231",
+  "normal_guide_source": "296f43359126a4c3caa19bcc9290bf4e79fbffde",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793155679",
+  "actual_browser_exit_code": 1,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R67",
+  "completed_ui_barriers": 188,
+  "expected_ui_barriers": 232,
+  "native_elapsed_seconds": 235.19,
+  "failed_at": "prepareLiveMentorAccess before live help/role/common clarification/formal submission/cutoff phases",
+  "failure": "Historical preparation approval incorrectly checked against mutable latest-plan projection; normal worker maintains distinct unapproved live mentor roster draft.",
+  "scope_limits": [
+    "12 branch configuration UI commands and6 fictional practice UI submissions acknowledged before failure",
+    "cutoff reconciliation UI not reached",
+    "native journey/archive/retention not completed; no R67 acceptance claim"
+  ],
+  "restored_snapshot_diagnosis": {
+    "legacy_current_equals_historical_approval": false,
+    "latest_plans_changed": 12,
+    "original_approvals_exact_and_intact": 12,
+    "historical_fields_checked": [
+      "plan ID",
+      "version",
+      "fingerprint",
+      "approved actor",
+      "approved timestamp present",
+      "accepted member census"
+    ],
+    "latest_plans_unapproved": true,
+    "latest_plan_reason_matches_native_maintenance": true,
+    "independent_authority_gate_flags_open": true,
+    "fast_snapshot_probe_elapsed_seconds_less_than": 1
+  },
+  "correction_commit": "8aa59b7f",
+  "correction": "Wait for actual worker live draft; require exact new read-only mentor source; read original immutable actor-bound approval receipt separately; preserve distinct human review/approval and original dispatch guards. Native rerun pending.",
+  "scoped_failed_run_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "12411eed3469c67635977f630c472b45e93f6764d5b6de843acac8e02d97478a",
+    "native/work-progress.json": "281ae1138ba01e57642e2506d317816733cd80bce96b0fe9d18e4f03ce8438ba",
+    "native-runner.log": "c0b12157a056e0773e4c8bdf38976e16c64bf953b5e5f219f48f94419559286d",
+    "browser.log": "1ae4b7a432b005f4925bb980f206a1869f01e15ee3f36b510daf32d39200741d",
+    "final.dump": "361e6376801b42f6c778a613244e99188af94154ec78cfe4a69c18630d9efd9a"
+  }
+}

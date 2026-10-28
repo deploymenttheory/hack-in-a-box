@@ -1,0 +1,151 @@
+{
+  "source_revision": "b6bd368022d3c1ed65ec7574e1bd3b2acfe4ae35",
+  "verification_image": "sha256:d2e5e3a82ab1403e611549ae7519549de20b9aa3a6b3f2659a9ac2f9d3285a90",
+  "normal_guide_image": "sha256:75b1ab9675252c4ccb41e91450e5faf5710d8fdcd0c9fdb6c38f4b023fb1bc67",
+  "normal_guide_source": "b6bd368022d3c1ed65ec7574e1bd3b2acfe4ae35",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793149094",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R58",
+  "native_elapsed_seconds": 418.75,
+  "completed_ui_barriers": 150,
+  "challenge_UI_decisions": [
+    {
+      "event_id": "d2706abe-8f50-43d0-b403-df13619a7f2c",
+      "content_id": "660219d9-39da-4c37-9392-6f52d41f1bb2",
+      "action": "save-challenge",
+      "version": 1,
+      "revision": 1,
+      "rubric": {
+        "digest": "a2cf935c3b8e3165110e5aff77ac65fa4e025a17d344bf269765e395ed10fcaf",
+        "id": "205d903c-171f-41b2-80d1-a172ba4cf2f6",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "d2706abe-8f50-43d0-b403-df13619a7f2c",
+      "content_id": "660219d9-39da-4c37-9392-6f52d41f1bb2",
+      "action": "review-challenge",
+      "version": 1,
+      "revision": 2,
+      "rubric": {
+        "digest": "a2cf935c3b8e3165110e5aff77ac65fa4e025a17d344bf269765e395ed10fcaf",
+        "id": "205d903c-171f-41b2-80d1-a172ba4cf2f6",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "d2706abe-8f50-43d0-b403-df13619a7f2c",
+      "content_id": "660219d9-39da-4c37-9392-6f52d41f1bb2",
+      "action": "approve-challenge",
+      "version": 1,
+      "revision": 3,
+      "rubric": {
+        "digest": "a2cf935c3b8e3165110e5aff77ac65fa4e025a17d344bf269765e395ed10fcaf",
+        "id": "205d903c-171f-41b2-80d1-a172ba4cf2f6",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "61007cac-d98e-42e0-9127-66eb61bbc7e4",
+      "content_id": "ab9a3a7c-6275-4dba-90a1-500b23b9bfbf",
+      "action": "save-challenge",
+      "version": 1,
+      "revision": 1,
+      "rubric": {
+        "digest": "e188c7a752565012bcc4f3031a7195669ca8f18da614e24a34160507af1c5e3f",
+        "id": "77f2de56-1faf-48a2-b158-8b9b3ea4e6f3",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "61007cac-d98e-42e0-9127-66eb61bbc7e4",
+      "content_id": "ab9a3a7c-6275-4dba-90a1-500b23b9bfbf",
+      "action": "review-challenge",
+      "version": 1,
+      "revision": 2,
+      "rubric": {
+        "digest": "e188c7a752565012bcc4f3031a7195669ca8f18da614e24a34160507af1c5e3f",
+        "id": "77f2de56-1faf-48a2-b158-8b9b3ea4e6f3",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "61007cac-d98e-42e0-9127-66eb61bbc7e4",
+      "content_id": "ab9a3a7c-6275-4dba-90a1-500b23b9bfbf",
+      "action": "approve-challenge",
+      "version": 1,
+      "revision": 3,
+      "rubric": {
+        "digest": "e188c7a752565012bcc4f3031a7195669ca8f18da614e24a34160507af1c5e3f",
+        "id": "77f2de56-1faf-48a2-b158-8b9b3ea4e6f3",
+        "version": 1
+      },
+      "preview_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    }
+  ],
+  "production_ui_revision": "5421707969f5e115fa85f6772d4f0fb18ade4c6c",
+  "current_pr342_head": "c2e2eab389198c356fb0024c4e365af8c1d53d8a",
+  "production_source_matches_current_pr_head": true,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_challenge_verification": [
+    "UI-generated content identity",
+    "one draft version; draft/review/approved revisions1/2/3",
+    "complete title and markdown",
+    "exact approved rubric ID/version/digest",
+    "confirmed-only audience and required acknowledgement",
+    "common T-minus-seven-calendar-day schedule",
+    "no early release or event/census/configuration changes",
+    "one native content resource; no duplicates",
+    "existing real-worker common publication and later assessment/archive guards retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "challenge_approved_through_UI": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "challenge_approved_through_UI": true
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Original full #120 remains incomplete: remaining withdrawals/freeze, assessment/feedback/archive UI journeys, role/stage/provider matrix and original final audit. No full lifecycle or release readiness claim.",
+  "private_artifact_sha256": {
+    "source.json": "da5bec2a7f3e0cd57e1bea8117d2044b286bf8072380e3494e88694beec8bb88",
+    "connected-browser-proof.json": "df2ac91e56690928e4e3a36b910c59433b4e2de4afca143f0da2aad3fc8ffb6b",
+    "native/journey-start-live.json": "78fa539ce11848f9dd5f4e71be0c9be82e1fe4afb7c9bf88b2b1bd7f62d242f1",
+    "native-runner.log": "99bf360f59d9ee8293226072d7f4a215bb31058f991b88541aa1fd3f7730d9c2",
+    "native-challenge-approved-505.png": "fef77048cd79f297148b43beae115a4104c0af027efd229343cb61bfe2bb7049",
+    "native-challenge-approved-525.png": "58409e768c62fbdabd14ad649ce523b8ed7b21679c1dc96196167b8b4bad0ef4",
+    "final.dump": "7f0784c1f83a0a7269e5ae38e4cbb39c076f0a8bef67adce73424f08bc785b6b"
+  }
+}

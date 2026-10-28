@@ -1,0 +1,120 @@
+{
+  "source": {
+    "source_revision": "6133691de3a9225fbe39960f2773653e91b064a7",
+    "verification_image": "sha256:391292daeb4b1d11c968a7a9454070d571562e5bf9ea87c19b329f101e17315d",
+    "normal_guide_image": "sha256:2169ec0bb5e09856b2e49c25359021c692d1ee657d742dceb26c28a90f0555eb",
+    "normal_guide_source": "ef676fea3bb5f0aabeee2c6a422b89c922447d66",
+    "guide_web_source_matches": true,
+    "project": "hackbox-connected-browser-1793110377",
+    "actual_browser_exit_code": 0,
+    "complete_lifecycle": false,
+    "browser_phases": "planning"
+  },
+  "browser": {
+    "source_revision": "6133691de3a9225fbe39960f2773653e91b064a7",
+    "kind": "same-event-native-browser-planning",
+    "complete_lifecycle": false,
+    "normal_oidc": true,
+    "fulfilled_application_routes": 0,
+    "session_injections": 0,
+    "page_errors": 0,
+    "native_journey_exit_code": 0,
+    "planning": [
+      {
+        "sequence": 1,
+        "action": "save-branding",
+        "event_id": "112d6028-ec96-4957-b3c5-dc7b33e6c1f6",
+        "saved_by_ui": true,
+        "preview_matches": true,
+        "persisted_after_reload": true
+      },
+      {
+        "sequence": 2,
+        "action": "save-branding",
+        "event_id": "59d4fa13-207e-45de-b8b6-0e75380cdfa2",
+        "saved_by_ui": true,
+        "preview_matches": true,
+        "persisted_after_reload": true
+      }
+    ]
+  },
+  "native_journey_seconds": 403.03,
+  "retention_days": 120,
+  "events": [
+    {
+      "event_id": "112d6028-ec96-4957-b3c5-dc7b33e6c1f6",
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_brand_verified": true,
+      "failed_message": {
+        "event_id": "112d6028-ec96-4957-b3c5-dc7b33e6c1f6",
+        "campaign_id": "bc28a3f3-0487-402a-aba3-57052e93df31",
+        "delivery_id": "29ed0a8a-32c4-4c29-b0f7-58ddb02f2223",
+        "attempt_id": "9aa54253-7072-41b5-8f36-ed094754139f",
+        "recipient_id": "84e98f83-e738-46da-9b52-715060ac1197",
+        "state": "permanent",
+        "retry_denied": true,
+        "history_intact": true,
+        "no_accepted_data": true
+      },
+      "retired_repository_verified": true,
+      "retention_expiry": {
+        "event_id": "112d6028-ec96-4957-b3c5-dc7b33e6c1f6",
+        "native_completed_at": "2026-03-31T16:00:00Z",
+        "retention_days": 120,
+        "exclusive_deadline": "2026-07-29T16:00:00Z",
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    },
+    {
+      "event_id": "59d4fa13-207e-45de-b8b6-0e75380cdfa2",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_brand_verified": true,
+      "failed_message": {
+        "event_id": "59d4fa13-207e-45de-b8b6-0e75380cdfa2",
+        "campaign_id": "92410dee-5fc0-4f2a-81a7-59b9d21c85fa",
+        "delivery_id": "60bca727-b234-4c75-b07a-8a43f44db8d6",
+        "attempt_id": "9c20c608-a2df-4513-a498-f6f95db0662f",
+        "recipient_id": "84e98f83-e738-46da-9b52-715060ac1197",
+        "state": "permanent",
+        "retry_denied": true,
+        "history_intact": true,
+        "no_accepted_data": true
+      },
+      "retired_repository_verified": true,
+      "retention_expiry": {
+        "event_id": "59d4fa13-207e-45de-b8b6-0e75380cdfa2",
+        "native_completed_at": "2026-03-31T16:00:00Z",
+        "retention_days": 120,
+        "exclusive_deadline": "2026-07-29T16:00:00Z",
+        "owner_readable_one_second_before": true,
+        "owner_denied_at_deadline": true,
+        "organiser_denied_at_deadline": true,
+        "notification_denied_at_deadline": true,
+        "competition_unchanged": true
+      }
+    }
+  ],
+  "github_transport_counts": {
+    "app_jwts_verified": 1216,
+    "installation_tokens_minted": 424,
+    "template_reads": 67,
+    "repository_creates": 14,
+    "repository_reads": 343,
+    "oauth_exchanges_verified": 38,
+    "oauth_user_reads": 38,
+    "invitation_creates": 82,
+    "invitation_acceptances": 82,
+    "branch_reads": 7,
+    "branch_failures": 1
+  },
+  "requires_production_fix_pr": 332,
+  "production_tree_matches_fix_pr": true,
+  "scoped_cleanup_verified": true,
+  "complete_lifecycle": false
+}

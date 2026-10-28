@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -40,7 +42,9 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			t.Fatal(err)
 		}
 		var created rubric.Configuration
-		if err := r.owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "judge_final", "reason": "Plan an independent final round; practice never scores this run"}, &created, http.StatusOK); err != nil {
+		if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+			created = r.createFinalRoundInBrowser(t, item, index, configured)
+		} else if err := r.owner.call(ctx, http.MethodPost, base+"/rubric/configuration", configured.Revision, map[string]any{"action": "create_run", "version": configured.Reference.Version, "purpose": "judge_final", "reason": "Plan an independent final round; practice never scores this run"}, &created, http.StatusOK); err != nil {
 			t.Fatal(err)
 		}
 		for _, run := range created.Runs {
@@ -80,7 +84,9 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			}
 			currentTeams = append(currentTeams, team.ID)
 			var assigned judging.Receipt
-			if err := r.owner.call(ctx, http.MethodPost, path, round.Revision, map[string]any{"request_id": uuid.New(), "action": "assign", "team_id": team.ID, "judge_ids": judgeIDs, "reason": "Three independently selected current judges, never mentor votes"}, &assigned, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				assigned = r.assignFinalJudgesInBrowser(t, item, index, len(currentTeams)-1, team.ID, team.Name, round, judges)
+			} else if err := r.owner.call(ctx, http.MethodPost, path, round.Revision, map[string]any{"request_id": uuid.New(), "action": "assign", "team_id": team.ID, "judge_ids": judgeIDs, "reason": "Three independently selected current judges, never mentor votes"}, &assigned, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if assigned.RunID != item.judgeRun || assigned.TeamID != team.ID || assigned.ActorID != r.owner.person {
@@ -107,7 +113,7 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 				}
 			}
 		}
-		for _, judge := range judges {
+		for judgeIndex, judge := range judges {
 			var raw json.RawMessage
 			if err := judge.call(ctx, http.MethodGet, base+"/judge-practice", -1, nil, &raw, http.StatusOK); err != nil {
 				t.Fatal(err)
@@ -134,7 +140,10 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			}
 			command := judging.PracticeCommand{RequestID: uuid.New(), Action: "submit", Scores: scores}
 			var accepted judging.Receipt
-			if err := judge.call(ctx, http.MethodPost, base+"/judge-practice", 0, command, &accepted, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				accepted = r.practiceInBrowser(t, item, index, judgeIndex, judge, practice, scores)
+				command.RequestID = accepted.RequestID
+			} else if err := judge.call(ctx, http.MethodPost, base+"/judge-practice", 0, command, &accepted, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if accepted.RequestID != command.RequestID || accepted.ActorID != judge.person || accepted.TeamID != practice.FictionalEntryID || accepted.RunID != uuid.Nil || accepted.Action != "practice_submit" || accepted.Revision != 1 || accepted.State != "submitted" {
@@ -144,7 +153,7 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			if err := judge.call(ctx, http.MethodGet, base+"/judge-practice", -1, nil, &current, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			if current.Card == nil || current.Card.Version != 1 || current.Card.State != "submitted" || current.Card.Rubric != practice.Rubric {
+			if current.Card == nil || current.Card.Version != 1 || current.Card.State != "submitted" || current.Card.Rubric != practice.Rubric || !reflect.DeepEqual(current.Card.Scores, scores) {
 				t.Fatal("native practice did not retain its own submitted version")
 			}
 			realPath := fmt.Sprintf("%s/teams/%s", path, currentTeams[0])

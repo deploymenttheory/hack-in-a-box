@@ -46,16 +46,28 @@ type lifecycleCode struct {
 func newLifecycleOIDC(issuer string, clients map[string]string) (*lifecycleOIDC, error) {
 	people := map[string]lifecyclePerson{}
 	for _, role := range []string{"owner", "coordinator", "mentor-a", "mentor-b", "judge-a", "judge-b", "judge-c", "mc", "logistics", "stranger", "former-organiser", "early-access"} {
-		people[role] = lifecyclePerson{Subject: role, Name: "Synthetic " + role, Email: role + "@example.test"}
+		people[role] = lifecyclePerson{
+			Subject: role,
+			Name:    "Synthetic " + role,
+			Email:   role + "@example.test",
+		}
 	}
 	for i := 1; i <= 40; i++ {
 		subject := fmt.Sprintf("attendee-%02d", i)
-		people[subject] = lifecyclePerson{Subject: subject, Name: fmt.Sprintf("Synthetic attendee %02d", i), Email: subject + "@example.test"}
+		people[subject] = lifecyclePerson{
+			Subject: subject,
+			Name:    fmt.Sprintf("Synthetic attendee %02d", i),
+			Email:   subject + "@example.test",
+		}
 	}
 	return newLifecycleOIDCForPeople(issuer, clients, people)
 }
 
-func newLifecycleOIDCForPeople(issuer string, clients map[string]string, people map[string]lifecyclePerson) (*lifecycleOIDC, error) {
+func newLifecycleOIDCForPeople(
+	issuer string,
+	clients map[string]string,
+	people map[string]lifecyclePerson,
+) (*lifecycleOIDC, error) {
 	people = maps.Clone(people)
 	clients = maps.Clone(clients)
 	if len(people) == 0 {
@@ -64,8 +76,12 @@ func newLifecycleOIDCForPeople(issuer string, clients map[string]string, people 
 	emails := map[string]bool{}
 	for subject, person := range people {
 		email := strings.ToLower(strings.TrimSpace(person.Email))
-		if subject == "" || person.Subject != subject || strings.TrimSpace(person.Name) == "" || email == "" || emails[email] {
-			return nil, fmt.Errorf("synthetic people require matching distinct subjects, names and mailboxes")
+		if subject == "" || person.Subject != subject || strings.TrimSpace(person.Name) == "" ||
+			email == "" ||
+			emails[email] {
+			return nil, fmt.Errorf(
+				"synthetic people require matching distinct subjects, names and mailboxes",
+			)
 		}
 		emails[email] = true
 	}
@@ -81,9 +97,17 @@ func newLifecycleOIDCForPeople(issuer string, clients map[string]string, people 
 		return nil, err
 	}
 	return &lifecycleOIDC{
-		issuer: issuer, signer: signer,
-		public:  jose.JSONWebKey{Key: &key.PublicKey, KeyID: "synthetic-lifecycle", Algorithm: "RS256", Use: "sig"},
-		clients: clients, people: people, codes: map[string]lifecycleCode{},
+		issuer: issuer,
+		signer: signer,
+		public: jose.JSONWebKey{
+			Key:       &key.PublicKey,
+			KeyID:     "synthetic-lifecycle",
+			Algorithm: "RS256",
+			Use:       "sig",
+		},
+		clients: clients,
+		people:  people,
+		codes:   map[string]lifecycleCode{},
 	}, nil
 }
 
@@ -92,10 +116,18 @@ func (p *lifecycleOIDC) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/.well-known/openid-configuration":
 		lifecycleJSON(w, map[string]any{
-			"issuer": p.issuer, "authorization_endpoint": p.issuer + "/authorize",
-			"token_endpoint": p.issuer + "/token", "jwks_uri": p.issuer + "/keys",
-			"response_types_supported": []string{"code"}, "subject_types_supported": []string{"public"},
-			"id_token_signing_alg_values_supported": []string{"RS256"}, "code_challenge_methods_supported": []string{"S256"},
+			"issuer":                 p.issuer,
+			"authorization_endpoint": p.issuer + "/authorize",
+			"token_endpoint":         p.issuer + "/token",
+			"jwks_uri":               p.issuer + "/keys",
+			"response_types_supported": []string{
+				"code",
+			},
+			"subject_types_supported": []string{"public"},
+			"id_token_signing_alg_values_supported": []string{
+				"RS256",
+			},
+			"code_challenge_methods_supported": []string{"S256"},
 		})
 	case "/keys":
 		lifecycleJSON(w, jose.JSONWebKeySet{Keys: []jose.JSONWebKey{p.public}})
@@ -108,14 +140,19 @@ func (p *lifecycleOIDC) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var lifecycleLogin = template.Must(template.New("synthetic-provider").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Synthetic lifecycle identity</title><h1>Synthetic identity provider</h1><p>This provider belongs only to the isolated lifecycle Compose network.</p><form method="get" action="/authorize">{{range $key,$values := .Query}}{{range $values}}<input type="hidden" name="{{$key}}" value="{{.}}">{{end}}{{end}}<label>Synthetic actor <select name="actor">{{range .People}}<option value="{{.Subject}}">{{.Name}}</option>{{end}}</select></label><button type="submit">Continue through normal OIDC</button></form></html>`))
+var lifecycleLogin = template.Must(
+	template.New("synthetic-provider").
+		Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Synthetic lifecycle identity</title><h1>Synthetic identity provider</h1><p>This provider belongs only to the isolated lifecycle Compose network.</p><form method="get" action="/authorize">{{range $key,$values := .Query}}{{range $values}}<input type="hidden" name="{{$key}}" value="{{.}}">{{end}}{{end}}<label for="synthetic-actor">Synthetic actor</label><select id="synthetic-actor" name="actor">{{range .People}}<option value="{{.Subject}}">{{.Name}}</option>{{end}}</select><button type="submit">Continue through normal OIDC</button></form></html>`),
+)
 
 func (p *lifecycleOIDC) authorize(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	redirect, exists := p.clients[q.Get("client_id")]
 	if r.Method != http.MethodGet || !exists || q.Get("redirect_uri") != redirect ||
 		q.Get("response_type") != "code" || q.Get("code_challenge_method") != "S256" ||
-		len(q.Get("code_challenge")) != 43 || len(q.Get("state")) < 20 || len(q.Get("nonce")) < 20 ||
+		len(
+			q.Get("code_challenge"),
+		) != 43 || len(q.Get("state")) < 20 || len(q.Get("nonce")) < 20 ||
 		!strings.Contains(" "+q.Get("scope")+" ", " openid ") {
 		http.Error(w, "invalid synthetic authorization request", http.StatusBadRequest)
 		return
@@ -141,8 +178,14 @@ func (p *lifecycleOIDC) authorize(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	p.codes[code] = lifecycleCode{
-		ClientID: q.Get("client_id"), Redirect: redirect, Nonce: q.Get("nonce"),
-		Challenge: q.Get("code_challenge"), Subject: person.Subject, Expires: time.Now().Add(2 * time.Minute),
+		ClientID: q.Get("client_id"),
+		Redirect: redirect,
+		Nonce:    q.Get("nonce"),
+		Challenge: q.Get(
+			"code_challenge",
+		),
+		Subject: person.Subject,
+		Expires: time.Now().Add(2 * time.Minute),
 	}
 	p.mu.Unlock()
 	target, _ := url.Parse(redirect)
@@ -172,8 +215,10 @@ func (p *lifecycleOIDC) token(w http.ResponseWriter, r *http.Request) {
 	delete(p.codes, r.Form.Get("code"))
 	p.mu.Unlock()
 	digest := sha256.Sum256([]byte(r.Form.Get("code_verifier")))
-	if !exists || !time.Now().Before(code.Expires) || clientID != code.ClientID || secret != "synthetic-lifecycle-secret" ||
-		r.Form.Get("grant_type") != "authorization_code" || r.Form.Get("redirect_uri") != code.Redirect ||
+	if !exists || !time.Now().Before(code.Expires) || clientID != code.ClientID ||
+		secret != "synthetic-lifecycle-secret" ||
+		r.Form.Get("grant_type") != "authorization_code" ||
+		r.Form.Get("redirect_uri") != code.Redirect ||
 		base64.RawURLEncoding.EncodeToString(digest[:]) != code.Challenge {
 		http.Error(w, "invalid or consumed synthetic authorization code", http.StatusBadRequest)
 		return
@@ -198,7 +243,15 @@ func (p *lifecycleOIDC) token(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "synthetic signing failed", http.StatusInternalServerError)
 		return
 	}
-	lifecycleJSON(w, map[string]any{"access_token": "synthetic-provider-only", "token_type": "Bearer", "id_token": compact, "expires_in": 120})
+	lifecycleJSON(
+		w,
+		map[string]any{
+			"access_token": "synthetic-provider-only",
+			"token_type":   "Bearer",
+			"id_token":     compact,
+			"expires_in":   120,
+		},
+	)
 }
 
 func lifecycleJSON(w http.ResponseWriter, value any) {

@@ -1,0 +1,57 @@
+{
+  "source_revision": "ae70a551b551afc1145050c5586a1de5115c8d41",
+  "verification_image": "sha256:e3247a47bfd7d267fa0cfc74e0d070c7233179e63c7f18a380825445f2ef4663",
+  "normal_guide_image": "sha256:953afdd0f0370d5a205a5a751c119ec6280a4b41ce271f3fee6e97640639fbce",
+  "normal_guide_source": "ae70a551b551afc1145050c5586a1de5115c8d41",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793141793",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R53",
+  "matching_reviewed_web_revision": "73db4f7add77e03c87c6a2cca7377c37525361fd",
+  "native_elapsed_seconds": 372.03,
+  "completed_ui_barriers": 48,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "form_collection_readability_gate": {
+    "required_labelled_records": true,
+    "minimum_long_name_width_px": 160,
+    "horizontal_overflow_allowed": false,
+    "executed_for_all_six_forms": true,
+    "native_form216_visually_inspected": true
+  },
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived"
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived"
+    }
+  ],
+  "queued_owned_reviews_verified": [
+    30,
+    60,
+    90
+  ],
+  "exact_retention_expiry_verified": true,
+  "competition_unchanged_after_archive_and_followup": true,
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "d5ddf87f7f7adde588024c9da7cbe0c6411408cfe53f5b2b7cf63b4b8f2c84a4",
+    "connected-browser-proof.json": "a9fb5a6dcb2ab7377107d3dc9e52ea8bcfacef37cbbfb9b85413fbc33f57f420",
+    "native/journey-start-live.json": "072b7f1aea4ab387a68b2f8d4f98193c11cceef1122389ef6f1fb34dacde8610",
+    "native-runner.log": "fce884f15f0e8f5ff07b019b4c6c0a20fd8087d59de90d69dfd708de8456c11a",
+    "native-form-216.png": "82fd186e586dba2576c03bcad4fa3c765594aa30680549051e0ec3597240ee1f",
+    "final.dump": "6c8cee64bc37218e7ba4b12bd6b9a764d27a54368985f576d2e647978b11dd9b"
+  },
+  "remaining": "Full original120 team/content/publication, assessment, feedback/archive and remaining role/stage/provider acceptance;337 requires all separate CI checks green before merge."
+}

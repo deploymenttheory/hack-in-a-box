@@ -1,0 +1,30 @@
+{
+  "source_revision": "3f2f81adedb46aa14cfb7bb08c777cb890ee3668",
+  "image": "sha256:f38b968cda01d923fe8071035068653daaf28290edc6b7958be47e04fcb8260c",
+  "exit_code": 1,
+  "duration_seconds": 266.23,
+  "complete_lifecycle": false,
+  "result": "failed",
+  "phase": "private_team_feedback",
+  "http_status": 503,
+  "observed_server_duration_ms": 10001,
+  "cause": "unclassified; request timeout boundary observed",
+  "command_replayed": false,
+  "work_progress_sha256": "80f4498c08d181c32019dd3b36c42468d371196b561842632497cf74a6ecbd76",
+  "feedback_census": [
+    {
+      "event_id": "5ce4b394-e077-4d8e-9607-f574ceb8e472",
+      "versions": [
+        2,
+        4
+      ],
+      "retained_command_acknowledgements": 6
+    },
+    {
+      "event_id": "3f51f95c-cf46-4cf0-b2e2-2410d97a3518",
+      "versions": [],
+      "retained_command_acknowledgements": 0
+    }
+  ],
+  "cleanup": "owned containers, volumes and network removed after protected dump and artifacts retained"
+}

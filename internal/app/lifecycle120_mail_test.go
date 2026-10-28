@@ -36,7 +36,7 @@ func TestLifecycleComposeSMTP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	owner, err := signInLifecycle(ctx, "http://admin:8080", "http://provider:8080", "owner")
+	owner, err := signInLifecycle(ctx, "http://admin.localhost:8080", "http://provider.localhost:8080", "owner")
 	if err != nil {
 		t.Fatal(err)
 	}

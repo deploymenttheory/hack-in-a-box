@@ -1,0 +1,44 @@
+{
+  "source": {
+    "source_revision": "d543c437f73ef41b371c6983601db6dcae5906c9",
+    "verification_image": "sha256:bb47357b7456141a709fab6b4e6e500020f5719afdfc7b6b260d519944d9f23a",
+    "normal_guide_image": "sha256:2169ec0bb5e09856b2e49c25359021c692d1ee657d742dceb26c28a90f0555eb",
+    "normal_guide_source": "ef676fea3bb5f0aabeee2c6a422b89c922447d66",
+    "guide_web_source_matches": true,
+    "project": "hackbox-connected-browser-1793106724",
+    "actual_browser_exit_code": 0,
+    "complete_lifecycle": false,
+    "browser_phases": "planning"
+  },
+  "browser": {
+    "source_revision": "d543c437f73ef41b371c6983601db6dcae5906c9",
+    "kind": "same-event-native-browser-planning",
+    "complete_lifecycle": false,
+    "normal_oidc": true,
+    "fulfilled_application_routes": 0,
+    "session_injections": 0,
+    "page_errors": 0,
+    "native_journey_exit_code": 0,
+    "planning": [
+      {
+        "sequence": 1,
+        "action": "save-branding",
+        "event_id": "f867ef9b-55cd-46ac-872d-7561402085bf",
+        "saved_by_ui": true,
+        "preview_matches": true,
+        "persisted_after_reload": true
+      },
+      {
+        "sequence": 2,
+        "action": "save-branding",
+        "event_id": "7c718602-a74a-4824-8308-6fac153c3078",
+        "saved_by_ui": true,
+        "preview_matches": true,
+        "persisted_after_reload": true
+      }
+    ]
+  },
+  "native_journey_seconds": 237.05,
+  "scoped_cleanup_verified": true,
+  "previous_identical_image_run_failed_results_prepare_503_at_10s": true
+}

@@ -1,0 +1,117 @@
+{
+  "complete_lifecycle": false,
+  "source_revision": "db8f2343c433a68332a68b2d49150f8f2b01a0f8",
+  "verification_image": "sha256:9adf7dfe67cb381e7bb6d638400be6fa81667006fa0ffb94932d30cca1d4621b",
+  "cases": [
+    {
+      "case": "last-on-time",
+      "actual_runner_exit_code": 0,
+      "worker_absent_before_ready_barrier": true,
+      "runner_log_sha256": "151245e019b2fa5cffb91d5592ab337c8f423ae3766037e8c4c687c1abaf790b",
+      "intent_journal_sha256": "641de1532edbe6151a36347f94a8581d02eccf93d4d3c89313199423cd3922c7",
+      "final_dump_sha256": "9327f98b36cae2adbae320f34707f5983ec11ccebd0456fc32c55815e56b72ac",
+      "native_receipt": {
+        "allowed_window_seconds": 60,
+        "case": "last-on-time",
+        "complete_lifecycle": false,
+        "events": [
+          {
+            "event_id": "b23edc3a-bdc7-46fb-bd6a-9d79488b185d",
+            "mode": "all_teams",
+            "challenge_id": "655a7d77-170e-4bb1-9527-2fb3ca157b28",
+            "original_approved_revision": 3,
+            "original_version": 1,
+            "original_live_start": "2026-03-30T09:00:00+01:00",
+            "scheduled_at": "2026-03-23T09:00:00Z",
+            "controlled_domain_dispatch_at": "2026-03-23T09:01:00Z",
+            "native_dispatch_state": "released",
+            "published_at": "2026-03-23T09:01:00Z",
+            "original_missed_history_at": null,
+            "missed_release_readers_denied": false,
+            "manual_live_cannot_bypass_missed_release": false,
+            "past_schedule_reapproval_denied": false,
+            "recovery_frozen_teams_preserved": false
+          },
+          {
+            "event_id": "37cad97d-4a8b-4217-8cbd-0cea13c2f91d",
+            "mode": "mentor_qualification",
+            "challenge_id": "48f118c5-646f-4d9f-a342-bb6f156b027e",
+            "original_approved_revision": 3,
+            "original_version": 1,
+            "original_live_start": "2026-03-30T09:00:00+01:00",
+            "scheduled_at": "2026-03-23T09:00:00Z",
+            "controlled_domain_dispatch_at": "2026-03-23T09:01:00Z",
+            "native_dispatch_state": "released",
+            "published_at": "2026-03-23T09:01:00Z",
+            "original_missed_history_at": null,
+            "missed_release_readers_denied": false,
+            "manual_live_cannot_bypass_missed_release": false,
+            "past_schedule_reapproval_denied": false,
+            "recovery_frozen_teams_preserved": false
+          }
+        ],
+        "late_precision": "one PostgreSQL microsecond after the inclusive limit",
+        "worker_dispatch": "actual native worker started by host after ready barrier; no direct handler or SQL setup"
+      }
+    },
+    {
+      "case": "first-late",
+      "actual_runner_exit_code": 0,
+      "worker_absent_before_ready_barrier": true,
+      "runner_log_sha256": "7cfbf9c5644a75a388d2b3ef0fde5318c052de3bfeb2b6a2366772bfbabc09af",
+      "intent_journal_sha256": "80ce03f0ba78256f89dff240dcf8bc6523a115e153ae9971c30078b7e7a22a82",
+      "final_dump_sha256": "e14f5719dc69f3f996e18cf820d9dbbd6e3a8cbce32a51c59208c7f36d8c2703",
+      "native_receipt": {
+        "allowed_window_seconds": 60,
+        "case": "first-late",
+        "complete_lifecycle": false,
+        "events": [
+          {
+            "event_id": "520bf69b-7c66-40ba-a427-9faf356888f5",
+            "mode": "all_teams",
+            "challenge_id": "c876dada-d611-4133-93dd-69f36d3e012c",
+            "original_approved_revision": 3,
+            "original_version": 1,
+            "original_live_start": "2026-03-30T09:00:00+01:00",
+            "scheduled_at": "2026-03-23T09:00:00Z",
+            "controlled_domain_dispatch_at": "2026-03-23T09:01:00.000001Z",
+            "native_dispatch_state": "missed",
+            "published_at": null,
+            "original_missed_history_at": "2026-03-23T09:01:00.000001Z",
+            "missed_release_readers_denied": true,
+            "manual_live_cannot_bypass_missed_release": true,
+            "past_schedule_reapproval_denied": true,
+            "recovery_live_start": "2026-03-31T08:00:00Z",
+            "recovery_scheduled_at": "2026-03-24T09:00:00Z",
+            "recovery_published_at": "2026-03-24T09:00:00Z",
+            "recovery_version": 3,
+            "recovery_frozen_teams_preserved": true
+          },
+          {
+            "event_id": "f82f2442-b0c1-4df2-8c80-59f4b24d2e7b",
+            "mode": "mentor_qualification",
+            "challenge_id": "741a0676-8f45-4e5d-a2ff-ee44962f1ed3",
+            "original_approved_revision": 3,
+            "original_version": 1,
+            "original_live_start": "2026-03-30T09:00:00+01:00",
+            "scheduled_at": "2026-03-23T09:00:00Z",
+            "controlled_domain_dispatch_at": "2026-03-23T09:01:00.000001Z",
+            "native_dispatch_state": "missed",
+            "published_at": null,
+            "original_missed_history_at": "2026-03-23T09:01:00.000001Z",
+            "missed_release_readers_denied": true,
+            "manual_live_cannot_bypass_missed_release": true,
+            "past_schedule_reapproval_denied": true,
+            "recovery_live_start": "2026-03-31T08:00:00Z",
+            "recovery_scheduled_at": "2026-03-24T09:00:00Z",
+            "recovery_published_at": "2026-03-24T09:00:00Z",
+            "recovery_version": 3,
+            "recovery_frozen_teams_preserved": true
+          }
+        ],
+        "late_precision": "one PostgreSQL microsecond after the inclusive limit",
+        "worker_dispatch": "actual native worker started by host after ready barrier; no direct handler or SQL setup"
+      }
+    }
+  ]
+}

@@ -18,12 +18,12 @@ x-fixture: &fixture
     HACKBOX_ENV: test
     HACKBOX_DATABASE_URL: postgres://lifecycle:synthetic-lifecycle-only@postgres:5432/lifecycle?sslmode=disable
     HACKBOX_HTTP_ADDR: 0.0.0.0:8080
-    HACKBOX_PUBLIC_ORIGIN: http://public:8080
-    HACKBOX_ADMIN_ORIGIN: http://admin:8080
-    HACKBOX_WORKSPACE_ORIGIN: http://public:8080
+    HACKBOX_PUBLIC_ORIGIN: http://public.localhost:8080
+    HACKBOX_ADMIN_ORIGIN: http://admin.localhost:8080
+    HACKBOX_WORKSPACE_ORIGIN: http://public.localhost:8080
     HACKBOX_STORAGE_PATH: /data/files
     HACKBOX_WEB_DIR: /app/web-public
-    HACKBOX_OIDC_ISSUER: http://provider:8080
+    HACKBOX_OIDC_ISSUER: http://provider.localhost:8080
     HACKBOX_OIDC_CLIENT_ID: lifecycle-public
     HACKBOX_OIDC_CLIENT_SECRET: synthetic-lifecycle-secret
     HACKBOX_BOOTSTRAP_SUBJECT: owner
@@ -61,7 +61,7 @@ services:
       POSTGRES_PASSWORD: synthetic-lifecycle-only
     volumes: [database:/var/lib/postgresql/data]
     healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U lifecycle -d lifecycle']
+      test: [CMD-SHELL, 'pg_isready -h 127.0.0.1 -U lifecycle -d lifecycle']
       interval: 2s
       timeout: 2s
       retries: 30
@@ -73,6 +73,7 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
   provider:
+    networks: {synthetic: {aliases: [provider.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
@@ -85,18 +86,20 @@ services:
       timeout: 5s
       retries: 30
   public:
+    networks: {synthetic: {aliases: [public.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: public
     healthcheck: *healthcheck
   admin:
+    networks: {synthetic: {aliases: [admin.localhost]}}
     <<: *fixture
     environment:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: admin
       HACKBOX_SURFACE: admin
-      HACKBOX_PUBLIC_ORIGIN: http://admin:8080
+      HACKBOX_PUBLIC_ORIGIN: http://admin.localhost:8080
       HACKBOX_OIDC_CLIENT_ID: lifecycle-admin
       HACKBOX_WEB_DIR: /app/web-admin
     healthcheck: *healthcheck
@@ -106,7 +109,8 @@ services:
       <<: *environment
       HACKBOX_LIFECYCLE_ROLE: worker
   styleguide:
-    image: hackbox-lifecycle:styleguide-verification
+    networks: {synthetic: {aliases: [styleguide.localhost]}}
+    image: ${HACKBOX_LIFECYCLE_GUIDE_IMAGE:-hackbox-lifecycle:styleguide-verification}
     build:
       context: ../../..
       dockerfile: Dockerfile
@@ -118,7 +122,6 @@ services:
     tmpfs: [/tmp]
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    networks: [synthetic]
     healthcheck: *healthcheck
   bootstrap:
     <<: *fixture
@@ -155,12 +158,45 @@ services:
       admin: {condition: service_healthy}
       worker: {condition: service_started}
 
+  dispatch-window:
+    <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_DISPATCH_CASE: ${HACKBOX_LIFECYCLE_DISPATCH_CASE:-last-on-time}
+      HACKBOX_LIFECYCLE_INTENT_JOURNAL: /artifacts/intent-journal.jsonl
+    profiles: [dispatch-window]
+    command: ['-test.run=^TestLifecycleComposeDispatchWindow$', '-test.timeout=3m', '-test.v']
+    volumes: ['control:/control:ro', 'artifacts:/artifacts']
+    # The host starts the real worker after the runner's private ready barrier.
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+
+  browser-proxy:
+    <<: *fixture
+    profiles: [browser]
+    networks: [synthetic, browser-edge]
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_ROLE: browser-proxy
+    ports: ['127.0.0.1:${HACKBOX_LIFECYCLE_BROWSER_PROXY_PORT:-18088}:8080']
+    healthcheck: *healthcheck
+    depends_on:
+      public: {condition: service_healthy}
+      admin: {condition: service_healthy}
+      styleguide: {condition: service_healthy}
+
   journey:
     <<: *fixture
+    environment:
+      <<: *environment
+      HACKBOX_LIFECYCLE_INTENT_JOURNAL: /artifacts/intent-journal.jsonl
+      HACKBOX_LIFECYCLE_RETENTION_CASE: ${HACKBOX_LIFECYCLE_RETENTION_CASE:-configured120}
+      HACKBOX_LIFECYCLE_BROWSER_PHASES: ${HACKBOX_LIFECYCLE_BROWSER_PHASES:-}
     profiles: [journey]
-    # The connected help/feedback baseline takes ~480s. Clarification/correction
-    # adds >500 actual current-audience HTTP reads. Individual guards stay unchanged.
-    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=12m', '-test.v']
+    # R73 executes335 real UI barriers in709.32s. New reviewed deliberation
+    # rejection/opening barriers extend that journey; individual guards are unchanged.
+    command: ['-test.run=^TestLifecycleComposeJourney$', '-test.timeout=15m', '-test.v']
     volumes: ['control:/control:ro', 'artifacts:/artifacts']
     depends_on:
       public: {condition: service_healthy}
@@ -174,3 +210,4 @@ volumes:
   artifacts:
 networks:
   synthetic: {internal: true}
+  browser-edge: {}

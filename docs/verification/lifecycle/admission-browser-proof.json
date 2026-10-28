@@ -1,0 +1,186 @@
+{
+  "run": "R49",
+  "complete_lifecycle": false,
+  "source_revision": "eb29664652cea8d6ee74ba6b1c74903a7232e00d",
+  "verification_image": "sha256:a3978ea948481b5447740b98dffd767831931aefbff93fbb6aa1ee19f4697fa8",
+  "normal_guide_image": "sha256:1c91e28aa7c61ffff71ff0f205915b778f97469c9209e976b8d663f9126a4d1b",
+  "normal_guide_source": "ee687d32d6e4fe61802ee83d5c70c5fa11d9c5eb",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793137945",
+  "actual_browser_exit_code": 0,
+  "browser_phases": "ui-journey",
+  "ui_source_revision": "7dfa483245a30fad47ad6563f1d978cf89e7b5b3",
+  "separate_archive_fix_revision": "d034d228737aa6847bf3a3ce482f20aa050b9c75",
+  "source_composition": "UI draft plus separately reviewed archive incident fix in an isolated integration checkout",
+  "native_elapsed_seconds": 668.33,
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "completed_ui_barriers": 40,
+  "events": [
+    {
+      "mode": "all_teams",
+      "final_stage": "archived",
+      "applications": [
+        {
+          "actor": "mentor-a",
+          "audience": "mentor",
+          "submission_state": "received",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "judge-a",
+          "audience": "judge",
+          "submission_state": "received",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "attendee-35",
+          "audience": "attendee",
+          "submission_state": "confirmed",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "attendee-36",
+          "audience": "attendee",
+          "submission_state": "waitlisted",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        }
+      ],
+      "facilitator_selections": [
+        {
+          "actor": "mentor-a",
+          "audience": "mentor",
+          "decision_recorded": true,
+          "active_native_role": true
+        },
+        {
+          "actor": "judge-a",
+          "audience": "judge",
+          "decision_recorded": true,
+          "active_native_role": true
+        }
+      ],
+      "ui_admission_decisions": [
+        "competition-go",
+        "withdraw",
+        "accept"
+      ],
+      "native_admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34,
+        "reserve_waitlist_position": 2
+      },
+      "queued_owned_review_days": [
+        30,
+        60,
+        90
+      ],
+      "exact_retention_expiry_verified": true,
+      "competition_unchanged_after_archive_and_followup": true
+    },
+    {
+      "mode": "mentor_qualification",
+      "final_stage": "archived",
+      "applications": [
+        {
+          "actor": "mentor-a",
+          "audience": "mentor",
+          "submission_state": "received",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "judge-a",
+          "audience": "judge",
+          "submission_state": "received",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "attendee-35",
+          "audience": "attendee",
+          "submission_state": "confirmed",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        },
+        {
+          "actor": "attendee-36",
+          "audience": "attendee",
+          "submission_state": "waitlisted",
+          "exact_form_and_answers": true,
+          "own_native_read": true
+        }
+      ],
+      "facilitator_selections": [
+        {
+          "actor": "mentor-a",
+          "audience": "mentor",
+          "decision_recorded": true,
+          "active_native_role": true
+        },
+        {
+          "actor": "judge-a",
+          "audience": "judge",
+          "decision_recorded": true,
+          "active_native_role": true
+        }
+      ],
+      "ui_admission_decisions": [
+        "competition-go",
+        "withdraw",
+        "accept"
+      ],
+      "native_admission_census": {
+        "accepted_offer_confirmed": 35,
+        "explicit_go_confirmed": 35,
+        "minimum_blocked_confirmed": 29,
+        "minimum_reached_without_auto_advance": 30,
+        "overflow_waitlist_position": 1,
+        "pending_offer_excluded_confirmed": 34,
+        "reserve_waitlist_position": 2
+      },
+      "queued_owned_review_days": [
+        30,
+        60,
+        90
+      ],
+      "exact_retention_expiry_verified": true,
+      "competition_unchanged_after_archive_and_followup": true
+    }
+  ],
+  "live_role_checks": {
+    "stage": "live",
+    "ui_staff_grants": 6,
+    "native_event_checks": 24,
+    "mentor_revocation_cleared": true,
+    "other_event_retained": true,
+    "native_revocation_and_restore_audited": true
+  },
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "d914c96847af0f68357bf6def63c0efc59e5660536d3b6521521ddfed06fc738",
+    "connected-browser-proof.json": "c7ef2ad517892b98c64757c9b7417876eb0878e687f616c4c0050ef905f7371f",
+    "native/journey-start-live.json": "b937b531b7338362c52e6ffd3432fc0eae2fcfc6360f4a7d672415a568a24dec",
+    "native-runner.log": "80578fc46456c97d06b2c30d642e91b09d37d4c50659050b170820127d5a2cee",
+    "final.dump": "fbdc70c0c29fc6c14aa4896c66a19e15f148a0c3d7f21fdb12714dbedde789ac"
+  },
+  "limits": [
+    "Form authoring and offer policy UI increments are subsequent code and are not proven by R49.",
+    "Team/content/publication, assessment and feedback/archive UI paths, remaining role/stage/provider cases and full acceptance audit remain open.",
+    "Elapsed time on this shared local host is not load or capacity evidence for #123."
+  ]
+}

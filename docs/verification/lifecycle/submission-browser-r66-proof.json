@@ -1,0 +1,321 @@
+{
+  "source_revision": "83a97df3e11bbdafbe97f41bdb4212c0281da3ff",
+  "verification_image": "sha256:e358482c7ad46b9bf5579c49b406d659b3f8b9e33efb87375b59e317374489ff",
+  "normal_guide_image": "sha256:a35f65ad5c53cbac7402d4e3eee9e920ef3f747b68d1b23d502f5437bb7042cb",
+  "normal_guide_source": "83a97df3e11bbdafbe97f41bdb4212c0281da3ff",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793155085",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R66",
+  "native_elapsed_seconds": 417.72,
+  "completed_ui_barriers": 208,
+  "source_composition": {
+    "fixture_runtime_revision": "32e7d3fdcd26a99bad21f9850a01876b587b9fab",
+    "fixture_runtime_paths": [
+      "cmd",
+      "internal",
+      "scripts",
+      "Dockerfile",
+      "compose.yaml",
+      "docs/verification/lifecycle/*.mjs"
+    ],
+    "production_web_revision": "f440a8a0ef5b13394baf9b4b32023342bc38b278",
+    "production_dependency_pr": 344,
+    "runtime_comparison": "All listed fixture runtime paths byte-identical to published fixture revision; complete web tree byte-identical to separately reviewed PR344. R66 does not execute later freeze/practice extensions."
+  },
+  "team_submission_UI_receipts": [
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "4d590853-2331-4606-9e20-f9c4b5d4bb81",
+      "actor": "attendee-07",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "045fa8ba-7147-4771-975c-b6fc7f094a0d",
+      "actor": "attendee-12",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "url",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "01617027-398d-4399-aba9-f651711626d1",
+      "actor": "attendee-19",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "27747479-bb4c-4acf-b993-956d042042fd",
+      "actor": "attendee-21",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "4fd765f4-89a6-46df-b354-a4722826adac",
+      "actor": "attendee-28",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "370c5767-480f-4f88-a83b-6b84f24a471d",
+      "actor": "attendee-36",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "4d3d625b-1a1c-4a59-8bc6-f5f5cfc7661a",
+      "actor": "attendee-07",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "f6f7bf82-efea-42fb-bd61-ba3ad9bb0d8a",
+      "actor": "attendee-12",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "url",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "866de997-52a9-47f2-946e-98e2379e8fa4",
+      "actor": "attendee-19",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "1d58952b-df85-4b0e-9967-6dbadde81344",
+      "actor": "attendee-21",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "75487d14-f9de-46e9-a143-2a784bbcf5c2",
+      "actor": "attendee-28",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "a55e35ce-00d8-40a2-8290-39064defe298",
+      "actor": "attendee-36",
+      "kind": "draft",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": true
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "4d590853-2331-4606-9e20-f9c4b5d4bb81",
+      "actor": "attendee-07",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "045fa8ba-7147-4771-975c-b6fc7f094a0d",
+      "actor": "attendee-12",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "url",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "01617027-398d-4399-aba9-f651711626d1",
+      "actor": "attendee-19",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "44757c51-068e-4ecc-b85a-5fdcdc7eda6d",
+      "team_id": "27747479-bb4c-4acf-b993-956d042042fd",
+      "actor": "attendee-21",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "4d3d625b-1a1c-4a59-8bc6-f5f5cfc7661a",
+      "actor": "attendee-07",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "f6f7bf82-efea-42fb-bd61-ba3ad9bb0d8a",
+      "actor": "attendee-12",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "url",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "866de997-52a9-47f2-946e-98e2379e8fa4",
+      "actor": "attendee-19",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    },
+    {
+      "event_id": "97eeb746-be28-4110-a918-1ae0b5e2e66f",
+      "team_id": "1d58952b-df85-4b0e-9967-6dbadde81344",
+      "actor": "attendee-21",
+      "kind": "formal",
+      "revision": 1,
+      "evidence_kind": "repository",
+      "cancel_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true,
+      "preweek_formal_disabled": false
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "native_verification": [
+    "exact saved private evidence, preweek phase and revision",
+    "formal preweek submission and completion review rejected without mutation",
+    "private draft retained after denial and unreadable to organiser/other teams",
+    "exact live formal evidence, actor, revision and current domain instant",
+    "two private-only teams per event remain absent from formal acceptance",
+    "cutoff freezes while stage remains live; late replacement denied",
+    "actual unresolved capture and explicit earlier SHA reconciliation retained",
+    "original assessment/archive/120-day retention guards retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "draft_teams": 6,
+      "formal_teams": 4,
+      "private_only_teams": 2
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "draft_teams": 6,
+      "formal_teams": 4,
+      "private_only_teams": 2
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "failed_predecessor": {
+    "run": "R65",
+    "source": "367e5cd259dd4776b42368cba389fa997767219a",
+    "completed_ui_barriers": 156,
+    "exit_code": 1,
+    "failure": "Native200 exact evidence was falsely classified as unknown due JSON member order; separate343/344 product correction. No R65 acceptance claim."
+  },
+  "remaining": "Full original120 remains incomplete, including branch/cutoff/practice UI extensions not executed here, organiser judging setup345, remaining assessment/results/feedback/outcomes/archive/roles/providers/keyboard/narrow/private recovery/final audit. No release-readiness claim.",
+  "private_artifact_sha256": {
+    "source.json": "d5c83f7db0f9ac0da1feed621c2aa7d6abb100d3ef6c4afa50a73a707cc66433",
+    "connected-browser-proof.json": "ddd69a6880f558eb7abb22ccc8fa4b1dcc891820a2bc423490a296b182effd3e",
+    "native/journey-start-live.json": "89306f7edbaf87c4c8327ec60150931d72bedca21ab030a875b77b02d6907a48",
+    "native-runner.log": "f81f4b950f529bee227a7fb9e094d3416fb31d49aeeb6ab8072672edf9ebfe96",
+    "final.dump": "6297582984749112e96b84527e46faeca614111c6c8424108e3bad10831f29f9",
+    "native-team-formal-1201.png": "84ea49c5174ae7e0dc6a276db6be5806375c31a1a1902fffb8df327802e5a726"
+  }
+}

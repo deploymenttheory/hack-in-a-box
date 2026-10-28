@@ -52,7 +52,9 @@ func TestLifecycleComposeProcess(t *testing.T) {
 	}()
 	ctx, stop := signal.NotifyContext(t.Context(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if role == "provider" {
+	if role == "browser-proxy" {
+		err = runLifecycleBrowserProxy(ctx)
+	} else if role == "provider" {
 		err = runLifecycleProvider(ctx)
 	} else if role == "public" || role == "admin" || role == "worker" {
 		err = runLifecycleNativeProcess(ctx, role)
@@ -209,9 +211,9 @@ func runLifecycleProvider(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	provider, err := newLifecycleOIDC("http://provider:8080", map[string]string{
-		"lifecycle-public": "http://public:8080/auth/callback",
-		"lifecycle-admin":  "http://admin:8080/auth/callback",
+	provider, err := newLifecycleOIDC("http://provider.localhost:8080", map[string]string{
+		"lifecycle-public": "http://public.localhost:8080/auth/callback",
+		"lifecycle-admin":  "http://admin.localhost:8080/auth/callback",
 	})
 	if err != nil {
 		return err
@@ -262,7 +264,9 @@ func runLifecycleProvider(ctx context.Context) error {
 			if err := clock.advance(
 				directory,
 				input.At,
-				timeline.Day90.Add(24*time.Hour),
+				// Cover the explicit120-day policy after the one-day postponement.
+				// This bounds only the private fixture clock, not a production window.
+				timeline.Day90.AddDate(0, 0, 31),
 			); err != nil {
 				http.Error(w, "clock fixture unavailable", http.StatusInternalServerError)
 				return
