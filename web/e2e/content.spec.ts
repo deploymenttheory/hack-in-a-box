@@ -352,3 +352,22 @@ test('definite criteria denial clears the private challenge editor without a con
   await expect(page.getByText('PRIVATE UNPUBLISHED CHALLENGE', { exact: true })).toHaveCount(0)
   expect(state.writes).toHaveLength(0)
 })
+
+test('an unbound challenge draft can be saved and cancellation stays available during rubric read failures', async ({ page }) => {
+  const state = await setup(page, true)
+  state.rubric.latest = { ...state.rubric.latest, reference: { ...state.rubric.latest.reference, version: 0, digest: '' }, approved: false }
+  await page.getByRole('button', { name: 'Edit Common challenge', exact: true }).click()
+  await page.getByLabel('Markdown', { exact: true }).fill('Private draft before criteria approval')
+  await page.getByRole('button', { name: 'Save new draft', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Draft version 2 saved.' })).toBeVisible()
+  expect((state.writes[0].body as { document: Document }).document.rubric).toBeUndefined()
+  await expect(page.getByRole('button', { name: 'Mark ready for review', exact: true })).toBeDisabled()
+  state.rubric.readStatus = 503
+  await contentSection(page, 'Judging criteria')
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByRole('region', { name: 'Challenge judging criteria', exact: true })).toContainText('Criteria checks are paused.')
+  await page.getByRole('button', { name: 'Cancel pending release', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Pending release cancelled.' })).toBeVisible()
+  expect(state.writes).toHaveLength(2)
+  expect(state.writes[1].body).toMatchObject({ action: 'cancel' })
+})
