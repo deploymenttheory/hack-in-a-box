@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -107,7 +109,7 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 				}
 			}
 		}
-		for _, judge := range judges {
+		for judgeIndex, judge := range judges {
 			var raw json.RawMessage
 			if err := judge.call(ctx, http.MethodGet, base+"/judge-practice", -1, nil, &raw, http.StatusOK); err != nil {
 				t.Fatal(err)
@@ -134,7 +136,10 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			}
 			command := judging.PracticeCommand{RequestID: uuid.New(), Action: "submit", Scores: scores}
 			var accepted judging.Receipt
-			if err := judge.call(ctx, http.MethodPost, base+"/judge-practice", 0, command, &accepted, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				accepted = r.practiceInBrowser(t, item, index, judgeIndex, judge, practice, scores)
+				command.RequestID = accepted.RequestID
+			} else if err := judge.call(ctx, http.MethodPost, base+"/judge-practice", 0, command, &accepted, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
 			if accepted.RequestID != command.RequestID || accepted.ActorID != judge.person || accepted.TeamID != practice.FictionalEntryID || accepted.RunID != uuid.Nil || accepted.Action != "practice_submit" || accepted.Revision != 1 || accepted.State != "submitted" {
@@ -144,7 +149,7 @@ func (r *lifecycleJourney) rehearseJudgePractice(t *testing.T) {
 			if err := judge.call(ctx, http.MethodGet, base+"/judge-practice", -1, nil, &current, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			if current.Card == nil || current.Card.Version != 1 || current.Card.State != "submitted" || current.Card.Rubric != practice.Rubric {
+			if current.Card == nil || current.Card.Version != 1 || current.Card.State != "submitted" || current.Card.Rubric != practice.Rubric || !reflect.DeepEqual(current.Card.Scores, scores) {
 				t.Fatal("native practice did not retain its own submitted version")
 			}
 			realPath := fmt.Sprintf("%s/teams/%s", path, currentTeams[0])

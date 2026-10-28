@@ -1,3 +1,4 @@
+import {rehearseJudgeInFleet} from './browser-judge-practice.mjs'
 import {reviewSubmissionFreezeInFleet} from './browser-submission-freeze.mjs'
 import {submitTeamEvidenceInFleet} from './browser-team-submissions.mjs'
 import {askClarificationInFleet,answerClarificationInFleet} from './browser-clarification-authoring.mjs'
@@ -56,7 +57,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[],submissions=[],freezeChanges=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[],submissions=[],freezeChanges=[],practiceSubmissions=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -227,6 +228,14 @@ try{
    submissions.push(await submitTeamEvidenceInFleet({browser,expect,phase,output,errors}))
    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,saved_by_ui:true})
   }
+  for(const base of [1501,1521])for(let offset=0;offset<3;offset++){
+   const sequence=base+offset
+   step=`fictional-judge-practice-${sequence}`
+   const phase=await readPhase(sequence,180000)
+   const result=await rehearseJudgeInFleet({browser,expect,phase,output,errors})
+   practiceSubmissions.push(result)
+   await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,command_id:result.command_id,saved_by_ui:true})
+  }
   for(const sequence of [902,922]){
    step=`approve-live-attendance-exception-${sequence}`
    const phase=await readPhase(sequence,180000)
@@ -278,7 +287,7 @@ try{
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,team_submissions:submissions,submission_freeze:freezeChanges,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,team_submissions:submissions,submission_freeze:freezeChanges,fictional_practice:practiceSubmissions,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)
