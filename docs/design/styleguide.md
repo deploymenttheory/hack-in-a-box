@@ -531,3 +531,42 @@ writes. Only an exact actor/request/run/team/version/fingerprint assignment
 receipt can settle an original assignment; choosing a reviewed current base
 retains the earlier unknown metadata and never replays it. Native scoring owns
 assessment start, eligibility, cutoff and frozen-code gates.
+
+### Mentor assessment and checkpoint planning
+
+The independent **Plan mentor checkpoints** example imports production
+`MentorPlannerFields`, `MentorPlannerCurrent` and `MentorPlannerDecision`. Its
+explicit UTC fixture and local review grant no authority and issue no requests.
+Use the example's scenario controls to inspect run creation and checkpoint
+configuration separately. Handoff links update a local note in the guide;
+production navigation belongs to the actual portal. Reveal named window fields
+after an assessment run is selected so the next action remains clear.
+
+```tsx
+<MentorPlannerFields source={currentAuthorisedPlanning}
+  input={input} change={setInput} errors={fieldErrors}
+  disabled={pausedOrUnconfirmed} review={resolveNativeWindowAndCapture}
+  form={form} />
+```
+
+The production owner verifies the current event organiser before privileged
+reads. Bind each captured review to the exact approved rubric/run and event or
+checkpoint revision. Resolve event-local times through `/api/v1/time/resolve`,
+show the timezone, resolved instants and repeated-clock choice, and associate
+errors with named controls. Focus the first invalid field; cancel returns focus
+to its initiating button or an always-visible heading. Use constant geometry
+and the shared field primitives; do not add an assertive alert per field.
+
+Create live observations and frozen-output qualification as separate assessment
+runs. Qualification is available only for mentor-qualification judging. Native
+live/cutoff/window and private-score gates remain authoritative. Edits retain
+exact checkpoint IDs and versions; name a saved checkpoint rather than asking
+operators to paste opaque identifiers. Form entry, native time preview and
+captured review must not write configuration until explicit confirmation.
+
+The original response must match its complete captured definition, source,
+public criteria, version and resolved window. Current reads cannot establish
+original actor/reason evidence after a lost response. Preserve an unknown write
+as safe metadata above private editor teardown, do not retry it, and require an
+explicitly reviewed new base for a different command. Keep production, local
+guide, usage/accessibility guidance and meaningful checks updated together.

@@ -1,3 +1,4 @@
+import { rubricGuideConfiguration } from '../src/styleguide/rubric-fixture'
 import { expect, type Page } from '@playwright/test'
 import { firstID, mockWorkspace } from './fixtures'
 import type { components } from '../src/api/schema.gen'
@@ -19,6 +20,8 @@ export function fixtureMentors(): MentorPage {
 export async function mockMentors(page: Page) {
   const workspace = await mockWorkspace(page)
   workspace.events[0].configuration.timezone = 'UTC'; workspace.events[0].stage = 'live'
+  await page.route(`**/events/${firstID}/rubric/configuration*`, route => route.fulfill({ json: rubricGuideConfiguration() }))
+  await page.route(`**/events/${firstID}/scorecard-checkpoints*`, route => route.fulfill({ json: { revision: workspace.events[0].revision, items: [], next_cursor: null } }))
   const state: { value: MentorPage; commands: components['schemas']['MentorCommand'][]; denied: boolean; stale: boolean } = { value: fixtureMentors(), commands: [], denied: false, stale: false }
   await page.route(`**/events/${firstID}/teams`, route => {
     expect(route.request().method()).toBe('GET')
