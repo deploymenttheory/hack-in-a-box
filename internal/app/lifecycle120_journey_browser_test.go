@@ -20,6 +20,7 @@ import (
 // Browser barriers are private fixture IPC, never application endpoints or
 // authentication overrides. The native test independently reads every effect.
 type lifecycleBrowserPhase struct {
+	Deliberation   *lifecycleBrowserDeliberationInput   `json:"deliberation,omitempty"`
 	Qualification  *lifecycleBrowserQualificationInput  `json:"qualification,omitempty"`
 	Huddle         *lifecycleBrowserFinalHuddleInput    `json:"huddle,omitempty"`
 	MentorPlanning *lifecycleBrowserMentorPlanningInput `json:"mentor_planning,omitempty"`

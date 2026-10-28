@@ -33,6 +33,7 @@ import (
 type lifecycleJourneyEvent struct {
 	browserFinalHuddleActions   []lifecycleFinalHuddleActionReceipt
 	browserQualification        []lifecycleQualificationCommandReceipt
+	browserDeliberation         []lifecycleDeliberationBrowserReceipt
 	browserFinalMentorCards     []lifecycleMentorCardReceipt
 	browserMentorPlanning       []lifecycleMentorPlanningReceipt
 	browserLiveMentorCards      []lifecycleMentorCardReceipt
@@ -350,7 +351,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !lifecycleBrowserQualificationComplete(item) || !lifecycleBrowserFinalHuddlesComplete(item) || !lifecycleBrowserFinalMentorCardsComplete(item) || !lifecycleBrowserMentorPlanningComplete(item) || !lifecycleBrowserMentorCheckpointsComplete(item) || !lifecycleBrowserJudgingSetupComplete(item) || !lifecycleBrowserPracticeComplete(item) || !lifecycleBrowserFreezeComplete(item) || !lifecycleBrowserSubmissionsComplete(item) || !lifecycleBrowserClarificationComplete(item.browserClarificationActions) || !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
+			if !lifecycleBrowserDeliberationComplete(item) || !lifecycleBrowserQualificationComplete(item) || !lifecycleBrowserFinalHuddlesComplete(item) || !lifecycleBrowserFinalMentorCardsComplete(item) || !lifecycleBrowserMentorPlanningComplete(item) || !lifecycleBrowserMentorCheckpointsComplete(item) || !lifecycleBrowserJudgingSetupComplete(item) || !lifecycleBrowserPracticeComplete(item) || !lifecycleBrowserFreezeComplete(item) || !lifecycleBrowserSubmissionsComplete(item) || !lifecycleBrowserClarificationComplete(item.browserClarificationActions) || !item.browserEventCreated || !item.browserPostponed || !item.browserLiveException || !item.browserObjectiveAuthored || len(item.browserAcknowledgements) != 2 || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
 				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
@@ -399,6 +400,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserDeliberation         []lifecycleDeliberationBrowserReceipt  `json:"browser_deliberation"`
 		BrowserQualification        []lifecycleQualificationCommandReceipt `json:"browser_qualification"`
 		BrowserFinalHuddleActions   []lifecycleFinalHuddleActionReceipt    `json:"browser_final_huddle_actions"`
 		BrowserFinalMentorCards     []lifecycleMentorCardReceipt           `json:"browser_final_mentor_cards"`
@@ -510,6 +512,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
+				BrowserDeliberation:         item.browserDeliberation,
 				BrowserQualification:        item.browserQualification,
 				BrowserFinalHuddleActions:   item.browserFinalHuddleActions,
 				BrowserFinalMentorCards:     item.browserFinalMentorCards,

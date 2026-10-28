@@ -328,3 +328,16 @@ actor/action/version without exercising history pagination. The fixture now
 uses the endpoint’s actual `before` parameter to target that exclusive version
 explicitly. R73 keeps its original source and evidence; the corrected query will
 be exercised by the next integrated rehearsal. No earlier proof is relabelled.
+
+### Reviewed deliberation (pending execution with product350)
+
+The fixture now requires a deliberate organiser UI attempt before the third
+required judge has submitted, followed by a separate reviewed opening after
+all independent cards are complete, in each judging mode. Native rejection
+leaves the exact round unchanged; successful original receipts bind actual UI
+UUID, actor, run, revision, action and independently computed command fingerprint.
+Existing native peer-card disclosure and missing-judge guards remain unchanged.
+The extended339-barrier journey has a15-minute overall native allowance based
+on R73’s measured709.32-second335-action run; per-action guards remain unchanged.
+Target339 is unverified, R73 stays accepted335-step history and original120
+remains incomplete. Product349/350 stays separate from draft316.
