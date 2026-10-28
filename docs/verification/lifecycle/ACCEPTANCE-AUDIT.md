@@ -13,7 +13,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
 | Confirmed-only floor, surviving offers, freeze ordering, target five/preference four-to-six | R12 cutoff and R16 connected journey; R54 adds92 reviewed team commands with exact native revisions, target-five initial publication and corrected preferred-size publication | R59 adds actual before/after-freeze withdrawals and reviewed hard freeze; remaining full integrated role/UI variants remain |
 | Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | R59 completes the bounded withdrawal/freeze action sequence; remaining role, UI boundary and full acceptance variants remain |
-| Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | Complete browser publication/exception paths |
+| Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | R63 verifies reasoned post-publication postponement and below-floor live approval; remaining full publication/recovery/role variants remain |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
 | Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | R61 objective setup and R62 common-rubric visibility/exact document acknowledgements pass; objective disclosure, clarification/correction and remaining full Fleet sequence remain |
 | Fictional practice, real judging, reviewed nonwinner showcase, owned30/60/90 reviews | R21 real independent cards/majority decisions, six outcomes/event, reviewed nonwinner, retained native queued reviews | Full browser sequence and current-role/provider variants |
@@ -125,3 +125,13 @@ Both archives and exact retention guards pass; scoped cleanup is zero. See
 `reading-browser-r62-proof.json`; runtime and all browser-controller source
 bytes match a pinned rebased draft revision. This supersedes the prior pending
 reading observation, while exception and remaining full journeys stay open.
+
+R63 passes174 UI barriers and the native journey (418.22s), adding both actual
+organiser postponements and explicit reasoned below-minimum LIVE approvals.
+Original native date, publication, frozen-team/common-content, peer-event,
+decision/audience, denied-unapproved-change and attendance guards all pass,
+followed by both archives and exact retention; scoped cleanup is zero. See
+`event-decisions-browser-r63-proof.json`. This supersedes the pending-exception
+observation for that bounded sequence. Clarification/correction, assessment,
+feedback/archive and remaining original full role/provider/acceptance work stay
+open; `complete_lifecycle` remains false.

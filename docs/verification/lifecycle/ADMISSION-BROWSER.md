@@ -199,3 +199,18 @@ rebased runtime/controller byte comparison and private artifact hashes; the
 [synthetic participant screenshot](native-published-rubric-reading.png) shows
 published criteria. Postponement/attendance exception is a later extension;
 full original #120 remains incomplete.
+
+R63 passes174 UI barriers and the native journey (418.22s). Both organisers use
+real setup date controls, preview/review/confirmation and a reasoned exceptional
+postponement; later they explicitly approve LIVE entry with29 confirmed against
+the30 floor and a recorded reason. Native exact dates, original publication,
+common content, frozen roster, decision audits, current notice audience and
+peer-event isolation remain checked. Unapproved/frozen-deadline and unwaived
+attendance attempts remain denied. Both events archive with exact retention
+guards; scoped cleanup is zero.
+[event-decisions-browser-r63-proof.json](event-decisions-browser-r63-proof.json)
+retains exact runtime/controller identity and private hashes;
+[native-postponement-dates.png](native-postponement-dates.png) shows synthetic
+revised dates. Full original #120 remains incomplete; clarification/correction,
+assessment/feedback/archive and remaining full role/provider variants still need
+complete normal-UI acceptance.
