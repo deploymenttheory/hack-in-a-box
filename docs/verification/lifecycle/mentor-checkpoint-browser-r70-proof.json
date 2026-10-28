@@ -322,5 +322,16 @@
     "native-runner.log": "0be81fb06a61c944b3d3bfee91b3feaa0304a637a528a4a41009e102ffa3c1d8",
     "final.dump": "26d0801232c109545f5967ec3cb071b18d64ee66f12d666a7a277841a3f98931"
   },
-  "remaining": "Full original120 remains incomplete: organiser mentor planning347, remaining final-review/real judging/results/feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim."
+  "remaining": "Full original120 remains incomplete: organiser mentor planning347, remaining final-review/real judging/results/feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim.",
+  "matching_published_runtime_revision": "800d8746d41f3a0b8c227c9ea1922cc85bbb750c",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "production_dependency_346_merged_main": "6023d844ae05fea35592b5066f1dc4d7b5fd954d"
 }
