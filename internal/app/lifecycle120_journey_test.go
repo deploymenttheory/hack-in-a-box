@@ -31,7 +31,8 @@ import (
 // phases are implemented. A passing preparation/live checkpoint is explicitly
 // not acceptance of the complete L01–L18 matrix.
 type lifecycleJourneyEvent struct {
-	browserHelp *lifecycleBrowserHelpReceipt
+	browserObjectiveAuthored bool
+	browserHelp              *lifecycleBrowserHelpReceipt
 
 	failedMessage lifecycleFailedMessageReceipt
 
@@ -332,7 +333,7 @@ func TestLifecycleComposeJourney(t *testing.T) {
 	}
 	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
 		for _, item := range run.events {
-			if !item.browserEventCreated || !item.browserRegistrationOpened ||
+			if !item.browserEventCreated || !item.browserObjectiveAuthored || !item.browserRegistrationOpened ||
 				!item.browserOfferPolicyApproved ||
 				!item.browserRubricApproved || !item.browserChallengeApproved || len(item.browserAllocationWithdrawals) != 3 || len(item.browserFrozenWithdrawals) != 3 ||
 				!lifecycleBrowserTeamCommandsComplete(item.browserTeamCommands) ||
@@ -381,6 +382,8 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		)
 	}
 	type eventReceipt struct {
+		BrowserObjectiveAuthored bool `json:"browser_objective_authored"`
+
 		BrowserHelp              *lifecycleBrowserHelpReceipt         `json:"browser_help_recovery,omitempty"`
 		FailedMessage            lifecycleFailedMessageReceipt        `json:"failed_message"`
 		BrowserApplications      []lifecycleBrowserApplicationReceipt `json:"browser_applications,omitempty"`
@@ -471,11 +474,12 @@ func TestLifecycleComposeJourney(t *testing.T) {
 		items = append(
 			items,
 			eventReceipt{
-				BrowserHelp:           item.browserHelp,
-				FailedMessage:         item.failedMessage,
-				BrowserBrandVerified:  item.browserBrandVerified,
-				BrowserEventCreated:   item.browserEventCreated,
-				BrowserPublishedForms: item.browserPublishedForms,
+				BrowserObjectiveAuthored: item.browserObjectiveAuthored,
+				BrowserHelp:              item.browserHelp,
+				FailedMessage:            item.failedMessage,
+				BrowserBrandVerified:     item.browserBrandVerified,
+				BrowserEventCreated:      item.browserEventCreated,
+				BrowserPublishedForms:    item.browserPublishedForms,
 
 				BrowserAllocationWithdrawals: item.browserAllocationWithdrawals,
 				BrowserFrozenWithdrawals:     item.browserFrozenWithdrawals,
@@ -637,7 +641,9 @@ func (r *lifecycleJourney) prepareEvent(
 			},
 		},
 	}
-	if err := r.owner.call(
+	if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+		r.createObjectiveInBrowser(t, &item, index, definition)
+	} else if err := r.owner.call(
 		ctx,
 		http.MethodPut,
 		base+"/objectives/"+uuid.NewString(),
