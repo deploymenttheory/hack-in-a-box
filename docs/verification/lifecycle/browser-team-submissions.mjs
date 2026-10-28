@@ -37,6 +37,7 @@ export async function submitTeamEvidenceInFleet({browser,expect,phase,output,err
   assert.equal(writes.length,0)
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click()
   await expect(dialog).toHaveCount(0)
+  await expect(opener).toBeFocused()
   assert.equal(writes.length,0,'Cancelled review must not save evidence')
   await opener.focus();await opener.press('Enter')
   const response=page.waitForResponse(r=>new URL(r.url()).pathname===path&&r.request().method()==='PUT')
