@@ -165,3 +165,12 @@ retains source/images and private hashes;
 [native-team-freeze.png](native-team-freeze.png) shows the synthetic frozen
 allocation and unused retired team. Objective authoring is the next published
 extension and is not established by this run. Full original #120 remains open.
+
+R60 failed before the first objective save: the fixture used exact raw label
+text for a select nested in its label. The DOM label contains option text, while
+the actual accessible combobox name is exactly “Baseline basis”. A focused
+desktop/mobile browser loop reproduced the mismatch; the correction targets
+that exact accessible role/name, retaining exact matching and the same user
+control. The failed source and private evidence remain retained; it is not
+objective acceptance. All scoped resources were removed. A corrected full
+connected run is required.
