@@ -15,7 +15,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | R59 completes the bounded withdrawal/freeze action sequence; remaining role, UI boundary and full acceptance variants remain |
 | Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | R63 verifies reasoned post-publication postponement and below-floor live approval; remaining full publication/recovery/role variants remain |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
-| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | R61 objective setup and R62 common-rubric visibility/exact document acknowledgements pass; objective disclosure, clarification/correction and remaining full Fleet sequence remain |
+| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | R61 objective setup and R62 common-rubric visibility/exact document acknowledgements pass; R64 private question and reviewed common-answer correction pass; objective disclosure and remaining full Fleet sequence remain |
 | Fictional practice, real judging, reviewed nonwinner showcase, owned30/60/90 reviews | R21 real independent cards/majority decisions, six outcomes/event, reviewed nonwinner, retained native queued reviews | Full browser sequence and current-role/provider variants |
 | Archive freezes competition and permits only approved audited follow-up | R21 full competition hash comparison, reviewed outcomes and exact queued reviews | Revocation/provider variants and final archive/export review |
 | Completed Fleet screens/guide with full journeys | Existing component/route/native browser proofs and separate normal-image guide | Full integrated keyboard/narrow/offline/private-recovery journeys and provenance index |
@@ -135,3 +135,17 @@ followed by both archives and exact retention; scoped cleanup is zero. See
 observation for that bounded sequence. Clarification/correction, assessment,
 feedback/archive and remaining original full role/provider/acceptance work stay
 open; `complete_lifecycle` remains false.
+
+
+R64 passes all188 UI barriers and the subsequent native journey (454.86s).
+Both modes ask a private team question, then separately save, approve and publish
+common answer versions1 and2 using normal OIDC and captured production controls.
+Native reads retain exact source/resource/revision identities, private-question
+and draft denial, rejected unapproved publication without notification effects,
+old release retention during correction, immutable history and exact current
+confirmed-recipient delivery. Both events finish archived with the original
+120-day retention guards. Scoped cleanup independently leaves zero resources.
+See `clarification-browser-r64-proof.json` and the synthetic common audience
+preview `native-common-answer-correction.png`. Full original acceptance remains
+open, including submission/cutoff, assessment, feedback/outcomes/archive and
+remaining role/provider/keyboard/narrow/recovery/final audit requirements.

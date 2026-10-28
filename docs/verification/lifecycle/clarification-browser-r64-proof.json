@@ -1,0 +1,239 @@
+{
+  "source_revision": "81eb33480db54a38391da66ae0f89df680f8ad14",
+  "verification_image": "sha256:f9ba2d2bfd877dbda2ba8bcb0a4f5fa6768f23957870180def3c903c051b2886",
+  "normal_guide_image": "sha256:127a088d153abcbff75846cc124a23fe30efae9ccf24b51f005b331f4024d3ae",
+  "normal_guide_source": "81eb33480db54a38391da66ae0f89df680f8ad14",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793153715",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R64",
+  "native_elapsed_seconds": 454.86,
+  "completed_ui_barriers": 188,
+  "production_main": "8d80b4dea29b6377fee8cfdc11e762f90c13e072",
+  "matching_published_runtime_revision": "81eb33480db54a38391da66ae0f89df680f8ad14",
+  "runtime_trees_compared": [
+    "cmd",
+    "internal",
+    "web",
+    "scripts",
+    "Dockerfile",
+    "compose.yaml",
+    "docs/verification/lifecycle/*.mjs"
+  ],
+  "clarification_UI_actions": [
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "command_id": "4908a9fa-0454-4d88-ad30-f28a514807cb",
+      "action": "ask-common-question",
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-save",
+      "version": 1,
+      "revision": 1,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-approve",
+      "version": 1,
+      "revision": 2,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-publish",
+      "version": 1,
+      "revision": 3,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-save",
+      "version": 2,
+      "revision": 4,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-approve",
+      "version": 2,
+      "revision": 5,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "question_id": "396143e2-1852-4c70-bb96-440d7827cdea",
+      "answer_id": "125fc4cf-bf71-4218-b5b7-1a34c6291f82",
+      "action": "answer-publish",
+      "version": 2,
+      "revision": 6,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "command_id": "7b909390-729e-43a7-9af4-b82b7e22a31a",
+      "action": "ask-common-question",
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-save",
+      "version": 1,
+      "revision": 1,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-approve",
+      "version": 1,
+      "revision": 2,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-publish",
+      "version": 1,
+      "revision": 3,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-save",
+      "version": 2,
+      "revision": 4,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-approve",
+      "version": 2,
+      "revision": 5,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "question_id": "efa3bd58-8637-4566-b90e-d7b8bee7720b",
+      "answer_id": "59333c22-100c-46fc-847f-c5d688f170fa",
+      "action": "answer-publish",
+      "version": 2,
+      "revision": 6,
+      "review_without_write": true,
+      "one_confirmed_command": true,
+      "reloaded": true
+    }
+  ],
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "final_modes_and_stages": [
+    {
+      "event_id": "fb7653ae-945d-418f-8ac2-020853302136",
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_actions": [
+        "ask",
+        "save-1",
+        "approve-1",
+        "publish-1",
+        "save-2",
+        "approve-2",
+        "publish-2"
+      ],
+      "native_guards": {
+        "other_team_question_denied": true,
+        "private_draft_denied": true,
+        "unapproved_publication_denied": true,
+        "correction_draft_kept_old_release": true
+      },
+      "published_versions": 2
+    },
+    {
+      "event_id": "15a5c80b-9060-484c-98c6-bc848e5b49bb",
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_actions": [
+        "ask",
+        "save-1",
+        "approve-1",
+        "publish-1",
+        "save-2",
+        "approve-2",
+        "publish-2"
+      ],
+      "native_guards": {
+        "other_team_question_denied": true,
+        "private_draft_denied": true,
+        "unapproved_publication_denied": true,
+        "correction_draft_kept_old_release": true
+      },
+      "published_versions": 2
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "remaining": "Full original #120 remains incomplete: submission/cutoff, assessment, feedback/outcomes/archive and remaining role/provider/keyboard/narrow/recovery/final audit. No release readiness claim.",
+  "private_artifact_sha256": {
+    "source.json": "c50801f70bd932ccc76688d8ab40c9acdc3e12c5e3fabc7d8f8da69eff58f522",
+    "connected-browser-proof.json": "3d2702abbd3a38af0e7f148684de20f40861dffc806ccf67052bade128def07c",
+    "native/journey-start-live.json": "b11e9f0903ef7becc036b5a562ac58d3eff146319d258fdf4e76518b9736a7a0",
+    "native-runner.log": "8088418fb72beb1c177131f08f2f63b7adc7052b620582df6d24c03a74ff9721",
+    "native-common-answer-1007.png": "8bf9ba13b43c28af9e52dae6901f1403525febe0350b6029af3efa1b8379b65f",
+    "final.dump": "fa222656a8f7dbf709f5c2644abf07372cb5ec89b62ef72b1c5107ffeebea878"
+  }
+}
