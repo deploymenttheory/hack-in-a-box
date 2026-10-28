@@ -7,7 +7,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 
 | Original criterion | Inspected evidence | Remaining acceptance |
 | --- | --- | --- |
-| Both judging modes, concurrent brands, overlapping people | Connected R23/R24, `retention-cases-proof.json`; original full private run retains both native events | Complete browser journey for both |
+| Both judging modes, concurrent brands, overlapping people | Connected R23/R24, `retention-cases-proof.json`; original full private run retains both native events | R58 covers the shared planning/registration/team/rubric/challenge UI prefix; later complete browser journey for both remains |
 | Withdrawal, failed message, private resource, Wi-Fi interruption, unresolved/reconciled freeze | Connected native journey includes withdrawals, private guidance, concurrent help and real failed/reconciled cutoff; CONNECTED-MESSAGE.md adds same-event queued permanent SMTP failure with immutable history and denied retry | R39 adds actual same-event browser offline/accepted-response-loss recovery with one PUT and independent native verification; remaining integrated provider/role variants |
 | Every role authorised throughout; final archive intended evidence | Native current member/withdrawn/owner/team privacy, final/archive hashes; LIVE-ROLES.md adds twelve live actor cases on both events and audited mentor revoke/restore with peer isolation | Remaining other-stage/current-resource role cases, full action journeys and archive/export inspection |
 | Synthetic reproducible fixtures without production accounts | `verify-lifecycle-journey.sh`, `verify-lifecycle-dispatch.sh`; isolated native OIDC/GitHub/provider, clean source/image and original journal/dump capture | One final documented sequence covering all remaining browser/role cases |
@@ -15,7 +15,7 @@ establishes the complete Fleet browser/role/provider matrix by implication.
 | Before/after-freeze depletion, no late move/backfill, discarded repositories unused/unscored | R11 surviving pair and R21 original repository checks; R54 drives explicit unlocks, surviving-pair moves and corrected publication through Fleet, retaining prior snapshots until publication | Complete withdrawal/freeze and remaining before/after-freeze browser cases |
 | Local-calendar T−7, early work/no early submissions/reviews, missed release and exceptions | R16 work/postponement/attendance exception; R15 exact +60s/first late microsecond with actual worker; `normal-calendar-proof.json` actual production Go API/DST | Complete browser publication/exception paths |
 | Lasting privileged exclusions and exact cutoff/census | R16 native role history exclusion, freeze before stage advancement and all seven final sources | Full current/revoked-role browser matrix |
-| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve | Remaining full action-to-next-action Fleet browser sequence |
+| Objectives, rubric, exact acknowledgements, claimed help and reviewed corrections | Connected native journey exact source/version identities and real current audience delivery; R39 actual browser help review, recovery, mentor claim/resolve; R57 rubric authoring/approval and R58 exact challenge binding/save/review/approval | Objective setup, document acknowledgements, clarification/correction and remaining full Fleet sequence |
 | Fictional practice, real judging, reviewed nonwinner showcase, owned30/60/90 reviews | R21 real independent cards/majority decisions, six outcomes/event, reviewed nonwinner, retained native queued reviews | Full browser sequence and current-role/provider variants |
 | Archive freezes competition and permits only approved audited follow-up | R21 full competition hash comparison, reviewed outcomes and exact queued reviews | Revocation/provider variants and final archive/export review |
 | Completed Fleet screens/guide with full journeys | Existing component/route/native browser proofs and separate normal-image guide | Full integrated keyboard/narrow/offline/private-recovery journeys and provenance index |
@@ -82,3 +82,16 @@ six teams of four-to-six. Neither run completes the full twelve-criterion audit.
 Rubric configuration still lacks an administrator authoring screen; separate339
 tracks that product gap. Depletion withdrawals, later hard freeze, content and
 assessment, feedback/archive and other role/stage/provider UI paths remain.
+
+R57 verifies actual rubric authoring and separate exact-version approval on both
+events, including native save/approval keyboard handoffs, with144 barriers and
+both native archives (457.08s). R58 adds explicit approved-rubric selection and
+actual challenge template/save/review/approval controls: all150 barriers and the
+subsequent native journey pass418.75s. Exact native title/body, reference,
+audience, acknowledgement, schedule and revisions are independently checked.
+See `rubric-browser-r57-proof.json` and `challenge-browser-r58-proof.json` for
+pinned source/images and private artifact hashes. All scoped resources were
+removed after both runs. These supersede the historical missing-rubric-screen
+observation above for that bounded portion. The newly added before/after-freeze
+withdrawal and hard-freeze UI extension is not established by R58; its connected
+execution is pending. Full original twelve-criterion acceptance remains open.
