@@ -283,3 +283,14 @@ live cards remain unchanged, and all-team judging gains no final mentor stage.
 Only identity/version metadata is published; no private assessment screenshots.
 Target300 browser barriers is pending execution; R71 remains historical accepted
 276-step evidence and full original120 remains incomplete.
+
+### R72 executed final mentor reviews and signed huddles
+
+Exact source8234261f passed all300 browser barriers and the native journey
+in 608.40 seconds. Eight fresh independent final cards and sixteen formal
+huddle actions retain exact original authors, versions, frozen sources and native
+immutable history/sign-off proofs. Earlier live cards remain unchanged; all-team
+mode acquires no final mentor stage. Both modes archived, configured120-day
+retention passed and scoped resources are zero. See
+`final-reviews-browser-r72-proof.json`; no private assessment screenshot or body
+is published. Full original120 remains incomplete and draft316 stays draft.
