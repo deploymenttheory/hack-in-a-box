@@ -306,3 +306,16 @@ actor/version/history and current frozen source. The missing-vote sign-off
 negative API check remains. All-team mode acquires no qualification workflow.
 Target335 browser barriers is unverified; R72 remains accepted300-step history.
 Full original120 remains incomplete and draft316 stays draft.
+
+### R73 executed qualification panel journey
+
+Exact source3e172b06 passed all335 browser barriers and the native journey
+in 709.32 seconds. All35 qualification commands use production UI controls
+and named normal OIDC actors. Actual request IDs bind independently computed
+native fingerprints, original recovery and exact immutable history. Four moderated
+cards, both mentors’ sixteen ballots, eight resolutions and final sign-off retain
+current frozen sources. Missing-vote sign-off remains denied; all-team mode gains
+no qualification workflow. Both events archived, configured120-day retention
+passed and scoped resources are zero. See `qualification-browser-r73-proof.json`;
+no assessment bodies or private screenshots are published. Full original120
+remains incomplete and draft316 stays draft.
