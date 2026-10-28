@@ -259,3 +259,14 @@ and final checkpoint separation and early-write denials remain. The participant
 Mentors section remains its published-roster reader. Target276 browser barriers
 is pending execution; R70 remains accepted270-step history, not this planner's
 native acceptance. Full original120 remains incomplete.
+
+### R71 executed organiser mentor planning
+
+Exact source0a3f3f3e passed all276 browser barriers and the native journey in
+611.60 seconds. Three separate production UI assessment runs and three
+checkpoint windows retain actual generated identities, exact approved sources,
+earlier independent runs/windows and known native resolved event instants. Both
+modes archived, configured120-day retention remained enforced and scoped
+resources are zero. See `mentor-planning-browser-r71-proof.json` and the
+synthetic-only `native-mentor-checkpoint-planning.png`. Product dependency is
+separate PR348; full original120 stays incomplete and draft316 remains draft.

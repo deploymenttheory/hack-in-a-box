@@ -1,0 +1,122 @@
+{
+  "source_revision": "0a3f3f3e8859a0b2df67367ea40a7704edee7d49",
+  "verification_image": "sha256:91d7e40d9c325e147349557411d5aed64ce0412110fcc8c735cbc5068e44e6ac",
+  "normal_guide_image": "sha256:94e68930647816feea066bf8998560e9677d5c1b838207a785a05b7821f76c05",
+  "normal_guide_source": "0a3f3f3e8859a0b2df67367ea40a7704edee7d49",
+  "guide_web_source_matches": true,
+  "project": "hackbox-connected-browser-1793164771",
+  "actual_browser_exit_code": 0,
+  "complete_lifecycle": false,
+  "browser_phases": "ui-journey",
+  "run": "R71",
+  "completed_ui_barriers": 276,
+  "native_elapsed_seconds": 611.6,
+  "source_composition": {
+    "fixture_runtime_revision": "f1c3024205bb0549526dc50aecc11ecd09f7a5c7",
+    "production_web_revision": "3811ad77d7ac68738e9baedc094831790450e0a9",
+    "production_dependency_pr": 348,
+    "runtime_byte_identity_verified": true
+  },
+  "normal_oidc": true,
+  "application_route_fulfillments": 0,
+  "session_injections": 0,
+  "page_errors": 0,
+  "mentor_planning_UI_receipts": [
+    {
+      "event_id": "6d81a89f-d446-455c-8e53-7516e039baed",
+      "action": "create-mentor-assessment",
+      "purpose": "checkpoint",
+      "run_id": "75b341b3-c67c-4207-8e4f-f81a967939db",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "6d81a89f-d446-455c-8e53-7516e039baed",
+      "action": "configure-mentor-checkpoint",
+      "purpose": "checkpoint",
+      "checkpoint_id": "c7dafc03-de5d-4da9-b8b9-91941cc19680",
+      "run_id": "75b341b3-c67c-4207-8e4f-f81a967939db",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "4e1e6f01-2e01-4f25-94bc-c1eb1cbaad49",
+      "action": "create-mentor-assessment",
+      "purpose": "checkpoint",
+      "run_id": "6b4baf96-3e03-4afb-a33e-14d7faa4970f",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "4e1e6f01-2e01-4f25-94bc-c1eb1cbaad49",
+      "action": "configure-mentor-checkpoint",
+      "purpose": "checkpoint",
+      "checkpoint_id": "0cb976d9-0fcd-4b98-84f2-a840bdea487a",
+      "run_id": "6b4baf96-3e03-4afb-a33e-14d7faa4970f",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "4e1e6f01-2e01-4f25-94bc-c1eb1cbaad49",
+      "action": "create-mentor-assessment",
+      "purpose": "mentor_final",
+      "run_id": "2526670a-61d0-4097-8e0d-d3b8851396d9",
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    },
+    {
+      "event_id": "4e1e6f01-2e01-4f25-94bc-c1eb1cbaad49",
+      "action": "configure-mentor-checkpoint",
+      "purpose": "mentor_final",
+      "checkpoint_id": "f957a2b7-2cbd-4747-8e79-0bc89870206a",
+      "run_id": "2526670a-61d0-4097-8e0d-d3b8851396d9",
+      "version": 1,
+      "cancel_without_write": true,
+      "one_confirmed_write": true,
+      "reloaded": true
+    }
+  ],
+  "native_guards": [
+    "Three original production UI run creations and three named checkpoint configurations",
+    "Each original response binds its actual generated identity, expected revision, approved rubric/source and purpose",
+    "Earlier exact runs/windows retained; shared native verifier also rejects reused or started judge-run identities",
+    "Checkpoint definitions, version, public criteria and native resolved instants independently verified against exact event live/cutoff/end boundaries",
+    "Live observations in both modes, separate frozen-output qualification in its applicable mode only",
+    "All original live/final-source separation, early writes, private mentor cards, judging, cutoff, archive and configured120-day retention assertions retained"
+  ],
+  "final_modes_and_stages": [
+    {
+      "mode": "all_teams",
+      "stage": "archived",
+      "browser_mentor_planning_actions": 2,
+      "browser_live_mentor_cards": 12
+    },
+    {
+      "mode": "mentor_qualification",
+      "stage": "archived",
+      "browser_mentor_planning_actions": 4,
+      "browser_live_mentor_cards": 12
+    }
+  ],
+  "scoped_resources_after_cleanup": {
+    "containers": 0,
+    "volumes": 0,
+    "networks": 0
+  },
+  "private_artifact_sha256": {
+    "source.json": "6d5854bc8b8d1428b5e53e3ffb20e444384eae630edffa9c7ac36c86cc974ce5",
+    "connected-browser-proof.json": "c5b1700b35a5becf1a871324b6699ff6c45920c0ad64d60351c1ddd2692164af",
+    "native/journey-start-live.json": "0276be5e188793e88575783bab8b909710e9cc71e05d4cd585dc94df524e2953",
+    "native-runner.log": "4285bd64c45ffd23a98d31f4264b224dd7f70483d19d94b11c0cd9e63849b85a",
+    "final.dump": "aea1da737cadecfda3bcdc16fe936cc108f1d2c0437dfaaa9b7731a09fd173bd",
+    "native-mentor-checkpoint-planning.png": "541e9c2e704eaacb23e555c1effd60eb28f00c9964101794632796ada487071d"
+  },
+  "remaining": "Full original120 remains incomplete: remaining mentor final reviews/huddles/qualification, actual judging/results, feedback/outcomes/archive UI, full role/stage/provider/keyboard/narrow/private recovery and final archive/export audit. No release readiness claim."
+}
