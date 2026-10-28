@@ -74,7 +74,7 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
       const body: JudgeSetupCommand | undefined = captured.kind === 'open_deliberation' ? { request_id: crypto.randomUUID(), action: 'open_deliberation', reason: captured.input.reason.trim() } : captured.kind === 'assign' ? { request_id: crypto.randomUUID(), action: 'assign', team_id: captured.input.teamID, judge_ids: [...captured.input.judgeIDs], reason: captured.input.reason.trim() } : undefined
       const fingerprint = body ? await judgingSetupFingerprint(captured.source.run!.id, revision, body) : undefined
       ticket.assert()
-      attemptID = commands.begin({ operation: captured.kind === 'create' ? 'Create final judging round' : captured.kind === 'open_deliberation' ? 'Open final deliberation' : 'Assign final judges', revision, command: { action: captured.kind === 'create' ? 'create_run' : captured.kind, intentID: crypto.randomUUID(), requestID: body?.request_id, resourceID: captured.source.run?.id ?? captured.source.configuration.reference.id, subjectID: body ? body.team_id ?? '00000000-0000-0000-0000-000000000000' : undefined, intentFingerprint: fingerprint } })
+      attemptID = commands.begin({ operation: captured.kind === 'create' ? 'Create final judging round' : captured.kind === 'open_deliberation' ? 'Open final deliberation' : 'Assign final judges', revision, command: { action: captured.kind === 'create' ? 'create_run' : captured.kind, intentID: crypto.randomUUID(), requestID: body?.request_id, resourceID: captured.source.run?.id ?? captured.source.configuration.reference.id, subjectID: body?.team_id, intentFingerprint: fingerprint } })
       if (captured.kind === 'create') {
         const result = unwrap(await api.POST('/api/v1/events/{event_id}/rubric/configuration', { params: { path: { event_id: source.event.id }, header: { 'X-CSRF-Token': identity.csrf_token, 'If-Match': `"${revision}"` } }, body: { action: 'create_run', purpose: 'judge_final', version: captured.source.approved!.reference.version, reason: captured.input.reason.trim() } }))
         if (!createdFinalRound(captured.source, result, captured.source.approved!.reference)) throw new JudgingSetupReceiptIssue('The original response did not acknowledge the exact reviewed final round.')
@@ -106,13 +106,13 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
   }
   async function recover(attempt: Commands['attempts'][number]) {
     const metadata = attempt.command
-    if (busy || lock.current || !['assign', 'open_deliberation'].includes(metadata.action) || !metadata.requestID || !metadata.resourceID || !metadata.subjectID || !metadata.intentFingerprint) return
+    if (busy || lock.current || !['assign', 'open_deliberation'].includes(metadata.action) || !metadata.requestID || !metadata.resourceID || metadata.action === 'assign' && !metadata.subjectID || !metadata.intentFingerprint) return
     lock.current = true; setChecking(true); const ticket = scope.capture(); setFailure(undefined)
     const noun = metadata.action === 'assign' ? 'assignment' : 'deliberation'
     try {
       const result = unwrap(await api.GET('/api/v1/events/{event_id}/judging-receipts/{request_id}', { signal: ticket.signal, cache: 'no-store', params: { path: { event_id: source.event.id, request_id: metadata.requestID } } }))
       ticket.assert()
-      if (!result.receipt || !matchesJudgingSetupReceipt(result.receipt, { requestID: metadata.requestID, runID: metadata.resourceID, teamID: metadata.subjectID, action: metadata.action as 'assign' | 'open_deliberation', revision: attempt.revision, fingerprint: metadata.intentFingerprint }, identity.person.id)) throw new JudgingSetupReceiptIssue(`No matching original ${noun} acknowledgement is available. Its outcome remains unknown.`)
+      if (!result.receipt || !matchesJudgingSetupReceipt(result.receipt, { requestID: metadata.requestID, runID: metadata.resourceID, teamID: metadata.action === 'open_deliberation' ? '00000000-0000-0000-0000-000000000000' : metadata.subjectID!, action: metadata.action as 'assign' | 'open_deliberation', revision: attempt.revision, fingerprint: metadata.intentFingerprint }, identity.person.id)) throw new JudgingSetupReceiptIssue(`No matching original ${noun} acknowledgement is available. Its outcome remains unknown.`)
       commands.complete(attempt.id); acknowledged(`The exact original ${noun} acknowledgement was recovered. No write was replayed.`); await refresh()
     } catch (error) { if (ticket.current()) { if (denied(error)) clearDenied(); else setFailure(error) } }
     finally { lock.current = false; if (ticket.current()) setChecking(false) }
