@@ -24,8 +24,8 @@ export function OrganiserJudgingSetup({ event, parent }: { event: EventRecord; p
   const load = useCallback((signal: AbortSignal, assert: () => void) => loadJudgingSetup(event.id, signal, assert), [event.id])
   const read = useTodayRead(owner, load, parent, judgingSetupIdentity)
   const [notice, setNotice] = useState('')
-  return <section aria-label="Organiser final judging setup" className="py-6 border-y border-border fleet-print-excluded">
-    <h2>Final judging setup</h2><ActionLink icon="book" href={`/events/${event.id}?section=judging%20criteria`}>Review judging criteria</ActionLink><p>Create the independent final round, then review the judges for each frozen team. Practice, competition scores and result publication remain separate tasks.</p>
+  return <section aria-label="Organiser final judging setup" className="space-y-3 py-6 border-y border-border fleet-print-excluded">
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Final judging setup</h2><ActionLink variant="ghost" icon="book" href={`/events/${event.id}?section=judging%20criteria`}>Review judging criteria</ActionLink></div><p>Create the independent final round, then review the judges for each frozen team. Practice, competition scores and result publication remain separate tasks.</p>
     {read.denied ? <><p>Current organiser access is unavailable. Private setup inputs and reviews have been cleared.</p><Button icon="refresh" onClick={() => void read.refresh()}>Check current setup access</Button></> : <>{read.error && <Failure error={read.error} retry={() => void read.refresh()} />}{!read.data ? !read.error && <Loading /> : <><p role="status" aria-label="Last acknowledged setup change">{notice}</p><SetupEditor key={read.generation} source={read.data} parent={read.authority} commands={commands} paused={read.pending || !!read.error || !!boundary?.paused} refresh={read.refresh} observe={read.observeCurrent} acknowledged={setNotice} /></>}</>}
   </section>
 }
@@ -134,7 +134,7 @@ function SetupEditor({ source, parent, commands, paused, refresh, observe, ackno
     finally { lock.current = false; if (ticket.current()) setChecking(false) }
   }
   if (denial) return <p>Current organiser authority ended. Private setup inputs have been cleared.</p>
-  return <><h3 ref={heading} tabIndex={-1}>Plan and review final judging</h3><Button icon="refresh" variant="outline" disabled={busy} onClick={() => void readCurrent()}>Read current judging setup</Button>{closed && <p>The competition is closed. Final judging setup is read-only.</p>}
+  return <><h3 ref={heading} tabIndex={-1} className="text-base font-semibold">Round and assignments</h3><Button icon="refresh" variant="outline" disabled={busy} onClick={() => void readCurrent()}>Read current judging setup</Button>{closed && <p>The competition is closed. Final judging setup is read-only.</p>}
     <JudgingSetupCurrent source={source} />
     {needsCurrent && <p role="status">The starting point changed. Read current judging setup, then review your retained inputs again.</p>}
     {!closed && <div hidden={!!review || !!fresh}><JudgingSetupFields source={source} input={input} change={setInput} errors={errors} disabled={blocked} review={begin} form={form} /></div>}
