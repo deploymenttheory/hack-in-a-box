@@ -1,5 +1,6 @@
+import {reviewFinalHuddleInFleet} from './browser-final-huddles.mjs'
 import {planMentorAssessmentInFleet} from './browser-mentor-planning.mjs'
-import {submitLiveMentorCardInFleet} from './browser-mentor-scorecards.mjs'
+import {submitLiveMentorCardInFleet,submitFinalMentorCardInFleet} from './browser-mentor-scorecards.mjs'
 import {planFinalJudgingInFleet} from './browser-judging-setup.mjs'
 import {rehearseJudgeInFleet} from './browser-judge-practice.mjs'
 import {reviewSubmissionFreezeInFleet} from './browser-submission-freeze.mjs'
@@ -60,7 +61,7 @@ async function acknowledge(ack){
 }
 const errors=[],receipts=[]
 let recovery,liveRoles
-const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[],submissions=[],freezeChanges=[],practiceSubmissions=[],judgingSetupChanges=[],liveMentorCards=[],mentorPlanning=[]
+const creations=[],applications=[],selections=[],admissionDecisions=[],forms=[],offerPolicies=[],teamChanges=[],rubrics=[],challenges=[],teamWithdrawals=[],objectives=[],readings=[],eventDecisions=[],clarifications=[],submissions=[],freezeChanges=[],practiceSubmissions=[],judgingSetupChanges=[],liveMentorCards=[],mentorPlanning=[],finalMentorCards=[],finalHuddleActions=[]
 
 let step='launch'
 const browser=await chromium.launch({headless:true})
@@ -311,11 +312,31 @@ try{
    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,command_id:result.command_id,saved_by_ui:true})
   }
  }
+ if(process.env.HACKBOX_LIFECYCLE_BROWSER_PHASES==='ui-journey'){
+  for(let team=0;team<4;team++){
+   for(let author=0;author<2;author++){
+    const sequence=1801+team*2+author
+    step=`final-mentor-card-${sequence}`
+    const phase=await readPhase(sequence,180000)
+    const result=await submitFinalMentorCardInFleet({browser,expect,phase,errors})
+    finalMentorCards.push(result)
+    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,card_id:result.card_id,saved_by_ui:true})
+   }
+   for(let action=0;action<4;action++){
+    const sequence=2001+team*4+action
+    step=`final-huddle-${sequence}`
+    const phase=await readPhase(sequence,180000)
+    const result=await reviewFinalHuddleInFleet({browser,owner:page,expect,phase,errors})
+    finalHuddleActions.push(result)
+    await acknowledge({sequence:phase.sequence,action:phase.action,event_id:phase.event_id,huddle_id:result.huddle_id,saved_by_ui:true})
+   }
+  }
+ }
  step='native-journey-completion'
  const completed=await docker('docker',['wait',runner],{timeout:720000})
  assert.equal(completed.stdout.trim(),'0','Same-event native journey failed after browser actions')
  assert.deepEqual(errors,[])
- await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,team_submissions:submissions,submission_freeze:freezeChanges,fictional_practice:practiceSubmissions,judging_setup:judgingSetupChanges,live_mentor_cards:liveMentorCards,mentor_planning:mentorPlanning,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
+ await writeFile(join(output,'connected-browser-proof.json'),JSON.stringify({source_revision:source,kind:'same-event-native-browser-planning',complete_lifecycle:false,normal_oidc:true,fulfilled_application_routes:0,session_injections:0,page_errors:0,native_journey_exit_code:0,event_creation:creations,objective_authoring:objectives,publication_reading:readings,event_decisions:eventDecisions,clarification_authoring:clarifications,team_submissions:submissions,submission_freeze:freezeChanges,fictional_practice:practiceSubmissions,judging_setup:judgingSetupChanges,live_mentor_cards:liveMentorCards,mentor_planning:mentorPlanning,final_mentor_cards:finalMentorCards,final_huddle_actions:finalHuddleActions,offer_policies:offerPolicies,registration_forms:forms,registration_applications:applications,facilitator_selections:selections,admission_decisions:admissionDecisions,team_changes:teamChanges,team_withdrawals:teamWithdrawals,rubric_configuration:rubrics,challenge_authoring:challenges,planning:receipts,live_help_recovery:recovery,live_role_matrix:liveRoles},null,2)+'\n',{mode:0o600})
  console.log('Same-event browser branding actions and subsequent native journey PASS; full browser acceptance remains open.')
 }catch(error){
  console.error(`Connected browser failed during ${step}; private original evidence retained.`)

@@ -152,7 +152,7 @@ func (r *lifecycleJourney) recordLiveMentorCheckpoints(t *testing.T) {
 			command := scorecards.CardCommand{Action: "submit", CheckpointID: item.review.Checkpoint.Definition.ID, CheckpointVersion: item.review.Checkpoint.Version, Scores: scores}
 			var card scorecards.Card
 			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
-				card = r.submitMentorCheckpointInBrowser(t, item, index, assignmentIndex, actor, client, assignment.TeamID, page.Revision, command)
+				card = r.submitMentorCheckpointInBrowser(t, item, index, assignmentIndex, actor, client, assignment.TeamID, page, command)
 			} else if err := client.call(t.Context(), http.MethodPost, path, page.Revision, command, &card, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}

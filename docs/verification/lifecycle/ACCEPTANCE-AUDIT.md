@@ -270,3 +270,16 @@ modes archived, configured120-day retention remained enforced and scoped
 resources are zero. See `mentor-planning-browser-r71-proof.json` and the
 synthetic-only `native-mentor-checkpoint-planning.png`. Product dependency is
 separate PR348; full original120 stays incomplete and draft316 remains draft.
+
+### Final mentor reviews and formal huddles (pending execution)
+
+The next extension replaces direct native final-review writes with eight normal
+mentor UI submissions and sixteen intended-panel UI huddle actions: configure,
+record the second author's submitted review, open against both exact cards, and
+sign off frozen final evidence for each of four eligible entries. Native reads
+independently bind authors, rubric/checkpoint/run, exact frozen revision, content,
+original immutable card/huddle versions and canonical sign-off proof. Earlier
+live cards remain unchanged, and all-team judging gains no final mentor stage.
+Only identity/version metadata is published; no private assessment screenshots.
+Target300 browser barriers is pending execution; R71 remains historical accepted
+276-step evidence and full original120 remains incomplete.

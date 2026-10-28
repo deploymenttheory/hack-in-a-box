@@ -121,7 +121,11 @@ func (r *lifecycleJourney) reviewFrozenMentorEvidence(t *testing.T) {
 					scores = append(scores, scorecards.CategoryScore{CategoryID: category.ID, Value: &value, Evidence: []scorecards.EvidenceReference{{Kind: "note", Note: "Fresh independent review of this exact frozen synthetic final; live checkpoint excluded"}}})
 				}
 				var card scorecards.Card
-				if err := client.call(t.Context(), http.MethodPost, path, page.Revision, scorecards.CardCommand{Action: "submit", CheckpointID: checkpoint.Definition.ID, CheckpointVersion: checkpoint.Version, Scores: scores}, &card, http.StatusOK); err != nil {
+				command := scorecards.CardCommand{Action: "submit", CheckpointID: checkpoint.Definition.ID, CheckpointVersion: checkpoint.Version, Scores: scores}
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					card = r.submitIndependentMentorCardInBrowser(t, item, 1801+len(item.review.FinalCards), client, page, lifecycleBrowserMentorCardInput{Actor: actor, TeamID: source.TeamID, AuthorID: client.person, Revision: page.Revision, Checkpoint: *checkpoint, Command: command, FrozenRevision: source.SubmissionRevision})
+					item.browserFinalMentorCards = append(item.browserFinalMentorCards, lifecycleMentorCardReceipt{TeamID: card.TeamID, AuthorID: card.AuthorID, Reference: card.Reference, RunID: card.RunID})
+				} else if err := client.call(t.Context(), http.MethodPost, path, page.Revision, command, &card, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
 				if card.Purpose != "mentor_final" || card.RunID != checkpoint.Definition.RunID || card.AuthorID != client.person || card.TeamID != source.TeamID || card.SubmissionRevision == nil || *card.SubmissionRevision != *source.SubmissionRevision || card.Reference.Version != 1 || card.State != "submitted" {
@@ -143,17 +147,23 @@ func (r *lifecycleJourney) reviewFrozenMentorEvidence(t *testing.T) {
 			}
 			var huddle moderation.Huddle
 			command := map[string]any{"action": "configure", "version": 0, "reason": "Record exact independent frozen-final review context", "definition": moderation.Definition{ID: id, CheckpointID: checkpoint.Definition.ID, CheckpointVersion: checkpoint.Version, ModeratorID: r.owner.person, SecondReviewerID: item.cohort.staff["mentor-b"].person, ReviewDueAt: checkpoint.ClosesAt.Add(-time.Minute)}}
-			if err := r.owner.call(t.Context(), http.MethodPut, huddlePath, current.Revision, command, &huddle, http.StatusOK); err != nil {
+			if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+				huddle = r.configureFinalHuddleInBrowser(t, item, len(item.review.FinalHuddles), source.TeamID, current.Revision, command["definition"].(moderation.Definition), command["reason"].(string), refs)
+				id = huddle.Definition.ID
+				huddlePath = fmt.Sprintf("/api/v1/events/%s/teams/%s/moderation-huddles/%s", item.view.ID, source.TeamID, id)
+			} else if err := r.owner.call(t.Context(), http.MethodPut, huddlePath, current.Revision, command, &huddle, http.StatusOK); err != nil {
 				t.Fatal(err)
 			}
-			for _, step := range []struct {
+			for actionIndex, step := range []struct {
 				client *lifecycleClient
 				action string
 			}{{item.cohort.staff["mentor-b"], "complete_second_review"}, {r.owner, "open"}, {r.owner, "sign_off"}} {
 				if err := r.owner.call(t.Context(), http.MethodGet, "/api/v1/events/"+item.view.ID.String(), -1, nil, &current, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
-				if err := step.client.call(t.Context(), http.MethodPut, huddlePath, current.Revision, map[string]any{"action": step.action, "version": huddle.Version, "reason": "Recorded current independent final review and exact source"}, &huddle, http.StatusOK); err != nil {
+				if os.Getenv("HACKBOX_LIFECYCLE_BROWSER_PHASES") == "ui-journey" {
+					huddle = r.decideFinalHuddleInBrowser(t, item, len(item.review.FinalHuddles), actionIndex, step.client, current.Revision, huddle, step.action, "Recorded current independent final review and exact source", refs, *source.SubmissionRevision)
+				} else if err := step.client.call(t.Context(), http.MethodPut, huddlePath, current.Revision, map[string]any{"action": step.action, "version": huddle.Version, "reason": "Recorded current independent final review and exact source"}, &huddle, http.StatusOK); err != nil {
 					t.Fatal(err)
 				}
 			}
