@@ -27,7 +27,9 @@ func (r *lifecycleJourney) prepareLiveMentorAccess(t *testing.T) {
 			// Maintenance can legitimately replace the latest projection with an
 			// unapproved live-coverage draft. Wait for that normal worker effect
 			// deliberately; history is proved by its own immutable receipt.
-			deadline := time.Now().Add(45 * time.Second)
+			// Maintenance runs once per minute; include a full tick plus
+			// execution margin without relying on the faster reconcile cadence.
+			deadline := time.Now().Add(120 * time.Second)
 			for before.Plan != nil && before.Plan.ID == original.PlanID && time.Now().Before(deadline) {
 				select {
 				case <-t.Context().Done():
